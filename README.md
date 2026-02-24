@@ -45,10 +45,11 @@ pnpm run server
 
 #### Ollama
 
-- Create an `.env` file in `server/services/` folder and insert you api key file:
+- Create an `.env` file in `services/` folder and insert you api key file:
 ```
 OLLAMA_API_KEY=your_api_key
 ```
+an `.env.example` file is available for an example.
 
 [//]: # (How to set up the database?)
 
