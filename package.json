@@ -1,0 +1,32 @@
+{
+  "name": "newsgenerator",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "server": "cd services && node server.js --env-file=.env",
+    "ndm_server": "cd services && nodemon server.js --env-file=.env",
+    "build": "../node_modules/.bin/vite build",
+    "lint": "../node_modules/.bin/eslint .",
+    "preview": "../node_modules/.bin/vite preview"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "cors": "^2.8.6",
+    "crawlee": "^3.16.0",
+    "dotenv": "^17.2.4",
+    "express": "^5.2.1",
+    "fast-xml-parser": "^5.3.5",
+    "linkedom": "^0.18.12",
+    "ollama": "^0.6.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "url": "^0.11.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0",
+    "nodemon": "^3.1.11"
+  }
+}
