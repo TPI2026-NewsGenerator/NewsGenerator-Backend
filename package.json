@@ -19,8 +19,6 @@
     "fast-xml-parser": "^5.3.5",
     "linkedom": "^0.18.12",
     "ollama": "^0.6.3",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
     "url": "^0.11.4"
   },
   "devDependencies": {
