@@ -8,13 +8,13 @@ user parameters such as keywords, desired/undesired topics, language and timefra
 
 ## Tech Stack
 
-* [Node.js](https://nodejs.org/) 
-* **Server:** [Express](https://expressjs.com/)
+* [Node.js](https://nodejs.org/) [v22.18.0]
+* **Server:** [Express](https://expressjs.com/) [v5.2.1]
 * **AI Orchestration:** [Ollama](https://ollama.com/)
-* **Scraper:** [Crawlee](https://crawlee.dev/js)
+* **Scraper:** [Crawlee](https://crawlee.dev/js) [v3.16.0]
 * **Parsers:**
-    * HTML: [linkedom](https://www.npmjs.com/package/linkedom) and [Readability](https://github.com/mozilla/readability) to extract content
-    * XML: [fast-xml-parser](https://www.npmjs.com/package/fast-xml-parser)
+    * HTML: [linkedom](https://www.npmjs.com/package/linkedom) [v0.18.12] and [Readability](https://github.com/mozilla/readability) [v0.6.0] to extract content
+    * XML: [fast-xml-parser](https://www.npmjs.com/package/fast-xml-parser) [v5.3.5]
 
 ## Getting Started
 
@@ -23,13 +23,24 @@ user parameters such as keywords, desired/undesired topics, language and timefra
 List all dependencies and their version needed by the project as :
 
 [//]: # (* DataBase Engine &#40;MySql, PostgreSQL, MSSQL,...&#41;)
-* IDE used: [IntelliJ](https://www.jetbrains.com/idea/)
-* Package manager: [pnpm](https://pnpm.io/fr/)
+* [Node.js](https://nodejs.org/) [v22.18.0]
+* IDE used: [IntelliJ](https://www.jetbrains.com/idea/) [v2025.3.3]
+* Package manager: [pnpm](https://pnpm.io/fr/) [v10.28.2]
 * OS supported: All (web based)
 
 [//]: # (* Virtualization &#40;Docker, .Net, .JDK, .JRE&#41;)
 
 ### Configuration
+#### Ollama
+
+1. Visit Ollama [website](https://ollama.com/), create an account and create an API Key
+under `Settings -> Keys -> Add API Key`
+
+2. Rename `.env.example` to `.env` and insert you api key file:
+```
+OLLAMA_API_KEY=your_api_key
+```
+
 #### Environment
 To install dependencies:
 
@@ -41,13 +52,6 @@ To start a development server:
 
 ```bash
 pnpm run server
-```
-
-#### Ollama
-
-- Create an `.env` file such as the `.env.example` example file in `services/` folder and insert you api key file:
-```
-OLLAMA_API_KEY=your_api_key
 ```
 
 [//]: # (How to set up the database?)
