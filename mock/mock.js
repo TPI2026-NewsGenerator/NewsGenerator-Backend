@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import {rss_feed} from './rss_text.js'
+import {rss_feed} from './rss_feed.js'
 
 
 const app = express();
