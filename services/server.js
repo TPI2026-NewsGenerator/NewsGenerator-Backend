@@ -29,7 +29,7 @@ app.post('/api/news', async (req, res) => {
 });
 
 // fallback route (all routes except above)
-app.get(/.*/, async (req, res) => {
+app.get('/healthcheck', async (req, res) => {
     res.status(200).json({message: "Welcome to NewsGenerator [HealthCheck]"});
 });
 
