@@ -14,7 +14,7 @@ export const scrapNews = async (keywords, urls) => {
 }
 
 // inspired by "https://crawlee.dev/js/docs/examples/basic-crawler"
-async function scrapXml(urls, keywords) {
+export async function scrapXml(urls, keywords) {
     let fetchedNews = [];
 
     // used basic crawler since it is for xml content
@@ -50,7 +50,7 @@ async function scrapXml(urls, keywords) {
 }
 
 // inspired by "https://crawlee.dev/js/api/cheerio-crawler/class/CheerioCrawler"
-async function scrapHtml(urls){
+export async function scrapHtml(urls){
     let fetchedContentNews = [];
 
     const crawler = new CheerioCrawler({
@@ -92,7 +92,7 @@ async function scrapHtml(urls){
 }
 
 // filter news on category and title
-const filterNews = (newsList, keywords) => {
+export const filterNews = (newsList, keywords) => {
     let filteredNews = [];
     if (keywords[0] && keywords[0].trim() !== ''){
         for (let news of newsList) {
