@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import process from 'node:process'
+import 'dotenv/config';
 import {scrapNews} from "./scraper.js";
 import {rss} from './../db/rss_links.js'
 
@@ -35,4 +37,4 @@ app.get('/healthcheck', async (req, res) => {
 
 
 console.log("Listening on http://localhost:3001");
-app.listen(3001);
+app.listen(process.env.PORT);
