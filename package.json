@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "server": "cd services && node server.js --env-file=.env",
+    "server": "cd services && node server.js --env-file=../.env",
     "ndm_server": "cd services && nodemon server.js --env-file=.env",
     "build": "../node_modules/.bin/vite build",
     "lint": "../node_modules/.bin/eslint .",
