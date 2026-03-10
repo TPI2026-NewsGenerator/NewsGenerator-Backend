@@ -28,6 +28,11 @@ app.post('/api/news', async (req, res) => {
     }
 });
 
+// fallback route (all routes except above)
+app.get(/.*/, async (req, res) => {
+    res.status(200).json({message: "Welcome to NewsGenerator [HealthCheck]"});
+});
+
 
 console.log("Listening on http://localhost:3001");
 app.listen(3001);
