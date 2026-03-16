@@ -7,6 +7,7 @@
     "server": "node server.js --env-file=.env",
     "ndm_server": "nodemon server.js --env-file=.env",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:fetch-links": "pnpm run test -- tests/test.fetchLinks.js",
     "build": "../node_modules/.bin/vite build",
     "lint": "../node_modules/.bin/eslint .",
     "preview": "../node_modules/.bin/vite preview"
