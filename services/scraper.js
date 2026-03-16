@@ -10,7 +10,12 @@ export const scrapNews = async (keywords, urls) => {
     const scrapedXmlLinks = scrappedXml.map(news => news.link ?? null)
     const newsContent = await scrapHtml(scrapedXmlLinks);
 
-    return newsContent || [];
+    const response = {
+        totalResults: newsContent.length,
+        articles: {newsContent}
+    }
+
+    return response || [];
 }
 
 // inspired by "https://crawlee.dev/js/docs/examples/basic-crawler"
@@ -68,8 +73,8 @@ export async function scrapHtml(urls){
             // format data
             fetchedContentNews.push({
                 url: request.url ?? null,
-                site: newsContent.siteName ?? '',
-                publishedTime: newsContent.publishedTime ?? '',
+                source: newsContent.siteName ?? '',
+                publishedAt: newsContent.publishedTime ?? '',
                 title: newsContent.title ?? '',
                 author: newsContent.byline ?? '',
                 lang: newsContent.lang ?? '',

@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "server": "cd services && node server.js --env-file=../.env",
-    "ndm_server": "cd services && nodemon server.js --env-file=.env",
+    "server": "node server.js --env-file=.env",
+    "ndm_server": "nodemon server.js --env-file=.env",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "build": "../node_modules/.bin/vite build",
     "lint": "../node_modules/.bin/eslint .",
     "preview": "../node_modules/.bin/vite preview"
@@ -14,17 +15,21 @@
     "@mozilla/readability": "^0.6.0",
     "cors": "^2.8.6",
     "crawlee": "^3.16.0",
-    "dotenv": "^17.2.4",
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "fast-xml-parser": "^5.3.5",
+    "fast-xml-parser": "^5.5.5",
     "linkedom": "^0.18.12",
     "ollama": "^0.6.3",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "url": "^0.11.4"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "eslint": "^9.39.1",
-    "globals": "^16.5.0",
-    "nodemon": "^3.1.11"
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.0.3",
+    "express-validator": "^7.3.1",
+    "globals": "^17.4.0",
+    "jest": "^30.3.0",
+    "nodemon": "^3.1.14"
   }
 }

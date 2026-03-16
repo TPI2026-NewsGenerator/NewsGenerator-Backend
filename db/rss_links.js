@@ -309,7 +309,7 @@ export const rss = {
             // "https://news.yahoo.com/rss/",
             // "https://zeenews.india.com/rss/world-news.xml",
         ],
-        sports: [
+        sport: [
             "https://www.wfmz.com/search/?f=rss&t=article&c=sports&l=50&s=start_time&sd=desc",
             "https://abcnews.go.com/abcnews/sportsheadlines",
             // "https://www.youtube.com/feeds/videos.xml?channel_id=UCZOhMveylz2eyjIdG6SehJg",
