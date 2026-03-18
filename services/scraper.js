@@ -1,3 +1,5 @@
+"use strict"
+
 import {BasicCrawler, CheerioCrawler, log} from 'crawlee';
 import { Readability } from '@mozilla/readability';
 import { parseHTML } from 'linkedom';

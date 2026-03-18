@@ -1,3 +1,5 @@
+"use strict"
+
 import { XMLParser} from 'fast-xml-parser';
 
 // XML parsed made with 'fast-xml-parser'

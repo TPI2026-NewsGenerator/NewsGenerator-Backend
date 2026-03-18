@@ -1,3 +1,5 @@
+"use strict"
+
 import process from 'node:process'
 import 'dotenv/config';
 import {Ollama} from 'ollama'

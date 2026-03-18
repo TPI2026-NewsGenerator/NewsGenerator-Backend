@@ -1,3 +1,5 @@
+"use strict"
+
 import Links from "./links.js";
 import {scrapNews} from "./scraper.js";
 

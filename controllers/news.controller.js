@@ -1,3 +1,5 @@
+"use strict"
+
 import NewsService from '../services/news.service.js';
 
 const News = {
