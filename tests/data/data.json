@@ -1,0 +1,20 @@
+{
+    "result1": [
+        "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
+        "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
+        "https://abcnews.go.com/abcnews/internationalheadlines",
+        "https://www.youtube.com/feeds/videos.xml?playlist_id=PLQOa26lW-uI9Ja7WDOHBJecZXTC9fm__C"
+    ],
+    "result2": [
+        "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
+        "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
+        "https://abcnews.go.com/abcnews/internationalheadlines",
+        "https://www.youtube.com/feeds/videos.xml?playlist_id=PLQOa26lW-uI9Ja7WDOHBJecZXTC9fm__C",
+        "https://www.404media.co/rss/",
+        "https://abcnews.go.com/abcnews/internationalheadlines",
+        "https://www.wfmz.com/search/?f=rss&t=article&c=sports&l=50&s=start_time&sd=desc",
+        "https://abcnews.go.com/abcnews/sportsheadlines"
+    ],
+    "result3": "None of theses categories were found: technology",
+    "result4": "No categories selected, please select a category."
+}

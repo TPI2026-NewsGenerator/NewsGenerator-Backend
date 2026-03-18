@@ -2,6 +2,9 @@ import {rss} from "../db/rss_links.js";
 
 const Links = {
     getCategoriesLinks(categories) {
+        if (categories.length === 0) {
+            throw "No categories selected, please select a category."
+        }
         let newsLinks = [];
         let missingCategories = [];
 
