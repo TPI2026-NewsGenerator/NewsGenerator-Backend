@@ -4,7 +4,7 @@ import Links from "./links.js";
 import {Scraper} from "./scraper.js";
 
 const News = {
-    async fetch({keywords, categories, undesiredTopics, language, timeframe}) {
+    getNews: async ({keywords, categories, undesiredTopics, language, timeframe}) => {
         try {
             // Get links from categories
             const newsLinks = Links.getCategoriesLinks(categories);
