@@ -1,5 +1,5 @@
 import express from 'express'
-import { body, param } from 'express-validator';
+import { body } from 'express-validator';
 import newsController from '../controllers/news.controller.js';
 
 const router = express.Router();
@@ -12,6 +12,6 @@ const fetchNewsValidator = [
     body('timeframe').isObject().withMessage('timeframe must be an object with properties "start" and "end"'),
 ];
 
-router.post('', fetchNewsValidator, newsController.fetch);
+router.post('', fetchNewsValidator, newsController.getNews);
 
 export default router;
