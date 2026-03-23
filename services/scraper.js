@@ -30,7 +30,7 @@ export const Scraper = {
 
     // inspired by "https://crawlee.dev/js/docs/examples/basic-crawler"
     Xml: async (urls) => {
-        let fetchedNews = [];
+        let scrapedNews = [];
 
         // used basic crawler since it is for xml content
         const crawler = new BasicCrawler({
@@ -45,7 +45,7 @@ export const Scraper = {
 
                 const xmlParsed = await xmlParse(body)
 
-                fetchedNews.push(xmlParsed);
+                scrapedNews.push(xmlParsed);
             },
 
             // This function is called if the page processing failed more than maxRequestRetries + 1 times.
@@ -57,12 +57,12 @@ export const Scraper = {
         // trigger crawlee with links
         await crawler.run(urls);
 
-        return fetchedNews.flat();
+        return scrapedNews.flat();
     },
 
     // inspired by "https://crawlee.dev/js/api/cheerio-crawler/class/CheerioCrawler"
     Html: async (urls) => {
-        let fetchedContentNews = [];
+        let scrapedContentNews = [];
 
         const crawler = new CheerioCrawler({
             minConcurrency: 20,
@@ -77,7 +77,7 @@ export const Scraper = {
                 const newsContent = reader.parse(); // parse useful content
 
                 // format data
-                fetchedContentNews.push({
+                scrapedContentNews.push({
                     url: request.url ?? null,
                     source: newsContent.siteName ?? '',
                     publishedAt: newsContent.publishedTime ?? '',
@@ -99,6 +99,6 @@ export const Scraper = {
         // trigger crawlee with links
         await crawler.run(urls);
 
-        return fetchedContentNews;
+        return scrapedContentNews;
     }
 }
