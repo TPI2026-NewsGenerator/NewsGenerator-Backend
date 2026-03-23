@@ -49,9 +49,9 @@ export async function scrapXml(urls, keywords) {
     // trigger crawlee with links
     await crawler.run(urls);
 
-    // return filtered news if found
-    const filteredNews = filterNews(fetchedNews.flat(), keywords);
-    if (filteredNews.length > 0) return filteredNews;
+        // return filtered news if found
+        const filteredNews = Filter.News(fetchedNews.flat(), keywords);
+        if (filteredNews.length > 0) return filteredNews;
 
     return fetchedNews;
 }
