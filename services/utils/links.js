@@ -1,6 +1,6 @@
 "use strict"
 
-import {rss} from "../db/rss_links.js";
+import {rss} from "../../db/rss_links.js";
 
 const Links = {
     getCategoriesLinks(categories) {
