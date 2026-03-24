@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import {rss_feed} from './rss_feed.js'
+import {rssFeed} from './rss-feed.js'
 
 
 const app = express();
@@ -9,7 +9,7 @@ app.use(cors());
 
 app.get('/api/mock', async (req, res) => {
     try {
-        res.status(200).json(rss_feed);
+        res.status(200).json(rssFeed);
     } catch (err) {
         res.status(500).json({error: err.message});
     }

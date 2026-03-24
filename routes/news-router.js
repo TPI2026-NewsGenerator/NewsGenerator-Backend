@@ -1,6 +1,6 @@
 import express from 'express'
 import { body } from 'express-validator';
-import newsController from '../controllers/news.controller.js';
+import newsController from '../controllers/news-controller.js';
 
 const router = express.Router();
 

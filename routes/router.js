@@ -1,5 +1,5 @@
 import express from 'express';
-import newsRouter from './news.router.js';
+import newsRouter from './news-router.js';
 import cors from "cors";
 
 const router = express.Router();
