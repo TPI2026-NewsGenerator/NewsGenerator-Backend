@@ -8,26 +8,6 @@ import { Filter } from './filter.js'
 
 
 export const Scraper = {
-    // main scrap function
-    Handler: async (keywords, urls) => {
-        // 1. scrap XML
-        const scrappedXml = await this.Xml(urls, keywords);
-
-        // 2. return filtered news if found
-        const filteredNews = Filter.News(scrappedXml, keywords);
-        if (filteredNews.length > 0) {
-            const scrapedXmlLinks = scrappedXml.map(news => news.link ?? null)
-            // 3. get full news content of filtered news
-            const newsContent = await this.Html(scrapedXmlLinks);
-            return {
-                totalResults: newsContent.length,
-                articles: {newsContent}
-            }
-        }
-
-        return [];
-    },
-
     // inspired by "https://crawlee.dev/js/docs/examples/basic-crawler"
     Xml: async (urls) => {
         let scrapedNews = [];
