@@ -3,7 +3,7 @@
 import { BasicCrawler, CheerioCrawler, log } from 'crawlee';
 import { Readability } from '@mozilla/readability';
 import { parseHTML } from 'linkedom';
-import { xmlParse } from "./xmlParser.js";
+import { Parser } from "./parser.js";
 import { Filter } from './filter.js'
 
 
@@ -43,7 +43,7 @@ export const Scraper = {
             async requestHandler({ sendRequest }) {
                 const { body } = await sendRequest();
 
-                const xmlParsed = await xmlParse(body)
+                const xmlParsed = await Parser.Xml(body)
 
                 scrapedNews.push(xmlParsed);
             },
