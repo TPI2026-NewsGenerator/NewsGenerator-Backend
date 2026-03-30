@@ -13,7 +13,7 @@ user parameters such as keywords, desired/undesired topics, language and timefra
 * **AI Orchestration:** [Ollama](https://ollama.com/)
 * **Scraper:** [Crawlee](https://crawlee.dev/js) [v3.16.0]
 * **Parsers:**
-    * HTML: [linkedom](https://www.npmjs.com/package/linkedom) [v0.18.12] and [Readability](https://github.com/mozilla/readability) [v0.6.0] to extract content
+    * HTML: [LinkeDOM](https://www.npmjs.com/package/linkedom) [v0.18.12] and [Readability](https://github.com/mozilla/readability) [v0.6.0] to extract content
     * XML: [fast-xml-parser](https://www.npmjs.com/package/fast-xml-parser) [v5.3.5]
 
 ## Getting Started
