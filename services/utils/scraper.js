@@ -4,7 +4,6 @@ import { BasicCrawler, CheerioCrawler, log } from 'crawlee';
 import { Readability } from '@mozilla/readability';
 import { parseHTML } from 'linkedom';
 import { Parser } from "./parser.js";
-import { Filter } from './filter.js'
 
 
 export const Scraper = {
@@ -12,7 +11,7 @@ export const Scraper = {
     Xml: async (urls) => {
         let scrapedNews = [];
 
-        // used basic crawler since it is for xml content
+        // used basic crawler since it is for XML content
         const crawler = new BasicCrawler({
             minConcurrency: 20,
             maxConcurrency: 50,
