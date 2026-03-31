@@ -3,18 +3,18 @@
 import {rss} from "../../db/rss-links.js";
 
 const Links = {
-    getCategoriesLinks(categories) {
-        if (categories.length === 0) {
+    getCategoriesLinks(category) {
+        if (!category || category.length === 0) {
             throw "No categories selected, please select a category."
         }
         let newsLinks = [];
         let missingCategories = [];
 
-        for (let category of categories) {
-            if (category in rss.en) {
-                newsLinks.push(rss.en[category.toLowerCase()]);
+        for (let c of category) {
+            if (c.toLowerCase() in rss.en) {
+                newsLinks = [...newsLinks, rss.en[c.toLowerCase()]];
             } else {
-                missingCategories.push(category);
+                missingCategories = [...missingCategories, c];
             }
         }
 

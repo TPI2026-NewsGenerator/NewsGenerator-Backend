@@ -1,13 +1,13 @@
 "use strict"
 
-import NewsService from '../services/news-service.js';
+import {NewsService} from '../services/news-service.js';
 
-const News = {
+export const NewsController = {
     getNews: async (req, res) => {
         const filters = req.body;
 
         // authorized filters
-        const authorizedFilters = ['keywords', 'categories', 'undesiredTopics', 'language', 'timeframe'];
+        const authorizedFilters = ['keywords', 'category', 'undesiredTopics', 'language', 'timeframe'];
         for (let filter in filters) {
             if (!authorizedFilters.find(element => element === filter)) {
                 const err = new Error(`Filter ${filter} is not authorized.`);
@@ -16,7 +16,7 @@ const News = {
             }
         }
 
-        const {keywords, categories, undesiredTopics, language, timeframe} = filters;
+        const {keywords, category, undesiredTopics, language, timeframe} = filters;
 
         // validate data
         if (keywords === undefined || keywords.length === 0) {
@@ -25,24 +25,25 @@ const News = {
             throw err;
         }
 
-        if (categories === undefined || categories.length === 0) {
+        if (category === undefined || category.length === 0) {
             const err = new Error("No categories selected, please select at least one category.")
             err.status = 400;
             throw err;
         }
 
-        const authorizedLang = ['en', 'fr', 'es', 'ch', 'ru'];
-        if (language !== undefined || language !== "") {
-            if (!authorizedLang.find(element => element === language)) {
-                const err = new Error(`Language ${language} is not authorized.`);
-                err.status = 400;
-                throw err;
-            }
-        }
+        // not used for the moment
+        // const authorizedLang = ['en', 'fr', 'es', 'ch', 'ru'];
+        // if (language !== undefined || language !== "") {
+        //     if (!authorizedLang.find(element => element === language)) {
+        //         const err = new Error(`Language ${language} is not authorized.`);
+        //         err.status = 400;
+        //         throw err;
+        //     }
+        // }
 
         try {
-            const customer = await NewsService.fetch(req.body);
-            res.status(200).json(customer);
+            const news = await NewsService.getNews(req.body);
+            res.status(200).json(news);
         } catch (error) {
             if (error.includes("None of theses categories were found:")) {
                 res.status(400).json({error: error});
@@ -53,5 +54,3 @@ const News = {
     },
 
 }
-
-export default News;
