@@ -16,7 +16,10 @@ export const NewsService = {
             // 3. filter news
             const filteredNews = Filter.News(scrappedXml, keywords);
             if (filteredNews.length > 0) {
-                const scrapedXmlLinks = scrappedXml.map(news => news.link ?? null)
+                const scrapedXmlLinks = scrappedXml
+                    .filter(news => news?.link)
+                    .map(news => news.link)
+
                 // 4. get full news content of filtered news and return it
                 const news = await Scraper.Html(scrapedXmlLinks);
                 return {
