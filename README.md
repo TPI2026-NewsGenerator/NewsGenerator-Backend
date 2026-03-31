@@ -82,10 +82,17 @@ pnpm run build
 ## Directory structure
 
 ```shell
-├───api
+├───config
+├───controllers
 ├───db
-└───services
-    └───storage   // Crawlee storage space
+├───docs
+├───routes
+├───services
+│   ├───storage     // Crawlee storage folder
+│   └───utils
+└───tests
+    ├───data
+    └───mock
 ```
 
 ## Collaborate
