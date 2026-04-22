@@ -1,6 +1,6 @@
 "use strict"
 
-import { BasicCrawler, CheerioCrawler, log } from 'crawlee';
+import {BasicCrawler, CheerioCrawler, Configuration, KeyValueStore, log, RequestQueue} from 'crawlee';
 import { Readability } from '@mozilla/readability';
 import { parseHTML } from 'linkedom';
 import { Parser } from "./parser.js";
@@ -10,6 +10,11 @@ export const Scraper = {
     // inspired by "https://crawlee.dev/js/docs/examples/basic-crawler"
     Xml: async (urls) => {
         let scrapedNews = [];
+
+        // Configuration.getGlobalConfig().set('purgeOnStart', true);
+
+        await RequestQueue.open().then(queue => queue.drop());
+        await KeyValueStore.open().then(store => store.drop());
 
         // used basic crawler since it is for XML content
         const crawler = new BasicCrawler({
@@ -43,6 +48,10 @@ export const Scraper = {
     Html: async (urls) => {
         let scrapedContentNews = [];
 
+        // Configuration.getGlobalConfig().set('purgeOnStart', true);
+        await RequestQueue.open().then(queue => queue.drop());
+        await KeyValueStore.open().then(store => store.drop());
+
         const crawler = new CheerioCrawler({
             minConcurrency: 20,
             maxConcurrency: 50,
@@ -55,9 +64,12 @@ export const Scraper = {
                 const reader = new Readability(document); // parse HTML from linkedom document
                 const newsContent = reader.parse(); // parse useful content
 
+                const { thumbnail } = request.userData;
+
                 // format data
                 scrapedContentNews.push({
                     url: request.url ?? null,
+                    thumbnail: thumbnail ?? null,
                     source: newsContent.siteName ?? '',
                     publishedAt: newsContent.publishedTime ?? '',
                     title: newsContent.title ?? '',

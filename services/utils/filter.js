@@ -11,8 +11,8 @@ export const Filter = {
                 for (let keyword of keywords) {
                     // Check filter in category array
                     if (Array.isArray(news.category)) {
-                        for (let category of news.category ?? []) {
-                            if (category.toLowerCase().includes(keyword.toLowerCase())) {
+                        for (let category of (news?.category["#text"] || news?.category) ?? []) {
+                            if (typeof category === 'string' && category?.toLowerCase().includes(keyword.toLowerCase())) {
                                 filteredNews.push(news);
                             }
                         }
