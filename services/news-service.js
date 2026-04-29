@@ -1,7 +1,7 @@
 "use strict"
 
 import Links from "./utils/links.js";
-import {Scraper} from "./utils/scraper.js";
+import {Crawlers} from "./utils/crawlers.js";
 import {Filter} from "./utils/filter.js";
 
 export const NewsService = {
@@ -11,7 +11,7 @@ export const NewsService = {
             const newsLinks = Links.getCategoriesLinks(category);
 
             // 2. scrap XML
-            const scrappedXml = await Scraper.Xml(newsLinks, keywords);
+            const scrappedXml = await Crawlers.Xml(newsLinks, keywords);
 
             // 3. filter news
             const filteredNews = Filter.News(scrappedXml, keywords);
@@ -26,7 +26,7 @@ export const NewsService = {
                     }))
 
                 // 4. get full news content of filtered news and return it
-                const news = await Scraper.Html(scrapedXmlLinks);
+                const news = await Crawlers.Html(scrapedXmlLinks);
                 return {
                     totalResults: news.length,
                     news: news
