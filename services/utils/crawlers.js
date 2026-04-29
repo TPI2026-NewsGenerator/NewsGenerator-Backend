@@ -6,13 +6,13 @@ import { parseHTML } from 'linkedom';
 import { Parser } from "./parser.js";
 
 
-export const Scraper = {
+export const Crawlers = {
     // inspired by "https://crawlee.dev/js/docs/examples/basic-crawler"
     Xml: async (urls) => {
         let scrapedNews = [];
 
+        // remove storage functionality
         // Configuration.getGlobalConfig().set('purgeOnStart', true);
-
         await RequestQueue.open().then(queue => queue.drop());
         await KeyValueStore.open().then(store => store.drop());
 
@@ -22,7 +22,7 @@ export const Scraper = {
             maxConcurrency: 50,
             maxRequestRetries: 1,
             requestHandlerTimeoutSecs: 30,
-            // maxRequestsPerCrawl: 10,
+            maxRequestsPerCrawl: 10,
 
             async requestHandler({ sendRequest }) {
                 const { body } = await sendRequest();
@@ -57,7 +57,7 @@ export const Scraper = {
             maxConcurrency: 50,
             maxRequestRetries: 1,
             requestHandlerTimeoutSecs: 30,
-            // maxRequestsPerCrawl: 10,
+            maxRequestsPerCrawl: 10,
 
             async requestHandler({ request, body }) {
                 const { document } = parseHTML(body);   // structure html DOM
