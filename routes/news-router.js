@@ -1,6 +1,7 @@
 import express from 'express'
 import { body } from 'express-validator';
 import {NewsController} from '../controllers/news-controller.js';
+import {authenticateToken} from "../services/utils/jwt.js";
 
 const router = express.Router();
 
@@ -12,6 +13,6 @@ const fetchNewsValidator = [
     body('timeframe').isObject().withMessage('timeframe must be an object with properties "start" and "end"'),
 ];
 
-router.post('', fetchNewsValidator, NewsController.getNews);
+router.post('', authenticateToken, fetchNewsValidator, NewsController.getNews);
 
 export default router;
