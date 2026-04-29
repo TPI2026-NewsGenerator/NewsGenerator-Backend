@@ -76,10 +76,18 @@ model users {
   username    String?
   email       String?
   password    String?
+  role        Int?
   categories  categories[]
   histories   histories[]
   keywords    keywords[]
   newsletter  newsletter[]
   preferences preferences[]
   sources     sources[]
+  roles_list  roles_list?   @relation(fields: [role], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_role")
+}
+
+model roles_list {
+  id    Int     @id @default(autoincrement())
+  role  String?
+  users users[]
 }
