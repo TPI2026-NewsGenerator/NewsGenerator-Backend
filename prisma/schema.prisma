@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model categories {
+  id              Int             @default(autoincrement())
+  id_user         Int
+  id_category     Int
+  categories_list categories_list @relation(fields: [id_category], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_category")
+  users           users           @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_user")
+
+  @@id([id, id_user, id_category])
+}
+
+model categories_list {
+  id            Int          @id @default(autoincrement())
+  category_name String?
+  categories    categories[]
+  newsletter    newsletter[]
+}
+
+model histories {
+  id      Int   @default(autoincrement())
+  id_user Int
+  history Json?
+  users   users @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_user")
+
+  @@id([id, id_user])
+}
+
+model keywords {
+  id          Int      @id @default(autoincrement())
+  id_user     Int?
+  keywords    String?
+  is_excluded Boolean?
+  users       users?   @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_user")
+}
+
+model newsletter {
+  id              Int             @default(autoincrement())
+  id_user         Int
+  id_category     Int
+  frequence       String?
+  categories_list categories_list @relation(fields: [id_category], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_category")
+  users           users           @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_user")
+
+  @@id([id, id_user, id_category])
+}
+
+model preferences {
+  id        Int     @default(autoincrement())
+  id_user   Int
+  language  String?
+  timelapse String?
+  users     users   @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_user")
+
+  @@id([id, id_user])
+}
+
+model sources {
+  id      Int     @default(autoincrement())
+  id_user Int
+  source  String?
+  users   users   @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_user")
+
+  @@id([id, id_user])
+}
+
+model users {
+  id          Int           @id @default(autoincrement())
+  username    String?
+  email       String?
+  password    String?
+  categories  categories[]
+  histories   histories[]
+  keywords    keywords[]
+  newsletter  newsletter[]
+  preferences preferences[]
+  sources     sources[]
+}
