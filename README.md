@@ -8,13 +8,18 @@ user parameters such as keywords, desired/undesired topics, language and timefra
 
 ## Tech Stack
 
-* [Node.js](https://nodejs.org/) [v22.18.0]
-* **Server:** [Express](https://expressjs.com/) [v5.2.1]
-* **AI Orchestration:** [Ollama](https://ollama.com/)
-* **Scraper:** [Crawlee](https://crawlee.dev/js) [v3.16.0]
-* **Parsers:**
-    * HTML: [LinkeDOM](https://www.npmjs.com/package/linkedom) [v0.18.12] and [Readability](https://github.com/mozilla/readability) [v0.6.0] to extract content
-    * XML: [fast-xml-parser](https://www.npmjs.com/package/fast-xml-parser) [v5.3.5]
+- [Node.js](https://nodejs.org/) [v22.18.0]
+- **Server:** [Express](https://expressjs.com/) [v5.2.1]
+- **AI Orchestration:** [Ollama](https://ollama.com/)
+- **Scraper:** [Crawlee](https://crawlee.dev/js) [v3.16.0]
+- **Parsers:**
+  - HTML: [LinkeDOM](https://www.npmjs.com/package/linkedom) [v0.18.12] and [Readability](https://github.com/mozilla/readability) [v0.6.0] to extract content
+  - XML: [fast-xml-parser](https://www.npmjs.com/package/fast-xml-parser) [v5.3.5]
+- **Security**
+  - [JasonWebToken](https://www.npmjs.com/package/jsonwebtoken) [v9.0.3] for JWT creation
+  - [bcrypt](https://www.npmjs.com/package/bcrypt) [v6.0.0] for password hashing
+- **Database**
+  - [PostgreSQL](https://www.postgresql.org/)
 
 ## Getting Started
 
@@ -41,15 +46,32 @@ under `Settings -> Keys -> Add API Key`
 OLLAMA_API_KEY=your_api_key
 ```
 
+#### Database
+
+1. Download [PostgreSQL](https://www.postgresql.org/download/)
+2. Open "pgAdmin 4.exe" application
+3. Create new Database (*Right-click* **Databases** -> Create -> Database...)
+4. Open Query Tool on the database (*Right-click* **New_Database** -> Query Tool) **[Alt + Shift + Q]**
+5. Open File **[Ctrl + O]** -> open "create_insert_NewsGenerator.sql" from `server/db`
+6. Execute script **[F5]**
+
+To install prisma schema (in environment):
+```bash
+npx prisma db pull
+```
+
+To generate prisma client:
+```bash
+npx prisma generate
+```
+
 #### Environment
 To install dependencies:
-
 ```bash
 pnpm install
 ```
 
 To start a development server:
-
 ```bash
 pnpm run server
 ```
@@ -82,15 +104,26 @@ pnpm run build
 ## Directory structure
 
 ```shell
+├───.github
 ├───config
 ├───controllers
 ├───db
 ├───docs
+├───generated   // generated prisma models
+│   └───prisma
+│       ├───internal
+│       └───models
+├───models
+├───prisma    // prisma schema fodler
 ├───routes
 ├───services
-│   ├───storage     // Crawlee storage folder
 │   └───utils
-└───tests
+├───storage   // Crawlee storage folder
+│   ├───key_value_stores
+│   │   └───default
+│   └───request_queues
+│       └───default
+└───tests     // test folder
     ├───data
     └───mock
 ```
