@@ -60,7 +60,7 @@ To install prisma schema (in environment):
 npx prisma db pull
 ```
 
-To generate prisma files:
+To generate prisma client:
 ```bash
 npx prisma generate
 ```
