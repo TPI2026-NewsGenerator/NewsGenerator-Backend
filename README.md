@@ -55,12 +55,12 @@ OLLAMA_API_KEY=your_api_key
 5. Open File **[Ctrl + O]** -> open "create_insert_NewsGenerator.sql" from `server/db`
 6. Execute script **[F5]**
 
-To install prisma schema (in environment):
+To generate **prisma schema**:
 ```bash
 npx prisma db pull
 ```
 
-To generate prisma client:
+To generate **prisma client**:
 ```bash
 npx prisma generate
 ```
