@@ -23,6 +23,8 @@ export const LoginService = {
             err.status = 401;
             throw err;
         }
+
+        // create jwt
         const token = generateAccessToken({id: user.id, username: user.username, email: user.email, role: user.role})
 
         return {id_user: user.id, token: token};
