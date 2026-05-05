@@ -6,18 +6,22 @@ export const Filter = {
         let filteredNews = [];
         if (keywords[0] && keywords[0].trim() !== ''){
             for (let news of newsList) {
-                // check if category corresponds
-                if (!news || !news.category) continue;
+                // check if category
+                if (!news || !news.category || news.category === "") continue;
+
                 for (let keyword of keywords) {
                     // Check filter in category array
                     if (Array.isArray(news.category)) {
                         for (let category of (news?.category["#text"] || news?.category) ?? []) {
-                            if (typeof category === 'string' && category?.toLowerCase().includes(keyword.toLowerCase())) {
+                            if (typeof category === 'object' && category["#text"].toLowerCase().includes(keyword.toLowerCase())){
+                                filteredNews.push(news);
+                            }
+                            else if (typeof category === 'string' && category?.toLowerCase().includes(keyword.toLowerCase())) {
                                 filteredNews.push(news);
                             }
                         }
                         // Check filter in category word (if only 1 category)
-                    } else if (news.category.toLowerCase().includes(keyword.toLowerCase())) {
+                    } else if (news.category && news.category.toLowerCase().includes(keyword.toLowerCase())) {
                         filteredNews.push(news);
                     }
 
