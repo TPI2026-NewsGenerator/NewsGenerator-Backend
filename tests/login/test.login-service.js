@@ -2,27 +2,28 @@ import { jest } from '@jest/globals';
 
 // aide IA: having issues with prisma being imported -> first mock then import with await
 // 1. Mock the module using the unstable ESM-specific method
-jest.unstable_mockModule('../models/login-model.js', () => ({
+jest.unstable_mockModule('../../models/login-model.js', () => ({
     LoginModel: {
         getUserByUsername: jest.fn()
     }
 }));
 
-jest.unstable_mockModule('../services/utils/pwd-hasher.js', () => ({
+jest.unstable_mockModule('../../services/utils/pwd-hasher.js', () => ({
     verifyPassword: jest.fn()
 }));
 
-jest.unstable_mockModule('../services/utils/jwt.js', () => ({
+jest.unstable_mockModule('../../services/utils/jwt.js', () => ({
     generateAccessToken: jest.fn()
 }));
 
 // 2. You MUST use dynamic imports after the mocks are defined
-const { LoginService } = await import('../services/login-service.js');
-const { LoginModel } = await import('../models/login-model.js');
-const { verifyPassword } = await import('../services/utils/pwd-hasher.js');
-const { generateAccessToken } = await import('../services/utils/jwt.js');
+const { LoginService } = await import('../../services/login-service.js');
+const { LoginModel } = await import('../../models/login-model.js');
+const { verifyPassword } = await import('../../services/utils/pwd-hasher.js');
+const { generateAccessToken } = await import('../../services/utils/jwt.js');
 
 describe('authUser', () => {
+    // aide IA: how to mock data and simulate service success for jest tests
     const mockCredentials = { username: 'testuser', password: 'password123' };
     const mockUser = {
         id: 1,
@@ -33,7 +34,7 @@ describe('authUser', () => {
     };
 
     afterEach(() => {
-        jest.clearAllMocks(); // Reset mocks between tests
+        jest.clearAllMocks();
     });
 
     it('should return user ID and token on successful login', async () => {
@@ -51,8 +52,10 @@ describe('authUser', () => {
     });
 
     it('should throw 404 if user does not exist', async () => {
+        // given
         LoginModel.getUserByUsername.mockResolvedValue(null);
 
+        // when & then
         await expect(LoginService.authUser(mockCredentials)).rejects.toMatchObject({
             message: 'This username does not exist...',
             status: 404
@@ -60,9 +63,11 @@ describe('authUser', () => {
     });
 
     it('should throw 401 if password is incorrect', async () => {
+        // given
         LoginModel.getUserByUsername.mockResolvedValue(mockUser);
         verifyPassword.mockResolvedValue(false);
 
+        // when & then
         await expect(LoginService.authUser(mockCredentials)).rejects.toMatchObject({
             message: 'Invalid password...',
             status: 401
