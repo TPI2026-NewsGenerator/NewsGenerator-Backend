@@ -10,7 +10,7 @@ user parameters such as keywords, desired/undesired topics, language and timefra
 
 - [Node.js](https://nodejs.org/) [v22.18.0]
 - **Server:** [Express](https://expressjs.com/) [v5.2.1]
-- **AI Orchestration:** [Ollama](https://ollama.com/)
+- **AI Orchestration:** [Ollama](https://ollama.com/) [v0.6.3]
 - **Scraper:** [Crawlee](https://crawlee.dev/js) [v3.16.0]
 - **Parsers:**
   - HTML: [LinkeDOM](https://www.npmjs.com/package/linkedom) [v0.18.12] and [Readability](https://github.com/mozilla/readability) [v0.6.0] to extract content
@@ -19,7 +19,7 @@ user parameters such as keywords, desired/undesired topics, language and timefra
   - [JasonWebToken](https://www.npmjs.com/package/jsonwebtoken) [v9.0.3] for JWT creation
   - [bcrypt](https://www.npmjs.com/package/bcrypt) [v6.0.0] for password hashing
 - **Database**
-  - [PostgreSQL](https://www.postgresql.org/)
+  - [PostgreSQL](https://www.postgresql.org/) [v18.3-3]
 
 ## Getting Started
 
