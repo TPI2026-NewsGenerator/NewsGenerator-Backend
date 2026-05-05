@@ -1,5 +1,5 @@
-import Links from "../services/utils/links.js";
-import data from './data/data.json'
+import Links from "../../services/utils/links.js";
+import data from '../data/data.json'
 
 test('get one category link', () => {
     // Given
