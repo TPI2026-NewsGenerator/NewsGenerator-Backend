@@ -8,12 +8,12 @@ export const LoginController = {
         const {username, password} = req.body
 
         // username verification
-        if (typeof username !== "string" || !username || username === ""){
+        if (!username || typeof username !== "string" || username === ""){
             return res.status(400).json({error: "Username is required."});
         }
 
         // password verification
-        if (typeof password !== "string" || !password || password === ""){
+        if (!password || typeof password !== "string" || password === ""){
             return res.status(400).json({error: "Password is required."});
         }
 
