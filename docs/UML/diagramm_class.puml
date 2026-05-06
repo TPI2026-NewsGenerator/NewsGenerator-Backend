@@ -1,0 +1,53 @@
+@startuml
+
+title Class Diagram - Backend
+
+left to right direction
+
+package "Presentation Layer" {
+    class router
+    class newsRouter
+    class loginRouter
+    class newsController
+    class loginController
+}
+
+package "Business Layer" {
+    class newsService
+    class loginService
+    class loginModel
+    class linkFinder
+    class scraper
+    class jwt
+    class pwdHasher
+}
+
+package "Infrastructure Layer" {
+    class "Input/Output" as io
+    class BasicCrawler
+    class CheerioCrawler
+    class JasonWebToken
+    class bcrypt
+}
+
+EndUser --> router
+router --> newsRouter
+router --> loginRouter
+newsRouter <--> newsController
+loginRouter <--> loginController
+
+newsController <--> newsService
+loginController <--> loginService
+loginService <--> loginModel
+loginService --> pwdHasher
+loginService --> jwt
+jwt <--> JasonWebToken
+pwdHasher <--> bcrypt
+newsService --> linkFinder
+
+linkFinder <--> io
+linkFinder --> scraper
+scraper <--> BasicCrawler
+scraper <--> CheerioCrawler
+
+@enduml
