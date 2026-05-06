@@ -22,7 +22,6 @@ Service --> Service : generateAccessToken()
 Service --> Controller : user_id + JWT
 Controller --> Router : HTTP 200 + JWT
 Router --> Client : success_confirmation
-Client --> Client : enregistre JWT dans localStorage
-Client --> Client : redirige /fetch
+
 
 @enduml
