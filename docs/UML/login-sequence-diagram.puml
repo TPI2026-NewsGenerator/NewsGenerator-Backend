@@ -1,0 +1,28 @@
+@startuml
+title Sauvegarde et récupération de l'historique (Backend)
+autonumber
+
+participant "Client (App)" as Client
+participant "Router" as Router
+participant "Controller" as Controller
+participant "Service" as Service
+participant "Model" as Model
+database "Storage (DB)" as Storage
+
+== Connexion utilisateur ==
+Client -> Router : POST /login (user_cred)
+Router -> Controller : request(user_cred)
+Controller -> Service : authUser(user_cred)
+Service -> Model : authUser(user_cred)
+Model -> Storage : findFirst(username)
+Storage --> Model : user_data
+Model --> Service : user_data
+Service --> Service : verifyPassword()
+Service --> Service : generateAccessToken()
+Service --> Controller : user_id + JWT
+Controller --> Router : HTTP 200 + JWT
+Router --> Client : success_confirmation
+Client --> Client : enregistre JWT dans localStorage
+Client --> Client : redirige /fetch
+
+@enduml
