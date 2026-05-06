@@ -1,0 +1,36 @@
+@startuml
+title Sauvegarde et récupération de l'historique (Backend)
+autonumber
+
+participant "Client (App)" as Client
+participant "Router" as Router
+participant "Controller" as Controller
+participant "Service" as Service
+participant "Model" as Model
+database "Storage (DB)" as Storage
+
+== Sauvegarde de l'historique ==
+Client -> Router : POST /history (data)
+Router -> Controller : processRequest(data)
+Controller -> Service : saveHistory(data)
+Service -> Model : saveHistory(data)
+Model -> Storage : INSERT INTO history
+Storage --> Model : confirm_success
+Model --> Service : confirm_success
+Service --> Controller : confirm_success
+Controller --> Router : HTTP 200
+Router --> Client : Response JSON
+
+== Récupération de l'historique ==
+Client -> Router : GET /history
+Router -> Controller : getHistory()
+Controller -> Service : fetchAllHistory()
+Service -> Model : fetchAllHistory()
+Model -> Storage : SELECT * FROM history
+Storage --> Model : data_results
+Model --> Service : data_results
+Service --> Controller : data_results
+Controller --> Router : HTTP 200 (OK)
+Router --> Client : Response JSON (History List)
+
+@enduml
