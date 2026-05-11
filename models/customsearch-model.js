@@ -20,8 +20,6 @@ export const CustomSearchModel = {
                 },
             },
         })
-    }
-}
     },
     postUserCustomSearch: async (userId, title, keyword, language, category) => {
         return prisma.custom_searches.create({
@@ -34,6 +32,24 @@ export const CustomSearchModel = {
                     connect: { id: userId }
                 },
                 custom_searches_has_categories: {
+                    create: category.map(catName => ({
+                        categories: {
+                            connect: { category_name: catName }
+                        }
+                    }))
+                },
+            },
+        });
+    },
+    updateUserCustomSearch: async (id, user_id, title, keyword, language, category) => {
+        return prisma.custom_searches.update({
+            where: { id: id, id_user: user_id },
+            data: {
+                title: title,
+                language: language,
+                keyword: keyword,
+                custom_searches_has_categories: {
+                    deleteMany: {},
                     create: category.map(catName => ({
                         categories: {
                             connect: { category_name: catName }
