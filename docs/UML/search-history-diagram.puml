@@ -1,5 +1,5 @@
 @startuml
-title Sauvegarde et récupération de l'historique (Backend)
+title Sauvegarde et récupération des recherches personnalisées (Backend)
 autonumber
 
 participant "Client (App)" as Client
@@ -12,9 +12,21 @@ database "Storage (DB)" as Storage
 == Sauvegarde de la recherche personnalisée ==
 Client -> Router : POST /customsearch (data)
 Router -> Controller : processRequest(data)
-Controller -> Service : saveUserCustomSearch(data)
-Service -> Model : saveUserCustomSearch(data)
+Controller -> Service : postPutUserCustomSearch(data)
+Service -> Model : postUserCustomSearch(data)
 Model -> Storage : INSERT INTO custom_searches
+Storage --> Model : confirm_success
+Model --> Service : confirm_success
+Service --> Controller : confirm_success
+Controller --> Router : HTTP 200
+Router --> Client : Response JSON (confirmation)
+
+== Modification de la recherche personnalisée ==
+Client -> Router : POST /customsearch (data)
+Router -> Controller : processRequest(data)
+Controller -> Service : postPutUserCustomSearch(data)
+Service -> Model : updateUserCustomSearch(data)
+Model -> Storage : UPDATE custom_searches
 Storage --> Model : confirm_success
 Model --> Service : confirm_success
 Service --> Controller : confirm_success
@@ -32,20 +44,6 @@ Model --> Service : data_results
 Service --> Controller : data_results
 Controller --> Router : HTTP 200 (OK)
 Router --> Client : Response JSON (custom_search_data)
-
-== Modification de la recherche personnalisée ==
-Client -> Router : POST /customsearch (data)
-Router -> Controller : processRequest(data)
-Controller -> Service : postPutUserCustomSearch(data)
-Service -> Model : (si mise à jour) updateUserCustomSearch(data)
-Model -> Storage : UPDATE custom_searches
-Service -> Model : (si création) postUserCustomSearch(data)
-Model -> Storage : INSERT INTO custom_searches
-Storage --> Model : confirm_success
-Model --> Service : confirm_success
-Service --> Controller : confirm_success
-Controller --> Router : HTTP 200
-Router --> Client : Response JSON (confirmation)
 
 == Suppression de la recherche personnalisée ==
 Client -> Router : DELETE /customsearch (search_id)
