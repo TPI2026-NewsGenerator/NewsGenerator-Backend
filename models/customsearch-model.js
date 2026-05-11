@@ -59,3 +59,17 @@ export const CustomSearchModel = {
             },
         });
     },
+    deleteUserCustomSearch: async (id, userId) => {
+        const deleteCustomSearchesHasCategories = prisma.custom_searches_has_categories.deleteMany({
+            where: {
+                id_custom_search: id,
+            },
+        });
+        const deleteCustomSearch = prisma.custom_searches.delete({
+            where: {
+                id: id, id_user: userId
+            },
+        });
+        return prisma.$transaction([deleteCustomSearchesHasCategories, deleteCustomSearch]);
+    },
+ }
