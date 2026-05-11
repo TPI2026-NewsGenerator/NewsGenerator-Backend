@@ -8,86 +8,48 @@ datasource db {
 }
 
 model categories {
-  id              Int             @default(autoincrement())
-  id_user         Int
-  id_category     Int
-  categories_list categories_list @relation(fields: [id_category], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_category")
-  users           users           @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_user")
-
-  @@id([id, id_user, id_category])
+  id                             Int                              @id(map: "categories_list_pkey") @default(autoincrement())
+  category_name                  String                           @unique(map: "u_categories_list")
+  custom_searches_has_categories custom_searches_has_categories[]
 }
 
-model categories_list {
-  id            Int          @id @default(autoincrement())
-  category_name String?
-  categories    categories[]
-  newsletter    newsletter[]
+model custom_searches {
+  id                             Int                              @id @default(autoincrement())
+  id_user                        Int
+  title                          String
+  language                       String
+  timeframe                      String
+  keyword                        String
+  users                          users                            @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_user")
+  custom_searches_has_categories custom_searches_has_categories[]
+
+  @@unique([id_user, title], map: "u_custom_searches")
 }
 
-model histories {
-  id      Int   @default(autoincrement())
-  id_user Int
-  history Json?
-  users   users @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_user")
+model custom_searches_has_categories {
+  id               Int             @id @default(autoincrement())
+  id_custom_search Int
+  id_category      Int
+  categories       categories      @relation(fields: [id_category], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_category")
+  custom_searches  custom_searches @relation(fields: [id_custom_search], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_custom_search")
 
-  @@id([id, id_user])
+  @@unique([id_custom_search, id_category], map: "u_custom_searches_has_categories")
 }
 
-model keywords {
-  id          Int      @id @default(autoincrement())
-  id_user     Int?
-  keywords    String?
-  is_excluded Boolean?
-  users       users?   @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_user")
-}
-
-model newsletter {
-  id              Int             @default(autoincrement())
-  id_user         Int
-  id_category     Int
-  frequence       String?
-  categories_list categories_list @relation(fields: [id_category], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_category")
-  users           users           @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_user")
-
-  @@id([id, id_user, id_category])
-}
-
-model preferences {
-  id        Int     @default(autoincrement())
-  id_user   Int
-  language  String?
-  timelapse String?
-  users     users   @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_user")
-
-  @@id([id, id_user])
-}
-
-model sources {
-  id      Int     @default(autoincrement())
-  id_user Int
-  source  String?
-  users   users   @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_user")
-
-  @@id([id, id_user])
+model roles {
+  id    Int     @id(map: "roles_list_pkey") @default(autoincrement())
+  role  String  @unique(map: "u_roles_list")
+  users users[]
 }
 
 model users {
-  id          Int           @id @default(autoincrement())
-  username    String?
-  email       String?
-  password    String?
-  role        Int?
-  categories  categories[]
-  histories   histories[]
-  keywords    keywords[]
-  newsletter  newsletter[]
-  preferences preferences[]
-  sources     sources[]
-  roles_list  roles_list?   @relation(fields: [role], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_role")
-}
+  id              Int               @id @default(autoincrement())
+  username        String
+  email           String
+  password        String
+  role            Int
+  custom_searches custom_searches[]
+  roles           roles             @relation(fields: [role], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_role")
 
-model roles_list {
-  id    Int     @id @default(autoincrement())
-  role  String?
-  users users[]
+  @@unique([username, email], map: "u_users")
 }
