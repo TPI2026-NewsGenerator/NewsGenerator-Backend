@@ -13,7 +13,8 @@ const customSearchValidator = [
     body('category').isArray().withMessage('category must be an array'),
 ];
 
-router.post('', customSearchValidator, CustomSearchController.getUserCustomSearch);
 router.get('', customSearchValidator, CustomSearchController.getUserCustomSearch);
+router.post('', customSearchValidator, CustomSearchController.postUserCustomSearch);
+router.delete('', customSearchValidator, CustomSearchController.deleteUserCustomSearch);
 
 export default router;

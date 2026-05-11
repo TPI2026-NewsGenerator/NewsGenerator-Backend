@@ -3,20 +3,22 @@
 import {prisma} from '../config/db.js';
 
 export const CustomSearchModel = {
-    getUserCustomSearch: async (user_id) => {
+    getUserCustomSearch: async (id) => {
         return prisma.users.findFirst({
             where: {
-                id: user_id
+                id: id
             },
             include: {
-                keywords: true,
-
-                user_selected_categories: {
+                custom_searches: {
                     include: {
-                        categories: true
-                    }
-                }
-            }
+                        custom_searches_has_categories: {
+                            include: {
+                                categories: true,
+                            },
+                        },
+                    },
+                },
+            },
         })
     }
 }
