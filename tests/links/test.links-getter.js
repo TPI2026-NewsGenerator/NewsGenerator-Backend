@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: test.links-getter.js
+//  Description: Tests for custom getting links
+//
+
 import Links from "../../services/utils/links.js";
 import data from '../data/data.json'
 

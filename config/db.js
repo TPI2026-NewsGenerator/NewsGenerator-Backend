@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: db.js
+//  Description: Prisma set up
+//
+
 "use strict"
 
 import process from 'node:process'

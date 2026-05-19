@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: customsearch-service.js
+//  Description: Service for custom searches feature
+//
+
 "use strict"
 
 import { CustomSearchModel } from '../models/customsearch-model.js'

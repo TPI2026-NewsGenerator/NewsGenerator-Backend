@@ -1,6 +1,13 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: crawlers.js
+//  Description: BasicCrawler and CheerioCrawler from Crawlee
+//
+
 "use strict"
 
-import {BasicCrawler, CheerioCrawler, Configuration, KeyValueStore, log, RequestQueue} from 'crawlee';
+import {BasicCrawler, CheerioCrawler, KeyValueStore, log, RequestQueue} from 'crawlee';
 import { Readability } from '@mozilla/readability';
 import { parseHTML } from 'linkedom';
 import { Parser } from "./parser.js";

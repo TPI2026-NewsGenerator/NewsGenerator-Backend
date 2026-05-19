@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: news-router.js
+//  Description: Router for news feature
+//
+
 import express from 'express'
 import { body } from 'express-validator';
 import {NewsController} from '../controllers/news-controller.js';

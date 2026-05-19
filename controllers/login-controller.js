@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: login-controller.js
+//  Description: Controller for login feature
+//
+
 "use strict"
 
 import {LoginService} from "../services/login-service.js";

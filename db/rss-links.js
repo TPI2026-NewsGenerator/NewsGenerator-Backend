@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: rss-links.js
+//  Description: list of hard coded sources of news
+//
+
 // links taken from "https://atlasflux.saynete.net/"
 
 export const rss = {

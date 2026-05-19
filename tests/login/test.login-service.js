@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: test.login-service.js
+//  Description: Tests for login service
+//
+
 import { jest } from '@jest/globals';
 
 // aide IA: having issues with prisma being imported -> first mock then import with await

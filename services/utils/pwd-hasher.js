@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: pwd-hasher.js
+//  Description: password salt hashing and verification from bcrypt
+//
+
 import bcrypt from 'bcrypt'
 
 export const hashWithSalt = async (password) => {

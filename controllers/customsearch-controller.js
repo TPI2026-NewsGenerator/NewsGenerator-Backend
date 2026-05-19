@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: customsearch-controller.js
+//  Description: Controller for custom searches feature
+//
+
 "use strict"
 
 import {CustomSearchService} from '../services/customsearch-service.js';

@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: filter.js
+//  Description: News filtering system
+//
+
 "use strict"
 
 export const Filter = {

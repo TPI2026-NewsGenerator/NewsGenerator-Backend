@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: test.login-controller.js
+//  Description: Tests for login controller
+//
+
 import { jest } from '@jest/globals';
 
 jest.unstable_mockModule('../../services/login-service.js', () => ({

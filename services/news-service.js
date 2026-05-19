@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: news-service.js
+//  Description: Service for news feature
+//
+
 "use strict"
 
 import Links from "./utils/links.js";

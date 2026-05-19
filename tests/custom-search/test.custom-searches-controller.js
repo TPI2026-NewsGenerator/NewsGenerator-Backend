@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: test.custom-search-controller.js
+//  Description: Tests for custom searches controller
+//
+
 import { jest } from '@jest/globals';
 
 

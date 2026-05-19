@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: customsearch-model.js
+//  Description: Model for custom searches feature
+//
+
 "use strict"
 
 import {prisma} from '../config/db.js';

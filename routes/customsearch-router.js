@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: customsearch-router.js
+//  Description: Router for custom searches feature
+//
+
 import express from 'express'
 import { body } from 'express-validator';
 import {CustomSearchController} from "../controllers/customsearch-controller.js";

@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: jwt.js
+//  Description: JSONWebToken generation and verification
+//
+
 import process from 'node:process'
 import 'dotenv/config';
 import jwt from 'jsonwebtoken'

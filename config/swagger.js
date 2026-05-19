@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: swagger.js
+//  Description: Swagger documentation
+//
+
 import swaggerJSDoc from 'swagger-jsdoc';
 import process from 'node:process'
 import 'dotenv/config';

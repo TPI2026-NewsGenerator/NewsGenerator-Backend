@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: test.news-filter.js
+//  Description: Tests for news filtering
+//
+
 import {Filter} from '../../services/utils/filter.js'
 
 describe('Filter.SearchApi', () => {

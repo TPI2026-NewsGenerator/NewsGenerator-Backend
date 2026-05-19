@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: links.js
+//  Description: Filtering RSS links
+//
+
 "use strict"
 
 import {rss} from "../../db/rss-links.js";

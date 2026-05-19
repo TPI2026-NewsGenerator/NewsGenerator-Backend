@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: ollama.js
+//  Description: Ollama import
+//
+
 "use strict"
 
 import process from 'node:process'

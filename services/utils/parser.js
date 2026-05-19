@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: parser.js
+//  Description: XML parser from fast-xml-parser
+//
+
 "use strict"
 
 import {XMLParser} from 'fast-xml-parser';

@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: login-service.js
+//  Description: Service for login feature
+//
+
 "use strict"
 
 import {verifyPassword} from './utils/pwd-hasher.js'

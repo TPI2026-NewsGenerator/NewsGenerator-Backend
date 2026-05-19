@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: app.js
+//  Description: Express entry point
+//
+
 "use strict"
 
 import express from "express";

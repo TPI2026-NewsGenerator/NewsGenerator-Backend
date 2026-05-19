@@ -1,3 +1,10 @@
+//
+//  Author: Fabian Rostello
+//  Date: 19.05.2026
+//  File: news-controller.js
+//  Description: Controller for news feature
+//
+
 "use strict"
 
 import {NewsService} from '../services/news-service.js';
