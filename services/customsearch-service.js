@@ -3,14 +3,8 @@
 import { CustomSearchModel } from '../models/customsearch-model.js'
 
 export const CustomSearchService = {
-    getUserCustomSearch: async ({id}) => {
-        if (!id) {
-            const err = new Error(`A id is required...`);
-            err.status = 400;
-            throw err;
-        }
-
-        const response = await CustomSearchModel.getUserCustomSearch(parseInt(id))
+    getUserCustomSearch: async ({userId}) => {
+        const response = await CustomSearchModel.getUserCustomSearch(parseInt(userId))
 
         if (!response) {
             const err = new Error(`This user_id does not exist...`);
@@ -29,37 +23,7 @@ export const CustomSearchService = {
             }
         })
     },
-    postUserCustomSearch: async ({id, userId, title, keyword, language, category}) => {
-        if (!userId) {
-            const err = new Error(`A user id is required...`);
-            err.status = 400;
-            throw err;
-        }
-
-        if (!title) {
-            const err = new Error(`A title is required...`);
-            err.status = 400;
-            throw err;
-        }
-
-        if (!keyword) {
-            const err = new Error(`A keyword is required...`);
-            err.status = 400;
-            throw err;
-        }
-
-        if (!language) {
-            const err = new Error(`A language is required...`);
-            err.status = 400;
-            throw err;
-        }
-
-        if (!category || category.length === 0) {
-            const err = new Error(`A category is required...`);
-            err.status = 400;
-            throw err;
-        }
-
+    postPutUserCustomSearch: async ({id, userId, title, keyword, language, category}) => {
         if (id) {
             return await CustomSearchModel.updateUserCustomSearch(parseInt(id), parseInt(userId), title, keyword, language, category)
         } else {
@@ -67,17 +31,12 @@ export const CustomSearchService = {
         }
     },
     deleteUserCustomSearch: async ({id, userId}) => {
-        if (!id) {
-            const err = new Error(`An id is required...`);
-            err.status = 404;
-            throw err;
-        }
-        if (!userId) {
-            const err = new Error(`A user_id is required...`);
-            err.status = 404;
-            throw err;
-        }
+        const response = await CustomSearchModel.deleteUserCustomSearch(parseInt(id), parseInt(userId))
 
-        return await CustomSearchModel.deleteUserCustomSearch(parseInt(id), parseInt(userId))
+        if (!response) {
+            const err = new Error(`No link between the member and the custom search exists...`);
+            err.status = 404;
+            throw err;
+        }
     }
 }
