@@ -22,6 +22,7 @@ export const CustomSearchModel = {
         })
     },
     postUserCustomSearch: async (userId, title, keyword, language, category) => {
+        // aide IA: how to insert into and join table with prisma
         return prisma.custom_searches.create({
             data: {
                 title: title,
@@ -42,6 +43,7 @@ export const CustomSearchModel = {
         });
     },
     updateUserCustomSearch: async (id, user_id, title, keyword, language, category) => {
+        // aide IA: how to update and join table with prisma
         return prisma.custom_searches.update({
             where: { id: id, id_user: user_id },
             data: {
