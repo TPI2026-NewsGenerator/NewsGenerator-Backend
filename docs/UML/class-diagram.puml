@@ -6,20 +6,24 @@ left to right direction
 
 package "Presentation Layer" {
     class router
-    class newsRouter
     class loginRouter
-    class historyRouter
+    class newsRouter
+    class custom_searchRouter
+    class user_preferencesRouter
     class newsController
     class loginController
-    class historyController
+    class custom_searchController
+    class user_preferencesController
 }
 
 package "Business Layer" {
     class newsService
     class loginService
-    class historyService
+    class custom_searchService
+    class user_preferencesService
     class loginModel
-    class historyModel
+    class custom_searchModel
+    class user_preferencesModel
     class links
     class scraper
     class filter
@@ -31,17 +35,19 @@ package "Infrastructure Layer" {
     class "Input/Output" as io
     class BasicCrawler
     class CheerioCrawler
-    class JasonWebToken
+    class JSONWebToken
     class bcrypt
 }
 
 EndUser --> router
 router --> newsRouter
 router --> loginRouter
-router --> historyRouter
+router --> custom_searchRouter
+router --> user_preferencesRouter
 newsRouter <--> newsController
 loginRouter <--> loginController
-historyRouter <--> historyController
+custom_searchRouter <--> custom_searchController
+user_preferencesRouter <--> user_preferencesController
 
 newsController <--> newsService
 newsService <--> links
@@ -49,12 +55,14 @@ newsService <--> scraper
 newsService <--> filter
 loginController <--> loginService
 loginService <--> loginModel
-loginService --> pwdHasher
-loginService --> jwt
-jwt <--> JasonWebToken
+loginService <--> pwdHasher
+loginService <--> jwt
+jwt <--> JSONWebToken
 pwdHasher <--> bcrypt
-historyController <--> historyService
-historyService <--> historyModel
+custom_searchController <--> custom_searchService
+custom_searchService <--> custom_searchModel
+user_preferencesController <--> user_preferencesService
+user_preferencesService <--> user_preferencesModel
 
 links <--> io
 scraper <--> BasicCrawler
