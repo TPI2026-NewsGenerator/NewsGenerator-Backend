@@ -7,7 +7,6 @@ import { Parser } from "./parser.js";
 
 
 export const Crawlers = {
-    // inspired by "https://crawlee.dev/js/docs/examples/basic-crawler"
     Xml: async (urls) => {
         let scrapedNews = [];
 
@@ -44,7 +43,6 @@ export const Crawlers = {
         return scrapedNews.flat();
     },
 
-    // inspired by "https://crawlee.dev/js/api/cheerio-crawler/class/CheerioCrawler"
     Html: async (urls) => {
         let scrapedContentNews = [];
 
