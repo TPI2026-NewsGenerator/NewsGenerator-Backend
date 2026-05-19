@@ -16,7 +16,7 @@ user parameters such as keywords, desired/undesired topics, language and timefra
   - HTML: [LinkeDOM](https://www.npmjs.com/package/linkedom) [v0.18.12] and [Readability](https://github.com/mozilla/readability) [v0.6.0] to extract content
   - XML: [fast-xml-parser](https://www.npmjs.com/package/fast-xml-parser) [v5.3.5]
 - **Security**
-  - [JasonWebToken](https://www.npmjs.com/package/jsonwebtoken) [v9.0.3] for JWT creation
+  - [JsonWebToken](https://www.npmjs.com/package/jsonwebtoken) [v9.0.3] for JWT creation
   - [bcrypt](https://www.npmjs.com/package/bcrypt) [v6.0.0] for password hashing
 - **Database**
   - [PostgreSQL](https://www.postgresql.org/) [v18.3-3]
@@ -104,28 +104,26 @@ pnpm run build
 ## Directory structure
 
 ```shell
-├───.github
-├───config
-├───controllers
-├───db
-├───docs
-├───generated   // generated prisma models
-│   └───prisma
-│       ├───internal
-│       └───models
-├───models
-├───prisma    // prisma schema fodler
-├───routes
-├───services
-│   └───utils
-├───storage   // Crawlee storage folder
-│   ├───key_value_stores
-│   │   └───default
-│   └───request_queues
-│       └───default
-└───tests     // test folder
-    ├───data
-    └───mock
+|-- config
+|-- controllers
+|-- db
+|-- docs
+|   |-- UML
+|-- generated
+|-- models
+|-- prisma
+|-- routes
+|-- server.js
+|-- services
+|   `-- utils
+|-- storage
+`-- tests
+    |-- custom-search
+    |-- data
+    |-- filtering
+    |-- links
+    |-- login
+    `-- mock
 ```
 
 ## Collaborate
