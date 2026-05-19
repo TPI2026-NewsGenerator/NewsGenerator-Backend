@@ -1,0 +1,23 @@
+@startuml
+title Sauvegarde de la recherche personnalisée (Backend)
+autonumber
+
+participant "Client (App)" as Client
+participant "Router" as Router
+participant "Controller" as Controller
+participant "Service" as Service
+participant "Model" as Model
+database "Storage (DB)" as Storage
+
+Client -> Router : POST /customsearch (data)
+Router -> Controller : processRequest(data)
+Controller -> Service : postPutUserCustomSearch(data)
+Service -> Model : postUserCustomSearch(data)
+Model -> Storage : INSERT INTO custom_searches
+Storage --> Model : confirm_success
+Model --> Service : confirm_success
+Service --> Controller : confirm_success
+Controller --> Router : HTTP 200
+Router --> Client : Response JSON (confirmation)
+
+@enduml
