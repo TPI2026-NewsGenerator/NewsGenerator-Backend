@@ -1,0 +1,36 @@
+@startuml
+title Diagramme de séquence - Sauvegarde et récupération du dernier filtre appliqué (Backend)
+autonumber
+
+participant "Client (App)" as Client
+participant "Router" as Router
+participant "Controller" as Controller
+participant "Service" as Service
+participant "Model" as Model
+database "Storage (DB)" as Storage
+
+== Sauvegarde du dernier filtre appliqué ==
+Client -> Router : POST /lastfilter (user_id)
+Router -> Controller : processRequest(user_id)
+Controller -> Service : postUserLastFilter(data)
+Service -> Model : postUserLastFilter(data)
+Model -> Storage : INSERT INTO users_has_filters
+Storage --> Model : confirm_success
+Model --> Service : confirm_success
+Service --> Controller : confirm_success
+Controller --> Router : HTTP 200
+Router --> Client : Response JSON (confirmation)
+
+== Récupération du dernier filtre appliqué ==
+Client -> Router : GET /lastfilter (user_id)
+Router -> Controller : processRequest(user_id)
+Controller -> Service : getUserLastFilter(user_id)
+Service -> Model : getUserLastFilter(user_id)
+Model -> Storage : SELECT * FROM users_has_filters
+Storage --> Model : data_results
+Model --> Service : data_results
+Service --> Controller : data_results
+Controller --> Router : HTTP 200 (OK)
+Router --> Client : Response JSON (last_user_filter)
+
+@enduml
