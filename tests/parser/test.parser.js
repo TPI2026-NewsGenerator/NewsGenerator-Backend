@@ -65,6 +65,24 @@ describe('Parser.Xml', () => {
         expect(items).toEqual([{title: 'Hello', thumbnail: null, link: 'https://x/a', pubDate: '2026-01-01', description: 'S', category: ['Politics']}]);
     });
 
+    it('should decode the HTML entities of the titles and descriptions', async () => {
+        const items = await Parser.Xml(`<rss><channel><item>
+            <title>Fed&#x2019;s Barkin &amp; the &#8212; rate</title>
+            <description>caf&#233; &amp; croissant</description>
+            <link>https://x</link>
+        </item></channel></rss>`);
+        expect(items[0].title).toBe("Fed’s Barkin & the — rate");
+        expect(items[0].description).toBe('café & croissant');
+    });
+
+    it('should decode entities encoded twice by some feeds', async () => {
+        const items = await Parser.Xml(`<rss><channel><item>
+            <title>Apple&amp;#8217;s keyboard</title>
+            <link>https://x</link>
+        </item></channel></rss>`);
+        expect(items[0].title).toBe("Apple’s keyboard");
+    });
+
     it('should return nothing for an unknown format', async () => {
         expect(await Parser.Xml('<html><body>Not a feed</body></html>')).toEqual([]);
     });

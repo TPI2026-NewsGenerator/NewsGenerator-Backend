@@ -15,14 +15,23 @@ const ARRAY_TAGS = ['item', 'entry', 'category', 'dc:subject', 'link', 'media:th
 const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: "",
+    htmlEntities: true,     // some feeds write "Fed&#x2019;s" instead of "Fed's" (WSJ, Bloomberg)
     isArray: (name) => ARRAY_TAGS.includes(name)
+});
+
+// some feeds encode their entities twice ("&amp;#8217;"), the parser decodes the first level only
+const NAMED_ENTITIES = {amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' '};
+const decodeEntities = (value) => value.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (entity, code) => {
+    if (code[0] !== '#') return NAMED_ENTITIES[code.toLowerCase()] ?? entity;
+    const number = code[1] === 'x' || code[1] === 'X' ? parseInt(code.slice(2), 16) : Number(code.slice(1));
+    return Number.isFinite(number) ? String.fromCodePoint(number) : entity;
 });
 
 // get the text of a node which can be a string or an object with attributes ({ "#text": ... })
 const text = (node) => {
     if (node === undefined || node === null) return '';
-    if (typeof node === 'object') return String(node["#text"] ?? '').trim();
-    return String(node).trim();
+    const value = typeof node === 'object' ? String(node["#text"] ?? '') : String(node);
+    return decodeEntities(value).trim();
 };
 
 // get the biggest thumbnail url

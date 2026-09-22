@@ -10,6 +10,7 @@
 export const rss = {
     en: {
         world: [
+            "https://feeds.content.dowjones.io/public/rss/RSSWorldNews",
             "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
             "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
             "https://abcnews.go.com/abcnews/internationalheadlines",
@@ -578,6 +579,7 @@ export const rss = {
             "https://www.youtube.com/feeds/videos.xml?channel_id=UCfqe0wER0mdcpsI0JRpzisA",
         ],
         politics: [
+            "https://feeds.bloomberg.com/politics/news.rss",
             "https://feeds.bbci.co.uk/news/politics/rss.xml",
             "https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml",
             "https://www.theguardian.com/politics/rss",
@@ -587,6 +589,11 @@ export const rss = {
             "https://thehill.com/homenews/feed/",
         ],
         economy: [
+            "https://feeds.bloomberg.com/markets/news.rss",
+            "https://feeds.content.dowjones.io/public/rss/RSSMarketsMain",
+            "https://feeds.content.dowjones.io/public/rss/WSJcomUSBusiness",
+            "https://feeds.content.dowjones.io/public/rss/socialeconomyfeed",
+            "https://feeds.content.dowjones.io/public/rss/mw_topstories",
             "https://feeds.bbci.co.uk/news/business/rss.xml",
             "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml",
             "https://rss.nytimes.com/services/xml/rss/nyt/Economy.xml",
@@ -597,6 +604,8 @@ export const rss = {
             "https://rss.dw.com/rdf/rss-en-bus",
         ],
         technology: [
+            "https://feeds.bloomberg.com/technology/news.rss",
+            "https://feeds.content.dowjones.io/public/rss/RSSWSJD",
             "https://feeds.bbci.co.uk/news/technology/rss.xml",
             "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
             "https://www.theguardian.com/technology/rss",

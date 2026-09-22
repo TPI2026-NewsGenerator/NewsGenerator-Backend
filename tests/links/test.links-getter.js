@@ -14,7 +14,7 @@ test('get one category link', () => {
     const category = ["world"];
 
     // When & Then
-    expect(Links.getCategoriesLinks(category)).toEqual(data.result1);
+    expect(Links.getCategoriesLinks(category)).toEqual(rss.en.world);
 });
 
 test('get multiple category links', () => {
@@ -38,7 +38,7 @@ test('get existent and non-existent category links', () => {
     const category = ["cooking", "world"];
 
     // When & Then
-    expect(Links.getCategoriesLinks(category)).toEqual(data.result1);
+    expect(Links.getCategoriesLinks(category)).toEqual(rss.en.world);
 });
 
 test('get category links without keywords', () => {
