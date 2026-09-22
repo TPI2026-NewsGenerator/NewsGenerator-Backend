@@ -589,6 +589,8 @@ export const rss = {
             "https://thehill.com/homenews/feed/",
         ],
         economy: [
+            "https://finance.yahoo.com/news/rssindex",
+            "https://fortune.com/feed",
             "https://feeds.bloomberg.com/markets/news.rss",
             "https://feeds.content.dowjones.io/public/rss/RSSMarketsMain",
             "https://feeds.content.dowjones.io/public/rss/WSJcomUSBusiness",
