@@ -81,7 +81,7 @@ export const NewsService = {
             ])];
 
             // 2. fetch the feeds only if the cache is too old
-            await FeedService.ensureFresh();
+            await FeedService.ensureFresh(userId);
 
             // 3. search in SQL: keywords, excluded keywords (-word) and publication date
             const articles = await FeedModel.searchArticles({

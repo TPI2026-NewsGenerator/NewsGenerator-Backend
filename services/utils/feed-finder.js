@@ -12,7 +12,10 @@ import {Crawlers} from './crawlers.js';
 import {assertPublicUrl, fetchPublicUrl} from './public-url.js';
 
 // paths tried when the page declares no feed
-const COMMON_PATHS = ['/rss', '/rss.xml', '/feed', '/feed.xml', '/feeds', '/atom.xml', '/index.xml'];
+const COMMON_PATHS = [
+    '/rss', '/rss.xml', '/feed', '/feed.xml', '/feeds', '/atom.xml', '/index.xml',
+    '/rss/news', '/news/rss', '/feeds/rss', '/rss/index.xml',
+];
 const USER_AGENT = 'Mozilla/5.0 (compatible; NewsGenerator/1.0; +RSS reader)';
 const MAX_PAGE_CHARS = 2_000_000;
 

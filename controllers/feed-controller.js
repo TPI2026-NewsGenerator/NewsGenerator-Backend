@@ -9,7 +9,9 @@
 
 import {FeedModel} from '../models/feed-model.js';
 import {FeedService} from '../services/feed-service.js';
+import {SourceService} from '../services/source-service.js';
 import {findFeeds} from '../services/utils/feed-finder.js';
+import {assertPublicUrl} from '../services/utils/public-url.js';
 
 export const MAX_USER_FEEDS = 20;   // a user can't fill the refresh with thousands of feeds
 
@@ -65,6 +67,68 @@ export const FeedController = {
             }
             res.status(error.status || 500).json({error: error.message ?? String(error)});
         }
+    },
+
+    // media covering the search of the user and missing from their sources, with the feed to add
+    suggestSources: async (req, res) => {
+        const {keywords, timeframe} = req.body;
+
+        if (!Array.isArray(keywords) || keywords.length === 0) {
+            return res.status(400).json({error: "Keywords are required to look for missing sources."});
+        }
+
+        try {
+            const suggestions = await SourceService.suggest({
+                keywords: keywords,
+                timeframe: timeframe ?? {},
+                userId: req.user.id,
+            });
+
+            res.status(200).json(suggestions);
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
+    // add several suggested sources at once, their feed is checked again here: what the client sends
+    // back is never trusted, it could be any address
+    importSources: async (req, res) => {
+        const {sources} = req.body;
+
+        if (!Array.isArray(sources) || sources.length === 0) {
+            return res.status(400).json({error: "Please select at least one source."});
+        }
+
+        const added = [];
+        const errors = [];
+        let count = await FeedModel.countUserFeeds(req.user.id);
+
+        for (let {site, feed, category} of sources) {
+            if (count >= MAX_USER_FEEDS) {
+                errors.push({site, error: `You can't have more than ${MAX_USER_FEEDS} sources.`});
+                continue;
+            }
+            if (!FeedService.categories().includes(category)) {
+                errors.push({site, error: `Unknown category "${category}".`});
+                continue;
+            }
+
+            try {
+                const url = (await assertPublicUrl(feed)).href;
+                added.push(toFeed(await FeedModel.addUserFeed({
+                    userId: req.user.id,
+                    url: url,
+                    site: String(site ?? '').trim() || url,
+                    category: category,
+                })));
+                count++;
+            } catch (error) {
+                const message = error.code === 'P2002' ? "You already added this source." : error.message;
+                errors.push({site, error: message ?? String(error)});
+            }
+        }
+
+        res.status(200).json({feeds: added, errors});
     },
 
     deleteUserFeed: async (req, res) => {

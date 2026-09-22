@@ -18,17 +18,17 @@ import {toDate} from "./utils/dates.js";
 const MAX_AGE_MINUTES = Number(process.env.FEED_MAX_AGE_MINUTES) || 30;
 const RETENTION_DAYS = Number(process.env.FEED_RETENTION_DAYS) || 30;
 
-let running = null;     // refresh in progress, shared so two refreshes never run at the same time
+// refreshes in progress, by group of feeds ('feeds' and one per user), so the same feeds are never
+// fetched twice at the same time. The feeds of a user are a group of their own: they are read when
+// that user searches, not when somebody else does.
+const running = new Map();
 
-// every feed url: the list of db/rss-links.js and the feeds added by the users, without duplicates
-const allFeedUrls = async () => [...new Set([
-    ...Object.values(rss).flatMap(language => Object.values(language).flat()),
-    ...await FeedModel.allUserFeedUrls(),
-])];
+// the feeds shared by everybody, from db/rss-links.js
+const sharedUrls = () => [...new Set(Object.values(rss).flatMap(language => Object.values(language).flat()))];
 
-const doRefresh = async () => {
+const doRefresh = async (urls, {purge = false} = {}) => {
     const start = Date.now();
-    const feeds = await FeedModel.syncFeeds(await allFeedUrls());
+    const feeds = await FeedModel.syncFeeds(urls);
 
     const results = await Crawlers.Xml(feeds.map(feed => ({
         url: feed.url,
@@ -74,32 +74,50 @@ const doRefresh = async () => {
     }
 
     const inserted = await FeedModel.insertArticles(articles);
-    const deleted = await FeedModel.deleteArticlesOlderThan(new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000));
+
+    // the old articles are dropped once, with the shared feeds, not at every refresh of a user
+    const deleted = purge
+        ? await FeedModel.deleteArticlesOlderThan(new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000))
+        : 0;
 
     const stats = { feeds: feeds.length, notModified, failed, inserted, deleted, ms: Date.now() - start };
     console.log(`Feeds refreshed: ${JSON.stringify(stats)}`);
     return stats;
 };
 
+// fetch this group of feeds, or join the fetch already running for it
+const refreshGroup = (key, urls, options) => {
+    if (urls.length === 0) return null;
+
+    if (!running.has(key)) {
+        running.set(key, doRefresh(urls, options).finally(() => running.delete(key)));
+    }
+    return running.get(key);
+};
+
+// same thing, but only when one of these feeds has not been read for a while
+const refreshStaleGroup = async (key, urls, options) => {
+    if (urls.length === 0) return null;
+    if (running.has(key)) return running.get(key);
+
+    const oldest = await FeedModel.oldestFetch(urls);
+    if (oldest && Date.now() - oldest.getTime() < MAX_AGE_MINUTES * 60 * 1000) return null;
+
+    return refreshGroup(key, urls, options);
+};
+
 export const FeedService = {
-    // fetch every feed and save the new articles, one refresh at a time
-    refresh: () => {
-        if (!running) {
-            running = doRefresh().finally(() => running = null);
-        }
-        return running;
-    },
+    // fetch the shared feeds and, when a user is given, their own sources
+    refresh: async (userId = null) => Promise.all([
+        refreshGroup('feeds', sharedUrls(), {purge: true}),
+        userId ? refreshGroup(`user:${userId}`, await FeedModel.userFeedUrls(userId)) : null,
+    ]),
 
-    // refresh only if the cache is too old, awaited by the searches
-    ensureFresh: async () => {
-        if (running) return running;
-
-        const lastFetchedAt = await FeedModel.lastFetchedAt();
-        const age = lastFetchedAt ? Date.now() - lastFetchedAt.getTime() : Infinity;
-        if (age < MAX_AGE_MINUTES * 60 * 1000) return null;
-
-        return FeedService.refresh();
-    },
+    // refresh only what is too old, awaited by the searches of this user
+    ensureFresh: async (userId = null) => Promise.all([
+        refreshStaleGroup('feeds', sharedUrls(), {purge: true}),
+        userId ? refreshStaleGroup(`user:${userId}`, await FeedModel.userFeedUrls(userId)) : null,
+    ]),
 
     // categories of the feeds, they can be used in a search
     categories: () => [...new Set(Object.values(rss).flatMap(language => Object.keys(language)))],

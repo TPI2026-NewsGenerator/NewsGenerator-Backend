@@ -87,3 +87,22 @@ export const fetchPublicUrl = async (value, {headers = {}, timeoutMs = 15000, ma
         url = await assertPublicUrl(new URL(location, url).href);
     }
 };
+
+// hostname of an url without its "www.", null when it is not an url: "https://www.bbc.com/x" -> "bbc.com"
+export const hostOf = (value) => {
+    try {
+        return new URL(value).hostname.replace(/^www\./, '');
+    } catch {
+        return null;
+    }
+};
+
+// "bbc.co.uk" is not the ".uk" of "bbc": these endings need one label more to name a medium
+const TWO_LEVEL_TLDS = ['co.uk', 'org.uk', 'com.au', 'net.au', 'co.nz', 'co.jp', 'co.za', 'co.in', 'com.br'];
+
+// the medium behind a hostname, so "rss.cnn.com" and "edition.cnn.com" are seen as the same one
+export const mediumOf = (host) => {
+    const labels = host.split('.');
+    const twoLast = labels.slice(-2).join('.');
+    return TWO_LEVEL_TLDS.includes(twoLast) ? labels.slice(-3).join('.') : twoLast;
+};

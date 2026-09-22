@@ -46,6 +46,13 @@ const thumbnail = (news) => {
     return thumbnails[thumbnails.length - 1]?.url ?? null;
 };
 
+// RSS 2.0 <source url="https://www.bbc.com">bbc.com</source>: the site that first published the news,
+// aggregators like Google News give it while their own link only goes through a redirect
+const source = (node) => {
+    if (!node || typeof node !== 'object' || !node.url) return null;
+    return {url: String(node.url), name: text(node)};
+};
+
 // categories as an array of strings, null if none
 const categories = (list, getText) => {
     const result = (list ?? []).map(getText).filter(Boolean);
@@ -60,6 +67,7 @@ const fromRssItem = (news) => ({
     pubDate: news.pubDate ?? news['dc:date'] ?? null,
     description: text(news.description),
     category: categories([...(news.category ?? []), ...(news['dc:subject'] ?? [])], text),
+    source: source(news.source),
 });
 
 // format Atom entry

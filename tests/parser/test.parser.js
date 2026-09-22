@@ -20,7 +20,7 @@ describe('Parser.Xml', () => {
 
     it('should read an RSS 2.0 feed with only one item', async () => {
         const items = await Parser.Xml(`<rss><channel><item><title> T </title><link>https://y</link></item></channel></rss>`);
-        expect(items).toEqual([{title: 'T', thumbnail: null, link: 'https://y', pubDate: null, description: '', category: null}]);
+        expect(items).toEqual([{title: 'T', thumbnail: null, link: 'https://y', pubDate: null, description: '', category: null, source: null}]);
     });
 
     it('should read an RDF (RSS 1.0) feed, items next to the channel', async () => {
@@ -48,8 +48,23 @@ describe('Parser.Xml', () => {
             pubDate: '2026-09-22T12:14:00Z',
             description: 'Mixed martial arts has made its debut.',
             category: ['Sports'],
+            source: null,
         });
         expect(items[1].category).toBeNull();
+    });
+
+    it('should read the publisher of an item (<source url>), used to discover new media', async () => {
+        const items = await Parser.Xml(`<rss><channel>
+            <item>
+                <title>Week 3 referee assignments</title>
+                <link>https://news.google.com/rss/articles/CBMi</link>
+                <source url="https://www.footballzebras.com">Football Zebras</source>
+            </item>
+            <item><title>No publisher</title><link>https://x/a</link></item>
+        </channel></rss>`);
+
+        expect(items[0].source).toEqual({url: 'https://www.footballzebras.com', name: 'Football Zebras'});
+        expect(items[1].source).toBeNull();
     });
 
     it('should read an Atom feed', async () => {

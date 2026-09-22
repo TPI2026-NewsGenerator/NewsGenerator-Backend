@@ -14,6 +14,8 @@ const router = express.Router();
 // the feeds are private: the user always comes from the token, never from the request
 router.get('', authenticateToken, FeedController.getUserFeeds);
 router.post('', authenticateToken, FeedController.addUserFeed);
+router.post('/suggestions', authenticateToken, FeedController.suggestSources);
+router.post('/import', authenticateToken, FeedController.importSources);
 router.delete('/:id', authenticateToken, FeedController.deleteUserFeed);
 
 export default router;

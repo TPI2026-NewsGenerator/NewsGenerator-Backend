@@ -41,6 +41,19 @@ export const FeedModel = {
         const { _max } = await prisma.feeds.aggregate({ _max: { last_fetched_at: true } });
         return _max.last_fetched_at;
     },
+    // oldest fetch of these feeds, null when one of them was never fetched (a source just added):
+    // the cache is only fresh when every feed the search needs has been read
+    oldestFetch: async (urls) => {
+        const feeds = await prisma.feeds.findMany({
+            where: { url: { in: urls } },
+            select: { last_fetched_at: true },
+        });
+
+        if (feeds.length < new Set(urls).size) return null;      // a feed is not in the table yet
+
+        const dates = feeds.map(feed => feed.last_fetched_at);
+        return dates.some(date => !date) ? null : new Date(Math.min(...dates.map(date => date.getTime())));
+    },
     // articles already saved (same feed and link) are ignored
     insertArticles: async (articles) => {
         const { count } = await prisma.articles.createMany({
@@ -127,17 +140,13 @@ export const FeedModel = {
         });
         return count;
     },
-    // urls to search for this user: only their feeds of these categories
-    userFeedUrls: async (userId, categories) => {
+    // urls of the feeds of this user, only those of these categories when they are given
+    userFeedUrls: async (userId, categories = null) => {
         const feeds = await prisma.user_feeds.findMany({
-            where: { id_user: userId, category: { in: categories } },
+            where: { id_user: userId, ...(categories ? { category: { in: categories } } : {}) },
             select: { url: true },
+            distinct: ['url'],
         });
-        return feeds.map(feed => feed.url);
-    },
-    // every user feed, they are refreshed with the others
-    allUserFeedUrls: async () => {
-        const feeds = await prisma.user_feeds.findMany({ select: { url: true }, distinct: ['url'] });
         return feeds.map(feed => feed.url);
     },
     deleteArticlesOlderThan: async (date) => {
