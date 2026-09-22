@@ -27,11 +27,17 @@ const decodeEntities = (value) => value.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (en
     return Number.isFinite(number) ? String.fromCodePoint(number) : entity;
 });
 
+// descriptions often contain HTML (<p>, <a>, lists), the client and the AI want plain text
+const stripHtml = (value) => value
+    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/[ \t]{2,}/g, ' ');
+
 // get the text of a node which can be a string or an object with attributes ({ "#text": ... })
 const text = (node) => {
     if (node === undefined || node === null) return '';
     const value = typeof node === 'object' ? String(node["#text"] ?? '') : String(node);
-    return decodeEntities(value).trim();
+    return stripHtml(decodeEntities(value)).trim();
 };
 
 // get the biggest thumbnail url

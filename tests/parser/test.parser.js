@@ -83,6 +83,15 @@ describe('Parser.Xml', () => {
         expect(items[0].title).toBe("Apple’s keyboard");
     });
 
+    it('should remove the HTML of the descriptions', async () => {
+        const items = await Parser.Xml(`<rss><channel><item>
+            <title>La Liga president speaks</title>
+            <description>&lt;ul&gt;&lt;li&gt;&lt;p&gt;The competition belongs to no one&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;Javier Tebas hit out &lt;a href="https://x"&gt;on Tuesday&lt;/a&gt;.&lt;/p&gt;</description>
+            <link>https://x</link>
+        </item></channel></rss>`);
+        expect(items[0].description).toBe('The competition belongs to no one Javier Tebas hit out on Tuesday .');
+    });
+
     it('should return nothing for an unknown format', async () => {
         expect(await Parser.Xml('<html><body>Not a feed</body></html>')).toEqual([]);
     });
