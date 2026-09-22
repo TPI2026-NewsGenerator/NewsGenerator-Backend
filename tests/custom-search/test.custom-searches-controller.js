@@ -71,29 +71,14 @@ describe('CustomSearchController', () => {
     describe('postUserCustomSearch', () => {
         const search = {title: 'My search', keyword: 'trump', language: 'en', category: ['world']};
 
-        it('should save the desired and undesired topics', async () => {
-            mockReq = { body: {...search, topics: ['politics'], undesiredTopics: ['sport']}, user: {id: 4} };
+        it('should save the search of the authenticated user', async () => {
+            mockReq = { body: {...search}, user: {id: 4} };
             CustomSearchService.postPutUserCustomSearch.mockResolvedValue({id: 1});
 
             await CustomSearchController.postUserCustomSearch(mockReq, mockRes);
 
-            expect(CustomSearchService.postPutUserCustomSearch).toHaveBeenCalledWith({...mockReq.body, id: undefined, userId: 4});
+            expect(CustomSearchService.postPutUserCustomSearch).toHaveBeenCalledWith({...search, id: undefined, userId: 4});
             expect(mockRes.status).toHaveBeenCalledWith(200);
-        });
-
-        it('should refuse a topic both desired and undesired', async () => {
-            mockReq = { body: {...search, topics: ['politics'], undesiredTopics: ['politics']}, user: {id: 4} };
-
-            await expect(CustomSearchController.postUserCustomSearch(mockReq, mockRes))
-                .rejects.toMatchObject({status: 400});
-            expect(CustomSearchService.postPutUserCustomSearch).not.toHaveBeenCalled();
-        });
-
-        it('should refuse an unknown topic', async () => {
-            mockReq = { body: {...search, topics: ['gossip']}, user: {id: 4} };
-
-            await expect(CustomSearchController.postUserCustomSearch(mockReq, mockRes))
-                .rejects.toMatchObject({status: 400});
         });
 
         it('should ignore the userId of another user in the body', async () => {

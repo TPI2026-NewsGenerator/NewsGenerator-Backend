@@ -17,5 +17,6 @@ const port = process.env.PORT || 3000;
 console.log("Listening on http://localhost:3001");
 app.listen(port);
 
-// fill the RSS cache now, then refresh it in background
-FeedService.start();
+// the categories of the feeds must exist for the custom searches, the feeds themselves are
+// fetched when a search needs them (see FeedService.ensureFresh)
+FeedService.syncCategories().catch(err => console.error(`Categories sync failed: ${err}`));

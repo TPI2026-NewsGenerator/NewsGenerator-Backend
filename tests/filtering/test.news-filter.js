@@ -12,33 +12,44 @@ import {Filter} from '../../services/utils/filter.js'
 
 describe('Filter.parse', () => {
     it('should return nothing for empty keywords', () => {
-        expect(Filter.parse([''])).toEqual([]);
-        expect(Filter.parse([' , '])).toEqual([]);
-        expect(Filter.parse(['""'])).toEqual([]);
-        expect(Filter.parse(undefined)).toEqual([]);
+        expect(Filter.parse([''])).toEqual({groups: [], excluded: []});
+        expect(Filter.parse([' , '])).toEqual({groups: [], excluded: []});
+        expect(Filter.parse(['""'])).toEqual({groups: [], excluded: []});
+        expect(Filter.parse(undefined)).toEqual({groups: [], excluded: []});
     });
 
     it('should split alternatives on commas', () => {
-        expect(Filter.parse(['climat, tech'])).toEqual([
+        expect(Filter.parse(['climat, tech']).groups).toEqual([
             [{text: 'climat', exact: false}],
             [{text: 'tech', exact: false}],
         ]);
     });
 
     it('should keep the words of an alternative together', () => {
-        expect(Filter.parse(['red card'])).toEqual([
+        expect(Filter.parse(['red card']).groups).toEqual([
             [{text: 'red', exact: false}, {text: 'card', exact: false}],
         ]);
     });
 
     it('should read quoted phrases, with commas inside', () => {
-        expect(Filter.parse(['"red, card" referee'])).toEqual([
+        expect(Filter.parse(['"red, card" referee']).groups).toEqual([
             [{text: 'red, card', exact: true}, {text: 'referee', exact: false}],
         ]);
     });
 
     it('should read an unclosed quote until the end', () => {
-        expect(Filter.parse(['"red card'])).toEqual([[{text: 'red card', exact: true}]]);
+        expect(Filter.parse(['"red card']).groups).toEqual([[{text: 'red card', exact: true}]]);
+    });
+
+    it('should read the excluded terms (-word and -"phrase")', () => {
+        expect(Filter.parse(['referee -rugby -"red card"'])).toEqual({
+            groups: [[{text: 'referee', exact: false}]],
+            excluded: [{text: 'rugby', exact: false}, {text: 'red card', exact: true}],
+        });
+    });
+
+    it('should keep a hyphen inside a word', () => {
+        expect(Filter.parse(['e-sport']).groups).toEqual([[{text: 'e-sport', exact: false}]]);
     });
 });
 
@@ -68,8 +79,7 @@ afterAll(() => pool.end());
 
 // titles of the news matching the keywords, in the order of newsList
 const titles = async (newsList, keywords) => {
-    const groups = Filter.parse(keywords);
-    if (groups.length === 0) return [];
+    const parsed = Filter.parse(keywords);
 
     const values = [];
     const rows = newsList.map((news, i) => {
@@ -77,7 +87,8 @@ const titles = async (newsList, keywords) => {
         const n = values.length - 3;
         return `($${n}::int, $${n + 1}::text, $${n + 2}::text, $${n + 3}::text[])`;
     });
-    const keywordsSql = Filter.keywordsSql(groups, values.length + 1, 'search_text');
+    const keywordsSql = Filter.keywordsSql(parsed, values.length + 1, 'search_text');
+    if (!keywordsSql) return [];
 
     const {rows: found} = await pool.query(`
         SELECT title FROM (

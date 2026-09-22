@@ -568,6 +568,40 @@ export const rss = {
             "https://www.youtube.com/feeds/videos.xml?channel_id=UCJ5v_MCY6GNUBTO8-D3XoAg",
             "https://www.youtube.com/feeds/videos.xml?channel_id=UCHBVO54duIyZW8kfyNX6V9Q",
             "https://www.youtube.com/feeds/videos.xml?channel_id=UCfqe0wER0mdcpsI0JRpzisA",
+        ],
+        politics: [
+            "https://feeds.bbci.co.uk/news/politics/rss.xml",
+            "https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml",
+            "https://www.theguardian.com/politics/rss",
+            "https://www.theguardian.com/us-news/us-politics/rss",
+            "https://feeds.npr.org/1014/rss.xml",
+            "https://rss.politico.com/politics-news.xml",
+            "https://thehill.com/homenews/feed/",
+        ],
+        economy: [
+            "https://feeds.bbci.co.uk/news/business/rss.xml",
+            "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml",
+            "https://rss.nytimes.com/services/xml/rss/nyt/Economy.xml",
+            "https://www.theguardian.com/business/rss",
+            "https://www.theguardian.com/business/economics/rss",
+            "https://www.cnbc.com/id/20910258/device/rss/rss.html",
+            "https://feeds.npr.org/1017/rss.xml",
+            "https://rss.dw.com/rdf/rss-en-bus",
+        ],
+        technology: [
+            "https://feeds.bbci.co.uk/news/technology/rss.xml",
+            "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
+            "https://www.theguardian.com/technology/rss",
+            "https://feeds.arstechnica.com/arstechnica/index",
+            "https://www.theverge.com/rss/index.xml",
+            "https://techcrunch.com/feed/",
+        ],
+        science: [
+            "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml",
+            "https://rss.nytimes.com/services/xml/rss/nyt/Science.xml",
+            "https://www.theguardian.com/science/rss",
+            "https://www.sciencedaily.com/rss/all.xml",
+            "https://feeds.npr.org/1007/rss.xml",
         ]
     }
 }

@@ -26,17 +26,15 @@ export const CustomSearchService = {
                 keyword: search.keyword,
                 language: search.language,
                 timeframe: search.timeframe,
-                topics: search.topics,
-                undesiredTopics: search.undesired_topics,
                 category: search.custom_searches_has_categories.map(selected => selected.categories.category_name.toLowerCase())
             }
         })
     },
-    postPutUserCustomSearch: async ({id, userId, title, keyword, language, category, topics = [], undesiredTopics = []}) => {
+    postPutUserCustomSearch: async ({id, userId, title, keyword, language, category}) => {
         if (id) {
-            return await CustomSearchModel.updateUserCustomSearch(parseInt(id), parseInt(userId), title, keyword, language, category, topics, undesiredTopics)
+            return await CustomSearchModel.updateUserCustomSearch(parseInt(id), parseInt(userId), title, keyword, language, category)
         } else {
-            return await CustomSearchModel.postUserCustomSearch(parseInt(userId), title, keyword, language, category, topics, undesiredTopics)
+            return await CustomSearchModel.postUserCustomSearch(parseInt(userId), title, keyword, language, category)
         }
     },
     deleteUserCustomSearch: async ({id, userId}) => {

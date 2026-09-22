@@ -28,15 +28,13 @@ export const CustomSearchModel = {
             },
         })
     },
-    postUserCustomSearch: async (userId, title, keyword, language, category, topics, undesiredTopics) => {
+    postUserCustomSearch: async (userId, title, keyword, language, category) => {
         // aide IA: how to insert into and join table with prisma
         return prisma.custom_searches.create({
             data: {
                 title: title,
                 language: language,
                 keyword: keyword,
-                topics: topics,
-                undesired_topics: undesiredTopics,
                 timeframe: "Weekly",
                 users: {
                     connect: { id: userId }
@@ -51,7 +49,7 @@ export const CustomSearchModel = {
             },
         });
     },
-    updateUserCustomSearch: async (id, user_id, title, keyword, language, category, topics, undesiredTopics) => {
+    updateUserCustomSearch: async (id, user_id, title, keyword, language, category) => {
         // aide IA: how to update and join table with prisma
         return prisma.custom_searches.update({
             where: { id: id, id_user: user_id },
@@ -59,8 +57,6 @@ export const CustomSearchModel = {
                 title: title,
                 language: language,
                 keyword: keyword,
-                topics: topics,
-                undesired_topics: undesiredTopics,
                 custom_searches_has_categories: {
                     deleteMany: {},
                     create: category.map(catName => ({

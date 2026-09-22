@@ -20,9 +20,14 @@ const WORD_END = '([^[:alnum:]]|$)';
 
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-// 'referee, "red card" var' -> [[{text: 'referee', exact: false}], [{text: 'red card', exact: true}, {text: 'var', exact: false}]]
+// 'referee -rugby, "red card"' -> {
+//   groups: [[{text: 'referee', exact: false}], [{text: 'red card', exact: true}]],
+//   excluded: [{text: 'rugby', exact: false}]
+// }
+// a term starting with '-' excludes the news that contain it, whatever the alternatives ('-"red card"' works too)
 const parse = (keywords) => {
     const groups = [];
+    const excluded = [];
 
     for (let keyword of keywords ?? []) {
         // split on commas outside quotes
@@ -30,15 +35,18 @@ const parse = (keywords) => {
 
         for (let part of parts) {
             const terms = [];
-            for (let [, phrase, word] of part.matchAll(/"([^"]*)"?|([^\s"]+)/g)) {
-                if (phrase !== undefined && phrase.trim()) terms.push({ text: phrase.trim(), exact: true });
-                if (word) terms.push({ text: word, exact: false });
+            for (let [, minus, phrase, word] of part.matchAll(/(-?)(?:"([^"]*)"?|([^\s"]+))/g)) {
+                const text = (phrase !== undefined ? phrase : word).trim();
+                if (!text) continue;
+
+                const term = { text, exact: phrase !== undefined };
+                if (minus) excluded.push(term); else terms.push(term);
             }
             if (terms.length > 0) groups.push(terms);
         }
     }
 
-    return groups;
+    return { groups, excluded };
 };
 
 // Postgres regex of a term, used case-insensitive with ~*
@@ -52,17 +60,26 @@ const toPattern = ({ text, exact }) => {
 
 // SQL condition on 'column' (the text searched, see articles.search_text in db/add_articles_search.sql),
 // the patterns are parameters numbered from $firstParam
-// [[a], [b, c]] -> "(a.search_text ~* $4) OR (a.search_text ~* $5 AND a.search_text ~* $6)"
-const keywordsSql = (groups, firstParam, column) => {
+// alternatives with OR, their terms with AND, excluded terms with NOT:
+// "(col ~* $4) OR (col ~* $5 AND col ~* $6) AND NOT (col ~* $7)"
+// null when there is nothing to filter
+const keywordsSql = ({groups, excluded}, firstParam, column) => {
     const params = [];
-    const sql = groups
-        .map(terms => '(' + terms.map(term => {
-            params.push(toPattern(term));
-            return `${column} ~* $${firstParam + params.length - 1}`;
-        }).join(' AND ') + ')')
-        .join(' OR ');
+    const match = (term) => {
+        params.push(toPattern(term));
+        return `${column} ~* $${firstParam + params.length - 1}`;
+    };
 
-    return { sql, params };
+    const wanted = groups.map(terms => '(' + terms.map(match).join(' AND ') + ')').join(' OR ');
+    const unwanted = excluded.map(match).join(' OR ');
+
+    if (!wanted && !unwanted) return null;
+
+    const conditions = [];
+    if (wanted) conditions.push(`(${wanted})`);
+    if (unwanted) conditions.push(`NOT (${unwanted})`);
+
+    return { sql: conditions.join(' AND '), params };
 };
 
 export const Filter = { parse, toPattern, keywordsSql };

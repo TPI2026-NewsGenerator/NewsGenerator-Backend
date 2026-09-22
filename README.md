@@ -54,9 +54,8 @@ OLLAMA_API_KEY=your_api_key
 4. Open Query Tool on the database (*Right-click* **New_Database** -> Query Tool) **[Alt + Shift + Q]**
 5. Open File **[Ctrl + O]** -> open "create_insert_NewsGenerator.sql" from `server/db`
 6. Execute script **[F5]**
-7. Do the same with "create_feeds_cache.sql" (RSS cache tables `feeds` and `articles`, with the `topic` column)
-8. Do the same with "add_custom_searches_topics.sql" (desired and undesired topics of the custom searches)
-9. Do the same with "add_articles_search.sql" (text searched by the keywords filter, with a `pg_trgm` index)
+7. Do the same with "create_feeds_cache.sql" (RSS cache tables `feeds` and `articles`)
+8. Do the same with "add_articles_search.sql" (text searched by the keywords filter, with a `pg_trgm` index)
 
 To generate **prisma schema**:
 ```bash
@@ -79,17 +78,26 @@ To start a development server:
 pnpm run server
 ```
 
-The RSS feeds of `db/rss-links.js` are fetched at server start, then every 15 minutes, and saved in
-the `articles` table. Searches read this cache instead of fetching the feeds. Optional variables in `.env`:
+### How a search works
+
+1. The feeds of `db/rss-links.js` are grouped by category (world, press, sport, politics, economy,
+   technology, science). The user chooses the categories, that is the first filter.
+2. A search fetches the feeds only when the cache is older than `FEED_MAX_AGE_MINUTES`, then reads
+   the `articles` table. No feed is fetched in background.
+3. Keywords, excluded keywords and the timeframe are applied in SQL. Keywords work like on Google:
+   commas separate alternatives (OR), the words of an alternative must all be found (AND),
+   `"quoted text"` is an exact word or phrase and `-word` excludes.
+4. News telling the same story (same title at 45% or more, trigram similarity) are grouped: one card
+   with the other sources listed.
+5. Ollama is called **only** on the news selected by the user, and gives the resume and the topic of
+   the news in one call. Both are saved, so asking the same resume twice costs nothing.
+
+Optional variables in `.env`:
 
 | Variable | Default | Description |
 |---|---|---|
-| `FEED_REFRESH_MINUTES` | 15 | Delay between two refreshes of the feeds |
-| `FEED_RETENTION_DAYS` | 7 | Articles older than this are deleted |
-| `FEED_CLASSIFY_MAX` | 400 | Articles classified by topic per refresh (limits the AI cost) |
-
-After each refresh, the new articles get a topic (politics, economy, conflict...) from the AI, by batches of 40.
-The list of topics is in `services/utils/topics.js` and can be filtered with `topics` in `POST /api/news`.
+| `FEED_MAX_AGE_MINUTES` | 30 | A search refreshes the feeds when the cache is older than this |
+| `FEED_RETENTION_DAYS` | 30 | Articles older than this are deleted |
 
 [//]: # (How to set up the database?)
 

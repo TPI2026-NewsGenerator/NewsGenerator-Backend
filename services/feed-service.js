@@ -2,7 +2,7 @@
 //  Author: Fabian Rostello
 //  Date: 22.09.2026
 //  File: feed-service.js
-//  Description: Background refresh of the RSS feeds cache
+//  Description: Refresh of the RSS feeds cache, on demand when a search needs it
 //
 
 "use strict"
@@ -11,19 +11,13 @@ import process from 'node:process'
 import {rss} from "../db/rss-links.js";
 import {FeedModel} from "../models/feed-model.js";
 import {Crawlers} from "./utils/crawlers.js";
-import {ollamaClassify} from "./utils/ollama.js";
-import {mapWithConcurrency} from "./utils/concurrency.js";
 
-const REFRESH_MINUTES = Number(process.env.FEED_REFRESH_MINUTES) || 15;
-const RETENTION_DAYS = Number(process.env.FEED_RETENTION_DAYS) || 7;
-const CLASSIFY_MAX = Number(process.env.FEED_CLASSIFY_MAX) || 400;   // articles classified per run, limits the AI cost
-const CLASSIFY_BATCH = 40;          // articles sent to the AI in one call
-const CLASSIFY_CONCURRENCY = 3;     // AI calls at the same time
+// the feeds are fetched when a search needs them, not in background: the cache is refreshed
+// only if it is older than this
+const MAX_AGE_MINUTES = Number(process.env.FEED_MAX_AGE_MINUTES) || 30;
+const RETENTION_DAYS = Number(process.env.FEED_RETENTION_DAYS) || 30;
 
 let running = null;     // refresh in progress, shared so two refreshes never run at the same time
-let classifying = null; // classification in progress
-let firstRun = null;    // first refresh, awaited by the requests arriving before the cache is filled
-let timer = null;
 
 // every feed url of every language and category, without duplicates
 const allFeedUrls = () => [...new Set(
@@ -90,45 +84,8 @@ const doRefresh = async () => {
     return stats;
 };
 
-// give a topic to the articles saved without one, by batches
-const doClassify = async () => {
-    const start = Date.now();
-    const articles = await FeedModel.getUnclassifiedArticles(CLASSIFY_MAX);
-
-    const batches = [];
-    for (let i = 0; i < articles.length; i += CLASSIFY_BATCH) {
-        batches.push(articles.slice(i, i + CLASSIFY_BATCH));
-    }
-
-    let classified = 0;
-    let failed = 0;
-    await mapWithConcurrency(batches, CLASSIFY_CONCURRENCY, async (batch) => {
-        try {
-            const topics = await ollamaClassify(batch);
-
-            // one update per topic
-            const idsByTopic = new Map();
-            batch.forEach((article, i) => {
-                idsByTopic.set(topics[i], [...(idsByTopic.get(topics[i]) ?? []), article.id]);
-            });
-            for (let [topic, ids] of idsByTopic) {
-                await FeedModel.setArticlesTopic(ids, topic);
-            }
-            classified += batch.length;
-        } catch (err) {
-            // articles stay without topic and will be retried on next run
-            failed += batch.length;
-            console.error(`Classification failed for ${batch.length} articles: ${err}`);
-        }
-    });
-
-    const stats = { classified, failed, ms: Date.now() - start };
-    if (articles.length > 0) console.log(`Articles classified: ${JSON.stringify(stats)}`);
-    return stats;
-};
-
 export const FeedService = {
-    // fetch every feed and save the new articles
+    // fetch every feed and save the new articles, one refresh at a time
     refresh: () => {
         if (!running) {
             running = doRefresh().finally(() => running = null);
@@ -136,48 +93,20 @@ export const FeedService = {
         return running;
     },
 
-    // classify the articles without topic
-    classify: () => {
-        if (!classifying) {
-            classifying = doClassify().finally(() => classifying = null);
-        }
-        return classifying;
+    // refresh only if the cache is too old, awaited by the searches
+    ensureFresh: async () => {
+        if (running) return running;
+
+        const lastFetchedAt = await FeedModel.lastFetchedAt();
+        const age = lastFetchedAt ? Date.now() - lastFetchedAt.getTime() : Infinity;
+        if (age < MAX_AGE_MINUTES * 60 * 1000) return null;
+
+        return FeedService.refresh();
     },
 
-    // refresh then classify the new articles, the classification is not awaited by the searches
-    refreshAndClassify: () => {
-        const refresh = FeedService.refresh();
-        refresh
-            .then(() => FeedService.classify())
-            .catch(err => console.error(`Feeds refresh or classification failed: ${err}`));
-        return refresh;
-    },
+    // categories of the feeds, they can be used in a search
+    categories: () => [...new Set(Object.values(rss).flatMap(language => Object.keys(language)))],
 
-    // resolves once the cache has been filled at least once
-    ready: () => {
-        if (!firstRun) {
-            firstRun = FeedService.refresh().catch(err => {
-                firstRun = null;    // retry on next call
-                throw err;
-            });
-        }
-        return firstRun;
-    },
-
-    // refresh now, then every REFRESH_MINUTES
-    start: () => {
-        if (timer) return;
-
-        FeedService.ready()
-            .then(() => FeedService.classify())
-            .catch(err => console.error(`First feeds refresh failed: ${err}`));
-        timer = setInterval(() => {
-            FeedService.refreshAndClassify().catch(() => {});   // error already logged
-        }, REFRESH_MINUTES * 60 * 1000);
-    },
-
-    stop: () => {
-        clearInterval(timer);
-        timer = null;
-    },
+    // keep the categories table in sync with the feeds list, for the custom searches
+    syncCategories: () => FeedModel.syncCategories(FeedService.categories()),
 }

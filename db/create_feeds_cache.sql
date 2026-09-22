@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS public.articles (
 
 CREATE INDEX IF NOT EXISTS i_articles_created_at ON public.articles (created_at);
 
--- topic of the news (politics, economy...), given by the AI after the article is saved, null until then
+-- AI resume and topic (politics, economy...) of the news, given only when the user asks for the resume,
+-- null until then, kept to answer the next requests without calling the AI again
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS summary text;
 ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS topic text;
-CREATE INDEX IF NOT EXISTS i_articles_topic ON public.articles (topic);

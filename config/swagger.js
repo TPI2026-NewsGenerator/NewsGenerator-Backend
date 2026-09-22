@@ -69,21 +69,22 @@ const options = {
                     }
                 }
             },
-            "/news/topics": {
+            "/news/categories": {
                 "get": {
                     "tags": [
                         "News"
                     ],
-                    "summary": "Topics usable in the topics filter",
+                    "summary": "Categories of feeds that can be searched",
+                    "description": "The categories come from the feeds list (db/rss-links.js): world, press, sport, politics, economy, technology, science.",
                     "responses": {
                         "200": {
-                            "description": "List of topics",
+                            "description": "List of categories",
                             "content": {
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
                                         "properties": {
-                                            "topics": {
+                                            "categories": {
                                                 "type": "array",
                                                 "items": {
                                                     "type": "string"
@@ -153,7 +154,7 @@ const options = {
                         "News"
                     ],
                     "summary": "AI resume of the selected news",
-                    "description": "Scrapes the selected news (10 max, like POST /news/content), then asks the AI for a resume of 120 to 150 words. News that could not be scraped (fullContent false) get no resume: summary is null and summaryError explains why.",
+                    "description": "Scrapes the selected news (10 max, like POST /news/content), then asks the AI for a resume of 120 to 150 words and the topic of the news. The resume is kept, so asking twice costs nothing. News that could not be scraped get no resume: summary is null and summaryError explains why.",
                     "requestBody": {
                         "required": true,
                         "content": {
@@ -224,28 +225,6 @@ const options = {
                                 "press"
                             ]
                         },
-                        "topics": {
-                            "type": "array",
-                            "description": "Only news of these topics (given by the AI). All topics if empty. List: GET /news/topics.",
-                            "items": {
-                                "type": "string"
-                            },
-                            "example": [
-                                "politics",
-                                "economy"
-                            ]
-                        },
-                        "undesiredTopics": {
-                            "type": "array",
-                            "description": "News of these topics are excluded (given by the AI). Same list as topics, a topic can't be in both.",
-                            "items": {
-                                "type": "string"
-                            },
-                            "example": [
-                                "sport",
-                                "culture"
-                            ]
-                        },
                         "language": {
                             "type": "string",
                             "description": "ISO 639-1 language code.",
@@ -254,7 +233,7 @@ const options = {
                         },
                         "timeframe": {
                             "type": "object",
-                            "description": "Temporal range for the news search.",
+                            "description": "News published in this range, on the date given by the feed (or the date the news was first seen when the feed gives none). Both bounds are optional: only start means \"not older than\".",
                             "properties": {
                                 "start": {
                                     "type": "string",
@@ -330,7 +309,20 @@ const options = {
                         "topic": {
                             "type": "string",
                             "nullable": true,
-                            "description": "Topic given by the AI, null while the news is not classified yet."
+                            "description": "Topic given by the AI with the resume, null while the news has no resume."
+                        },
+                        "sources": {
+                            "type": "array",
+                            "description": "Other news telling the same story, grouped (only in POST /news).",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "url": {"type": "string", "format": "uri"},
+                                    "source": {"type": "string"},
+                                    "title": {"type": "string"},
+                                    "publishedAt": {"type": "string", "format": "date-time"}
+                                }
+                            }
                         },
                         "fullContent": {
                             "type": "boolean",

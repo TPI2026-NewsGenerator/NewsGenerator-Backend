@@ -15,14 +15,13 @@ const router = express.Router();
 const fetchNewsValidator = [
     body('category').isArray().withMessage('categories must be an array'),
     body('keywords').isArray().withMessage('keywords must be an array'),
-    body('undesiredTopics').isArray().withMessage('undesiredTopics must be an array'),
     body('language').isString().withMessage('language must be a string'),
     body('timeframe').isObject().withMessage('timeframe must be an object with properties "start" and "end"'),
 ];
 
 router.post('', authenticateToken, fetchNewsValidator, NewsController.getNews);
-// topics that can be used in the "topics" filter
-router.get('/topics', NewsController.getTopics);
+// categories of feeds that can be searched
+router.get('/categories', NewsController.getCategories);
 // full content of the news selected by the user (10 max)
 router.post('/content', authenticateToken, NewsController.getNewsContent);
 // AI resume of the news selected by the user (10 max)

@@ -8,7 +8,6 @@
 "use strict"
 
 import {CustomSearchService} from '../services/customsearch-service.js';
-import {topicsError} from '../services/utils/topics.js';
 
 export const CustomSearchController = {
     getUserCustomSearch: async (req, res) => {
@@ -33,7 +32,7 @@ export const CustomSearchController = {
         }
     },
     postUserCustomSearch: async (req, res) => {
-        const {id, title, keyword, language, category, topics, undesiredTopics} = req.body;
+        const {id, title, keyword, language, category} = req.body;
         const userId = req.user?.id;
         if (!userId) {
             const err = new Error(`An id is required...`);
@@ -65,15 +64,8 @@ export const CustomSearchController = {
             throw err;
         }
 
-        const topicsErrorMessage = topicsError(topics, undesiredTopics);
-        if (topicsErrorMessage) {
-            const err = new Error(topicsErrorMessage);
-            err.status = 400;
-            throw err;
-        }
-
         try {
-            const customSearch = await CustomSearchService.postPutUserCustomSearch({id, userId, title, keyword, language, category, topics, undesiredTopics});
+            const customSearch = await CustomSearchService.postPutUserCustomSearch({id, userId, title, keyword, language, category});
             res.status(200).json(customSearch);
         } catch (error) {
             if (typeof(error) === 'string' && error.includes("Error saving this custom search:")) {

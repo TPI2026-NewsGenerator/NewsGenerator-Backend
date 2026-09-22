@@ -16,7 +16,8 @@ import {ollamaResume} from "./utils/ollama.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 
 export const MAX_SELECTED_NEWS = 10;
-const AI_CONCURRENCY = 5;   // resumes asked to Ollama at the same time
+const AI_CONCURRENCY = 5;       // resumes asked to Ollama at the same time
+const SIMILARITY = 0.45;        // above this, two titles tell the same news (trigram similarity)
 
 // site name from the article link, e.g. "https://www.nytimes.com/..." -> "nytimes.com"
 const sourceOf = (link) => {
@@ -38,25 +39,58 @@ const toNews = (article) => ({
     topic: article.topic,
 });
 
+// group the articles telling the same news: the most recent one is kept and the others become its
+// 'sources', so the user doesn't see the same news ten times
+const groupDuplicates = async (articles) => {
+    const pairs = await FeedModel.similarArticlePairs(articles.map(article => article.id), SIMILARITY);
+
+    // union-find: every article of a group points to the first article of that group
+    const groupOf = new Map(articles.map(article => [article.id, article.id]));
+    const find = (id) => {
+        while (groupOf.get(id) !== id) id = groupOf.get(id);
+        return id;
+    };
+    for (let {id_a, id_b} of pairs) {
+        const [a, b] = [find(id_a), find(id_b)];
+        if (a !== b) groupOf.set(b, a);
+    }
+
+    const news = new Map();     // group -> news sent to the client
+    for (let article of articles) {
+        const group = find(article.id);
+
+        if (!news.has(group)) {
+            news.set(group, {...toNews(article), sources: []});
+        } else {
+            const {url, source, title, publishedAt} = toNews(article);
+            news.get(group).sources.push({url, source, title, publishedAt});
+        }
+    }
+
+    return [...news.values()];
+};
+
 export const NewsService = {
-    // news list for the selection, read only from the RSS cache (no page is scraped here)
-    getNews: async ({keywords, category, topics = [], undesiredTopics = [], language, timeframe}) => {
+    // news list for the selection, read from the RSS cache (no page scraped, no AI)
+    getNews: async ({keywords, category, timeframe}) => {
         try {
             // 1. get links from categories
             const newsLinks = Links.getCategoriesLinks(category);
 
-            // 2. search the cached news of these feeds (filled in background by FeedService), filtered in SQL
-            await FeedService.ready();
+            // 2. fetch the feeds only if the cache is too old
+            await FeedService.ensureFresh();
+
+            // 3. search in SQL: keywords, excluded keywords (-word) and publication date
             const articles = await FeedModel.searchArticles({
                 feedUrls: newsLinks,
-                topics,
-                undesiredTopics,
-                keywordGroups: Filter.parse(keywords),
+                keywords: Filter.parse(keywords),
+                timeframe: timeframe,
             });
             if (articles.length === 0) return [];
 
-            // 3. once per link (a news can be in several feeds)
-            const news = [...new Map(articles.map(article => [article.link, toNews(article)])).values()];
+            // 4. once per link (a news can be in several feeds), then group the news telling the same story
+            const uniqueArticles = [...new Map(articles.map(article => [article.link, article])).values()];
+            const news = await groupDuplicates(uniqueArticles);
 
             return {
                 totalResults: news.length,
@@ -68,11 +102,10 @@ export const NewsService = {
         }
     },
 
-    // full content of the news selected by the user, scraped only now
-    getNewsContent: async (urls) => {
-        // only links from the cache can be scraped, so the API can't be used to fetch any url
-        const cachedArticles = await FeedModel.getArticlesByLinks(urls);
-        const articles = new Map(cachedArticles.map(article => [article.link, article]));
+    // articles of the cache for these urls, refuses an url that is not in the cache so the API
+    // can't be used to scrape or summarize any page
+    cachedArticles: async (urls) => {
+        const articles = new Map((await FeedModel.getArticlesByLinks(urls)).map(article => [article.link, article]));
 
         const unknownUrls = urls.filter(url => !articles.has(url));
         if (unknownUrls.length > 0) {
@@ -80,6 +113,13 @@ export const NewsService = {
             err.status = 400;
             throw err;
         }
+
+        return articles;
+    },
+
+    // full content of the news selected by the user, scraped only now
+    getNewsContent: async (urls) => {
+        const articles = await NewsService.cachedArticles(urls);
 
         const scraped = await Crawlers.Html(urls.map(url => ({
             url: url,
@@ -102,32 +142,44 @@ export const NewsService = {
         });
     },
 
-    // AI resume of the news selected by the user
+    // AI resume and topic of the news selected by the user, kept in the cache for the next requests
     getNewsSummary: async (urls) => {
-        const newsList = await NewsService.getNewsContent(urls);
+        const articles = await NewsService.cachedArticles(urls);
 
-        const results = await mapWithConcurrency(newsList, AI_CONCURRENCY, async (news) => {
+        // a news already summarized costs nothing
+        const toSummarize = urls.filter(url => !articles.get(url).summary);
+        const contents = new Map(
+            (toSummarize.length > 0 ? await NewsService.getNewsContent(toSummarize) : [])
+                .map(news => [news.url, news])
+        );
+
+        const results = await mapWithConcurrency(toSummarize, AI_CONCURRENCY, async (url) => {
+            const news = contents.get(url);
             // the RSS description is too short, the AI would invent the rest
             if (!news.fullContent) return null;
-            return ollamaResume(news.title, news.content);
+
+            const {summary, topic} = await ollamaResume(news.title, news.content);
+            await FeedModel.saveSummary(url, summary, topic);
+            return {summary, topic};
         });
+        const summaries = new Map(toSummarize.map((url, i) => [url, results[i]]));
 
-        return newsList.map((news, i) => {
-            const result = results[i];
-            let summaryError = null;
+        return urls.map(url => {
+            const article = articles.get(url);
+            const news = toNews(article);
 
+            if (article.summary) return {...news, summary: article.summary, summaryError: null};
+
+            const result = summaries.get(url);
             if (result.status === 'rejected') {
-                console.log(`AI resume failed for ${news.url}: ${result.reason}`);
-                summaryError = "The AI could not summarize this news, please try again.";
-            } else if (result.value === null) {
-                summaryError = "This news could not be read (paywall or protected site), no resume generated.";
+                console.log(`AI resume failed for ${url}: ${result.reason}`);
+                return {...news, summary: null, summaryError: "The AI could not summarize this news, please try again."};
+            }
+            if (result.value === null) {
+                return {...news, summary: null, summaryError: "This news could not be read (paywall or protected site), no resume generated."};
             }
 
-            return {
-                ...news,
-                summary: result.status === 'fulfilled' ? result.value : null,
-                summaryError: summaryError,
-            };
+            return {...news, topic: result.value.topic, summary: result.value.summary, summaryError: null};
         });
     }
 }

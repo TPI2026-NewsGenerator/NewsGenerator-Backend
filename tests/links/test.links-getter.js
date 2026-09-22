@@ -27,7 +27,7 @@ test('get multiple category links', () => {
 
 test('get non-existent category links', () => {
     // Given
-    const category = ["technology"];
+    const category = ["cooking"];
 
     // When & Then
     expect(() => Links.getCategoriesLinks(category)).toThrow(data.result3);
@@ -35,7 +35,7 @@ test('get non-existent category links', () => {
 
 test('get existent and non-existent category links', () => {
     // Given
-    const category = ["technology", "world"];
+    const category = ["cooking", "world"];
 
     // When & Then
     expect(Links.getCategoriesLinks(category)).toEqual(data.result1);

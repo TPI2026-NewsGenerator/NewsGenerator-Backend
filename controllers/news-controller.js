@@ -8,7 +8,7 @@
 "use strict"
 
 import {NewsService, MAX_SELECTED_NEWS} from '../services/news-service.js';
-import {TOPICS, topicsError} from '../services/utils/topics.js';
+import {FeedService} from '../services/feed-service.js';
 
 // validate the urls of the selected news, then answer with the result of 'serviceFn'
 const respondWithSelectedNews = async (req, res, serviceFn) => {
@@ -40,7 +40,7 @@ export const NewsController = {
         const filters = req.body;
 
         // authorized filters
-        const authorizedFilters = ['keywords', 'category', 'topics', 'undesiredTopics', 'language', 'timeframe'];
+        const authorizedFilters = ['keywords', 'category', 'language', 'timeframe'];
         for (let filter in filters) {
             if (!authorizedFilters.find(element => element === filter)) {
                 const err = new Error(`Filter ${filter} is not authorized.`);
@@ -49,7 +49,7 @@ export const NewsController = {
             }
         }
 
-        const {keywords, category, topics, undesiredTopics, language, timeframe} = filters;
+        const {keywords, category, language, timeframe} = filters;
 
         // validate data
         if (keywords === undefined || keywords.length === 0) {
@@ -64,11 +64,18 @@ export const NewsController = {
             throw err;
         }
 
-        const topicsErrorMessage = topicsError(topics, undesiredTopics);
-        if (topicsErrorMessage) {
-            const err = new Error(topicsErrorMessage)
-            err.status = 400;
-            throw err;
+        // timeframe: {start, end} ISO dates, both optional ("not older than 24h" is a start only)
+        const timeframeDates = {};
+        for (let bound of ['start', 'end']) {
+            if (timeframe?.[bound] === undefined || timeframe[bound] === '') continue;
+
+            const date = new Date(timeframe[bound]);
+            if (isNaN(date)) {
+                const err = new Error(`Timeframe ${bound} is not a valid date.`);
+                err.status = 400;
+                throw err;
+            }
+            timeframeDates[bound] = date;
         }
 
         // not used for the moment
@@ -82,7 +89,7 @@ export const NewsController = {
         // }
 
         try {
-            const news = await NewsService.getNews(req.body);
+            const news = await NewsService.getNews({keywords, category, timeframe: timeframeDates});
             res.status(200).json(news);
         } catch (error) {
             if (typeof(error) === 'string' && error.includes("None of theses categories were found:")) {
@@ -93,8 +100,8 @@ export const NewsController = {
         }
     },
 
-    getTopics: async (req, res) => {
-        res.status(200).json({topics: TOPICS});
+    getCategories: async (req, res) => {
+        res.status(200).json({categories: FeedService.categories()});
     },
 
     getNewsContent: async (req, res) => {
