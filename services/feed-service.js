@@ -11,6 +11,7 @@ import process from 'node:process'
 import {rss} from "../db/rss-links.js";
 import {FeedModel} from "../models/feed-model.js";
 import {Crawlers} from "./utils/crawlers.js";
+import {toDate} from "./utils/dates.js";
 
 // the feeds are fetched when a search needs them, not in background: the cache is refreshed
 // only if it is older than this
@@ -23,11 +24,6 @@ let running = null;     // refresh in progress, shared so two refreshes never ru
 const allFeedUrls = () => [...new Set(
     Object.values(rss).flatMap(language => Object.values(language).flat())
 )];
-
-const toDate = (value) => {
-    const date = value ? new Date(value) : null;
-    return date && !isNaN(date) ? date : null;
-};
 
 const doRefresh = async () => {
     const start = Date.now();
