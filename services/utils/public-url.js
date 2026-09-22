@@ -17,17 +17,20 @@ export const isPrivateIp = (ip) => {
     if (mapped) ip = mapped[1];
 
     if (net.isIPv4(ip)) {
-        const [a, b] = ip.split('.').map(Number);
-        return a === 0                              // 0.0.0.0/8
-            || a === 10                             // private
-            || a === 127                            // loopback
-            || (a === 100 && b >= 64 && b <= 127)   // carrier grade nat
-            || (a === 169 && b === 254)             // link local, cloud metadata (169.254.169.254)
-            || (a === 172 && b >= 16 && b <= 31)    // private
-            || (a === 192 && b === 168)             // private
-            || (a === 192 && b === 0)               // protocol assignments
-            || (a === 198 && (b === 18 || b === 19))// benchmarking
-            || a >= 224;                            // multicast and reserved
+        const [a, b, c] = ip.split('.').map(Number);
+        return a === 0                                  // 0.0.0.0/8
+            || a === 10                                 // private
+            || a === 127                                // loopback
+            || (a === 100 && b >= 64 && b <= 127)       // carrier grade nat
+            || (a === 169 && b === 254)                 // link local, cloud metadata (169.254.169.254)
+            || (a === 172 && b >= 16 && b <= 31)        // private
+            || (a === 192 && b === 168)                 // private
+            || (a === 192 && b === 0 && c === 0)        // protocol assignments (192.0.66.x is public, techcrunch)
+            || (a === 192 && b === 0 && c === 2)        // documentation
+            || (a === 198 && (b === 18 || b === 19))    // benchmarking
+            || (a === 198 && b === 51 && c === 100)     // documentation
+            || (a === 203 && b === 0 && c === 113)      // documentation
+            || a >= 224;                                // multicast and reserved
     }
 
     if (net.isIPv6(ip)) {

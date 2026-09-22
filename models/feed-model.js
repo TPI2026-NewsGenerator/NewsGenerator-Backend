@@ -98,11 +98,20 @@ export const FeedModel = {
         });
     },
     // feeds added by a user, they are private: only used in the searches of this user
+    // with the state of the last refresh of each feed, so the user sees a source that stopped working
     listUserFeeds: async (userId) => {
-        return prisma.user_feeds.findMany({
+        const userFeeds = await prisma.user_feeds.findMany({
             where: { id_user: userId },
             orderBy: { created_at: 'desc' },
         });
+
+        const feeds = await prisma.feeds.findMany({
+            where: { url: { in: userFeeds.map(feed => feed.url) } },
+            select: { url: true, last_error: true, last_fetched_at: true },
+        });
+        const status = new Map(feeds.map(feed => [feed.url, feed]));
+
+        return userFeeds.map(feed => ({ ...feed, ...status.get(feed.url) }));
     },
     countUserFeeds: async (userId) => {
         return prisma.user_feeds.count({ where: { id_user: userId } });

@@ -12,12 +12,15 @@ import { Readability } from '@mozilla/readability';
 import { parseHTML } from 'linkedom';
 import { Parser } from "./parser.js";
 import { mapWithConcurrency } from "./concurrency.js";
+import { fetchPublicUrl } from "./public-url.js";
 
 const XML_CONCURRENCY = 50;       // number of feeds fetched at the same time
 const XML_TIMEOUT_MS = 8000;      // a slow feed is abandoned after this delay
 const USER_AGENT = 'Mozilla/5.0 (compatible; NewsGenerator/1.0; +RSS reader)';
 
 // download and parse one feed, the server answers 304 if it did not change since the last etag / last-modified
+// the address is checked at every refresh, not only when a user adds a feed: a name that was public
+// can point to a private address later, and a feed can redirect to one
 const fetchFeed = async ({url, etag, lastModified}) => {
     const headers = {
         'User-Agent': USER_AGENT,
@@ -26,7 +29,7 @@ const fetchFeed = async ({url, etag, lastModified}) => {
     if (etag) headers['If-None-Match'] = etag;
     if (lastModified) headers['If-Modified-Since'] = lastModified;
 
-    const res = await fetch(url, { headers, signal: AbortSignal.timeout(XML_TIMEOUT_MS) });
+    const { res } = await fetchPublicUrl(url, { headers, timeoutMs: XML_TIMEOUT_MS });
 
     if (res.status === 304) return { notModified: true, items: [] };
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

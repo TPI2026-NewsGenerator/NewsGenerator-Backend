@@ -19,6 +19,8 @@ const toFeed = (feed) => ({
     site: feed.site,
     category: feed.category,
     createdAt: feed.created_at,
+    error: feed.last_error ?? null,             // why the last refresh of this feed failed
+    lastFetchedAt: feed.last_fetched_at ?? null,
 });
 
 export const FeedController = {
