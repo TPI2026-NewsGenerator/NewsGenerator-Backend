@@ -8,6 +8,7 @@
 import express from 'express';
 import loginRouter from './login-router.js';
 import newsRouter from './news-router.js';
+import feedRouter from './feed-router.js';
 import customSearchRouter from './customsearch-router.js';
 import cors from "cors";
 
@@ -17,6 +18,7 @@ router.use(cors());
 
 router.use('/login', loginRouter);
 router.use('/news', newsRouter);
+router.use('/feeds', feedRouter);
 router.use('/customsearch', customSearchRouter);
 
 export default router;

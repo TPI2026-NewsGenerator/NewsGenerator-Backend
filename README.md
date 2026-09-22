@@ -56,6 +56,7 @@ OLLAMA_API_KEY=your_api_key
 6. Execute script **[F5]**
 7. Do the same with "create_feeds_cache.sql" (RSS cache tables `feeds` and `articles`)
 8. Do the same with "add_articles_search.sql" (text searched by the keywords filter, with a `pg_trgm` index)
+9. Do the same with "add_user_feeds.sql" (sources added by the users)
 
 To generate **prisma schema**:
 ```bash
@@ -89,7 +90,10 @@ pnpm run server
    `"quoted text"` is an exact word or phrase and `-word` excludes.
 4. News telling the same story (same title at 45% or more, trigram similarity) are grouped: one card
    with the other sources listed.
-5. Ollama is called **only** on the news selected by the user, and gives the resume and the topic of
+5. A user can add their own sources (`POST /api/feeds` with a site address): the server finds the
+   RSS feed of the site and checks it answers. These sources are **private**, they are only used in
+   the searches of this user. Addresses of private networks are refused, see `services/utils/public-url.js`.
+6. Ollama is called **only** on the news selected by the user, and gives the resume and the topic of
    the news in one call. Both are saved, so asking the same resume twice costs nothing.
 
 Optional variables in `.env`:

@@ -20,14 +20,15 @@ const RETENTION_DAYS = Number(process.env.FEED_RETENTION_DAYS) || 30;
 
 let running = null;     // refresh in progress, shared so two refreshes never run at the same time
 
-// every feed url of every language and category, without duplicates
-const allFeedUrls = () => [...new Set(
-    Object.values(rss).flatMap(language => Object.values(language).flat())
-)];
+// every feed url: the list of db/rss-links.js and the feeds added by the users, without duplicates
+const allFeedUrls = async () => [...new Set([
+    ...Object.values(rss).flatMap(language => Object.values(language).flat()),
+    ...await FeedModel.allUserFeedUrls(),
+])];
 
 const doRefresh = async () => {
     const start = Date.now();
-    const feeds = await FeedModel.syncFeeds(allFeedUrls());
+    const feeds = await FeedModel.syncFeeds(await allFeedUrls());
 
     const results = await Crawlers.Xml(feeds.map(feed => ({
         url: feed.url,

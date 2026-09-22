@@ -97,6 +97,40 @@ export const FeedModel = {
             data: { summary: summary, topic: topic },
         });
     },
+    // feeds added by a user, they are private: only used in the searches of this user
+    listUserFeeds: async (userId) => {
+        return prisma.user_feeds.findMany({
+            where: { id_user: userId },
+            orderBy: { created_at: 'desc' },
+        });
+    },
+    countUserFeeds: async (userId) => {
+        return prisma.user_feeds.count({ where: { id_user: userId } });
+    },
+    addUserFeed: async ({userId, url, site, category}) => {
+        return prisma.user_feeds.create({
+            data: { id_user: userId, url: url, site: site, category: category },
+        });
+    },
+    deleteUserFeed: async (userId, id) => {
+        const { count } = await prisma.user_feeds.deleteMany({
+            where: { id: id, id_user: userId },
+        });
+        return count;
+    },
+    // urls to search for this user: only their feeds of these categories
+    userFeedUrls: async (userId, categories) => {
+        const feeds = await prisma.user_feeds.findMany({
+            where: { id_user: userId, category: { in: categories } },
+            select: { url: true },
+        });
+        return feeds.map(feed => feed.url);
+    },
+    // every user feed, they are refreshed with the others
+    allUserFeedUrls: async () => {
+        const feeds = await prisma.user_feeds.findMany({ select: { url: true }, distinct: ['url'] });
+        return feeds.map(feed => feed.url);
+    },
     deleteArticlesOlderThan: async (date) => {
         const { count } = await prisma.articles.deleteMany({
             where: { created_at: { lt: date } }

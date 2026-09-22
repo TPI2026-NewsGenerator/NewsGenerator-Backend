@@ -29,6 +29,10 @@ const options = {
             {
                 "name": "News",
                 "description": "Operations related to news retrieval and processing"
+            },
+            {
+                "name": "Feeds",
+                "description": "Sources added by a user, private to them"
             }
         ],
         "paths": {
@@ -67,6 +71,46 @@ const options = {
                             "description": "Internal Server Error"
                         }
                     }
+                }
+            },
+            "/feeds": {
+                "get": {
+                    "tags": ["Feeds"],
+                    "summary": "Sources added by the user",
+                    "description": "Private: the user comes from the token, a user only sees their own sources.",
+                    "responses": {"200": {"description": "List of the sources of this user"}}
+                },
+                "post": {
+                    "tags": ["Feeds"],
+                    "summary": "Add a source from the address of a website",
+                    "description": "The server finds the RSS feed of the site (declared in its page or at the usual paths) and keeps it only if it answers with news. Private addresses are refused (SSRF), 20 sources maximum per user.",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "site": {"type": "string", "example": "engadget.com"},
+                                        "category": {"type": "string", "example": "technology"}
+                                    },
+                                    "required": ["site", "category"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {"description": "Source added, with a sample of its news"},
+                        "400": {"description": "No feed found, private address, unknown category, already added or too many sources"}
+                    }
+                }
+            },
+            "/feeds/{id}": {
+                "delete": {
+                    "tags": ["Feeds"],
+                    "summary": "Remove one of the sources of the user",
+                    "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                    "responses": {"200": {"description": "Removed"}, "404": {"description": "Not a source of this user"}}
                 }
             },
             "/news/categories": {

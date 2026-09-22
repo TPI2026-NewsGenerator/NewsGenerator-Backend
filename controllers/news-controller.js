@@ -89,7 +89,7 @@ export const NewsController = {
         // }
 
         try {
-            const news = await NewsService.getNews({keywords, category, timeframe: timeframeDates});
+            const news = await NewsService.getNews({keywords, category, timeframe: timeframeDates, userId: req.user?.id});
             res.status(200).json(news);
         } catch (error) {
             if (typeof(error) === 'string' && error.includes("None of theses categories were found:")) {

@@ -72,10 +72,13 @@ const groupDuplicates = async (articles) => {
 
 export const NewsService = {
     // news list for the selection, read from the RSS cache (no page scraped, no AI)
-    getNews: async ({keywords, category, timeframe}) => {
+    getNews: async ({keywords, category, timeframe, userId}) => {
         try {
-            // 1. get links from categories
-            const newsLinks = Links.getCategoriesLinks(category);
+            // 1. get links from categories, with the feeds this user added (private to them)
+            const newsLinks = [...new Set([
+                ...Links.getCategoriesLinks(category),
+                ...(userId ? await FeedModel.userFeedUrls(userId, category) : []),
+            ])];
 
             // 2. fetch the feeds only if the cache is too old
             await FeedService.ensureFresh();
