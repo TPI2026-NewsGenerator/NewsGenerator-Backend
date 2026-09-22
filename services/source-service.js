@@ -2,20 +2,22 @@
 //  Author: Fabian Rostello
 //  Date: 22.09.2026
 //  File: source-service.js
-//  Description: Suggests the media covering a search that are missing from the sources of the user
+//  Description: What a search misses: the news published by the media that are not in the sources
+//               of the user, and those media with the feed to add for each
 //
 
 "use strict"
 
 import {rss} from "../db/rss-links.js";
 import {FeedModel} from "../models/feed-model.js";
-import {mediaFor} from "./utils/google-news.js";
+import {search} from "./utils/google-news.js";
 import {findFeeds} from "./utils/feed-finder.js";
 import {hostOf, mediumOf} from "./utils/public-url.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 
 const MAX_CANDIDATES = 8;       // finding the feed of a site costs a few requests, so only the best are tried
 const FIND_CONCURRENCY = 4;
+const MAX_NEWS = 25;            // news shown for reading, the rest would only be noise
 
 // media already searched for this user: the feeds of db/rss-links.js and the ones they added
 const knownMedia = async (userId) => {
@@ -28,18 +30,27 @@ const knownMedia = async (userId) => {
 };
 
 export const SourceService = {
-    // media publishing on this search but missing from the sources, with the feed to add for each
-    // the search itself is not redone: Google News is asked the same keywords, only to name the media
+    // what this search misses. Google News is asked the same keywords in one call: the news of the
+    // media that are not in the sources (read only, their link goes through a Google redirect so the
+    // server can neither scrape nor summarize them) and those media, with the feed to add for each
     suggest: async ({keywords, timeframe = {}, userId}) => {
         const days = timeframe.start
             ? Math.ceil((Date.now() - new Date(timeframe.start).getTime()) / (24 * 60 * 60 * 1000))
             : null;
 
-        const media = await mediaFor(keywords, {days: days > 0 ? days : null});
+        const {news, media} = await search(keywords, {days: days > 0 ? days : null});
 
         const known = await knownMedia(userId);
-        const missing = media.filter(medium => !known.has(mediumOf(medium.site)));
+        const isMissing = (site) => !known.has(mediumOf(site));
+
+        const missing = media.filter(medium => isMissing(medium.site));
         const candidates = missing.slice(0, MAX_CANDIDATES);
+
+        // the news the search could not find: those of the media that are not searched
+        const missingNews = news
+            .filter(item => isMissing(item.site))
+            .sort((a, b) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? ''))
+            .slice(0, MAX_NEWS);
 
         const found = await mapWithConcurrency(candidates, FIND_CONCURRENCY, medium => findFeeds(medium.site));
 
@@ -58,6 +69,6 @@ export const SourceService = {
             }));
 
         // 'missing' can be larger than 'sources': the media without a feed, and the ones not tried
-        return {sources, missing: missing.length, tried: candidates.length};
+        return {news: missingNews, sources, missing: missing.length, tried: candidates.length};
     },
 }

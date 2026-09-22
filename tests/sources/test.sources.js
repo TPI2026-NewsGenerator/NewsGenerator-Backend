@@ -61,5 +61,11 @@ describe('mediumOf', () => {
     it('should keep the label before a two level ending, "bbc.co.uk" is not the ".uk" of every bbc', () => {
         expect(mediumOf('feeds.bbci.co.uk')).toBe('bbci.co.uk');
         expect(mediumOf('abc.net.au')).toBe('abc.net.au');
+        expect(mediumOf('www.espn.com.sg')).toBe('espn.com.sg');
+    });
+
+    it('should not take a two letter word of the name for a country ending', () => {
+        expect(mediumOf('si.com')).toBe('si.com');
+        expect(mediumOf('rss.nytimes.com')).toBe('nytimes.com');
     });
 });

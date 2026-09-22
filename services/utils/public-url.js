@@ -97,12 +97,15 @@ export const hostOf = (value) => {
     }
 };
 
-// "bbc.co.uk" is not the ".uk" of "bbc": these endings need one label more to name a medium
-const TWO_LEVEL_TLDS = ['co.uk', 'org.uk', 'com.au', 'net.au', 'co.nz', 'co.jp', 'co.za', 'co.in', 'com.br'];
+// "bbc.co.uk" is not the ".uk" of "bbc": an ending made of one of these words and a country of two
+// letters ("co.uk", "com.au", "com.sg", "net.au"...) needs one label more to name a medium
+const SECOND_LEVELS = ['co', 'com', 'org', 'net', 'ac', 'gov', 'edu'];
 
 // the medium behind a hostname, so "rss.cnn.com" and "edition.cnn.com" are seen as the same one
 export const mediumOf = (host) => {
     const labels = host.split('.');
-    const twoLast = labels.slice(-2).join('.');
-    return TWO_LEVEL_TLDS.includes(twoLast) ? labels.slice(-3).join('.') : twoLast;
+    const [beforeLast, last] = labels.slice(-2);
+    const country = last?.length === 2 && SECOND_LEVELS.includes(beforeLast);
+
+    return labels.slice(country ? -3 : -2).join('.');
 };
