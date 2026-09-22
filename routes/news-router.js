@@ -21,5 +21,11 @@ const fetchNewsValidator = [
 ];
 
 router.post('', authenticateToken, fetchNewsValidator, NewsController.getNews);
+// topics that can be used in the "topics" filter
+router.get('/topics', NewsController.getTopics);
+// full content of the news selected by the user (10 max)
+router.post('/content', authenticateToken, NewsController.getNewsContent);
+// AI resume of the news selected by the user (10 max)
+router.post('/summary', authenticateToken, NewsController.getNewsSummary);
 
 export default router;

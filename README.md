@@ -54,6 +54,9 @@ OLLAMA_API_KEY=your_api_key
 4. Open Query Tool on the database (*Right-click* **New_Database** -> Query Tool) **[Alt + Shift + Q]**
 5. Open File **[Ctrl + O]** -> open "create_insert_NewsGenerator.sql" from `server/db`
 6. Execute script **[F5]**
+7. Do the same with "create_feeds_cache.sql" (RSS cache tables `feeds` and `articles`, with the `topic` column)
+8. Do the same with "add_custom_searches_topics.sql" (desired and undesired topics of the custom searches)
+9. Do the same with "add_articles_search.sql" (text searched by the keywords filter, with a `pg_trgm` index)
 
 To generate **prisma schema**:
 ```bash
@@ -75,6 +78,18 @@ To start a development server:
 ```bash
 pnpm run server
 ```
+
+The RSS feeds of `db/rss-links.js` are fetched at server start, then every 15 minutes, and saved in
+the `articles` table. Searches read this cache instead of fetching the feeds. Optional variables in `.env`:
+
+| Variable | Default | Description |
+|---|---|---|
+| `FEED_REFRESH_MINUTES` | 15 | Delay between two refreshes of the feeds |
+| `FEED_RETENTION_DAYS` | 7 | Articles older than this are deleted |
+| `FEED_CLASSIFY_MAX` | 400 | Articles classified by topic per refresh (limits the AI cost) |
+
+After each refresh, the new articles get a topic (politics, economy, conflict...) from the AI, by batches of 40.
+The list of topics is in `services/utils/topics.js` and can be filtered with `topics` in `POST /api/news`.
 
 [//]: # (How to set up the database?)
 
@@ -116,7 +131,6 @@ pnpm run build
 |-- server.js
 |-- services
 |   `-- utils
-|-- storage
 `-- tests
     |-- custom-search
     |-- data

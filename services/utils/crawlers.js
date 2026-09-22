@@ -2,72 +2,74 @@
 //  Author: Fabian Rostello
 //  Date: 19.05.2026
 //  File: crawlers.js
-//  Description: BasicCrawler and CheerioCrawler from Crawlee
+//  Description: XML fetcher and CheerioCrawler from Crawlee
 //
 
 "use strict"
 
-import {BasicCrawler, CheerioCrawler, KeyValueStore, log, RequestQueue} from 'crawlee';
+import {CheerioCrawler, Configuration, log} from 'crawlee';
 import { Readability } from '@mozilla/readability';
 import { parseHTML } from 'linkedom';
 import { Parser } from "./parser.js";
+import { mapWithConcurrency } from "./concurrency.js";
 
+const XML_CONCURRENCY = 50;       // number of feeds fetched at the same time
+const XML_TIMEOUT_MS = 8000;      // a slow feed is abandoned after this delay
+const USER_AGENT = 'Mozilla/5.0 (compatible; NewsGenerator/1.0; +RSS reader)';
+
+// download and parse one feed, the server answers 304 if it did not change since the last etag / last-modified
+const fetchFeed = async ({url, etag, lastModified}) => {
+    const headers = {
+        'User-Agent': USER_AGENT,
+        'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*'
+    };
+    if (etag) headers['If-None-Match'] = etag;
+    if (lastModified) headers['If-Modified-Since'] = lastModified;
+
+    const res = await fetch(url, { headers, signal: AbortSignal.timeout(XML_TIMEOUT_MS) });
+
+    if (res.status === 304) return { notModified: true, items: [] };
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    return {
+        notModified: false,
+        items: await Parser.Xml(await res.text()),
+        etag: res.headers.get('etag'),
+        lastModified: res.headers.get('last-modified'),
+    };
+};
 
 export const Crawlers = {
-    Xml: async (urls) => {
-        let scrapedNews = [];
+    // Crawlee is not needed for RSS feeds: a plain fetch in parallel is faster and has no shared storage
+    // feeds: [{url, etag?, lastModified?}], returns one result per feed, in the same order
+    Xml: async (feeds) => {
+        const results = await mapWithConcurrency(feeds, XML_CONCURRENCY, fetchFeed);
 
-        // remove storage functionality
-        // Configuration.getGlobalConfig().set('purgeOnStart', true);
-        await RequestQueue.open().then(queue => queue.drop());
-        await KeyValueStore.open().then(store => store.drop());
+        return results.map((result, i) => {
+            if (result.status === 'fulfilled') return { url: feeds[i].url, ...result.value };
 
-        // used basic crawler since it is for XML content
-        const crawler = new BasicCrawler({
-            minConcurrency: 20,
-            maxConcurrency: 50,
-            maxRequestRetries: 1,
-            requestHandlerTimeoutSecs: 30,
-            maxRequestsPerCrawl: 10,
-
-            async requestHandler({ sendRequest }) {
-                const { body } = await sendRequest();
-
-                const xmlParsed = await Parser.Xml(body)
-
-                scrapedNews.push(xmlParsed);
-            },
-
-            // This function is called if the page processing failed more than maxRequestRetries + 1 times.
-            failedRequestHandler({ request }) {
-                log.debug(`Request ${request.url} failed twice.`);
-            },
+            const error = result.reason?.message ?? String(result.reason);
+            log.debug(`Feed ${feeds[i].url} failed: ${error}`);
+            return { url: feeds[i].url, error, items: [] };
         });
-
-        // trigger crawlee with links
-        await crawler.run(urls);
-
-        return scrapedNews.flat();
     },
 
     Html: async (urls) => {
         let scrapedContentNews = [];
 
-        // Configuration.getGlobalConfig().set('purgeOnStart', true);
-        await RequestQueue.open().then(queue => queue.drop());
-        await KeyValueStore.open().then(store => store.drop());
-
         const crawler = new CheerioCrawler({
-            minConcurrency: 20,
+            minConcurrency: 10,
             maxConcurrency: 50,
             maxRequestRetries: 1,
             requestHandlerTimeoutSecs: 30,
-            maxRequestsPerCrawl: 10,
 
             async requestHandler({ request, body }) {
-                const { document } = parseHTML(body);   // structure html DOM
+                const { document } = parseHTML(body.toString());   // structure html DOM
                 const reader = new Readability(document); // parse HTML from linkedom document
                 const newsContent = reader.parse(); // parse useful content
+
+                // page without readable content (video, paywall...)
+                if (!newsContent) return;
 
                 const { thumbnail } = request.userData;
 
@@ -90,7 +92,8 @@ export const Crawlers = {
             failedRequestHandler({ request }) {
                 log.debug(`Request ${request.url} failed twice.`);
             },
-        });
+        // own in-memory storage for each run, so two simultaneous API calls don't share the same queue
+        }, new Configuration({ persistStorage: false }));
 
         // trigger crawlee with links
         await crawler.run(urls);

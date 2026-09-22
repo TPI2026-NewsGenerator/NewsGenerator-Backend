@@ -8,10 +8,12 @@
 "use strict"
 
 import {CustomSearchService} from '../services/customsearch-service.js';
+import {topicsError} from '../services/utils/topics.js';
 
 export const CustomSearchController = {
     getUserCustomSearch: async (req, res) => {
-        const {userId} = req.query;
+        // the user id comes from the verified token, never from the request
+        const userId = req.user?.id;
 
         if (!userId) {
             const err = new Error(`An id is required...`);
@@ -20,7 +22,7 @@ export const CustomSearchController = {
         }
 
         try {
-            const customSearch = await CustomSearchService.getUserCustomSearch(req.query);
+            const customSearch = await CustomSearchService.getUserCustomSearch({userId});
             res.status(200).json(customSearch);
         } catch (error) {
             if (typeof(error) === 'string' && error.includes("None of theses custom searches were found:")) {
@@ -31,7 +33,8 @@ export const CustomSearchController = {
         }
     },
     postUserCustomSearch: async (req, res) => {
-        const {userId, title, keyword, language, category} = req.body;
+        const {id, title, keyword, language, category, topics, undesiredTopics} = req.body;
+        const userId = req.user?.id;
         if (!userId) {
             const err = new Error(`An id is required...`);
             err.status = 400;
@@ -62,8 +65,15 @@ export const CustomSearchController = {
             throw err;
         }
 
+        const topicsErrorMessage = topicsError(topics, undesiredTopics);
+        if (topicsErrorMessage) {
+            const err = new Error(topicsErrorMessage);
+            err.status = 400;
+            throw err;
+        }
+
         try {
-            const customSearch = await CustomSearchService.postPutUserCustomSearch(req.body);
+            const customSearch = await CustomSearchService.postPutUserCustomSearch({id, userId, title, keyword, language, category, topics, undesiredTopics});
             res.status(200).json(customSearch);
         } catch (error) {
             if (typeof(error) === 'string' && error.includes("Error saving this custom search:")) {
@@ -74,7 +84,8 @@ export const CustomSearchController = {
         }
     },
     deleteUserCustomSearch: async (req, res) => {
-        const {id, userId} = req.body;
+        const {id} = req.body;
+        const userId = req.user?.id;
         if (!id) {
             const err = new Error(`An id is required...`);
             err.status = 400;
@@ -87,8 +98,8 @@ export const CustomSearchController = {
         }
 
         try {
-            const customSearch = await CustomSearchService.deleteUserCustomSearch(req.body);
-            res.status(200).json(customSearch);
+            await CustomSearchService.deleteUserCustomSearch({id, userId});
+            res.status(200).json({deleted: true});
         } catch (error) {
             if (typeof(error) === 'string' && error.includes("Error saving this custom search:")) {
                 res.status(400).json({error: error});

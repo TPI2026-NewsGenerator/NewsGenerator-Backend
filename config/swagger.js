@@ -68,6 +68,134 @@ const options = {
                         }
                     }
                 }
+            },
+            "/news/topics": {
+                "get": {
+                    "tags": [
+                        "News"
+                    ],
+                    "summary": "Topics usable in the topics filter",
+                    "responses": {
+                        "200": {
+                            "description": "List of topics",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "topics": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "/news/content": {
+                "post": {
+                    "tags": [
+                        "News"
+                    ],
+                    "summary": "Scrape the full content of the selected news",
+                    "description": "Scrapes the pages of the news selected by the user (10 max). Only urls returned by POST /news are accepted. When a page can't be read (paywall, 403...), the RSS description is returned as content and fullContent is false.",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "urls": {
+                                            "type": "array",
+                                            "maxItems": 10,
+                                            "items": {
+                                                "type": "string",
+                                                "format": "uri"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "urls"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Content of the selected news, in the same order as asked.",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/NewsResponse"
+                                    }
+                                }
+                            }
+                        },
+                        "400": {
+                            "description": "No url, more than 10 urls, or url not found in the news cache"
+                        },
+                        "500": {
+                            "description": "Internal Server Error"
+                        }
+                    }
+                }
+            },
+            "/news/summary": {
+                "post": {
+                    "tags": [
+                        "News"
+                    ],
+                    "summary": "AI resume of the selected news",
+                    "description": "Scrapes the selected news (10 max, like POST /news/content), then asks the AI for a resume of 120 to 150 words. News that could not be scraped (fullContent false) get no resume: summary is null and summaryError explains why.",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "urls": {
+                                            "type": "array",
+                                            "maxItems": 10,
+                                            "items": {
+                                                "type": "string",
+                                                "format": "uri"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "urls"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Selected news with their resume, in the same order as asked.",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/NewsResponse"
+                                    }
+                                }
+                            }
+                        },
+                        "400": {
+                            "description": "No url, more than 10 urls, or url not found in the news cache"
+                        },
+                        "500": {
+                            "description": "Internal Server Error"
+                        }
+                    }
+                }
             }
         },
         "components": {
@@ -77,12 +205,12 @@ const options = {
                     "properties": {
                         "keywords": {
                             "type": "array",
-                            "description": "Terms to include in the search.",
+                            "description": "Terms searched in the title, description and RSS categories. Commas separate alternatives (OR), the words of an alternative must all be found (AND). \"Quoted text\" is an exact word or phrase, other words also find their variants (referee -> referees). Words of 3 letters or less (VAR, NFL) are whole words.",
                             "items": {
                                 "type": "string"
                             },
                             "example": [
-                                "trump"
+                                "referee, \"red card\""
                             ]
                         },
                         "categories": {
@@ -96,15 +224,26 @@ const options = {
                                 "press"
                             ]
                         },
-                        "undesiredTopics": {
+                        "topics": {
                             "type": "array",
-                            "description": "Topics to explicitly exclude from results.",
+                            "description": "Only news of these topics (given by the AI). All topics if empty. List: GET /news/topics.",
                             "items": {
                                 "type": "string"
                             },
                             "example": [
                                 "politics",
-                                "celebrity gossip"
+                                "economy"
+                            ]
+                        },
+                        "undesiredTopics": {
+                            "type": "array",
+                            "description": "News of these topics are excluded (given by the AI). Same list as topics, a topic can't be in both.",
+                            "items": {
+                                "type": "string"
+                            },
+                            "example": [
+                                "sport",
+                                "culture"
                             ]
                         },
                         "language": {
@@ -139,7 +278,7 @@ const options = {
                         "totalResults": {
                             "type": "integer"
                         },
-                        "articles": {
+                        "news": {
                             "type": "array",
                             "items": {
                                 "$ref": "#/components/schemas/Article"
@@ -179,13 +318,33 @@ const options = {
                             "type": "string",
                             "description": "A brief description of the news."
                         },
+                        "thumbnail": {
+                            "type": "string",
+                            "format": "uri",
+                            "nullable": true
+                        },
                         "content": {
                             "type": "string",
-                            "description": "The raw news content."
+                            "description": "The raw news content (only in POST /news/content)."
+                        },
+                        "topic": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Topic given by the AI, null while the news is not classified yet."
+                        },
+                        "fullContent": {
+                            "type": "boolean",
+                            "description": "False when the page could not be scraped and content is the RSS description (only in POST /news/content)."
                         },
                         "summary": {
                             "type": "string",
-                            "description": "The personalized summary generated by the AI if requested."
+                            "nullable": true,
+                            "description": "The AI resume, 120 to 150 words (only in POST /news/summary)."
+                        },
+                        "summaryError": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "Why there is no resume (only in POST /news/summary)."
                         }
                     },
                     // "required": [

@@ -25,5 +25,4 @@ dist-ssr
 *.sw?
 
 /generated/prisma
-*/__pycache__/
-/__pycache__/
+__pycache__/

@@ -7,14 +7,40 @@
 
 "use strict"
 
-import {NewsService} from '../services/news-service.js';
+import {NewsService, MAX_SELECTED_NEWS} from '../services/news-service.js';
+import {TOPICS, topicsError} from '../services/utils/topics.js';
+
+// validate the urls of the selected news, then answer with the result of 'serviceFn'
+const respondWithSelectedNews = async (req, res, serviceFn) => {
+    const {urls} = req.body;
+
+    // validate data
+    if (!Array.isArray(urls) || urls.length === 0 || !urls.every(url => typeof url === 'string')) {
+        return res.status(400).json({error: "Please select at least one news."});
+    }
+
+    const uniqueUrls = [...new Set(urls)];
+    if (uniqueUrls.length > MAX_SELECTED_NEWS) {
+        return res.status(400).json({error: `${MAX_SELECTED_NEWS} news max.`});
+    }
+
+    try {
+        const news = await serviceFn(uniqueUrls);
+        res.status(200).json({
+            totalResults: news.length,
+            news: news
+        });
+    } catch (error) {
+        res.status(error.status || 500).json({error: error.message ?? error});
+    }
+};
 
 export const NewsController = {
     getNews: async (req, res) => {
         const filters = req.body;
 
         // authorized filters
-        const authorizedFilters = ['keywords', 'category', 'undesiredTopics', 'language', 'timeframe'];
+        const authorizedFilters = ['keywords', 'category', 'topics', 'undesiredTopics', 'language', 'timeframe'];
         for (let filter in filters) {
             if (!authorizedFilters.find(element => element === filter)) {
                 const err = new Error(`Filter ${filter} is not authorized.`);
@@ -23,7 +49,7 @@ export const NewsController = {
             }
         }
 
-        const {keywords, category, undesiredTopics, language, timeframe} = filters;
+        const {keywords, category, topics, undesiredTopics, language, timeframe} = filters;
 
         // validate data
         if (keywords === undefined || keywords.length === 0) {
@@ -34,6 +60,13 @@ export const NewsController = {
 
         if (category === undefined || category.length === 0) {
             const err = new Error("No categories selected, please select at least one category.")
+            err.status = 400;
+            throw err;
+        }
+
+        const topicsErrorMessage = topicsError(topics, undesiredTopics);
+        if (topicsErrorMessage) {
+            const err = new Error(topicsErrorMessage)
             err.status = 400;
             throw err;
         }
@@ -60,4 +93,15 @@ export const NewsController = {
         }
     },
 
+    getTopics: async (req, res) => {
+        res.status(200).json({topics: TOPICS});
+    },
+
+    getNewsContent: async (req, res) => {
+        await respondWithSelectedNews(req, res, NewsService.getNewsContent);
+    },
+
+    getNewsSummary: async (req, res) => {
+        await respondWithSelectedNews(req, res, NewsService.getNewsSummary);
+    },
 }
