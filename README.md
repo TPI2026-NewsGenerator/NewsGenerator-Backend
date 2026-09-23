@@ -120,11 +120,12 @@ pnpm run server
    search asking for *any* of the words is counted and **offered**, not done — widening `red card`
    on its own would answer everything about red or about card. See `canWiden` and `widen` in
    `services/utils/filter.js`.
-4. News telling the same story are grouped: one card, with the other sources listed under it. Two
-   titles tell the same news above **0.30** of trigram similarity — under 40 characters the stricter
-   **0.45** is kept, because a short title is mostly the template its paper puts around it and
-   trigrams cannot tell "Health Care Roundup: Market Talk" from "Auto & Transport Roundup: Market
-   Talk". Both constants, and what they were measured on, are at the top of `services/news-service.js`.
+4. News telling the same story are grouped: one card, with the other sources listed under it. An
+   article joins the group it resembles **on average** above **0.25** of trigram similarity — under
+   40 characters the stricter **0.45** is kept, because a short title is mostly the template its
+   paper puts around it and trigrams cannot tell "Health Care Roundup: Market Talk" from "Auto &
+   Transport Roundup: Market Talk". Both constants are at the top of `services/news-service.js`, and
+   **How the groups are built** below says why the average and not a single link.
 
    The accents are removed before comparing. Two papers do not spell a name the same way: the
    Guardian writes "Higuaín" where the Independent writes "Higuain", and that one accent moves the
@@ -177,20 +178,44 @@ Four things are shown next to a news, each one measured, none of them a verdict:
 
 A group of one medium says `this source only`, which is the honest answer and not a warning.
 
-**Above five articles, the card stops claiming to be one news** and says `N media on this story`.
-The grouping is transitive: A and B tell the same news, B and C too, so A and C end up together even
-when they share nothing. On two to four articles — 93% of the groups holding several, measured over
-three days in the five languages — that is what one wants. Above, it drifts: the thirty-one articles
-on the White House press ban really are one running story, from the court filing to the late-night
-jokes, but they are not one news carried thirty-one times.
+**Above ten articles, the card stops claiming to be one news** and says `N media on this story`.
+It is a safety net that nothing reaches today: the largest true group measured holds eight
+articles, and nothing between nine and eleven exists at all. It used to be five, when the grouping
+chained (see below) and a card could hold thirty-one articles from a court filing to the late-night
+jokes about it.
 
-Two structural fixes were measured and rejected. Accepting an article only when it resembles the
-first of its group splits the very groups this is meant to protect: the Guardian, the Independent
-and the BBC on the Higuaín story hold together only because the BBC's short headline matches the
-Guardian's, so that group falls back to two media. Splitting on how densely a group is linked fails
-too, and worse: the eight betting tips of eight different matches are more densely linked (0.79)
-than that Higuaín group (0.67). Neither the shape of the group nor its size separates one news from
-one running story, so the grouping is left alone and only what the card claims is bounded.
+#### How the groups are built
+
+An article joins the group it resembles **on average**, not the one where it found a single link
+(`services/utils/grouping.js`). Grouping on single links chains: A and B tell the same news, B and C
+too, so A and C end up together whatever they have to do with each other.
+
+Measured on 500 articles in each of four languages, scored against forty groups read and judged by
+hand:
+
+| | recovered whole | largest group (en/fr/es/it) |
+|---|---|---|
+| single link, 0.30 | 34/40 | 8 / 27 / 10 / 15 |
+| single link, 0.25 | 40/40 | 8 / **45** / 11 / 21 |
+| **average, 0.25** | **39/40** | **8 / 8 / 8 / 7** |
+
+None of them ever puts two media on a news they do not share. The threshold drops from 0.30 to 0.25
+because resembling a whole group is a harder question than resembling one of its members, so it is
+asked with a lower bar: at 0.30 the average only recovers 16 of the 40.
+
+The pairs the database leaves under the threshold count as no resemblance at all rather than being
+fetched. Measured both ways, that changes nothing, so the query stays as it is.
+
+Two other answers were measured and rejected. Weighing the words by how rare they are (TF-IDF) does
+worse, because a template is rare too: "Prediction and Betting Tips" is written by one site alone,
+so rarity hands it a high weight and joins eight unrelated matches. Embeddings, run locally by the
+Ollama already on the machine, judge **pairs** better than anything else here — they alone bring
+"Columbus Crew sack coach Higuaín" near "MLS coach sacked after sexist remark" — but they build
+worse **groups**, 32/40 against 39/40, and they cost a model, a vector per article and ten seconds
+on a large search. A better judge of pairs does not make a better grouper.
+
+`scripts/compare-grouping.js` is the bench that says all this: it scores every measure and every way
+of building the groups against the pairs judged by hand, and it can be run again.
 
 #### Missing sources
 

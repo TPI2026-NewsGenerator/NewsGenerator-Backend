@@ -16,6 +16,7 @@ import {ollamaResume} from "./utils/ollama.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {mediumOf} from "./utils/public-url.js";
 import {hedgedBy} from "./utils/hedging.js";
+import {averageLink, unionFind} from "./utils/grouping.js";
 
 export const MAX_SELECTED_NEWS = 10;
 const AI_CONCURRENCY = 5;       // resumes asked to Ollama at the same time
@@ -26,7 +27,11 @@ const AI_CONCURRENCY = 5;       // resumes asked to Ollama at the same time
 // Independent does not, which is why the accents are removed before comparing (see
 // FeedModel.similarArticlePairs). Measured on a day of sport news, every pair between 0.30 and 0.45
 // was a real duplicate; under 0.30 the betting tips of two different matches start being grouped.
-const SIMILARITY = 0.30;        // above this, two titles tell the same news (trigram similarity)
+// 0.25 and not 0.30 because the grouping asks an article to resemble a whole group and not one of
+// its members (see averageLink): that is a harder question, so it is asked with a lower bar. Both
+// were measured on the same forty groups judged by hand; 0.30 only recovers 16 of them, 0.25
+// recovers 39, and neither ever puts two media on a news they do not share.
+const SIMILARITY = 0.25;        // above this, two titles tell the same news (trigram similarity)
 const SAME_COPY = 0.85;         // above this they are the same text, a wire republished as it is
 
 // A title shorter than this is mostly the template of its paper, so it keeps the stricter threshold:
@@ -70,22 +75,6 @@ const toNews = (article) => ({
     hedged: hedgedBy(article.title, article.description),
 });
 
-// every article of a group points to the first article of that group
-const unionFind = (articles, pairs) => {
-    const groupOf = new Map(articles.map(article => [article.id, article.id]));
-    const find = (id) => {
-        while (groupOf.get(id) !== id) id = groupOf.get(id);
-        return id;
-    };
-
-    for (let {id_a, id_b} of pairs) {
-        const [a, b] = [find(id_a), find(id_b)];
-        if (a !== b) groupOf.set(b, a);
-    }
-
-    return find;
-};
-
 // group the articles telling the same news: the most recent one is kept and the others become its
 // 'sources', so the user doesn't see the same news ten times.
 //
@@ -98,7 +87,9 @@ const groupDuplicates = async (articles) => {
     const pairs = await FeedModel.similarArticlePairs(articles.map(article => article.id), SIMILARITY,
         {shortTitle: SHORT_TITLE, shortThreshold: SHORT_TITLE_SIMILARITY});
 
-    const sameNews = unionFind(articles, pairs);
+    const sameNews = averageLink(articles, pairs, SIMILARITY);
+    // the same text republished is transitive: if A is B word for word and B is C, then A is C.
+    // So the wire count keeps the single link, where it is right rather than dangerous.
     const sameCopy = unionFind(articles, pairs.filter(pair => pair.score >= SAME_COPY));
 
     const news = new Map();     // group -> news sent to the client
