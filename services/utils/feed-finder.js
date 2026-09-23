@@ -10,7 +10,8 @@
 import {parseHTML} from 'linkedom';
 import {Crawlers} from './crawlers.js';
 import {searchDirectory} from './feed-directory.js';
-import {assertPublicUrl, fetchPublicUrl, hostOf, nameOf} from './public-url.js';
+import {bridgeFeed} from './feed-bridge.js';
+import {assertPublicUrl, fetchPublicUrl, hostOf, isBridgeUrl, nameOf} from './public-url.js';
 
 // paths tried when the page declares no feed
 const COMMON_PATHS = [
@@ -74,10 +75,16 @@ const checkFeeds = async (urls) => {
 };
 
 // feeds of a site, the best first (the one with the most news)
-export const findFeeds = async (site) => {
+export const findFeeds = async (site, {language = null} = {}) => {
     // "fortune.com" -> https, but "file:///etc/passwd" keeps its protocol so it is refused as such
     const value = site.trim();
     const siteUrl = value.includes('://') ? value : `https://${value}`;
+
+    // the bridge is ours and answers on this machine: a user naming it would have us fetch whatever
+    // they put in its parameters
+    if (isBridgeUrl(siteUrl)) {
+        throw Object.assign(new Error('This address is not a website.'), {status: 400});
+    }
 
     let candidates = [];
     try {
@@ -103,5 +110,12 @@ export const findFeeds = async (site) => {
         .filter(feed => nameOf(hostOf(feed.url) ?? '') === nameOf(host))
         .map(feed => feed.url);
 
-    return (await checkFeeds(fromDirectory)).sort((a, b) => b.items - a.items);
+    const directoryFeeds = (await checkFeeds(fromDirectory)).sort((a, b) => b.items - a.items);
+    if (directoryFeeds.length > 0) return directoryFeeds;
+
+    // nothing published anywhere: the site is read as a page and turned into a feed. This one is
+    // built, not published, so it breaks the day the site changes its pages
+    const built = await bridgeFeed(siteUrl, {language});
+
+    return built ? [built] : [];
 };

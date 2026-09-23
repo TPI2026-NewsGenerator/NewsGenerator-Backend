@@ -93,6 +93,17 @@ pnpm run server
 5. A user can add their own sources (`POST /api/feeds` with a site address): the server finds the
    RSS feed of the site and checks it answers. These sources are **private**, they are only used in
    the searches of this user. Addresses of private networks are refused, see `services/utils/public-url.js`.
+   The feed of a site is looked for in four steps, each one tried only when the one before found
+   nothing (`services/utils/feed-finder.js`):
+   1. the feed the page declares, `<link rel="alternate" type="application/rss+xml">`;
+   2. the usual paths, `/rss`, `/feed`, `/rss/news`...;
+   3. a directory of feeds, which knows the ones a site declares nowhere and that are on no usual
+      path (`feed-directory.js`): this is what finds football.london and uefa.com;
+   4. the site read as a page and turned into a feed by RSS-Bridge (`feed-bridge.js`), for the news
+      sites that publish none at all: goal.com, onefootball.com, realmadrid.com.
+
+   On 30 media that searches were missing, 17 publish a feed, 6 more are reached by step 4, and 7
+   answer 401 or 403 to any server and stay out of reach (Reuters, AP, Man City).
 6. Ollama is called **only** on the news selected by the user, and gives the resume and the topic of
    the news in one call. Both are saved, so asking the same resume twice costs nothing.
 
@@ -102,6 +113,28 @@ Optional variables in `.env`:
 |---|---|---|
 | `FEED_MAX_AGE_MINUTES` | 30 | A search refreshes the feeds when the cache is older than this |
 | `FEED_RETENTION_DAYS` | 30 | Articles older than this are deleted |
+| `RSS_BRIDGE_URL` | _(none)_ | Address of the RSS-Bridge, step 4 above. Empty: the sites without a feed are simply out of reach |
+
+#### RSS-Bridge
+
+Some news sites publish no feed at all. RSS-Bridge reads their page and gives back its articles.
+It runs next to the server:
+
+```
+docker compose up -d        # starts it on 127.0.0.1:3002
+docker compose logs -f      # reads what it does
+```
+
+It is hosted here rather than used through a public instance: a public one answers `HTTP 500` as
+soon as several feeds are asked at the same time, and a refresh reads 50 feeds at once. Only
+`CssSelectorBridge` is enabled and the port is bound to the loopback address: the container is not
+meant to be reachable from anywhere else. Its configuration is `docker/rss-bridge/config.ini.php`,
+where every key must exist in the default configuration of RSS-Bridge, or every request answers
+`500 Config [...] is invalid`.
+
+A feed built this way is a scraper: it breaks the day the site changes its pages. The server only
+keeps one when the articles have a real headline and a date, so a wrong reading is refused instead
+of filling the cache with menus and contact pages.
 
 [//]: # (How to set up the database?)
 

@@ -11,7 +11,7 @@ import {FeedModel} from '../models/feed-model.js';
 import {FeedService} from '../services/feed-service.js';
 import {SourceService} from '../services/source-service.js';
 import {findFeeds} from '../services/utils/feed-finder.js';
-import {assertPublicUrl} from '../services/utils/public-url.js';
+import {assertPublicUrl, isBridgeUrl} from '../services/utils/public-url.js';
 import {Crawlers} from '../services/utils/crawlers.js';
 
 export const MAX_USER_FEEDS = 20;   // a user can't fill the refresh with thousands of feeds
@@ -47,7 +47,7 @@ export const FeedController = {
         }
 
         try {
-            const feeds = await findFeeds(site);
+            const feeds = await findFeeds(site, {language: 'en'});
             if (feeds.length === 0) {
                 return res.status(400).json({error: `No RSS feed found on "${site}".`});
             }
@@ -127,6 +127,12 @@ export const FeedController = {
         let count = await FeedModel.countUserFeeds(req.user.id);
 
         for (let {site, feed, category} of sources) {
+            // only the server builds an address on its own bridge, a client never names one
+            if (isBridgeUrl(feed)) {
+                errors.push({site, error: "This address can't be added."});
+                continue;
+            }
+
             const read = checked.get(feed);
             if (read && (read.error || read.items.length === 0)) {
                 errors.push({site, error: read.error ? `This feed does not answer (${read.error}).` : "This feed has no news."});

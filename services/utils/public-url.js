@@ -43,6 +43,20 @@ export const isPrivateIp = (ip) => {
     return true;    // not an ip we understand
 };
 
+// The RSS-Bridge of the project answers on the machine of the server, so its address is private on
+// purpose (see docker-compose.yml). It is configuration, not something a user typed: it is the only
+// address fetched without the checks below, and the only one a user is never allowed to name.
+export const isBridgeUrl = (value) => {
+    const bridge = process.env.RSS_BRIDGE_URL;
+    if (!bridge) return false;
+
+    try {
+        return new URL(value).origin === new URL(bridge).origin;
+    } catch {
+        return false;
+    }
+};
+
 // throws when the url can't be fetched for a user, returns the url otherwise
 export const assertPublicUrl = async (value) => {
     let url;
@@ -72,8 +86,10 @@ export const assertPublicUrl = async (value) => {
 };
 
 // fetch following the redirects one by one, checking each of them (a public url can redirect to a private one)
-export const fetchPublicUrl = async (value, {headers = {}, timeoutMs = 15000, maxRedirects = 3} = {}) => {
-    let url = await assertPublicUrl(value);
+// 'trusted' is for the addresses the project configured itself, the RSS-Bridge answering on this
+// machine: they are private on purpose, and no address a user gives ever reaches this
+export const fetchPublicUrl = async (value, {headers = {}, timeoutMs = 15000, maxRedirects = 3, trusted = false} = {}) => {
+    let url = trusted ? new URL(value) : await assertPublicUrl(value);
 
     for (let redirects = 0; ; redirects++) {
         const res = await fetch(url, {headers, redirect: 'manual', signal: AbortSignal.timeout(timeoutMs)});
@@ -84,7 +100,7 @@ export const fetchPublicUrl = async (value, {headers = {}, timeoutMs = 15000, ma
         if (redirects >= maxRedirects) {
             throw Object.assign(new Error('Too many redirects.'), {status: 400});
         }
-        url = await assertPublicUrl(new URL(location, url).href);
+        url = trusted ? new URL(location, url) : await assertPublicUrl(new URL(location, url).href);
     }
 };
 

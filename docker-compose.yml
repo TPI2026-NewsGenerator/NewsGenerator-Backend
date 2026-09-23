@@ -1,0 +1,20 @@
+# RSS-Bridge: builds a feed out of a page, for the news sites that publish none (goal.com,
+# onefootball.com, realmadrid.com). It is hosted here rather than used through a public instance:
+# a public one answers HTTP 500 as soon as several feeds are asked at the same time, and the
+# refresh reads 50 feeds at once.
+#
+#   docker compose up -d        start it
+#   docker compose logs -f      read what it does
+#
+# The server talks to it through RSS_BRIDGE_URL (see .env.example). Nothing else should: it is
+# bound to the loopback address only, it is not meant to be reachable from outside this machine.
+
+services:
+  rss-bridge:
+    image: rssbridge/rss-bridge:latest
+    container_name: newsgenerator-rss-bridge
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3002:80"
+    volumes:
+      - ./docker/rss-bridge:/config:ro

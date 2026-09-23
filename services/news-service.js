@@ -28,6 +28,14 @@ const sourceOf = (link) => {
     }
 };
 
+// a feed built from a page (see feed-bridge.js) gives the whole article as its description, where a
+// published feed gives a few lines. The card only shows the beginning, the whole text stays in the
+// database for the search to read.
+const CARD_LENGTH = 400;
+const shorten = (text) => !text || text.length <= CARD_LENGTH
+    ? text
+    : text.slice(0, CARD_LENGTH).replace(/\s+\S*$/, '') + '…';
+
 // cached article -> format sent to the client
 const toNews = (article) => ({
     url: article.link,
@@ -35,7 +43,7 @@ const toNews = (article) => ({
     source: sourceOf(article.link),
     publishedAt: article.published_at?.toISOString() ?? '',
     title: article.title,
-    description: article.description,
+    description: shorten(article.description),
     topic: article.topic,
 });
 

@@ -91,7 +91,7 @@ export const SourceService = {
             .sort((a, b) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? ''))
             .slice(0, MAX_NEWS);
 
-        const found = await mapWithConcurrency(candidates, FIND_CONCURRENCY, medium => findFeeds(medium.site));
+        const found = await mapWithConcurrency(candidates, FIND_CONCURRENCY, medium => findFeeds(medium.site, {language: 'en'}));
 
         const sources = candidates
             .map((medium, i) => ({

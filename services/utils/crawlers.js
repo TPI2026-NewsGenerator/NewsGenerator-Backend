@@ -12,10 +12,11 @@ import { Readability } from '@mozilla/readability';
 import { parseHTML } from 'linkedom';
 import { Parser } from "./parser.js";
 import { mapWithConcurrency } from "./concurrency.js";
-import { fetchPublicUrl } from "./public-url.js";
+import { fetchPublicUrl, isBridgeUrl } from "./public-url.js";
 
 const XML_CONCURRENCY = 50;       // number of feeds fetched at the same time
 const XML_TIMEOUT_MS = 8000;      // a slow feed is abandoned after this delay
+const BRIDGE_TIMEOUT_MS = 40000;  // a built feed is slower: the bridge reads the site page by page
 const USER_AGENT = 'Mozilla/5.0 (compatible; NewsGenerator/1.0; +RSS reader)';
 
 // download and parse one feed, the server answers 304 if it did not change since the last etag / last-modified
@@ -29,7 +30,13 @@ const fetchFeed = async ({url, etag, lastModified}) => {
     if (etag) headers['If-None-Match'] = etag;
     if (lastModified) headers['If-Modified-Since'] = lastModified;
 
-    const { res } = await fetchPublicUrl(url, { headers, timeoutMs: XML_TIMEOUT_MS });
+    // a feed built by our own RSS-Bridge answers on this machine, and it reads one page per article
+    const bridge = isBridgeUrl(url);
+    const { res } = await fetchPublicUrl(url, {
+        headers,
+        timeoutMs: bridge ? BRIDGE_TIMEOUT_MS : XML_TIMEOUT_MS,
+        trusted: bridge,
+    });
 
     if (res.status === 304) return { notModified: true, items: [] };
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
