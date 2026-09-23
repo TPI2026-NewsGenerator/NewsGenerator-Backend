@@ -104,7 +104,7 @@ pnpm run server
 
 1. The feeds of `db/rss-links.js` are grouped by language, then by category (world, press, sport,
    politics, economy, technology, science). The user chooses the language and the categories, that
-   is the first filter. There are 419 feeds: 339 in English, 25 in French, 20 in Spanish, 20 in
+   is the first filter. There are 416 feeds: 336 in English, 25 in French, 20 in Spanish, 20 in
    German, 15 in Italian. A search never mixes two languages, and one in French has no reason to
    fetch the English sources.
 2. A search fetches the feeds only when the cache is older than `FEED_MAX_AGE_MINUTES`, then reads
