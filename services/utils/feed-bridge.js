@@ -29,6 +29,14 @@ const MAX_TRIES = 3;                // patterns tried before giving up on a site
 // the sections where a site files its articles, in the languages it may answer in
 const NEWS_WORDS = /\/(news|article|story|stories|post|meldungen|noticias|notizie|actualites|nouvelles|nachrichten)/i;
 
+// sections a site links from every page and that never hold news. They pass every other rule:
+// "/fr/legal/" on ligue1.com is a named section, deeper than a language, and its pages carry a
+// title and a date, so only their name says what they are
+const NOT_NEWS = new RegExp('/(legal|mentions?|cgu|cgv|impressum|datenschutz|privacy|confidentialite|'
+    + 'terms|conditions|cookies?|about|a-propos|chi-siamo|quienes-somos|contact|help|aide|faq|'
+    + 'login|account|compte|abonnement|subscribe|newsletter|shop|boutique|store|tickets?|billetterie|'
+    + 'jobs|emploi|career|recrutement)', 'i');
+
 // The articles of a list page share the start of their address: on goal.com they all begin with
 // "/en/news/", on onefootball.com too, on realmadrid.com with "/en-US/news/". These prefixes are
 // the candidates given to the bridge, the most likely first.
@@ -57,7 +65,7 @@ export const articlePatterns = (html, {language = null} = {}) => {
     const section = (prefix) => NEWS_WORDS.test(prefix) || prefix.split('/').filter(Boolean).length >= 2;
 
     return [...counts.entries()]
-        .filter(([prefix, links]) => links >= MIN_LINKS && section(prefix))
+        .filter(([prefix, links]) => links >= MIN_LINKS && section(prefix) && !NOT_NEWS.test(prefix))
         .sort((a, b) => (news(b[0]) - news(a[0])) || (spoken(b[0]) - spoken(a[0])) || (b[1] - a[1]))
         .map(([prefix]) => prefix);
 };

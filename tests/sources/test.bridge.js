@@ -46,3 +46,19 @@ describe('articlePatterns', () => {
         expect(articlePatterns(html, {language: 'en'})).toEqual(['/en/news/']);
     });
 });
+
+describe('articlePatterns, sections that are never news', () => {
+    const page = (prefixes) => '<html><body>' + Object.entries(prefixes)
+        .flatMap(([prefix, links]) => Array.from({length: links}, (_, i) => `<a href="${prefix}page-${i}">a</a>`))
+        .join('') + '</body></html>';
+
+    it('should drop the legal pages, which a site links from everywhere', () => {
+        // ligue1.com links its legal notices more than its articles, and they carry a title and a date
+        expect(articlePatterns(page({'/fr/legal/': 30, '/fr/actualites/': 8}), {language: 'fr'}))
+            .toEqual(['/fr/actualites/']);
+    });
+
+    it('should drop the shop, the contact and the newsletter too', () => {
+        expect(articlePatterns(page({'/en/tickets/': 20, '/en/contact/': 15, '/en/newsletter/': 12}))).toEqual([]);
+    });
+});
