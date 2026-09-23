@@ -1,0 +1,277 @@
+'
+'  Author: Fabian Rostello
+'  Date: 23.09.2026
+'  File: class-diagram-backend-sprint4.puml
+'  Description: Class diagram of the backend, sprint 4 (RSS cache, private sources, corroboration)
+'
+'  Render it with:
+'    java -jar plantuml.jar docs/UML/class-diagram-backend-sprint4.puml
+'  or paste it in https://www.plantuml.com/plantuml
+'
+'  What changed since sprint 3:
+'    - user_preferences* are gone
+'    - the whole feeds module appeared: feedRouter/Controller/Service/Model and sourceService
+'    - newsService no longer scrapes to search: it reads the RSS cache, and the AI is called only
+'      on the news the user selected
+'
+
+@startuml Class Diagram - Backend Sprint 4
+
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+hide empty members
+
+class EndUser
+
+package "Presentation Layer" {
+    class router {
+        + use(/login, /news, /feeds, /customsearch)
+    }
+
+    class loginRouter
+    class newsRouter
+    class feedRouter
+    class customSearchRouter
+
+    class loginController {
+        + authUser()
+    }
+    class newsController {
+        + getNews()
+        + getCategories()
+        + getNewsContent()
+        + getNewsSummary()
+    }
+    class feedController {
+        + getUserFeeds()
+        + addUserFeed()
+        + suggestSources()
+        + searchSources()
+        + importSources()
+        + deleteUserFeed()
+    }
+    class customSearchController {
+        + getUserCustomSearch()
+        + postUserCustomSearch()
+        + deleteUserCustomSearch()
+    }
+}
+
+package "Business Layer" {
+    class loginService {
+        + authUser()
+    }
+    class customSearchService {
+        + getUserCustomSearch()
+        + postPutUserCustomSearch()
+        + deleteUserCustomSearch()
+    }
+
+    class newsService {
+        - groupDuplicates()
+        - unionFind()
+        + getNews()
+        + getNewsContent()
+        + getNewsSummary()
+    }
+    note right of newsService
+        Groups the news telling the same
+        story twice: at 0.30 (same news,
+        0.45 under 40 characters) and at
+        0.85 (the same text republished).
+        Answers how many media and how
+        many wordings, never a verdict.
+    end note
+
+    class feedService {
+        + refresh()
+        + ensureFresh()
+        + languages()
+        + categories()
+    }
+    class sourceService {
+        + suggest()
+        + searchDirectory()
+    }
+
+    class loginModel
+    class customSearchModel
+    class feedModel {
+        + searchArticles()
+        + similarArticlePairs()
+        + articleHosts()
+        + userFeedUrls()
+        + saveSummary()
+    }
+
+    package "utils" {
+        class filter {
+            + parse()
+            + keywordsSql()
+            + canWiden()
+            + widen()
+        }
+        class links {
+            + languages()
+            + categories()
+            + getCategoriesLinks()
+        }
+        class hedging {
+            + hedgedBy()
+        }
+        class ollama {
+            + ollamaResume()
+        }
+        class topics
+        class crawlers {
+            + Html()
+            + Xml()
+        }
+        class parser
+        class dates
+        class concurrency {
+            + mapWithConcurrency()
+        }
+        class publicUrl {
+            + assertPublicUrl()
+            + fetchPublicUrl()
+            + mediumOf()
+            + isBridgeUrl()
+        }
+        class feedFinder {
+            + findFeeds()
+        }
+        class feedDirectory {
+            + searchDirectory()
+        }
+        class feedBridge {
+            + bridgeFeed()
+            + articlePatterns()
+        }
+        class googleNews {
+            + search()
+        }
+        class gdelt {
+            + mediaFor()
+        }
+        class jwt {
+            + generateAccessToken()
+            + authenticateToken()
+        }
+        class pwdHasher
+    }
+}
+
+package "Infrastructure Layer" {
+    class bcrypt
+    class JsonWebToken
+    class Prisma
+    class PostgreSQL
+    class CheerioCrawler
+    class BasicCrawler
+    class Ollama
+    class "Google News" as GoogleNewsApi
+    class "GDELT DOC 2.0" as GdeltApi
+    class "Feed directory" as DirectoryApi
+    class "RSS-Bridge" as RssBridge
+}
+
+' --- presentation
+EndUser --> router
+router --> loginRouter
+router --> newsRouter
+router --> feedRouter
+router --> customSearchRouter
+
+loginRouter --> loginController
+newsRouter --> newsController
+feedRouter --> feedController
+customSearchRouter --> customSearchController
+
+newsRouter --> jwt
+feedRouter --> jwt
+customSearchRouter --> jwt
+
+' --- controllers to services
+loginController --> loginService
+newsController --> newsService
+newsController --> feedService
+feedController --> feedService
+feedController --> sourceService
+feedController --> feedModel
+feedController --> feedFinder
+feedController --> publicUrl
+feedController --> crawlers
+customSearchController --> customSearchService
+
+' --- login
+loginService --> loginModel
+loginService --> pwdHasher
+loginService --> jwt
+pwdHasher --> bcrypt
+jwt --> JsonWebToken
+
+' --- custom searches
+customSearchService --> customSearchModel
+
+' --- news
+newsService --> feedService
+newsService --> feedModel
+newsService --> filter
+newsService --> links
+newsService --> hedging
+newsService --> ollama
+newsService --> crawlers
+newsService --> concurrency
+newsService --> publicUrl
+ollama --> topics
+ollama --> Ollama
+
+' --- feeds cache
+feedService --> feedModel
+feedService --> crawlers
+feedService --> dates
+feedService --> links
+
+' --- missing sources
+sourceService --> feedModel
+sourceService --> googleNews
+sourceService --> gdelt
+sourceService --> feedDirectory
+sourceService --> feedFinder
+sourceService --> publicUrl
+sourceService --> concurrency
+
+feedFinder --> crawlers
+feedFinder --> feedDirectory
+feedFinder --> feedBridge
+feedFinder --> publicUrl
+feedBridge --> crawlers
+feedBridge --> publicUrl
+googleNews --> crawlers
+googleNews --> filter
+googleNews --> dates
+googleNews --> publicUrl
+gdelt --> filter
+gdelt --> publicUrl
+
+googleNews --> GoogleNewsApi
+gdelt --> GdeltApi
+feedDirectory --> DirectoryApi
+feedBridge --> RssBridge
+
+' --- infrastructure
+crawlers --> parser
+crawlers --> concurrency
+crawlers --> publicUrl
+crawlers --> CheerioCrawler
+crawlers --> BasicCrawler
+
+loginModel --> Prisma
+customSearchModel --> Prisma
+feedModel --> Prisma
+feedModel --> filter
+Prisma --> PostgreSQL
+
+@enduml
