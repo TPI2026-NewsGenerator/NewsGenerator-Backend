@@ -135,7 +135,7 @@ const embedding = (model) => ({
     embed: model,
     prepare: (title) => vectors.get(`${model}\u0000${title}`),
     score: (a, b) => (a && b ? cosine(a, b) : 0),
-    sweep: [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90],
+    sweep: [0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.60, 0.70, 0.80, 0.90],
 });
 
 const MEASURES = {
