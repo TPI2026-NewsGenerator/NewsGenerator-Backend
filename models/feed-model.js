@@ -99,18 +99,25 @@ export const FeedModel = {
     },
     // groups of articles telling the same news, found with the trigram similarity of their titles
     // returns the pairs above the threshold, the grouping is done by the caller
-    similarArticlePairs: async (ids, threshold) => {
+    similarArticlePairs: async (ids, threshold, {shortTitle, shortThreshold}) => {
         if (ids.length < 2) return [];
 
         // the similarity itself is returned: above the threshold two articles tell the same news,
-        // and far above it they are the same copy of the same wire, republished
+        // and far above it they are the same copy of the same wire, republished.
+        //
+        // A short title is mostly the template its paper puts around it: "Health Care Roundup:
+        // Market Talk" and "Auto & Transport Roundup: Market Talk" share everything but the sector.
+        // So under 'shortTitle' characters the old, stricter threshold is kept: those pairs stay
+        // apart, as they did before, rather than being wrongly merged into one news.
         return prisma.$queryRawUnsafe(`
             SELECT a.id AS id_a, b.id AS id_b, similarity(a.title, b.title) AS score
             FROM articles a
             JOIN articles b ON b.id > a.id AND b.id = ANY($1::int[])
             WHERE a.id = ANY($1::int[])
-              AND similarity(a.title, b.title) >= $2::real`,
-            ids, threshold);
+              AND similarity(a.title, b.title) >= CASE
+                  WHEN least(length(a.title), length(b.title)) < $3::int THEN $4::real
+                  ELSE $2::real END`,
+            ids, threshold, shortTitle, shortThreshold);
     },
     // one article per link, even if it is in several feeds
     getArticlesByLinks: async (links) => {

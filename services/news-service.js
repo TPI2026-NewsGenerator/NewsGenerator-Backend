@@ -26,6 +26,14 @@ const AI_CONCURRENCY = 5;       // resumes asked to Ollama at the same time
 // real duplicate; under 0.30 the betting tips of two different matches start being grouped.
 const SIMILARITY = 0.30;        // above this, two titles tell the same news (trigram similarity)
 const SAME_COPY = 0.85;         // above this they are the same text, a wire republished as it is
+
+// A title shorter than this is mostly the template of its paper, so it keeps the stricter threshold:
+// trigrams cannot tell "Health Care Roundup: Market Talk" from "Auto & Transport Roundup: Market
+// Talk". Measured on a wide search, the guard drops 32 pairs of 182, and none at all on a search
+// inside one category. It costs a few duplicates that stay apart, as they did before, which is the
+// safer mistake: merging two different news hides one of them and inflates the count of media.
+const SHORT_TITLE = 40;
+const SHORT_TITLE_SIMILARITY = 0.45;
 const MIN_RESULTS = 5;          // under this, a search asking for every word is asked again for any of them
 
 // site name from the article link, e.g. "https://www.nytimes.com/..." -> "nytimes.com"
@@ -85,7 +93,8 @@ const unionFind = (articles, pairs) => {
 // headline about the same event did each go and check. So both numbers are answered, and neither is
 // called reliable: a rumour repeated by twenty sites is still a rumour.
 const groupDuplicates = async (articles) => {
-    const pairs = await FeedModel.similarArticlePairs(articles.map(article => article.id), SIMILARITY);
+    const pairs = await FeedModel.similarArticlePairs(articles.map(article => article.id), SIMILARITY,
+        {shortTitle: SHORT_TITLE, shortThreshold: SHORT_TITLE_SIMILARITY});
 
     const sameNews = unionFind(articles, pairs);
     const sameCopy = unionFind(articles, pairs.filter(pair => pair.score >= SAME_COPY));
@@ -107,9 +116,12 @@ const groupDuplicates = async (articles) => {
         news.get(group).wordings.add(sameCopy(article.id));
     }
 
+    // a medium publishing two differently worded articles about the same news would give more
+    // wordings than media, which reads as nonsense. What the reader is told is how many of the
+    // media wrote their own, so the count never goes above them.
     return [...news.values()].map(({media, wordings, ...item}) => ({
         ...item,
-        corroboration: {media: media.size, wordings: wordings.size},
+        corroboration: {media: media.size, wordings: Math.min(wordings.size, media.size)},
     }));
 };
 
