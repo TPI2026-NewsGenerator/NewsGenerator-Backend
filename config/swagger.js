@@ -262,7 +262,7 @@ const options = {
                 "post": {
                     "tags": ["Feeds"],
                     "summary": "Add several suggested sources at once",
-                    "description": "Each feed is read again here: what the client sends back is never trusted, it could be any address, and a directory can name a feed that died. A source that fails does not stop the others, it is returned in `errors`.",
+                    "description": "Each feed is read again here: what the client sends back is never trusted, it could be any address, and a directory can name a feed that died. A source suggested from the RSS-Bridge is a special case: its address is **rebuilt from the name of the site** rather than taken from the request, because the bridge runs on this machine and a crafted address could point it anywhere. A source that fails does not stop the others, it is returned in `errors`.",
                     "requestBody": {
                         "required": true,
                         "content": {
@@ -281,7 +281,8 @@ const options = {
                                                 },
                                                 "required": ["site", "feed", "category"]
                                             }
-                                        }
+                                        },
+                                        "language": {"type": "string", "example": "en", "description": "Steers which section of a site is read when its feed has to be rebuilt from the page."}
                                     },
                                     "required": ["sources"]
                                 }

@@ -115,14 +115,19 @@ export const FeedController = {
     // add several suggested sources at once, their feed is checked again here: what the client sends
     // back is never trusted, it could be any address, and a directory can name a feed that died
     importSources: async (req, res) => {
-        const {sources} = req.body;
+        const {sources, language} = req.body;
+        const spoken = FeedService.languages().includes(language) ? language : 'en';
 
         if (!Array.isArray(sources) || sources.length === 0) {
             return res.status(400).json({error: "Please select at least one source."});
         }
 
-        // one read of each feed, so a dead one is refused instead of being added and never working
-        const checked = new Map((await Crawlers.Xml(sources.map(source => ({url: source.feed}))))
+        // one read of each feed, so a dead one is refused instead of being added and never working.
+        // The addresses on our own bridge are left out: they are read again below, from the one this
+        // server builds rather than the one the client sent.
+        const checked = new Map((await Crawlers.Xml(sources
+            .filter(source => !isBridgeUrl(source.feed))
+            .map(source => ({url: source.feed}))))
             .map(result => [result.url, result]));
 
         const added = [];
@@ -130,17 +135,7 @@ export const FeedController = {
         let count = await FeedModel.countUserFeeds(req.user.id);
 
         for (let {site, feed, category} of sources) {
-            // only the server builds an address on its own bridge, a client never names one
-            if (isBridgeUrl(feed)) {
-                errors.push({site, error: "This address can't be added."});
-                continue;
-            }
-
-            const read = checked.get(feed);
-            if (read && (read.error || read.items.length === 0)) {
-                errors.push({site, error: read.error ? `This feed does not answer (${read.error}).` : "This feed has no news."});
-                continue;
-            }
+            const name = String(site ?? '').trim();
 
             if (count >= MAX_USER_FEEDS) {
                 errors.push({site, error: `You can't have more than ${MAX_USER_FEEDS} sources.`});
@@ -151,12 +146,35 @@ export const FeedController = {
                 continue;
             }
 
+            // A site that publishes no feed is read through the bridge, and the suggestions offer it
+            // like any other source. But a client must never name an address on that bridge: it runs
+            // on this machine and a crafted address could point it anywhere. So the address is not
+            // trusted, it is built again here from the name of the site. What is added is then always
+            // something this server decided, and the suggestion stays usable.
+            const fromBridge = isBridgeUrl(feed);
+            if (fromBridge) {
+                const found = name ? await findFeeds(name, {language: spoken}) : [];
+                if (found.length === 0) {
+                    errors.push({site, error: `No RSS feed found on "${site}".`});
+                    continue;
+                }
+                feed = found[0].url;        // findFeeds has just read it, so it answers and has news
+            } else {
+                const read = checked.get(feed);
+                if (read && (read.error || read.items.length === 0)) {
+                    errors.push({site, error: read.error ? `This feed does not answer (${read.error}).` : "This feed has no news."});
+                    continue;
+                }
+            }
+
             try {
-                const url = (await assertPublicUrl(feed)).href;
+                // the bridge answers on a private address on purpose, so it is the one address that
+                // is not asked to be public: it is ours, not one a user gave
+                const url = fromBridge ? feed : (await assertPublicUrl(feed)).href;
                 added.push(toFeed(await FeedModel.addUserFeed({
                     userId: req.user.id,
                     url: url,
-                    site: String(site ?? '').trim() || url,
+                    site: name || url,
                     category: category,
                 })));
                 count++;
