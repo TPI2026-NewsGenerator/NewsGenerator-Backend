@@ -212,3 +212,25 @@ const titles = async (newsList, keywords) => {
         });
     });
 });
+
+describe('Filter.canWiden and Filter.widen', () => {
+    it('should see that a search asking for several words at once can be widened', () => {
+        expect(Filter.canWiden(Filter.parse(['referee football soccer']))).toBe(true);
+        expect(Filter.canWiden(Filter.parse(['referee']))).toBe(false);
+        expect(Filter.canWiden(Filter.parse(['referee, football']))).toBe(false);
+    });
+
+    it('should turn "all of them" into "any of them", keeping what was excluded', () => {
+        const wider = Filter.widen(Filter.parse(['referee football -rugby']));
+
+        expect(wider.groups.map(terms => terms.map(term => term.text))).toEqual([['referee'], ['football']]);
+        expect(wider.excluded.map(term => term.text)).toEqual(['rugby']);
+    });
+
+    it('should keep an exact phrase whole, it was asked for on purpose', () => {
+        const wider = Filter.widen(Filter.parse(['"red card" referee']));
+
+        expect(wider.groups.map(terms => terms.map(term => term.text))).toEqual([['red card'], ['referee']]);
+        expect(wider.groups[0][0].exact).toBe(true);
+    });
+});

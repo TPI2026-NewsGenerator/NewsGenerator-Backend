@@ -18,6 +18,7 @@ import {mapWithConcurrency} from "./utils/concurrency.js";
 export const MAX_SELECTED_NEWS = 10;
 const AI_CONCURRENCY = 5;       // resumes asked to Ollama at the same time
 const SIMILARITY = 0.45;        // above this, two titles tell the same news (trigram similarity)
+const MIN_RESULTS = 5;          // under this, a search asking for every word is asked again for any of them
 
 // site name from the article link, e.g. "https://www.nytimes.com/..." -> "nytimes.com"
 const sourceOf = (link) => {
@@ -92,12 +93,33 @@ export const NewsService = {
             await FeedService.ensureFresh(userId, language);
 
             // 3. search in SQL: keywords, excluded keywords (-word) and publication date
-            const articles = await FeedModel.searchArticles({
+            const search = (parsed) => FeedModel.searchArticles({
                 feedUrls: newsLinks,
-                keywords: Filter.parse(keywords),
+                keywords: parsed,
                 timeframe: timeframe,
             });
-            if (articles.length === 0) return [];
+
+            const parsed = Filter.parse(keywords);
+            const articles = await search(parsed);
+
+            // "referee football soccer" asks for the three words in the same news, and almost none
+            // has all three. Written like that in a web search it would only rank, never remove.
+            // So when a search finds close to nothing, the wider one is counted and offered, not
+            // done: widening "red card" on its own would answer everything about red or about card.
+            let wider = null;
+            if (articles.length < MIN_RESULTS && Filter.canWiden(parsed)) {
+                const loose = Filter.widen(parsed);
+                const found = await search(loose);
+
+                if (found.length > articles.length) {
+                    wider = {
+                        found: found.length,
+                        terms: loose.groups.map(([term]) => term.text),
+                    };
+                }
+            }
+
+            if (articles.length === 0) return {totalResults: 0, news: [], wider};
 
             // 4. once per link (a news can be in several feeds), then group the news telling the same story
             const uniqueArticles = [...new Map(articles.map(article => [article.link, article])).values()];
@@ -105,7 +127,8 @@ export const NewsService = {
 
             return {
                 totalResults: news.length,
-                news: news
+                news: news,
+                wider: wider,
             }
         } catch (err) {
             console.log(`Error fetching news for ${category}: ${err}`);

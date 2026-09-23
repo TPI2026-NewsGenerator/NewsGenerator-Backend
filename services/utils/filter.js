@@ -82,4 +82,12 @@ const keywordsSql = ({groups, excluded}, firstParam, column) => {
     return { sql: conditions.join(' AND '), params };
 };
 
-export const Filter = { parse, toPattern, keywordsSql };
+// Several words mean "all of them", which is exact but merciless: "referee football soccer" asks
+// for the three in the same news and finds almost nothing. On Google the same words would only
+// rank the results, never remove them, so a search that finds close to nothing is asked again for
+// any of the words. The excluded ones (-word) are kept: they were asked for on purpose.
+const canWiden = ({groups}) => groups.some(terms => terms.length > 1);
+
+const widen = ({groups, excluded}) => ({groups: groups.flat().map(term => [term]), excluded});
+
+export const Filter = { parse, toPattern, keywordsSql, canWiden, widen };
