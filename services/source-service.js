@@ -12,21 +12,28 @@ import {rss} from "../db/rss-links.js";
 import {FeedModel} from "../models/feed-model.js";
 import {search} from "./utils/google-news.js";
 import {findFeeds} from "./utils/feed-finder.js";
-import {hostOf, mediumOf} from "./utils/public-url.js";
+import {hostOf, nameOf} from "./utils/public-url.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 
 const MAX_CANDIDATES = 8;       // finding the feed of a site costs a few requests, so only the best are tried
 const FIND_CONCURRENCY = 4;
 const MAX_NEWS = 25;            // news shown for reading, the rest would only be noise
 
-// media already searched for this user: the feeds of db/rss-links.js and the ones they added
+// media already searched for this user: the feeds of db/rss-links.js and the ones they added.
+// The address of a feed does not always name its medium ("feeds.content.dowjones.io" is the WSJ,
+// feedburner is everybody), so the links of the articles already cached are read too
 const knownMedia = async (userId) => {
     const urls = [
         ...Object.values(rss).flatMap(language => Object.values(language).flat()),
         ...await FeedModel.userFeedUrls(userId),
     ];
 
-    return new Set(urls.map(hostOf).filter(Boolean).map(mediumOf));
+    const hosts = [
+        ...urls.map(hostOf).filter(Boolean),
+        ...await FeedModel.articleHosts(urls),
+    ];
+
+    return new Set(hosts.map(nameOf));
 };
 
 export const SourceService = {
@@ -41,7 +48,7 @@ export const SourceService = {
         const {news, media} = await search(keywords, {days: days > 0 ? days : null});
 
         const known = await knownMedia(userId);
-        const isMissing = (site) => !known.has(mediumOf(site));
+        const isMissing = (site) => !known.has(nameOf(site));
 
         const missing = media.filter(medium => isMissing(medium.site));
         const candidates = missing.slice(0, MAX_CANDIDATES);

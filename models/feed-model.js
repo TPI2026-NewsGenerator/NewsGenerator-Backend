@@ -83,6 +83,20 @@ export const FeedModel = {
             ORDER BY COALESCE(a.published_at, a.created_at) DESC`,
             feedUrls, timeframe.start ?? null, timeframe.end ?? null, ...keywordsSql.params);
     },
+    // hostnames of the articles already saved for these feeds. A feed is often served from another
+    // address than the site it publishes ("feeds.bbci.co.uk" for bbc.com, "feeds.content.dowjones.io"
+    // for wsj.com, feedburner and flipboard for anybody), so the links of the articles are the only
+    // reliable way to know which media are really searched
+    articleHosts: async (feedUrls) => {
+        const rows = await prisma.$queryRawUnsafe(`
+            SELECT DISTINCT lower(substring(a.link from '^https?://(?:www[.])?([^/:?#]+)')) AS host
+            FROM articles a
+            JOIN feeds f ON f.id = a.id_feed
+            WHERE f.url = ANY($1::text[])`,
+            feedUrls);
+
+        return rows.map(row => row.host).filter(Boolean);
+    },
     // groups of articles telling the same news, found with the trigram similarity of their titles
     // returns the pairs above the threshold, the grouping is done by the caller
     similarArticlePairs: async (ids, threshold) => {

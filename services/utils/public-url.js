@@ -109,3 +109,7 @@ export const mediumOf = (host) => {
 
     return labels.slice(country ? -3 : -2).join('.');
 };
+
+// the name of a medium without its ending: "www.bbc.co.uk" and "bbc.com" are the same newspaper
+// writing on two endings, and only the name says so
+export const nameOf = (host) => mediumOf(host).split('.')[0];

@@ -7,7 +7,7 @@
 //
 
 import {toQuery} from '../../services/utils/google-news.js'
-import {hostOf, mediumOf} from '../../services/utils/public-url.js'
+import {hostOf, mediumOf, nameOf} from '../../services/utils/public-url.js'
 
 describe('toQuery', () => {
     it('should keep a single keyword as it is', () => {
@@ -67,5 +67,17 @@ describe('mediumOf', () => {
     it('should not take a two letter word of the name for a country ending', () => {
         expect(mediumOf('si.com')).toBe('si.com');
         expect(mediumOf('rss.nytimes.com')).toBe('nytimes.com');
+    });
+});
+
+describe('nameOf', () => {
+    it('should see the two endings of a medium as the same one, so it is not suggested again', () => {
+        expect(nameOf('bbc.com')).toBe(nameOf('www.bbc.co.uk'));
+        expect(nameOf('reuters.com')).toBe('reuters');
+    });
+
+    it('should drop the subdomains of a feed', () => {
+        expect(nameOf('rss.nytimes.com')).toBe('nytimes');
+        expect(nameOf('feeds.content.dowjones.io')).toBe('dowjones');
     });
 });
