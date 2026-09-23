@@ -14,10 +14,18 @@ import {FeedService} from "./feed-service.js";
 import {FeedModel} from "../models/feed-model.js";
 import {ollamaResume} from "./utils/ollama.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
+import {mediumOf} from "./utils/public-url.js";
+import {hedgedBy} from "./utils/hedging.js";
 
 export const MAX_SELECTED_NEWS = 10;
 const AI_CONCURRENCY = 5;       // resumes asked to Ollama at the same time
-const SIMILARITY = 0.45;        // above this, two titles tell the same news (trigram similarity)
+// Two titles telling the same news share less than one would think: the Guardian writing "Columbus
+// Crew sack coach Federico Higuain for man's game jibe aimed at female referee" and the Independent
+// writing "Gonzalo Higuain's brother sacked by MLS club after telling female referee this is a man's
+// game" only reach 0.325. Measured on a day of sport news, every pair between 0.30 and 0.45 was a
+// real duplicate; under 0.30 the betting tips of two different matches start being grouped.
+const SIMILARITY = 0.30;        // above this, two titles tell the same news (trigram similarity)
+const SAME_COPY = 0.85;         // above this they are the same text, a wire republished as it is
 const MIN_RESULTS = 5;          // under this, a search asking for every word is asked again for any of them
 
 // site name from the article link, e.g. "https://www.nytimes.com/..." -> "nytimes.com"
@@ -46,37 +54,63 @@ const toNews = (article) => ({
     title: article.title,
     description: shorten(article.description),
     topic: article.topic,
+    // who the article credits for what it reports, answered by the AI with the summary
+    sourcing: article.sourcing,
+    // the words the article itself used to say it has no confirmation, null when it has none
+    hedged: hedgedBy(article.title, article.description),
 });
 
-// group the articles telling the same news: the most recent one is kept and the others become its
-// 'sources', so the user doesn't see the same news ten times
-const groupDuplicates = async (articles) => {
-    const pairs = await FeedModel.similarArticlePairs(articles.map(article => article.id), SIMILARITY);
-
-    // union-find: every article of a group points to the first article of that group
+// every article of a group points to the first article of that group
+const unionFind = (articles, pairs) => {
     const groupOf = new Map(articles.map(article => [article.id, article.id]));
     const find = (id) => {
         while (groupOf.get(id) !== id) id = groupOf.get(id);
         return id;
     };
+
     for (let {id_a, id_b} of pairs) {
         const [a, b] = [find(id_a), find(id_b)];
         if (a !== b) groupOf.set(b, a);
     }
 
+    return find;
+};
+
+// group the articles telling the same news: the most recent one is kept and the others become its
+// 'sources', so the user doesn't see the same news ten times.
+//
+// The same titles are grouped twice, at two thresholds, and the second one is what says something.
+// A wire of Reuters or the AFP republished by twenty sites gives twenty media but one wording: that
+// is one report seen twenty times, not twenty confirmations. Twenty media that each wrote their own
+// headline about the same event did each go and check. So both numbers are answered, and neither is
+// called reliable: a rumour repeated by twenty sites is still a rumour.
+const groupDuplicates = async (articles) => {
+    const pairs = await FeedModel.similarArticlePairs(articles.map(article => article.id), SIMILARITY);
+
+    const sameNews = unionFind(articles, pairs);
+    const sameCopy = unionFind(articles, pairs.filter(pair => pair.score >= SAME_COPY));
+
     const news = new Map();     // group -> news sent to the client
     for (let article of articles) {
-        const group = find(article.id);
+        const group = sameNews(article.id);
 
         if (!news.has(group)) {
-            news.set(group, {...toNews(article), sources: []});
+            news.set(group, {...toNews(article), sources: [], media: new Set(), wordings: new Set()});
         } else {
             const {url, source, title, publishedAt} = toNews(article);
             news.get(group).sources.push({url, source, title, publishedAt});
         }
+
+        // a medium publishing the same news in two of its feeds is one medium, and two articles
+        // written the same way are one wording
+        news.get(group).media.add(mediumOf(sourceOf(article.link)));
+        news.get(group).wordings.add(sameCopy(article.id));
     }
 
-    return [...news.values()];
+    return [...news.values()].map(({media, wordings, ...item}) => ({
+        ...item,
+        corroboration: {media: media.size, wordings: wordings.size},
+    }));
 };
 
 export const NewsService = {
@@ -192,9 +226,9 @@ export const NewsService = {
             // the RSS description is too short, the AI would invent the rest
             if (!news.fullContent) return null;
 
-            const {summary, topic} = await ollamaResume(news.title, news.content);
-            await FeedModel.saveSummary(url, summary, topic);
-            return {summary, topic};
+            const {summary, topic, sourcing} = await ollamaResume(news.title, news.content);
+            await FeedModel.saveSummary(url, summary, topic, sourcing);
+            return {summary, topic, sourcing};
         });
         const summaries = new Map(toSummarize.map((url, i) => [url, results[i]]));
 

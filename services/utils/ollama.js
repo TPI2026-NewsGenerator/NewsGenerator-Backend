@@ -17,6 +17,9 @@ const MAX_CONTENT_CHARS = 12000;    // longer articles are cut, the start of a n
 const SUMMARY_MIN_WORDS = 120;
 const SUMMARY_MAX_WORDS = 150;
 
+// who the article credits for what it reports, asked in the same call as the summary
+export const SOURCINGS = ['named', 'anonymous', 'none'];
+
 // inspired by "https://github.com/ollama/ollama-js"
 const ollama = new Ollama({
     host: 'https://ollama.com',
@@ -34,11 +37,17 @@ export const ollamaResume = async (title, text) => {
                 content: `You are a journalist who writes neutral summaries of news articles.
                         Answer in this format, nothing before or after:
                         TOPIC: <one topic>
+                        SOURCING: <one word>
                         <the summary>
                         Rules:
                         - TOPIC is the main subject of the article, one of: ${TOPICS.join(', ')}
                         - A news about a sport, a team, an athlete, a match or a referee is always sport,
                           even when it is about a controversy, money or the behaviour of a player
+                        - SOURCING says who the article credits for what it reports, one of:
+                          named (it names them: a person, a club, an institution, an official statement),
+                          anonymous (it relies on sources it does not name, "sources close to", "insiders"),
+                          none (it credits nobody)
+                        - SOURCING describes the article, never whether the news is true
                         - The summary is between ${SUMMARY_MIN_WORDS} and ${SUMMARY_MAX_WORDS} words, in English
                         - 1 or 2 paragraphs of normal readable text, no title, no list, no markdown
                         - Only facts from the article: who, what, when, where, why
@@ -47,7 +56,7 @@ export const ollamaResume = async (title, text) => {
             },
             {
                 role: "user",
-                content: `Give the topic and the summary of this news.
+                content: `Give the topic, the sourcing and the summary of this news.
 
                         TITLE: ${title}
 
@@ -64,11 +73,14 @@ export const ollamaResume = async (title, text) => {
     const answer = response.message.content.trim();
     if (!answer) throw new Error("Empty answer from the AI");
 
-    // "TOPIC: sport" on the first line, the summary after
-    const [, topic, summary] = answer.match(/^\s*TOPIC\s*:\s*\**\s*([a-z]+)\**\s*([\s\S]*)$/i) ?? [];
+    // "TOPIC: sport" then "SOURCING: named" on their own lines, the summary after. Both are asked
+    // for in this one call: a second call to read the same article again would double the cost.
+    const [, topic, sourcing, summary] =
+        answer.match(/^\s*TOPIC\s*:\s*\**\s*([a-z]+)\**\s*(?:SOURCING\s*:\s*\**\s*([a-z]+)\**)?\s*([\s\S]*)$/i) ?? [];
 
     return {
         summary: (summary ?? answer).trim(),
         topic: isTopic(topic?.toLowerCase()) ? topic.toLowerCase() : null,
+        sourcing: SOURCINGS.includes(sourcing?.toLowerCase()) ? sourcing.toLowerCase() : null,
     };
 }

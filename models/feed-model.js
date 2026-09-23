@@ -73,7 +73,7 @@ export const FeedModel = {
 
         return prisma.$queryRawUnsafe(`
             SELECT a.id, a.id_feed, a.link, a.title, a.description, a.thumbnail, a.category,
-                   a.published_at, a.created_at, a.topic, a.summary
+                   a.published_at, a.created_at, a.topic, a.summary, a.sourcing
             FROM articles a
             JOIN feeds f ON f.id = a.id_feed
             WHERE f.url = ANY($1::text[])
@@ -102,8 +102,10 @@ export const FeedModel = {
     similarArticlePairs: async (ids, threshold) => {
         if (ids.length < 2) return [];
 
+        // the similarity itself is returned: above the threshold two articles tell the same news,
+        // and far above it they are the same copy of the same wire, republished
         return prisma.$queryRawUnsafe(`
-            SELECT a.id AS id_a, b.id AS id_b
+            SELECT a.id AS id_a, b.id AS id_b, similarity(a.title, b.title) AS score
             FROM articles a
             JOIN articles b ON b.id > a.id AND b.id = ANY($1::int[])
             WHERE a.id = ANY($1::int[])
@@ -117,11 +119,11 @@ export const FeedModel = {
             distinct: ['link'],
         });
     },
-    // the AI resume and topic are kept, a news asked twice is not summarized twice
-    saveSummary: async (link, summary, topic) => {
+    // the AI resume, topic and sourcing are kept, a news asked twice is not summarized twice
+    saveSummary: async (link, summary, topic, sourcing) => {
         return prisma.articles.updateMany({
             where: { link: link },
-            data: { summary: summary, topic: topic },
+            data: { summary: summary, topic: topic, sourcing: sourcing },
         });
     },
     // feeds added by a user, they are private: only used in the searches of this user
