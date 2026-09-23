@@ -8,7 +8,7 @@
 
 import {toQuery} from '../../services/utils/google-news.js'
 import {searchDirectory} from '../../services/utils/feed-directory.js'
-import {mediaFor as gdeltMedia, toQuery as gdeltQuery} from '../../services/utils/gdelt.js'
+import {mediaFor as gdeltMedia, mediaOf as gdeltMediaOf, toQuery as gdeltQuery} from '../../services/utils/gdelt.js'
 import {hostOf, mediumOf, nameOf} from '../../services/utils/public-url.js'
 
 describe('toQuery', () => {
@@ -117,44 +117,31 @@ describe('searchDirectory', () => {
 });
 
 describe('gdelt', () => {
-    const answer = (body, ok = true) => () => Promise.resolve({
-        ok, text: () => Promise.resolve(typeof body === 'string' ? body : JSON.stringify(body)),
-    });
-    const realFetch = globalThis.fetch;
-
-    afterEach(() => { globalThis.fetch = realFetch; });
-
     it('should ask the language the search is in', () => {
         expect(gdeltQuery(['referee'], {language: 'fr'})).toBe('referee sourcelang:fre');
         expect(gdeltQuery(['referee, VAR'], {language: 'en'})).toBe('(referee OR VAR) sourcelang:eng');
         expect(gdeltQuery(['referee -rugby'], {language: 'en'})).toBe('referee -rugby sourcelang:eng');
     });
 
-    it('should count the media of the articles, the one publishing the most first', async () => {
-        globalThis.fetch = answer({articles: [
+    it('should count the media of the articles, the one publishing the most first', () => {
+        expect(gdeltMediaOf([
             {url: 'https://www.a.com/1', domain: 'www.a.com'},
             {url: 'https://a.com/2', domain: 'a.com'},
             {url: 'https://b.com/1', domain: 'b.com'},
             {url: 'https://b.com/2', domain: 'b.com'},
             {url: 'https://b.com/3', domain: 'b.com'},
-        ]});
-
-        expect(await gdeltMedia(['referee'])).toEqual([
+        ])).toEqual([
             {site: 'b.com', name: 'b.com', news: 3},
             {site: 'a.com', name: 'a.com', news: 2},
         ]);
     });
 
-    it('should drop a medium that only mentions the subject once', async () => {
-        globalThis.fetch = answer({articles: [{url: 'https://passing.com/1', domain: 'passing.com'}]});
-        expect(await gdeltMedia(['referee'])).toEqual([]);
+    it('should drop a medium that only mentions the subject once', () => {
+        expect(gdeltMediaOf([{url: 'https://passing.com/1', domain: 'passing.com'}])).toEqual([]);
     });
 
-    it('should answer nothing when it refuses, it answers a sentence and not an error code', async () => {
-        globalThis.fetch = answer('Please limit requests to one every 5 seconds');
-        expect(await gdeltMedia(['referee'])).toEqual([]);
-
-        globalThis.fetch = () => Promise.reject(new Error('connect timeout'));
-        expect(await gdeltMedia(['referee'])).toEqual([]);
+    it('should answer nothing rather than fail when it is not asked, or answers nothing', async () => {
+        expect(await gdeltMedia(['referee'], {tries: 0})).toEqual([]);
+        expect(await gdeltMedia([], {tries: 0})).toEqual([]);
     });
 });
