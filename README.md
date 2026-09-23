@@ -177,6 +177,21 @@ Four things are shown next to a news, each one measured, none of them a verdict:
 
 A group of one medium says `this source only`, which is the honest answer and not a warning.
 
+**Above five articles, the card stops claiming to be one news** and says `N media on this story`.
+The grouping is transitive: A and B tell the same news, B and C too, so A and C end up together even
+when they share nothing. On two to four articles — 93% of the groups holding several, measured over
+three days in the five languages — that is what one wants. Above, it drifts: the thirty-one articles
+on the White House press ban really are one running story, from the court filing to the late-night
+jokes, but they are not one news carried thirty-one times.
+
+Two structural fixes were measured and rejected. Accepting an article only when it resembles the
+first of its group splits the very groups this is meant to protect: the Guardian, the Independent
+and the BBC on the Higuaín story hold together only because the BBC's short headline matches the
+Guardian's, so that group falls back to two media. Splitting on how densely a group is linked fails
+too, and worse: the eight betting tips of eight different matches are more densely linked (0.79)
+than that Higuaín group (0.67). Neither the shape of the group nor its size separates one news from
+one running story, so the grouping is left alone and only what the card claims is bounded.
+
 #### Missing sources
 
 A search only finds what the sources publish, so the sources are grown from what the searches
