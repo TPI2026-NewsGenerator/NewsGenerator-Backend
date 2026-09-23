@@ -664,5 +664,149 @@ export const rss = {
             "http://www.twis.org/feed/",
             "https://flowingdata.com/feed",
         ]
-    }
+    },
+    fr: {
+        world: [
+            "https://www.lemonde.fr/international/rss_full.xml",
+            "https://www.france24.com/fr/rss",
+            "https://www.rfi.fr/fr/monde/rss",
+            "https://www.lefigaro.fr/rss/figaro_international.xml",
+        ],
+        press: [
+            "https://www.francetvinfo.fr/titres.rss",
+            "https://www.lemonde.fr/rss/une.xml",
+            "https://www.liberation.fr/arc/outboundfeeds/rss-all/?outputType=xml",
+            "https://www.20minutes.fr/feeds/rss-une.xml",
+            "https://www.nouvelobs.com/a-la-une/rss.xml",
+        ],
+        sport: [
+            "https://www.francetvinfo.fr/sports.rss",
+            "https://rmcsport.bfmtv.com/rss/football/",
+            "https://www.20minutes.fr/feeds/rss-sport.xml",
+        ],
+        politics: [
+            "https://www.lemonde.fr/politique/rss_full.xml",
+            "https://www.lefigaro.fr/rss/figaro_politique.xml",
+            "https://www.francetvinfo.fr/politique.rss",
+        ],
+        economy: [
+            "https://www.lemonde.fr/economie/rss_full.xml",
+            "https://www.lefigaro.fr/rss/figaro_economie.xml",
+            "https://www.latribune.fr/feed.xml",
+        ],
+        technology: [
+            "https://www.lemonde.fr/pixels/rss_full.xml",
+            "https://www.numerama.com/feed/",
+            "https://www.01net.com/feed/",
+            "https://www.frandroid.com/feed",
+        ],
+        science: [
+            "https://www.lemonde.fr/sciences/rss_full.xml",
+            "https://www.futura-sciences.com/rss/actualites.xml",
+            "https://www.sciencesetavenir.fr/rss.xml",
+        ],
+    },
+    es: {
+        world: [
+            "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/internacional/portada",
+            "https://www.lavanguardia.com/rss/internacional.xml",
+            "https://e00-elmundo.uecdn.es/elmundo/rss/internacional.xml",
+        ],
+        press: [
+            "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada",
+            "https://www.lavanguardia.com/rss/home.xml",
+            "https://e00-elmundo.uecdn.es/elmundo/rss/portada.xml",
+        ],
+        sport: [
+            "https://e00-marca.uecdn.es/rss/portada.xml",
+            "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/deportes/portada",
+            "https://www.lavanguardia.com/rss/deportes.xml",
+            "https://www.mundodeportivo.com/rss/home.xml",
+        ],
+        politics: [
+            "https://www.lavanguardia.com/rss/politica.xml",
+            "https://e00-elmundo.uecdn.es/elmundo/rss/espana.xml",
+        ],
+        economy: [
+            "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/economia/portada",
+            "https://e00-expansion.uecdn.es/rss/portada.xml",
+            "https://www.eleconomista.es/rss/rss-category.php?category=economia",
+        ],
+        technology: [
+            "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/tecnologia/portada",
+            "https://www.xataka.com/feedburner.xml",
+            "https://e00-elmundo.uecdn.es/elmundo/rss/navegante.xml",
+        ],
+        science: [
+            "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/ciencia/portada",
+            "https://www.nationalgeographic.com.es/feeds/ciencia.html",
+        ],
+    },
+    de: {
+        world: [
+            "https://www.tagesschau.de/ausland/index~rss2.xml",
+            "https://www.spiegel.de/international/index.rss",
+        ],
+        press: [
+            "https://www.tagesschau.de/index~rss2.xml",
+            "https://newsfeed.zeit.de/index",
+            "https://www.welt.de/feeds/latest.rss",
+            "https://www.spiegel.de/schlagzeilen/index.rss",
+        ],
+        sport: [
+            "https://www.sportschau.de/index~rss2.xml",
+            "https://www.spiegel.de/sport/index.rss",
+            "https://rss.sueddeutsche.de/rss/Sport",
+            "https://rss.orf.at/sport.xml",
+        ],
+        politics: [
+            "https://rss.sueddeutsche.de/rss/Politik",
+            "https://www.deutschlandfunk.de/politik.1499.de.rss",
+        ],
+        economy: [
+            "https://www.tagesschau.de/wirtschaft/index~rss2.xml",
+            "https://www.wiwo.de/contentexport/feed/rss/schlagzeilen",
+            "https://rss.sueddeutsche.de/rss/Wirtschaft",
+        ],
+        technology: [
+            "https://www.heise.de/rss/heise-atom.xml",
+            "https://www.golem.de/rss.php?feed=RSS2.0",
+            "https://www.nzz.ch/technologie.rss",
+        ],
+        science: [
+            "https://www.spiegel.de/wissenschaft/index.rss",
+            "https://www.spektrum.de/alias/rss/spektrum-de-rss-feed/996406",
+        ],
+    },
+    it: {
+        world: [
+            "https://www.ansa.it/sito/notizie/mondo/mondo_rss.xml",
+            "https://www.repubblica.it/rss/esteri/rss2.0.xml",
+        ],
+        press: [
+            "https://www.ansa.it/sito/ansait_rss.xml",
+            "https://www.repubblica.it/rss/homepage/rss2.0.xml",
+        ],
+        sport: [
+            "https://www.ansa.it/sito/notizie/sport/sport_rss.xml",
+        ],
+        politics: [
+            "https://www.ansa.it/sito/notizie/politica/politica_rss.xml",
+            "https://www.repubblica.it/rss/politica/rss2.0.xml",
+            "https://www.ilfattoquotidiano.it/category/politica-palazzo/feed/",
+        ],
+        economy: [
+            "https://www.ansa.it/sito/notizie/economia/economia_rss.xml",
+            "https://www.repubblica.it/rss/economia/rss2.0.xml",
+            "https://www.ilsole24ore.com/rss/economia.xml",
+        ],
+        technology: [
+            "https://www.ilpost.it/tecnologia/feed/",
+            "https://www.repubblica.it/rss/tecnologia/rss2.0.xml",
+        ],
+        science: [
+            "https://www.ansa.it/canale_scienza_tecnica/notizie/scienzaetecnica_rss.xml",
+            "https://www.focus.it/rss/scienza.rss",
+        ],
+    },
 }

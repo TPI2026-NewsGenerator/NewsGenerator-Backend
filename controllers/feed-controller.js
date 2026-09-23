@@ -34,7 +34,8 @@ export const FeedController = {
 
     // the user gives a site ("fortune.com") or a feed, the server finds the feed and checks it answers
     addUserFeed: async (req, res) => {
-        const {site, category} = req.body;
+        const {site, category, language} = req.body;
+        const spoken = FeedService.languages().includes(language) ? language : 'en';
 
         if (typeof site !== 'string' || site.trim() === '') {
             return res.status(400).json({error: "Please enter the address of a website."});
@@ -47,7 +48,7 @@ export const FeedController = {
         }
 
         try {
-            const feeds = await findFeeds(site, {language: 'en'});
+            const feeds = await findFeeds(site, {language: spoken});
             if (feeds.length === 0) {
                 return res.status(400).json({error: `No RSS feed found on "${site}".`});
             }
@@ -72,7 +73,7 @@ export const FeedController = {
 
     // media covering the search of the user and missing from their sources, with the feed to add
     suggestSources: async (req, res) => {
-        const {keywords, timeframe} = req.body;
+        const {keywords, timeframe, language} = req.body;
 
         if (!Array.isArray(keywords) || keywords.length === 0) {
             return res.status(400).json({error: "Keywords are required to look for missing sources."});
@@ -83,6 +84,8 @@ export const FeedController = {
                 keywords: keywords,
                 timeframe: timeframe ?? {},
                 userId: req.user.id,
+                // the panel follows the language of the search it was opened from
+                language: FeedService.languages().includes(language) ? language : 'en',
             });
 
             res.status(200).json(suggestions);

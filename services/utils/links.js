@@ -9,17 +9,36 @@
 
 import {rss} from "../../db/rss-links.js";
 
+export const DEFAULT_LANGUAGE = 'en';
+
 const Links = {
-    getCategoriesLinks(category) {
+    // the languages the project has sources for
+    languages() {
+        return Object.keys(rss);
+    },
+
+    // the categories that can be searched in this language
+    categories(language = DEFAULT_LANGUAGE) {
+        return Object.keys(rss[language] ?? {});
+    },
+
+    // feeds of these categories, in this language only: a search never mixes two languages
+    getCategoriesLinks(category, language = DEFAULT_LANGUAGE) {
         if (!category || category.length === 0) {
             throw "No categories selected, please select a category."
         }
+
+        const sources = rss[language];
+        if (!sources) {
+            throw `No source in this language yet: ${language}. Available: ${Links.languages().join(', ')}`;
+        }
+
         let newsLinks = [];
         let missingCategories = [];
 
         for (let c of category) {
-            if (c.toLowerCase() in rss.en) {
-                newsLinks = [...newsLinks, rss.en[c.toLowerCase()]];
+            if (c.toLowerCase() in sources) {
+                newsLinks = [...newsLinks, sources[c.toLowerCase()]];
             } else {
                 missingCategories = [...missingCategories, c];
             }

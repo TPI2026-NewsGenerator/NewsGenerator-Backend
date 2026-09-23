@@ -12,6 +12,7 @@ import {rss} from "../db/rss-links.js";
 import {FeedModel} from "../models/feed-model.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {toDate} from "./utils/dates.js";
+import Links, {DEFAULT_LANGUAGE} from "./utils/links.js";
 
 // the feeds are fetched when a search needs them, not in background: the cache is refreshed
 // only if it is older than this
@@ -23,8 +24,9 @@ const RETENTION_DAYS = Number(process.env.FEED_RETENTION_DAYS) || 30;
 // that user searches, not when somebody else does.
 const running = new Map();
 
-// the feeds shared by everybody, from db/rss-links.js
-const sharedUrls = () => [...new Set(Object.values(rss).flatMap(language => Object.values(language).flat()))];
+// the feeds shared by everybody, from db/rss-links.js, for one language only: a search in French
+// has no reason to fetch the English sources, and the catalogue grows with every language added
+const sharedUrls = (language) => [...new Set(Object.values(rss[language] ?? {}).flat())];
 
 const doRefresh = async (urls, {purge = false} = {}) => {
     const start = Date.now();
@@ -107,21 +109,24 @@ const refreshStaleGroup = async (key, urls, options) => {
 };
 
 export const FeedService = {
-    // fetch the shared feeds and, when a user is given, their own sources
-    refresh: async (userId = null) => Promise.all([
-        refreshGroup('feeds', sharedUrls(), {purge: true}),
+    // fetch the shared feeds of a language and, when a user is given, their own sources
+    refresh: async (userId = null, language = DEFAULT_LANGUAGE) => Promise.all([
+        refreshGroup(`feeds:${language}`, sharedUrls(language), {purge: true}),
         userId ? refreshGroup(`user:${userId}`, await FeedModel.userFeedUrls(userId)) : null,
     ]),
 
     // refresh only what is too old, awaited by the searches of this user
-    ensureFresh: async (userId = null) => Promise.all([
-        refreshStaleGroup('feeds', sharedUrls(), {purge: true}),
+    ensureFresh: async (userId = null, language = DEFAULT_LANGUAGE) => Promise.all([
+        refreshStaleGroup(`feeds:${language}`, sharedUrls(language), {purge: true}),
         userId ? refreshStaleGroup(`user:${userId}`, await FeedModel.userFeedUrls(userId)) : null,
     ]),
 
-    // categories of the feeds, they can be used in a search
-    categories: () => [...new Set(Object.values(rss).flatMap(language => Object.keys(language)))],
+    // languages that have sources, and the categories of one of them
+    languages: () => Links.languages(),
+    categories: (language = DEFAULT_LANGUAGE) => Links.categories(language),
 
     // keep the categories table in sync with the feeds list, for the custom searches
-    syncCategories: () => FeedModel.syncCategories(FeedService.categories()),
+    syncCategories: () => FeedModel.syncCategories(
+        [...new Set(Links.languages().flatMap(language => Links.categories(language)))]
+    ),
 }

@@ -20,6 +20,16 @@ import {hostOf} from './public-url.js';
 const FEED_URL = 'https://news.google.com/rss/search';
 const MAX_ITEMS = 100;      // Google News never returns more
 
+// Google News answers in the language and the country it is asked for: without this it only ever
+// names the English speaking media, whatever the keywords
+const LOCALES = {
+    en: {hl: 'en-US', gl: 'US', ceid: 'US:en'},
+    fr: {hl: 'fr', gl: 'FR', ceid: 'FR:fr'},
+    es: {hl: 'es', gl: 'ES', ceid: 'ES:es'},
+    de: {hl: 'de', gl: 'DE', ceid: 'DE:de'},
+    it: {hl: 'it', gl: 'IT', ceid: 'IT:it'},
+};
+
 // our keywords (see Filter.parse) written with the Google operators: alternatives with OR, the terms
 // of an alternative one after the other (AND), "quotes" and -excluded mean the same thing there
 export const toQuery = (keywords, days) => {
@@ -41,11 +51,12 @@ const withoutPublisher = (title, publisher) =>
 
 // the news and the media Google News gives for these keywords, in one call
 // news: [{title, url, site, name, publishedAt}], media: [{site, name, news}] the most present first
-export const search = async (keywords, {days = null} = {}) => {
+export const search = async (keywords, {days = null, language = 'en'} = {}) => {
     const query = toQuery(keywords, days);
     if (query.trim() === '') return {news: [], media: []};
 
-    const url = `${FEED_URL}?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+    const locale = LOCALES[language] ?? LOCALES.en;
+    const url = `${FEED_URL}?q=${encodeURIComponent(query)}&hl=${locale.hl}&gl=${locale.gl}&ceid=${locale.ceid}`;
     const [feed] = await Crawlers.Xml([{url}]);
 
     if (feed.error) {

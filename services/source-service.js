@@ -12,6 +12,7 @@ import {rss} from "../db/rss-links.js";
 import {FeedModel} from "../models/feed-model.js";
 import {search} from "./utils/google-news.js";
 import {searchDirectory as directoryFeeds} from "./utils/feed-directory.js";
+import {mediaFor as gdeltMedia} from "./utils/gdelt.js";
 import {findFeeds} from "./utils/feed-finder.js";
 import {hostOf, nameOf} from "./utils/public-url.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
@@ -36,6 +37,22 @@ const knownMedia = async (userId) => {
     ];
 
     return new Set(hosts.map(nameOf));
+};
+
+// the media of the two directories in one list: a medium both of them name counts for both, and
+// the ones publishing the most on the subject come first
+const mergeMedia = (...lists) => {
+    const media = new Map();
+
+    for (const medium of lists.flat()) {
+        const name = nameOf(medium.site);
+        const found = media.get(name);
+
+        if (found) found.news += medium.news;
+        else media.set(name, {...medium});
+    }
+
+    return [...media.values()].sort((a, b) => b.news - a.news);
 };
 
 export const SourceService = {
@@ -72,17 +89,22 @@ export const SourceService = {
     // what this search misses. Google News is asked the same keywords in one call: the news of the
     // media that are not in the sources (read only, their link goes through a Google redirect so the
     // server can neither scrape nor summarize them) and those media, with the feed to add for each
-    suggest: async ({keywords, timeframe = {}, userId}) => {
+    suggest: async ({keywords, timeframe = {}, userId, language = 'en'}) => {
         const days = timeframe.start
             ? Math.ceil((Date.now() - new Date(timeframe.start).getTime()) / (24 * 60 * 60 * 1000))
             : null;
 
-        const {news, media} = await search(keywords, {days: days > 0 ? days : null});
+        // the two directories are asked at the same time, and GDELT answering nothing costs nothing:
+        // it names media Google News does not, but it is slow and refuses requests under load
+        const [{news, media}, alsoFound] = await Promise.all([
+            search(keywords, {days: days > 0 ? days : null, language}),
+            gdeltMedia(keywords, {days: days > 0 ? days : 2, language}),
+        ]);
 
         const known = await knownMedia(userId);
         const isMissing = (site) => !known.has(nameOf(site));
 
-        const missing = media.filter(medium => isMissing(medium.site));
+        const missing = mergeMedia(media, alsoFound).filter(medium => isMissing(medium.site));
         const candidates = missing.slice(0, MAX_CANDIDATES);
 
         // the news the search could not find: those of the media that are not searched
@@ -91,7 +113,7 @@ export const SourceService = {
             .sort((a, b) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? ''))
             .slice(0, MAX_NEWS);
 
-        const found = await mapWithConcurrency(candidates, FIND_CONCURRENCY, medium => findFeeds(medium.site, {language: 'en'}));
+        const found = await mapWithConcurrency(candidates, FIND_CONCURRENCY, medium => findFeeds(medium.site, {language}));
 
         const sources = candidates
             .map((medium, i) => ({

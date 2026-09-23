@@ -78,18 +78,23 @@ export const NewsController = {
             timeframeDates[bound] = date;
         }
 
-        // not used for the moment
-        // const authorizedLang = ['en', 'fr', 'es', 'ch', 'ru'];
-        // if (language !== undefined || language !== "") {
-        //     if (!authorizedLang.find(element => element === language)) {
-        //         const err = new Error(`Language ${language} is not authorized.`);
-        //         err.status = 400;
-        //         throw err;
-        //     }
-        // }
+        // a search reads the sources of one language, the categories of db/rss-links.js are filed
+        // under it: asking for a language we have no source for gives nothing, so it is refused here
+        const searched = language || 'en';
+        if (!FeedService.languages().includes(searched)) {
+            const err = new Error(`No source in "${searched}" yet. Available: ${FeedService.languages().join(', ')}.`);
+            err.status = 400;
+            throw err;
+        }
 
         try {
-            const news = await NewsService.getNews({keywords, category, timeframe: timeframeDates, userId: req.user?.id});
+            const news = await NewsService.getNews({
+                keywords,
+                category,
+                timeframe: timeframeDates,
+                userId: req.user?.id,
+                language: searched,
+            });
             res.status(200).json(news);
         } catch (error) {
             if (typeof(error) === 'string' && error.includes("None of theses categories were found:")) {
@@ -101,7 +106,10 @@ export const NewsController = {
     },
 
     getCategories: async (req, res) => {
-        res.status(200).json({categories: FeedService.categories()});
+        res.status(200).json({
+            categories: FeedService.categories(req.query.language || 'en'),
+            languages: FeedService.languages(),
+        });
     },
 
     getNewsContent: async (req, res) => {
