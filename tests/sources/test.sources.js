@@ -7,6 +7,7 @@
 //
 
 import {toQuery} from '../../services/utils/google-news.js'
+import {searchDirectory} from '../../services/utils/feed-directory.js'
 import {hostOf, mediumOf, nameOf} from '../../services/utils/public-url.js'
 
 describe('toQuery', () => {
@@ -79,5 +80,37 @@ describe('nameOf', () => {
     it('should drop the subdomains of a feed', () => {
         expect(nameOf('rss.nytimes.com')).toBe('nytimes');
         expect(nameOf('feeds.content.dowjones.io')).toBe('dowjones');
+    });
+});
+
+describe('searchDirectory', () => {
+    const answer = (body, ok = true) => () => Promise.resolve({ok, json: () => Promise.resolve(body)});
+    const realFetch = globalThis.fetch;
+
+    afterEach(() => { globalThis.fetch = realFetch; });
+
+    it('should read the feeds of the directory, the most read first', async () => {
+        globalThis.fetch = answer({results: [
+            {feedId: 'feed/https://small.com/rss', title: 'Small', website: 'https://small.com', language: 'en', subscribers: 12},
+            {feedId: 'feed/https://big.com/rss', title: 'Big', website: 'https://big.com', language: 'en', subscribers: 900},
+        ]});
+
+        const feeds = await searchDirectory('football');
+
+        expect(feeds.map(feed => feed.title)).toEqual(['Big', 'Small']);
+        expect(feeds[0]).toEqual({url: 'https://big.com/rss', title: 'Big', site: 'https://big.com', language: 'en', subscribers: 900});
+    });
+
+    it('should drop an answer that is not an address', async () => {
+        globalThis.fetch = answer({results: [{feedId: 'feed/not an url', title: 'Broken'}, {title: 'No feed at all'}]});
+        expect(await searchDirectory('football')).toEqual([]);
+    });
+
+    it('should answer nothing when the directory fails, it is only a bonus', async () => {
+        globalThis.fetch = () => Promise.reject(new Error('down'));
+        expect(await searchDirectory('football')).toEqual([]);
+
+        globalThis.fetch = answer({}, false);
+        expect(await searchDirectory('football')).toEqual([]);
     });
 });

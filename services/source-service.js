@@ -11,6 +11,7 @@
 import {rss} from "../db/rss-links.js";
 import {FeedModel} from "../models/feed-model.js";
 import {search} from "./utils/google-news.js";
+import {searchDirectory as directoryFeeds} from "./utils/feed-directory.js";
 import {findFeeds} from "./utils/feed-finder.js";
 import {hostOf, nameOf} from "./utils/public-url.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
@@ -18,6 +19,7 @@ import {mapWithConcurrency} from "./utils/concurrency.js";
 const MAX_CANDIDATES = 8;       // finding the feed of a site costs a few requests, so only the best are tried
 const FIND_CONCURRENCY = 4;
 const MAX_NEWS = 25;            // news shown for reading, the rest would only be noise
+const MAX_DIRECTORY_RESULTS = 15;   // feeds answered to a search of the directory
 
 // media already searched for this user: the feeds of db/rss-links.js and the ones they added.
 // The address of a feed does not always name its medium ("feeds.content.dowjones.io" is the WSJ,
@@ -37,6 +39,36 @@ const knownMedia = async (userId) => {
 };
 
 export const SourceService = {
+    // feeds of the directory matching a subject ("premier league") or a site, the most read first,
+    // without the media this user already searches. They are checked before being added, not here:
+    // the directory is only asked what exists
+    searchDirectory: async ({query, userId}) => {
+        const [found, known] = await Promise.all([
+            directoryFeeds(query, 2 * MAX_DIRECTORY_RESULTS),
+            knownMedia(userId),
+        ]);
+
+        // the feed and the site it belongs to are both compared: the Guardian publishes on
+        // theguardian.com but serves its feeds from guardian.co.uk, either name is enough to know it
+        const isKnown = (feed) => [feed.url, feed.site]
+            .map(hostOf)
+            .filter(Boolean)
+            .some(host => known.has(nameOf(host)));
+
+        const sources = found
+            .filter(feed => !isKnown(feed))
+            .slice(0, MAX_DIRECTORY_RESULTS)
+            .map(feed => ({
+                site: hostOf(feed.site) ?? hostOf(feed.url),
+                name: feed.title || hostOf(feed.url),
+                feed: feed.url,
+                language: feed.language,
+                readers: feed.subscribers,
+            }));
+
+        return {sources};
+    },
+
     // what this search misses. Google News is asked the same keywords in one call: the news of the
     // media that are not in the sources (read only, their link goes through a Google redirect so the
     // server can neither scrape nor summarize them) and those media, with the feed to add for each

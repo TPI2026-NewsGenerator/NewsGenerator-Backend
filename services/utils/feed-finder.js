@@ -9,7 +9,8 @@
 
 import {parseHTML} from 'linkedom';
 import {Crawlers} from './crawlers.js';
-import {assertPublicUrl, fetchPublicUrl} from './public-url.js';
+import {searchDirectory} from './feed-directory.js';
+import {assertPublicUrl, fetchPublicUrl, hostOf, nameOf} from './public-url.js';
 
 // paths tried when the page declares no feed
 const COMMON_PATHS = [
@@ -89,5 +90,18 @@ export const findFeeds = async (site) => {
         candidates = COMMON_PATHS.map(path => new URL(path, siteUrl).href);
     }
 
-    return (await checkFeeds(candidates)).sort((a, b) => b.items - a.items);
+    const feeds = (await checkFeeds(candidates)).sort((a, b) => b.items - a.items);
+    if (feeds.length > 0) return feeds;
+
+    // last resort: the site declares no feed and has none on a usual path, but it may still publish
+    // one that readers know. Only the feeds of this same medium are kept, a search for "uefa.com"
+    // also answers with the sites that write about it
+    const host = hostOf(siteUrl);
+    if (!host) return [];
+
+    const fromDirectory = (await searchDirectory(host, 10))
+        .filter(feed => nameOf(hostOf(feed.url) ?? '') === nameOf(host))
+        .map(feed => feed.url);
+
+    return (await checkFeeds(fromDirectory)).sort((a, b) => b.items - a.items);
 };

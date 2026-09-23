@@ -15,6 +15,7 @@ const router = express.Router();
 router.get('', authenticateToken, FeedController.getUserFeeds);
 router.post('', authenticateToken, FeedController.addUserFeed);
 router.post('/suggestions', authenticateToken, FeedController.suggestSources);
+router.post('/search', authenticateToken, FeedController.searchSources);
 router.post('/import', authenticateToken, FeedController.importSources);
 router.delete('/:id', authenticateToken, FeedController.deleteUserFeed);
 

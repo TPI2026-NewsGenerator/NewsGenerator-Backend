@@ -12,6 +12,7 @@ import {FeedService} from '../services/feed-service.js';
 import {SourceService} from '../services/source-service.js';
 import {findFeeds} from '../services/utils/feed-finder.js';
 import {assertPublicUrl} from '../services/utils/public-url.js';
+import {Crawlers} from '../services/utils/crawlers.js';
 
 export const MAX_USER_FEEDS = 20;   // a user can't fill the refresh with thousands of feeds
 
@@ -90,8 +91,26 @@ export const FeedController = {
         }
     },
 
+    // feeds of the directory for a subject or a site, to be added like a suggestion
+    searchSources: async (req, res) => {
+        const {query} = req.body;
+
+        if (typeof query !== 'string' || query.trim() === '') {
+            return res.status(400).json({error: "Enter a subject or a website to search for."});
+        }
+
+        try {
+            res.status(200).json(await SourceService.searchDirectory({
+                query: query.trim(),
+                userId: req.user.id,
+            }));
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
     // add several suggested sources at once, their feed is checked again here: what the client sends
-    // back is never trusted, it could be any address
+    // back is never trusted, it could be any address, and a directory can name a feed that died
     importSources: async (req, res) => {
         const {sources} = req.body;
 
@@ -99,11 +118,21 @@ export const FeedController = {
             return res.status(400).json({error: "Please select at least one source."});
         }
 
+        // one read of each feed, so a dead one is refused instead of being added and never working
+        const checked = new Map((await Crawlers.Xml(sources.map(source => ({url: source.feed}))))
+            .map(result => [result.url, result]));
+
         const added = [];
         const errors = [];
         let count = await FeedModel.countUserFeeds(req.user.id);
 
         for (let {site, feed, category} of sources) {
+            const read = checked.get(feed);
+            if (read && (read.error || read.items.length === 0)) {
+                errors.push({site, error: read.error ? `This feed does not answer (${read.error}).` : "This feed has no news."});
+                continue;
+            }
+
             if (count >= MAX_USER_FEEDS) {
                 errors.push({site, error: `You can't have more than ${MAX_USER_FEEDS} sources.`});
                 continue;
