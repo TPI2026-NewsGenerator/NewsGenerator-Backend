@@ -108,6 +108,9 @@ Indexes:
 `search_text` is filled by the function `article_search_text(title, description, category)` of
 `db/add_articles_search.sql`. It needs the `pg_trgm` extension, which the same script creates.
 
+Two extensions are needed in all: `pg_trgm` for the keyword search and the grouping, and `unaccent`
+(`db/add_unaccent.sql`) so that two papers spelling a name differently still group.
+
 ### user_feeds — *new*
 | Column | Type | |
 |---|---|---|

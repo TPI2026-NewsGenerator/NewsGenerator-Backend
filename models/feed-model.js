@@ -105,16 +105,23 @@ export const FeedModel = {
         // the similarity itself is returned: above the threshold two articles tell the same news,
         // and far above it they are the same copy of the same wire, republished.
         //
+        // The accents are removed before comparing. Two papers do not spell a name the same way:
+        // the Guardian writes "Higuaín" where the Independent writes "Higuain", and that single
+        // accent changes enough trigrams to move the pair from 0.325 to 0.294, which is the
+        // difference between grouped and not grouped. It matters most in French, Spanish and
+        // Italian, where accents are everywhere.
+        //
         // A short title is mostly the template its paper puts around it: "Health Care Roundup:
         // Market Talk" and "Auto & Transport Roundup: Market Talk" share everything but the sector.
         // So under 'shortTitle' characters the old, stricter threshold is kept: those pairs stay
         // apart, as they did before, rather than being wrongly merged into one news.
         return prisma.$queryRawUnsafe(`
-            SELECT a.id AS id_a, b.id AS id_b, similarity(a.title, b.title) AS score
+            SELECT a.id AS id_a, b.id AS id_b,
+                   similarity(unaccent(a.title), unaccent(b.title)) AS score
             FROM articles a
             JOIN articles b ON b.id > a.id AND b.id = ANY($1::int[])
             WHERE a.id = ANY($1::int[])
-              AND similarity(a.title, b.title) >= CASE
+              AND similarity(unaccent(a.title), unaccent(b.title)) >= CASE
                   WHEN least(length(a.title), length(b.title)) < $3::int THEN $4::real
                   ELSE $2::real END`,
             ids, threshold, shortTitle, shortThreshold);

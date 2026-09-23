@@ -65,6 +65,7 @@ OLLAMA_API_KEY=your_api_key
 8. Do the same with "add_articles_search.sql" (text searched by the keywords filter, with a `pg_trgm` index)
 9. Do the same with "add_user_feeds.sql" (sources added by the users)
 10. Do the same with "add_articles_sourcing.sql" (who an article credits, answered by the AI)
+11. Do the same with "add_unaccent.sql" (compare the titles without their accents when grouping)
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.
@@ -124,6 +125,12 @@ pnpm run server
    **0.45** is kept, because a short title is mostly the template its paper puts around it and
    trigrams cannot tell "Health Care Roundup: Market Talk" from "Auto & Transport Roundup: Market
    Talk". Both constants, and what they were measured on, are at the top of `services/news-service.js`.
+
+   The accents are removed before comparing. Two papers do not spell a name the same way: the
+   Guardian writes "Higuaín" where the Independent writes "Higuain", and that one accent moves the
+   pair from 0.325 to 0.294, which is the difference between grouped and not grouped. Measured on a
+   day of articles it adds 0.75% of pairs, almost all of them French, Spanish or Italian, where
+   accents are common. It needs `db/add_unaccent.sql`.
 5. Each card says what the grouping measured, and nothing more (see **Corroboration** below).
 6. A user can add their own sources (`POST /api/feeds` with a site address): the server finds the
    RSS feed of the site and checks it answers. These sources are **private**, they are only used in

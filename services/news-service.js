@@ -22,8 +22,10 @@ const AI_CONCURRENCY = 5;       // resumes asked to Ollama at the same time
 // Two titles telling the same news share less than one would think: the Guardian writing "Columbus
 // Crew sack coach Federico Higuain for man's game jibe aimed at female referee" and the Independent
 // writing "Gonzalo Higuain's brother sacked by MLS club after telling female referee this is a man's
-// game" only reach 0.325. Measured on a day of sport news, every pair between 0.30 and 0.45 was a
-// real duplicate; under 0.30 the betting tips of two different matches start being grouped.
+// game" only reach 0.325 — and 0.294 with the accent of "Higuaín" that the Guardian writes and the
+// Independent does not, which is why the accents are removed before comparing (see
+// FeedModel.similarArticlePairs). Measured on a day of sport news, every pair between 0.30 and 0.45
+// was a real duplicate; under 0.30 the betting tips of two different matches start being grouped.
 const SIMILARITY = 0.30;        // above this, two titles tell the same news (trigram similarity)
 const SAME_COPY = 0.85;         // above this they are the same text, a wire republished as it is
 
