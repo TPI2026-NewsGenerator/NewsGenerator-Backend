@@ -316,6 +316,8 @@ export const rss = {
             // "https://www.wired.com/feed/rss",
             // "https://news.yahoo.com/rss/",
             // "https://zeenews.india.com/rss/world-news.xml",
+            // media found missing by the search, checked one by one
+            "http://feeds.washingtonpost.com/rss/world",
         ],
         sport: [
             "https://feeds.bbci.co.uk/sport/football/rss.xml",
@@ -577,6 +579,21 @@ export const rss = {
             "https://www.youtube.com/feeds/videos.xml?channel_id=UCJ5v_MCY6GNUBTO8-D3XoAg",
             "https://www.youtube.com/feeds/videos.xml?channel_id=UCHBVO54duIyZW8kfyNX6V9Q",
             "https://www.youtube.com/feeds/videos.xml?channel_id=UCfqe0wER0mdcpsI0JRpzisA",
+            // media found missing by the search, checked one by one
+            "https://www.soccernews.com/feed",
+            "http://feeds.skynews.com/feeds/rss/sports.xml",
+            "https://www.sportskeeda.com/feed",
+            "https://indianexpress.com/section/sports/feed/",
+            "https://indianexpress.com/section/sports/tennis/feed/",
+            "https://indianexpress.com/section/sports/cricket/feed/",
+            "https://www.perfect-tennis.com/feed/",
+            "https://www.wisden.com/feed",
+            "http://www.espncricinfo.com/rss/content/story/feeds/0.xml",
+            "https://www.football.london/?service=rss",
+            "https://www.football.london/arsenal-fc/?service=rss",
+            "https://www.football.london/tottenham-hotspur-fc/?service=rss",
+            "https://www.uefa.com/rss/uefachampionsleague/rss.xml",
+            "https://www.uefa.com/rss/uefaeuro/rss.xml",
         ],
         politics: [
             "https://feeds.bloomberg.com/politics/news.rss",
@@ -604,6 +621,10 @@ export const rss = {
             "https://www.cnbc.com/id/20910258/device/rss/rss.html",
             "https://feeds.npr.org/1017/rss.xml",
             "https://rss.dw.com/rdf/rss-en-bus",
+            // media found missing by the search, checked one by one
+            "https://www.investing.com/rss/news.rss",
+            "https://seekingalpha.com/market_currents.xml",
+            "https://www.forbes.com/business/feed/",
         ],
         technology: [
             "https://feeds.bloomberg.com/technology/news.rss",
@@ -614,6 +635,18 @@ export const rss = {
             "https://feeds.arstechnica.com/arstechnica/index",
             "https://www.theverge.com/rss/index.xml",
             "https://techcrunch.com/feed/",
+            // media found missing by the search, checked one by one
+            "https://www.cnet.com/rss/news/",
+            "https://www.engadget.com/rss.xml",
+            "https://gizmodo.com/rss",
+            "https://news.ycombinator.com/rss",
+            "https://lifehacker.com/rss",
+            "http://feeds.mashable.com/Mashable",
+            "http://rss.slashdot.org/Slashdot/slashdotMain",
+            "http://stratechery.com/feed/",
+            "https://www.blog.google/rss/",
+            "https://thenextweb.com/feed/",
+            "https://www.theregister.com/headlines.rss",
         ],
         science: [
             "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml",
@@ -621,6 +654,15 @@ export const rss = {
             "https://www.theguardian.com/science/rss",
             "https://www.sciencedaily.com/rss/all.xml",
             "https://feeds.npr.org/1007/rss.xml",
+            // media found missing by the search, checked one by one
+            "https://www.nature.com/nature.rss",
+            "https://phys.org/rss-feed/",
+            "https://www.popsci.com/arcio/rss/",
+            "https://www.wired.com/feed/category/science/latest/rss",
+            "http://rss.sciam.com/ScientificAmerican-Global",
+            "https://www.nasa.gov/rss/dyn/breaking_news.rss",
+            "http://www.twis.org/feed/",
+            "https://flowingdata.com/feed",
         ]
     }
 }
