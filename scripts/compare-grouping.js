@@ -28,23 +28,32 @@ const days = Number(process.argv[process.argv.indexOf('--days') + 1]) || 3;
 // around unrelated matches, a daily market report, a subject followed over days.
 // ---------------------------------------------------------------------------------------------
 const SAME = {
+    // English
     higuain: ['Columbus Crew sack coach Federico Higua', 'brother sacked by MLS club',
-        'MLS coach sacked after sexist remark'],
+        'MLS coach sacked after sexist remark', 'Columbus Crew reserve team coach fired',
+        'Crew 2 fires Higuain after fallout'],
     realMadrid: ['Real Madrid referee row rages on', 'Furious Real Madrid turn on',
         'Real Madrid call for La Liga president'],
     merz: ['Merz Pledges to Stay On', 'Merz Vows to Stay After Another'],
-    mamdani: ['Netanyahu accuses Mamdani', 'Netanyahu Attacks Mamdani', 'Netanyahu says of Mamdani'],
+    mamdani: ['Netanyahu accuses Mamdani', 'Netanyahu Attacks Mamdani', 'Netanyahu says of Mamdani',
+        'Netanyahu Falsely Accuses Mamdani'],
     irelandIsrael: ['Ireland manager responds to Israel criticism', 'Israel accuse Ireland manager',
-        "Israel's FA accuse Ireland manager"],
+        "Israel's FA accuse Ireland manager", "Hallgrimsson accused of 'ignorance",
+        "Israel FA accuses Hallgrimsson"],
+    // Spanish
     zapatero: ['Zapatero sostiene que Arabia Saud', 'Zapatero asegura que las joyas',
-        'Zapatero alega ante el juez'],
-    hakimi: ['Achraf Hakimi sera jug', 'Affaire Hakimi : un proc',
-        'Cour de cassation confirme le renvoi'],
+        'Zapatero alega ante el juez', 'Zapatero asegura al juez que las joyas'],
     querola: ['Así era La Querola', 'El fuego destruye La Querola', 'Un incendio destruye la lujosa'],
-    ocse: ['Ocse rivede al rialzo la crescita', 'Ocse rivede al rialzo stime pil'],
-    brun: ['Philippe Brun ne sera pas r', 'justice rejette la demande de r'],
+    // French
+    hakimi: ['Achraf Hakimi sera jug', 'Affaire Hakimi : un proc', 'Cour de cassation confirme le renvoi',
+        "Cour de cassation rejette le pourvoi d'Achraf", 'Débouté par la Cour de cassation',
+        'la Cour de cassation a tranché'],
+    brun: ['Philippe Brun ne sera pas r', 'justice rejette la demande de r',
+        'Écarté de la primaire de la gauche', 'ne pourra réintégrer'],
+    // Italian
+    ocse: ['Ocse rivede al rialzo la crescita', 'Ocse rivede al rialzo stime pil',
+        'Ocse rivede al rialzo le stime del pil'],
 };
-
 const APART = {
     bettingTips: ['Egypt vs Angola Prediction', 'Togo vs Burundi Prediction',
         'Sudan vs Ethiopia Prediction', 'UAE vs Yemen Prediction'],
@@ -138,6 +147,22 @@ const embedding = (model) => ({
     sweep: [0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.60, 0.70, 0.80, 0.90],
 });
 
+// The two measures fail on opposite cases: trigrams miss a paraphrase (0.263 between the Guardian
+// and the BBC on Higuain), embeddings blur the entities (0.829 between two unrelated matches under
+// the same betting template). Each score is divided by its own threshold, so 1.0 means "at the bar",
+// and the two are then combined: the maximum groups when EITHER agrees, the minimum when BOTH do.
+const TRIGRAM_BAR = 0.25;
+const EMBED_BAR = 0.50;
+const mixed = (combine) => ({
+    embed: 'paraphrase-multilingual',
+    prepare: (title) => ({tri: trigrams(title), vec: vectors.get(`paraphrase-multilingual\u0000${title}`)}),
+    score: (a, b) => combine(
+        jaccard(a.tri, b.tri) / TRIGRAM_BAR,
+        (a.vec && b.vec ? cosine(a.vec, b.vec) : 0) / EMBED_BAR,
+    ),
+    sweep: [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.4, 1.6],
+});
+
 const MEASURES = {
     trigram: {prepare: trigrams, score: jaccard,
         sweep: [0.20, 0.22, 0.25, 0.27, 0.30, 0.33, 0.35, 0.40, 0.45]},
@@ -146,7 +171,8 @@ const MEASURES = {
     idfShared: {prepare: tokens, score: cosineShared,
         sweep: [0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.60]},
     multilingual: embedding('paraphrase-multilingual'),
-    nomic: embedding('nomic-embed-text'),
+    either: mixed(Math.max),        // trigrams OR the model
+    both: mixed(Math.min),          // trigrams AND the model
 };
 
 // document frequency over the whole window of a language, not over the results of one search:
@@ -417,7 +443,7 @@ const grouping = async () => {
 
         const {idf, media} = await idfFor(language);
         for (const [name, measure] of Object.entries(MEASURES)) {
-            if (name === 'nomic' || name === 'idfShared') continue;      // measured worse already
+            if (name === 'idf' || name === 'idfShared') continue;        // measured worse already
             if (measure.embed) { try { await embedAll(rows.map(r => r.title), measure.embed); } catch { continue; } }
 
             const prepared = rows.map(r => measure.prepare(r.title));
