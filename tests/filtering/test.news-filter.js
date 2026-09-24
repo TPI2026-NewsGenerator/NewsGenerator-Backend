@@ -63,6 +63,15 @@ describe('Filter.toPattern', () => {
         expect(Filter.toPattern({text: 'referee', exact: false})).toBe('(^|[^[:alnum:]])referee');
         expect(Filter.toPattern({text: 'referee', exact: true})).toBe('(^|[^[:alnum:]])referee([^[:alnum:]]|$)');
     });
+
+    it('should make short words in capitals (acronyms) case-sensitive only', () => {
+        expect(Filter.toPattern({text: 'AI', exact: false})).toBe('(?c)(^|[^[:alnum:]])AI([^[:alnum:]]|$)');
+        expect(Filter.toPattern({text: 'NFL', exact: true})).toMatch(/^\(\?c\)/);
+        expect(Filter.toPattern({text: 'ai', exact: false})).not.toMatch(/^\(\?c\)/);
+        expect(Filter.toPattern({text: 'Var', exact: false})).not.toMatch(/^\(\?c\)/);
+        expect(Filter.toPattern({text: 'NASA', exact: false})).not.toMatch(/^\(\?c\)/);
+        expect(Filter.toPattern({text: '100', exact: false})).not.toMatch(/^\(\?c\)/);
+    });
 });
 
 // the matching runs in Postgres (regex ~* on articles.search_text), so it is tested there
@@ -156,6 +165,36 @@ const titles = async (newsList, keywords) => {
             { title: 'Navarrete vs Valdez' },
         ];
         expect(await titles(newsList, ['var'])).toEqual(['Howard Webb defends VAR decision']);
+    });
+
+    describe('acronyms in capitals', () => {
+        const newsList = [
+            { title: 'OpenAI ships a new AI model' },
+            { title: "J'ai testé le Mac mini M4" },
+            { title: "Je n'ai jamais organisé de mariage" },
+            { title: 'Heat wave in Miami' },
+            { title: "L'IA générative au travail" },
+        ];
+
+        it('should find an acronym in capitals, not the same letters in lowercase', async () => {
+            expect(await titles(newsList, ['AI'])).toEqual(['OpenAI ships a new AI model']);
+        });
+
+        it('should still find it in an alternative and next to an apostrophe', async () => {
+            expect(await titles(newsList, ['IA, AI'])).toEqual(['OpenAI ships a new AI model', "L'IA générative au travail"]);
+        });
+
+        it('should keep a short word in lowercase case-insensitive, as asked', async () => {
+            expect(await titles(newsList, ['ai'])).toEqual([
+                'OpenAI ships a new AI model', "J'ai testé le Mac mini M4", "Je n'ai jamais organisé de mariage",
+            ]);
+        });
+
+        it('should also exclude an acronym in capitals only', async () => {
+            expect(await titles(newsList, ['mac, mariage, model -AI'])).toEqual([
+                "J'ai testé le Mac mini M4", "Je n'ai jamais organisé de mariage",
+            ]);
+        });
     });
 
     it('should work with accents and special characters', async () => {

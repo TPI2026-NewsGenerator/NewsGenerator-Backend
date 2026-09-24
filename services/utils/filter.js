@@ -12,6 +12,9 @@
 //  - the terms of an alternative must all be found, in any order (AND)
 //  - "quoted text" is an exact word or phrase, other words also find their variants ("referee" -> "referees")
 //  - short words (acronyms like VAR, NFL, AI) are whole words, else "VAR" would find "Variations" or "Alvarez"
+//  - the case doesn't matter, except for a short word written in capitals: it is an acronym and must be
+//    found in capitals, else "AI" would find the French "j'ai" or "n'ai" (the apostrophe ends a word).
+//    "ai" written in lowercase still finds "AI" and "j'ai", the user may want that on purpose
 const SHORT_WORD_LENGTH = 3;
 
 // Postgres regex: [[:alnum:]] includes accented letters, so "préchauffe" doesn't start with "réchauffe"
@@ -49,13 +52,21 @@ const parse = (keywords) => {
     return { groups, excluded };
 };
 
-// Postgres regex of a term, used case-insensitive with ~*
+// Postgres ARE option at the start of a regex: case-sensitive, even with ~*
+const CASE_SENSITIVE = '(?c)';
+
+// "AI", "VAR", "5G", not "ai", "Var" or "42"
+const isAcronym = (text) =>
+    text.length <= SHORT_WORD_LENGTH && text === text.toUpperCase() && text !== text.toLowerCase();
+
+// Postgres regex of a term, used case-insensitive with ~* (acronyms turn it case-sensitive, see CASE_SENSITIVE)
 const toPattern = ({ text, exact }) => {
+    const options = isAcronym(text) ? CASE_SENSITIVE : '';
     if (exact) {
-        return WORD_START + text.split(/\s+/).map(escapeRegex).join('[[:space:]]+') + WORD_END;
+        return options + WORD_START + text.split(/\s+/).map(escapeRegex).join('[[:space:]]+') + WORD_END;
     }
     const end = text.length <= SHORT_WORD_LENGTH ? WORD_END : '';
-    return WORD_START + escapeRegex(text) + end;
+    return options + WORD_START + escapeRegex(text) + end;
 };
 
 // SQL condition on 'column' (the text searched, see articles.search_text in db/add_articles_search.sql),
