@@ -10,11 +10,14 @@
 import {FeedModel} from '../models/feed-model.js';
 import {FeedService} from '../services/feed-service.js';
 import {SourceService} from '../services/source-service.js';
+import {RecommendationService} from '../services/recommendation-service.js';
 import {findFeeds} from '../services/utils/feed-finder.js';
 import {assertPublicUrl, isBridgeUrl} from '../services/utils/public-url.js';
+import {bridgeRoom, looksPrivate, MAX_USER_FEEDS} from '../services/utils/feed-limits.js';
 import {Crawlers} from '../services/utils/crawlers.js';
 
-export const MAX_USER_FEEDS = 20;   // a user can't fill the refresh with thousands of feeds
+const TOO_MANY = `You can't have more than ${MAX_USER_FEEDS} sources.`;
+const NO_BRIDGE_ROOM = "You have as many sites without a feed as the server can read for you: this one publishes none.";
 
 const toFeed = (feed) => ({
     id: feed.id,
@@ -23,6 +26,7 @@ const toFeed = (feed) => ({
     category: feed.category,
     origin: feed.origin,                        // 'user' added by hand, 'profile' found for the profile
     trusted: feed.trusted ?? false,             // a source the user trusts, its stories come first
+    shared: feed.shared ?? false,               // a source the user shares: it can be suggested to others
     createdAt: feed.created_at,
     error: feed.last_error ?? null,             // why the last refresh of this feed failed
     lastFetchedAt: feed.last_fetched_at ?? null,
@@ -46,7 +50,7 @@ export const FeedController = {
             return res.status(400).json({error: `Category must be one of: ${FeedService.categories().join(', ')}.`});
         }
         if (await FeedModel.countUserFeeds(req.user.id) >= MAX_USER_FEEDS) {
-            return res.status(400).json({error: `You can't have more than ${MAX_USER_FEEDS} sources.`});
+            return res.status(400).json({error: TOO_MANY});
         }
 
         try {
@@ -57,6 +61,9 @@ export const FeedController = {
 
             // the feed with the most news
             const found = feeds[0];
+            if (isBridgeUrl(found.url) && bridgeRoom(await FeedModel.userFeedUrls(req.user.id)) === 0) {
+                return res.status(400).json({error: NO_BRIDGE_ROOM});
+            }
             const feed = await FeedModel.addUserFeed({
                 userId: req.user.id,
                 url: found.url,
@@ -142,12 +149,13 @@ export const FeedController = {
         const added = [];
         const errors = [];
         let count = await FeedModel.countUserFeeds(req.user.id);
+        let bridge = bridgeRoom(await FeedModel.userFeedUrls(req.user.id));
 
         for (let {site, feed, category} of sources) {
             const name = String(site ?? '').trim();
 
             if (count >= MAX_USER_FEEDS) {
-                errors.push({site, error: `You can't have more than ${MAX_USER_FEEDS} sources.`});
+                errors.push({site, error: TOO_MANY});
                 continue;
             }
             if (!FeedService.categories().includes(category)) {
@@ -162,6 +170,10 @@ export const FeedController = {
             // something this server decided, and the suggestion stays usable.
             const fromBridge = isBridgeUrl(feed);
             if (fromBridge) {
+                if (bridge <= 0) {
+                    errors.push({site, error: NO_BRIDGE_ROOM});
+                    continue;
+                }
                 const found = name ? await findFeeds(name, {language: spoken, subject: keywords}) : [];
                 if (found.length === 0) {
                     errors.push({site, error: `No RSS feed found on "${site}".`});
@@ -187,6 +199,7 @@ export const FeedController = {
                     category: category,
                 })));
                 count++;
+                if (fromBridge) bridge--;
             } catch (error) {
                 const message = error.code === 'P2002' ? "You already added this source." : error.message;
                 errors.push({site, error: message ?? String(error)});
@@ -196,23 +209,53 @@ export const FeedController = {
         res.status(200).json({feeds: added, errors});
     },
 
-    // {trusted}: among the stories close to the profile, the ones this source tells come first in
-    // the briefing and its article leads the card. Only for the sources added by hand
-    setTrusted: async (req, res) => {
+    // Only for the sources added by hand, one or both of:
+    //  - {trusted}: among the stories close to the profile, the ones this source tells come first in
+    //    the briefing and its article leads the card
+    //  - {shared}: it can be suggested to the other readers whose interests it publishes on. Refused
+    //    for an address that may hold a key of the reader (a paid newsletter, a private podcast)
+    updateUserFeed: async (req, res) => {
         const id = Number(req.params.id);
         if (!Number.isInteger(id)) {
             return res.status(400).json({error: "An id is required."});
         }
-        if (typeof req.body?.trusted !== 'boolean') {
-            return res.status(400).json({error: "trusted: true or false."});
+        const {trusted, shared} = req.body ?? {};
+        if ((trusted === undefined && shared === undefined)
+            || ![trusted, shared].every(value => value === undefined || typeof value === 'boolean')) {
+            return res.status(400).json({error: "trusted and/or shared: true or false."});
         }
 
-        const updated = await FeedModel.setTrusted(req.user.id, id, req.body.trusted);
-        if (updated === 0) {
+        const feed = await FeedModel.getUserFeed(req.user.id, id);
+        if (!feed || feed.origin !== 'user') {
             return res.status(404).json({error: "This source does not exist, or was found for the profile."});
         }
+        if (shared && looksPrivate(feed.url)) {
+            return res.status(400).json({error: "The address of this feed looks like it holds a private key: it can't be shared."});
+        }
 
-        res.status(200).json({id, trusted: req.body.trusted});
+        const changes = {...(trusted !== undefined ? {trusted} : {}), ...(shared !== undefined ? {shared} : {})};
+        await FeedModel.updateUserFeed(req.user.id, id, changes);
+        res.status(200).json({id, trusted: feed.trusted, shared: feed.shared, ...changes});
+    },
+
+    // the sources this reader could add: found for the profile of other readers, or shared by them,
+    // and publishing on the interests of this one. [{id, site, url, category, language, news, relevant, samples}]
+    getRecommended: async (req, res) => {
+        try {
+            res.status(200).json({sources: await RecommendationService.list(req.user.id)});
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
+    // {ids}: recommended sources to add, by the id GET /feeds/recommended gave them
+    addRecommended: async (req, res) => {
+        try {
+            const {feeds, errors} = await RecommendationService.add(req.user.id, req.body?.ids);
+            res.status(200).json({feeds: feeds.map(toFeed), errors});
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
     },
 
     deleteUserFeed: async (req, res) => {

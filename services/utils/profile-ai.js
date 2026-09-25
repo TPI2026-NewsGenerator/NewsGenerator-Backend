@@ -95,7 +95,7 @@ Ce lecteur a déjà jugé des histoires des jours passés. Sers-t'en pour compre
 ${liked.length > 0 ? `il les a trouvées bonnes pour lui :\n${liked.map(title => `+ ${title}`).join('\n')}\n` : ''}${refused.length > 0 ? `il ne les voulait pas :\n${refused.map(title => `- ${title}`).join('\n')}\n` : ''}Cherche ce qui les rapproche (un genre d'article, un angle, un sujet précis) plutôt que de refuser tout ce qui parle des mêmes équipes ou des mêmes personnes.
 `);
 
-// a story told by a source the reader trusts (their choice, see FeedModel.setTrusted); nothing is
+// a story told by a source the reader trusts (their choice, see FeedController.updateUserFeed); nothing is
 // added to the prompt when no candidate has one
 const TRUSTED_MARK = '(source de confiance du lecteur)';
 

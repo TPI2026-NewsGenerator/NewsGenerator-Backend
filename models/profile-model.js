@@ -90,13 +90,33 @@ export const ProfileModel = {
         WHERE id_user = $1 AND NOT ($2 = ANY(kept_sources))`,
         userId, url),
 
-    // the feeds found for the profile replace the ones found before, never the ones added by hand
+    // the feeds found for the profile join the ones found before
     // feeds: [{url, site, category, language}]
-    replaceProfileFeeds: async (userId, feeds) => prisma.$transaction([
-        prisma.user_feeds.deleteMany({where: {id_user: userId, origin: 'profile'}}),
-        prisma.user_feeds.createMany({
-            data: feeds.map(feed => ({...feed, id_user: userId, origin: 'profile'})),
-            skipDuplicates: true,       // a feed the user already added by hand stays theirs
-        }),
-    ]),
+    addProfileFeeds: async (userId, feeds) => prisma.user_feeds.createMany({
+        data: feeds.map(feed => ({...feed, id_user: userId, origin: 'profile'})),
+        skipDuplicates: true,           // a feed the user already added by hand stays theirs
+    }),
+
+    // Each feed found for the profile, with its news of the last days that got vectors, and how many
+    // of them are on one of its interests: their title reaches 'threshold' with it, as when the feed
+    // was found (see judgeOf in discovery-service.js). [{id, url, site, created_at, news, relevant}]
+    profileFeedRelevance: async (userId, {since, threshold}) => prisma.$queryRawUnsafe(`
+        SELECT uf.id, uf.url, uf.site, uf.created_at,
+               count(a.id)::int AS news,
+               count(a.id) FILTER (WHERE EXISTS (
+                   SELECT 1 FROM profile_interests i
+                   WHERE i.id_user = uf.id_user AND i.dense IS NOT NULL
+                     AND -(a.title_dense <#> i.dense) >= $3::real))::int AS relevant
+        FROM user_feeds uf
+        LEFT JOIN feeds f ON f.url = uf.url
+        LEFT JOIN articles a ON a.id_feed = f.id AND a.embedded_at IS NOT NULL AND a.created_at >= $2::timestamptz
+        WHERE uf.id_user = $1::int AND uf.origin = 'profile'
+        GROUP BY uf.id`,
+        userId, since, threshold),
+
+    // only feeds found for the profile of this user, never one added by hand
+    deleteProfileFeeds: async (userId, ids) => {
+        const {count} = await prisma.user_feeds.deleteMany({where: {id: {in: ids}, id_user: userId, origin: 'profile'}});
+        return count;
+    },
 };

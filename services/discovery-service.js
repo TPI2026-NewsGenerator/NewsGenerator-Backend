@@ -18,7 +18,9 @@ import {embed, denseSimilarity, parseVector} from "./utils/embedder.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {nameOf} from "./utils/public-url.js";
 import {parseSearch} from "./utils/profile-ai.js";
-import {allocate} from "./utils/allocation.js";
+import {allocate, staleFeeds} from "./utils/allocation.js";
+import {FeedModel} from "../models/feed-model.js";
+import {bridgeRoom, MAX_NEW_PROFILE_FEEDS, MAX_PROFILE_FEEDS, withinBridgeRoom} from "./utils/feed-limits.js";
 
 // Measured on four profiles: with the feeds of the project only, a private chef had 1 relevant
 // story in 48 hours and a dog owner 2. The feeds found this way brought them to 8 and 32, and the
@@ -30,10 +32,12 @@ const FIND_CONCURRENCY = 3;
 // judged by hand: it keeps 57% of the fully relevant ones and 11% of the others, which is enough to
 // tell a section from a general feed. Judging by keywords written by the AI changed from one run to
 // the next; the meaning did not.
-const JUDGE_THRESHOLD = 0.45;
-// The feeds found for a profile have their own room, apart from the ones the user adds by hand: a
-// user who had added 20 sources got none for their profile, silently.
-const MAX_PROFILE_FEEDS = 20;
+export const JUDGE_THRESHOLD = 0.45;
+// A feed found for the profile stays while its news are on the profile: on the UEFA profile goal.com
+// had 18 such news in 14 days, the latimes.com none in 99. It is removed when none of its news of
+// these days is, once it had the time or the news to show it
+export const RELEVANCE_DAYS = 14;
+const MIN_NEWS = 30;
 
 // the judge of findFeeds: which texts are on one of the interests of the profile, by meaning. A feed
 // is kept for the whole profile, and judged on one interest alone a football feed rarely had two news
@@ -68,14 +72,40 @@ const mediaOf = async (searches) => {
     return [...media.values()].sort((a, b) => b.news - a.news);
 };
 
-const discover = async (userId) => {
-    const interests = await ProfileModel.interestsForDiscovery(userId);
-    const own = await ProfileModel.ownFeedUrls(userId);
+// the feeds found for this profile that bring nothing on it any more, removed: the ones of an interest
+// the reader took out, a section that changed, a feed that died. Answers how many
+const prune = async (userId) => {
+    const [rows, kept] = await Promise.all([
+        ProfileModel.profileFeedRelevance(userId, {
+            since: new Date(Date.now() - RELEVANCE_DAYS * 24 * 3600e3),
+            threshold: JUDGE_THRESHOLD,
+        }),
+        ProfileModel.keptSources(userId),
+    ]);
+    const stale = staleFeeds(rows, {graceDays: RELEVANCE_DAYS, minNews: MIN_NEWS, kept});
+    if (stale.length === 0) return 0;
 
-    // the feeds found before are about to be replaced: their media can be found again, except the
-    // ones whose cards the reader refused again and again (see FeedbackService): not found twice
+    console.log(`Discovery: ${stale.length} feeds of user ${userId} bring nothing on the profile, removed (${stale.map(row => row.site).join(', ')})`);
+    return ProfileModel.deleteProfileFeeds(userId, stale.map(row => row.id));
+};
+
+const discover = async (userId) => {
+    await prune(userId);
+    const [interests, feeds, profileCount] = await Promise.all([
+        ProfileModel.interestsForDiscovery(userId),
+        FeedModel.userFeedUrls(userId),
+        FeedModel.countUserFeeds(userId, 'profile'),
+    ]);
+    const room = Math.min(MAX_NEW_PROFILE_FEEDS, MAX_PROFILE_FEEDS - profileCount);
+    if (room <= 0) {
+        console.log(`Discovery: user ${userId} has ${profileCount} feeds for the profile already, none looked for`);
+        return [];
+    }
+
+    // the feeds found before stay: only new media are looked for. Nor the ones whose cards the
+    // reader refused again and again (see FeedbackService): not found twice
     const {refused} = await FeedbackService.of(userId);
-    const known = await knownMedia(userId, {userFeeds: [...own, ...refused]});
+    const known = await knownMedia(userId, {userFeeds: [...feeds, ...refused]});
     // A medium refused for one interest is tried again for the next: tribuna.com had 1 news in 30 on
     // the governance of the UEFA, was never judged on refereeing (7 in 30), and was lost. Only the
     // media already kept are not tried twice, their feed is already there
@@ -101,9 +131,10 @@ const discover = async (userId) => {
         }));
     }
 
-    const feeds = allocate(perInterest, MAX_PROFILE_FEEDS);
-    await ProfileModel.replaceProfileFeeds(userId, feeds.map(({url, site, category, language}) => ({url, site, category, language})));
-    return feeds;
+    // the ones read through the bridge only while there is room for them, the next ones take their place
+    const added = withinBridgeRoom(allocate(perInterest, perInterest.flat().length), bridgeRoom(feeds)).slice(0, room);
+    await ProfileModel.addProfileFeeds(userId, added.map(({url, site, category, language}) => ({url, site, category, language})));
+    return added;
 };
 
 const running = new Map();      // user -> discovery in progress
@@ -133,4 +164,7 @@ export const DiscoveryService = {
     },
 
     isRunning: (userId) => running.has(userId),
+
+    // the feeds found for the profile that bring nothing on it any more, removed (before each briefing)
+    prune,
 };

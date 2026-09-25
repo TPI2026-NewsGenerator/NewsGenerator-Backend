@@ -26,3 +26,12 @@ export const allocate = (perInterest, room) => {
     }
     return kept;
 };
+
+// The feeds found for a profile that bring nothing on it any more: none of their news of the last
+// days is on one of its interests. A feed just found is given the time to show it, unless it already
+// published enough news to say so; a feed the reader kept stays.
+// rows: [{id, url, created_at, news, relevant}] (see ProfileModel.profileFeedRelevance)
+export const staleFeeds = (rows, {now = Date.now(), graceDays, minNews, kept = []}) => rows.filter(row =>
+    row.relevant === 0
+    && !kept.includes(row.url)
+    && (now - new Date(row.created_at).getTime() >= graceDays * 24 * 3600e3 || row.news >= minNews));

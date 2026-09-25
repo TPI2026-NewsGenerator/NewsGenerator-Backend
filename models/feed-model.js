@@ -147,24 +147,61 @@ export const FeedModel = {
 
         return userFeeds.map(feed => ({ ...feed, ...status.get(feed.url) }));
     },
-    // the feeds added by hand, the only ones the limit of a user counts: the ones found for the
-    // profile have their own (see discovery-service.js)
-    countUserFeeds: async (userId) => {
-        return prisma.user_feeds.count({ where: { id_user: userId, origin: 'user' } });
+    // the feeds added by hand by default, the ones found for the profile have their own limit
+    // (see utils/feed-limits.js)
+    countUserFeeds: async (userId, origin = 'user') => {
+        return prisma.user_feeds.count({ where: { id_user: userId, origin: origin } });
     },
-    addUserFeed: async ({userId, url, site, category}) => {
+    addUserFeed: async ({userId, url, site, category, language = null}) => {
         return prisma.user_feeds.create({
-            data: { id_user: userId, url: url, site: site, category: category },
+            data: { id_user: userId, url: url, site: site, category: category, language: language },
         });
     },
-    // only a source added by hand can be trusted: one found for the profile is replaced when it changes
-    setTrusted: async (userId, id, trusted) => {
+    // {trusted, shared}, only on a source added by hand: one found for the profile is removed once it
+    // brings nothing on it, and is already a public find (see RecommendationService)
+    updateUserFeed: async (userId, id, data) => {
         const { count } = await prisma.user_feeds.updateMany({
             where: { id: id, id_user: userId, origin: 'user' },
-            data: { trusted: trusted },
+            data: data,
         });
         return count;
     },
+    getUserFeed: async (userId, id) => prisma.user_feeds.findFirst({ where: { id: id, id_user: userId } }),
+    // The feeds this reader could add: the ones read for other readers for a public reason, found by
+    // the discovery of a profile or shared by the reader who added them, never a feed another reader
+    // only added by hand. Those whose news of the last days are on the interests of this reader, with
+    // how many: their title reaches 'threshold' with one of them, as for the discovery.
+    // excluded: feeds never suggested (the shared ones, the ones the thumbs of this reader left out)
+    // [{id, url, site, category, language, news, relevant, samples}], the most relevant first
+    recommendedFeeds: async (userId, {excluded, languages, since, threshold, minRelevant, limit}) => prisma.$queryRawUnsafe(`
+        WITH candidates AS (
+            SELECT DISTINCT ON (uf.url) f.id, uf.url, uf.category, uf.language
+            FROM user_feeds uf
+            JOIN feeds f ON f.url = uf.url
+            WHERE uf.id_user <> $1::int
+              AND (uf.origin = 'profile' OR uf.shared)
+              AND uf.url <> ALL($2::text[])
+              AND NOT EXISTS (SELECT 1 FROM user_feeds mine WHERE mine.id_user = $1::int AND mine.url = uf.url)
+            ORDER BY uf.url, (uf.origin = 'profile') DESC, uf.created_at
+        ), scored AS (
+            SELECT c.id, a.title,
+                   (SELECT max(-(a.title_dense <#> i.dense)) FROM profile_interests i
+                    WHERE i.id_user = $1::int AND i.dense IS NOT NULL) AS score
+            FROM candidates c
+            JOIN articles a ON a.id_feed = c.id
+            WHERE a.embedded_at IS NOT NULL AND a.created_at >= $4::timestamptz AND a.lang = ANY($3::text[])
+        )
+        SELECT c.id, c.url, c.category, c.language,
+               count(*)::int AS news,
+               count(*) FILTER (WHERE s.score >= $5::real)::int AS relevant,
+               (array_agg(s.title ORDER BY s.score DESC))[1:2] AS samples
+        FROM candidates c
+        JOIN scored s ON s.id = c.id
+        GROUP BY c.id, c.url, c.category, c.language
+        HAVING count(*) FILTER (WHERE s.score >= $5::real) >= $6::int
+        ORDER BY relevant DESC, news
+        LIMIT $7::int`,
+        userId, excluded, languages, since, threshold, minRelevant, limit),
     trustedFeedUrls: async (userId) => (await prisma.user_feeds.findMany({
         where: { id_user: userId, origin: 'user', trusted: true },
         select: { url: true },

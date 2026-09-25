@@ -11,11 +11,12 @@
 import {ProfileModel} from "../models/profile-model.js";
 import {FeedModel} from "../models/feed-model.js";
 import {FeedService} from "./feed-service.js";
-import {DiscoveryService} from "./discovery-service.js";
+import {DiscoveryService, JUDGE_THRESHOLD, RELEVANCE_DAYS} from "./discovery-service.js";
 import {FeedbackService} from "./feedback-service.js";
 import {embed, toSparsevec, toVector} from "./utils/embedder.js";
 import {interestsOf} from "./utils/profile-ai.js";
 import {TOPICS} from "./utils/topics.js";
+import {MAX_PROFILE_FEEDS} from "./utils/feed-limits.js";
 
 const MIN_TEXT = 20;            // "rugby" says too little to split into interests
 const MAX_TEXT = 2000;
@@ -60,12 +61,17 @@ export const ProfileService = {
     topics: () => PROFILE_TOPICS,
 
     get: async (userId) => {
-        const [profile, interests, feeds, refusedSources] = await Promise.all([
+        const [profile, interests, feeds, refusedSources, relevance] = await Promise.all([
             ProfileModel.get(userId),
             ProfileModel.interests(userId),
             FeedModel.listUserFeeds(userId),
             FeedbackService.refusedSources(userId),
+            ProfileModel.profileFeedRelevance(userId, {
+                since: new Date(Date.now() - RELEVANCE_DAYS * 24 * 3600e3),
+                threshold: JUDGE_THRESHOLD,
+            }),
         ]);
+        const relevant = new Map(relevance.map(row => [row.id, row.relevant]));
 
         return {
             profile: toProfile(profile),
@@ -78,7 +84,10 @@ export const ProfileService = {
                 category: feed.category,
                 language: feed.language,
                 error: feed.last_error ?? null,
+                // its news of the last RELEVANCE_DAYS on the interests: at 0 it is removed, once it had the time
+                relevant: relevant.get(feed.id) ?? 0,
             })),
+            limits: {profileFeeds: MAX_PROFILE_FEEDS, relevanceDays: RELEVANCE_DAYS},
             // the sources found for the profile the thumbs of the reader left out: [{url, site, refused, liked}]
             refusedSources,
         };

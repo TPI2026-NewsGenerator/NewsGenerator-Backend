@@ -17,7 +17,9 @@ router.post('', authenticateToken, FeedController.addUserFeed);
 router.post('/suggestions', authenticateToken, FeedController.suggestSources);
 router.post('/search', authenticateToken, FeedController.searchSources);
 router.post('/import', authenticateToken, FeedController.importSources);
-router.patch('/:id', authenticateToken, FeedController.setTrusted);
+router.get('/recommended', authenticateToken, FeedController.getRecommended);
+router.post('/recommended', authenticateToken, FeedController.addRecommended);
+router.patch('/:id', authenticateToken, FeedController.updateUserFeed);
 router.delete('/:id', authenticateToken, FeedController.deleteUserFeed);
 
 export default router;

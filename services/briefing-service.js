@@ -14,6 +14,7 @@ import {ProfileModel} from "../models/profile-model.js";
 import {FeedModel} from "../models/feed-model.js";
 import {StoryModel} from "../models/story-model.js";
 import {FeedbackService} from "./feedback-service.js";
+import {DiscoveryService} from "./discovery-service.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {newUsage, ollamaResume} from "./utils/ollama.js";
 import {checkStories, mergeStories, selectStories, WRITTEN_IN} from "./utils/profile-ai.js";
@@ -166,6 +167,9 @@ const write = async (briefingId, userId) => {
     // database, where the vectors are (see rank_stories in db/add_briefing.sql)
     await step('ranking');
     const since = new Date(Date.now() - WINDOW_HOURS * 3600e3);
+    // the sources found for the profile that bring nothing on it any more are removed first; the
+    // briefing never waits on it failing
+    await DiscoveryService.prune(userId).catch(err => console.error(`Briefing: the sources were not pruned (${err.message})`));
     // the thumbs of the reader: examples for the choice, and the sources found for the profile whose
     // cards were refused again and again are left out
     const feedback = await FeedbackService.of(userId);

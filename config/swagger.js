@@ -334,11 +334,46 @@ const options = {
                 },
                 "patch": {
                     "tags": ["Feeds"],
-                    "summary": "Trust one of the sources added by hand, or not",
-                    "description": "Among the stories already close to the profile, the ones a trusted source tells get a bonus in the briefing, the AI that chooses is told so, and its article leads the card. It changes nothing to the corroboration. Only for the sources added by hand.",
+                    "summary": "Trust or share one of the sources added by hand, or not",
+                    "description": "`trusted`: among the stories already close to the profile, the ones a trusted source tells get a bonus in the briefing, the AI that chooses is told so, and its article leads the card. It changes nothing to the corroboration.\n\n`shared`: the source can be recommended to the other readers whose interests it publishes on (GET /feeds/recommended). A source added by hand is never recommended without it. Refused when its address looks like it holds a private key (`?key=`, `?token=`, a long random part...).\n\nOnly for the sources added by hand.",
                     "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
-                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"trusted": {"type": "boolean"}}}}}},
-                    "responses": {"200": {"description": "{id, trusted}"}, "400": {"description": "trusted missing"}, "404": {"description": "Not a source added by hand by this user"}}
+                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"trusted": {"type": "boolean"}, "shared": {"type": "boolean"}}}}}},
+                    "responses": {"200": {"description": "{id, trusted, shared}"}, "400": {"description": "Neither trusted nor shared given, or an address that can't be shared"}, "404": {"description": "Not a source added by hand by this user"}}
+                }
+            },
+            "/feeds/recommended": {
+                "get": {
+                    "tags": ["Feeds"],
+                    "summary": "Sources this reader could add",
+                    "description": "Among the feeds the server already reads for the other readers, only the ones read for a **public reason**: found by the discovery of a profile, or shared by the reader who added them. A feed another reader only added by hand is never a candidate. Kept: the ones with at least 3 news of the last 7 days on the interests of this reader, in their languages, without the media they already read and the sources their thumbs left out. The most relevant first, 20 at most.",
+                    "responses": {
+                        "200": {
+                            "description": "The recommended sources",
+                            "content": {"application/json": {"schema": {"type": "object", "properties": {"sources": {"type": "array", "items": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {"type": "integer", "description": "Of the feed, to send back to POST /feeds/recommended"},
+                                    "site": {"type": "string", "example": "goal.com"},
+                                    "url": {"type": "string", "nullable": true, "description": "null for a site read through the RSS-Bridge of the project"},
+                                    "category": {"type": "string"},
+                                    "language": {"type": "string", "nullable": true},
+                                    "news": {"type": "integer", "description": "Its news of the last 7 days in the languages of the reader"},
+                                    "relevant": {"type": "integer", "description": "How many of them are on the interests of the reader"},
+                                    "samples": {"type": "array", "items": {"type": "string"}, "description": "The titles closest to them"}
+                                }
+                            }}}}}}
+                        }
+                    }
+                },
+                "post": {
+                    "tags": ["Feeds"],
+                    "summary": "Add recommended sources",
+                    "description": "Only ids are sent: each is checked to be recommended to this reader right now, so every address added is one the server already reads, never one the client names. They are added as if by hand: counted in the limit of 100, never removed without the reader, and not shared.",
+                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"ids": {"type": "array", "items": {"type": "integer"}, "maxItems": 20}}, "required": ["ids"]}}}},
+                    "responses": {
+                        "200": {"description": "{feeds, errors}: the sources added, and why the others were not ({id, site, error})"},
+                        "400": {"description": "No id, or more than 20"}
+                    }
                 }
             },
             "/news/categories": {
