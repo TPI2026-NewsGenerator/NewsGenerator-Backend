@@ -7,7 +7,7 @@
 
 "use strict"
 
-// run 'task' on every item with at most 'concurrency' tasks running at the same time
+// run 'task(item, index)' on every item with at most 'concurrency' tasks running at the same time
 // returns one result per item, in the same order, like Promise.allSettled
 export const mapWithConcurrency = async (items, concurrency, task) => {
     const results = new Array(items.length);
@@ -17,7 +17,7 @@ export const mapWithConcurrency = async (items, concurrency, task) => {
         while (next < items.length) {
             const index = next++;
             try {
-                results[index] = { status: 'fulfilled', value: await task(items[index]) };
+                results[index] = { status: 'fulfilled', value: await task(items[index], index) };
             } catch (err) {
                 results[index] = { status: 'rejected', reason: err };
             }

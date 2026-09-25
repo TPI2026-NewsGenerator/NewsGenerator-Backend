@@ -273,3 +273,30 @@ describe('Filter.canWiden and Filter.widen', () => {
         expect(wider.groups[0][0].exact).toBe(true);
     });
 });
+
+describe('Filter.matcher', () => {
+    const matches = (keywords, text) => Filter.matcher(Filter.parse(keywords))(text);
+
+    it('should read the keywords like the SQL filter: alternatives, all the terms, exclusions', () => {
+        expect(matches(['rugby, fashion'], 'London Fashion Week')).toBe(true);
+        expect(matches(['Top 14'], 'Top 14 - Vannes perd encore')).toBe(true);
+        expect(matches(['Top 14'], 'Le top 140 des séries')).toBe(false);
+        expect(matches(['chien -chaud'], 'Un chien sauvé')).toBe(true);
+        expect(matches(['chien -chaud'], 'Chien chaud au menu')).toBe(false);
+    });
+
+    it('should find the variants of a word but not a short word inside another', () => {
+        expect(matches(['chien'], 'Les chiens et la chaleur')).toBe(true);
+        expect(matches(['vet'], 'Un vétérinaire explique')).toBe(false);
+    });
+
+    it('should ignore the accents and the case, except for an acronym', () => {
+        expect(matches(['défilé'], 'DEFILE Marni')).toBe(true);
+        expect(matches(['AI'], "J'ai vu le match")).toBe(false);
+        expect(matches(['AI'], 'A new AI model')).toBe(true);
+    });
+
+    it('should match nothing without keywords', () => {
+        expect(Filter.matcher(Filter.parse(['']))).toBeNull();
+    });
+});

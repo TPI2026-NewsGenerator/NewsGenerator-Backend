@@ -10,6 +10,8 @@ import loginRouter from './login-router.js';
 import newsRouter from './news-router.js';
 import feedRouter from './feed-router.js';
 import customSearchRouter from './customsearch-router.js';
+import profileRouter from './profile-router.js';
+import briefingRouter from './briefing-router.js';
 import cors from "cors";
 
 const router = express.Router();
@@ -20,5 +22,7 @@ router.use('/login', loginRouter);
 router.use('/news', newsRouter);
 router.use('/feeds', feedRouter);
 router.use('/customsearch', customSearchRouter);
+router.use('/profile', profileRouter);
+router.use('/briefing', briefingRouter);
 
 export default router;

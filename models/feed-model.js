@@ -10,6 +10,8 @@
 import {prisma} from '../config/db.js';
 import {Filter} from '../services/utils/filter.js';
 
+const INSERT_SLICE = 1000;      // rows per INSERT, 7 values each: far under the 65535 of Postgres
+
 export const FeedModel = {
     // make sure every url has a row in feeds, then return these rows
     syncFeeds: async (urls) => {
@@ -36,31 +38,20 @@ export const FeedModel = {
             data: data,
         });
     },
-    // when the feeds were fetched for the last time, null when the cache is empty
-    lastFetchedAt: async () => {
-        const { _max } = await prisma.feeds.aggregate({ _max: { last_fetched_at: true } });
-        return _max.last_fetched_at;
-    },
-    // oldest fetch of these feeds, null when one of them was never fetched (a source just added):
-    // the cache is only fresh when every feed the search needs has been read
-    oldestFetch: async (urls) => {
-        const feeds = await prisma.feeds.findMany({
-            where: { url: { in: urls } },
-            select: { last_fetched_at: true },
-        });
-
-        if (feeds.length < new Set(urls).size) return null;      // a feed is not in the table yet
-
-        const dates = feeds.map(feed => feed.last_fetched_at);
-        return dates.some(date => !date) ? null : new Date(Math.min(...dates.map(date => date.getTime())));
-    },
     // articles already saved (same feed and link) are ignored
+    // A refresh of every feed gives thousands of rows. Prisma (7.8 to 7.10) cuts such a createMany into
+    // several INSERTs of one transaction and sends them together on its connection, which pg 8 only
+    // warns about and pg 9 will refuse: the slices are sent one after the other here instead
     insertArticles: async (articles) => {
-        const { count } = await prisma.articles.createMany({
-            data: articles,
-            skipDuplicates: true,
-        });
-        return count;
+        let inserted = 0;
+        for (let i = 0; i < articles.length; i += INSERT_SLICE) {
+            const { count } = await prisma.articles.createMany({
+                data: articles.slice(i, i + INSERT_SLICE),
+                skipDuplicates: true,
+            });
+            inserted += count;
+        }
+        return inserted;
     },
     // articles of these feeds matching the search, filtered in SQL so only the results leave the database
     // keywords: from Filter.parse, timeframe: {start, end} on the publication date (the date we saw the news
@@ -156,14 +147,28 @@ export const FeedModel = {
 
         return userFeeds.map(feed => ({ ...feed, ...status.get(feed.url) }));
     },
+    // the feeds added by hand, the only ones the limit of a user counts: the ones found for the
+    // profile have their own (see discovery-service.js)
     countUserFeeds: async (userId) => {
-        return prisma.user_feeds.count({ where: { id_user: userId } });
+        return prisma.user_feeds.count({ where: { id_user: userId, origin: 'user' } });
     },
     addUserFeed: async ({userId, url, site, category}) => {
         return prisma.user_feeds.create({
             data: { id_user: userId, url: url, site: site, category: category },
         });
     },
+    // only a source added by hand can be trusted: one found for the profile is replaced when it changes
+    setTrusted: async (userId, id, trusted) => {
+        const { count } = await prisma.user_feeds.updateMany({
+            where: { id: id, id_user: userId, origin: 'user' },
+            data: { trusted: trusted },
+        });
+        return count;
+    },
+    trustedFeedUrls: async (userId) => (await prisma.user_feeds.findMany({
+        where: { id_user: userId, origin: 'user', trusted: true },
+        select: { url: true },
+    })).map(feed => feed.url),
     deleteUserFeed: async (userId, id) => {
         const { count } = await prisma.user_feeds.deleteMany({
             where: { id: id, id_user: userId },
@@ -177,6 +182,11 @@ export const FeedModel = {
             select: { url: true },
             distinct: ['url'],
         });
+        return feeds.map(feed => feed.url);
+    },
+    // the feeds of every user, read by the worker (see IngestService.run)
+    allUserFeedUrls: async () => {
+        const feeds = await prisma.user_feeds.findMany({select: {url: true}, distinct: ['url']});
         return feeds.map(feed => feed.url);
     },
     deleteArticlesOlderThan: async (date) => {

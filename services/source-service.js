@@ -24,11 +24,12 @@ const MAX_DIRECTORY_RESULTS = 15;   // feeds answered to a search of the directo
 
 // media already searched for this user: the feeds of db/rss-links.js and the ones they added.
 // The address of a feed does not always name its medium ("feeds.content.dowjones.io" is the WSJ,
-// feedburner is everybody), so the links of the articles already cached are read too
-const knownMedia = async (userId) => {
+// feedburner is everybody), so the links of the articles already cached are read too.
+// 'userFeeds' replaces the feeds of the user, when some of them are about to be replaced
+export const knownMedia = async (userId, {userFeeds = null} = {}) => {
     const urls = [
         ...Object.values(rss).flatMap(language => Object.values(language).flat()),
-        ...await FeedModel.userFeedUrls(userId),
+        ...(userFeeds ?? await FeedModel.userFeedUrls(userId)),
     ];
 
     const hosts = [
@@ -113,7 +114,9 @@ export const SourceService = {
             .sort((a, b) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? ''))
             .slice(0, MAX_NEWS);
 
-        const found = await mapWithConcurrency(candidates, FIND_CONCURRENCY, medium => findFeeds(medium.site, {language}));
+        // the feed kept for a medium is its section on these keywords, not its main feed where they
+        // are 3 news out of 100
+        const found = await mapWithConcurrency(candidates, FIND_CONCURRENCY, medium => findFeeds(medium.site, {language, subject: keywords}));
 
         const sources = candidates
             .map((medium, i) => ({

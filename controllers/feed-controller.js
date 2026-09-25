@@ -21,6 +21,8 @@ const toFeed = (feed) => ({
     url: feed.url,
     site: feed.site,
     category: feed.category,
+    origin: feed.origin,                        // 'user' added by hand, 'profile' found for the profile
+    trusted: feed.trusted ?? false,             // a source the user trusts, its stories come first
     createdAt: feed.created_at,
     error: feed.last_error ?? null,             // why the last refresh of this feed failed
     lastFetchedAt: feed.last_fetched_at ?? null,
@@ -115,8 +117,15 @@ export const FeedController = {
     // add several suggested sources at once, their feed is checked again here: what the client sends
     // back is never trusted, it could be any address, and a directory can name a feed that died
     importSources: async (req, res) => {
-        const {sources, language} = req.body;
+        const {sources, language, subject} = req.body;
         const spoken = FeedService.languages().includes(language) ? language : 'en';
+
+        // the keywords the sources were suggested for: a site read through the bridge is built again
+        // on its section about them, as it was suggested. They only choose among the sections the
+        // site links, never an address
+        const keywords = Array.isArray(subject) && subject.every(keyword => typeof keyword === 'string')
+            ? subject.slice(0, 20).map(keyword => keyword.slice(0, 200))
+            : null;
 
         if (!Array.isArray(sources) || sources.length === 0) {
             return res.status(400).json({error: "Please select at least one source."});
@@ -153,7 +162,7 @@ export const FeedController = {
             // something this server decided, and the suggestion stays usable.
             const fromBridge = isBridgeUrl(feed);
             if (fromBridge) {
-                const found = name ? await findFeeds(name, {language: spoken}) : [];
+                const found = name ? await findFeeds(name, {language: spoken, subject: keywords}) : [];
                 if (found.length === 0) {
                     errors.push({site, error: `No RSS feed found on "${site}".`});
                     continue;
@@ -185,6 +194,25 @@ export const FeedController = {
         }
 
         res.status(200).json({feeds: added, errors});
+    },
+
+    // {trusted}: among the stories close to the profile, the ones this source tells come first in
+    // the briefing and its article leads the card. Only for the sources added by hand
+    setTrusted: async (req, res) => {
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id)) {
+            return res.status(400).json({error: "An id is required."});
+        }
+        if (typeof req.body?.trusted !== 'boolean') {
+            return res.status(400).json({error: "trusted: true or false."});
+        }
+
+        const updated = await FeedModel.setTrusted(req.user.id, id, req.body.trusted);
+        if (updated === 0) {
+            return res.status(404).json({error: "This source does not exist, or was found for the profile."});
+        }
+
+        res.status(200).json({id, trusted: req.body.trusted});
     },
 
     deleteUserFeed: async (req, res) => {

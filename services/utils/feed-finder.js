@@ -9,9 +9,11 @@
 
 import {parseHTML} from 'linkedom';
 import {Crawlers} from './crawlers.js';
+import {toDate} from './dates.js';
 import {searchDirectory} from './feed-directory.js';
 import {bridgeFeed} from './feed-bridge.js';
 import {assertPublicUrl, fetchPublicUrl, hostOf, isBridgeUrl, nameOf} from './public-url.js';
+import {feedLinks, feedsPageLink, keywordJudge, sectionLinks, subjectStats, subjectWords} from './site-sections.js';
 
 // paths tried when the page declares no feed
 const COMMON_PATHS = [
@@ -20,16 +22,20 @@ const COMMON_PATHS = [
 ];
 const USER_AGENT = 'Mozilla/5.0 (compatible; NewsGenerator/1.0; +RSS reader)';
 const MAX_PAGE_CHARS = 2_000_000;
+const MAX_SECTIONS = 3;         // section pages read for a subject
+const MAX_CHECKED = 20;         // feeds read to choose one: each is a request
+const MIN_ON_SUBJECT = 2;       // one news on the subject in a whole feed is chance, not a section
 
 // feeds declared in the page: <link rel="alternate" type="application/rss+xml" href="...">
-const declaredFeeds = async (siteUrl) => {
+// the page is given back too: its links name the sections of the site
+const readPage = async (siteUrl) => {
     const {res, url} = await fetchPublicUrl(siteUrl, {headers: {'User-Agent': USER_AGENT}});
-    if (!res.ok) return [];
+    if (!res.ok) return {feeds: [], html: '', url};
 
     const body = (await res.text()).slice(0, MAX_PAGE_CHARS);
 
     // the address given is the feed itself
-    if (/^\s*<(\?xml|rss|feed|rdf:RDF)/i.test(body)) return [url];
+    if (/^\s*<(\?xml|rss|feed|rdf:RDF)/i.test(body)) return {feeds: [url], html: '', url};
 
     const {document} = parseHTML(body);
     const links = [...document.querySelectorAll('link[rel="alternate" i]')]
@@ -43,11 +49,15 @@ const declaredFeeds = async (siteUrl) => {
         })
         .filter(Boolean);
 
-    return [...new Set(links)];
+    return {feeds: [...new Set(links)], html: body, url};
 };
 
-// keep only the candidates that really answer with news
-const checkFeeds = async (urls) => {
+// a section that can't be read gives no feed, it is only one candidate among others
+const tryPage = (url) => readPage(url).catch(() => ({feeds: [], html: '', url}));
+
+// keep only the candidates that really answer with news. With a judge of the subject (see
+// keywordJudge), each feed also says how much it is on it (see subjectStats)
+const checkFeeds = async (urls, judge = null) => {
     const publicUrls = [];
     for (let url of urls) {
         try {
@@ -57,25 +67,65 @@ const checkFeeds = async (urls) => {
         }
     }
 
-    const results = await Crawlers.Xml(publicUrls.map(url => ({url})));
+    const results = (await Crawlers.Xml(publicUrls.map(url => ({url}))))
+        .map(result => ({...result, items: result.items.filter(item => item.link)}))
+        .filter(result => result.items.length > 0);
 
-    return results
-        .map(result => {
-            const items = result.items.filter(item => item.link);
-            const dates = result.items.map(item => new Date(item.pubDate)).filter(date => !isNaN(date));
+    return Promise.all(results.map(async ({url, items}) => {
+        const dates = items.map(item => toDate(item.pubDate)).filter(Boolean);
+        const stats = judge ? await subjectStats(items, judge) : null;
 
-            return {
-                url: result.url,
-                items: items.length,
-                newest: dates.sort((a, b) => b - a)[0] ?? null,
-                titles: items.slice(0, 3).map(item => item.title),
-            };
-        })
-        .filter(feed => feed.items > 0);
+        return {
+            url: url,
+            items: items.length,
+            newest: dates.sort((a, b) => b - a)[0] ?? null,
+            // the sample shown to the user is a news on the subject when there is one
+            titles: [...new Set([stats?.sample, ...items.map(item => item.title)])].filter(Boolean).slice(0, 3),
+            ...(stats ? {onSubject: stats.onSubject, judged: stats.judged, onSubjectPerDay: stats.onSubjectPerDay} : {}),
+        };
+    }));
 };
 
-// feeds of a site, the best first (the one with the most news)
-export const findFeeds = async (site, {language = null} = {}) => {
+// How much a feed brings on the subject: its news on it per day, times the share of its news on it.
+// The flow alone would pick the main feed of a newspaper, where "chef" also finds "chef de l'Etat",
+// and the share alone would pick a feed 100% on the subject that publishes once a month (the "Top
+// Chef" feed of ladepeche.fr), or the women's rugby feed of a rugby site, whose main feed rarely
+// writes "rugby" in its titles ("Top 14 - Toulon bat Vannes") but brings 16 news a day.
+// A single news proves nothing: a regional feed must not win because one of its 20 news named a dog.
+export const isOnSubject = (feed) => feed.onSubject >= MIN_ON_SUBJECT;
+export const subjectScore = (feed) => isOnSubject(feed) ? feed.onSubjectPerDay * feed.onSubject / feed.judged : 0;
+
+// the feeds of this same medium known to the directory: the ones a site declares nowhere, and often
+// one per section. A search for "uefa.com" also answers with the sites that write about it
+const directoryFeeds = async (host) => (await searchDirectory(host, 20))
+    .filter(feed => nameOf(hostOf(feed.url) ?? '') === nameOf(host))
+    .map(feed => feed.url);
+
+// the feeds of a site that may be on the subject: those of its sections ("/rugby/"), of its page
+// listing its feeds ("/rss/"), and those the directory knows
+const subjectCandidates = async (home, words, host) => {
+    const sections = sectionLinks(home.html, home.url, words, MAX_SECTIONS);
+    const feedsPage = feedsPageLink(home.html, home.url);
+
+    const [sectionPages, listing, known] = await Promise.all([
+        Promise.all(sections.map(tryPage)),
+        feedsPage ? tryPage(feedsPage) : null,
+        host ? directoryFeeds(host) : [],
+    ]);
+
+    return [
+        ...sectionPages.flatMap(page => page.feeds),
+        ...(listing ? feedLinks(listing.html, listing.url, words) : []),
+        ...known,
+    ];
+};
+
+// feeds of a site, the best first. Without a subject the best is the one with the most news. With a
+// subject (keywords, as a search writes them) it is the one most on it: the rugby section of a
+// newspaper rather than its main feed, where rugby is 3 news out of 100. The keywords also name the
+// sections to look for; which news are on the subject is decided by 'judge' when one is given (by
+// meaning, see subjectStats), else by the keywords themselves
+export const findFeeds = async (site, {language = null, subject = null, judge = null} = {}) => {
     // "fortune.com" -> https, but "file:///etc/passwd" keeps its protocol so it is refused as such
     const value = site.trim();
     const siteUrl = value.includes('://') ? value : `https://${value}`;
@@ -86,36 +136,43 @@ export const findFeeds = async (site, {language = null} = {}) => {
         throw Object.assign(new Error('This address is not a website.'), {status: 400});
     }
 
-    let candidates = [];
+    let home = {feeds: [], html: '', url: siteUrl};
     try {
-        candidates = await declaredFeeds(siteUrl);
+        home = await readPage(siteUrl);
     } catch (err) {
         if (err.status === 400) throw err;      // private address, bad protocol: the user must know
     }
 
-    if (candidates.length === 0) {
-        candidates = COMMON_PATHS.map(path => new URL(path, siteUrl).href);
+    const host = hostOf(siteUrl);
+    const words = subject ? subjectWords(subject) : [];
+    const judgeSubject = judge ?? (subject ? keywordJudge(subject) : null);
+
+    let candidates = home.feeds.length > 0 ? home.feeds : COMMON_PATHS.map(path => new URL(path, siteUrl).href);
+    if (judgeSubject) {
+        candidates = [...new Set([...candidates, ...await subjectCandidates(home, words, host)])].slice(0, MAX_CHECKED);
     }
 
-    const feeds = (await checkFeeds(candidates)).sort((a, b) => b.items - a.items);
-    if (feeds.length > 0) return feeds;
+    const best = (a, b) => (judgeSubject ? subjectScore(b) - subjectScore(a) : 0) || b.items - a.items;
+    const feeds = (await checkFeeds(candidates, judgeSubject)).sort(best);
 
-    // last resort: the site declares no feed and has none on a usual path, but it may still publish
-    // one that readers know. Only the feeds of this same medium are kept, a search for "uefa.com"
-    // also answers with the sites that write about it
-    const host = hostOf(siteUrl);
-    if (!host) return [];
+    if (feeds.length > 0 && (!judgeSubject || isOnSubject(feeds[0]))) return feeds;
+    if (!host) return feeds;
 
-    const fromDirectory = (await searchDirectory(host, 10))
-        .filter(feed => nameOf(hostOf(feed.url) ?? '') === nameOf(host))
-        .map(feed => feed.url);
+    // the site declares no feed and has none on a usual path, but it may still publish one that
+    // readers know (already asked when there is a subject). Only the feeds of this same medium count
+    if (!judgeSubject) {
+        const fromDirectory = (await checkFeeds(await directoryFeeds(host))).sort(best);
+        if (fromDirectory.length > 0) return fromDirectory;
+    }
 
-    const directoryFeeds = (await checkFeeds(fromDirectory)).sort((a, b) => b.items - a.items);
-    if (directoryFeeds.length > 0) return directoryFeeds;
+    // last resort: nothing published anywhere, or nothing on the subject. The site is read as a page
+    // and turned into a feed, of its section on the subject when it has one. This one is built, not
+    // published, so it breaks the day the site changes its pages
+    const built = await bridgeFeed(siteUrl, {language, words, judge: judgeSubject});
+    if (!built) return feeds;
 
-    // nothing published anywhere: the site is read as a page and turned into a feed. This one is
-    // built, not published, so it breaks the day the site changes its pages
-    const built = await bridgeFeed(siteUrl, {language});
+    // a built feed off the subject is worth less than a published one off it
+    if (judgeSubject && !isOnSubject(built) && feeds.length > 0) return feeds;
 
-    return built ? [built] : [];
+    return [built, ...feeds];
 };

@@ -10,7 +10,6 @@
 import Links from "./utils/links.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {Filter} from "./utils/filter.js";
-import {FeedService} from "./feed-service.js";
 import {FeedModel} from "../models/feed-model.js";
 import {ollamaResume} from "./utils/ollama.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
@@ -128,10 +127,7 @@ export const NewsService = {
                 ...(userId ? await FeedModel.userFeedUrls(userId, category) : []),
             ])];
 
-            // 2. fetch the feeds only if the cache is too old
-            await FeedService.ensureFresh(userId, language);
-
-            // 3. search in SQL: keywords, excluded keywords (-word) and publication date
+            // 2. search in SQL (the feeds are read in background, see IngestService: nobody waits for them): keywords, excluded keywords (-word) and publication date
             const search = (parsed) => FeedModel.searchArticles({
                 feedUrls: newsLinks,
                 keywords: parsed,
@@ -160,7 +156,7 @@ export const NewsService = {
 
             if (articles.length === 0) return {totalResults: 0, news: [], wider};
 
-            // 4. once per link (a news can be in several feeds), then group the news telling the same story
+            // 3. once per link (a news can be in several feeds), then group the news telling the same story
             const uniqueArticles = [...new Map(articles.map(article => [article.link, article])).values()];
             const news = await groupDuplicates(uniqueArticles);
 

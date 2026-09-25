@@ -41,6 +41,14 @@ const options = {
             {
                 "name": "Custom searches",
                 "description": "Searches a user saved to run them again"
+            },
+            {
+                "name": "Profile",
+                "description": "What a user wants to read, in their own words, split into interests by the AI, and the sources found for it"
+            },
+            {
+                "name": "Briefing",
+                "description": "The stories of the last 48 hours chosen for the profile, read, summarized and counted"
             }
         ],
         // every route but /login needs the token, so it is asked once at the top of the page
@@ -323,6 +331,14 @@ const options = {
                     "summary": "Remove one of the sources of the user",
                     "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
                     "responses": {"200": {"description": "Removed"}, "404": {"description": "Not a source of this user"}}
+                },
+                "patch": {
+                    "tags": ["Feeds"],
+                    "summary": "Trust one of the sources added by hand, or not",
+                    "description": "Among the stories already close to the profile, the ones a trusted source tells get a bonus in the briefing, the AI that chooses is told so, and its article leads the card. It changes nothing to the corroboration. Only for the sources added by hand.",
+                    "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"trusted": {"type": "boolean"}}}}}},
+                    "responses": {"200": {"description": "{id, trusted}"}, "400": {"description": "trusted missing"}, "404": {"description": "Not a source added by hand by this user"}}
                 }
             },
             "/news/categories": {
@@ -523,6 +539,112 @@ const options = {
                         "400": {"description": "No id given, or not a search of this user"}
                     }
                 }
+            },
+            "/profile": {
+                "get": {
+                    "tags": ["Profile"],
+                    "summary": "The profile of the user, its interests and the sources found for it",
+                    "responses": {"200": {"description": "The profile, null before the user wrote one", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ProfileResponse"}}}}}
+                },
+                "put": {
+                    "tags": ["Profile"],
+                    "summary": "Write the profile",
+                    "description": "The AI splits the text into 1 to 6 interests, each gets its bge-m3 vector, and the sources of the profile are found again in background (discovery.status 'running' until done). Needs the embedder (pnpm run embedder).",
+                    "requestBody": {
+                        "required": true,
+                        "content": {"application/json": {"schema": {
+                            "type": "object",
+                            "properties": {
+                                "text": {"type": "string", "minLength": 20, "maxLength": 2000, "example": "Je suis passionné de rugby (Top 14, Six Nations). J'aime aussi la mode. Pas de football."},
+                                "topics": {"type": "array", "items": {"type": "string"}, "example": ["sport", "culture"]},
+                                "languages": {"type": "array", "items": {"type": "string"}, "example": ["fr", "en"]}
+                            },
+                            "required": ["text", "languages"]
+                        }}}
+                    },
+                    "responses": {
+                        "200": {"description": "The profile written", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ProfileResponse"}}}},
+                        "400": {"description": "Text too short or too long, unknown topic or language"},
+                        "422": {"description": "The AI read no interest in the text"},
+                        "503": {"description": "The embedder does not answer"}
+                    }
+                }
+            },
+            "/profile/options": {
+                "get": {
+                    "tags": ["Profile"],
+                    "summary": "The topics and languages a profile can choose",
+                    "security": [],
+                    "responses": {"200": {"description": "{topics: [...], languages: [...]}"}}
+                }
+            },
+            "/profile/interests/{id}": {
+                "patch": {
+                    "tags": ["Profile"],
+                    "summary": "Correct one interest",
+                    "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                    "requestBody": {"content": {"application/json": {"schema": {"type": "object", "properties": {
+                        "text": {"type": "string", "maxLength": 300},
+                        "weight": {"type": "number", "minimum": 0.5, "maximum": 1}
+                    }}}}},
+                    "responses": {"200": {"description": "The profile"}, "400": {"description": "Invalid text or weight"}, "404": {"description": "Not an interest of this user"}}
+                },
+                "delete": {
+                    "tags": ["Profile"],
+                    "summary": "Remove one interest",
+                    "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                    "responses": {"200": {"description": "The profile"}, "404": {"description": "Not an interest of this user"}}
+                }
+            },
+            "/profile/kept-sources": {
+                "post": {
+                    "tags": ["Profile"],
+                    "summary": "Keep a source the thumbs left out",
+                    "description": "A source found for the profile is left out once at least 3 of its cards were refused, twice as often as liked (GET /profile gives them in refusedSources). Kept, it comes back and is never left out again.",
+                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"url": {"type": "string"}}}}}},
+                    "responses": {"200": {"description": "The profile"}, "400": {"description": "url missing"}, "404": {"description": "This source is not left out"}}
+                }
+            },
+            "/profile/discover": {
+                "post": {
+                    "tags": ["Profile"],
+                    "summary": "Find the sources of the profile again",
+                    "description": "In background. Replaces the sources found before, never the ones the user added by hand.",
+                    "responses": {"200": {"description": "The profile, discovery.status 'running'"}, "400": {"description": "No profile yet"}}
+                }
+            },
+            "/briefing": {
+                "get": {
+                    "tags": ["Briefing"],
+                    "summary": "The last briefing of the user",
+                    "responses": {"200": {"description": "{briefing: Briefing | null}", "content": {"application/json": {"schema": {"type": "object", "properties": {"briefing": {"$ref": "#/components/schemas/Briefing"}}}}}}}
+                },
+                "post": {
+                    "tags": ["Briefing"],
+                    "summary": "Write a new briefing",
+                    "description": "In background: answers the briefing running, GET /briefing until its status is 'ready' or 'failed'. One at a time per user; the stories seen in the last 3 days (POST /briefing/{id}/seen) are not shown again, nor stories telling the same news.",
+                    "responses": {"202": {"description": "{briefing: Briefing} running"}}
+                }
+            },
+            "/briefing/{id}/seen": {
+                "post": {
+                    "tags": ["Briefing"],
+                    "summary": "Mark cards of a briefing as seen",
+                    "description": "Sent by the page once a card stayed on the screen. Only the cards seen are left out of the next briefings; a card keeps the time it was first seen.",
+                    "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"storyIds": {"type": "array", "items": {"type": "integer"}, "maxItems": 50}}}}}},
+                    "responses": {"204": {"description": "Marked"}, "400": {"description": "storyIds missing or wrong"}, "404": {"description": "Not a ready briefing of this user"}}
+                }
+            },
+            "/briefing/{id}/vote": {
+                "post": {
+                    "tags": ["Briefing"],
+                    "summary": "Give a thumb to a card",
+                    "description": "'up': good for me, 'down': not for me, null: taken back. The titles of the last 30 days guide the AI that chooses the next briefings, and a source found for the profile whose cards are refused at least 3 times (twice as often as liked) is left out. The sources added by hand are never left out.",
+                    "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"storyId": {"type": "integer"}, "vote": {"type": "string", "enum": ["up", "down"], "nullable": true}}}}}},
+                    "responses": {"204": {"description": "Saved"}, "400": {"description": "storyId or vote wrong"}, "404": {"description": "No such card in a ready briefing of this user"}}
+                }
             }
         },
         "components": {
@@ -722,6 +844,66 @@ const options = {
                         }
                     },
                     "required": ["title", "keyword", "language", "category"]
+                },
+                "ProfileResponse": {
+                    "type": "object",
+                    "properties": {
+                        "profile": {"type": "object", "nullable": true, "properties": {
+                            "text": {"type": "string"},
+                            "topics": {"type": "array", "items": {"type": "string"}},
+                            "languages": {"type": "array", "items": {"type": "string"}},
+                            "discovery": {"type": "object", "properties": {
+                                "status": {"type": "string", "enum": ["idle", "running", "done", "failed"]},
+                                "error": {"type": "string", "nullable": true},
+                                "at": {"type": "string", "format": "date-time", "nullable": true}
+                            }}
+                        }},
+                        "interests": {"type": "array", "items": {"type": "object", "properties": {
+                            "id": {"type": "integer"},
+                            "text": {"type": "string", "example": "Rugby : Top 14, Six Nations, transferts"},
+                            "weight": {"type": "number", "example": 1},
+                            "keywords": {"type": "string", "example": "rugby, Top 14, XV de France"},
+                            "sections": {"type": "array", "items": {"type": "string"}},
+                            "category": {"type": "string", "example": "sport"}
+                        }}},
+                        "sources": {"type": "array", "items": {"type": "object", "properties": {
+                            "id": {"type": "integer"}, "site": {"type": "string"}, "url": {"type": "string"},
+                            "category": {"type": "string"}, "language": {"type": "string"}, "error": {"type": "string", "nullable": true}
+                        }}}
+                    }
+                },
+                "Briefing": {
+                    "type": "object",
+                    "nullable": true,
+                    "properties": {
+                        "id": {"type": "integer"},
+                        "status": {"type": "string", "enum": ["running", "ready", "failed"]},
+                        "step": {"type": "string", "nullable": true, "enum": ["starting", "ranking", "choosing", "checking", "reading", "summarizing"]},
+                        "error": {"type": "string", "nullable": true},
+                        "createdAt": {"type": "string", "format": "date-time"},
+                        "items": {"type": "array", "items": {"type": "object", "properties": {
+                            "storyId": {"type": "integer"},
+                            "title": {"type": "string"},
+                            "why": {"type": "string", "description": "Why the AI chose it for this user"},
+                            "interest": {"type": "string", "nullable": true, "description": "The interest it is closest to"},
+                            "summary": {"type": "string", "nullable": true, "description": "Neutral summary of one article read, null when none could be read"},
+                            "topic": {"type": "string", "nullable": true},
+                            "sourcing": {"type": "string", "nullable": true, "enum": ["named", "anonymous", "none"]},
+                            "hedged": {"type": "string", "nullable": true, "description": "The words the article used to say it has no confirmation"},
+                            "thumbnail": {"type": "string", "nullable": true},
+                            "publishedAt": {"type": "string", "format": "date-time"},
+                            "corroboration": {"type": "object", "properties": {
+                                "media": {"type": "integer", "description": "Media telling the story"},
+                                "read": {"type": "integer", "description": "Media whose text could be read"},
+                                "independent": {"type": "integer", "description": "Texts written apart from the others among the ones read"},
+                                "agencies": {"type": "array", "items": {"type": "string"}, "example": ["AFP"]},
+                                "mediaNames": {"type": "array", "items": {"type": "string"}}
+                            }},
+                            "articles": {"type": "array", "items": {"type": "object", "properties": {
+                                "title": {"type": "string"}, "url": {"type": "string"}, "source": {"type": "string"}, "publishedAt": {"type": "string"}
+                            }}}
+                        }}}
+                    }
                 },
                 "SuggestedSource": {
                     "type": "object",

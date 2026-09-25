@@ -101,4 +101,39 @@ const canWiden = ({groups}) => groups.some(terms => terms.length > 1);
 
 const widen = ({groups, excluded}) => ({groups: groups.flat().map(term => [term]), excluded});
 
-export const Filter = { parse, toPattern, keywordsSql, canWiden, widen };
+// The same keywords read in JavaScript, for texts that are not in the database yet (the items of a
+// feed being chosen, see findFeeds). The accents are ignored on both sides: "defile" finds "défilé".
+// The letters and digits are listed without the i flag: under /iu a negated \p{} class also refuses
+// the capitals, so the case is removed from the text instead
+const withoutAccents = (text) => text.normalize('NFD').replace(/\p{M}/gu, '');
+const WORD_START_JS = '(?:^|[^\\p{L}\\p{N}])';
+const WORD_END_JS = '(?=[^\\p{L}\\p{N}]|$)';
+
+const toRegex = ({text, exact}) => {
+    const acronym = isAcronym(text);
+    const term = withoutAccents(acronym ? text : text.toLowerCase());
+    const body = exact ? term.split(/\s+/).map(escapeRegex).join('\\s+') : escapeRegex(term);
+    const end = exact || term.length <= SHORT_WORD_LENGTH ? WORD_END_JS : '';
+    const regex = new RegExp(WORD_START_JS + body + end, 'u');
+
+    // an acronym is searched in the text as written, anything else in lowercase
+    return (original, lowered) => regex.test(acronym ? original : lowered);
+};
+
+// text -> true when it matches the keywords, like keywordsSql would; null when there is nothing to match
+const matcher = ({groups, excluded}) => {
+    if (groups.length === 0 && excluded.length === 0) return null;
+
+    const wanted = groups.map(terms => terms.map(toRegex));
+    const unwanted = excluded.map(toRegex);
+
+    return (text) => {
+        const original = withoutAccents(text ?? '');
+        const lowered = original.toLowerCase();
+        const has = (test) => test(original, lowered);
+
+        return (wanted.length === 0 || wanted.some(terms => terms.every(has))) && !unwanted.some(has);
+    };
+};
+
+export const Filter = { parse, toPattern, keywordsSql, canWiden, widen, matcher, withoutAccents };

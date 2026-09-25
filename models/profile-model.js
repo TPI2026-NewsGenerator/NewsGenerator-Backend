@@ -1,0 +1,102 @@
+//
+//  Author: Fabian Rostello
+//  Date: 24.09.2026
+//  File: profile-model.js
+//  Description: Model for the profile of a user, its interests and the feeds found for it
+//
+
+"use strict"
+
+import {prisma} from '../config/db.js';
+
+const PUBLIC_INTEREST = {id: true, position: true, text: true, weight: true, keywords: true, sections: true, category: true};
+
+// the vectors of an interest are pgvector columns, Prisma has no type for them: written as text
+// (see toVector and toSparsevec in embedder.js) and cast in SQL
+const setVectors = (where, params, {dense, sparse}) => prisma.$executeRawUnsafe(
+    `UPDATE profile_interests SET dense = $1::vector, sparse = $2::sparsevec WHERE ${where}`,
+    dense, sparse, ...params);
+
+export const ProfileModel = {
+    get: async (userId) => prisma.user_profiles.findUnique({where: {id_user: userId}}),
+
+    // the interests in their order
+    interests: async (userId) => prisma.profile_interests.findMany({
+        where: {id_user: userId},
+        orderBy: {position: 'asc'},
+        select: PUBLIC_INTEREST,
+    }),
+
+    // the interests with their searches and their dense vector as text ("[0.1,...]"), to find their sources
+    interestsForDiscovery: async (userId) => prisma.$queryRawUnsafe(`
+        SELECT id, position, text, weight, keywords, searches, sections, category, dense::text AS dense
+        FROM profile_interests
+        WHERE id_user = $1::int AND dense IS NOT NULL
+        ORDER BY position`,
+        userId),
+
+    // the profile and its interests, the old interests replaced at once
+    // interests: [{text, weight, keywords, searches, sections, category, dense, sparse}], vectors as text
+    save: async (userId, {text, topics, languages}, interests) => prisma.$transaction([
+        prisma.user_profiles.upsert({
+            where: {id_user: userId},
+            create: {id_user: userId, text, topics, languages},
+            update: {text, topics, languages, updated_at: new Date()},
+        }),
+        prisma.profile_interests.deleteMany({where: {id_user: userId}}),
+        prisma.profile_interests.createMany({
+            data: interests.map(({text, weight, keywords, searches, sections, category}, position) =>
+                ({text, weight, keywords, searches, sections, category, id_user: userId, position})),
+        }),
+        ...interests.map((interest, position) =>
+            setVectors('id_user = $3::int AND position = $4::int', [userId, position], interest)),
+    ]),
+
+    // one interest changed by the user, only theirs; its vectors when its text changed
+    updateInterest: async (userId, id, {dense, sparse, ...data}) => {
+        const {count} = await prisma.profile_interests.updateMany({where: {id, id_user: userId}, data});
+        if (count > 0 && dense) await setVectors('id = $3::int AND id_user = $4::int', [id, userId], {dense, sparse});
+        return count;
+    },
+
+    deleteInterest: async (userId, id) => {
+        const {count} = await prisma.profile_interests.deleteMany({where: {id, id_user: userId}});
+        return count;
+    },
+
+    setDiscovery: async (userId, status, error = null) => prisma.user_profiles.update({
+        where: {id_user: userId},
+        data: {
+            discovery_status: status,
+            discovery_error: error,
+            ...(status === 'done' ? {discovered_at: new Date()} : {}),
+        },
+    }),
+
+    // the feeds the user added by hand: the ones found for the profile take the room left
+    ownFeedUrls: async (userId) => (await prisma.user_feeds.findMany({
+        where: {id_user: userId, origin: 'user'},
+        select: {url: true},
+    })).map(feed => feed.url),
+
+    // the feeds the reader kept after their thumbs left them out: never left out again
+    keptSources: async (userId) => (await prisma.user_profiles.findUnique({
+        where: {id_user: userId},
+        select: {kept_sources: true},
+    }))?.kept_sources ?? [],
+
+    keepSource: async (userId, url) => prisma.$executeRawUnsafe(`
+        UPDATE user_profiles SET kept_sources = array_append(kept_sources, $2)
+        WHERE id_user = $1 AND NOT ($2 = ANY(kept_sources))`,
+        userId, url),
+
+    // the feeds found for the profile replace the ones found before, never the ones added by hand
+    // feeds: [{url, site, category, language}]
+    replaceProfileFeeds: async (userId, feeds) => prisma.$transaction([
+        prisma.user_feeds.deleteMany({where: {id_user: userId, origin: 'profile'}}),
+        prisma.user_feeds.createMany({
+            data: feeds.map(feed => ({...feed, id_user: userId, origin: 'profile'})),
+            skipDuplicates: true,       // a feed the user already added by hand stays theirs
+        }),
+    ]),
+};

@@ -2,31 +2,21 @@
 //  Author: Fabian Rostello
 //  Date: 22.09.2026
 //  File: feed-service.js
-//  Description: Refresh of the RSS feeds cache, on demand when a search needs it
+//  Description: Refresh of the RSS feeds cache, in background (see ingest-service.js)
 //
 
 "use strict"
 
 import process from 'node:process'
-import {rss} from "../db/rss-links.js";
 import {FeedModel} from "../models/feed-model.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {toDate} from "./utils/dates.js";
 import Links, {DEFAULT_LANGUAGE} from "./utils/links.js";
 
-// the feeds are fetched when a search needs them, not in background: the cache is refreshed
-// only if it is older than this
-const MAX_AGE_MINUTES = Number(process.env.FEED_MAX_AGE_MINUTES) || 30;
 const RETENTION_DAYS = Number(process.env.FEED_RETENTION_DAYS) || 30;
 
-// refreshes in progress, by group of feeds ('feeds' and one per user), so the same feeds are never
-// fetched twice at the same time. The feeds of a user are a group of their own: they are read when
-// that user searches, not when somebody else does.
+// refreshes in progress, by group of feeds, so the same feeds are never fetched twice at the same time
 const running = new Map();
-
-// the feeds shared by everybody, from db/rss-links.js, for one language only: a search in French
-// has no reason to fetch the English sources, and the catalogue grows with every language added
-const sharedUrls = (language) => [...new Set(Object.values(rss[language] ?? {}).flat())];
 
 const doRefresh = async (urls, {purge = false} = {}) => {
     const start = Date.now();
@@ -97,29 +87,9 @@ const refreshGroup = (key, urls, options) => {
     return running.get(key);
 };
 
-// same thing, but only when one of these feeds has not been read for a while
-const refreshStaleGroup = async (key, urls, options) => {
-    if (urls.length === 0) return null;
-    if (running.has(key)) return running.get(key);
-
-    const oldest = await FeedModel.oldestFetch(urls);
-    if (oldest && Date.now() - oldest.getTime() < MAX_AGE_MINUTES * 60 * 1000) return null;
-
-    return refreshGroup(key, urls, options);
-};
-
 export const FeedService = {
-    // fetch the shared feeds of a language and, when a user is given, their own sources
-    refresh: async (userId = null, language = DEFAULT_LANGUAGE) => Promise.all([
-        refreshGroup(`feeds:${language}`, sharedUrls(language), {purge: true}),
-        userId ? refreshGroup(`user:${userId}`, await FeedModel.userFeedUrls(userId)) : null,
-    ]),
-
-    // refresh only what is too old, awaited by the searches of this user
-    ensureFresh: async (userId = null, language = DEFAULT_LANGUAGE) => Promise.all([
-        refreshStaleGroup(`feeds:${language}`, sharedUrls(language), {purge: true}),
-        userId ? refreshStaleGroup(`user:${userId}`, await FeedModel.userFeedUrls(userId)) : null,
-    ]),
+    // fetch these feeds now, the old news dropped when 'purge' (see IngestService.run)
+    refreshUrls: (urls, {purge = false} = {}) => refreshGroup(purge ? 'all' : `urls:${urls.join('|')}`, urls, {purge}),
 
     // languages that have sources, and the categories of one of them
     languages: () => Links.languages(),

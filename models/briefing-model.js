@@ -1,0 +1,94 @@
+//
+//  Author: Fabian Rostello
+//  Date: 24.09.2026
+//  File: briefing-model.js
+//  Description: Model for the briefings written for a user
+//
+
+"use strict"
+
+import {prisma} from '../config/db.js';
+
+export const BriefingModel = {
+    create: async (userId) => prisma.briefings.create({data: {id_user: userId, status: 'running', step: 'starting'}}),
+
+    step: async (id, step) => prisma.briefings.update({where: {id}, data: {step}}),
+
+    finish: async (id, items) => prisma.briefings.update({
+        where: {id},
+        data: {status: 'ready', step: null, items, finished_at: new Date()},
+    }),
+
+    fail: async (id, error) => prisma.briefings.update({
+        where: {id},
+        data: {status: 'failed', step: null, error, finished_at: new Date()},
+    }),
+
+    latest: async (userId) => prisma.briefings.findFirst({
+        where: {id_user: userId},
+        orderBy: {created_at: 'desc'},
+    }),
+
+    // a briefing still being written for this user, if any
+    running: async (userId) => prisma.briefings.findFirst({
+        where: {id_user: userId, status: 'running'},
+        orderBy: {created_at: 'desc'},
+    }),
+
+    // the cards this user saw since 'since', the newest first: the next briefing tells what is new.
+    // A card is seen once it stayed on the screen (seenAt, see markSeen): the cards of a briefing the
+    // reader stopped reading after two stay for the next one. The cards written before seenAt existed
+    // have no such key and count as seen. [{storyIds: [the story, and those joined to it], title, summary}]
+    shownCards: async (userId, since) => {
+        const briefings = await prisma.briefings.findMany({
+            where: {id_user: userId, status: 'ready', created_at: {gte: since}},
+            orderBy: {created_at: 'desc'},
+            select: {items: true},
+        });
+        const seen = (item) => !('seenAt' in item) || item.seenAt !== null;
+        return briefings.flatMap(briefing => (briefing.items ?? []).filter(seen).map(item => ({
+            storyIds: [item.storyId, ...(item.mergedStoryIds ?? [])],
+            title: item.title,
+            summary: item.summary ?? null,
+        })));
+    },
+
+    // these cards of a briefing of this user stayed on the screen. One statement, so two calls at the
+    // same time both count; a card seen keeps the time it was first seen. 0 when the briefing is not
+    // a ready one of this user
+    markSeen: async (userId, briefingId, storyIds) => prisma.$executeRawUnsafe(`
+        UPDATE briefings
+        SET items = (SELECT jsonb_agg(CASE WHEN (item->>'storyId')::int = ANY($3::int[]) AND item ? 'seenAt' AND item->'seenAt' = 'null'::jsonb
+                                          THEN item || jsonb_build_object('seenAt', now())
+                                          ELSE item END ORDER BY position)
+                     FROM jsonb_array_elements(items) WITH ORDINALITY AS cards(item, position))
+        WHERE id = $1 AND id_user = $2 AND status = 'ready' AND jsonb_array_length(items) > 0`,
+        briefingId, userId, storyIds),
+
+    // the thumb of the reader on a card: 'up', 'down', or null to take it back. One statement, like
+    // markSeen. 0 when the briefing is not a ready one of this user or has no such card
+    vote: async (userId, briefingId, storyId, vote) => prisma.$executeRawUnsafe(`
+        UPDATE briefings
+        SET items = (SELECT jsonb_agg(CASE WHEN (item->>'storyId')::int = $3
+                                          THEN item || jsonb_build_object('vote', $4::text, 'votedAt', CASE WHEN $4::text IS NULL THEN NULL ELSE now() END)
+                                          ELSE item END ORDER BY position)
+                     FROM jsonb_array_elements(items) WITH ORDINALITY AS cards(item, position))
+        WHERE id = $1 AND id_user = $2 AND status = 'ready'
+          AND EXISTS (SELECT 1 FROM jsonb_array_elements(items) AS card WHERE (card->>'storyId')::int = $3)`,
+        briefingId, userId, storyId, vote),
+
+    // the cards this user gave a thumb since 'since', the newest vote first: [{title, vote, feedUrls}]
+    votes: async (userId, since) => (await prisma.$queryRawUnsafe(`
+        SELECT item->>'title' AS title, item->>'vote' AS vote, item->'feedUrls' AS "feedUrls"
+        FROM briefings, jsonb_array_elements(items) AS item
+        WHERE id_user = $1 AND status = 'ready' AND item->>'vote' IS NOT NULL
+          AND (item->>'votedAt')::timestamptz >= $2::timestamptz
+        ORDER BY (item->>'votedAt')::timestamptz DESC`,
+        userId, since)).map(row => ({...row, feedUrls: Array.isArray(row.feedUrls) ? row.feedUrls : []})),
+
+    // a briefing left 'running' by a server that stopped will never finish
+    failAbandoned: async (before) => prisma.briefings.updateMany({
+        where: {status: 'running', created_at: {lt: before}},
+        data: {status: 'failed', step: null, error: 'The server stopped while writing it.', finished_at: new Date()},
+    }),
+};

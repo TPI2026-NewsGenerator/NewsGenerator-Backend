@@ -10,7 +10,9 @@
 import process from 'node:process'
 import {parseHTML} from 'linkedom';
 import {Crawlers} from './crawlers.js';
+import {toDate} from './dates.js';
 import {fetchPublicUrl, isBridgeUrl} from './public-url.js';
+import {namesSubject, sectionLinks, subjectStats} from './site-sections.js';
 
 // Some news sites have no feed at all (goal.com, onefootball.com). RSS-Bridge reads their page and
 // gives back its articles. The address of the instance is configuration, never something a user
@@ -25,6 +27,7 @@ const MIN_ITEMS = 3;                // under this the feed is not worth a scrape
 const MIN_TITLE = 12;               // "Home", "Menu": a real headline is longer
 const MIN_DATED = 0.5;              // a page of news carries a date, a page of team or contact does not
 const MAX_TRIES = 3;                // patterns tried before giving up on a site
+const MAX_SECTIONS = 2;             // section pages read when the home page has no list on the subject
 
 // the sections where a site files its articles, in the languages it may answer in
 const NEWS_WORDS = /\/(news|article|story|stories|post|meldungen|noticias|notizie|actualites|nouvelles|nachrichten)/i;
@@ -44,7 +47,10 @@ const NOT_NEWS = new RegExp('/(legal|mentions?|cgu|cgv|impressum|datenschutz|pri
 // The count alone is not enough: the English page of goal.com carries more links to "/en/team/"
 // than to "/en/news/", and a feed of team pages is not news. So a prefix naming a section of
 // articles comes first, then one in the language wanted, then the most frequent.
-export const articlePatterns = (html, {language = null} = {}) => {
+//
+// With the words of a subject, the section naming it comes before everything: the home page of
+// lequipe.fr links more football than rugby, a reader of rugby wants "/Rugby/Actualites/".
+export const articlePatterns = (html, {language = null, words = []} = {}) => {
     const {document} = parseHTML(html.slice(0, MAX_PAGE_CHARS));
     const counts = new Map();
 
@@ -58,6 +64,7 @@ export const articlePatterns = (html, {language = null} = {}) => {
     }
 
     const news = (prefix) => NEWS_WORDS.test(prefix);
+    const onSubject = (prefix) => namesSubject(words, prefix);
     const spoken = (prefix) => Boolean(language) && new RegExp(`/${language}([-_][a-z]{2})?/`, 'i').test(prefix);
 
     // "/en/" is the root of a language, not a section of articles: everything of the site is under
@@ -66,7 +73,7 @@ export const articlePatterns = (html, {language = null} = {}) => {
 
     return [...counts.entries()]
         .filter(([prefix, links]) => links >= MIN_LINKS && section(prefix) && !NOT_NEWS.test(prefix))
-        .sort((a, b) => (news(b[0]) - news(a[0])) || (spoken(b[0]) - spoken(a[0])) || (b[1] - a[1]))
+        .sort((a, b) => (onSubject(b[0]) - onSubject(a[0])) || (news(b[0]) - news(a[0])) || (spoken(b[0]) - spoken(a[0])) || (b[1] - a[1]))
         .map(([prefix]) => prefix);
 };
 
@@ -84,25 +91,29 @@ const bridgeFeedUrl = (page, pattern) => `${BRIDGE_URL().replace(/\/$/, '')}/?` 
 
 // Feed built from the page of a site, null when there is no bridge, when the site refuses to be
 // read, or when what comes back does not look like articles. Same shape as findFeeds.
-export const bridgeFeed = async (siteUrl, {language = null} = {}) => {
+// 'words' and 'judge' are the subject wanted (see findFeeds): its section is built first, and the
+// feed says how much it is on it (see subjectStats)
+export const bridgeFeed = async (siteUrl, {language = null, words = [], judge = null} = {}) => {
     if (!BRIDGE_URL() || isBridgeUrl(siteUrl)) return null;
 
+    // the patterns of a page, and the page itself: its links name the sections of the site
     const read = async (page) => {
         try {
             // the address of the site is checked here, so the bridge is only ever sent a public one
             const {res} = await fetchPublicUrl(page, {headers: {'User-Agent': BROWSER}});
-            if (!res.ok) return [];             // 401 and 403: the site refuses robots, nothing to do
+            if (!res.ok) return {patterns: [], html: ''};   // 401 and 403: the site refuses robots
 
-            return articlePatterns(await res.text(), {language});
+            const html = await res.text();
+            return {patterns: articlePatterns(html, {language, words}), html};
         } catch {
-            return [];
+            return {patterns: [], html: ''};
         }
     };
 
     const speaks = (pattern) => !language || pattern.toLowerCase().includes(`/${language.toLowerCase()}`);
 
     let page = siteUrl;
-    let patterns = await read(page);
+    let {patterns, html} = await read(page);
 
     // a site answers in the language of the visitor: from here goal.com serves its German home, and
     // its English articles are linked nowhere on it. The section of the wanted language is tried too.
@@ -110,9 +121,22 @@ export const bridgeFeed = async (siteUrl, {language = null} = {}) => {
         const translated = new URL(`/${language}/`, siteUrl).href;
         const found = await read(translated);
 
-        if (found.some(speaks)) {
+        if (found.patterns.some(speaks)) {
             page = translated;
-            patterns = found;
+            ({patterns, html} = found);
+        }
+    }
+
+    // the home page of a general medium may link too few articles of the section wanted to make a
+    // list of them: the page of the section itself does
+    if (words.length > 0 && !patterns.some(pattern => namesSubject(words, pattern))) {
+        for (const section of sectionLinks(html, page, words, MAX_SECTIONS)) {
+            const found = await read(section);
+            if (found.patterns.some(pattern => namesSubject(words, pattern))) {
+                page = section;
+                patterns = found.patterns;
+                break;
+            }
         }
     }
 
@@ -124,16 +148,19 @@ export const bridgeFeed = async (siteUrl, {language = null} = {}) => {
         // headline and no date, where an article has both, so they are refused here instead of
         // quietly filling the cache with rubbish.
         const articles = feed.items.filter(item => item.link && item.title?.trim().length >= MIN_TITLE);
-        const dates = articles.map(item => new Date(item.pubDate)).filter(date => !isNaN(date));
+        const dates = articles.map(item => toDate(item.pubDate)).filter(Boolean);
 
         if (articles.length < MIN_ITEMS || dates.length < articles.length * MIN_DATED) continue;
+
+        const stats = judge ? await subjectStats(articles, judge) : null;
 
         return {
             url: feed.url,
             items: articles.length,
             newest: dates.sort((a, b) => b - a)[0] ?? null,
-            titles: articles.slice(0, 3).map(item => item.title),
+            titles: [...new Set([stats?.sample, ...articles.map(item => item.title)])].filter(Boolean).slice(0, 3),
             pattern: pattern,           // shown to the user: this feed is built, not published
+            ...(stats ? {onSubject: stats.onSubject, judged: stats.judged, onSubjectPerDay: stats.onSubjectPerDay} : {}),
         };
     }
 

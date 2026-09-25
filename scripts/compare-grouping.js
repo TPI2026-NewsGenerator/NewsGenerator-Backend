@@ -15,58 +15,14 @@ import {FeedModel} from '../models/feed-model.js';
 import {Filter} from '../services/utils/filter.js';
 import Links from '../services/utils/links.js';
 import {prisma} from '../config/db.js';
+import {SAME, APART} from './judged-pairs.js';
 
 const days = Number(process.argv[process.argv.indexOf('--days') + 1]) || 3;
 
 // ---------------------------------------------------------------------------------------------
-// What a right answer looks like. Every article is named by a piece of its title, read and judged
-// by hand in the searches of the last days. A measure is only worth something if one threshold
-// catches all of the first list and none of the second.
-//
-// SAME: the same event. Different papers, different words, one fact.
-// APART: the hard negatives — they look alike and are not the same news. A template its paper puts
-// around unrelated matches, a daily market report, a subject followed over days.
+// What a right answer looks like: the pairs read and judged by hand, in scripts/judged-pairs.js so
+// the Python bench of the BGE-M3 heads (scripts/bge-hybrid.py) is scored on the very same set.
 // ---------------------------------------------------------------------------------------------
-const SAME = {
-    // English
-    higuain: ['Columbus Crew sack coach Federico Higua', 'brother sacked by MLS club',
-        'MLS coach sacked after sexist remark', 'Columbus Crew reserve team coach fired',
-        'Crew 2 fires Higuain after fallout'],
-    realMadrid: ['Real Madrid referee row rages on', 'Furious Real Madrid turn on',
-        'Real Madrid call for La Liga president'],
-    merz: ['Merz Pledges to Stay On', 'Merz Vows to Stay After Another'],
-    mamdani: ['Netanyahu accuses Mamdani', 'Netanyahu Attacks Mamdani', 'Netanyahu says of Mamdani',
-        'Netanyahu Falsely Accuses Mamdani'],
-    irelandIsrael: ['Ireland manager responds to Israel criticism', 'Israel accuse Ireland manager',
-        "Israel's FA accuse Ireland manager", "Hallgrimsson accused of 'ignorance",
-        "Israel FA accuses Hallgrimsson"],
-    // Spanish
-    zapatero: ['Zapatero sostiene que Arabia Saud', 'Zapatero asegura que las joyas',
-        'Zapatero alega ante el juez', 'Zapatero asegura al juez que las joyas'],
-    querola: ['Así era La Querola', 'El fuego destruye La Querola', 'Un incendio destruye la lujosa'],
-    // French
-    hakimi: ['Achraf Hakimi sera jug', 'Affaire Hakimi : un proc', 'Cour de cassation confirme le renvoi',
-        "Cour de cassation rejette le pourvoi d'Achraf", 'Débouté par la Cour de cassation',
-        'la Cour de cassation a tranché'],
-    brun: ['Philippe Brun ne sera pas r', 'justice rejette la demande de r',
-        'Écarté de la primaire de la gauche', 'ne pourra réintégrer'],
-    // Italian
-    ocse: ['Ocse rivede al rialzo la crescita', 'Ocse rivede al rialzo stime pil',
-        'Ocse rivede al rialzo le stime del pil'],
-};
-const APART = {
-    bettingTips: ['Egypt vs Angola Prediction', 'Togo vs Burundi Prediction',
-        'Sudan vs Ethiopia Prediction', 'UAE vs Yemen Prediction'],
-    ipbl: ['3 interesting facts about Mihika', '3 interesting facts about Armaan',
-        '3 interesting facts about Harsh'],
-    borsa: ['Borsa: Milano chiude in calo', 'La Borsa di Milano apre in rialzo',
-        "Borsa: l'Europa rallenta malgrado"],
-    howToWatch: ['How to Watch Nebraska vs. Missouri', 'South Africa vs Australia ODIs, live streaming'],
-    // one subject, several days, several events: the card must not call this one news
-    unAssembly: ['U.N. General Assembly Traffic and Street Closures', "Trump Threatens Iran’s ‘Annihilation’",
-        'Macron to Make His Final U.N. General Assembly'],
-    marketTalk: ['Health Care Roundup: Market Talk', 'Auto & Transport Roundup: Market Talk'],
-};
 
 // ---------------------------------------------------------------------------------------------
 // The measures
@@ -140,11 +96,11 @@ const cosine = (a, b) => {
     return na && nb ? dot / (Math.sqrt(na) * Math.sqrt(nb)) : 0;
 };
 
-const embedding = (model) => ({
+const embedding = (model, sweep) => ({
     embed: model,
     prepare: (title) => vectors.get(`${model}\u0000${title}`),
     score: (a, b) => (a && b ? cosine(a, b) : 0),
-    sweep: [0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.60, 0.70, 0.80, 0.90],
+    sweep: sweep ?? [0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.60, 0.70, 0.80, 0.90],
 });
 
 // The two measures fail on opposite cases: trigrams miss a paraphrase (0.263 between the Guardian
@@ -153,15 +109,21 @@ const embedding = (model) => ({
 // and the two are then combined: the maximum groups when EITHER agrees, the minimum when BOTH do.
 const TRIGRAM_BAR = 0.25;
 const EMBED_BAR = 0.50;
-const mixed = (combine) => ({
-    embed: 'paraphrase-multilingual',
-    prepare: (title) => ({tri: trigrams(title), vec: vectors.get(`paraphrase-multilingual\u0000${title}`)}),
+const mixed = (combine, model = 'paraphrase-multilingual', bar = EMBED_BAR) => ({
+    embed: model,
+    prepare: (title) => ({tri: trigrams(title), vec: vectors.get(`${model}\u0000${title}`)}),
     score: (a, b) => combine(
         jaccard(a.tri, b.tri) / TRIGRAM_BAR,
-        (a.vec && b.vec ? cosine(a.vec, b.vec) : 0) / EMBED_BAR,
+        (a.vec && b.vec ? cosine(a.vec, b.vec) : 0) / bar,
     ),
     sweep: [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.4, 1.6],
 });
+
+// bge-m3 answers on a narrower band than paraphrase-multilingual: it is not centred, so two
+// unrelated titles already sit around 0.5 and everything useful happens above it. Swept higher,
+// and its bar in the mixes is placed where its own sweep puts the best cut.
+const BGE_BAR = 0.75;
+const BGE_SWEEP = [0.40, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95];
 
 const MEASURES = {
     trigram: {prepare: trigrams, score: jaccard,
@@ -171,8 +133,11 @@ const MEASURES = {
     idfShared: {prepare: tokens, score: cosineShared,
         sweep: [0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.60]},
     multilingual: embedding('paraphrase-multilingual'),
+    bgem3: embedding('bge-m3', BGE_SWEEP),
     either: mixed(Math.max),        // trigrams OR the model
     both: mixed(Math.min),          // trigrams AND the model
+    eitherBge: mixed(Math.max, 'bge-m3', BGE_BAR),
+    bothBge: mixed(Math.min, 'bge-m3', BGE_BAR),
 };
 
 // document frequency over the whole window of a language, not over the results of one search:
@@ -355,7 +320,10 @@ const onSearches = async (thresholds) => {
 };
 
 await judged();
-await onSearches({trigram: 0.30, idf: 0.25, idfShared: 0.25, multilingual: 0.60, nomic: 0.75});
+// each measure at the cut its own sweep in part 1 puts the best separation on: a measure left out
+// of this list would be compared against undefined and group nothing at all
+await onSearches({trigram: 0.30, idf: 0.25, idfShared: 0.25, multilingual: 0.60, nomic: 0.75,
+    bgem3: 0.65, either: 1.00, both: 1.00, eitherBge: 1.00, bothBge: 0.90});
 
 // ---------------------------------------------------------------------------------------------
 // Part 3: the grouping itself, not the pairs.

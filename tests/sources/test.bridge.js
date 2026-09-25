@@ -62,3 +62,16 @@ describe('articlePatterns, sections that are never news', () => {
         expect(articlePatterns(page({'/en/tickets/': 20, '/en/contact/': 15, '/en/newsletter/': 12}))).toEqual([]);
     });
 });
+
+describe('articlePatterns, the section of a subject', () => {
+    it('should prefer the section naming the subject over one with more links', () => {
+        // the home page of lequipe.fr links more football than rugby
+        const html = page({'/Football/Actualites/': 40, '/Rugby/Actualites/': 6});
+        expect(articlePatterns(html, {language: 'fr', words: ['rugby']})[0]).toBe('/Rugby/Actualites/');
+    });
+
+    it('should keep the usual order without a subject', () => {
+        const html = page({'/Football/Actualites/': 40, '/Rugby/Actualites/': 6});
+        expect(articlePatterns(html, {language: 'fr'})[0]).toBe('/Football/Actualites/');
+    });
+});

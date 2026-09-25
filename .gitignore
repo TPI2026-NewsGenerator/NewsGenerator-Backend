@@ -26,3 +26,6 @@ dist-ssr
 
 /generated/prisma
 __pycache__/
+
+# benches: the code is kept, the data they record is not
+/bench/data

@@ -1,0 +1,50 @@
+//
+//  Author: Fabian Rostello
+//  Date: 24.09.2026
+//  File: briefing-controller.js
+//  Description: Controller for the daily briefing
+//
+
+"use strict"
+
+import {BriefingService} from '../services/briefing-service.js';
+
+export const BriefingController = {
+    // the last briefing, null when none was ever written
+    latest: async (req, res) => {
+        try {
+            res.status(200).json({briefing: await BriefingService.latest(req.user.id)});
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
+    // {storyIds}: these cards of the briefing stayed on the screen
+    seen: async (req, res) => {
+        try {
+            await BriefingService.markSeen(req.user.id, req.params.id, req.body?.storyIds);
+            res.status(204).end();
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
+    // {storyId, vote}: the thumb of the reader on a card, vote null takes it back
+    vote: async (req, res) => {
+        try {
+            await BriefingService.vote(req.user.id, req.params.id, req.body?.storyId, req.body?.vote ?? null);
+            res.status(204).end();
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
+    // a new briefing, written in background: 202 with the briefing running, asked again until ready
+    start: async (req, res) => {
+        try {
+            res.status(202).json({briefing: await BriefingService.start(req.user.id)});
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+};
