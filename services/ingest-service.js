@@ -48,10 +48,10 @@ export const richText = (title, description) => {
     return text ? `${title}. ${text}` : title;
 };
 
-// the vectors of the news published in the window that have none yet
-const embedPending = async () => {
+// the vectors of the news published in the window that have none yet: of every feed, or of these ones
+const embedPending = async (urls = null) => {
     const since = new Date(Date.now() - WINDOW_HOURS * 3600e3);
-    const pending = await StoryModel.pendingArticles(since, MAX_EMBEDDED_PER_RUN);
+    const pending = await StoryModel.pendingArticles(since, MAX_EMBEDDED_PER_RUN, urls);
     if (pending.length === 0) return 0;
 
     // a news in several feeds, or a title republished, is encoded once
@@ -140,11 +140,14 @@ export const IngestService = {
             };
             try {
                 // a backlog (the first run, a long stop) is worked through in several batches, each
-                // grouped at once so the briefing can use it without waiting for the others
-                for (let batch = await embedPending(); batch > 0; batch = await embedPending()) {
+                // grouped at once so the briefing can use it without waiting for the others. A run of
+                // some feeds (those just found for a profile) embeds all of theirs, and only theirs:
+                // a new reader had 300 of 564 and waited the next run for the rest, and the backlog
+                // of the others is the work of the scheduled run
+                for (let batch = await embedPending(urls); batch > 0; batch = await embedPending(urls)) {
                     embedded += batch;
                     await group();
-                    if (batch < MAX_EMBEDDED_PER_RUN || urls) break;
+                    if (batch < MAX_EMBEDDED_PER_RUN) break;
                 }
                 // news embedded by a run that stopped before grouping them
                 if (embedded === 0) await group();

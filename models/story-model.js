@@ -16,16 +16,17 @@ export const StoryModel = {
     // the news still without vectors, published since 'since', the newest first. The language of
     // their feed is given when the feed says it (a feed of a user or of a profile), the text decides
     // otherwise
-    pendingArticles: async (since, limit) => prisma.$queryRawUnsafe(`
+    pendingArticles: async (since, limit, urls = null) => prisma.$queryRawUnsafe(`
         SELECT a.id, a.title, a.description, f.url AS feed,
                (SELECT uf.language FROM user_feeds uf WHERE uf.url = f.url AND uf.language IS NOT NULL LIMIT 1) AS feed_language
         FROM articles a
         JOIN feeds f ON f.id = a.id_feed
         WHERE a.embedded_at IS NULL
           AND COALESCE(a.published_at, a.created_at) >= $1::timestamptz
+          AND ($3::text[] IS NULL OR f.url = ANY($3::text[]))
         ORDER BY COALESCE(a.published_at, a.created_at) DESC
         LIMIT $2::int`,
-        since, limit),
+        since, limit, urls),
 
     // rows: [{id, lang, titleDense, titleSparse, textDense, textSparse}], the vectors as pgvector
     // reads them (see toVector and toSparsevec in embedder.js)

@@ -7,7 +7,7 @@
 
 import {jest} from '@jest/globals'
 import {denseSimilarity, embed, parseVector, SPARSE_DIMENSIONS, toSparsevec, toVector} from '../../services/utils/embedder.js'
-import {languageOf} from '../../services/utils/language.js'
+import {feedLanguage, languageOf} from '../../services/utils/language.js'
 
 const unit = (...values) => {
     const norm = Math.hypot(...values);
@@ -107,5 +107,29 @@ describe('languageOf', () => {
     it('should keep the language of the feed when the text is too short to tell', () => {
         expect(languageOf('Top 14 : Toulon', 'fr')).toBe('fr');
         expect(languageOf('', null)).toBeNull();
+    });
+});
+
+describe('feedLanguage', () => {
+    it('should tell a Dutch feed from the languages of the readers', () => {
+        // favorflav.com/nl/restaurant/feed/, found by a French search on gastronomy
+        expect(feedLanguage([
+            'Zonder reservering tóch een tafeltje bij een topzaak bemachtigen',
+            'Een ode aan de visstick',
+            'Nieuw: De Japanner in Amsterdam-Zuid',
+            'Ga eens naar een sterrenrestaurant',
+            'Fantastisch nieuws: de beste pizzeria van het land gaat nu ook bezorgen',
+        ])).toBe('nl');
+        expect(languageOf('Van Dijk remains the leader of the defence')).toBe('en');
+        expect(languageOf('Robertson no olvida a Diogo Jota: no nos importaba el fútbol, era la vida de la familia')).toBe('es');
+    });
+
+    it('should say nothing when too few news tell it or they do not agree', () => {
+        expect(feedLanguage(['Top 14', 'PSG 2-1 OM', 'Ligue 1 : Lens-Nice', 'Le choc de la journée pour le club'])).toBeNull();
+        expect(feedLanguage([
+            'The coach of the Crew was fired', 'Le Stade toulousain gagne le choc de la journée',
+            'El Real Madrid gana el derbi con un gol', 'Die Regierung hat sich auf einen Haushalt geeinigt',
+        ])).toBeNull();
+        expect(feedLanguage([])).toBeNull();
     });
 });

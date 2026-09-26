@@ -91,11 +91,13 @@ const prune = async (userId) => {
 
 const discover = async (userId) => {
     await prune(userId);
-    const [interests, feeds, profileCount] = await Promise.all([
+    const [interests, feeds, profileCount, profile] = await Promise.all([
         ProfileModel.interestsForDiscovery(userId),
         FeedModel.userFeedUrls(userId),
         FeedModel.countUserFeeds(userId, 'profile'),
+        ProfileModel.get(userId),
     ]);
+    const languages = profile?.languages?.length ? profile.languages : null;
     const room = Math.min(MAX_NEW_PROFILE_FEEDS, MAX_PROFILE_FEEDS - profileCount);
     if (room <= 0) {
         console.log(`Discovery: user ${userId} has ${profileCount} feeds for the profile already, none looked for`);
@@ -120,13 +122,14 @@ const discover = async (userId) => {
 
         const subject = [interest.keywords, ...interest.sections].filter(Boolean);
         const found = await mapWithConcurrency(media, FIND_CONCURRENCY,
-            medium => findFeeds(medium.site, {language: medium.lang, subject, judge}));
+            medium => findFeeds(medium.site, {language: medium.lang, subject, judge, languages}));
 
         perInterest.push(media.flatMap((medium, i) => {
             const feed = found[i].status === 'fulfilled' ? found[i].value[0] : null;
             if (!feed || !isOnSubject(feed)) return [];
             kept.add(nameOf(medium.site));
-            return [{url: feed.url, site: medium.site, category: interest.category ?? 'world', language: medium.lang,
+            // the language read in its news: tribuna.com/en/, found by a French search, is in English
+            return [{url: feed.url, site: medium.site, category: interest.category ?? 'world', language: feed.language ?? medium.lang,
                 score: subjectScore(feed)}];
         }));
     }

@@ -14,6 +14,7 @@ import {searchDirectory} from './feed-directory.js';
 import {bridgeFeed} from './feed-bridge.js';
 import {assertPublicUrl, fetchPublicUrl, hostOf, isBridgeUrl, nameOf} from './public-url.js';
 import {feedLinks, feedsPageLink, keywordJudge, sectionLinks, subjectStats, subjectWords} from './site-sections.js';
+import {feedLanguage} from './language.js';
 
 // paths tried when the page declares no feed
 const COMMON_PATHS = [
@@ -81,6 +82,7 @@ const checkFeeds = async (urls, judge = null) => {
             newest: dates.sort((a, b) => b - a)[0] ?? null,
             // the sample shown to the user is a news on the subject when there is one
             titles: [...new Set([stats?.sample, ...items.map(item => item.title)])].filter(Boolean).slice(0, 3),
+            language: feedLanguage(items.map(item => `${item.title ?? ''} ${item.description ?? ''}`)),
             ...(stats ? {onSubject: stats.onSubject, judged: stats.judged, onSubjectPerDay: stats.onSubjectPerDay} : {}),
         };
     }));
@@ -124,8 +126,10 @@ const subjectCandidates = async (home, words, host) => {
 // subject (keywords, as a search writes them) it is the one most on it: the rugby section of a
 // newspaper rather than its main feed, where rugby is 3 news out of 100. The keywords also name the
 // sections to look for; which news are on the subject is decided by 'judge' when one is given (by
-// meaning, see subjectStats), else by the keywords themselves
-export const findFeeds = async (site, {language = null, subject = null, judge = null} = {}) => {
+// meaning, see subjectStats), else by the keywords themselves. With 'languages' (those of the reader)
+// a feed written in another is no candidate: favorflav.com, found by a French search, gave its Dutch
+// section, on the subject by meaning (the vectors read every language) but not readable
+export const findFeeds = async (site, {language = null, subject = null, judge = null, languages = null} = {}) => {
     // "fortune.com" -> https, but "file:///etc/passwd" keeps its protocol so it is refused as such
     const value = site.trim();
     const siteUrl = value.includes('://') ? value : `https://${value}`;
@@ -153,7 +157,9 @@ export const findFeeds = async (site, {language = null, subject = null, judge = 
     }
 
     const best = (a, b) => (judgeSubject ? subjectScore(b) - subjectScore(a) : 0) || b.items - a.items;
-    const feeds = (await checkFeeds(candidates, judgeSubject)).sort(best);
+    // a feed whose language can't be told is kept: its titles may be too short to tell it
+    const readable = (feed) => !languages || !feed.language || languages.includes(feed.language);
+    const feeds = (await checkFeeds(candidates, judgeSubject)).filter(readable).sort(best);
 
     if (feeds.length > 0 && (!judgeSubject || isOnSubject(feeds[0]))) return feeds;
     if (!host) return feeds;
@@ -161,7 +167,7 @@ export const findFeeds = async (site, {language = null, subject = null, judge = 
     // the site declares no feed and has none on a usual path, but it may still publish one that
     // readers know (already asked when there is a subject). Only the feeds of this same medium count
     if (!judgeSubject) {
-        const fromDirectory = (await checkFeeds(await directoryFeeds(host))).sort(best);
+        const fromDirectory = (await checkFeeds(await directoryFeeds(host))).filter(readable).sort(best);
         if (fromDirectory.length > 0) return fromDirectory;
     }
 
@@ -169,7 +175,7 @@ export const findFeeds = async (site, {language = null, subject = null, judge = 
     // and turned into a feed, of its section on the subject when it has one. This one is built, not
     // published, so it breaks the day the site changes its pages
     const built = await bridgeFeed(siteUrl, {language, words, judge: judgeSubject});
-    if (!built) return feeds;
+    if (!built || !readable(built)) return feeds;
 
     // a built feed off the subject is worth less than a published one off it
     if (judgeSubject && !isOnSubject(built) && feeds.length > 0) return feeds;

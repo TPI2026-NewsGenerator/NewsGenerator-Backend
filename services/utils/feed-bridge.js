@@ -13,6 +13,7 @@ import {Crawlers} from './crawlers.js';
 import {toDate} from './dates.js';
 import {fetchPublicUrl, isBridgeUrl} from './public-url.js';
 import {namesSubject, sectionLinks, subjectStats} from './site-sections.js';
+import {feedLanguage} from './language.js';
 
 // Some news sites have no feed at all (goal.com, onefootball.com). RSS-Bridge reads their page and
 // gives back its articles. The address of the instance is configuration, never something a user
@@ -160,6 +161,7 @@ export const bridgeFeed = async (siteUrl, {language = null, words = [], judge = 
             newest: dates.sort((a, b) => b - a)[0] ?? null,
             titles: [...new Set([stats?.sample, ...articles.map(item => item.title)])].filter(Boolean).slice(0, 3),
             pattern: pattern,           // shown to the user: this feed is built, not published
+            language: feedLanguage(articles.map(item => `${item.title} ${item.description ?? ''}`)),
             ...(stats ? {onSubject: stats.onSubject, judged: stats.judged, onSubjectPerDay: stats.onSubjectPerDay} : {}),
         };
     }

@@ -108,17 +108,20 @@ export const ProfileModel = {
 
     // Each feed found for the profile, with its news of the last days that got vectors, and how many
     // of them are on one of its interests: their title reaches 'threshold' with it, as when the feed
-    // was found (see judgeOf in discovery-service.js). [{id, url, site, created_at, news, relevant}]
+    // was found (see judgeOf in discovery-service.js), and they are in a language of the reader: the
+    // vectors read every language, a Dutch news of restaurants is near "gastronomie" too.
+    // [{id, url, site, created_at, news, relevant}]
     profileFeedRelevance: async (userId, {since, threshold}) => prisma.$queryRawUnsafe(`
         SELECT uf.id, uf.url, uf.site, uf.created_at,
                count(a.id)::int AS news,
-               count(a.id) FILTER (WHERE EXISTS (
+               count(a.id) FILTER (WHERE a.lang = ANY(up.languages) AND EXISTS (
                    SELECT 1 FROM profile_interests i
                    WHERE i.id_user = uf.id_user AND i.dense IS NOT NULL
                      AND -(a.title_dense <#> i.dense) >= $3::real))::int AS relevant
         FROM user_feeds uf
         LEFT JOIN feeds f ON f.url = uf.url
         LEFT JOIN articles a ON a.id_feed = f.id AND a.embedded_at IS NOT NULL AND a.created_at >= $2::timestamptz
+        JOIN user_profiles up ON up.id_user = uf.id_user
         WHERE uf.id_user = $1::int AND uf.origin = 'profile'
         GROUP BY uf.id`,
         userId, since, threshold),
