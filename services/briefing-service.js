@@ -23,7 +23,7 @@ import {hedgedBy} from "./utils/hedging.js";
 import {languageOf} from "./utils/language.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {hostOf, mediumOf} from "./utils/public-url.js";
-import {credibleStory, decodeLinks, isGoogleNewsUrl, pickCandidates} from "./utils/google-news.js";
+import {credibleStory, decodeLinks, isGoogleNewsUrl, isNotNews, pickCandidates} from "./utils/google-news.js";
 import {searchesOfUser} from "./ingest-service.js";
 
 // Measured on four profiles and 249 stories judged by hand:
@@ -262,23 +262,31 @@ const write = async (briefingId, userId) => {
 
     // 3. the AI checks which articles of each story tell the news of its best one
     await step('checking');
-    const stories = await keepSameNews(selected.map(item => ({...byId.get(item.id), why: item.why})), shownCards, usage);
+    const chosen = await keepSameNews(selected.map(item => ({...byId.get(item.id), why: item.why})), shownCards, usage);
 
     // 4. the chosen stories read: their texts say who wrote them and give the summary
     await step('reading');
-    const reads = stories.map(story => toRead(story, trusted));
     // the real address of the news of Google News to read, never asked twice (see google-news.js)
-    const toDecode = [...new Set(reads
+    const toDecode = [...new Set(chosen.map(story => toRead(story, trusted))
         .filter(articles => articles.every(article => fromGoogle(article) && !article.resolved_link))
         .flatMap(articles => articles.slice(0, DECODED_PER_STORY).map(article => article.link)))].slice(0, MAX_DECODED);
     if (toDecode.length > 0) {
         const decoded = await decodeLinks(toDecode);
         console.log(`Briefing: ${decoded.size} of ${toDecode.length} addresses of Google News found`);
-        for (const article of stories.flatMap(story => story.members)) {
+        for (const article of chosen.flatMap(story => story.members)) {
             if (decoded.has(article.link)) article.resolved_link = decoded.get(article.link);
         }
         await FeedModel.saveResolvedLinks([...decoded].map(([link, resolved]) => ({link, resolved})));
     }
+    // a page of Google News its address shows is no news (a live blog, a table) is left out, and the
+    // story with it when it had nothing else
+    const stories = chosen.flatMap(story => {
+        const members = story.members.filter(article => !fromGoogle(article) || !isNotNews(article.title, article.resolved_link));
+        if (members.length === 0) return [];
+        return [{...story, members, best: members.includes(story.best) ? story.best : members[0]}];
+    });
+    if (stories.length < chosen.length) console.log(`Briefing: ${chosen.length - stories.length} chosen stories of Google News were no news`);
+    const reads = stories.map(story => toRead(story, trusted));
     // a link of Google News not decoded is not read: it only leads to a redirect
     const readable = (article) => !fromGoogle(article) || Boolean(article.resolved_link);
     const pages = await Crawlers.Html([...new Set(reads.flat().filter(readable).map(addressOf))]);

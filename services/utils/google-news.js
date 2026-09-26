@@ -172,6 +172,29 @@ export const isPlatform = (url) => {
     return !host || PLATFORMS.has(mediumOf(host));
 };
 
+// Google News also answers a search with pages that are no news: the table of a league ("Fasofoot
+// Ligue 1 Table: Football Scores, Results & Fixtures", "Ligue 1 Table - 2026/2027"), a live blog
+// (skysports.com/football/live-blog/...), where to watch a match. The AI took them for news of the
+// interest. Their title says it, or their address once decoded
+const NOT_NEWS_TITLES = [
+    /\b(table|standings|scores|results|fixtures)\b.*\b(table|standings|scores|results|fixtures)\b/i,
+    /\b(table|standings|classement|clasificación|tabelle|classifica)\s*[-–|:]\s*(\d{4}|live)/i,
+    /\b(live blog|live updates|live scores?|as it happened|en direct|minute par minute|liveticker|in diretta|en vivo|en directo)\b/i,
+    /\b(how to (watch|stream|buy tickets)|where to watch|live stream(ing)?|tv channel|comment (regarder|suivre|obtenir des billets)|sur quelle chaîne|en streaming)\b/i,
+];
+const NOT_NEWS_PATHS = /\/(live-?blog|live-?table|live|liveticker|en-direct|direct|minute-par-minute|standings|classement|fixtures|results|scores|table|tables)(\/|\.[a-z]+$|$)/i;
+
+// 'link' is the real address of the page, when known (never the one of Google News)
+export const isNotNews = (title, link = null) => {
+    if (NOT_NEWS_TITLES.some(pattern => pattern.test(title ?? ''))) return true;
+    if (!link || isGoogleNewsUrl(link)) return false;
+    try {
+        return NOT_NEWS_PATHS.test(new URL(link).pathname);
+    } catch {
+        return false;
+    }
+};
+
 // Feeds of Google News read one after the other, in the shape of Crawlers.Xml: the title without
 // its publisher, the publisher in 'source', no description (Google only gives a list of links).
 // Once Google blocks, the feeds left are answered {skipped: true}: they are read next time.
@@ -182,7 +205,8 @@ export const readSearches = async (urls) => {
             const feed = await readFeed(url);
             results.push({...feed, items: feed.items.slice(0, MAX_ITEMS)
                 .filter(item => item.link && item.source?.url && !isPlatform(item.source.url))
-                .map(item => ({...item, title: withoutPublisher(item.title, item.source.name), description: '', thumbnail: null}))});
+                .map(item => ({...item, title: withoutPublisher(item.title, item.source.name), description: '', thumbnail: null}))
+                .filter(item => !isNotNews(item.title))});
         } catch (err) {
             if (!(err instanceof GoogleBlocked)) throw err;
             results.push({url, skipped: true, items: []});

@@ -8,7 +8,7 @@
 
 import {describe, expect, it} from '@jest/globals';
 import {
-    articleIdOf, credibleStory, interestSearchUrls, isPlatform, pickCandidates, isGoogleNewsUrl, languageOfSearch, parseBatchAnswer,
+    articleIdOf, credibleStory, interestSearchUrls, isNotNews, isPlatform, pickCandidates, isGoogleNewsUrl, languageOfSearch, parseBatchAnswer,
     searchUrl, withoutPublisher,
 } from '../../services/utils/google-news.js';
 
@@ -89,6 +89,30 @@ describe('credibleStory', () => {
     it('should keep a story two media tell through Google News, or one medium the server reads', () => {
         expect(credibleStory([google('myjoyonline.com'), google('pulse.com.gh')], established)).toBe(true);
         expect(credibleStory([google('lequipe.fr')], established)).toBe(true);
+    });
+});
+
+describe('isNotNews', () => {
+    it('should leave out the tables, live pages, streams and tickets Google News answers', () => {
+        expect(isNotNews('Fasofoot Ligue 1 Table: Football Scores, Results & Fixtures')).toBe(true);
+        expect(isNotNews('Ligue 1 Table - 2026/2027')).toBe(true);
+        expect(isNotNews('Turquie - France en direct - Ligue des Nations : Football Scores & Résultats - 25/09/2026')).toBe(true);
+        expect(isNotNews('Where to watch Turkiye vs. France live stream, TV channel, start time')).toBe(true);
+        expect(isNotNews('Comment obtenir des billets pour Lille - Le Havre : prix en Ligue 1')).toBe(true);
+        expect(isNotNews('À quelle heure et sur quelle chaîne regarder Angleterre-Espagne en Ligue des nations ?')).toBe(true);
+    });
+
+    it('should know a live blog or a table by its address once decoded', () => {
+        expect(isNotNews('European football news and transfers', 'https://www.skysports.com/football/live-blog/13575723/european')).toBe(true);
+        expect(isNotNews('x', 'https://www.tntsports.co.uk/football/fasofoot-ligue-1/2026-2027/asfb/live-table.shtml')).toBe(true);
+        expect(isNotNews('x', GOOGLE)).toBe(false);
+    });
+
+    it('should keep the news that only name a table, results or tickets', () => {
+        expect(isNotNews('Arsenal go top of the table after win')).toBe(false);
+        expect(isNotNews('Election results: what they mean for Europe', 'https://www.bbc.com/news/election-results-2026')).toBe(false);
+        expect(isNotNews('Tickets for the final sold out in minutes')).toBe(false);
+        expect(isNotNews('Turquie - France : les notes des Bleus', 'https://www.lequipe.fr/Football/Actualites/notes/123')).toBe(false);
     });
 });
 
