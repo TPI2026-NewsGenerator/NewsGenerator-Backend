@@ -20,7 +20,9 @@ const WORDS = {
     // No reader reads them: they are here so that a feed in them is not taken for one of the others.
     // Last, so a tie goes to the languages above ("Van Dijk", "para")
     nl: 'het een van op met voor niet zijn dat aan bij ook naar om wordt werd hun deze nog maar uit',
-    pt: 'os um uma do dos das em na ao não com mais seu sua pelo pela foi são',
+    pt: 'os um uma dos das em ao não com mais seu sua pelo pela foi são',
+    cs: 'že jsou pro jak už jako ale od byl bylo jeho které který také nebo při',
+    pl: 'się nie że jest jak po od już dla oraz przez był jego które który także tym',
 };
 const SETS = Object.fromEntries(Object.entries(WORDS).map(([language, words]) => [language, new Set(words.split(' '))]));
 const MIN_HITS = 2;             // under this the text says nothing, the default is kept
@@ -45,8 +47,8 @@ export const languageOf = (text, fallback = null) => {
 };
 
 // The language most of these texts (the news of one feed) are written in, null when too few of them
-// tell it or they do not agree. Measured on 345 feeds: every feed of a known language was told right;
-// a language not listed here (Czech, Polish) can still pass for English on its short words
+// tell it or they do not agree. Measured on 345 feeds: every feed of a listed language was told right;
+// a language not listed here can still pass for English on its short words
 export const feedLanguage = (texts) => {
     const counts = new Map();
     let told = 0;

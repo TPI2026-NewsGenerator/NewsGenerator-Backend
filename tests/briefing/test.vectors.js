@@ -120,6 +120,8 @@ describe('feedLanguage', () => {
             'Ga eens naar een sterrenrestaurant',
             'Fantastisch nieuws: de beste pizzeria van het land gaat nu ook bezorgen',
         ])).toBe('nl');
+        expect(languageOf('Tydzień temu nie było różnic, bo ciężko było cokolwiek wybrać, więc lecimy już w piątek dla was')).toBe('pl');
+        expect(languageOf('Kovářovy minely otevírají dveře konkurenci, ale trenér už ví, že jeho brankář je jako skála')).toBe('cs');
         expect(languageOf('Van Dijk remains the leader of the defence')).toBe('en');
         expect(languageOf('Robertson no olvida a Diogo Jota: no nos importaba el fútbol, era la vida de la familia')).toBe('es');
     });
