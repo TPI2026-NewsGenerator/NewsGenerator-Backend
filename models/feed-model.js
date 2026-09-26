@@ -221,6 +221,32 @@ export const FeedModel = {
         });
         return feeds.map(feed => feed.url);
     },
+    // among these feeds, the ones not read since 'before' (or never), the oldest read first
+    dueFeeds: async (urls, before, limit) => (await prisma.$queryRawUnsafe(`
+        SELECT u.url
+        FROM unnest($1::text[]) AS u(url)
+        LEFT JOIN feeds f ON f.url = u.url
+        WHERE f.last_fetched_at IS NULL OR f.last_fetched_at < $2::timestamptz
+        ORDER BY f.last_fetched_at NULLS FIRST
+        LIMIT $3::int`,
+        urls, before, limit)).map(row => row.url),
+    // the real address of news of Google News, once a briefing found it: links [{link, resolved}]
+    saveResolvedLinks: async (links) => {
+        if (links.length === 0) return 0;
+        return prisma.$executeRawUnsafe(`
+            UPDATE articles a SET resolved_link = v.resolved
+            FROM unnest($1::text[], $2::text[]) AS v(link, resolved)
+            WHERE a.link = v.link`,
+            links.map(row => row.link), links.map(row => row.resolved));
+    },
+    // the media the server reads through a feed of its own, not only through Google News: a story
+    // Google alone tells by one of them is no spam (see credibleStory)
+    feedMedia: async () => (await prisma.$queryRawUnsafe(`
+        SELECT DISTINCT a.medium
+        FROM articles a
+        JOIN feeds f ON f.id = a.id_feed
+        WHERE a.source_url IS NULL AND a.medium IS NOT NULL
+          AND f.url NOT LIKE 'https://news.google.com/%'`)).map(row => row.medium),
     // the feeds of every user, read by the worker (see IngestService.run)
     allUserFeedUrls: async () => {
         const feeds = await prisma.user_feeds.findMany({select: {url: true}, distinct: ['url']});

@@ -12,6 +12,7 @@ import {FeedModel} from "../models/feed-model.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {toDate} from "./utils/dates.js";
 import Links, {DEFAULT_LANGUAGE} from "./utils/links.js";
+import {isGoogleNewsUrl, readSearches} from "./utils/google-news.js";
 
 const RETENTION_DAYS = Number(process.env.FEED_RETENTION_DAYS) || 30;
 
@@ -22,21 +23,36 @@ const doRefresh = async (urls, {purge = false} = {}) => {
     const start = Date.now();
     const feeds = await FeedModel.syncFeeds(urls);
 
-    const results = await Crawlers.Xml(feeds.map(feed => ({
-        url: feed.url,
-        etag: feed.etag,
-        lastModified: feed.last_modified,
-    })));
+    // the searches of Google News one after the other, in the queue of every request to Google;
+    // the other feeds all at once
+    const google = feeds.filter(feed => isGoogleNewsUrl(feed.url));
+    const others = feeds.filter(feed => !isGoogleNewsUrl(feed.url));
+    const [read, searched] = await Promise.all([
+        Crawlers.Xml(others.map(feed => ({
+            url: feed.url,
+            etag: feed.etag,
+            lastModified: feed.last_modified,
+        }))),
+        readSearches(google.map(feed => feed.url)),
+    ]);
+    const byUrl = new Map([...read, ...searched].map(result => [result.url, result]));
+    const results = feeds.map(feed => byUrl.get(feed.url));
 
     const now = new Date();
     const articles = [];
     let notModified = 0;
     let failed = 0;
+    let skipped = 0;
 
     for (let i = 0; i < feeds.length; i++) {
         const feed = feeds[i];
         const result = results[i];
 
+        // Google paused the searches: read at the next refresh, as if never asked
+        if (result.skipped) {
+            skipped++;
+            continue;
+        }
         if (result.error) {
             failed++;
             await FeedModel.updateFeed(feed.id, { last_fetched_at: now, last_error: result.error });
@@ -61,6 +77,8 @@ const doRefresh = async (urls, {purge = false} = {}) => {
                 thumbnail: news.thumbnail,
                 category: news.category ?? [],
                 published_at: toDate(news.pubDate),
+                // the publisher Google News gives: its links are its own redirects
+                source_url: isGoogleNewsUrl(feed.url) ? news.source?.url ?? null : null,
             });
         }
     }
@@ -72,7 +90,7 @@ const doRefresh = async (urls, {purge = false} = {}) => {
         ? await FeedModel.deleteArticlesOlderThan(new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000))
         : 0;
 
-    const stats = { feeds: feeds.length, notModified, failed, inserted, deleted, ms: Date.now() - start };
+    const stats = { feeds: feeds.length, notModified, failed, skipped, inserted, deleted, ms: Date.now() - start };
     console.log(`Feeds refreshed: ${JSON.stringify(stats)}`);
     return stats;
 };

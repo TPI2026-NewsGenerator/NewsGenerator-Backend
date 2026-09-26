@@ -73,6 +73,15 @@ export const ProfileModel = {
         },
     }),
 
+    // the searches of Google News of the interests, with the languages of their reader: of one user,
+    // or of every user. [{searches, languages}]
+    searchesOf: async (userId = null) => prisma.$queryRawUnsafe(`
+        SELECT pi.searches, up.languages
+        FROM profile_interests pi
+        JOIN user_profiles up ON up.id_user = pi.id_user
+        WHERE $1::int IS NULL OR pi.id_user = $1::int`,
+        userId),
+
     // the feeds the user added by hand: the ones found for the profile take the room left
     ownFeedUrls: async (userId) => (await prisma.user_feeds.findMany({
         where: {id_user: userId, origin: 'user'},

@@ -23,6 +23,8 @@ import {hedgedBy} from "./utils/hedging.js";
 import {languageOf} from "./utils/language.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {hostOf, mediumOf} from "./utils/public-url.js";
+import {credibleStory, decodeLinks, isGoogleNewsUrl, pickCandidates} from "./utils/google-news.js";
+import {searchesOfUser} from "./ingest-service.js";
 
 // Measured on four profiles and 249 stories judged by hand:
 //  - one vector per interest, dense + half the sparse: 88% of relevant cards (one vector for the
@@ -33,7 +35,13 @@ import {hostOf, mediumOf} from "./utils/public-url.js";
 // writing on one subject without telling the same fact.
 const WINDOW_HOURS = 48;
 const SPARSE_WEIGHT = 0.5;
-const CANDIDATES = 40;              // stories the AI chooses from
+const CANDIDATES = 40;              // stories the AI chooses from, told by at least one feed
+// and at most this many known only through Google News, GOOGLE_PER_MEDIUM of one medium (see
+// pickCandidates): the AI leaves the pages that are no news out
+const GOOGLE_CANDIDATES = 10;
+const GOOGLE_PER_MEDIUM = 2;
+// the closest stories ranked: the ones known only through Google News take many of the first places
+const RANKED = 150;
 // A story told by a source the reader trusts gets TRUST_BONUS, among the TRUST_POOL closest stories
 // only: a trusted source never brings a story far from the profile. On the UEFA profile the scores
 // were 0.516 at rank 40 and 0.502 at rank 60: the bonus lifts a story from about 60th to 35th
@@ -48,31 +56,59 @@ const DESCRIPTION_CHARS = 200;
 const CHECKED_PER_STORY = 12;       // other articles of a story checked by the AI, one per medium first
 const CHECKED_DESCRIPTION_CHARS = 150;
 const ABANDONED_MINUTES = 30;
+// Articles of Google News whose real address is asked for one briefing: a page of Google each, and
+// Google blocked the first one after about 40 requests of the server in an hour. So only for the
+// stories no feed lets read, a few each: the others are summarized from their feeds, their media
+// of Google News still count in how many tell them
+const MAX_DECODED = 10;
+const DECODED_PER_STORY = 2;
+const FEED_MEDIA_MINUTES = 60;      // the media read through a feed, asked again after this
 
 const running = new Set();          // users whose briefing is being written by this server
 
-// the feeds this user reads: the shared ones of their languages and their own
+// the feeds this user reads: the shared ones of their languages, their own, and the searches of
+// Google News of their interests
 const feedsOf = async (userId, languages) => [...new Set([
     ...languages.flatMap(language => Object.values(rss[language] ?? {}).flat()),
     ...await FeedModel.userFeedUrls(userId),
+    ...await searchesOfUser(userId),
 ])];
+
+// the media read through a feed of their own, for the stories known only through Google News
+let feedMedia = {at: 0, media: new Set()};
+const established = async () => {
+    if (Date.now() - feedMedia.at > FEED_MEDIA_MINUTES * 60e3) {
+        feedMedia = {at: Date.now(), media: new Set(await FeedModel.feedMedia())};
+    }
+    return feedMedia.media;
+};
+
+// A news read through Google News links to a redirect of Google: its site is the publisher Google
+// names, and its address the real one once a briefing found it
+const fromGoogle = (article) => isGoogleNewsUrl(article.feed_url);
+const siteOf = (article) => hostOf(article.source_url ?? article.link) ?? '';
+const mediumOfArticle = (article) => mediumOf(siteOf(article));
+const addressOf = (article) => article.resolved_link ?? article.link;
 
 const toArticle = (article, trusted = new Set()) => ({
     title: article.title,
-    url: article.link,
-    source: hostOf(article.link) ?? '',
+    url: addressOf(article),        // a link of Google News not decoded: the browser follows it
+    source: siteOf(article),
     publishedAt: article.at?.toISOString?.() ?? null,
     trusted: trusted.has(article.feed_url),         // from a source the reader trusts
 });
 
 // the articles of a story to read: one of a source the reader trusts first (the summary is written
-// from the first one that can be read), else its best one, then one per other medium, the newest first
+// from the first one that can be read), else its best one, then one per other medium, the newest
+// first. A medium met through its feed and through Google News is read from its feed: no address
+// to ask Google for
 const toRead = (story, trusted = new Set()) => {
     const first = story.members.find(article => trusted.has(article.feed_url)) ?? story.best;
-    const byMedium = new Map([[mediumOf(hostOf(first.link) ?? ''), first]]);
-    for (const article of [story.best, ...[...story.members].sort((a, b) => b.at - a.at)]) {
-        const medium = mediumOf(hostOf(article.link) ?? '');
-        if (!byMedium.has(medium)) byMedium.set(medium, article);
+    const byMedium = new Map();
+    for (const article of [first, story.best, ...[...story.members].sort((a, b) => b.at - a.at)]) {
+        const medium = mediumOfArticle(article);
+        const kept = byMedium.get(medium);
+        if (!kept || (fromGoogle(kept) && !fromGoogle(article))) byMedium.set(medium, article);
     }
     return [...byMedium.values()].slice(0, READ_PER_STORY);
 };
@@ -80,10 +116,10 @@ const toRead = (story, trusted = new Set()) => {
 // the other articles of a story the AI checks: one per medium first, the newest first, then the others
 const toCheck = (story) => {
     const others = [...story.members].filter(article => article !== story.best).sort((a, b) => b.at - a.at);
-    const media = new Set([mediumOf(hostOf(story.best.link) ?? '')]);
+    const media = new Set([mediumOfArticle(story.best)]);
     const first = [], then = [];
     for (const article of others) {
-        const medium = mediumOf(hostOf(article.link) ?? '');
+        const medium = mediumOfArticle(article);
         (media.has(medium) ? then : first).push(article);
         media.add(medium);
     }
@@ -183,7 +219,7 @@ const write = async (briefingId, userId) => {
         languages: profile.languages,
         sparseWeight: SPARSE_WEIGHT,
         excluded: shownCards.flatMap(card => card.storyIds).filter(Number.isInteger),
-        limit: trusted.size > 0 ? TRUST_POOL : CANDIDATES,
+        limit: RANKED,
     });
     if (ranked.length === 0) {
         throw new Error('No new story to choose from: the news of the last 48 hours are not read and embedded yet, or they were all shown already. The background work runs every few minutes, try again soon.');
@@ -194,9 +230,12 @@ const write = async (briefingId, userId) => {
     for (const article of await StoryModel.storyArticles({storyIds: [...members.keys()], feedUrls, since})) {
         members.get(article.id_story).push(article);
     }
-    const byId = new Map(ranked.map(row => {
+    const media = await established();
+    const byId = new Map(ranked.map((row, rank) => {
         const news = members.get(row.id_story);
-        const told = news.some(article => trusted.has(article.feed_url));
+        // the bonus only among the TRUST_POOL closest: a trusted source never brings a story far
+        // from the profile
+        const told = rank < TRUST_POOL && news.some(article => trusted.has(article.feed_url));
         return [String(row.id_story), {
             storyId: row.id_story,
             best: news.find(article => article.id === row.id_article) ?? news[0],
@@ -206,10 +245,9 @@ const write = async (briefingId, userId) => {
             score: Number(row.score) + (told ? TRUST_BONUS : 0),
         }];
     }));
-    const candidates = [...byId.values()]
-        .filter(story => story.best)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, CANDIDATES);
+    const candidates = pickCandidates([...byId.values()]
+        .filter(story => story.best && credibleStory(story.members, media))
+        .sort((a, b) => b.score - a.score), {fromFeeds: CANDIDATES, extra: GOOGLE_CANDIDATES, perMedium: GOOGLE_PER_MEDIUM});
 
     // 2. the AI chooses, against the whole profile and what it refuses
     await step('choosing');
@@ -229,8 +267,25 @@ const write = async (briefingId, userId) => {
     // 4. the chosen stories read: their texts say who wrote them and give the summary
     await step('reading');
     const reads = stories.map(story => toRead(story, trusted));
-    const pages = await Crawlers.Html([...new Set(reads.flat().map(article => article.link))]);
-    const content = new Map(pages.map(page => [page.url, page]));
+    // the real address of the news of Google News to read, never asked twice (see google-news.js)
+    const toDecode = [...new Set(reads
+        .filter(articles => articles.every(article => fromGoogle(article) && !article.resolved_link))
+        .flatMap(articles => articles.slice(0, DECODED_PER_STORY).map(article => article.link)))].slice(0, MAX_DECODED);
+    if (toDecode.length > 0) {
+        const decoded = await decodeLinks(toDecode);
+        console.log(`Briefing: ${decoded.size} of ${toDecode.length} addresses of Google News found`);
+        for (const article of stories.flatMap(story => story.members)) {
+            if (decoded.has(article.link)) article.resolved_link = decoded.get(article.link);
+        }
+        await FeedModel.saveResolvedLinks([...decoded].map(([link, resolved]) => ({link, resolved})));
+    }
+    // a link of Google News not decoded is not read: it only leads to a redirect
+    const readable = (article) => !fromGoogle(article) || Boolean(article.resolved_link);
+    const pages = await Crawlers.Html([...new Set(reads.flat().filter(readable).map(addressOf))]);
+    const byAddress = new Map(pages.map(page => [page.url, page]));
+    const content = new Map(stories.flatMap(story => story.members)
+        .filter(article => readable(article) && byAddress.has(addressOf(article)))
+        .map(article => [article.link, byAddress.get(addressOf(article))]));
 
     // 5. one summary per story, in the language of the profile
     await step('summarizing');
@@ -254,8 +309,9 @@ const write = async (briefingId, userId) => {
             mergedStoryIds: story.mergedStoryIds ?? [],   // cards of the same news joined to this one
             seenAt: null,                                  // set once it stayed on the screen (markSeen)
             vote: null,                                    // the thumb of the reader, 'up' or 'down'
-            // the feeds its articles came from: a refused card is blamed on them (utils/feedback.js)
-            feedUrls: [...new Set(story.members.map(article => article.feed_url).filter(Boolean))],
+            // the feeds its articles came from: a refused card is blamed on them (utils/feedback.js),
+            // never on a search of Google News, which is the interest itself
+            feedUrls: [...new Set(story.members.map(article => article.feed_url).filter(url => url && !isGoogleNewsUrl(url)))],
             title: lead.title,
             why: story.why,
             interest: story.interest,
@@ -268,11 +324,11 @@ const write = async (briefingId, userId) => {
             publishedAt: members[0].at?.toISOString?.() ?? null,
             corroboration: {
                 ...corroborationOf(story.members.map(article => ({
-                    medium: mediumOf(hostOf(article.link) ?? ''),
+                    medium: mediumOfArticle(article),
                     text: content.get(article.link)?.content ?? null,
                     byline: content.get(article.link)?.author ?? '',
                 }))),
-                mediaNames: [...new Set(members.map(article => mediumOf(hostOf(article.link) ?? '')))],
+                mediaNames: [...new Set(members.map(mediumOfArticle))],
             },
             articles: members.map(article => toArticle(article, trusted)),
         };

@@ -17,6 +17,7 @@ import {embed, toSparsevec, toVector} from "./utils/embedder.js";
 import {interestsOf} from "./utils/profile-ai.js";
 import {TOPICS} from "./utils/topics.js";
 import {MAX_PROFILE_FEEDS} from "./utils/feed-limits.js";
+import {searchesOfUser} from "./ingest-service.js";
 
 const MIN_TEXT = 20;            // "rugby" says too little to split into interests
 const MAX_TEXT = 2000;
@@ -61,7 +62,7 @@ export const ProfileService = {
     topics: () => PROFILE_TOPICS,
 
     get: async (userId) => {
-        const [profile, interests, feeds, refusedSources, relevance] = await Promise.all([
+        const [profile, interests, feeds, refusedSources, relevance, searches] = await Promise.all([
             ProfileModel.get(userId),
             ProfileModel.interests(userId),
             FeedModel.listUserFeeds(userId),
@@ -70,6 +71,7 @@ export const ProfileService = {
                 since: new Date(Date.now() - RELEVANCE_DAYS * 24 * 3600e3),
                 threshold: JUDGE_THRESHOLD,
             }),
+            searchesOfUser(userId),
         ]);
         const relevant = new Map(relevance.map(row => [row.id, row.relevant]));
 
@@ -88,6 +90,8 @@ export const ProfileService = {
                 relevant: relevant.get(feed.id) ?? 0,
             })),
             limits: {profileFeeds: MAX_PROFILE_FEEDS, relevanceDays: RELEVANCE_DAYS},
+            // the searches of Google News of the interests, read like feeds for this reader only
+            googleSearches: searches.length,
             // the sources found for the profile the thumbs of the reader left out: [{url, site, refused, liked}]
             refusedSources,
         };

@@ -113,7 +113,7 @@ Respecte aussi ce qu'il dit ne pas vouloir. S'il y en a moins de ${MAX_BRIEFING}
 Ne choisis jamais deux histoires qui racontent la même nouvelle (le même match ou la même annonce dans deux langues ou par deux médias) : garde la meilleure.
 Varie les sujets : pas deux histoires sur la même équipe, la même personne ou le même match à venir, sauf si ce sont deux nouvelles importantes et différentes.
 Préfère les nouvelles (faits, décisions, résultats, déclarations) aux pronostics, conseils de paris et guides, sauf si le lecteur les demande.
-Ne choisis jamais ce qui n'apporte aucun fait du jour : page de dossier ou de thème qui explique un sujet en général, guide pratique ("comment regarder…", "à quelle heure…"), compilation de vidéos ou de plus beaux buts.
+Ne choisis jamais ce qui n'apporte aucun fait du jour : page de dossier ou de thème qui explique un sujet en général, guide pratique ("comment regarder…", "à quelle heure…", "comment obtenir des billets…"), page de billetterie, de classement, de calendrier, de résultats ou de diffusion en direct, présentation d'un programme ou d'une institution, compilation de vidéos ou de plus beaux buts.
 Pour chacune, "why" est une phrase courte qui dit au lecteur pourquoi elle est pour lui, dans la langue de son profil, tirée seulement de ce que disent son titre et sa description : si le lien avec le profil n'y est pas, ne la choisis pas.
 Réponds uniquement en JSON : {"selected": [{"id": "...", "why": "une phrase courte"}]}`;
 

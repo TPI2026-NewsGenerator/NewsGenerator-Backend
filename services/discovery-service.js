@@ -10,7 +10,7 @@
 
 import {ProfileModel} from "../models/profile-model.js";
 import {knownMedia} from "./source-service.js";
-import {IngestService} from "./ingest-service.js";
+import {IngestService, searchesOfUser} from "./ingest-service.js";
 import {FeedbackService} from "./feedback-service.js";
 import {search} from "./utils/google-news.js";
 import {findFeeds, isOnSubject, subjectScore} from "./utils/feed-finder.js";
@@ -150,8 +150,10 @@ export const DiscoveryService = {
             try {
                 const feeds = await discover(userId);
                 console.log(`Discovery: ${feeds.length} feeds for user ${userId}`);
-                // read and embedded now, so the next briefing already has them
-                if (feeds.length > 0) await IngestService.run({urls: feeds.map(feed => feed.url)});
+                // read and embedded now with the searches of Google News of the interests, so the next
+                // briefing already has them
+                const urls = [...feeds.map(feed => feed.url), ...await searchesOfUser(userId)];
+                if (urls.length > 0) await IngestService.run({urls});
                 await ProfileModel.setDiscovery(userId, 'done');
             } catch (err) {
                 console.error(`Discovery failed for user ${userId}: ${err.stack ?? err}`);

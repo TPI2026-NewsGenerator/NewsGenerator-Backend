@@ -16,6 +16,8 @@ import {FeedModel} from "../models/feed-model.js";
 import {StoryModel} from "../models/story-model.js";
 import {embed, toSparsevec, toVector} from "./utils/embedder.js";
 import {languageOf} from "./utils/language.js";
+import {ProfileModel} from "../models/profile-model.js";
+import {googleAvailable, interestSearchUrls, languageOfSearch} from "./utils/google-news.js";
 
 // A user never waits for a feed: the searches and the briefing read what this has already stored.
 const INTERVAL_MINUTES = Number(process.env.INGEST_INTERVAL_MINUTES) || 20;
@@ -29,6 +31,12 @@ const STORY_SPARSE_WEIGHT = 1;
 const STORY_SAME_MEDIUM_MARGIN = 0.5;   // what two titles of one medium need more: its templates look alike
 const STORY_TEXT_THRESHOLD = 0.6;       // the texts must meet too: one subject is not one fact
 const LOCK_KEY = 'newsgenerator-ingest';
+// The searches of Google News of the interests are read less often than the feeds: each is one more
+// request to Google, which blocks an address asking too much. A search gives the news of 2 days, an
+// hour late costs nothing
+const GOOGLE_EVERY_MINUTES = Number(process.env.GOOGLE_NEWS_EVERY_MINUTES) || 60;
+const MAX_GOOGLE_PER_RUN = 60;
+const GOOGLE_ENABLED = () => process.env.GOOGLE_NEWS !== 'off';
 
 // the language of each shared feed, from db/rss-links.js
 const sharedLanguage = new Map(Object.entries(rss).flatMap(([language, categories]) =>
@@ -53,7 +61,7 @@ const embedPending = async () => {
     await StoryModel.saveVectors(pending.map(a => {
         const title = vectors.get(a.title);
         const text = vectors.get(richText(a.title, a.description));
-        const fallback = a.feed_language ?? sharedLanguage.get(a.feed) ?? null;
+        const fallback = a.feed_language ?? sharedLanguage.get(a.feed) ?? languageOfSearch(a.feed) ?? null;
         return {
             id: a.id,
             lang: languageOf(`${a.title} ${a.description ?? ''}`, fallback) ?? 'en',
@@ -102,12 +110,25 @@ const withLock = async (task) => {
 
 let timer = null;
 
+// the searches of Google News of every reader not read for GOOGLE_EVERY_MINUTES
+const dueSearches = async () => {
+    if (!GOOGLE_ENABLED() || !googleAvailable()) return [];
+    const urls = [...new Set((await ProfileModel.searchesOf())
+        .flatMap(({searches, languages}) => interestSearchUrls(searches, languages)))];
+    return FeedModel.dueFeeds(urls, new Date(Date.now() - GOOGLE_EVERY_MINUTES * 60e3), MAX_GOOGLE_PER_RUN);
+};
+
+// the searches of Google News of one reader, read with the sources just found for them
+export const searchesOfUser = async (userId) => GOOGLE_ENABLED()
+    ? [...new Set((await ProfileModel.searchesOf(userId)).flatMap(({searches, languages}) => interestSearchUrls(searches, languages)))]
+    : [];
+
 export const IngestService = {
     // one pass: every feed read (or only these ones), the new news embedded and grouped
     run: async ({urls = null} = {}) => {
         const started = Date.now();
         const result = await withLock(async () => {
-            const feeds = urls ?? [...new Set([...sharedLanguage.keys(), ...await FeedModel.allUserFeedUrls()])];
+            const feeds = urls ?? [...new Set([...sharedLanguage.keys(), ...await FeedModel.allUserFeedUrls(), ...await dueSearches()])];
             const refresh = await FeedService.refreshUrls(feeds, {purge: urls === null});
 
             // the embedder may be down: the news are stored anyway, they get their vectors next time
