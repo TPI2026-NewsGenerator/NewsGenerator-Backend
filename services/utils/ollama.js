@@ -11,6 +11,7 @@ import process from 'node:process'
 import 'dotenv/config';
 import {Ollama} from 'ollama'
 import {TOPICS, isTopic} from './topics.js';
+import {strayWords} from './language.js';
 
 // The model of every call, one of Ollama cloud (or of an Ollama server of our own, same names).
 // gemma4:31b measured against gpt-oss:20b, gpt-oss:120b and nemotron-3-nano:30b, all small enough to
@@ -23,6 +24,9 @@ const MODEL = process.env.OLLAMA_MODEL || "gemma4:31b";
 const MAX_CONTENT_CHARS = 12000;    // longer articles are cut, the start of a news holds the main information
 const SUMMARY_MIN_WORDS = 120;
 const SUMMARY_MAX_WORDS = 150;
+// A summary of an English article, written in French, once kept "..., known as the EU AI Act" (1 of
+// 77 summaries): with this many words of another language it is asked again, once
+const MAX_STRAY_WORDS = 1;
 
 // who the article credits for what it reports, asked in the same call as the summary
 export const SOURCINGS = ['named', 'anonymous', 'none'];
@@ -47,53 +51,65 @@ const count = (usage, response) => {
 // returns the resume of a news, always about the same length, and its topic
 // one call gives both: the AI reads the article once. 'language' is the one the resume is written in
 export const ollamaResume = async (title, text, {language = 'English', usage = null} = {}) => {
-    const response = await ollama.chat({
-        model: MODEL,
-        messages: [
-            {
-                role: "system",
-                content: `You are a journalist who writes neutral summaries of news articles.
-                        Answer in this format, nothing before or after:
-                        TOPIC: <one topic>
-                        SOURCING: <one word>
-                        <the summary>
-                        Rules:
-                        - TOPIC is the main subject of the article, one of: ${TOPICS.join(', ')}
-                        - A news about a sport, a team, an athlete, a match or a referee is always sport,
-                          even when it is about a controversy, money or the behaviour of a player
-                        - SOURCING says who the article credits for what it reports, one of:
-                          named (it names them: a person, a club, an institution, an official statement),
-                          anonymous (it relies on sources it does not name, "sources close to", "insiders"),
-                          none (it credits nobody)
-                        - SOURCING describes the article, never whether the news is true
-                        - The summary is between ${SUMMARY_MIN_WORDS} and ${SUMMARY_MAX_WORDS} words, in ${language}
-                        - 1 or 2 paragraphs of normal readable text, no title, no list, no markdown
-                        - Only facts from the article: who, what, when, where, why
-                        - Never add information that is not in the article
-                        - Ignore text that is not part of the news (ads, newsletter, related links)`
-            },
-            {
-                role: "user",
-                content: `Give the topic, the sourcing and the summary of this news.
+    const messages = [
+        {
+            role: "system",
+            content: `You are a journalist who writes neutral summaries of news articles.
+                    Answer in this format, nothing before or after:
+                    TOPIC: <one topic>
+                    SOURCING: <one word>
+                    <the summary>
+                    Rules:
+                    - TOPIC is the main subject of the article, one of: ${TOPICS.join(', ')}
+                    - A news about a sport, a team, an athlete, a match or a referee is always sport,
+                      even when it is about a controversy, money or the behaviour of a player
+                    - SOURCING says who the article credits for what it reports, one of:
+                      named (it names them: a person, a club, an institution, an official statement),
+                      anonymous (it relies on sources it does not name, "sources close to", "insiders"),
+                      none (it credits nobody)
+                    - SOURCING describes the article, never whether the news is true
+                    - The summary is between ${SUMMARY_MIN_WORDS} and ${SUMMARY_MAX_WORDS} words, in ${language}
+                    - Every word of it is in ${language}, whatever the language of the article: translate
+                      its phrases and quotes. Only names (people, organisations, laws) stay as they are
+                    - 1 or 2 paragraphs of normal readable text, no title, no list, no markdown
+                    - Only facts from the article: who, what, when, where, why
+                    - Never add information that is not in the article
+                    - Ignore text that is not part of the news (ads, newsletter, related links)`
+        },
+        {
+            role: "user",
+            content: `Give the topic, the sourcing and the summary in ${language} of this news.
 
-                        TITLE: ${title}
+                    TITLE: ${title}
 
-                        ARTICLE:
-                        ${text.slice(0, MAX_CONTENT_CHARS)}`
-            }
-        ],
-        think: "low",
-        options: {
-            temperature: 0.1
+                    ARTICLE:
+                    ${text.slice(0, MAX_CONTENT_CHARS)}`
         }
-    });
-    count(usage, response);
+    ];
+    const ask = async () => {
+        const response = await ollama.chat({model: MODEL, messages, think: "low", options: {temperature: 0.1}});
+        count(usage, response);
+        const answer = response.message.content.trim();
+        if (!answer) throw new Error("Empty answer from the AI");
+        return answer;
+    };
 
-    const answer = response.message.content.trim();
-    if (!answer) throw new Error("Empty answer from the AI");
+    const first = await ask();
+    let result = readResume(first);
+    const stray = strayWords(result.summary, language);
+    if (stray.length > MAX_STRAY_WORDS) {
+        // the AI is shown its answer and what is wrong with it: one more call, only for these rare ones
+        messages.push({role: 'assistant', content: first}, {role: 'user', content:
+            `Your summary has words that are not in ${language} (${[...new Set(stray)].join(', ')}). Write the same answer again, entirely in ${language}.`});
+        const again = readResume(await ask());
+        if (again.summary && strayWords(again.summary, language).length < stray.length) result = again;
+    }
+    return result;
+}
 
-    // "TOPIC: sport" then "SOURCING: named" on their own lines, the summary after. Both are asked
-    // for in this one call: a second call to read the same article again would double the cost.
+// "TOPIC: sport" then "SOURCING: named" on their own lines, the summary after. Both are asked for in
+// one call: a second call to read the same article again would double the cost.
+const readResume = (answer) => {
     const [, topic, sourcing, summary] =
         answer.match(/^\s*TOPIC\s*:\s*\**\s*([a-z]+)\**\s*(?:SOURCING\s*:\s*\**\s*([a-z]+)\**)?\s*([\s\S]*)$/i) ?? [];
 
@@ -102,7 +118,7 @@ export const ollamaResume = async (title, text, {language = 'English', usage = n
         topic: isTopic(topic?.toLowerCase()) ? topic.toLowerCase() : null,
         sourcing: SOURCINGS.includes(sourcing?.toLowerCase()) ? sourcing.toLowerCase() : null,
     };
-}
+};
 
 
 // an answer of the AI as JSON, for the calls that return data rather than text (the interests of a

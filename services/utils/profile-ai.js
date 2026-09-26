@@ -18,7 +18,7 @@ const MAX_SEARCHES_PER_LANGUAGE = 2;
 
 export const LANGUAGE_NAMES = {fr: 'français', en: 'anglais', es: 'espagnol', de: 'allemand', it: 'italien'};
 // the language a text of the AI is written in, for the prompts asking it to write
-export const WRITTEN_IN = {fr: 'French', en: 'English', es: 'Spanish', de: 'German', it: 'Italian'};
+export {WRITTEN_IN} from './language.js';
 
 // The keywords are written for Filter (commas = alternatives, spaces = all the words), and the rules
 // are the ones the benches needed: without them the AI wrote phrases ("chef biographie / chef

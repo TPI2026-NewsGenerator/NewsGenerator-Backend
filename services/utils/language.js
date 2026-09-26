@@ -46,6 +46,24 @@ export const languageOf = (text, fallback = null) => {
     return best;
 };
 
+// the name of a language in the prompts of the AI
+export const WRITTEN_IN = {fr: 'French', en: 'English', es: 'Spanish', de: 'German', it: 'Italian'};
+
+// Words that only one language writes in lower case: the ones of an English or a French article
+// the AI left in a summary written in another ("..., known as the EU AI Act"). Not "was" (German),
+// nor "les" and "qui" (Spanish and Italian write them too); a name ("The Guardian") has a capital
+const ONLY_IN = {
+    en: new Set('the and with that this which from has have been their known'.split(' ')),
+    fr: new Set('des une est dans avec pour sont cette aussi'.split(' ')),
+};
+
+// the words of another language in a text written in 'language' (a name of WRITTEN_IN)
+export const strayWords = (text, language) => {
+    const code = Object.keys(WRITTEN_IN).find(key => WRITTEN_IN[key] === language);
+    const words = (text ?? '').match(/[\p{L}]+/gu) ?? [];
+    return words.filter(word => Object.entries(ONLY_IN).some(([other, set]) => other !== code && set.has(word)));
+};
+
 // The language most of these texts (the news of one feed) are written in, null when too few of them
 // tell it or they do not agree. Measured on 345 feeds: every feed of a listed language was told right;
 // a language not listed here can still pass for English on its short words
