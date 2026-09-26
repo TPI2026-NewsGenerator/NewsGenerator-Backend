@@ -13,7 +13,7 @@ import process from 'node:process';
 import {Crawlers} from './crawlers.js';
 import {Filter} from './filter.js';
 import {toDate} from './dates.js';
-import {hostOf} from './public-url.js';
+import {hostOf, mediumOf} from './public-url.js';
 
 // Google News indexes far more media than db/rss-links.js. Its article links go through a redirect
 // that hides the real address. Every item names its publisher in clear with
@@ -162,6 +162,16 @@ export const search = async (keywords, {days = null, language = 'en'} = {}) => {
     return {news, media: [...media.values()].sort((a, b) => b.news - a.news)};
 };
 
+// Google News also names posts of social networks and videos ("Just like last year, restaurateurs
+// ... | Via ANC 24/7" on facebook.com): no medium, and nothing the server can read. They are left out
+// when read, and never count as a voice
+const PLATFORMS = new Set(['facebook.com', 'instagram.com', 'x.com', 'twitter.com', 'threads.net', 'tiktok.com',
+    'youtube.com', 'youtu.be', 'linkedin.com', 'reddit.com', 'pinterest.com', 'dailymotion.com']);
+export const isPlatform = (url) => {
+    const host = hostOf(url);
+    return !host || PLATFORMS.has(mediumOf(host));
+};
+
 // Feeds of Google News read one after the other, in the shape of Crawlers.Xml: the title without
 // its publisher, the publisher in 'source', no description (Google only gives a list of links).
 // Once Google blocks, the feeds left are answered {skipped: true}: they are read next time.
@@ -171,7 +181,7 @@ export const readSearches = async (urls) => {
         try {
             const feed = await readFeed(url);
             results.push({...feed, items: feed.items.slice(0, MAX_ITEMS)
-                .filter(item => item.link && item.source?.url)
+                .filter(item => item.link && item.source?.url && !isPlatform(item.source.url))
                 .map(item => ({...item, title: withoutPublisher(item.title, item.source.name), description: '', thumbnail: null}))});
         } catch (err) {
             if (!(err instanceof GoogleBlocked)) throw err;
@@ -275,7 +285,7 @@ export const decodeLinks = async (links) => {
 // members: [{feed_url, medium}]
 export const credibleStory = (members, established, minMedia = 2) => {
     if (members.some(article => !isGoogleNewsUrl(article.feed_url))) return true;
-    const media = new Set(members.map(article => article.medium).filter(Boolean));
+    const media = new Set(members.map(article => article.medium).filter(medium => medium && !PLATFORMS.has(medium)));
     return media.size >= minMedia || [...media].some(medium => established.has(medium));
 };
 

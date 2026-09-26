@@ -8,7 +8,7 @@
 
 import {describe, expect, it} from '@jest/globals';
 import {
-    articleIdOf, credibleStory, interestSearchUrls, pickCandidates, isGoogleNewsUrl, languageOfSearch, parseBatchAnswer,
+    articleIdOf, credibleStory, interestSearchUrls, isPlatform, pickCandidates, isGoogleNewsUrl, languageOfSearch, parseBatchAnswer,
     searchUrl, withoutPublisher,
 } from '../../services/utils/google-news.js';
 
@@ -76,6 +76,14 @@ describe('credibleStory', () => {
 
     it('should leave out a story only one unknown medium tells through Google News', () => {
         expect(credibleStory([google('horticulture-abadie-pyrenees.com'), google('horticulture-abadie-pyrenees.com')], established)).toBe(false);
+    });
+
+    it('should never count a social network or a video platform as a voice', () => {
+        expect(credibleStory([google('facebook.com')], new Set(['facebook.com']))).toBe(false);
+        expect(credibleStory([google('facebook.com'), google('youtube.com')], established)).toBe(false);
+        expect(isPlatform('https://www.facebook.com')).toBe(true);
+        expect(isPlatform('https://m.youtube.com')).toBe(true);
+        expect(isPlatform('https://www.lequipe.fr')).toBe(false);
     });
 
     it('should keep a story two media tell through Google News, or one medium the server reads', () => {
