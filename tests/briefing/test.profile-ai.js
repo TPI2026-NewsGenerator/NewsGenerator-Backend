@@ -44,6 +44,16 @@ describe('normalizeInterests', () => {
         expect(interest.sections).toEqual([]);
     });
 
+    it('should drop the keywords and the searches of a year gone by, and keep the ones of this year or to come', () => {
+        const year = new Date().getFullYear();
+        const [interest] = normalizeInterests({interests: [{
+            text: 'UEFA : compétitions', keywords: `UEFA, Euro ${year - 2}, Euro ${year + 2}, Ligue des champions ${year}`,
+            searches: [{q: `Euro ${year - 2}`, lang: 'fr'}, {q: 'Ligue des champions', lang: 'fr'}],
+        }]}, options);
+        expect(interest.keywords).toBe(`UEFA, Euro ${year + 2}, Ligue des champions ${year}`);
+        expect(interest.searches).toEqual(['fr:Ligue des champions']);
+    });
+
     it('should drop the interests without a text and keep six at most', () => {
         const many = Array.from({length: 9}, (_, i) => ({text: `Sujet ${i}`}));
         expect(normalizeInterests({interests: [{text: ''}, ...many]}, options)).toHaveLength(6);

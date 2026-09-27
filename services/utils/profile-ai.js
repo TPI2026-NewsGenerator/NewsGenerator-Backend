@@ -56,6 +56,13 @@ Réponds uniquement en JSON : {"interests": [{"text": "...", "weight": 1, "keywo
 
 const cleanText = (value, max) => typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, max) : '';
 
+// A name with a year gone by is an old edition: "Euro 2024" came back once the example was taken out
+// of the prompt (a UEFA profile, in 2026). The rule is kept in the prompt, and checked here
+const pastYear = (text, year = new Date().getFullYear()) =>
+    (String(text).match(/\b(19|20)\d{2}\b/g) ?? []).some(found => Number(found) < year);
+const withoutPastYears = (keywords) => keywords.split(',').map(keyword => keyword.trim())
+    .filter(keyword => keyword && !pastYear(keyword)).join(', ');
+
 // the answer of the AI made safe: at most MAX_INTERESTS interests with a text, weights between 0.5
 // and 1, searches only in the languages read, a category of the list
 export const normalizeInterests = (answer, {languages, categories}) => {
@@ -70,7 +77,7 @@ export const normalizeInterests = (answer, {languages, categories}) => {
             for (const search of Array.isArray(interest?.searches) ? interest.searches : []) {
                 const q = cleanText(search?.q, 80);
                 const count = (perLanguage.get(search?.lang) ?? 0) + 1;
-                if (!q || !languages.includes(search?.lang) || count > MAX_SEARCHES_PER_LANGUAGE) continue;
+                if (!q || pastYear(q) || !languages.includes(search?.lang) || count > MAX_SEARCHES_PER_LANGUAGE) continue;
 
                 perLanguage.set(search.lang, count);
                 searches.push(`${search.lang}:${q}`);
@@ -79,7 +86,7 @@ export const normalizeInterests = (answer, {languages, categories}) => {
             return {
                 text: cleanText(interest?.text, 300),
                 weight: Number.isFinite(weight) ? Math.min(1, Math.max(0.5, weight)) : 1,
-                keywords: cleanText(interest?.keywords, MAX_KEYWORDS_CHARS).replace(/\s*\/\s*/g, ', '),
+                keywords: withoutPastYears(cleanText(interest?.keywords, MAX_KEYWORDS_CHARS).replace(/\s*\/\s*/g, ', ')),
                 searches: searches,
                 sections: [...new Set((Array.isArray(interest?.sections) ? interest.sections : [])
                     .map(section => cleanText(section, 40)).filter(Boolean))].slice(0, 4),
