@@ -16,8 +16,12 @@ import {mapWithConcurrency} from "./utils/concurrency.js";
 import {mediumOf} from "./utils/public-url.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {averageLink, unionFind} from "./utils/grouping.js";
+import {corroborationOf} from "./utils/corroboration.js";
+import {WRITTEN_IN} from "./utils/language.js";
+import {dateOf, mediumOfArticle, readingOrder, sourceOf} from "./utils/reading-order.js";
 
 export const MAX_SELECTED_NEWS = 10;
+export const MAX_STORY_ARTICLES = 30;  // articles of one card sent to be summarized, a group is never bigger
 const AI_CONCURRENCY = 5;       // resumes asked to Ollama at the same time
 // Two titles telling the same news share less than one would think: the Guardian writing "Columbus
 // Crew sack coach Federico Higuain for man's game jibe aimed at female referee" and the Independent
@@ -41,15 +45,6 @@ const SAME_COPY = 0.85;         // above this they are the same text, a wire rep
 const SHORT_TITLE = 40;
 const SHORT_TITLE_SIMILARITY = 0.45;
 const MIN_RESULTS = 5;          // under this, a search asking for every word is asked again for any of them
-
-// site name from the article link, e.g. "https://www.nytimes.com/..." -> "nytimes.com"
-const sourceOf = (link) => {
-    try {
-        return new URL(link).hostname.replace(/^www\./, '');
-    } catch {
-        return '';
-    }
-};
 
 // a feed built from a page (see feed-bridge.js) gives the whole article as its description, where a
 // published feed gives a few lines. The card only shows the beginning, the whole text stays in the
@@ -211,44 +206,67 @@ export const NewsService = {
         });
     },
 
-    // AI resume and topic of the news selected by the user, kept in the cache for the next requests
-    getNewsSummary: async (urls) => {
-        const articles = await NewsService.cachedArticles(urls);
+    // One AI resume per card chosen by the user, and who tells it, as in the briefing.
+    // stories: [{urls}], the articles of each card, its lead first. Up to 5 of them are read, one per
+    // medium and a source the reader trusts first: their texts say how many were written apart from
+    // the others (no AI, see corroborationOf), and the first one readable is summarized, in the
+    // language searched. So a card costs one call to the AI, like one article did.
+    // A resume already written in that language is kept, a news asked twice costs nothing.
+    summarizeStories: async (stories, {userId = null, language = 'en'} = {}) => {
+        const written = WRITTEN_IN[language] ?? 'English';
+        const articles = await NewsService.cachedArticles([...new Set(stories.flatMap(story => story.urls))]);
+        const trusted = new Set(userId ? await FeedModel.trustedFeedUrls(userId) : []);
 
-        // a news already summarized costs nothing
-        const toSummarize = urls.filter(url => !articles.get(url).summary);
-        const contents = new Map(
-            (toSummarize.length > 0 ? await NewsService.getNewsContent(toSummarize) : [])
-                .map(news => [news.url, news])
-        );
+        const members = stories.map(story => story.urls.map(url => articles.get(url)));
+        const reads = members.map(list => readingOrder(list, trusted));
+        const pages = await Crawlers.Html([...new Set(reads.flat().map(article => article.link))].map(url => ({url})));
+        const pageOf = new Map(pages.filter(page => page.content).map(page => [page.url, page]));
 
-        const results = await mapWithConcurrency(toSummarize, AI_CONCURRENCY, async (url) => {
-            const news = contents.get(url);
+        const results = await mapWithConcurrency(reads, AI_CONCURRENCY, async (read) => {
             // the RSS description is too short, the AI would invent the rest
-            if (!news.fullContent) return null;
-
-            const {summary, topic, sourcing} = await ollamaResume(news.title, news.content);
-            await FeedModel.saveSummary(url, summary, topic, sourcing);
-            return {summary, topic, sourcing};
-        });
-        const summaries = new Map(toSummarize.map((url, i) => [url, results[i]]));
-
-        return urls.map(url => {
-            const article = articles.get(url);
-            const news = toNews(article);
-
-            if (article.summary) return {...news, summary: article.summary, summaryError: null};
-
-            const result = summaries.get(url);
-            if (result.status === 'rejected') {
-                console.log(`AI resume failed for ${url}: ${result.reason}`);
-                return {...news, summary: null, summaryError: "The AI could not summarize this news, please try again."};
+            const from = read.find(article => pageOf.has(article.link));
+            if (!from) return null;
+            if (from.summary && (from.summary_language ?? 'English') === written) {
+                return {from, summary: from.summary, topic: from.topic, sourcing: from.sourcing};
             }
-            if (result.value === null) {
-                return {...news, summary: null, summaryError: "This news could not be read (paywall or protected site), no resume generated."};
-            }
-
-            return {...news, topic: result.value.topic, summary: result.value.summary, summaryError: null};
+            const {summary, topic, sourcing} = await ollamaResume(from.title, pageOf.get(from.link).content, {language: written});
+            await FeedModel.saveSummary(from.link, summary, topic, sourcing, written);
+            return {from, summary, topic, sourcing};
         });
-    }
+
+        return members.map((list, i) => {
+            const result = results[i];
+            const done = result.status === 'fulfilled' ? result.value : null;
+            if (result.status === 'rejected') console.log(`AI resume failed for ${list[0].link}: ${result.reason}`);
+            const lead = done?.from ?? list[0];
+            const news = toNews(lead);
+            const corroboration = corroborationOf(list.map(article => ({
+                medium: mediumOfArticle(article),
+                text: pageOf.get(article.link)?.content ?? null,
+                byline: pageOf.get(article.link)?.author ?? null,
+            })));
+
+            return {
+                ...news,
+                // the card chosen is known by the url of its lead, whatever article was summarized
+                id: list[0].link,
+                summary: done?.summary ?? null,
+                topic: done?.topic ?? news.topic,
+                sourcing: done?.sourcing ?? news.sourcing,
+                summaryError: done ? null : result.status === 'rejected'
+                    ? "The AI could not summarize this news, please try again."
+                    : "No article of this news could be read (paywall or protected site), no resume generated.",
+                corroboration: {...corroboration, mediaNames: [...new Set(list.map(mediumOfArticle))]},
+                articles: [...list]
+                    .sort((a, b) => Number(trusted.has(b.feeds?.url)) - Number(trusted.has(a.feeds?.url)) || dateOf(b) - dateOf(a))
+                    .map(article => ({
+                        url: article.link,
+                        source: sourceOf(article.link),
+                        title: article.title,
+                        publishedAt: article.published_at?.toISOString() ?? '',
+                        trusted: trusted.has(article.feeds?.url),
+                    })),
+            };
+        });
+    },
 }

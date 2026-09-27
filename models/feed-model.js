@@ -121,17 +121,20 @@ export const FeedModel = {
             ids, threshold, shortTitle, shortThreshold);
     },
     // one article per link, even if it is in several feeds
+    // with the url of their feed, which says whether the reader trusts it
     getArticlesByLinks: async (links) => {
         return prisma.articles.findMany({
             where: { link: { in: links } },
             distinct: ['link'],
+            include: { feeds: { select: { url: true } } },
         });
     },
-    // the AI resume, topic and sourcing are kept, a news asked twice is not summarized twice
-    saveSummary: async (link, summary, topic, sourcing) => {
+    // the AI resume, topic and sourcing are kept, a news asked twice in the same language is not
+    // summarized twice
+    saveSummary: async (link, summary, topic, sourcing, language = 'English') => {
         return prisma.articles.updateMany({
             where: { link: link },
-            data: { summary: summary, topic: topic, sourcing: sourcing },
+            data: { summary: summary, topic: topic, sourcing: sourcing, summary_language: language },
         });
     },
     // feeds added by a user, they are private: only used in the searches of this user

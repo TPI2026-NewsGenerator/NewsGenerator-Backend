@@ -7,7 +7,7 @@
 
 "use strict"
 
-import {NewsService, MAX_SELECTED_NEWS} from '../services/news-service.js';
+import {NewsService, MAX_SELECTED_NEWS, MAX_STORY_ARTICLES} from '../services/news-service.js';
 import {FeedService} from '../services/feed-service.js';
 
 // validate the urls of the selected news, then answer with the result of 'serviceFn'
@@ -116,7 +116,33 @@ export const NewsController = {
         await respondWithSelectedNews(req, res, NewsService.getNewsContent);
     },
 
+    // body: {stories: [{urls}], language}, the cards chosen with their articles, the lead first.
+    // {urls} alone is still read, one card per url
     getNewsSummary: async (req, res) => {
-        await respondWithSelectedNews(req, res, NewsService.getNewsSummary);
+        const {language = 'en'} = req.body;
+        const stories = Array.isArray(req.body.stories)
+            ? req.body.stories
+            : Array.isArray(req.body.urls) ? req.body.urls.map(url => ({urls: [url]})) : null;
+
+        const valid = (story) => Array.isArray(story?.urls) && story.urls.length > 0
+            && story.urls.length <= MAX_STORY_ARTICLES && story.urls.every(url => typeof url === 'string');
+        if (!stories || stories.length === 0 || !stories.every(valid)) {
+            return res.status(400).json({error: "Please select at least one news."});
+        }
+        // the same card chosen twice is one card
+        const unique = [...new Map(stories.map(story => [story.urls[0], {urls: [...new Set(story.urls)]}])).values()];
+        if (unique.length > MAX_SELECTED_NEWS) {
+            return res.status(400).json({error: `${MAX_SELECTED_NEWS} news max.`});
+        }
+        if (typeof language !== 'string' || !FeedService.languages().includes(language)) {
+            return res.status(400).json({error: `Unknown language: ${language}`});
+        }
+
+        try {
+            const news = await NewsService.summarizeStories(unique, {userId: req.user?.id, language});
+            res.status(200).json({totalResults: news.length, news});
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? error});
+        }
     },
 }
