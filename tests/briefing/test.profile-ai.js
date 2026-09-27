@@ -9,7 +9,9 @@ import {jest} from '@jest/globals'
 
 // the AI is never called by these tests, only its answers are read
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson: jest.fn()}));
-const {normalizeCheck, normalizeInterests, normalizeMerges, normalizeReview, normalizeSelection, parseSearch, reviewPrompt} = await import('../../services/utils/profile-ai.js');
+const {ollamaJson} = await import('../../services/utils/ollama.js');
+const {selectionPrompt} = await import('../../services/utils/profile-ai.js');
+const {balanceSelection, interestsOf, missingWords, normalizeCheck, normalizeInterests, normalizeMerges, normalizeReview, normalizeSelection, parseSearch, reviewPrompt} = await import('../../services/utils/profile-ai.js');
 
 const options = {languages: ['fr', 'en'], categories: ['world', 'sport', 'technology']};
 
@@ -49,6 +51,48 @@ describe('normalizeInterests', () => {
     });
 });
 
+describe('the words of a profile its interests leave out', () => {
+    const uefa = "Je suis aussi l'arbitrage du football : décisions arbitrales et VAR, polémiques, nominations et sanctions des arbitres, changements des règles du jeu.";
+
+    it('should find the precisions the AI dropped, and not the words that say how the profile is written', () => {
+        expect(missingWords(uefa, [{text: 'Arbitrage football : VAR, décisions arbitrales, polémiques, règles du jeu'}]))
+            .toEqual(['nominations', 'sanctions', 'changements']);
+    });
+
+    it('should count a word named by its start, and the words of what the reader refuses', () => {
+        expect(missingWords('Le tennis, les arbitres, mais pas les paris sportifs.', [{text: 'Tennis : arbitrage'}], ['paris sportifs'])).toEqual([]);
+        expect(missingWords('Le tennis ATP et la VAR.', [{text: 'Tennis'}])).toEqual(['ATP', 'VAR']);
+    });
+});
+
+describe('interestsOf', () => {
+    const profile = {text: "L'arbitrage du football : VAR, nominations des arbitres.", topics: [], languages: ['fr'], categories: ['sport']};
+
+    beforeEach(() => ollamaJson.mockReset());
+
+    it('should ask once more when a word of the profile is missing, and keep the answer that misses fewer', async () => {
+        ollamaJson
+            .mockResolvedValueOnce({interests: [{text: 'Arbitrage du football : VAR'}], refused: []})
+            .mockResolvedValueOnce({interests: [{text: 'Arbitrage du football : VAR, nominations des arbitres'}], refused: []});
+
+        const interests = await interestsOf(profile);
+        expect(interests.map(interest => interest.text)).toEqual(['Arbitrage du football : VAR, nominations des arbitres']);
+        const [conversation] = ollamaJson.mock.calls[1];
+        expect(conversation.at(-1).content).toContain('nominations');
+    });
+
+    it('should keep the first answer when the second is not better, and not ask when nothing misses', async () => {
+        ollamaJson
+            .mockResolvedValueOnce({interests: [{text: 'Arbitrage du football : VAR'}]})
+            .mockRejectedValueOnce(new Error('The AI did not answer in JSON.'));
+        expect((await interestsOf(profile))[0].text).toBe('Arbitrage du football : VAR');
+
+        ollamaJson.mockReset().mockResolvedValueOnce({interests: [{text: 'Arbitrage du football : VAR, nominations des arbitres'}]});
+        await interestsOf(profile);
+        expect(ollamaJson).toHaveBeenCalledTimes(1);
+    });
+});
+
 describe('parseSearch', () => {
     it('should read back a search kept with its language', () => {
         expect(parseSearch('fr:Top 14')).toEqual({lang: 'fr', q: 'Top 14'});
@@ -67,6 +111,34 @@ describe('normalizeSelection', () => {
     it('should accept an empty choice: no story fits', () => {
         expect(normalizeSelection({selected: []}, ['1'])).toEqual([]);
         expect(normalizeSelection({}, ['1'])).toEqual([]);
+    });
+});
+
+describe('the share of each interest in a briefing', () => {
+    // the AI answers 15 stories: 9 on AI (interest 2) first, then 3 on tennis (1) and 3 on politics (3)
+    const interestOf = (id) => Number(id[0]);
+    const chosen = [...Array.from({length: 9}, (_, i) => `2${i}`), '10', '11', '12', '30', '31', '32'].map(id => ({id, why: ''}));
+    const three = [{id: 1, weight: 1}, {id: 2, weight: 1}, {id: 3, weight: 1}];
+
+    it('should give each interest its share of the ten places, then the place left to the next of the AI, in its order', () => {
+        const kept = balanceSelection(chosen, interestOf, three).map(item => item.id);
+        expect(kept).toEqual(['20', '21', '22', '23', '10', '11', '12', '30', '31', '32']);
+    });
+
+    it('should leave the places of an interest without story to the others, and follow the weights', () => {
+        const onlyAi = chosen.filter(item => item.id[0] === '2');
+        expect(balanceSelection(onlyAi, interestOf, three)).toHaveLength(9);
+        const secondary = [{id: 1, weight: 0.85}, {id: 2, weight: 1}];
+        const many = ['10', '11', '12', '13', '14', '15', '20', '21', '22', '23', '24', '25'].map(id => ({id, why: ''}));
+        const kept = balanceSelection(many, interestOf, secondary).map(item => item.id);
+        expect(kept.filter(id => id[0] === '1')).toHaveLength(5);      // floor(10 * 0.85 / 1.85) = 4, then the first left
+        expect(kept.filter(id => id[0] === '2')).toHaveLength(5);
+    });
+
+    it('should give the AI the interests only when there are several', () => {
+        const candidates = [{id: '1', title: 'Arthur Fils dans le Top 10', others: []}];
+        expect(selectionPrompt("Le tennis et l'IA.", candidates, undefined, ['Tennis : circuit ATP', 'IA : modèles'])).toContain('Ses intérêts :\n- Tennis : circuit ATP\n- IA : modèles');
+        expect(selectionPrompt('Le tennis.', candidates, undefined, ['Tennis : circuit ATP'])).not.toContain('Ses intérêts');
     });
 });
 

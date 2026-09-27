@@ -123,12 +123,13 @@ const readResume = (answer) => {
 
 // an answer of the AI as JSON, for the calls that return data rather than text (the interests of a
 // profile, the stories of a briefing). format: 'json' is asked, but the model sometimes still wraps
-// its answer in a markdown json block, so that is removed before reading it
+// its answer in a markdown json block, so that is removed before reading it. A conversation can be
+// given for the prompt, to ask again after an answer
 export const ollamaJson = async (prompt, usage = null, {think} = {}) => {
     const response = await ollama.chat({
         model: MODEL,
         format: 'json',
-        messages: [{role: 'user', content: prompt}],
+        messages: Array.isArray(prompt) ? prompt : [{role: 'user', content: prompt}],
         ...(think ? {think} : {}),
         options: {temperature: 0.1},
     });

@@ -17,7 +17,7 @@ import {FeedbackService} from "./feedback-service.js";
 import {DiscoveryService} from "./discovery-service.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {newUsage, ollamaResume} from "./utils/ollama.js";
-import {checkStories, mergeStories, reviewCards, selectStories, WRITTEN_IN} from "./utils/profile-ai.js";
+import {balanceSelection, checkStories, mergeStories, reviewCards, selectStories, WRITTEN_IN} from "./utils/profile-ai.js";
 import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {languageOf} from "./utils/language.js";
@@ -239,6 +239,7 @@ const write = async (briefingId, userId) => {
         return [String(row.id_story), {
             storyId: row.id_story,
             best: news.find(article => article.id === row.id_article) ?? news[0],
+            interestId: row.id_interest,
             interest: interests.find(interest => interest.id === row.id_interest)?.text ?? null,
             members: news,
             trusted: told,
@@ -251,13 +252,14 @@ const write = async (briefingId, userId) => {
 
     // 2. the AI chooses, against the whole profile and what it refuses
     await step('choosing');
-    const selected = await selectStories(profile.text, candidates.map(story => ({
+    const chosenByAi = await selectStories(profile.text, candidates.map(story => ({
         id: String(story.storyId),
         title: story.best.title,
         description: (story.best.description ?? '').slice(0, DESCRIPTION_CHARS),
         others: story.members.filter(article => article !== story.best).map(article => article.title).slice(0, 3),
         trusted: story.trusted,
-    })), usage.choosing, feedback.examples);
+    })), usage.choosing, feedback.examples, interests.map(interest => interest.text));
+    const selected = balanceSelection(chosenByAi, id => byId.get(id)?.interestId, interests);
     if (selected.length === 0) return [];
 
     // 3. the AI checks which articles of each story tell the news of its best one
