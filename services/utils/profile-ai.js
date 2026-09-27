@@ -28,6 +28,14 @@ export {WRITTEN_IN} from './language.js';
 // biography"), words that do not name the subject alone ("vaccins" for dog health, which sent a
 // general medium to its human health feed) and names of models of years ago. The date is given: without
 // it "current" meant the AI's own year, and a UEFA profile got "Euro 2024" two years after it.
+// The rules hold for any subject, and their examples are taken on none of the profiles measured
+// (football, tennis, AI, Swiss politics, motor racing, climate, Japanese food, dogs, hiking): a
+// prompt fitted to the profiles it is measured on would say nothing of the others. Measured 3 times on
+// the 7 profiles: no word left out, the UEFA one in 3 interests each time; a profile of keywords only
+// ("F1, MotoGP, Verstappen, Ducati, règlement technique 2027, transferts de pilotes…") still gets an
+// interest whose subject is unsure ("Marché des pilotes") 2 times of 3: it does not say it either.
+// A rule sending each precision to the interest it precises merged the UEFA competitions and their
+// governance 6 times of 6, it only takes the precisions that name no subject
 const today = () => new Date().toLocaleDateString('fr-CH', {day: 'numeric', month: 'long', year: 'numeric'});
 
 export const interestsPrompt = ({text, topics, languages, categories}) => `Nous sommes le ${today()}. Voici le profil d'un lecteur de nouvelles, écrit par lui-même :
@@ -36,12 +44,12 @@ ${topics.length > 0 ? `Thèmes qu'il a cochés : ${topics.join(', ')}.\n` : ''}I
 
 Découpe ce profil en 1 à ${MAX_INTERESTS} intérêts distincts. Ce que le lecteur dit ne pas vouloir n'est pas un intérêt : ne le mets dans aucun intérêt, mets-le dans "refused".
 Pour chaque intérêt, donne :
-- "text" : le sujet de l'intérêt, puis TOUT ce que le lecteur en cite, avec ses propres mots et sans en résumer ni en enlever aucun, comme "Rugby : matchs et résultats du Top 14 et des Six Nations, transferts de joueurs". Chaque précision du lecteur compte : "nominations et sanctions des arbitres, changements des règles du jeu" reste tel quel, et ne devient pas "règles du jeu". Le texte se lit seul : il nomme toujours son sujet ("règlement technique 2027 de la F1 et du MotoGP", pas "règlement technique 2027"), sans les mots qui disent combien le lecteur l'aime ("j'adore", "un peu"). N'ajoute ni date, ni année, ni nom qu'il n'a pas écrit.
+- "text" : le sujet de l'intérêt, puis TOUT ce que le lecteur en cite, avec ses propres mots et sans en résumer ni en enlever aucun, comme "Opéra : nouvelles productions de l'Opéra de Paris et de la Scala, nominations des directeurs et des chefs d'orchestre". Chaque précision du lecteur compte et reste telle quelle : "les expositions et les ventes aux enchères d'art contemporain" ne devient pas "art contemporain". Le texte se lit seul : il nomme toujours son sujet ("les nouvelles lignes de TGV", pas "les nouvelles lignes"). Une précision qui ne nomme aucun sujet ("des règles", "des prix") va dans l'intérêt du sujet qu'elle précise, dans chacun s'il y en a plusieurs : elle ne fait jamais un intérêt à elle seule. Il laisse de côté les mots qui disent combien le lecteur l'aime ("j'adore", "un peu"). N'ajoute ni date, ni année, ni nom qu'il n'a pas écrit.
 - "weight" : 1 pour un intérêt principal, 0.85 pour un intérêt que le lecteur dit secondaire.
-- "keywords" : 8 à 12 alternatives séparées par des virgules, dans les langues qu'il lit. CHAQUE alternative, à elle seule, doit désigner le sujet de cet intérêt : un article qui la contient en parle presque sûrement. Une alternative est un mot, ou 2 ou 3 mots qui doivent tous être dans l'article, séparés par des espaces. Si un mot seul est trop général, ajoute-lui le mot du sujet ("vaccin chien" et pas "vaccins"). Jamais d'article ni de préposition, pas de barre oblique, pas de mot général seul ("actualités", "news", "match", "santé", "interview"). Pour les noms propres (modèles, compétitions, personnes), ne cite que ceux qui sont actuels et certains, jamais l'édition d'une année passée ("Euro 2024") : sans année si tu ne connais pas l'édition en cours.
-  Exemple pour "la santé des chats" : "vétérinaire chat, vaccin chat, chat malade, maladie chat, croquettes chat, coryza, typhus félin, cat health, cat vet, feline disease"
+- "keywords" : 8 à 12 alternatives séparées par des virgules, dans les langues qu'il lit. CHAQUE alternative, à elle seule, doit désigner le sujet de cet intérêt : un article qui la contient en parle presque sûrement. Une alternative est un mot, ou 2 ou 3 mots qui doivent tous être dans l'article, séparés par des espaces. Si un mot seul est trop général, ajoute-lui le mot du sujet ("taille rosier" et pas "taille"). Jamais d'article ni de préposition, pas de barre oblique, pas de mot général seul ("actualités", "news", "nouveauté", "interview"). Pour les noms propres (produits, événements, personnes), ne cite que ceux qui sont actuels et certains, jamais l'édition d'une année passée : sans année si tu ne connais pas l'édition en cours.
+  Exemple pour "le jardinage bio" : "potager bio, compost jardin, permaculture, semis tomate, purin ortie, paillage potager, jardin sans pesticide, organic gardening, vegetable garden, composting"
 - "searches" : ${MAX_SEARCHES_PER_LANGUAGE} recherches courtes (1 à 3 mots) par langue qu'il lit, pour trouver dans Google News les médias qui publient sur ce sujet. Des mots qu'un titre d'article contiendrait, pas des phrases.
-- "sections" : 1 mot par langue qu'il lit qui nomme la rubrique d'un journal où ce sujet est publié, comme "rugby", "gastronomie", "animaux", "technologie".
+- "sections" : 1 mot par langue qu'il lit qui nomme la rubrique d'un journal où ce sujet est publié, comme "jardin", "musique", "transports", "technologie".
 - "category" : la rubrique la plus proche parmi : ${categories.join(', ')}.
 Dans "refused", mets ce que le lecteur dit ne pas vouloir, avec ses mots, et [] s'il ne refuse rien.
 Réponds uniquement en JSON : {"interests": [{"text": "...", "weight": 1, "keywords": "...", "searches": [{"q": "...", "lang": "${languages[0]}"}], "sections": ["..."], "category": "${categories[0]}"}], "refused": ["..."]}`;
@@ -151,12 +159,8 @@ export const interestsOf = async (profile) => {
 // prompt is then the one measured on the benches
 const feedbackBlock = ({liked = [], refused = []} = {}) => (liked.length === 0 && refused.length === 0 ? '' : `
 Ce lecteur a déjà jugé des histoires des jours passés. Sers-t'en pour comprendre ce qu'il veut vraiment, en plus de son profil :
-${liked.length > 0 ? `il les a trouvées bonnes pour lui :\n${liked.map(title => `+ ${title}`).join('\n')}\n` : ''}${refused.length > 0 ? `il ne les voulait pas :\n${refused.map(title => `- ${title}`).join('\n')}\n` : ''}Cherche ce qui les rapproche (un genre d'article, un angle, un sujet précis) plutôt que de refuser tout ce qui parle des mêmes équipes ou des mêmes personnes.
+${liked.length > 0 ? `il les a trouvées bonnes pour lui :\n${liked.map(title => `+ ${title}`).join('\n')}\n` : ''}${refused.length > 0 ? `il ne les voulait pas :\n${refused.map(title => `- ${title}`).join('\n')}\n` : ''}Cherche ce qui les rapproche (un genre d'article, un angle, un sujet précis) plutôt que de refuser tout ce qui parle des mêmes personnes, organisations ou lieux.
 `);
-
-// a story told by a source the reader trusts (their choice, see FeedController.updateUserFeed); nothing is
-// added to the prompt when no candidate has one
-const TRUSTED_MARK = '(source de confiance du lecteur)';
 
 // The prompt measured on the four profiles of the bench: 95% then 96% of relevant cards, and it
 // answers fewer than ten stories when fewer fit (0 for the chef with the feeds of the start only).
@@ -164,21 +168,24 @@ const TRUSTED_MARK = '(source de confiance du lecteur)';
 // Asked for ten, it gave the strongest interest most of them: 5 or 6 cards on AI of 9 for a reader of
 // tennis, AI and Swiss politics, 1 or 2 on tennis with 12 to 14 tennis candidates. Its interests are
 // given, it chooses up to MAX_CHOSEN and the briefing keeps a share of each (see balanceSelection).
+// The rules other steps do were taken out: two stories of one news (merged by mergeStories before any
+// summary), a precision read out of its subject (the review of the cards with their summary), the
+// trusted sources (a bonus of their score, TRUST_BONUS). The others are said for any subject, the
+// refusals with the example of the review (a looser one cost the reader of food 1 or 2 cards of 5 on
+// restaurants as "people"). Measured on the 3 accounts, 2 to 4 runs each: the same share of each
+// interest, 5 cards on refereeing of 10 for the UEFA one (3 before)
 export const selectionPrompt = (profileText, candidates, examples = {liked: [], refused: []}, interests = []) => `Voici le profil d'un lecteur, écrit par lui-même :
 """${profileText}"""
 ${interests.length > 1 ? `Ses intérêts :\n${interests.map(interest => `- ${interest}`).join('\n')}\n` : ''}${feedbackBlock(examples)}
 Voici des histoires d'actualité du jour, chacune avec son identifiant entre crochets :
-${candidates.map(c => `[${c.id}] ${c.title}${c.description ? ` — ${c.description}` : ''}${c.others.length > 0 ? ` (aussi : ${c.others.join(' / ')})` : ''}${c.trusted ? ` ${TRUSTED_MARK}` : ''}`).join('\n')}
-${candidates.some(c => c.trusted) ? `\nLes histoires marquées ${TRUSTED_MARK} sont racontées par une source que ce lecteur a choisie et en qui il a confiance : à pertinence égale, préfère-les. Ne choisis jamais une histoire hors de ses intérêts pour cette seule raison.\n` : ''}
+${candidates.map(c => `[${c.id}] ${c.title}${c.description ? ` — ${c.description}` : ''}${c.others.length > 0 ? ` (aussi : ${c.others.join(' / ')})` : ''}`).join('\n')}
+
 Choisis au plus ${MAX_CHOSEN} histoires qui correspondent vraiment à ce que ce lecteur demande, de la plus à la moins pertinente.${interests.length > 1 ? `
 Couvre tous ses intérêts : pour chacun, donne les histoires qui lui conviennent, même quand un autre intérêt en a de plus fortes. Son résumé en gardera ${MAX_BRIEFING}, réparties entre ses intérêts.` : ''}
-Ce qu'il dit ne pas vouloir est exclu : ne choisis jamais une histoire sur un de ces sujets, même quand il n'y est pas nommé (une équipe nationale, un club, un joueur ou un championnat d'un sport qu'il refuse) et même quand elle touche un de ses intérêts.
-Un intérêt se lit avec son sujet : « les jeunes joueurs » d'un intérêt sur le tennis sont des joueurs de tennis, pas ceux d'un autre sport.
+Ce qu'il dit ne pas vouloir est exclu, même quand l'histoire touche un de ses intérêts et même quand son titre ne le nomme pas (une équipe d'un sport refusé, un parti d'une politique refusée).
 S'il y en a moins de ${MAX_CHOSEN} qui conviennent, n'en rends que celles-là : une liste courte vaut mieux qu'une histoire hors sujet.
-Ne choisis jamais deux histoires qui racontent la même nouvelle (le même match ou la même annonce dans deux langues ou par deux médias) : garde la meilleure.
-Varie les sujets : pas deux histoires sur la même équipe, la même personne ou le même match à venir, sauf si ce sont deux nouvelles importantes et différentes.
-Préfère les nouvelles (faits, décisions, résultats, déclarations) aux pronostics, conseils de paris et guides, sauf si le lecteur les demande.
-Ne choisis jamais ce qui n'apporte aucun fait du jour : page de dossier ou de thème qui explique un sujet en général, guide pratique ("comment regarder…", "à quelle heure…", "comment obtenir des billets…"), page de billetterie, de classement, de calendrier, de résultats ou de diffusion en direct, présentation d'un programme ou d'une institution, compilation de vidéos ou de plus beaux buts.
+Varie : pas deux histoires sur la même personne, la même organisation ou le même événement, sauf si ce sont deux nouvelles importantes et différentes.
+Préfère les faits du jour (décisions, annonces, résultats, déclarations) aux pronostics, conseils et guides, sauf si le lecteur les demande. Ne choisis jamais une page qui n'apporte aucun fait nouveau : présentation générale d'un sujet, guide pratique, billetterie, classement, calendrier, direct, compilation.
 Pour chacune, "why" est une phrase courte qui dit au lecteur pourquoi elle est pour lui, dans la langue de son profil, tirée seulement de ce que disent son titre et sa description : si le lien avec le profil n'y est pas, ne la choisis pas.
 Réponds uniquement en JSON : {"selected": [{"id": "...", "why": "une phrase courte"}]}`;
 
@@ -234,14 +241,19 @@ export const selectStories = async (profileText, candidates, usage = null, examp
 // tout" (the tennis interest names "les jeunes joueurs suisses"). Its summary says it: the cards are
 // read once more with their summary, and the ones on what the reader refuses are left out. Only
 // that: asked also for the cards far from the interests, it left out 6 good ones of 70 (a French
-// tennis player on the ATP tour, a parliament hearing of OpenAI and Anthropic, a card with no summary)
+// tennis player on the ATP tour, a parliament hearing of OpenAI and Anthropic, a card with no summary).
+// Its example is said for any subject: "a person, an organisation, a place of it" left out 6 good cards
+// of 163 (federal credits as "cantonal politics", Top Chef restaurants as "people"), "a brand of a
+// refused product" 2 cards on new AI models; "its main subject", with a team of a refused sport and a
+// party of a refused politics, 1 card in 2 runs of the 163 (a resignation as "politics news in brief"),
+// the Nati 6 times of 6
 export const reviewPrompt = (profileText, cards) => `Voici le profil d'un lecteur, écrit par lui-même :
 """${profileText}"""
 
 Voici les cartes de son résumé de l'actualité, chacune avec son identifiant entre crochets, son titre et le résumé de son article :
 ${cards.map(card => `[${card.id}] ${card.title}\n${card.summary || '(pas de résumé)'}`).join('\n\n')}
 
-Le résumé dit de quoi parle vraiment une carte, mieux que son titre. Dis seulement quelles cartes portent sur un sujet que le lecteur dit explicitement ne pas vouloir, même quand leur titre ne le nommait pas (une équipe nationale, un club, un joueur ou un championnat d'un sport qu'il refuse).
+Le résumé dit de quoi parle vraiment une carte, mieux que son titre. Dis seulement quelles cartes ont pour sujet principal ce que le lecteur dit explicitement ne pas vouloir, même quand leur titre ne le nommait pas (une équipe d'un sport refusé, un parti d'une politique refusée). Une carte qui ne fait que mentionner un sujet refusé, ou qui s'en approche sans en être, est gardée.
 Ne juge pas si une carte est assez proche de ses intérêts : elle a déjà été choisie pour eux, et une carte qui correspond à un seul d'entre eux est gardée. Un sujet que le profil ne mentionne pas n'est pas refusé pour autant : seul compte ce qu'il écrit ne pas vouloir. S'il n'écrit rien de tel, n'enlève aucune carte.
 Une carte sans résumé est gardée. Dans le doute, garde la carte.
 Réponds uniquement en JSON : {"refused": [{"id": "...", "why": "une phrase courte"}]}`;

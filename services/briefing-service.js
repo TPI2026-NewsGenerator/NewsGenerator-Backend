@@ -242,7 +242,6 @@ const write = async (briefingId, userId) => {
             interestId: row.id_interest,
             interest: interests.find(interest => interest.id === row.id_interest)?.text ?? null,
             members: news,
-            trusted: told,
             score: Number(row.score) + (told ? TRUST_BONUS : 0),
         }];
     }));
@@ -257,7 +256,6 @@ const write = async (briefingId, userId) => {
         title: story.best.title,
         description: (story.best.description ?? '').slice(0, DESCRIPTION_CHARS),
         others: story.members.filter(article => article !== story.best).map(article => article.title).slice(0, 3),
-        trusted: story.trusted,
     })), usage.choosing, feedback.examples, interests.map(interest => interest.text));
     const selected = balanceSelection(chosenByAi, id => byId.get(id)?.interestId, interests);
     if (selected.length === 0) return [];
