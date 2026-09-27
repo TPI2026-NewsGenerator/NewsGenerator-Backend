@@ -26,6 +26,10 @@ const MAX_PAGE_CHARS = 2_000_000;
 const MAX_SECTIONS = 3;         // section pages read for a subject
 const MAX_CHECKED = 20;         // feeds read to choose one: each is a request
 const MIN_ON_SUBJECT = 2;       // one news on the subject in a whole feed is chance, not a section
+// Without a subject, the feed with the most news of these days: rts.ch declares no news feed on its
+// home, and the one with the most items was a list of 100 old files (the newest three weeks old)
+const RECENT_DAYS = 7;
+const DAY_MS = 24 * 3600e3;
 
 // feeds declared in the page: <link rel="alternate" type="application/rss+xml" href="...">
 // the page is given back too: its links name the sections of the site
@@ -79,6 +83,7 @@ const checkFeeds = async (urls, judge = null) => {
         return {
             url: url,
             items: items.length,
+            recent: dates.filter(date => Date.now() - date <= RECENT_DAYS * DAY_MS).length,
             newest: dates.sort((a, b) => b - a)[0] ?? null,
             // the sample shown to the user is a news on the subject when there is one
             titles: [...new Set([stats?.sample, ...items.map(item => item.title)])].filter(Boolean).slice(0, 3),
@@ -156,7 +161,7 @@ export const findFeeds = async (site, {language = null, subject = null, judge = 
         candidates = [...new Set([...candidates, ...await subjectCandidates(home, words, host)])].slice(0, MAX_CHECKED);
     }
 
-    const best = (a, b) => (judgeSubject ? subjectScore(b) - subjectScore(a) : 0) || b.items - a.items;
+    const best = (a, b) => (judgeSubject ? subjectScore(b) - subjectScore(a) : (b.recent ?? 0) - (a.recent ?? 0)) || b.items - a.items;
     // a feed whose language can't be told is kept: its titles may be too short to tell it
     const readable = (feed) => !languages || !feed.language || languages.includes(feed.language);
     const feeds = (await checkFeeds(candidates, judgeSubject)).filter(readable).sort(best);

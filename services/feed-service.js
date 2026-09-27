@@ -55,7 +55,7 @@ const doRefresh = async (urls, {purge = false} = {}) => {
         }
         if (result.error) {
             failed++;
-            await FeedModel.updateFeed(feed.id, { last_fetched_at: now, last_error: result.error });
+            await FeedModel.updateFeed(feed.id, { last_fetched_at: now, last_error: result.error, failures: { increment: 1 } });
             continue;
         }
         if (result.notModified) notModified++;
@@ -65,6 +65,7 @@ const doRefresh = async (urls, {purge = false} = {}) => {
             last_modified: result.lastModified ?? feed.last_modified,
             last_fetched_at: now,
             last_error: null,
+            failures: 0,
         });
 
         for (let news of result.items) {

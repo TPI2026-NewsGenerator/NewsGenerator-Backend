@@ -85,6 +85,7 @@ export const ProfileService = {
                 url: feed.url,
                 category: feed.category,
                 language: feed.language,
+                trusted: feed.trusted ?? false,
                 error: feed.last_error ?? null,
                 // its news of the last RELEVANCE_DAYS on the interests: at 0 it is removed, once it had the time
                 relevant: relevant.get(feed.id) ?? 0,

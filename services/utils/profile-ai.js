@@ -109,7 +109,9 @@ Voici des histoires d'actualité du jour, chacune avec son identifiant entre cro
 ${candidates.map(c => `[${c.id}] ${c.title}${c.description ? ` — ${c.description}` : ''}${c.others.length > 0 ? ` (aussi : ${c.others.join(' / ')})` : ''}${c.trusted ? ` ${TRUSTED_MARK}` : ''}`).join('\n')}
 ${candidates.some(c => c.trusted) ? `\nLes histoires marquées ${TRUSTED_MARK} sont racontées par une source que ce lecteur a choisie et en qui il a confiance : à pertinence égale, préfère-les. Ne choisis jamais une histoire hors de ses intérêts pour cette seule raison.\n` : ''}
 Choisis au plus ${MAX_BRIEFING} histoires qui correspondent vraiment à ce que ce lecteur demande, de la plus à la moins pertinente.
-Respecte aussi ce qu'il dit ne pas vouloir. S'il y en a moins de ${MAX_BRIEFING} qui conviennent, n'en rends que celles-là : une liste courte vaut mieux qu'une histoire hors sujet.
+Ce qu'il dit ne pas vouloir est exclu : ne choisis jamais une histoire sur un de ces sujets, même quand il n'y est pas nommé (une équipe nationale, un club, un joueur ou un championnat d'un sport qu'il refuse) et même quand elle touche un de ses intérêts.
+Un intérêt se lit avec son sujet : « les jeunes joueurs » d'un intérêt sur le tennis sont des joueurs de tennis, pas ceux d'un autre sport.
+S'il y en a moins de ${MAX_BRIEFING} qui conviennent, n'en rends que celles-là : une liste courte vaut mieux qu'une histoire hors sujet.
 Ne choisis jamais deux histoires qui racontent la même nouvelle (le même match ou la même annonce dans deux langues ou par deux médias) : garde la meilleure.
 Varie les sujets : pas deux histoires sur la même équipe, la même personne ou le même match à venir, sauf si ce sont deux nouvelles importantes et différentes.
 Préfère les nouvelles (faits, décisions, résultats, déclarations) aux pronostics, conseils de paris et guides, sauf si le lecteur les demande.
@@ -135,6 +137,39 @@ export const normalizeSelection = (answer, knownIds) => {
 // examples: {liked: [titles], refused: [titles]}, the thumbs of the reader (see utils/feedback.js)
 export const selectStories = async (profileText, candidates, usage = null, examples = undefined) =>
     normalizeSelection(await ollamaJson(selectionPrompt(profileText, candidates, examples), usage), candidates.map(c => c.id));
+
+// The choice reads a title and the start of a description, which may not name what a story is about:
+// "L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Winsley Boteli?" is the Swiss
+// football team, chosen twice for a reader of tennis who wrote "le football ne m'intéresse pas du
+// tout" (the tennis interest names "les jeunes joueurs suisses"). Its summary says it: the cards are
+// read once more with their summary, and the ones on what the reader refuses are left out. Only
+// that: asked also for the cards far from the interests, it left out 6 good ones of 70 (a French
+// tennis player on the ATP tour, a parliament hearing of OpenAI and Anthropic, a card with no summary)
+export const reviewPrompt = (profileText, cards) => `Voici le profil d'un lecteur, écrit par lui-même :
+"""${profileText}"""
+
+Voici les cartes de son résumé de l'actualité, chacune avec son identifiant entre crochets, son titre et le résumé de son article :
+${cards.map(card => `[${card.id}] ${card.title}\n${card.summary || '(pas de résumé)'}`).join('\n\n')}
+
+Le résumé dit de quoi parle vraiment une carte, mieux que son titre. Dis seulement quelles cartes portent sur un sujet que le lecteur dit explicitement ne pas vouloir, même quand leur titre ne le nommait pas (une équipe nationale, un club, un joueur ou un championnat d'un sport qu'il refuse).
+Ne juge pas si une carte est assez proche de ses intérêts : elle a déjà été choisie pour eux, et une carte qui correspond à un seul d'entre eux est gardée. Un sujet que le profil ne mentionne pas n'est pas refusé pour autant : seul compte ce qu'il écrit ne pas vouloir. S'il n'écrit rien de tel, n'enlève aucune carte.
+Une carte sans résumé est gardée. Dans le doute, garde la carte.
+Réponds uniquement en JSON : {"refused": [{"id": "...", "why": "une phrase courte"}]}`;
+
+// the ids of the cards to leave out, only among the ones given: Map id -> why
+export const normalizeReview = (answer, knownIds) => {
+    const known = new Set(knownIds.map(String));
+    const refused = new Map();
+    for (const item of Array.isArray(answer?.refused) ? answer.refused : []) {
+        const id = String(item?.id ?? '').replace(/^\[|\]$/g, '');
+        if (known.has(id) && !refused.has(id)) refused.set(id, cleanText(item?.why, 300));
+    }
+    return refused;
+};
+
+// cards: [{id, title, summary}]
+export const reviewCards = async (profileText, cards, usage = null) =>
+    cards.length === 0 ? new Map() : normalizeReview(await ollamaJson(reviewPrompt(profileText, cards), usage), cards.map(card => card.id));
 
 // The stories are grouped by vectors, and two media writing on one subject can land in one story
 // without telling the same fact (a product launch and a bug found in it). No threshold of the vectors

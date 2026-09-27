@@ -17,7 +17,7 @@ import {FeedbackService} from "./feedback-service.js";
 import {DiscoveryService} from "./discovery-service.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {newUsage, ollamaResume} from "./utils/ollama.js";
-import {checkStories, mergeStories, selectStories, WRITTEN_IN} from "./utils/profile-ai.js";
+import {checkStories, mergeStories, reviewCards, selectStories, WRITTEN_IN} from "./utils/profile-ai.js";
 import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {languageOf} from "./utils/language.js";
@@ -186,7 +186,7 @@ const keepSameNews = async (stories, shownCards, usage) => {
 };
 
 const write = async (briefingId, userId) => {
-    const usage = {choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage()};
+    const usage = {choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), reviewing: newUsage()};
     const [profile, interests] = await Promise.all([ProfileModel.get(userId), ProfileModel.interests(userId)]);
     if (!profile || interests.length === 0) throw Object.assign(new Error('Write your profile first.'), {status: 400});
 
@@ -304,11 +304,25 @@ const write = async (briefingId, userId) => {
         return {...await ollamaResume(readable.title, content.get(readable.link).content, {language, usage: usage.summarizing}),
             from: readable.link};
     });
+    const summaryOf = (i) => summaries[i].status === 'fulfilled' ? summaries[i].value : null;
+
+    // 6. the cards read once more with their summary, which says what a title may not: the ones on
+    // what the reader refuses are left out (see reviewCards). The briefing never waits on it failing
+    const leftOut = await reviewCards(profile.text, stories.map((story, i) => ({
+        id: String(story.storyId),
+        title: (story.members.find(article => article.link === summaryOf(i)?.from) ?? story.best).title,
+        summary: summaryOf(i)?.summary ?? null,
+    })), usage.reviewing).catch(err => {
+        console.error(`Briefing: the cards were not read again (${err.message})`);
+        return new Map();
+    });
+    if (leftOut.size > 0) console.log(`Briefing: ${leftOut.size} cards on what the reader refuses left out (${[...leftOut.values()].join(' / ')})`);
     await step(null);
     console.log(`Briefing ${briefingId}: tokens ${JSON.stringify(usage)}, seconds ${JSON.stringify(seconds)}`);
 
-    return stories.map((story, i) => {
-        const summary = summaries[i].status === 'fulfilled' ? summaries[i].value : null;
+    return stories.flatMap((story, i) => {
+        if (leftOut.has(String(story.storyId))) return [];
+        const summary = summaryOf(i);
         const lead = story.members.find(article => article.link === summary?.from) ?? story.best;
         const members = [...story.members].sort((a, b) => b.at - a.at);
 
@@ -338,7 +352,9 @@ const write = async (briefingId, userId) => {
                 }))),
                 mediaNames: [...new Set(members.map(mediumOfArticle))],
             },
-            articles: members.map(article => toArticle(article, trusted)),
+            // the ones of a trusted source first: its star was sixth of eleven, behind "show all"
+            articles: [...members].sort((a, b) => trusted.has(b.feed_url) - trusted.has(a.feed_url))
+                .map(article => toArticle(article, trusted)),
         };
     });
 };

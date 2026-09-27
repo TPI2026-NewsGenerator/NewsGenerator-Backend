@@ -11,6 +11,9 @@ import {prisma} from '../config/db.js';
 import {Filter} from '../services/utils/filter.js';
 
 const INSERT_SLICE = 1000;      // rows per INSERT, 7 values each: far under the 65535 of Postgres
+// A feed is shown as not working once it failed this many times in a row: once is often the site
+// slow while every feed is read at once (tennisuptodate.com timed out after a long stop of the server)
+const FAILURES_SHOWN = 3;
 
 export const FeedModel = {
     // make sure every url has a row in feeds, then return these rows
@@ -141,9 +144,12 @@ export const FeedModel = {
 
         const feeds = await prisma.feeds.findMany({
             where: { url: { in: userFeeds.map(feed => feed.url) } },
-            select: { url: true, last_error: true, last_fetched_at: true },
+            select: { url: true, last_error: true, last_fetched_at: true, failures: true },
         });
-        const status = new Map(feeds.map(feed => [feed.url, feed]));
+        const status = new Map(feeds.map(feed => [feed.url, {
+            ...feed,
+            last_error: feed.failures >= FAILURES_SHOWN ? feed.last_error : null,
+        }]));
 
         return userFeeds.map(feed => ({ ...feed, ...status.get(feed.url) }));
     },
@@ -157,11 +163,11 @@ export const FeedModel = {
             data: { id_user: userId, url: url, site: site, category: category, language: language },
         });
     },
-    // {trusted, shared}, only on a source added by hand: one found for the profile is removed once it
-    // brings nothing on it, and is already a public find (see RecommendationService)
+    // {trusted} on any source, {shared} only on one added by hand: one found for the profile is
+    // already a public find (see RecommendationService)
     updateUserFeed: async (userId, id, data) => {
         const { count } = await prisma.user_feeds.updateMany({
-            where: { id: id, id_user: userId, origin: 'user' },
+            where: { id: id, id_user: userId, ...('shared' in data ? { origin: 'user' } : {}) },
             data: data,
         });
         return count;
@@ -203,7 +209,7 @@ export const FeedModel = {
         LIMIT $7::int`,
         userId, excluded, languages, since, threshold, minRelevant, limit),
     trustedFeedUrls: async (userId) => (await prisma.user_feeds.findMany({
-        where: { id_user: userId, origin: 'user', trusted: true },
+        where: { id_user: userId, trusted: true },
         select: { url: true },
     })).map(feed => feed.url),
     deleteUserFeed: async (userId, id) => {

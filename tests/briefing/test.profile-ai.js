@@ -9,7 +9,7 @@ import {jest} from '@jest/globals'
 
 // the AI is never called by these tests, only its answers are read
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson: jest.fn()}));
-const {normalizeCheck, normalizeInterests, normalizeMerges, normalizeSelection, parseSearch} = await import('../../services/utils/profile-ai.js');
+const {normalizeCheck, normalizeInterests, normalizeMerges, normalizeReview, normalizeSelection, parseSearch, reviewPrompt} = await import('../../services/utils/profile-ai.js');
 
 const options = {languages: ['fr', 'en'], categories: ['world', 'sport', 'technology']};
 
@@ -128,5 +128,29 @@ describe('normalizeMerges with the cards already shown', () => {
             {id: 'shown1', sameAs: 'shown0'}, {id: '8', sameAs: 'shown1'}, {id: '9', sameAs: null},
         ]}, stories, shown);
         expect(merges).toEqual(new Map([['8', 'shown1']]));
+    });
+});
+
+describe('the cards read again with their summary', () => {
+    it('should leave out only cards of the briefing, each once', () => {
+        const refused = normalizeReview({refused: [
+            {id: '[8234]', why: "L'article traite de l'équipe nationale de football."},
+            {id: '8234', why: 'twice'},
+            {id: '999', why: 'not a card of this briefing'},
+            {why: 'no id'},
+        ]}, ['8234', '12307']);
+        expect(refused).toEqual(new Map([['8234', "L'article traite de l'équipe nationale de football."]]));
+        expect(normalizeReview({refused: 'nothing'}, ['1'])).toEqual(new Map());
+        expect(normalizeReview(null, ['1'])).toEqual(new Map());
+    });
+
+    it('should give the AI the summary of each card, and say when there is none', () => {
+        const prompt = reviewPrompt("Le football ne m'intéresse pas du tout.", [
+            {id: '8234', title: 'Une nouvelle Nati', summary: "L'équipe nationale de Suisse de football débute à Skopje."},
+            {id: '1090', title: 'Anthropic Science Lab', summary: null},
+        ]);
+        expect(prompt).toContain("[8234] Une nouvelle Nati\nL'équipe nationale de Suisse de football débute à Skopje.");
+        expect(prompt).toContain('[1090] Anthropic Science Lab\n(pas de résumé)');
+        expect(prompt).toContain("S'il n'écrit rien de tel, n'enlève aucune carte.");
     });
 });

@@ -66,24 +66,34 @@ export const BriefingModel = {
         briefingId, userId, storyIds),
 
     // the thumb of the reader on a card: 'up', 'down', or null to take it back. One statement, like
-    // markSeen. 0 when the briefing is not a ready one of this user or has no such card
+    // markSeen. 0 when the briefing is not a ready one of this user or has no such card.
+    // A thumb says the card was seen: it is marked so, or a card refused before it stayed two seconds
+    // on the screen came back in the next briefing
     vote: async (userId, briefingId, storyId, vote) => prisma.$executeRawUnsafe(`
         UPDATE briefings
         SET items = (SELECT jsonb_agg(CASE WHEN (item->>'storyId')::int = $3
                                           THEN item || jsonb_build_object('vote', $4::text, 'votedAt', CASE WHEN $4::text IS NULL THEN NULL ELSE now() END)
+                                                    || CASE WHEN $4::text IS NOT NULL AND item->'seenAt' = 'null'::jsonb
+                                                            THEN jsonb_build_object('seenAt', now()) ELSE '{}'::jsonb END
                                           ELSE item END ORDER BY position)
                      FROM jsonb_array_elements(items) WITH ORDINALITY AS cards(item, position))
         WHERE id = $1 AND id_user = $2 AND status = 'ready'
           AND EXISTS (SELECT 1 FROM jsonb_array_elements(items) AS card WHERE (card->>'storyId')::int = $3)`,
         briefingId, userId, storyId, vote),
 
-    // the cards this user gave a thumb since 'since', the newest vote first: [{title, vote, feedUrls}]
+    // the stories this user gave a thumb since 'since', the newest vote first: [{title, vote, feedUrls}].
+    // One per story, the last one: a card not seen comes back in the next briefing, and two thumbs on
+    // it are one opinion, not two refusals of its sources
     votes: async (userId, since) => (await prisma.$queryRawUnsafe(`
-        SELECT item->>'title' AS title, item->>'vote' AS vote, item->'feedUrls' AS "feedUrls"
-        FROM briefings, jsonb_array_elements(items) AS item
-        WHERE id_user = $1 AND status = 'ready' AND item->>'vote' IS NOT NULL
-          AND (item->>'votedAt')::timestamptz >= $2::timestamptz
-        ORDER BY (item->>'votedAt')::timestamptz DESC`,
+        SELECT title, vote, "feedUrls"
+        FROM (SELECT DISTINCT ON (item->>'storyId')
+                     item->>'title' AS title, item->>'vote' AS vote, item->'feedUrls' AS "feedUrls",
+                     (item->>'votedAt')::timestamptz AS voted_at
+              FROM briefings, jsonb_array_elements(items) AS item
+              WHERE id_user = $1 AND status = 'ready' AND item->>'vote' IS NOT NULL
+                AND (item->>'votedAt')::timestamptz >= $2::timestamptz
+              ORDER BY item->>'storyId', (item->>'votedAt')::timestamptz DESC) AS latest
+        ORDER BY voted_at DESC`,
         userId, since)).map(row => ({...row, feedUrls: Array.isArray(row.feedUrls) ? row.feedUrls : []})),
 
     // a briefing left 'running' by a server that stopped will never finish

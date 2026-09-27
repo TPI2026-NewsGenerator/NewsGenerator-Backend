@@ -12,12 +12,20 @@ import {FeedService} from '../services/feed-service.js';
 import {SourceService} from '../services/source-service.js';
 import {RecommendationService} from '../services/recommendation-service.js';
 import {findFeeds} from '../services/utils/feed-finder.js';
-import {assertPublicUrl, isBridgeUrl} from '../services/utils/public-url.js';
+import {assertPublicUrl, hostOf, isBridgeUrl} from '../services/utils/public-url.js';
+import {IngestService} from '../services/ingest-service.js';
 import {bridgeRoom, looksPrivate, MAX_USER_FEEDS} from '../services/utils/feed-limits.js';
 import {Crawlers} from '../services/utils/crawlers.js';
 
 const TOO_MANY = `You can't have more than ${MAX_USER_FEEDS} sources.`;
 const NO_BRIDGE_ROOM = "You have as many sites without a feed as the server can read for you: this one publishes none.";
+
+// the sources just added are read and embedded now, in background: else they waited the next run of
+// the ingestion, up to 20 minutes, where the ones found for a profile are read at once
+const readNow = (urls) => {
+    if (urls.length === 0) return;
+    IngestService.run({urls}).catch(err => console.error(`Ingest of the added sources failed: ${err.stack ?? err}`));
+};
 
 const toFeed = (feed) => ({
     id: feed.id,
@@ -59,7 +67,7 @@ export const FeedController = {
                 return res.status(400).json({error: `No RSS feed found on "${site}".`});
             }
 
-            // the feed with the most news
+            // the feed with the most recent news
             const found = feeds[0];
             if (isBridgeUrl(found.url) && bridgeRoom(await FeedModel.userFeedUrls(req.user.id)) === 0) {
                 return res.status(400).json({error: NO_BRIDGE_ROOM});
@@ -67,9 +75,13 @@ export const FeedController = {
             const feed = await FeedModel.addUserFeed({
                 userId: req.user.id,
                 url: found.url,
-                site: site.trim(),
+                // the address of a feed given as it is is named after its site: "rts.ch"
+                site: site.includes('://') ? hostOf(site.trim()) ?? site.trim() : site.trim(),
                 category: category,
+                // the one its news are written in, else the one of the search it was added from
+                language: found.language ?? (FeedService.languages().includes(language) ? language : null),
             });
+            readNow([feed.url]);
 
             res.status(200).json({feed: toFeed(feed), sample: found.titles});
         } catch (error) {
@@ -206,14 +218,17 @@ export const FeedController = {
             }
         }
 
+        readNow(added.map(feed => feed.url));
         res.status(200).json({feeds: added, errors});
     },
 
-    // Only for the sources added by hand, one or both of:
+    // One or both of:
     //  - {trusted}: among the stories close to the profile, the ones this source tells come first in
-    //    the briefing and its article leads the card
-    //  - {shared}: it can be suggested to the other readers whose interests it publishes on. Refused
-    //    for an address that may hold a key of the reader (a paid newsletter, a private podcast)
+    //    the briefing and its article leads the card. Any source, one found for the profile too: it is
+    //    then never removed, by its relevance or by the thumbs
+    //  - {shared}: only a source added by hand. It can be suggested to the other readers whose
+    //    interests it publishes on. Refused for an address that may hold a key of the reader (a paid
+    //    newsletter, a private podcast)
     updateUserFeed: async (req, res) => {
         const id = Number(req.params.id);
         if (!Number.isInteger(id)) {
@@ -226,8 +241,11 @@ export const FeedController = {
         }
 
         const feed = await FeedModel.getUserFeed(req.user.id, id);
-        if (!feed || feed.origin !== 'user') {
-            return res.status(404).json({error: "This source does not exist, or was found for the profile."});
+        if (!feed) {
+            return res.status(404).json({error: "This source does not exist."});
+        }
+        if (shared !== undefined && feed.origin !== 'user') {
+            return res.status(400).json({error: "Only a source you added can be shared: the ones found for your profile are already suggested to the others."});
         }
         if (shared && looksPrivate(feed.url)) {
             return res.status(400).json({error: "The address of this feed looks like it holds a private key: it can't be shared."});

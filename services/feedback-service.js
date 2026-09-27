@@ -11,6 +11,7 @@
 import {rss} from "../db/rss-links.js";
 import {BriefingModel} from "../models/briefing-model.js";
 import {ProfileModel} from "../models/profile-model.js";
+import {FeedModel} from "../models/feed-model.js";
 import {examplesOf, refusedCounts} from "./utils/feedback.js";
 import {hostOf, isBridgeUrl} from "./utils/public-url.js";
 
@@ -30,11 +31,13 @@ export const siteOf = (url) => {
     return hostOf(url) ?? url;
 };
 
-// the votes and the feeds no vote can leave out: the shared ones, the ones added by hand, the kept ones
+// the votes and the feeds no vote can leave out: the shared ones, the ones added by hand, the kept
+// ones and the trusted ones
 const read = async (userId) => {
-    const [votes, own, kept] = await Promise.all([recentVotes(userId), ProfileModel.ownFeedUrls(userId), ProfileModel.keptSources(userId)]);
+    const [votes, own, kept, trusted] = await Promise.all([recentVotes(userId), ProfileModel.ownFeedUrls(userId),
+        ProfileModel.keptSources(userId), FeedModel.trustedFeedUrls(userId)]);
     const shared = Object.values(rss).flatMap(language => Object.values(language).flat());
-    return {votes, kept: [...shared, ...own, ...kept]};
+    return {votes, kept: [...shared, ...own, ...kept, ...trusted]};
 };
 
 export const FeedbackService = {

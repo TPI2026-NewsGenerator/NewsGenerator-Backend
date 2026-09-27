@@ -75,14 +75,16 @@ const mediaOf = async (searches) => {
 // the feeds found for this profile that bring nothing on it any more, removed: the ones of an interest
 // the reader took out, a section that changed, a feed that died. Answers how many
 const prune = async (userId) => {
-    const [rows, kept] = await Promise.all([
+    const [rows, kept, trusted] = await Promise.all([
         ProfileModel.profileFeedRelevance(userId, {
             since: new Date(Date.now() - RELEVANCE_DAYS * 24 * 3600e3),
             threshold: JUDGE_THRESHOLD,
         }),
         ProfileModel.keptSources(userId),
+        FeedModel.trustedFeedUrls(userId),
     ]);
-    const stale = staleFeeds(rows, {graceDays: RELEVANCE_DAYS, minNews: MIN_NEWS, kept});
+    // the reader keeps the ones they kept from the thumbs and the ones they trust
+    const stale = staleFeeds(rows, {graceDays: RELEVANCE_DAYS, minNews: MIN_NEWS, kept: [...kept, ...trusted]});
     if (stale.length === 0) return 0;
 
     console.log(`Discovery: ${stale.length} feeds of user ${userId} bring nothing on the profile, removed (${stale.map(row => row.site).join(', ')})`);
