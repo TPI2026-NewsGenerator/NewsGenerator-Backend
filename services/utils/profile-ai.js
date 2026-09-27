@@ -287,6 +287,10 @@ export const reviewCards = async (profileText, cards, usage = null) =>
 // Measured on 30 cards read by hand (the biggest stories, stories taken at random, and stories still
 // mixing two facts): gemma4:31b keeps 92% of the articles of the same news and drops 91% of the
 // others. Without "keep the analyses, when in doubt keep it" it dropped a quarter of the good ones.
+// Its examples of other news are said for any subject (they were mostly matches and players): 94% of the
+// articles of the same news kept and 97% of the others dropped on those 30 cards (93% and 89% before).
+// A shorter list ("what comes before an event", "a background explanation") dropped the previews and the
+// analyses of the same meeting: 72% kept.
 // About 1000 to 6500 tokens read and 400 written for ten cards, 2 seconds.
 export const checkPrompt = (stories) => `Voici des histoires d'actualité, chacune avec son identifiant entre crochets. Chaque histoire a un
 article principal (P) et d'autres articles, numérotés, regroupés automatiquement avec lui.
@@ -297,10 +301,11 @@ même avec d'autres mots ou sous un autre angle.
 Un article d'analyse, d'opinion, d'explication, de réactions, de chiffres ou de conséquences sur ce même
 événement en fait partie : garde-le. Dans le doute, si l'article parle de ce même événement, garde-le.
 N'enlève que les articles dont l'événement principal est un AUTRE, même sur le même sujet, les mêmes
-personnes ou la même entreprise : un lancement de produit et un bug trouvé ensuite, deux matchs, les
-prévisions de deux pays, un discours et une autre décision du même dirigeant, un match et une autre
-affaire du même joueur, une explication de fond et un incident précis sur le même sujet, l'enjeu d'un
-match et les déclarations ou la revue de presse d'avant-match de la même équipe.
+personnes ou la même organisation : un lancement de produit et un défaut trouvé ensuite, deux événements
+du même genre (deux matchs, deux concerts, deux élections), les prévisions de deux pays, un discours et une
+autre décision du même dirigeant, un événement et une autre affaire d'une personne qui y participe, une
+explication de fond et un incident précis sur le même sujet, l'enjeu d'un événement à venir et une autre
+déclaration faite avant lui par un de ses acteurs.
 
 ${stories.map(story => `[${story.id}]
 P. ${story.lead.title}${story.lead.description ? ` — ${story.lead.description}` : ''}
@@ -335,28 +340,36 @@ export const checkStories = async (stories, usage = null, {think} = {}) =>
 // articles of another news instead of 96% (bench of the check): it is a call of its own, sent with
 // the check, on the lead article of each card only. The later card joins the first one.
 // shown: the cards of the last days, at the top of the same list (one news is often several stories,
-// a French one and an English one), and answered like the others: about 20 tokens written per card.
-// Measured on the evening briefings, both cheaper ways made mistakes the full list does not: the shown
-// cards apart under their own heading, or answering for the stories of the day only, took an
-// explanation for the decision it explains, or a goals video for a refereeing talk of the same round
+// a French one and an English one). Apart under their own heading, an explanation was taken for the
+// decision it explains (evening briefings).
+// Bench of 110 stories of two days in five lists (world, AI, society, sport, affairs: data/merge), the
+// stories of one fact labelled by hand: the AI first writes the main fact of each story of the day, then
+// compares it. With a list of cases (mostly matches) and no fact written, it joined 69 to 76% of the
+// stories to their fact and 11 to 15% to another one, most into a shown card (the news hidden: a vote
+// into its announcement, the stages of one visit, the verdict of a club and a coach's comment on it).
+// With the fact written for the stories of the day and a short general rule: 78% and 7%, and with 40
+// shown cards (a reader of a few days) 74% and 10% instead of 70% and 15%, 14 s instead of 10. The fact
+// written for the shown cards too did a little better (78% and 12% with 40 of them) but took 33 s, and
+// the short rule without the fact did no better than the list of cases. The announcement of a vote still
+// takes in its result.
 const storyLine = (story) => `[${story.id}] ${story.lead.title}${story.lead.description ? ` — ${story.lead.description}` : ''}`;
 
 export const mergePrompt = (stories, shown = []) => `Voici les histoires d'un résumé de l'actualité, dans l'ordre, chacune avec son identifiant entre crochets.
 
-Pour chaque histoire, dis si elle raconte le MÊME FAIT qu'une histoire PLUS HAUT dans la liste : la même
-annonce, décision, incident, verdict ou publication, même sous un autre angle (réactions, analyse,
-conséquences, chronologie, sanctions possibles de ce même verdict).
-Ne sont PAS le même fait, même sur le même sujet, le même match, les mêmes personnes ou la même équipe :
-deux matchs ; l'avant-match (enjeu, composition, revue de presse) et un autre fait autour du même match ;
-un guide pour regarder un match et un fait du match ; une blessure et le match où elle a eu lieu ; une
-explication générale ou historique et une décision ou un incident précis ; la couverture d'un événement
-par un média et l'événement lui-même ; l'avis, l'interview ou l'hommage de quelqu'un à l'occasion d'un
-événement et cet événement.
+Pour chaque histoire, dis si elle raconte le MÊME FAIT qu'une histoire PLUS HAUT dans la liste : le même
+événement précis (la même annonce, décision, incident, verdict, résultat ou publication), même dans une
+autre langue ou sous un autre angle (réactions, analyse, conséquences de ce même événement).
+Deux faits de la même affaire, de la même personne ou du même événement ne sont pas le même fait : ce qui
+précède un événement et son résultat, deux étapes d'une affaire, deux déclarations, un événement et ce
+qui s'y est produit à côté.
 Dans le doute, ce n'est pas le même fait : réponds null. Fusionner à tort cache une nouvelle au lecteur.
 
 ${[...shown, ...stories].map(storyLine).join('\n')}
 
-Réponds uniquement en JSON : {"stories": [{"id": "...", "sameAs": "identifiant d'une histoire plus haut" ou null}]}`;
+${shown.length > 0 ? `Les histoires dont l'identifiant commence par "shown" ont déjà été montrées au lecteur : ne réponds que
+pour les autres. Pour chacune` : 'Pour chaque histoire'}, écris d'abord son fait principal en quelques mots (qui a fait quoi), puis
+compare-le à ceux des histoires plus haut.
+Réponds uniquement en JSON : {"stories": [{"id": "...", "fait": "...", "sameAs": "identifiant d'une histoire plus haut" ou null}]}`;
 
 // the stories telling the news of a story above them: Map id -> id of the first story of that news
 // (a shown card is above them all). Only a story higher in the list counts (no cycle), a chain leads
