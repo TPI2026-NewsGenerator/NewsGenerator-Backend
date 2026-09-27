@@ -24,6 +24,22 @@ const MODEL = process.env.OLLAMA_MODEL || "gemma4:31b";
 const MAX_CONTENT_CHARS = 12000;    // longer articles are cut, the start of a news holds the main information
 const SUMMARY_MIN_WORDS = 120;
 const SUMMARY_MAX_WORDS = 150;
+// A page read can give its first lines only (a teaser, a paywall): asked for 120 words out of 45,
+// the AI filled the rest, calling a person "the consultant" and a player "the captain", which the
+// text never said (a search for PSG, 28.09.2026). So under 60 words a text is not summarized (the
+// next article of the story is, or the reader is told none could be read), and a short one gets a
+// summary of a third to a half of its length. On 60 articles of that search, 10 were under 150
+// words, 7 of them teasers under 60.
+const MIN_TEXT_WORDS = 60;
+const SHORT_TEXT_WORDS = 250;
+const wordCount = (text) => (text ?? '').split(/\s+/).filter(Boolean).length;
+export const canSummarize = (text) => wordCount(text) >= MIN_TEXT_WORDS;
+// the length asked of the summary of this text: [min, max] words
+export const summaryLength = (text) => {
+    const words = wordCount(text);
+    if (words >= SHORT_TEXT_WORDS) return [SUMMARY_MIN_WORDS, SUMMARY_MAX_WORDS];
+    return [Math.round(words / 3), Math.round(words / 2)];
+};
 // A summary of an English article, written in French, once kept "..., known as the EU AI Act" (1 of
 // 77 summaries): with this many words of another language it is asked again, once
 const MAX_STRAY_WORDS = 1;
@@ -51,6 +67,7 @@ const count = (usage, response) => {
 // returns the resume of a news, always about the same length, and its topic
 // one call gives both: the AI reads the article once. 'language' is the one the resume is written in
 export const ollamaResume = async (title, text, {language = 'English', usage = null} = {}) => {
+    const [minWords, maxWords] = summaryLength(text.slice(0, MAX_CONTENT_CHARS));
     const messages = [
         {
             role: "system",
@@ -68,7 +85,7 @@ export const ollamaResume = async (title, text, {language = 'English', usage = n
                       anonymous (it relies on sources it does not name, "sources close to", "insiders"),
                       none (it credits nobody)
                     - SOURCING describes the article, never whether the news is true
-                    - The summary is between ${SUMMARY_MIN_WORDS} and ${SUMMARY_MAX_WORDS} words, in ${language}
+                    - The summary is between ${minWords} and ${maxWords} words, in ${language}
                     - Every word of it is in ${language}, whatever the language of the article: translate
                       its phrases and quotes. Only names (people, organisations, laws) stay as they are
                     - 1 or 2 paragraphs of normal readable text, no title, no list, no markdown

@@ -11,7 +11,7 @@ import Links from "./utils/links.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {Filter} from "./utils/filter.js";
 import {FeedModel} from "../models/feed-model.js";
-import {ollamaResume} from "./utils/ollama.js";
+import {canSummarize, ollamaResume} from "./utils/ollama.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {mediumOf} from "./utils/public-url.js";
 import {hedgedBy} from "./utils/hedging.js";
@@ -223,8 +223,8 @@ export const NewsService = {
         const pageOf = new Map(pages.filter(page => page.content).map(page => [page.url, page]));
 
         const results = await mapWithConcurrency(reads, AI_CONCURRENCY, async (read) => {
-            // the RSS description is too short, the AI would invent the rest
-            const from = read.find(article => pageOf.has(article.link));
+            // a text too short (the RSS description, the first lines of a page) would be completed by the AI
+            const from = read.find(article => canSummarize(pageOf.get(article.link)?.content));
             if (!from) return null;
             if (from.summary && (from.summary_language ?? 'English') === written) {
                 return {from, summary: from.summary, topic: from.topic, sourcing: from.sourcing};
@@ -255,7 +255,7 @@ export const NewsService = {
                 sourcing: done?.sourcing ?? news.sourcing,
                 summaryError: done ? null : result.status === 'rejected'
                     ? "The AI could not summarize this news, please try again."
-                    : "No article of this news could be read (paywall or protected site), no resume generated.",
+                    : "No article of this news could be read in full (paywall, protected site or its first lines only), no resume generated.",
                 corroboration: {...corroboration, mediaNames: [...new Set(list.map(mediumOfArticle))]},
                 articles: [...list]
                     .sort((a, b) => Number(trusted.has(b.feeds?.url)) - Number(trusted.has(a.feeds?.url)) || dateOf(b) - dateOf(a))

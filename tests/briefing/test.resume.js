@@ -10,7 +10,7 @@ import {describe, expect, it, jest} from '@jest/globals';
 
 const chat = jest.fn();
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
-const {newUsage, ollamaResume} = await import('../../services/utils/ollama.js');
+const {canSummarize, newUsage, ollamaResume, summaryLength} = await import('../../services/utils/ollama.js');
 const {strayWords} = await import('../../services/utils/language.js');
 
 const answer = (summary) => ({message: {content: `TOPIC: technology\nSOURCING: named\n${summary}`}, prompt_eval_count: 10, eval_count: 5});
@@ -54,5 +54,20 @@ describe('ollamaResume', () => {
         const result = await ollamaResume('EU AI Act', 'The EU formally adopted...', {language: 'French'});
         expect(result.summary).toBe(MIXED);
         expect(chat).toHaveBeenCalledTimes(2);
+    });
+});
+
+describe('canSummarize and summaryLength', () => {
+    const words = (n) => Array.from({length: n}, (_, i) => `mot${i}`).join(' ');
+
+    it('should not summarize the first lines of a page, which the AI would complete', () => {
+        expect(canSummarize(words(45))).toBe(false);
+        expect(canSummarize(null)).toBe(false);
+        expect(canSummarize(words(60))).toBe(true);
+    });
+
+    it('should ask a short text for a summary shorter than itself', () => {
+        expect(summaryLength(words(90))).toEqual([30, 45]);
+        expect(summaryLength(words(1000))).toEqual([120, 150]);
     });
 });

@@ -16,7 +16,7 @@ import {StoryModel} from "../models/story-model.js";
 import {FeedbackService} from "./feedback-service.js";
 import {DiscoveryService} from "./discovery-service.js";
 import {Crawlers} from "./utils/crawlers.js";
-import {newUsage, ollamaResume} from "./utils/ollama.js";
+import {canSummarize, newUsage, ollamaResume} from "./utils/ollama.js";
 import {balanceSelection, checkStories, mergeStories, reviewCards, selectStories, WRITTEN_IN} from "./utils/profile-ai.js";
 import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
@@ -299,7 +299,8 @@ const write = async (briefingId, userId) => {
     await step('summarizing');
     const language = WRITTEN_IN[languageOf(profile.text, profile.languages[0])] ?? 'English';
     const summaries = await mapWithConcurrency(stories, AI_CONCURRENCY, async (story, i) => {
-        const readable = reads[i].find(article => content.get(article.link)?.content);
+        // a text too short would be completed by the AI (see canSummarize)
+        const readable = reads[i].find(article => canSummarize(content.get(article.link)?.content));
         if (!readable) return null;
         return {...await ollamaResume(readable.title, content.get(readable.link).content, {language, usage: usage.summarizing}),
             from: readable.link};
