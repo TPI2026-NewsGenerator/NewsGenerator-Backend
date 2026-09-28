@@ -234,8 +234,8 @@ const options = {
             "/feeds/search": {
                 "post": {
                     "tags": ["Feeds"],
-                    "summary": "Search a directory of feeds by name or site, else the media publishing on a subject",
-                    "description": "Asks a public directory for the feeds whose name matches (\"premier league\") or of a site, the most read first, without the media this user already searches (`via: directory`). The directory only reads the names of the feeds: when it has nothing, the media that published on these words in the last 30 days are asked to Google News, with the feed found for each (`via: web`, about 20 s). Nothing is checked here: the feeds are read when they are imported.",
+                    "summary": "Search a directory of feeds by name or site, or the media publishing on a subject",
+                    "description": "`from: directory` asks a public directory for the feeds whose name matches (\"premier league\") or of a site, the most read first (about 1 s). The directory only reads the names of the feeds, so `from: web` asks Google News for the media that published on these words in the last 30 days, with the feed found for each (20 to 45 s). The client asks both at once and shows them in one list. The media this user already searches are left out. Nothing is checked here: the feeds are read when they are imported.",
                     "requestBody": {
                         "required": true,
                         "content": {
@@ -244,7 +244,8 @@ const options = {
                                     "type": "object",
                                     "properties": {
                                         "query": {"type": "string", "example": "premier league"},
-                                        "language": {"type": "string", "example": "fr", "description": "The language of the media looked for on Google News, 'en' by default"}
+                                        "language": {"type": "string", "example": "fr", "description": "The language of the media looked for on Google News, 'en' by default"},
+                                        "from": {"type": "string", "enum": ["directory", "web"], "default": "directory"}
                                     },
                                     "required": ["query"]
                                 }
@@ -253,20 +254,19 @@ const options = {
                     },
                     "responses": {
                         "200": {
-                            "description": "Feeds of the directory",
+                            "description": "Feeds of the directory, or of the media found on the web",
                             "content": {
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
                                         "properties": {
-                                            "sources": {"type": "array", "items": {"$ref": "#/components/schemas/SuggestedSource"}},
-                                            "via": {"type": "string", "enum": ["directory", "web"], "description": "Where they come from: the directory, or Google News when the directory had nothing"}
+                                            "sources": {"type": "array", "items": {"$ref": "#/components/schemas/SuggestedSource"}}
                                         }
                                     }
                                 }
                             }
                         },
-                        "400": {"description": "No subject given"}
+                        "400": {"description": "No subject given, or an unknown `from`"}
                     }
                 }
             },
@@ -970,10 +970,11 @@ const options = {
                         "site": {"type": "string", "example": "skysports.com"},
                         "name": {"type": "string", "example": "Sky Sports"},
                         "feed": {"type": "string", "format": "uri", "description": "The feed found for this medium, to send back to POST /feeds/import"},
-                        "news": {"type": "integer", "description": "How many news this medium published on the subject (POST /feeds/suggestions, and POST /feeds/search via web)"},
+                        "news": {"type": "integer", "description": "How many news this medium published on the subject (POST /feeds/suggestions, and POST /feeds/search from web)"},
                         "sample": {"type": "string", "nullable": true, "description": "One headline of the feed, to show what it publishes"},
                         "language": {"type": "string", "description": "POST /feeds/search only"},
-                        "readers": {"type": "integer", "description": "How many people follow this feed, as the directory counts them (POST /feeds/search via directory only)"}
+                        "readers": {"type": "integer", "description": "How many people follow this feed, as the directory counts them (POST /feeds/search from directory only)"},
+                        "via": {"type": "string", "enum": ["directory", "web"], "description": "POST /feeds/search only: where it was found"}
                     }
                 }
             },

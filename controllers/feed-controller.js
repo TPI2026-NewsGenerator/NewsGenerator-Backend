@@ -115,21 +115,26 @@ export const FeedController = {
         }
     },
 
-    // feeds of the directory for a site or a feed name, else of the media publishing on it, to be
-    // added like a suggestion
+    // feeds of the directory for a site or a feed name (from 'directory', about 1 s), or of the media
+    // publishing on these words (from 'web', 20 to 45 s): the client asks both and shows them in one
+    // list, the directory as soon as it answers
     searchSources: async (req, res) => {
-        const {query, language} = req.body;
+        const {query, language, from = 'directory'} = req.body;
 
         if (typeof query !== 'string' || query.trim() === '') {
             return res.status(400).json({error: "Enter a subject or a website to search for."});
         }
+        if (!['directory', 'web'].includes(from)) {
+            return res.status(400).json({error: "Search the directory or the web."});
+        }
 
         try {
-            res.status(200).json(await SourceService.searchDirectory({
+            const search = from === 'web' ? SourceService.searchWeb : SourceService.searchDirectory;
+            res.status(200).json({sources: await search({
                 query: query.trim().slice(0, 200),
                 userId: req.user.id,
                 language: FeedService.languages().includes(language) ? language : 'en',
-            }));
+            })});
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});
         }
