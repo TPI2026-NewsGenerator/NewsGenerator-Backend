@@ -234,15 +234,18 @@ const options = {
             "/feeds/search": {
                 "post": {
                     "tags": ["Feeds"],
-                    "summary": "Search a directory of feeds, by subject or by site",
-                    "description": "Asks a public directory for the feeds matching a subject (\"premier league\") or a site, the most read first, without the media this user already searches. Nothing is checked here: the feeds are read when they are imported.",
+                    "summary": "Search a directory of feeds by name or site, else the media publishing on a subject",
+                    "description": "Asks a public directory for the feeds whose name matches (\"premier league\") or of a site, the most read first, without the media this user already searches (`via: directory`). The directory only reads the names of the feeds: when it has nothing, the media that published on these words in the last 30 days are asked to Google News, with the feed found for each (`via: web`, about 20 s). Nothing is checked here: the feeds are read when they are imported.",
                     "requestBody": {
                         "required": true,
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
-                                    "properties": {"query": {"type": "string", "example": "premier league"}},
+                                    "properties": {
+                                        "query": {"type": "string", "example": "premier league"},
+                                        "language": {"type": "string", "example": "fr", "description": "The language of the media looked for on Google News, 'en' by default"}
+                                    },
                                     "required": ["query"]
                                 }
                             }
@@ -256,7 +259,8 @@ const options = {
                                     "schema": {
                                         "type": "object",
                                         "properties": {
-                                            "sources": {"type": "array", "items": {"$ref": "#/components/schemas/SuggestedSource"}}
+                                            "sources": {"type": "array", "items": {"$ref": "#/components/schemas/SuggestedSource"}},
+                                            "via": {"type": "string", "enum": ["directory", "web"], "description": "Where they come from: the directory, or Google News when the directory had nothing"}
                                         }
                                     }
                                 }
@@ -966,10 +970,10 @@ const options = {
                         "site": {"type": "string", "example": "skysports.com"},
                         "name": {"type": "string", "example": "Sky Sports"},
                         "feed": {"type": "string", "format": "uri", "description": "The feed found for this medium, to send back to POST /feeds/import"},
-                        "news": {"type": "integer", "description": "How many news this medium published on the subject (POST /feeds/suggestions only)"},
+                        "news": {"type": "integer", "description": "How many news this medium published on the subject (POST /feeds/suggestions, and POST /feeds/search via web)"},
                         "sample": {"type": "string", "nullable": true, "description": "One headline of the feed, to show what it publishes"},
                         "language": {"type": "string", "description": "POST /feeds/search only"},
-                        "readers": {"type": "integer", "description": "How many people follow this feed, as the directory counts them (POST /feeds/search only)"}
+                        "readers": {"type": "integer", "description": "How many people follow this feed, as the directory counts them (POST /feeds/search via directory only)"}
                     }
                 }
             },

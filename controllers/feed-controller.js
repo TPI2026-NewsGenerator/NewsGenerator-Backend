@@ -115,9 +115,10 @@ export const FeedController = {
         }
     },
 
-    // feeds of the directory for a subject or a site, to be added like a suggestion
+    // feeds of the directory for a site or a feed name, else of the media publishing on it, to be
+    // added like a suggestion
     searchSources: async (req, res) => {
-        const {query} = req.body;
+        const {query, language} = req.body;
 
         if (typeof query !== 'string' || query.trim() === '') {
             return res.status(400).json({error: "Enter a subject or a website to search for."});
@@ -125,8 +126,9 @@ export const FeedController = {
 
         try {
             res.status(200).json(await SourceService.searchDirectory({
-                query: query.trim(),
+                query: query.trim().slice(0, 200),
                 userId: req.user.id,
+                language: FeedService.languages().includes(language) ? language : 'en',
             }));
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});

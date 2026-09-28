@@ -21,6 +21,7 @@ const MAX_CANDIDATES = 8;       // finding the feed of a site costs a few reques
 const FIND_CONCURRENCY = 4;
 const MAX_NEWS = 25;            // news shown for reading, the rest would only be noise
 const MAX_DIRECTORY_RESULTS = 15;   // feeds answered to a search of the directory
+const WEB_DAYS = 30;                // a subject the directory does not name: the media of its news of these days
 
 // media already searched for this user: the feeds of db/rss-links.js and the ones they added.
 // The address of a feed does not always name its medium ("feeds.content.dowjones.io" is the WSJ,
@@ -57,10 +58,14 @@ const mergeMedia = (...lists) => {
 };
 
 export const SourceService = {
-    // feeds of the directory matching a subject ("premier league") or a site, the most read first,
-    // without the media this user already searches. They are checked before being added, not here:
-    // the directory is only asked what exists
-    searchDirectory: async ({query, userId}) => {
+    // feeds of the directory matching a site or the name of a feed ("premier league"), the most read
+    // first, without the media this user already searches. They are checked before being added, not
+    // here: the directory is only asked what exists.
+    // The directory only reads the names of the feeds: a subject in several words ("tcg cartes
+    // pokemon", "rugby top 14") names none and finds nothing, while Google News has the media that
+    // publish on it (5 with a feed of 38 for the first, 20 s). So when the directory has nothing,
+    // those are answered, via 'web', with how many news each published on it and one of its titles.
+    searchDirectory: async ({query, userId, language = 'en'}) => {
         const [found, known] = await Promise.all([
             directoryFeeds(query, 2 * MAX_DIRECTORY_RESULTS),
             knownMedia(userId),
@@ -83,8 +88,22 @@ export const SourceService = {
                 language: feed.language,
                 readers: feed.subscribers,
             }));
+        if (sources.length > 0) return {sources, via: 'directory'};
 
-        return {sources};
+        try {
+            const found = await SourceService.suggest({
+                keywords: [query], userId, language,
+                timeframe: {start: new Date(Date.now() - WEB_DAYS * 24 * 60 * 60 * 1000)},
+            });
+            return {
+                sources: found.sources.map(({site, name, feed, news, sample}) => ({site, name, feed, language, news, sample})),
+                via: 'web',
+            };
+        } catch (err) {
+            // Google News refusing is no error here either, the reader is told nothing was found
+            console.log(`Directory search, Google News: ${err.message}`);
+            return {sources: [], via: 'web'};
+        }
     },
 
     // what this search misses. Google News is asked the same keywords in one call: the news of the
