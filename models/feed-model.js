@@ -77,6 +77,29 @@ export const FeedModel = {
             ORDER BY COALESCE(a.published_at, a.created_at) DESC`,
             feedUrls, timeframe.start ?? null, timeframe.end ?? null, ...keywordsSql.params);
     },
+    // The articles of these feeds closest to a sentence, for the AI to choose from: the byMeaning closest
+    // by dense + sparse_weight * sparse (as the interests of a profile, see rank_stories), and the
+    // byWords with the most words of it (the sparse vector alone), which keeps the news naming what the
+    // sentence names when their meaning is further. dense, sparse: the vectors of the sentence as
+    // pgvector reads them (toVector, toSparsevec). The news without vectors yet are not found.
+    closestArticles: async ({feedUrls, timeframe = {}, dense, sparse, sparseWeight, byMeaning, byWords}) => prisma.$queryRawUnsafe(`
+        WITH candidates AS (
+            SELECT a.id, a.id_feed, a.link, a.title, a.description, a.thumbnail, a.category,
+                   a.published_at, a.created_at, a.topic, a.summary, a.sourcing,
+                   -(a.text_dense <#> $4::vector) - $6::real * (a.text_sparse <#> $5::sparsevec) AS score,
+                   -(a.text_sparse <#> $5::sparsevec) AS words
+            FROM articles a
+            JOIN feeds f ON f.id = a.id_feed
+            WHERE f.url = ANY($1::text[])
+              AND a.embedded_at IS NOT NULL
+              AND ($2::timestamptz IS NULL OR COALESCE(a.published_at, a.created_at) >= $2::timestamptz)
+              AND ($3::timestamptz IS NULL OR COALESCE(a.published_at, a.created_at) <= $3::timestamptz)
+        )
+        SELECT * FROM (SELECT * FROM candidates ORDER BY score DESC LIMIT $7::int) closest
+        UNION
+        SELECT * FROM (SELECT * FROM candidates ORDER BY words DESC LIMIT $8::int) named
+        ORDER BY score DESC`,
+        feedUrls, timeframe.start ?? null, timeframe.end ?? null, dense, sparse, sparseWeight, byMeaning, byWords),
     // hostnames of the articles already saved for these feeds. A feed is often served from another
     // address than the site it publishes ("feeds.bbci.co.uk" for bbc.com, "feeds.content.dowjones.io"
     // for wsj.com, feedburner and flipboard for anybody), so the links of the articles are the only

@@ -14,7 +14,7 @@ import {toDate} from "./utils/dates.js";
 import Links, {DEFAULT_LANGUAGE} from "./utils/links.js";
 import {isGoogleNewsUrl, readSearches} from "./utils/google-news.js";
 
-const RETENTION_DAYS = Number(process.env.FEED_RETENTION_DAYS) || 30;
+export const RETENTION_DAYS = Number(process.env.FEED_RETENTION_DAYS) || 30;
 
 // refreshes in progress, by group of feeds, so the same feeds are never fetched twice at the same time
 const running = new Map();

@@ -99,6 +99,9 @@ export const NewsController = {
         } catch (error) {
             if (typeof(error) === 'string' && error.includes("None of theses categories were found:")) {
                 res.status(400).json({error: error});
+            } else if (error?.status) {
+                // said for the reader (the search by meaning unavailable)
+                res.status(error.status).json({error: error.message});
             } else {
                 res.status(500).json({error: error});
             }

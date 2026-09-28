@@ -11,7 +11,7 @@
 import process from 'node:process'
 import pg from 'pg';
 import {rss} from "../db/rss-links.js";
-import {FeedService} from "./feed-service.js";
+import {FeedService, RETENTION_DAYS} from "./feed-service.js";
 import {FeedModel} from "../models/feed-model.js";
 import {StoryModel} from "../models/story-model.js";
 import {embed, toSparsevec, toVector} from "./utils/embedder.js";
@@ -25,6 +25,11 @@ export const WINDOW_HOURS = 48;         // news older than this get no vectors a
 // News embedded, saved and grouped at a time. On a busy processor 1500 news took over an hour, all
 // lost if the process stopped before saving them; grouping costs the same per news in small batches
 const MAX_EMBEDDED_PER_RUN = Number(process.env.INGEST_MAX_EMBEDDED) || 300;
+// The news older than the window without vectors (published before the embedder ran, or during a
+// stop longer than the window) get theirs too, for the search by meaning, which reads the whole
+// retention; they join no story. After the news of the window, and this many batches at most per
+// run: on a processor a batch of 300 is a few minutes
+const OLDER_BATCHES_PER_RUN = Number(process.env.INGEST_OLDER_BATCHES) || 1;
 const DESCRIPTION_CHARS = 400;          // the start of the description read with the title
 const STORY_THRESHOLD = 0.70;           // dense + sparse of the titles, see assign_stories (db/add_briefing.sql)
 const STORY_SPARSE_WEIGHT = 1;
@@ -48,9 +53,9 @@ export const richText = (title, description) => {
     return text ? `${title}. ${text}` : title;
 };
 
-// the vectors of the news published in the window that have none yet: of every feed, or of these ones
-const embedPending = async (urls = null) => {
-    const since = new Date(Date.now() - WINDOW_HOURS * 3600e3);
+// the vectors of the news published in the window that have none yet: of every feed, or of these ones.
+// 'since' further back for the older news
+const embedPending = async (urls = null, since = new Date(Date.now() - WINDOW_HOURS * 3600e3)) => {
     const pending = await StoryModel.pendingArticles(since, MAX_EMBEDDED_PER_RUN, urls);
     if (pending.length === 0) return 0;
 
@@ -133,6 +138,7 @@ export const IngestService = {
 
             // the embedder may be down: the news are stored anyway, they get their vectors next time
             let embedded = 0;
+            let older = 0;
             let grouping = {grouped: 0, created: 0};
             const group = async () => {
                 const done = await groupPending();
@@ -151,12 +157,21 @@ export const IngestService = {
                 }
                 // news embedded by a run that stopped before grouping them
                 if (embedded === 0) await group();
+                // then the older news, for the search only (the grouping reads the window)
+                if (urls === null) {
+                    const retention = new Date(Date.now() - RETENTION_DAYS * 24 * 3600e3);
+                    for (let run = 0; run < OLDER_BATCHES_PER_RUN; run++) {
+                        const batch = await embedPending(null, retention);
+                        older += batch;
+                        if (batch < MAX_EMBEDDED_PER_RUN) break;
+                    }
+                }
             } catch (err) {
                 console.error(`Ingest: vectors not computed (${err.message})`);
             }
 
             if (urls === null) await StoryModel.deleteEmptyStories();
-            return {feeds: feeds.length, inserted: refresh?.inserted ?? 0, embedded, ...grouping};
+            return {feeds: feeds.length, inserted: refresh?.inserted ?? 0, embedded, older, ...grouping};
         });
 
         if (result === null) {

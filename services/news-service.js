@@ -18,6 +18,8 @@ import {hedgedBy} from "./utils/hedging.js";
 import {averageLink, unionFind} from "./utils/grouping.js";
 import {corroborationOf} from "./utils/corroboration.js";
 import {dateOf, mediumOfArticle, readingOrder, sourceOf} from "./utils/reading-order.js";
+import {embed, toSparsevec, toVector} from "./utils/embedder.js";
+import {sortByMeaning} from "./utils/search-ai.js";
 
 export const MAX_SELECTED_NEWS = 10;
 export const MAX_STORY_ARTICLES = 30;  // articles of one card sent to be summarized, a group is never bigger
@@ -44,6 +46,12 @@ const SAME_COPY = 0.85;         // above this they are the same text, a wire rep
 const SHORT_TITLE = 40;
 const SHORT_TITLE_SIMILARITY = 0.45;
 const MIN_RESULTS = 5;          // under this, a search asking for every word is asked again for any of them
+// A sentence: the news the AI reads, the closest in meaning and the ones with the most of its words
+// (a name the meaning of the news is far from). 80 + 30 are 4000 to 7000 tokens, answered in 1 to 3 s
+const BY_MEANING = 80;
+const BY_WORDS = 30;
+const MEANING_SPARSE_WEIGHT = 0.5;  // as the briefing ranks the news of an interest (rank_stories)
+const UNCHECKED_RESULTS = 30;       // the closest given when the AI does not answer
 
 // a feed built from a page (see feed-bridge.js) gives the whole article as its description, where a
 // published feed gives a few lines. The card only shows the beginning, the whole text stays in the
@@ -112,7 +120,8 @@ const groupDuplicates = async (articles) => {
 };
 
 export const NewsService = {
-    // news list for the selection, read from the RSS cache (no page scraped, no AI)
+    // news list for the selection, read from the RSS cache (no page scraped). A sentence is searched by
+    // its meaning (one call to the AI, see searchByMeaning), keywords with operators as written, in SQL
     getNews: async ({keywords, category, timeframe, userId, language = 'en'}) => {
         try {
             // 1. get links from categories, with the feeds this user added (private to them)
@@ -120,6 +129,10 @@ export const NewsService = {
                 ...Links.getCategoriesLinks(category, language),
                 ...(userId ? await FeedModel.userFeedUrls(userId, category) : []),
             ])];
+
+            if (!Filter.hasOperators(keywords)) {
+                return await NewsService.searchByMeaning({query: keywords.join(' ').trim(), feedUrls: newsLinks, timeframe});
+            }
 
             // 2. search in SQL (the feeds are read in background, see IngestService: nobody waits for them): keywords, excluded keywords (-word) and publication date
             const search = (parsed) => FeedModel.searchArticles({
@@ -148,7 +161,7 @@ export const NewsService = {
                 }
             }
 
-            if (articles.length === 0) return {totalResults: 0, news: [], wider};
+            if (articles.length === 0) return {totalResults: 0, news: [], wider, mode: 'words'};
 
             // 3. once per link (a news can be in several feeds), then group the news telling the same story
             const uniqueArticles = [...new Map(articles.map(article => [article.link, article])).values()];
@@ -158,11 +171,72 @@ export const NewsService = {
                 totalResults: news.length,
                 news: news,
                 wider: wider,
+                mode: 'words',
             }
         } catch (err) {
             console.log(`Error fetching news for ${category}: ${err}`);
             throw err;
         }
+    },
+
+    // A search written as a sentence: the news closest to it in meaning (bge-m3, the vectors of the
+    // ingestion) are read by the AI, which says which ones answer it and which are only close to it
+    // (see search-ai.js). The cards come in its order, the answers first, each with 'match'. Without
+    // the AI the closest ones are given, 'checked' false; without the embedder the sentence can't be
+    // searched, the reader is told to use exact words.
+    searchByMeaning: async ({query, feedUrls, timeframe = {}}) => {
+        let vector;
+        try {
+            [vector] = await embed([query]);
+        } catch (err) {
+            console.log(`Search by meaning: ${err.message}`);
+            throw Object.assign(new Error('The search by meaning is not available right now. Put your words between quotes to find them exactly.'), {status: 503});
+        }
+
+        const candidates = await FeedModel.closestArticles({
+            feedUrls, timeframe,
+            dense: toVector(vector.dense),
+            sparse: toSparsevec(vector.sparse),
+            sparseWeight: MEANING_SPARSE_WEIGHT,
+            byMeaning: BY_MEANING,
+            byWords: BY_WORDS,
+        });
+        if (candidates.length === 0) return {totalResults: 0, news: [], wider: null, mode: 'meaning', checked: true};
+
+        // the AI reads a title once: the same news in several feeds, or republished word for word
+        const byTitle = new Map();
+        for (const article of candidates) {
+            if (!byTitle.has(article.title)) byTitle.set(article.title, article);
+        }
+        const read = [...byTitle.values()];
+
+        let sorted;
+        let checked = true;
+        try {
+            sorted = await sortByMeaning(query, read.map(article => ({id: String(article.id), title: article.title, description: article.description})));
+        } catch (err) {
+            console.log(`Search by meaning: the AI did not sort the news (${err.message})`);
+            checked = false;
+            sorted = {answers: read.slice(0, UNCHECKED_RESULTS).map(article => String(article.id)), related: []};
+        }
+
+        // link -> its place in the answer of the AI, the answers first
+        const place = new Map([...sorted.answers, ...sorted.related].map((id, i) => [id, i]));
+        const placeOf = (article) => place.get(String(byTitle.get(article.title).id));
+        const kept = [...new Map(candidates
+            .filter(article => placeOf(article) !== undefined)
+            .sort((a, b) => placeOf(a) - placeOf(b))
+            .map(article => [article.link, article])).values()];
+        const placeOfLink = new Map(kept.map(article => [article.link, placeOf(article)]));
+
+        // a card answers when one of its articles does, and comes at the place of its best one
+        const best = (card) => Math.min(...[card.url, ...card.sources.map(source => source.url)].map(link => placeOfLink.get(link) ?? Infinity));
+        const news = (await groupDuplicates(kept))
+            .map(card => ({card, at: best(card)}))
+            .sort((a, b) => a.at - b.at)
+            .map(({card, at}) => ({...card, match: !checked ? null : at < sorted.answers.length ? 'answer' : 'related'}));
+
+        return {totalResults: news.length, news, wider: null, mode: 'meaning', checked};
     },
 
     // articles of the cache for these urls, refuses an url that is not in the cache so the API

@@ -300,3 +300,19 @@ describe('Filter.matcher', () => {
         expect(Filter.matcher(Filter.parse(['']))).toBeNull();
     });
 });
+
+describe('Filter.hasOperators', () => {
+    it('should search a sentence by its meaning', () => {
+        expect(Filter.hasOperators(['les nouvelles règles des trottinettes à Paris'])).toBe(false);
+        expect(Filter.hasOperators(['Mbappé blessure'])).toBe(false);
+        // a dash inside a word is no exclusion
+        expect(Filter.hasOperators(['la Haute-Savoie après les orages'])).toBe(false);
+    });
+
+    it('should keep exact words when the reader wrote an operator', () => {
+        expect(Filter.hasOperators(['"red card"'])).toBe(true);
+        expect(Filter.hasOperators(['referee, VAR'])).toBe(true);
+        expect(Filter.hasOperators(['referee -rugby'])).toBe(true);
+        expect(Filter.hasOperators(['-"red card"'])).toBe(true);
+    });
+});

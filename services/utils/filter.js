@@ -136,4 +136,8 @@ const matcher = ({groups, excluded}) => {
     };
 };
 
-export const Filter = { parse, toPattern, keywordsSql, canWiden, widen, matcher, withoutAccents };
+// A search is written as a sentence ("the new rules for scooters in Paris") and found by its meaning,
+// or with the operators above when the reader wants exact words: quotes, a comma or -word say it
+const hasOperators = (keywords) => (keywords ?? []).some(keyword => /["“”,]|(?:^|\s)-\S/.test(String(keyword)));
+
+export const Filter = { parse, toPattern, keywordsSql, canWiden, widen, matcher, withoutAccents, hasOperators };
