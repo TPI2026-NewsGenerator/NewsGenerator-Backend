@@ -18,7 +18,13 @@ const DESCRIPTION_CHARS = 160;      // the start of the description read with th
 // say where the answers stop (the first news of a sentence with no answer scored like the tenth of
 // another). So they only bring the candidates, the AI judges them. Asked for one list, it left out
 // news a reader would want (fuel prices for "the rise of energy prices"): the ones not answering the
-// whole sentence go in a second list, shown after the answers.
+// whole sentence go in a second list, shown after the answers. Told that "short or empty lists are
+// better than a news off the subject", it still left out of that list news on the very subject (the
+// model releases for "the latest AI models for programming", the rest of a visit for "what the pope
+// said during his visit"): without it, on 14 sentences asked 4 times (bench/meaning-variants.mjs),
+// those came back and nothing off the subject came in, only a sentence excluding something lost a
+// few answers. Counting "the same subject without the precision of the sentence" as close brought
+// AI in general for "AI at the hospital".
 export const searchPrompt = (query, candidates) => `Un lecteur cherche des nouvelles avec cette phrase : """${query}"""
 
 Voici des articles, chacun avec son identifiant entre crochets :
@@ -28,7 +34,7 @@ Classe les articles qui concernent sa recherche en deux listes, chacune du plus 
 - "answers" : ceux qui répondent à sa phrase, même avec d'autres mots (un synonyme, une partie ou un cas particulier du sujet répondent aussi). Quand sa phrase précise quelque chose (une personne, une organisation, un lieu, une période, un aspect), l'article en parle.
 - "related" : ceux qui parlent directement du même sujet sans répondre à toute sa phrase (une autre précision, un autre lieu, un autre aspect).
 Les autres articles, qui touchent seulement le même domaine, ne sont dans aucune liste. Ce que sa phrase exclut n'est dans aucune liste, même quand l'article touche le sujet.
-Juge seulement sur le titre et la description. Des listes courtes, ou vides, valent mieux qu'un article hors sujet.
+Juge seulement sur le titre et la description.
 Réponds uniquement en JSON : {"answers": ["identifiant", ...], "related": ["identifiant", ...]}`;
 
 // the ids of the answers and of the news close to them, only among the ones given, each once
