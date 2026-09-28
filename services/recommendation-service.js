@@ -19,9 +19,14 @@ import {bridgeRoom, looksPrivate, MAX_USER_FEEDS} from "./utils/feed-limits.js";
 import {isBridgeUrl, nameOf} from "./utils/public-url.js";
 
 // A week of news says what a feed publishes; a feed with 3 news on the interests of the reader in it
-// brings them something the feeds they have missed
+// brings them something the feeds they have missed. But a title reaches the threshold by chance now
+// and then, and a feed of 300 to 500 news a week always had 3 of them: a TCG profile was offered a
+// Paris outings feed (a casino) and a tennis one, 1.2% and 0.6% of their news. Measured on the 4
+// profiles (bench/recommend-scores.mjs), the wrong ones were all under 1.5% of their news, the right
+// ones at 2.5% and more: those 3 news must also be 2% of the feed
 const RECENT_DAYS = 7;
 const MIN_RELEVANT = 3;
+const MIN_RELEVANT_SHARE = 0.02;
 const MAX_RECOMMENDED = 20;
 const MAX_ADDED_PER_CALL = MAX_RECOMMENDED;
 
@@ -41,6 +46,7 @@ const recommended = async (userId) => {
         since: new Date(Date.now() - RECENT_DAYS * 24 * 3600e3),
         threshold: JUDGE_THRESHOLD,
         minRelevant: MIN_RELEVANT,
+        minShare: MIN_RELEVANT_SHARE,
         // some are left out below
         limit: 3 * MAX_RECOMMENDED,
     });

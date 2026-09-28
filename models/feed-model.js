@@ -243,7 +243,7 @@ export const FeedModel = {
     // how many: their title reaches 'threshold' with one of them, as for the discovery.
     // excluded: feeds never suggested (the shared ones, the ones the thumbs of this reader left out)
     // [{id, url, site, category, language, news, relevant, samples}], the most relevant first
-    recommendedFeeds: async (userId, {excluded, languages, since, threshold, minRelevant, limit}) => prisma.$queryRawUnsafe(`
+    recommendedFeeds: async (userId, {excluded, languages, since, threshold, minRelevant, minShare = 0, limit}) => prisma.$queryRawUnsafe(`
         WITH candidates AS (
             SELECT DISTINCT ON (uf.url) f.id, uf.url, uf.category, uf.language
             FROM user_feeds uf
@@ -269,9 +269,10 @@ export const FeedModel = {
         JOIN scored s ON s.id = c.id
         GROUP BY c.id, c.url, c.category, c.language
         HAVING count(*) FILTER (WHERE s.score >= $5::real) >= $6::int
+           AND count(*) FILTER (WHERE s.score >= $5::real) >= $8::real * count(*)
         ORDER BY relevant DESC, news
         LIMIT $7::int`,
-        userId, excluded, languages, since, threshold, minRelevant, limit),
+        userId, excluded, languages, since, threshold, minRelevant, limit, minShare),
     trustedFeedUrls: async (userId) => (await prisma.user_feeds.findMany({
         where: { id_user: userId, trusted: true },
         select: { url: true },
