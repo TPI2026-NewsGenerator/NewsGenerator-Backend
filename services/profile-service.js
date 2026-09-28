@@ -78,7 +78,7 @@ export const ProfileService = {
         return {
             profile: toProfile(profile),
             interests: interests.map(toInterest),
-            // the sources found for the profile, the ones added by hand are on the search page
+            // the sources found for the profile, the ones added by hand are listed by FeedService (the profile page shows both)
             sources: feeds.filter(feed => feed.origin === 'profile').map(feed => ({
                 id: feed.id,
                 site: feed.site,
