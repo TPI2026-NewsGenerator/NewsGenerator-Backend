@@ -19,6 +19,27 @@ const XML_TIMEOUT_MS = 8000;      // a slow feed is abandoned after this delay
 const BRIDGE_TIMEOUT_MS = 40000;  // a built feed is slower: the bridge reads the site page by page
 const USER_AGENT = 'Mozilla/5.0 (compatible; NewsGenerator/1.0; +RSS reader)';
 
+// The blocks of an article as its page sets them: the key passages are cut in sentences inside a
+// block, so a heading or a caption is never glued to the sentence after it ("…09h53Une sortie à vélo"),
+// and a quote stays known as a quote. Only the innermost blocks, a list item holding a paragraph is
+// that paragraph
+const BLOCKS = 'p, h1, h2, h3, h4, h5, h6, li, blockquote, figcaption, pre, dt, dd';
+const blockKind = (element) => {
+    const tag = element.tagName.toUpperCase();
+    if (/^H\d$/.test(tag)) return 'heading';
+    if (tag === 'FIGCAPTION' || element.closest('figure')) return 'caption';
+    if (tag === 'BLOCKQUOTE' || element.closest('blockquote')) return 'quote';
+    return 'text';
+};
+export const blocksOf = (html) => {
+    if (!html) return [];
+    const {document} = parseHTML(`<!doctype html><html><body>${html}</body></html>`);
+    return [...document.querySelectorAll(BLOCKS)]
+        .filter(element => !element.querySelector(BLOCKS))
+        .map(element => ({kind: blockKind(element), text: element.textContent.replace(/\s+/g, ' ').trim()}))
+        .filter(block => block.text);
+};
+
 // download and parse one feed, the server answers 304 if it did not change since the last etag / last-modified
 // the address is checked at every refresh, not only when a user adds a feed: a name that was public
 // can point to a private address later, and a feed can redirect to one
@@ -94,6 +115,7 @@ export const Crawlers = {
                     lang: newsContent.lang ?? '',
                     description: newsContent.excerpt ?? '',
                     content: newsContent.textContent?.trim() || '',
+                    blocks: blocksOf(newsContent.content),
 
                 })
             },

@@ -129,12 +129,19 @@ export const FeedModel = {
             include: { feeds: { select: { url: true } } },
         });
     },
-    // the AI resume, topic and sourcing are kept, a news asked twice in the same language is not
-    // summarized twice
-    saveSummary: async (link, summary, topic, sourcing, language = 'English') => {
+    // the key passages of an article (as published, good for any reader), its topic and sourcing are
+    // kept: a news asked twice is not read by the AI twice. summary: the passages as one text
+    saveExtract: async (link, {extract, summary, topic, sourcing}) => {
         return prisma.articles.updateMany({
             where: { link: link },
-            data: { summary: summary, topic: topic, sourcing: sourcing, summary_language: language },
+            data: { extract, summary, topic, sourcing, translation: null, translation_language: null },
+        });
+    },
+    // their translation, for the readers of one language
+    saveTranslation: async (link, translation, language) => {
+        return prisma.articles.updateMany({
+            where: { link: link },
+            data: { translation, translation_language: language },
         });
     },
     // feeds added by a user, they are private: only used in the searches of this user

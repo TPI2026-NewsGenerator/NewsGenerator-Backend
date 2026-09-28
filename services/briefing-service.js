@@ -16,8 +16,9 @@ import {StoryModel} from "../models/story-model.js";
 import {FeedbackService} from "./feedback-service.js";
 import {DiscoveryService} from "./discovery-service.js";
 import {Crawlers} from "./utils/crawlers.js";
-import {canSummarize, newUsage, ollamaResume} from "./utils/ollama.js";
-import {balanceSelection, checkStories, mergeStories, reviewCards, selectStories, WRITTEN_IN} from "./utils/profile-ai.js";
+import {newUsage} from "./utils/ollama.js";
+import {canSummarize, extractArticle, passagesText} from "./utils/extract.js";
+import {balanceSelection, checkStories, mergeStories, reviewCards, selectStories} from "./utils/profile-ai.js";
 import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {languageOf} from "./utils/language.js";
@@ -295,15 +296,18 @@ const write = async (briefingId, userId) => {
         .filter(article => readable(article) && byAddress.has(addressOf(article)))
         .map(article => [article.link, byAddress.get(addressOf(article))]));
 
-    // 5. one summary per story, in the language of the profile
+    // 5. the key passages of each story, as published (see extract.js), translated for a reader of
+    // another language
     await step('summarizing');
-    const language = WRITTEN_IN[languageOf(profile.text, profile.languages[0])] ?? 'English';
+    const language = languageOf(profile.text, profile.languages[0]) ?? 'en';
     const summaries = await mapWithConcurrency(stories, AI_CONCURRENCY, async (story, i) => {
-        // a text too short would be completed by the AI (see canSummarize)
+        // the first lines of a page (a teaser, a paywall) do not tell the news
         const readable = reads[i].find(article => canSummarize(content.get(article.link)?.content));
         if (!readable) return null;
-        return {...await ollamaResume(readable.title, content.get(readable.link).content, {language, usage: usage.summarizing}),
-            from: readable.link};
+        const {passages, translation, topic, sourcing} = await extractArticle(readable.title, content.get(readable.link),
+            {language, usage: usage.summarizing});
+        if (passages.length === 0) return null;
+        return {summary: passagesText(passages), translation: passagesText(translation), topic, sourcing, from: readable.link};
     });
     const summaryOf = (i) => summaries[i].status === 'fulfilled' ? summaries[i].value : null;
 
@@ -338,7 +342,10 @@ const write = async (briefingId, userId) => {
             title: lead.title,
             why: story.why,
             interest: story.interest,
+            // the key sentences of the article as published, a paragraph per passage (see extract.js)
             summary: summary?.summary ?? null,
+            // their machine translation, when the article is not in the language of the reader
+            translation: summary?.translation ?? null,
             topic: summary?.topic ?? null,
             sourcing: summary?.sourcing ?? null,
             // the words the article itself used to say it has no confirmation

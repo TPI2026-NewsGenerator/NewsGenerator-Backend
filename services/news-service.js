@@ -11,13 +11,12 @@ import Links from "./utils/links.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {Filter} from "./utils/filter.js";
 import {FeedModel} from "../models/feed-model.js";
-import {canSummarize, ollamaResume} from "./utils/ollama.js";
+import {canSummarize, extractArticle, passagesText, translationFor} from "./utils/extract.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {mediumOf} from "./utils/public-url.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {averageLink, unionFind} from "./utils/grouping.js";
 import {corroborationOf} from "./utils/corroboration.js";
-import {WRITTEN_IN} from "./utils/language.js";
 import {dateOf, mediumOfArticle, readingOrder, sourceOf} from "./utils/reading-order.js";
 
 export const MAX_SELECTED_NEWS = 10;
@@ -206,14 +205,13 @@ export const NewsService = {
         });
     },
 
-    // One AI resume per card chosen by the user, and who tells it, as in the briefing.
+    // The key passages of each card chosen by the user, and who tells it, as in the briefing.
     // stories: [{urls}], the articles of each card, its lead first. Up to 5 of them are read, one per
     // medium and a source the reader trusts first: their texts say how many were written apart from
-    // the others (no AI, see corroborationOf), and the first one readable is summarized, in the
-    // language searched. So a card costs one call to the AI, like one article did.
-    // A resume already written in that language is kept, a news asked twice costs nothing.
+    // the others (no AI, see corroborationOf), and the AI picks the key sentences of the first one
+    // readable, shown as published (see extract.js), with a translation when it is not in the
+    // language searched. The passages of an article are kept, a news asked twice costs nothing.
     summarizeStories: async (stories, {userId = null, language = 'en'} = {}) => {
-        const written = WRITTEN_IN[language] ?? 'English';
         const articles = await NewsService.cachedArticles([...new Set(stories.flatMap(story => story.urls))]);
         const trusted = new Set(userId ? await FeedModel.trustedFeedUrls(userId) : []);
 
@@ -223,21 +221,28 @@ export const NewsService = {
         const pageOf = new Map(pages.filter(page => page.content).map(page => [page.url, page]));
 
         const results = await mapWithConcurrency(reads, AI_CONCURRENCY, async (read) => {
-            // a text too short (the RSS description, the first lines of a page) would be completed by the AI
+            // the first lines of a page (a teaser, a paywall) do not tell the news
             const from = read.find(article => canSummarize(pageOf.get(article.link)?.content));
             if (!from) return null;
-            if (from.summary && (from.summary_language ?? 'English') === written) {
-                return {from, summary: from.summary, topic: from.topic, sourcing: from.sourcing};
+            if (Array.isArray(from.extract) && from.extract.length > 0) {
+                if (from.translation_language === language) {
+                    return {from, passages: from.extract, translation: from.translation, topic: from.topic, sourcing: from.sourcing};
+                }
+                const {translation} = await translationFor(from.extract, language);
+                await FeedModel.saveTranslation(from.link, translation, language);
+                return {from, passages: from.extract, translation, topic: from.topic, sourcing: from.sourcing};
             }
-            const {summary, topic, sourcing} = await ollamaResume(from.title, pageOf.get(from.link).content, {language: written});
-            await FeedModel.saveSummary(from.link, summary, topic, sourcing, written);
-            return {from, summary, topic, sourcing};
+            const {passages, translation, topic, sourcing} = await extractArticle(from.title, pageOf.get(from.link), {language});
+            if (passages.length === 0) return null;
+            await FeedModel.saveExtract(from.link, {extract: passages, summary: passagesText(passages), topic, sourcing});
+            await FeedModel.saveTranslation(from.link, translation, language);
+            return {from, passages, translation, topic, sourcing};
         });
 
         return members.map((list, i) => {
             const result = results[i];
             const done = result.status === 'fulfilled' ? result.value : null;
-            if (result.status === 'rejected') console.log(`AI resume failed for ${list[0].link}: ${result.reason}`);
+            if (result.status === 'rejected') console.log(`Key passages failed for ${list[0].link}: ${result.reason}`);
             const lead = done?.from ?? list[0];
             const news = toNews(lead);
             const corroboration = corroborationOf(list.map(article => ({
@@ -250,12 +255,15 @@ export const NewsService = {
                 ...news,
                 // the card chosen is known by the url of its lead, whatever article was summarized
                 id: list[0].link,
-                summary: done?.summary ?? null,
+                // the sentences of the article as published, a paragraph per passage
+                summary: passagesText(done?.passages),
+                // their machine translation, when the article is not in the language searched
+                translation: passagesText(done?.translation),
                 topic: done?.topic ?? news.topic,
                 sourcing: done?.sourcing ?? news.sourcing,
                 summaryError: done ? null : result.status === 'rejected'
-                    ? "The AI could not summarize this news, please try again."
-                    : "No article of this news could be read in full (paywall, protected site or its first lines only), no resume generated.",
+                    ? "The AI could not choose the key passages of this news, please try again."
+                    : "No article of this news could be read in full (paywall, protected site or its first lines only).",
                 corroboration: {...corroboration, mediaNames: [...new Set(list.map(mediumOfArticle))]},
                 articles: [...list]
                     .sort((a, b) => Number(trusted.has(b.feeds?.url)) - Number(trusted.has(a.feeds?.url)) || dateOf(b) - dateOf(a))
