@@ -27,6 +27,8 @@ const SINCE = '2099-12-31T00:00:00Z';
 const THRESHOLD = 0.70;
 const SAME_MEDIUM_MARGIN = 0.5;
 const TEXT_THRESHOLD = 0.6;
+const IDLE_DECAY = 0.003;
+const IDLE_GRACE = 6;
 
 // a normalized vector of 1024 numbers, the ones given first and zeros after
 const dense = (...values) => {
@@ -67,8 +69,8 @@ const news = async (client, feed, {minute = 0, lang = 'en', title, text, titleWo
 };
 
 const storyOf = async (client, id) => (await client.query('SELECT id_story FROM articles WHERE id = $1', [id])).rows[0].id_story;
-const assign = async (client, sparseWeight = 1) => (await client.query('SELECT * FROM public.assign_stories($1, $2, $3, $4, $5)',
-    [SINCE, THRESHOLD, sparseWeight, SAME_MEDIUM_MARGIN, TEXT_THRESHOLD])).rows[0];
+const assign = async (client, sparseWeight = 1) => (await client.query('SELECT * FROM public.assign_stories($1, $2, $3, $4, $5, $6, $7)',
+    [SINCE, THRESHOLD, sparseWeight, SAME_MEDIUM_MARGIN, TEXT_THRESHOLD, IDLE_DECAY, IDLE_GRACE])).rows[0];
 
 (dbAvailable ? describe : describe.skip)('assign_stories', () => {
     it('should put the news telling the same thing in one story, and the others apart', () => inTransaction(async (client, feed) => {
@@ -163,6 +165,27 @@ const assign = async (client, sparseWeight = 1) => (await client.query('SELECT *
         const b = await news(client, other, {minute: 2, link: 'https://paper.invalid/news', title: dense(1, 0)});
         await assign(client);
         expect(await storyOf(client, a)).toBe(await storyOf(client, b));
+    }));
+
+    // 0.75 on the titles: enough a few hours later, not a day and a half later (0.003 * (36 - 6) = 0.09
+    // less), unless the news is almost the same. Grouped run by run, as the news come
+    it('should take a news close enough a few hours later', () => inTransaction(async (client, feed) => {
+        const a = await news(client, feed, {minute: 0, title: dense(1, 0)});
+        await assign(client);
+        const soon = await news(client, feed, {minute: 3 * 60, title: dense(0.75, 0.66)});
+        await assign(client);
+        expect(await storyOf(client, soon)).toBe(await storyOf(client, a));
+    }));
+
+    it('should ask more of a news the longer its story has been quiet', () => inTransaction(async (client, feed) => {
+        const a = await news(client, feed, {minute: 0, title: dense(1, 0)});
+        await assign(client);
+        const late = await news(client, feed, {minute: 36 * 60, title: dense(0.75, 0.66)});
+        await assign(client);
+        const again = await news(client, feed, {minute: 37 * 60, title: dense(1, 0.05)});
+        await assign(client);
+        expect(await storyOf(client, late)).not.toBe(await storyOf(client, a));
+        expect(await storyOf(client, again)).toBe(await storyOf(client, a));
     }));
 
     it('should date a story from its newest news', () => inTransaction(async (client, feed) => {

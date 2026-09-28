@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS public.stories (
     updated_at timestamp with time zone NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS i_stories_updated_at ON public.stories (updated_at);
+-- when a news last joined it: the threads (db/add_threads.sql) judge again the stories grouped since
+ALTER TABLE public.stories ADD COLUMN IF NOT EXISTS grouped_at timestamp with time zone;
 
 -- The bge-m3 vectors of a news (see services/utils/embedder.js), computed once by the worker: the
 -- title for the grouping, the title and the start of the description for the profiles.
@@ -105,10 +107,23 @@ CREATE INDEX IF NOT EXISTS i_articles_grouped ON public.articles (lang, (COALESC
 -- the pairs of one fact kept (the text tells them apart better than the title: AUC 0.84 against 0.70,
 -- the time between the two 0.68), and the big stories stay whole (the accusations against Thelyson
 -- Orelien, Fury v Joshua: 14 news of 14).
+--
+-- Over days a story drifts: the preview of a match takes its result, the first day of a tournament
+-- the next ones, since they share every name and the new news is compared with the members still in
+-- the window. So a story asks more of a news the longer it has been quiet: its score loses idle_decay
+-- per hour between the news and the newest member, after idle_grace hours. A news close to its story
+-- still joins it days later (the same verdict reported again), a preview and its result no more.
+-- Measured on a replay of this function over the news of 24-28.09 (bench/story-drift.py), 40 stories
+-- over a day long read by hand: at 0.003 per hour after 6 hours, 14 of 23 drifted stories cut (4
+-- before) and 2 of 12 stories of one fact (1 before), and the search cards judged by hand 80 right of
+-- 128 (75 before). Hard limits (a story at most 24 hours old, idle at most 12 hours) cut the drifted
+-- stories as well as the stories of one fact.
 DROP FUNCTION IF EXISTS public.assign_stories(timestamptz, real, real);
 DROP FUNCTION IF EXISTS public.assign_stories(timestamptz, real, real, real);
+DROP FUNCTION IF EXISTS public.assign_stories(timestamptz, real, real, real, real);
 CREATE OR REPLACE FUNCTION public.assign_stories(since timestamptz, threshold real, sparse_weight real,
-                                                 same_medium_margin real, text_threshold real)
+                                                 same_medium_margin real, text_threshold real,
+                                                 idle_decay real, idle_grace real)
     RETURNS TABLE (grouped integer, created integer)
     LANGUAGE plpgsql
 AS $$
@@ -147,13 +162,16 @@ BEGIN
                                     THEN AVG(pairs.similarity) FILTER (WHERE NOT pairs.same_medium) END
                            -- by this medium alone: almost the same title, the same figures
                            WHEN NOT bool_or(pairs.other_figures) THEN AVG(pairs.similarity) - same_medium_margin
-                       END AS score
+                       END
+                       -- a story quiet for a while asks more
+                       - idle_decay * GREATEST(0, EXTRACT(EPOCH FROM news.at - MAX(pairs.at)) / 3600 - idle_grace) AS score
                 FROM (
                     -- <#> is the negative inner product
                     SELECT m.id_story,
                            -(m.title_dense <#> news.title_dense) - sparse_weight * (m.title_sparse <#> news.title_sparse) AS similarity,
                            -(m.text_dense <#> news.text_dense) AS text_similarity,
                            m.medium IS NOT DISTINCT FROM news.medium AS same_medium,
+                           COALESCE(m.published_at, m.created_at) AS at,
                            cardinality(m.title_figures) > 0 AND cardinality(news.title_figures) > 0
                                AND m.title_figures <> news.title_figures AS other_figures
                     FROM articles m
@@ -169,10 +187,10 @@ BEGIN
         END IF;
 
         IF story IS NULL THEN
-            INSERT INTO stories (lang, updated_at) VALUES (news.lang, news.at) RETURNING id INTO story;
+            INSERT INTO stories (lang, updated_at, grouped_at) VALUES (news.lang, news.at, now()) RETURNING id INTO story;
             n_created := n_created + 1;
         ELSE
-            UPDATE stories SET updated_at = GREATEST(updated_at, news.at) WHERE id = story;
+            UPDATE stories SET updated_at = GREATEST(updated_at, news.at), grouped_at = now() WHERE id = story;
         END IF;
 
         UPDATE articles SET id_story = story WHERE id = news.id;

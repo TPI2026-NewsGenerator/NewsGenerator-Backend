@@ -843,6 +843,25 @@ const options = {
                                 }
                             }
                         },
+                        "story": {"type": "integer", "nullable": true, "description": "The story of the background work this news is in (only in POST /news), null for a news in none."},
+                        "thread": {"type": "integer", "nullable": true, "description": "The thread (the affair followed over days) of its story (only in POST /news), null when it has none."},
+                        "facts": {
+                            "type": "array",
+                            "description": "Only in POST /news: the facts of the affair of this card in time order, this news among them (a preview, the result, the reactions; see db/add_threads.sql). The facts found by the search have found true; the others are read from the feeds of this reader only, and carry corroboration.media alone. Each can be asked for its key passages with its url and the urls of its sources. One item when the news is in no thread.",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "url": {"type": "string", "format": "uri"},
+                                    "title": {"type": "string"},
+                                    "source": {"type": "string"},
+                                    "publishedAt": {"type": "string", "format": "date-time"},
+                                    "found": {"type": "boolean", "description": "Found by the search, or only part of the same affair"},
+                                    "match": {"type": "string", "nullable": true, "enum": ["answer", "related"]},
+                                    "corroboration": {"type": "object"},
+                                    "sources": {"type": "array", "items": {"type": "object"}}
+                                }
+                            }
+                        },
                         "fullContent": {
                             "type": "boolean",
                             "description": "False when the page could not be scraped and content is the RSS description (only in POST /news/content)."

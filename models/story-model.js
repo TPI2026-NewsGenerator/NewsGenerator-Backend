@@ -52,16 +52,29 @@ export const StoryModel = {
 
     // the news embedded and in no story join the stories of the window, in the database
     // (assign_stories): {grouped, created}
-    assignStories: async ({since, threshold, sparseWeight, sameMediumMargin, textThreshold}) => {
+    assignStories: async ({since, threshold, sparseWeight, sameMediumMargin, textThreshold, idleDecay, idleGrace}) => {
         const [result] = await prisma.$queryRawUnsafe(
-            'SELECT grouped, created FROM public.assign_stories($1::timestamptz, $2::real, $3::real, $4::real, $5::real)',
-            since, threshold, sparseWeight, sameMediumMargin, textThreshold);
+            'SELECT grouped, created FROM public.assign_stories($1::timestamptz, $2::real, $3::real, $4::real, $5::real, $6::real, $7::real)',
+            since, threshold, sparseWeight, sameMediumMargin, textThreshold, idleDecay, idleGrace);
         return result;
     },
 
-    // the stories left without news once the old news are deleted
-    deleteEmptyStories: async () => prisma.$executeRawUnsafe(`
-        DELETE FROM stories s WHERE NOT EXISTS (SELECT 1 FROM articles a WHERE a.id_story = s.id)`),
+    // the stories grouped since their thread was judged join the threads of their affair, in the
+    // database (assign_threads, db/add_threads.sql): {touched, created, merged}
+    assignThreads: async ({threshold, sameMediumMargin, mergeThreshold, activeDays}) => {
+        const [result] = await prisma.$queryRawUnsafe(
+            'SELECT touched, created, merged FROM public.assign_threads($1::real, $2::real, $3::real, $4::int)',
+            threshold, sameMediumMargin, mergeThreshold, activeDays);
+        return result;
+    },
+
+    // the stories left without news once the old news are deleted, then the threads left without story
+    deleteEmptyStories: async () => {
+        await prisma.$executeRawUnsafe(`
+            DELETE FROM stories s WHERE NOT EXISTS (SELECT 1 FROM articles a WHERE a.id_story = s.id)`);
+        await prisma.$executeRawUnsafe(`
+            DELETE FROM threads t WHERE NOT EXISTS (SELECT 1 FROM stories s WHERE s.id_thread = t.id)`);
+    },
 
     // the stories closest to the interests of this user (rank_stories), the best first:
     // [{id_story, id_article (its best news), id_interest, score}]

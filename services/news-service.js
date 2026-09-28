@@ -76,8 +76,15 @@ const toNews = (article) => ({
     hedged: hedgedBy(article.title, article.description),
 });
 
-// group the articles telling the same news: the most recent one is kept and the others become its
+// group the articles telling the same news: the first one is kept and the others become its
 // 'sources', so the user doesn't see the same news ten times.
+//
+// A news in a story of the background work (id_story, bge-m3, see assign_stories) is grouped with
+// its story, as in the briefing. The news without one (not embedded within 48 hours of their
+// publication) are grouped among themselves by the trigrams of their titles. Measured on eleven
+// searches of a week, every card where the two ways disagree read by hand: the stories were right
+// 74 times, the trigrams 31 (bench/story-cards.mjs). Grouping the results again with the rules of
+// the stories did no better than the stories, and made big cards of a whole subject.
 //
 // The same titles are grouped twice, at two thresholds, and the second one is what says something.
 // A wire of Reuters or the AFP republished by twenty sites gives twenty media but one wording: that
@@ -88,7 +95,11 @@ const groupDuplicates = async (articles) => {
     const pairs = await FeedModel.similarArticlePairs(articles.map(article => article.id), SIMILARITY,
         {shortTitle: SHORT_TITLE, shortThreshold: SHORT_TITLE_SIMILARITY});
 
-    const sameNews = averageLink(articles, pairs, SIMILARITY);
+    const alone = articles.filter(article => article.id_story == null);
+    const aloneIds = new Set(alone.map(article => article.id));
+    const byTitle = averageLink(alone, pairs.filter(pair => aloneIds.has(pair.id_a) && aloneIds.has(pair.id_b)), SIMILARITY);
+    const storyOf = new Map(articles.map(article => [article.id, article.id_story]));
+    const sameNews = (id) => storyOf.get(id) != null ? `story ${storyOf.get(id)}` : `title ${byTitle(id)}`;
     // the same text republished is transitive: if A is B word for word and B is C, then A is C.
     // So the wire count keeps the single link, where it is right rather than dangerous.
     const sameCopy = unionFind(articles, pairs.filter(pair => pair.score >= SAME_COPY));
@@ -98,7 +109,8 @@ const groupDuplicates = async (articles) => {
         const group = sameNews(article.id);
 
         if (!news.has(group)) {
-            news.set(group, {...toNews(article), sources: [], media: new Set(), wordings: new Set()});
+            news.set(group, {...toNews(article), story: article.id_story ?? null, thread: article.id_thread ?? null,
+                             sources: [], media: new Set(), wordings: new Set()});
         } else {
             const {url, source, title, publishedAt} = toNews(article);
             news.get(group).sources.push({url, source, title, publishedAt});
@@ -117,6 +129,59 @@ const groupDuplicates = async (articles) => {
         ...item,
         corroboration: {media: media.size, wordings: Math.min(wordings.size, media.size)},
     }));
+};
+
+// A thread links the facts of one affair followed over days: the preview of a match, its result, the
+// reactions to it (see assign_threads, db/add_threads.sql). The facts found of one thread are one card,
+// the first one found leading it, and the card shows the whole affair in its order: the facts the
+// search did not find too, read from the feeds of this reader only (a feed added by hand stays private).
+// The key passages are still asked for one fact.
+// Measured on a replay of the ingestion over five days, 74 search cards judged one news by hand: 55 in
+// one thread, 33 in one story (bench/story-threads-online.py)
+const MAX_THREAD_FACTS = 12;    // facts not found shown on a card, the closest in time to the ones found
+
+const timeOf = (item) => Date.parse(item.publishedAt) || 0;
+
+const withThreads = async (cards, feedUrls) => {
+    const threadIds = [...new Set(cards.map(card => card.thread).filter(id => id != null))];
+    const foundStoryIds = [...new Set(cards.map(card => card.story).filter(id => id != null))];
+    const others = await FeedModel.threadArticles({
+        feedUrls, threadIds, foundStoryIds, maxStories: MAX_THREAD_FACTS, maxArticles: MAX_STORY_ARTICLES,
+    });
+
+    // the facts not found, one per story: its first report leads it, as a news breaks
+    const byStory = new Map();
+    for (const article of new Map(others.map(article => [article.link, article])).values()) {
+        if (!byStory.has(article.id_story)) byStory.set(article.id_story, []);
+        byStory.get(article.id_story).push(article);
+    }
+    const otherFacts = [...byStory.values()].map(articles => {
+        const [lead, ...rest] = [...articles].sort((a, b) => dateOf(a) - dateOf(b));
+        return {
+            ...toNews(lead), story: lead.id_story, thread: lead.id_thread, found: false,
+            sources: rest.map(article => ({url: article.link, source: sourceOf(article.link), title: article.title,
+                                           publishedAt: article.published_at?.toISOString() ?? ''})),
+            // how many media tell it; the wordings are only counted for the news found
+            corroboration: {media: new Set(articles.map(article => mediumOf(sourceOf(article.link)))).size},
+        };
+    });
+
+    const byThread = new Map();
+    const result = [];
+    for (const card of cards) {
+        if (card.thread == null) {
+            result.push({...card, facts: [{...card, found: true}]});
+            continue;
+        }
+        if (!byThread.has(card.thread)) {
+            byThread.set(card.thread, {...card, facts: []});
+            result.push(byThread.get(card.thread));
+        }
+        byThread.get(card.thread).facts.push({...card, found: true});
+    }
+    for (const fact of otherFacts) byThread.get(fact.thread)?.facts.push(fact);
+    for (const card of byThread.values()) card.facts.sort((a, b) => timeOf(a) - timeOf(b));
+    return result;
 };
 
 export const NewsService = {
@@ -165,7 +230,8 @@ export const NewsService = {
 
             // 3. once per link (a news can be in several feeds), then group the news telling the same story
             const uniqueArticles = [...new Map(articles.map(article => [article.link, article])).values()];
-            const news = await groupDuplicates(uniqueArticles);
+            // 4. the news of one affair on one card, with the facts of the affair not found
+            const news = await withThreads(await groupDuplicates(uniqueArticles), newsLinks);
 
             return {
                 totalResults: news.length,
@@ -203,12 +269,14 @@ export const NewsService = {
         });
         if (candidates.length === 0) return {totalResults: 0, news: [], wider: null, mode: 'meaning', checked: true};
 
-        // the AI reads a title once: the same news in several feeds, or republished word for word
-        const byTitle = new Map();
+        // the AI reads a news once, as its closest article: a story of the background work is one
+        // card (see groupDuplicates), and a title in several feeds or republished word for word is one line
+        const keyOf = (article) => article.id_story != null ? `story ${article.id_story}` : `title ${article.title}`;
+        const byKey = new Map();
         for (const article of candidates) {
-            if (!byTitle.has(article.title)) byTitle.set(article.title, article);
+            if (!byKey.has(keyOf(article))) byKey.set(keyOf(article), article);
         }
-        const read = [...byTitle.values()];
+        const read = [...byKey.values()];
 
         let sorted;
         let checked = true;
@@ -222,7 +290,7 @@ export const NewsService = {
 
         // link -> its place in the answer of the AI, the answers first
         const place = new Map([...sorted.answers, ...sorted.related].map((id, i) => [id, i]));
-        const placeOf = (article) => place.get(String(byTitle.get(article.title).id));
+        const placeOf = (article) => place.get(String(byKey.get(keyOf(article)).id));
         const kept = [...new Map(candidates
             .filter(article => placeOf(article) !== undefined)
             .sort((a, b) => placeOf(a) - placeOf(b))
@@ -231,10 +299,12 @@ export const NewsService = {
 
         // a card answers when one of its articles does, and comes at the place of its best one
         const best = (card) => Math.min(...[card.url, ...card.sources.map(source => source.url)].map(link => placeOfLink.get(link) ?? Infinity));
-        const news = (await groupDuplicates(kept))
+        const facts = (await groupDuplicates(kept))
             .map(card => ({card, at: best(card)}))
             .sort((a, b) => a.at - b.at)
             .map(({card, at}) => ({...card, match: !checked ? null : at < sorted.answers.length ? 'answer' : 'related'}));
+        // the facts of one affair on one card, led by the one the AI put first
+        const news = await withThreads(facts, feedUrls);
 
         return {totalResults: news.length, news, wider: null, mode: 'meaning', checked};
     },

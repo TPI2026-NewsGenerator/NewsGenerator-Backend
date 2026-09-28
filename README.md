@@ -152,10 +152,11 @@ To start a development server:
 pnpm run server
 ```
 
-### Background work: feeds, vectors and stories
+### Background work: feeds, vectors, stories and threads
 
 The server reads every feed every `INGEST_INTERVAL_MINUTES` (20 by default), gives the new news their
-bge-m3 vectors and groups them into stories (`services/ingest-service.js`). Nobody waits for it: the
+bge-m3 vectors, groups them into stories and links the stories of one affair into threads
+(`services/ingest-service.js`). Nobody waits for it: the
 searches and the briefing read what it has already stored. The vectors come from the embedder, a
 Python process (`embedder/server.py`, on this machine or another one with a graphics card, see
 `EMBEDDER_URL` in `.env.example`); while it is down the news are stored anyway and get their vectors
@@ -163,6 +164,7 @@ at the next run.
 
 ```bash
 pnpm run ingest:status   # where it stands: news of the window with their vectors, waiting ones, pace, time left
+node scripts/assign-threads.js   # once, after db/add_threads.sql: a thread for the stories grouped before
 pnpm run ingest          # one run now, by hand (a run of the server at the same time is skipped, a lock keeps them apart)
 pnpm run embedder        # starts the embedder on this machine
 ```
@@ -257,6 +259,10 @@ Optional variables in `.env`:
    pair from 0.325 to 0.294, which is the difference between grouped and not grouped. Measured on a
    day of articles it adds 0.75% of pairs, almost all of them French, Spanish or Italian, where
    accents are common. It needs `db/add_unaccent.sql`.
+   The cards of one affair are then one card (see **The threads** below): the preview of a match, its
+   result and the reactions are three facts, shown under the card in their order, with the facts of
+   the affair the search did not find, read from the feeds of this user only. Each fact can be chosen
+   for its key passages.
 5. Each card says what the grouping measured, and nothing more (see **Corroboration** below).
 6. A user can add their own sources (`POST /api/feeds` with a site address): the server finds the
    RSS feed of the site and checks it answers. These sources are **private**, they are only used in
@@ -330,14 +336,27 @@ The news are grouped in two places, in two ways:
 
 | | where | with what | on which news |
 |---|---|---|---|
-| the list of a search | `NewsService` (`groupDuplicates`), at each search | the trigrams of the titles, in SQL (`FeedModel.similarArticlePairs`) | the results of the search, from the 30 days kept |
-| the stories of the briefing | the background work, `assign_stories` in `db/add_briefing.sql` | the bge-m3 vectors, dense + sparse, in SQL | the news of the last 48 hours, as they come |
+| the stories | the background work, `assign_stories` in `db/add_briefing.sql` | the bge-m3 vectors, dense + sparse, in SQL | the news of the last 48 hours, as they come |
+| the list of a search | `NewsService` (`groupDuplicates`), at each search | the stories above; the trigrams of the titles, in SQL (`FeedModel.similarArticlePairs`), for the news in no story | the results of the search, from the 30 days kept |
+| the threads | the background work, `assign_threads` in `db/add_threads.sql` | the mean of the vectors of each story, in SQL | the stories of the last 7 days |
 
-The search keeps the trigrams because it reads the whole retention, and the stories only exist for the
-news of the last 48 hours: the older ones get their vectors for the search by meaning, but join no
-story.
+The briefing shows the stories. A search groups its results by their story too, so a news gets the
+same card and the same count of media in both. The stories only exist for the news embedded within
+48 hours of their publication: the older ones (caught up later, see `INGEST_OLDER_BATCHES`) get their
+vectors for the search by meaning but join no story, and those are grouped among themselves by the
+trigrams of their titles.
 
-##### The list of a search: trigrams
+Measured on eleven searches of a week (`bench/story-cards.mjs`), every card where the stories and the
+trigrams disagree read by hand: the stories were right 74 times, the trigrams 31. The trigrams join
+different news whose titles share words ("Premier League", "Russia", "Ukraine"), and cut one news told
+in other words. The stories make fewer mistakes, but some: a story may keep growing from day to day
+(an invitation to the G-20 on Monday, a call to settle with Putin on Friday), and one news may land in
+two stories. Grouping the results again with the rules of the stories, without their order, did no
+better than the stories and made big cards of a whole subject.
+
+The search by meaning also sends one line per story to the AI, not one per article.
+
+##### The news in no story: trigrams
 
 An article joins the group it resembles **on average**, not the one where it found a single link
 (`services/utils/grouping.js`). Grouping on single links chains: A and B tell the same news, B and C
@@ -384,7 +403,7 @@ by another of the same run. The resemblance is dense + sparse of the titles, abo
 the stories judged by hand: 96% of the cards gave the right count of media, against 82% for the
 trigrams of the titles, and it barely depends on the order.
 
-Three rules were added, each one measured:
+Four rules were added, each one measured:
 
 - **A story is judged on the other media.** A medium repeats its own templates ("Is Portugal v Wales
   on TV?", "Is Netherlands v Germany on TV?"), so two of its titles look alike without telling the
@@ -400,6 +419,14 @@ Three rules were added, each one measured:
   88% of the pairs of one fact kept, and the big stories stay whole.
 - **The same news met again joins its story** whatever it scores: the same link, or the same title in
   its medium.
+- **A quiet story asks more.** Over days a story drifts: the preview of a match takes its result, the
+  first day of a tournament the next ones, since they share every name. So the score of a story loses
+  0.003 per hour between the news and its newest member, after 6 hours: a news almost the same still
+  joins days later (a verdict reported again), a preview and its result no more. On a replay of the
+  grouping over five days (`bench/story-drift.py`), 40 stories over a day long read by hand: 14 of 23
+  drifted stories cut instead of 4, 2 of 12 stories of one fact instead of 1, and 80 search cards right
+  of 128 instead of 75. Hard limits (a story at most 24 hours old) cut the stories of one fact as much
+  as the drifted ones.
 
 No HNSW index on the vectors, on purpose: the comparisons are always made on the news of the last 48
 hours (a few thousand rows, already narrowed by the indexes), and exactly. An approximate "nearest k"
@@ -407,6 +434,46 @@ does not answer an average over the members of a story, and an exact scan takes 
 
 No threshold of the vectors separates every pair of facts, so the few stories of a briefing are read
 once more by the AI before they are shown (see **The briefing** below).
+
+##### The threads: the facts of one affair
+
+A story tells one fact, and a quiet story asks more of a news (see above): the preview of a match and
+its result are two stories. The vectors measure what a news is about (names, subject) far better than
+what happened in it, so no rule on the stories alone keeps both the facts apart and the affair
+together: the stricter they are, the more a fact reported again two days later is cut from itself.
+So there are two levels. The stories stay strict, and the stories of one affair are linked in a
+**thread** (`assign_threads` in `db/add_threads.sql`, after each grouping):
+
+- each story that got news is judged again on the mean of its news (`stories.centroid`, the text
+  vectors of its news), and joins the thread of its language, active in the last 7 days, whose
+  stories it resembles on average above **0.75**, or starts one. As for the stories, it is judged on
+  the stories of **other media**: a medium repeats its own series ("Moon phase today", ETF dividends,
+  "Match ce soir") that look alike without being an affair, so through stories of its own media it
+  needs **0.10** more;
+- two facts of one affair born apart start two threads that nothing would join afterwards (the Man
+  City verdict and the reactions to it), so the threads touched are joined to the thread they
+  resemble most on average above **0.70**, with the same 0.10 for shared media.
+
+Measured on a replay run by run of five days of news (`bench/story-threads-online.py`), against 316
+news of 40 long stories labelled by hand with their affair and their fact
+(`bench/data/story-drift/facts.json`):
+
+| | one fact in one thread | one affair in one thread | search cards of one news together | 30 threads read: one affair |
+|---|---|---|---|---|
+| the stories alone | 88% | 65% | 33/74 | |
+| threads, without joining threads | 91% | 72% | 53/74 | 24/30 |
+| **threads, joined at 0.70 + 0.10** | **93%** | **80%** | **55/74** | **23/30** |
+| threads joined without the 0.10 | 92% | 77% | 60/74 | 18/30 |
+
+The threads read that were not one affair were three series of one medium and four too broad (the
+qualifiers of a whole competition, the transfer rumours of a club). The briefing keeps showing the
+facts; the search shows a thread as one card.
+
+The centroids are stored in half precision (`halfvec`, 2 KB) kept in the row: a story is compared
+with every story of its language of the week at each run, and read that way they are read about
+three times faster than a `vector(1024)` of 4 KB that Postgres stores apart. A run judges a hundred
+stories or so in a few seconds; a week of stories judged at once (`scripts/assign-threads.js`) takes
+about ten minutes.
 
 #### Missing sources
 

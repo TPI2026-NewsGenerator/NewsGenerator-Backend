@@ -67,9 +67,10 @@ export const FeedModel = {
 
         return prisma.$queryRawUnsafe(`
             SELECT a.id, a.id_feed, a.link, a.title, a.description, a.thumbnail, a.category,
-                   a.published_at, a.created_at, a.topic, a.summary, a.sourcing
+                   a.published_at, a.created_at, a.topic, a.summary, a.sourcing, a.id_story, s.id_thread
             FROM articles a
             JOIN feeds f ON f.id = a.id_feed
+            LEFT JOIN stories s ON s.id = a.id_story
             WHERE f.url = ANY($1::text[])
               AND ($2::timestamptz IS NULL OR COALESCE(a.published_at, a.created_at) >= $2::timestamptz)
               AND ($3::timestamptz IS NULL OR COALESCE(a.published_at, a.created_at) <= $3::timestamptz)
@@ -85,11 +86,12 @@ export const FeedModel = {
     closestArticles: async ({feedUrls, timeframe = {}, dense, sparse, sparseWeight, byMeaning, byWords}) => prisma.$queryRawUnsafe(`
         WITH candidates AS (
             SELECT a.id, a.id_feed, a.link, a.title, a.description, a.thumbnail, a.category,
-                   a.published_at, a.created_at, a.topic, a.summary, a.sourcing,
+                   a.published_at, a.created_at, a.topic, a.summary, a.sourcing, a.id_story, s.id_thread,
                    -(a.text_dense <#> $4::vector) - $6::real * (a.text_sparse <#> $5::sparsevec) AS score,
                    -(a.text_sparse <#> $5::sparsevec) AS words
             FROM articles a
             JOIN feeds f ON f.id = a.id_feed
+            LEFT JOIN stories s ON s.id = a.id_story
             WHERE f.url = ANY($1::text[])
               AND a.embedded_at IS NOT NULL
               AND ($2::timestamptz IS NULL OR COALESCE(a.published_at, a.created_at) >= $2::timestamptz)
@@ -100,6 +102,35 @@ export const FeedModel = {
         SELECT * FROM (SELECT * FROM candidates ORDER BY words DESC LIMIT $8::int) named
         ORDER BY score DESC`,
         feedUrls, timeframe.start ?? null, timeframe.end ?? null, dense, sparse, sparseWeight, byMeaning, byWords),
+    // The other facts of these threads (db/add_threads.sql), for the search to show an affair whole:
+    // the articles of these feeds in the stories of the threads, whatever their date, the stories
+    // already found left out. At most maxStories stories per thread, the closest in time to the ones
+    // found, and maxArticles articles per story, the newest first
+    threadArticles: async ({feedUrls, threadIds, foundStoryIds, maxStories, maxArticles}) => threadIds.length === 0 ? [] : prisma.$queryRawUnsafe(`
+        WITH found AS (
+            SELECT id_thread, avg(extract(epoch FROM updated_at)) AS at
+            FROM stories WHERE id = ANY($3::int[]) GROUP BY id_thread
+        ), facts AS (
+            SELECT s.id, s.id_thread,
+                   row_number() OVER (PARTITION BY s.id_thread
+                                      ORDER BY abs(extract(epoch FROM s.updated_at) - found.at)) AS rank
+            FROM stories s JOIN found USING (id_thread)
+            WHERE s.id_thread = ANY($2::int[]) AND NOT s.id = ANY($3::int[])
+              AND EXISTS (SELECT 1 FROM articles a JOIN feeds f ON f.id = a.id_feed
+                          WHERE a.id_story = s.id AND f.url = ANY($1::text[]))
+        )
+        SELECT * FROM (
+            SELECT a.id, a.id_feed, a.link, a.title, a.description, a.thumbnail, a.category,
+                   a.published_at, a.created_at, a.topic, a.summary, a.sourcing, a.id_story, facts.id_thread,
+                   row_number() OVER (PARTITION BY a.id_story ORDER BY COALESCE(a.published_at, a.created_at) DESC) AS n
+            FROM facts
+            JOIN articles a ON a.id_story = facts.id
+            JOIN feeds f ON f.id = a.id_feed
+            WHERE facts.rank <= $4::int AND f.url = ANY($1::text[])
+        ) numbered
+        WHERE n <= $5::int
+        ORDER BY COALESCE(published_at, created_at)`,
+        feedUrls, threadIds, foundStoryIds, maxStories, maxArticles),
     // hostnames of the articles already saved for these feeds. A feed is often served from another
     // address than the site it publishes ("feeds.bbci.co.uk" for bbc.com, "feeds.content.dowjones.io"
     // for wsj.com, feedburner and flipboard for anybody), so the links of the articles are the only

@@ -134,13 +134,36 @@ model articles {
 
 // the articles of several media telling the same news (db/add_briefing.sql)
 model stories {
-  id         Int        @id @default(autoincrement())
-  lang       String
-  created_at DateTime   @default(now()) @db.Timestamptz(6)
-  updated_at DateTime   @default(now()) @db.Timestamptz(6)
-  articles   articles[]
+  id          Int        @id @default(autoincrement())
+  lang        String
+  created_at  DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime   @default(now()) @db.Timestamptz(6)
+  grouped_at  DateTime?  @db.Timestamptz(6)
+  // its thread, judged in SQL only (db/add_threads.sql)
+  id_thread   Int?
+  centroid    Unsupported("halfvec(1024)")?
+  media       String[]   @default([])
+  threaded_at DateTime?  @db.Timestamptz(6)
+  articles    articles[]
+  threads     threads?   @relation(fields: [id_thread], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_stories_thread")
 
   @@index([updated_at], map: "i_stories_updated_at")
+  @@index([id_thread], map: "i_stories_thread")
+  @@index([grouped_at], map: "i_stories_to_thread")
+}
+
+// the stories of one affair followed over days (db/add_threads.sql)
+model threads {
+  id         Int                           @id @default(autoincrement())
+  lang       String
+  created_at DateTime                      @default(now()) @db.Timestamptz(6)
+  updated_at DateTime                      @default(now()) @db.Timestamptz(6)
+  centroid   Unsupported("halfvec(1024)")?
+  media      String[]                      @default([])
+  n_stories  Int                           @default(0)
+  stories    stories[]
+
+  @@index([lang, updated_at], map: "i_threads_lang_updated")
 }
 
 model user_profiles {

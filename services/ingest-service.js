@@ -3,7 +3,7 @@
 //  Date: 24.09.2026
 //  File: ingest-service.js
 //  Description: The work done in background every few minutes: read every feed, give the new news
-//               their vectors, group them into stories
+//               their vectors, group them into stories, and the stories into threads
 //
 
 "use strict"
@@ -35,6 +35,13 @@ const STORY_THRESHOLD = 0.70;           // dense + sparse of the titles, see ass
 const STORY_SPARSE_WEIGHT = 1;
 const STORY_SAME_MEDIUM_MARGIN = 0.5;   // what two titles of one medium need more: its templates look alike
 const STORY_TEXT_THRESHOLD = 0.6;       // the texts must meet too: one subject is not one fact
+const STORY_IDLE_DECAY = 0.003;         // a story quiet for a while asks more, per hour: it drifts less
+const STORY_IDLE_GRACE = 6;             // hours before it starts
+// the stories of one affair linked in a thread, see assign_threads (db/add_threads.sql)
+const THREAD_THRESHOLD = 0.75;          // a story joining a thread: its average likeness to the stories of other media
+const THREAD_SAME_MEDIUM_MARGIN = 0.10; // what it needs more through stories of its own media: their series look alike
+const THREAD_MERGE_THRESHOLD = 0.70;    // two threads of one affair born apart become one
+const THREAD_ACTIVE_DAYS = 7;           // a thread quiet for longer takes no more story
 const LOCK_KEY = 'newsgenerator-ingest';
 // The searches of Google News of the interests are read less often than the feeds: each is one more
 // request to Google, which blocks an address asking too much. A search gives the news of 2 days, an
@@ -80,6 +87,14 @@ const embedPending = async (urls = null, since = new Date(Date.now() - WINDOW_HO
     return pending.length;
 };
 
+// the stories grouped since their thread was judged join the threads of their affair
+export const threadPending = () => StoryModel.assignThreads({
+    threshold: THREAD_THRESHOLD,
+    sameMediumMargin: THREAD_SAME_MEDIUM_MARGIN,
+    mergeThreshold: THREAD_MERGE_THRESHOLD,
+    activeDays: THREAD_ACTIVE_DAYS,
+});
+
 // the news with vectors and no story join the stories of the window, or start new ones: done in the
 // database, where the vectors are (see assign_stories in db/add_briefing.sql)
 const groupPending = () => StoryModel.assignStories({
@@ -88,6 +103,8 @@ const groupPending = () => StoryModel.assignStories({
     sparseWeight: STORY_SPARSE_WEIGHT,
     sameMediumMargin: STORY_SAME_MEDIUM_MARGIN,
     textThreshold: STORY_TEXT_THRESHOLD,
+    idleDecay: STORY_IDLE_DECAY,
+    idleGrace: STORY_IDLE_GRACE,
 });
 
 // Two runs must never overlap: the server runs one every few minutes and "pnpm run ingest" can run
@@ -139,10 +156,14 @@ export const IngestService = {
             // the embedder may be down: the news are stored anyway, they get their vectors next time
             let embedded = 0;
             let older = 0;
-            let grouping = {grouped: 0, created: 0};
+            let grouping = {grouped: 0, created: 0, threaded: 0, merged: 0};
             const group = async () => {
                 const done = await groupPending();
-                grouping = {grouped: grouping.grouped + done.grouped, created: grouping.created + done.created};
+                const threads = await threadPending();
+                grouping = {
+                    grouped: grouping.grouped + done.grouped, created: grouping.created + done.created,
+                    threaded: grouping.threaded + threads.touched, merged: grouping.merged + threads.merged,
+                };
             };
             try {
                 // a backlog (the first run, a long stop) is worked through in several batches, each
