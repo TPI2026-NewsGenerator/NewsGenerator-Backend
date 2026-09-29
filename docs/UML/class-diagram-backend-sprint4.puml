@@ -1,19 +1,4 @@
-'
-'  Author: Fabian Rostello
-'  Date: 23.09.2026
-'  File: class-diagram-backend-sprint4.puml
-'  Description: Class diagram of the backend, sprint 4 (RSS cache, private sources, corroboration)
-'
-'  Render it with:
-'    java -jar plantuml.jar docs/UML/class-diagram-backend-sprint4.puml
-'  or paste it in https://www.plantuml.com/plantuml
-'
-'  What changed since sprint 3:
-'    - user_preferences* are gone
-'    - the whole feeds module appeared: feedRouter/Controller/Service/Model and sourceService
-'    - newsService no longer scrapes to search: it reads the RSS cache, and the AI is called only
-'      on the news the user selected
-'
+
 
 @startuml Class Diagram - Backend Sprint 4
 
@@ -26,16 +11,22 @@ class EndUser
 
 package "Presentation Layer" {
     class router {
-        + use(/login, /news, /feeds, /customsearch)
+        + use(/login, /signup, /news, /feeds, /customsearch, /profile, /briefing)
     }
 
     class loginRouter
+    class signupRouter
     class newsRouter
     class feedRouter
     class customSearchRouter
+    class profileRouter
+    class briefingRouter
 
     class loginController {
         + authUser()
+    }
+    class signupController {
+        + register()
     }
     class newsController {
         + getNews()
@@ -46,21 +37,41 @@ package "Presentation Layer" {
     class feedController {
         + getUserFeeds()
         + addUserFeed()
+        + updateUserFeed()
+        + deleteUserFeed()
         + suggestSources()
         + searchSources()
         + importSources()
-        + deleteUserFeed()
+        + getRecommended()
+        + addRecommended()
     }
     class customSearchController {
         + getUserCustomSearch()
         + postUserCustomSearch()
         + deleteUserCustomSearch()
     }
+    class profileController {
+        + get()
+        + options()
+        + save()
+        + updateInterest()
+        + deleteInterest()
+        + rediscover()
+        + keepSource()
+    }
+    class briefingController {
+        + latest()
+        + start()
+        + vote()
+    }
 }
 
 package "Business Layer" {
     class loginService {
         + authUser()
+    }
+    class signupService {
+        + register()
     }
     class customSearchService {
         + getUserCustomSearch()
@@ -69,97 +80,250 @@ package "Business Layer" {
     }
 
     class newsService {
-        - groupDuplicates()
-        - unionFind()
         + getNews()
+        + searchByMeaning()
+        + cachedArticles()
         + getNewsContent()
-        + getNewsSummary()
+        + summarizeStories()
     }
     note right of newsService
-        Groups the news telling the same
-        story twice: at 0.30 (same news,
-        0.45 under 40 characters) and at
-        0.85 (the same text republished).
-        Answers how many media and how
-        many wordings, never a verdict.
+        Words: keyword SQL on the cache.
+        A sentence: the closest news by
+        their vectors, sorted by the AI.
+        Cards grouped by story, then by
+        thread. Answers how many media and
+        how many wordings, never a verdict.
     end note
 
     class feedService {
-        + refresh()
-        + ensureFresh()
+        + refreshUrls()
         + languages()
         + categories()
+        + syncCategories()
     }
-    class sourceService {
-        + suggest()
-        + searchDirectory()
+    class ingestService {
+        + run()
+        + schedule()
     }
+    note right of ingestService
+        In background: reads the feeds and
+        the Google News searches of the
+        interests, embeds the news, groups
+        them into stories and threads (SQL)
+    end note
 
-    class loginModel
+    class sourceService {
+        + knownMedia()
+        + searchDirectory()
+        + searchWeb()
+        + suggest()
+    }
+    class profileService {
+        + topics()
+        + get()
+        + prepare()
+        + store()
+        + save()
+        + updateInterest()
+        + deleteInterest()
+        + rediscover()
+        + keepSource()
+    }
+    class discoveryService {
+        + start()
+        + isRunning()
+    }
+    class briefingService {
+        + latest()
+        + start()
+        + vote()
+    }
+    note right of briefingService
+        Stories ranked in SQL on the
+        interests, chosen and checked by
+        the AI, told by several media
+    end note
+    class feedbackService {
+        + of()
+        + refusedSources()
+        + keep()
+    }
+    class recommendationService {
+        + list()
+        + add()
+    }
+}
+
+package "Data Layer" {
+    class loginModel {
+        + getUserByUsername()
+    }
+    class userModel {
+        + taken()
+        + roleId()
+        + create()
+        + delete()
+    }
     class customSearchModel
     class feedModel {
         + searchArticles()
-        + similarArticlePairs()
-        + articleHosts()
+        + closestArticles()
+        + threadArticles()
+        + insertArticles()
+        + dueFeeds()
         + userFeedUrls()
-        + saveSummary()
+        + addUserFeed()
+        + recommendedFeeds()
+        + saveExtract()
+        + deleteArticlesOlderThan()
     }
+    class storyModel {
+        + pendingArticles()
+        + saveVectors()
+        + assignStories()
+        + assignThreads()
+        + rank()
+        + storyArticles()
+    }
+    class profileModel {
+        + get()
+        + interests()
+        + save()
+        + setDiscovery()
+        + addProfileFeeds()
+        + profileFeedRelevance()
+    }
+    class briefingModel {
+        + create()
+        + finish()
+        + latest()
+        + vote()
+        + votes()
+    }
+}
 
-    package "utils" {
+package "utils" {
+    package "search" {
         class filter {
             + parse()
             + keywordsSql()
-            + canWiden()
-            + widen()
+            + hasOperators()
         }
-        class links {
-            + languages()
-            + categories()
-            + getCategoriesLinks()
+        class searchAi {
+            + sortByMeaning()
+        }
+        class grouping {
+            + unionFind()
+            + averageLink()
+        }
+        class corroboration {
+            + corroborationOf()
         }
         class hedging {
             + hedgedBy()
         }
-        class ollama {
-            + ollamaResume()
+        class readingOrder {
+            + readingOrder()
         }
-        class topics
-        class crawlers {
-            + Html()
-            + Xml()
+        class extract {
+            + extractArticle()
+            + translationFor()
         }
-        class parser
-        class dates
-        class concurrency {
-            + mapWithConcurrency()
-        }
-        class publicUrl {
-            + assertPublicUrl()
-            + fetchPublicUrl()
-            + mediumOf()
-            + isBridgeUrl()
-        }
+    }
+
+    package "sources" {
         class feedFinder {
             + findFeeds()
+            + isOnSubject()
+            + isCommentsFeed()
+        }
+        class siteSections {
+            + sectionLinks()
+            + keywordJudge()
+            + subjectStats()
+        }
+        class meaningJudge {
+            + judgeOf()
         }
         class feedDirectory {
             + searchDirectory()
         }
         class feedBridge {
             + bridgeFeed()
-            + articlePatterns()
         }
         class googleNews {
             + search()
+            + readSearches()
+            + decodeLinks()
         }
         class gdelt {
             + mediaFor()
         }
+        class allocation {
+            + allocate()
+            + tryPerLanguage()
+        }
+        class feedLimits {
+            + withinBridgeRoom()
+            + looksPrivate()
+        }
+        class feedback {
+            + refusedSources()
+            + examplesOf()
+        }
+    }
+
+    package "AI and vectors" {
+        class ollama {
+            + ollamaJson()
+        }
+        class profileAi {
+            + interestsOf()
+            + selectStories()
+            + reviewCards()
+            + checkStories()
+            + mergeStories()
+        }
+        class embedder {
+            + embed()
+            + embedderIsUp()
+            + denseSimilarity()
+        }
+        class language {
+            + languageOf()
+            + feedLanguage()
+        }
+        class topics
+    }
+
+    package "web and security" {
+        class crawlers {
+            + Html()
+            + Xml()
+        }
+        class parser
+        class publicUrl {
+            + assertPublicUrl()
+            + fetchPublicUrl()
+            + mediumOf()
+            + isBridgeUrl()
+        }
+        class concurrency {
+            + mapWithConcurrency()
+        }
+        class links
+        class dates
         class jwt {
             + generateAccessToken()
             + authenticateToken()
         }
-        class pwdHasher
+        class pwdHasher {
+            + hashWithSalt()
+            + verifyPassword()
+        }
+        class rateLimit {
+            + rateLimit()
+        }
     }
 }
 
@@ -167,10 +331,10 @@ package "Infrastructure Layer" {
     class bcrypt
     class JsonWebToken
     class Prisma
-    class PostgreSQL
-    class CheerioCrawler
-    class BasicCrawler
-    class Ollama
+    class "PostgreSQL + pgvector" as PostgreSQL
+    class Crawlee
+    class "Ollama (gemma4:31b)" as Ollama
+    class "Embedder (bge-m3, Python)" as EmbedderServer
     class "Google News" as GoogleNewsApi
     class "GDELT DOC 2.0" as GdeltApi
     class "Feed directory" as DirectoryApi
@@ -180,98 +344,144 @@ package "Infrastructure Layer" {
 ' --- presentation
 EndUser --> router
 router --> loginRouter
+router --> signupRouter
 router --> newsRouter
 router --> feedRouter
 router --> customSearchRouter
+router --> profileRouter
+router --> briefingRouter
 
 loginRouter --> loginController
+signupRouter --> signupController
+signupRouter --> rateLimit
 newsRouter --> newsController
 feedRouter --> feedController
 customSearchRouter --> customSearchController
+profileRouter --> profileController
+briefingRouter --> briefingController
 
 newsRouter --> jwt
 feedRouter --> jwt
 customSearchRouter --> jwt
+profileRouter --> jwt
+briefingRouter --> jwt
 
 ' --- controllers to services
 loginController --> loginService
+signupController --> signupService
 newsController --> newsService
 newsController --> feedService
 feedController --> feedService
 feedController --> sourceService
+feedController --> recommendationService
+feedController --> ingestService
 feedController --> feedModel
 feedController --> feedFinder
-feedController --> publicUrl
-feedController --> crawlers
 customSearchController --> customSearchService
+profileController --> profileService
+briefingController --> briefingService
 
-' --- login
+' --- accounts
 loginService --> loginModel
 loginService --> pwdHasher
 loginService --> jwt
+signupService --> userModel
+signupService --> profileService
+signupService --> pwdHasher
+signupService --> jwt
 pwdHasher --> bcrypt
 jwt --> JsonWebToken
-
-' --- custom searches
 customSearchService --> customSearchModel
 
-' --- news
-newsService --> feedService
+' --- search
 newsService --> feedModel
 newsService --> filter
-newsService --> links
+newsService --> searchAi
+newsService --> embedder
+newsService --> grouping
+newsService --> corroboration
 newsService --> hedging
-newsService --> ollama
+newsService --> readingOrder
+newsService --> extract
 newsService --> crawlers
-newsService --> concurrency
-newsService --> publicUrl
-ollama --> topics
-ollama --> Ollama
+searchAi --> ollama
+extract --> ollama
 
-' --- feeds cache
+' --- background work
 feedService --> feedModel
 feedService --> crawlers
-feedService --> dates
+feedService --> googleNews
 feedService --> links
+ingestService --> feedService
+ingestService --> feedModel
+ingestService --> storyModel
+ingestService --> profileModel
+ingestService --> embedder
+ingestService --> googleNews
 
-' --- missing sources
+' --- profile, discovery, briefing
+profileService --> profileModel
+profileService --> profileAi
+profileService --> embedder
+profileService --> discoveryService
+profileService --> feedbackService
+discoveryService --> profileModel
+discoveryService --> sourceService
+discoveryService --> feedFinder
+discoveryService --> meaningJudge
+discoveryService --> googleNews
+discoveryService --> allocation
+discoveryService --> feedLimits
+briefingService --> briefingModel
+briefingService --> storyModel
+briefingService --> profileModel
+briefingService --> profileAi
+briefingService --> feedbackService
+briefingService --> discoveryService
+briefingService --> extract
+briefingService --> corroboration
+feedbackService --> briefingModel
+feedbackService --> feedback
+recommendationService --> feedModel
+recommendationService --> feedbackService
+recommendationService --> sourceService
+profileAi --> ollama
+
+' --- sources
 sourceService --> feedModel
 sourceService --> googleNews
 sourceService --> gdelt
 sourceService --> feedDirectory
 sourceService --> feedFinder
-sourceService --> publicUrl
+sourceService --> meaningJudge
+sourceService --> embedder
 sourceService --> concurrency
-
-feedFinder --> crawlers
+meaningJudge --> embedder
+feedFinder --> siteSections
 feedFinder --> feedDirectory
 feedFinder --> feedBridge
+feedFinder --> crawlers
 feedFinder --> publicUrl
 feedBridge --> crawlers
-feedBridge --> publicUrl
-googleNews --> crawlers
-googleNews --> filter
-googleNews --> dates
-googleNews --> publicUrl
-gdelt --> filter
-gdelt --> publicUrl
 
+' --- infrastructure
 googleNews --> GoogleNewsApi
 gdelt --> GdeltApi
 feedDirectory --> DirectoryApi
 feedBridge --> RssBridge
-
-' --- infrastructure
+ollama --> Ollama
+embedder --> EmbedderServer
 crawlers --> parser
-crawlers --> concurrency
 crawlers --> publicUrl
-crawlers --> CheerioCrawler
-crawlers --> BasicCrawler
+crawlers --> Crawlee
 
 loginModel --> Prisma
+userModel --> Prisma
 customSearchModel --> Prisma
 feedModel --> Prisma
-feedModel --> filter
+storyModel --> Prisma
+profileModel --> Prisma
+briefingModel --> Prisma
 Prisma --> PostgreSQL
 
 @enduml

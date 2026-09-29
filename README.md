@@ -126,6 +126,8 @@ fp32 on the card too, so they stay the ones of the processor, already stored and
 16. Do the same with "add_feed_failures.sql" (how many refreshes of a feed failed in a row)
 17. Do the same with "add_extracts.sql" (the key passages of an article and their translation)
 18. Do the same with "add_signup.sql" (one account per name and per email, whatever their case)
+19. Do the same with "add_threads.sql" (the threads linking the stories of one affair, and the SQL
+    function `assign_threads`), then run `node scripts/assign-threads.js` once for the stories already grouped
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.
@@ -201,7 +203,7 @@ Optional variables in `.env`:
 | Where | What |
 |---|---|
 | `http://localhost:3001/docs` | every route, with its body and its answers (Swagger UI). It is written in `config/swagger.js`, which is the only source: there is no `.yaml` to keep in step with it |
-| `docs/MLD_sprint4.md` | the eight tables, their columns and their keys, to redraw the MLD |
+| `docs/MLD_sprint4.md` | the thirteen tables, their columns and their keys, to redraw the MLD |
 | `docs/UML/class-diagram-backend-sprint4.puml` | the class diagram, as source. Render it with `java -jar plantuml.jar docs/UML/class-diagram-backend-sprint4.puml` |
 | `docs/*.png` | the MCD, MLD and class diagrams of sprints 1 to 3, kept as they were |
 
