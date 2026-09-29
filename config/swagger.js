@@ -95,6 +95,53 @@ const options = {
                     }
                 }
             },
+            "/signup": {
+                "post": {
+                    "tags": ["Login"],
+                    "summary": "Create an account with its profile, and sign in",
+                    "description": "The profile is required: nothing is read for a reader without it. It is split into interests by the AI **before** the account is created, so a text with no interest leaves no account behind (422). Then the account is created, the profile saved, and its sources are searched in background as after `PUT /profile`. At most 5 requests per address and hour.",
+                    "security": [],
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "username": {"type": "string", "example": "lecteur", "description": "3 to 30 letters, digits, dots, dashes or underscores, unique whatever its case"},
+                                        "email": {"type": "string", "format": "email", "description": "Unique whatever its case"},
+                                        "password": {"type": "string", "format": "password", "description": "10 to 72 characters"},
+                                        "text": {"type": "string", "description": "The profile in the reader's words, 20 to 2000 characters"},
+                                        "languages": {"type": "array", "items": {"type": "string"}, "example": ["fr", "en"]},
+                                        "topics": {"type": "array", "items": {"type": "string"}, "description": "Optional, among GET /profile/options"}
+                                    },
+                                    "required": ["username", "email", "password", "text", "languages"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "201": {
+                            "description": "The account, signed in as by POST /login",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id_user": {"type": "integer"},
+                                            "token": {"type": "string"}
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "400": {"description": "A field is missing or invalid"},
+                        "409": {"description": "The username or the email is already used"},
+                        "422": {"description": "No interest could be read in the profile"},
+                        "429": {"description": "Too many accounts created from this address"}
+                    }
+                }
+            },
             "/news": {
                 "post": {
                     "tags": [

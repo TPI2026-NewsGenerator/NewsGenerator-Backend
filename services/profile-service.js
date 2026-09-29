@@ -105,9 +105,9 @@ export const ProfileService = {
         return ProfileService.get(userId);
     },
 
-    // the profile written again: the AI splits it into interests, each gets its vector, and the
-    // sources are found again in background
-    save: async (userId, {text, topics = [], languages = []}) => {
+    // a profile checked and split into interests by the AI, each with its vector, not saved yet: the
+    // signup reads it before the account is created, so a text with no interest creates no account
+    prepare: async ({text, topics = [], languages = []}) => {
         const written = typeof text === 'string' ? text.trim() : '';
         if (written.length < MIN_TEXT || written.length > MAX_TEXT) {
             throw badRequest(`Describe what you want to read in ${MIN_TEXT} to ${MAX_TEXT} characters.`);
@@ -126,9 +126,19 @@ export const ProfileService = {
             throw Object.assign(new Error('No interest could be read in this text, describe the subjects you want to follow.'), {status: 422});
         }
 
-        await ProfileModel.save(userId, profile, await withVectors(interests));
-        await DiscoveryService.start(userId);
+        return {profile, interests: await withVectors(interests)};
+    },
 
+    // a prepared profile saved, and its sources found in background
+    store: async (userId, {profile, interests}) => {
+        await ProfileModel.save(userId, profile, interests);
+        await DiscoveryService.start(userId);
+    },
+
+    // the profile written again: the AI splits it into interests, each gets its vector, and the
+    // sources are found again in background
+    save: async (userId, written) => {
+        await ProfileService.store(userId, await ProfileService.prepare(written));
         return ProfileService.get(userId);
     },
 

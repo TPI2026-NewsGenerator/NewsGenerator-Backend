@@ -125,6 +125,7 @@ fp32 on the card too, so they stay the ones of the processor, already stored and
     Google News). Needs PostgreSQL 17 or later
 16. Do the same with "add_feed_failures.sql" (how many refreshes of a feed failed in a row)
 17. Do the same with "add_extracts.sql" (the key passages of an article and their translation)
+18. Do the same with "add_signup.sql" (one account per name and per email, whatever their case)
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.
