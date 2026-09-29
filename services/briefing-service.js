@@ -48,9 +48,6 @@ const RANKED = 150;
 // were 0.516 at rank 40 and 0.502 at rank 60: the bonus lifts a story from about 60th to 35th
 const TRUST_POOL = 60;
 const TRUST_BONUS = 0.02;
-const SHOWN_HOURS = 72;             // a story shown in a briefing of the last 3 days is not shown again
-const MAX_SEEN_PER_CALL = 50;       // cards marked seen in one call, a briefing has at most 10
-const MAX_SHOWN_COMPARED = 40;      // shown cards the AI compares the chosen stories with, the newest
 const READ_PER_STORY = 5;           // articles of a story read to count who wrote it themselves
 const AI_CONCURRENCY = 5;
 const DESCRIPTION_CHARS = 200;
@@ -134,22 +131,14 @@ const brief = (article, chars) => ({
 
 // the chosen stories keep only the articles the AI says tell the news of their best one, and a card
 // telling the news of a card above it joins that card with its articles (two calls sent together).
-// The cards shown in the last days come first in that list: a story telling the news of one of them
-// is not shown again. One news is often several stories (the French and the English articles of the
-// verdict of Manchester City), so a story new by its number can be a news already read.
-// If the AI fails, the stories are shown as the vectors grouped them: the check must never cost the
-// briefing
-const keepSameNews = async (stories, shownCards, usage) => {
-    // with the start of their summary: on its title alone, the live page of a match took the place of
-    // its preview already shown, and an interview given before a match the place of the match
-    const shown = shownCards.slice(0, MAX_SHOWN_COMPARED).map((card, i) => ({id: `shown${i}`, lead: {
-        title: card.title,
-        description: (card.summary ?? '').replace(/\s+/g, ' ').trim().slice(0, DESCRIPTION_CHARS),
-    }}));
+// One news is often several stories (the French and the English articles of the verdict of
+// Manchester City). If the AI fails, the stories are shown as the vectors grouped them: the check
+// must never cost the briefing
+const keepSameNews = async (stories, usage) => {
     const asked = stories
         .map(story => ({story, others: toCheck(story)}))
         .filter(({others}) => others.length > 0);
-    const [checked, answered] = await Promise.all([
+    const [checked, merges] = await Promise.all([
         checkStories(asked.map(({story, others}) => ({
             id: String(story.storyId),
             lead: brief(story.best, DESCRIPTION_CHARS),
@@ -158,7 +147,7 @@ const keepSameNews = async (stories, shownCards, usage) => {
             console.error(`Briefing: the stories were not checked (${err.message})`);
             return new Map();
         }),
-        mergeStories(stories.map(story => ({id: String(story.storyId), lead: brief(story.best, DESCRIPTION_CHARS)})), shown, usage.merging)
+        mergeStories(stories.map(story => ({id: String(story.storyId), lead: brief(story.best, DESCRIPTION_CHARS)})), usage.merging)
             .catch(err => {
                 console.error(`Briefing: the cards of one news were not joined (${err.message})`);
                 return new Map();
@@ -173,11 +162,7 @@ const keepSameNews = async (stories, shownCards, usage) => {
     });
 
     const byId = new Map(cards.map(card => [String(card.storyId), card]));
-    const merges = answered;
-    const already = new Set([...merges].filter(([, into]) => into.startsWith('shown')).map(([id]) => id));
-    if (already.size > 0) console.log(`Briefing: ${already.size} chosen stories were already shown as another story`);
     for (const [id, into] of merges) {
-        if (already.has(id)) continue;
         const card = byId.get(into);
         const links = new Set(card.members.map(article => article.link));
         card.members = [...card.members, ...byId.get(id).members.filter(article => !links.has(article.link))];
@@ -200,7 +185,7 @@ const write = async (briefingId, userId) => {
         if (name) await BriefingModel.step(briefingId, name);
     };
 
-    // 1. the stories of the last hours closest to the interests, not already shown: scored in the
+    // 1. the stories of the last hours closest to the interests: scored in the
     // database, where the vectors are (see rank_stories in db/add_briefing.sql)
     await step('ranking');
     const since = new Date(Date.now() - WINDOW_HOURS * 3600e3);
@@ -214,16 +199,14 @@ const write = async (briefingId, userId) => {
     const feedUrls = (await feedsOf(userId, profile.languages)).filter(url => !refused.has(url));
     // the sources the reader trusts: their stories get a bonus, among the TRUST_POOL closest only
     const trusted = new Set(await FeedModel.trustedFeedUrls(userId));
-    const shownCards = await BriefingModel.shownCards(userId, new Date(Date.now() - SHOWN_HOURS * 3600e3));
     const ranked = await StoryModel.rank({
         userId, feedUrls, since,
         languages: profile.languages,
         sparseWeight: SPARSE_WEIGHT,
-        excluded: shownCards.flatMap(card => card.storyIds).filter(Number.isInteger),
         limit: RANKED,
     });
     if (ranked.length === 0) {
-        throw new Error('No new story to choose from: the news of the last 48 hours are not read and embedded yet, or they were all shown already. The background work runs every few minutes, try again soon.');
+        throw new Error('No story to choose from: the news of the last 48 hours are not read and embedded yet. The background work runs every few minutes, try again soon.');
     }
 
     // the news of those stories the user can read, with the one that scored the best
@@ -263,7 +246,7 @@ const write = async (briefingId, userId) => {
 
     // 3. the AI checks which articles of each story tell the news of its best one
     await step('checking');
-    const chosen = await keepSameNews(selected.map(item => ({...byId.get(item.id), why: item.why})), shownCards, usage);
+    const chosen = await keepSameNews(selected.map(item => ({...byId.get(item.id), why: item.why})), usage);
 
     // 4. the chosen stories read: their texts say who wrote them and give the summary
     await step('reading');
@@ -334,7 +317,6 @@ const write = async (briefingId, userId) => {
         return {
             storyId: story.storyId,
             mergedStoryIds: story.mergedStoryIds ?? [],   // cards of the same news joined to this one
-            seenAt: null,                                  // set once it stayed on the screen (markSeen)
             vote: null,                                    // the thumb of the reader, 'up' or 'down'
             // the feeds its articles came from: a refused card is blamed on them (utils/feedback.js),
             // never on a search of Google News, which is the interest itself
@@ -380,20 +362,6 @@ const toBriefing = (row) => row && ({
 export const BriefingService = {
     // the last briefing of this user, running or not
     latest: async (userId) => toBriefing(await BriefingModel.latest(userId)),
-
-    // these cards of a briefing stayed on the screen: only the cards seen are left out of the next
-    // briefings, the others can come back while their news is in the window
-    markSeen: async (userId, briefingId, storyIds) => {
-        const id = Number(briefingId);
-        if (!Number.isInteger(id) || id <= 0) throw Object.assign(new Error('Unknown briefing.'), {status: 404});
-        if (!Array.isArray(storyIds) || storyIds.length === 0 || storyIds.length > MAX_SEEN_PER_CALL
-            || !storyIds.every(storyId => Number.isInteger(storyId) && storyId > 0)) {
-            throw Object.assign(new Error(`storyIds: 1 to ${MAX_SEEN_PER_CALL} story ids.`), {status: 400});
-        }
-        if (await BriefingModel.markSeen(userId, id, [...new Set(storyIds)]) === 0) {
-            throw Object.assign(new Error('Unknown briefing.'), {status: 404});
-        }
-    },
 
     // the thumb of the reader on a card: 'up' (good for me), 'down' (not for me) or null (taken back).
     // The next briefings read them (see FeedbackService)

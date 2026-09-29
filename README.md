@@ -568,8 +568,8 @@ stories built by the background work, and goes through these steps:
    feeds of the reader (the shared ones of their languages, their own sources, the searches of Google
    News of their interests, without the sources their thumbs left out), in the languages they read.
    Each news scores its best interest, weight × (dense + 0.5 × sparse) of its title and the start of
-   its description, and a story scores its best news. The stories of the cards the reader saw in the
-   last 3 days are left out. A story told by a source the reader trusts gets a small bonus, among the 60 closest only: a
+   its description, and a story scores its best news. A story already shown can come back: the reader
+   passes it, and leaving out every card shown left fewer news to choose from. A story told by a source the reader trusts gets a small bonus, among the 60 closest only: a
    trusted source never brings a story far from the profile. The AI chooses from the 40 best stories
    told by a feed, and at most 10 known only through Google News (see **Google News** below).
 2. **Choosing.** The AI reads the candidates against the whole profile, with the cards the reader
@@ -579,9 +579,8 @@ stories built by the background work, and goes through these steps:
    ten, it gave most of them to the strongest interest.
 3. **Checking**, two calls sent together (`services/utils/profile-ai.js`). `checkStories`: which
    articles of each story tell the news of its best one, up to 12 read per story, one per medium first;
-   the card counts and lists only those. `mergeStories`: two cards telling the same news become one, and
-   a card telling the news of a card seen in the last days is not shown again. If the AI fails, the
-   stories are shown as the vectors grouped them: the check never costs the briefing.
+   the card counts and lists only those. `mergeStories`: two cards telling the same news become one. If
+   the AI fails, the stories are shown as the vectors grouped them: the check never costs the briefing.
 4. **Reading.** Up to 5 articles per story, one of a source the reader trusts first, then one per
    medium. The real address of a news of Google News is asked only for the stories no feed lets read.
 5. **Key passages** of the first article read in full, translated for a reader of another language

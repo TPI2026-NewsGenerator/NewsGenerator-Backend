@@ -339,22 +339,16 @@ export const checkStories = async (stories, usage = null, {think} = {}) =>
 // risks" were two cards. Asked in the call of the check, this question made it drop 72% of the
 // articles of another news instead of 96% (bench of the check): it is a call of its own, sent with
 // the check, on the lead article of each card only. The later card joins the first one.
-// shown: the cards of the last days, at the top of the same list (one news is often several stories,
-// a French one and an English one). Apart under their own heading, an explanation was taken for the
-// decision it explains (evening briefings).
 // Bench of 110 stories of two days in five lists (world, AI, society, sport, affairs: data/merge), the
-// stories of one fact labelled by hand: the AI first writes the main fact of each story of the day, then
-// compares it. With a list of cases (mostly matches) and no fact written, it joined 69 to 76% of the
-// stories to their fact and 11 to 15% to another one, most into a shown card (the news hidden: a vote
-// into its announcement, the stages of one visit, the verdict of a club and a coach's comment on it).
-// With the fact written for the stories of the day and a short general rule: 78% and 7%, and with 40
-// shown cards (a reader of a few days) 74% and 10% instead of 70% and 15%, 14 s instead of 10. The fact
-// written for the shown cards too did a little better (78% and 12% with 40 of them) but took 33 s, and
-// the short rule without the fact did no better than the list of cases. The announcement of a vote still
-// takes in its result.
+// stories of one fact labelled by hand: the AI first writes the main fact of each story, then compares
+// it. With a list of cases (mostly matches) and no fact written, it joined 69 to 76% of the stories to
+// their fact and 11 to 15% to another one (the news hidden: a vote into its announcement, the stages of
+// one visit, the verdict of a club and a coach's comment on it). With the fact written and a short
+// general rule: 78% and 7%; the short rule without the fact did no better than the list of cases. The
+// announcement of a vote still takes in its result.
 const storyLine = (story) => `[${story.id}] ${story.lead.title}${story.lead.description ? ` — ${story.lead.description}` : ''}`;
 
-export const mergePrompt = (stories, shown = []) => `Voici les histoires d'un résumé de l'actualité, dans l'ordre, chacune avec son identifiant entre crochets.
+export const mergePrompt = (stories) => `Voici les histoires d'un résumé de l'actualité, dans l'ordre, chacune avec son identifiant entre crochets.
 
 Pour chaque histoire, dis si elle raconte le MÊME FAIT qu'une histoire PLUS HAUT dans la liste : le même
 événement précis (la même annonce, décision, incident, verdict, résultat ou publication), même dans une
@@ -364,34 +358,29 @@ précède un événement et son résultat, deux étapes d'une affaire, deux déc
 qui s'y est produit à côté.
 Dans le doute, ce n'est pas le même fait : réponds null. Fusionner à tort cache une nouvelle au lecteur.
 
-${[...shown, ...stories].map(storyLine).join('\n')}
+${stories.map(storyLine).join('\n')}
 
-${shown.length > 0 ? `Les histoires dont l'identifiant commence par "shown" ont déjà été montrées au lecteur : ne réponds que
-pour les autres. Pour chacune` : 'Pour chaque histoire'}, écris d'abord son fait principal en quelques mots (qui a fait quoi), puis
+Pour chaque histoire, écris d'abord son fait principal en quelques mots (qui a fait quoi), puis
 compare-le à ceux des histoires plus haut.
 Réponds uniquement en JSON : {"stories": [{"id": "...", "fait": "...", "sameAs": "identifiant d'une histoire plus haut" ou null}]}`;
 
-// the stories telling the news of a story above them: Map id -> id of the first story of that news
-// (a shown card is above them all). Only a story higher in the list counts (no cycle), a chain leads
-// to its first story, and only the stories of the day are answered
-export const normalizeMerges = (answer, stories, shown = []) => {
-    const rank = new Map([...shown.map((card, i) => [String(card.id), i - shown.length]),
-        ...stories.map((story, i) => [String(story.id), i])]);
-    const today = new Set(stories.map(story => String(story.id)));
+// the stories telling the news of a story above them: Map id -> id of the first story of that news.
+// Only a story higher in the list counts (no cycle), and a chain leads to its first story
+export const normalizeMerges = (answer, stories) => {
+    const rank = new Map(stories.map((story, i) => [String(story.id), i]));
     const clean = (id) => String(id ?? '').replace(/^\[|\]$/g, '');
     const target = new Map();
 
     for (const item of Array.isArray(answer?.stories) ? answer.stories : []) {
         const id = clean(item?.id);
         const into = clean(item?.sameAs);
-        if (today.has(id) && rank.has(into) && rank.get(into) < rank.get(id) && !target.has(id)) target.set(id, into);
+        if (rank.has(id) && rank.has(into) && rank.get(into) < rank.get(id) && !target.has(id)) target.set(id, into);
     }
 
     const first = (id) => (target.has(id) ? first(target.get(id)) : id);
     return new Map([...target.keys()].map(id => [id, first(id)]));
 };
 
-// stories and shown: [{id, lead: {title, description}}], in the order shown
-export const mergeStories = async (stories, shown = [], usage = null) =>
-    stories.length + shown.length < 2 || stories.length === 0 ? new Map()
-        : normalizeMerges(await ollamaJson(mergePrompt(stories, shown), usage), stories, shown);
+// stories: [{id, lead: {title, description}}], in the order shown
+export const mergeStories = async (stories, usage = null) =>
+    stories.length < 2 ? new Map() : normalizeMerges(await ollamaJson(mergePrompt(stories), usage), stories);

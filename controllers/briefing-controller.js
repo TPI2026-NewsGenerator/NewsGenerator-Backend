@@ -19,16 +19,6 @@ export const BriefingController = {
         }
     },
 
-    // {storyIds}: these cards of the briefing stayed on the screen
-    seen: async (req, res) => {
-        try {
-            await BriefingService.markSeen(req.user.id, req.params.id, req.body?.storyIds);
-            res.status(204).end();
-        } catch (error) {
-            res.status(error.status || 500).json({error: error.message ?? String(error)});
-        }
-    },
-
     // {storyId, vote}: the thumb of the reader on a card, vote null takes it back
     vote: async (req, res) => {
         try {

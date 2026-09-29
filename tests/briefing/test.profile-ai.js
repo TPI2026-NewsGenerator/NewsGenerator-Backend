@@ -201,18 +201,6 @@ describe('normalizeMerges', () => {
     });
 });
 
-describe('normalizeMerges with the cards already shown', () => {
-    const shown = [{id: 'shown0', lead: {title: 'Man City 115 charges timeline'}}, {id: 'shown1', lead: {title: 'City: the charges'}}];
-    const stories = [{id: '8', lead: {title: 'Manchester City reconnu coupable'}}, {id: '9', lead: {title: 'Galliani à la FIGC ?'}}];
-
-    it('should drop a story of the day telling a shown news, and not answer for the shown cards', () => {
-        const merges = normalizeMerges({stories: [
-            {id: 'shown1', sameAs: 'shown0'}, {id: '8', sameAs: 'shown1'}, {id: '9', sameAs: null},
-        ]}, stories, shown);
-        expect(merges).toEqual(new Map([['8', 'shown1']]));
-    });
-});
-
 describe('the cards read again with their summary', () => {
     it('should leave out only cards of the briefing, each once', () => {
         const refused = normalizeReview({refused: [

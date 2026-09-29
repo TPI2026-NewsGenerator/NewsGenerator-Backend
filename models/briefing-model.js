@@ -35,46 +35,13 @@ export const BriefingModel = {
         orderBy: {created_at: 'desc'},
     }),
 
-    // the cards this user saw since 'since', the newest first: the next briefing tells what is new.
-    // A card is seen once it stayed on the screen (seenAt, see markSeen): the cards of a briefing the
-    // reader stopped reading after two stay for the next one. The cards written before seenAt existed
-    // have no such key and count as seen. [{storyIds: [the story, and those joined to it], title, summary}]
-    shownCards: async (userId, since) => {
-        const briefings = await prisma.briefings.findMany({
-            where: {id_user: userId, status: 'ready', created_at: {gte: since}},
-            orderBy: {created_at: 'desc'},
-            select: {items: true},
-        });
-        const seen = (item) => !('seenAt' in item) || item.seenAt !== null;
-        return briefings.flatMap(briefing => (briefing.items ?? []).filter(seen).map(item => ({
-            storyIds: [item.storyId, ...(item.mergedStoryIds ?? [])],
-            title: item.title,
-            summary: item.summary ?? null,
-        })));
-    },
-
-    // these cards of a briefing of this user stayed on the screen. One statement, so two calls at the
-    // same time both count; a card seen keeps the time it was first seen. 0 when the briefing is not
-    // a ready one of this user
-    markSeen: async (userId, briefingId, storyIds) => prisma.$executeRawUnsafe(`
-        UPDATE briefings
-        SET items = (SELECT jsonb_agg(CASE WHEN (item->>'storyId')::int = ANY($3::int[]) AND item ? 'seenAt' AND item->'seenAt' = 'null'::jsonb
-                                          THEN item || jsonb_build_object('seenAt', now())
-                                          ELSE item END ORDER BY position)
-                     FROM jsonb_array_elements(items) WITH ORDINALITY AS cards(item, position))
-        WHERE id = $1 AND id_user = $2 AND status = 'ready' AND jsonb_array_length(items) > 0`,
-        briefingId, userId, storyIds),
-
-    // the thumb of the reader on a card: 'up', 'down', or null to take it back. One statement, like
-    // markSeen. 0 when the briefing is not a ready one of this user or has no such card.
-    // A thumb says the card was seen: it is marked so, or a card refused before it stayed two seconds
-    // on the screen came back in the next briefing
+    // the thumb of the reader on a card: 'up', 'down', or null to take it back. One statement, so two
+    // calls at the same time both count. 0 when the briefing is not a ready one of this user or has no
+    // such card
     vote: async (userId, briefingId, storyId, vote) => prisma.$executeRawUnsafe(`
         UPDATE briefings
         SET items = (SELECT jsonb_agg(CASE WHEN (item->>'storyId')::int = $3
                                           THEN item || jsonb_build_object('vote', $4::text, 'votedAt', CASE WHEN $4::text IS NULL THEN NULL ELSE now() END)
-                                                    || CASE WHEN $4::text IS NOT NULL AND item->'seenAt' = 'null'::jsonb
-                                                            THEN jsonb_build_object('seenAt', now()) ELSE '{}'::jsonb END
                                           ELSE item END ORDER BY position)
                      FROM jsonb_array_elements(items) WITH ORDINALITY AS cards(item, position))
         WHERE id = $1 AND id_user = $2 AND status = 'ready'
@@ -82,8 +49,8 @@ export const BriefingModel = {
         briefingId, userId, storyId, vote),
 
     // the stories this user gave a thumb since 'since', the newest vote first: [{title, vote, feedUrls}].
-    // One per story, the last one: a card not seen comes back in the next briefing, and two thumbs on
-    // it are one opinion, not two refusals of its sources
+    // One per story, the last one: a card can come back in the next briefing, and two thumbs on it are
+    // one opinion, not two refusals of its sources
     votes: async (userId, since) => (await prisma.$queryRawUnsafe(`
         SELECT title, vote, "feedUrls"
         FROM (SELECT DISTINCT ON (item->>'storyId')

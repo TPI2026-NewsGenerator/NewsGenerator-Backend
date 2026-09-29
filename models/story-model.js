@@ -78,9 +78,10 @@ export const StoryModel = {
 
     // the stories closest to the interests of this user (rank_stories), the best first:
     // [{id_story, id_article (its best news), id_interest, score}]
-    rank: async ({userId, feedUrls, languages, since, sparseWeight, excluded, limit}) => prisma.$queryRawUnsafe(
+    // A story already shown can come back: the reader passes it, and it leaves room for more news
+    rank: async ({userId, feedUrls, languages, since, sparseWeight, limit}) => prisma.$queryRawUnsafe(
         'SELECT * FROM public.rank_stories($1::int, $2::text[], $3::text[], $4::timestamptz, $5::real, $6::int[], $7::int)',
-        userId, feedUrls, languages, since, sparseWeight, excluded, limit),
+        userId, feedUrls, languages, since, sparseWeight, [], limit),
 
     // the news of these stories the user can read, once per link, the newest first
     storyArticles: async ({storyIds, feedUrls, since}) => prisma.$queryRawUnsafe(`

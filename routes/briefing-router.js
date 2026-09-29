@@ -13,7 +13,6 @@ const router = express.Router();
 
 router.get('', authenticateToken, BriefingController.latest);
 router.post('', authenticateToken, BriefingController.start);
-router.post('/:id/seen', authenticateToken, BriefingController.seen);
 router.post('/:id/vote', authenticateToken, BriefingController.vote);
 
 export default router;

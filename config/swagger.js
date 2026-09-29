@@ -708,18 +708,8 @@ const options = {
                 "post": {
                     "tags": ["Briefing"],
                     "summary": "Write a new briefing",
-                    "description": "In background: answers the briefing running, GET /briefing until its status is 'ready' or 'failed'. One at a time per user; the stories seen in the last 3 days (POST /briefing/{id}/seen) are not shown again, nor stories telling the same news.",
+                    "description": "In background: answers the briefing running, GET /briefing until its status is 'ready' or 'failed'. One at a time per user. A story already shown can be chosen again; two stories telling the same news are one card.",
                     "responses": {"202": {"description": "{briefing: Briefing} running"}}
-                }
-            },
-            "/briefing/{id}/seen": {
-                "post": {
-                    "tags": ["Briefing"],
-                    "summary": "Mark cards of a briefing as seen",
-                    "description": "Sent by the page once a card stayed on the screen. Only the cards seen are left out of the next briefings; a card keeps the time it was first seen.",
-                    "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
-                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"storyIds": {"type": "array", "items": {"type": "integer"}, "maxItems": 50}}}}}},
-                    "responses": {"204": {"description": "Marked"}, "400": {"description": "storyIds missing or wrong"}, "404": {"description": "Not a ready briefing of this user"}}
                 }
             },
             "/briefing/{id}/vote": {
