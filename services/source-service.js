@@ -13,9 +13,11 @@ import {FeedModel} from "../models/feed-model.js";
 import {search} from "./utils/google-news.js";
 import {searchDirectory as directoryFeeds} from "./utils/feed-directory.js";
 import {mediaFor as gdeltMedia} from "./utils/gdelt.js";
-import {findFeeds} from "./utils/feed-finder.js";
+import {findFeeds, isOnSubject} from "./utils/feed-finder.js";
 import {hostOf, nameOf} from "./utils/public-url.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
+import {embed} from "./utils/embedder.js";
+import {judgeOf} from "./utils/meaning-judge.js";
 
 const MAX_CANDIDATES = 8;       // finding the feed of a site costs a few requests, so only the best are tried
 const FIND_CONCURRENCY = 4;
@@ -55,6 +57,23 @@ const mergeMedia = (...lists) => {
     }
 
     return [...media.values()].sort((a, b) => b.news - a.news);
+};
+
+// Which news of a feed are on the search, by meaning, as the discovery judges the feeds of a profile.
+// Judged by its words, and offered even with none on it, 45 feeds were offered on 9 searches
+// (bench/web-quality.mjs) and about 7 were on them: the others were main feeds of newspapers (the one
+// of midilibre.fr for the video refereeing of Ligue 1, its sample the weather). Judged by meaning and
+// kept only on the search, 21, about 16 on it, and the section rather than the main feed (the Ligue 1
+// feeds of midilibre.fr and ladepeche.fr); two searches get none rather than regional main feeds.
+// Null without the embedder: findFeeds judges by the words
+const meaningJudge = async (keywords) => {
+    try {
+        const [vector] = await embed([keywords.join(' ')]);
+        return judgeOf([vector.dense]);
+    } catch (err) {
+        console.log(`Source search: the feeds are judged by their words (${err.message})`);
+        return null;
+    }
 };
 
 export const SourceService = {
@@ -117,14 +136,18 @@ export const SourceService = {
 
         // the two directories are asked at the same time, and GDELT answering nothing costs nothing:
         // it names media Google News does not, but it is slow and refuses requests under load
-        const [{news, media}, alsoFound] = await Promise.all([
+        const [{news, media}, alsoFound, known, judge] = await Promise.all([
             search(keywords, {days: days > 0 ? days : null, language}),
             gdeltMedia(keywords, {days: days > 0 ? days : 2, language}),
+            knownMedia(userId),
+            meaningJudge(keywords),
         ]);
-
-        const known = await knownMedia(userId);
         const isMissing = (site) => !known.has(nameOf(site));
 
+        // The media are counted on all the news of Google. Sorted by the AI first (bench/web-quality.mjs,
+        // 9 searches), the media of its answers alone gave 10 feeds on the subject instead of 21: a
+        // sentence has few answers, and on words ("trading card games") it left the Pokémon TCG out;
+        // it kept the rugby as close to "l'arbitrage vidéo en Ligue 1" all the same
         const missing = mergeMedia(media, alsoFound).filter(medium => isMissing(medium.site));
         const candidates = missing.slice(0, MAX_CANDIDATES);
 
@@ -135,15 +158,16 @@ export const SourceService = {
             .slice(0, MAX_NEWS);
 
         // the feed kept for a medium is its section on these keywords, not its main feed where they
-        // are 3 news out of 100
-        const found = await mapWithConcurrency(candidates, FIND_CONCURRENCY, medium => findFeeds(medium.site, {language, subject: keywords}));
+        // are 3 news out of 100, and a medium with none on them is not offered
+        const feeds = await mapWithConcurrency(candidates, FIND_CONCURRENCY,
+            medium => findFeeds(medium.site, {language, subject: keywords, ...(judge ? {judge} : {})}));
 
         const sources = candidates
             .map((medium, i) => ({
                 ...medium,
-                feed: found[i].status === 'fulfilled' ? found[i].value[0] : null,
+                feed: feeds[i].status === 'fulfilled' ? feeds[i].value[0] : null,
             }))
-            .filter(medium => medium.feed)
+            .filter(medium => medium.feed && isOnSubject(medium.feed))
             .map(({site, name, news, feed}) => ({
                 site: site,
                 name: name,

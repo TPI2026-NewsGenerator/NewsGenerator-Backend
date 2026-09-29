@@ -270,7 +270,8 @@ Optional variables in `.env`:
    the searches of this user. Addresses of private networks are refused, see `services/utils/public-url.js`.
    The feed of a site is looked for in four steps, each one tried only when the one before found
    nothing (`services/utils/feed-finder.js`):
-   1. the feed the page declares, `<link rel="alternate" type="application/rss+xml">`;
+   1. the feed the page declares, `<link rel="alternate" type="application/rss+xml">`, except the
+      feed of the comments a WordPress site declares next to its news (`/comments/feed`);
    2. the usual paths, `/rss`, `/feed`, `/rss/news`...;
    3. a directory of feeds, which knows the ones a site declares nowhere and that are on no usual
       path (`feed-directory.js`): this is what finds football.london and uefa.com;
@@ -488,6 +489,24 @@ two public directories, and the media they name that are not in the cache are sh
 Their news are shown **read-only** — the pages are not scraped and the AI never sees them, they are
 only there to show what the search did not have. Next to them, the media whose feed was found can be
 added in one click, and they become private sources of that user.
+
+The feed offered for a medium is its section on the search, not its main feed, and a medium with no
+feed on the search is not offered (`SourceService.suggest`). Which news of a feed are on the search is
+judged by meaning, as the discovery judges the feeds of a profile: the bge-m3 vector of the search
+against each title, at 0.45 (`services/utils/meaning-judge.js`), and a feed needs 2 news on it. Measured
+on 9 searches in French and English (`bench/web-quality.mjs`): judged by the words and offered even off
+the search, 45 feeds were offered and about 7 were on it (the main feed of midilibre.fr for the video
+refereeing of Ligue 1, its sample the weather); judged by meaning, 21 and about 16 (the Ligue 1 feeds of
+midilibre.fr and ladepeche.fr). Without the embedder the feeds are judged by the words.
+
+Having the AI sort the news of Google first, and trying only the media of its answers, was measured and
+left out: 10 feeds instead of 21, with the same share on the search. A sentence gets few answers (1 of
+17 for the Ligue 1 one), so good media were never tried (dsih.fr for "l'intelligence artificielle à
+l'hôpital", the Top 14 feed of sudouest.fr), and the rugby news stayed as close to the Ligue 1 all
+the same. The news shown read-only are Google's, newest first, unsorted.
+
+The judge makes the search wait on the embedder: about 20 seconds, but 13 minutes measured while the
+GPU of the embedder was busy with something else.
 
 Which media are already searched is decided on the links of the articles, not on the addresses of
 the feeds: a feed is often served from another domain than the site it publishes

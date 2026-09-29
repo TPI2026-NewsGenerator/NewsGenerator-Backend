@@ -31,8 +31,12 @@ const MIN_ON_SUBJECT = 2;       // one news on the subject in a whole feed is ch
 const RECENT_DAYS = 7;
 const DAY_MS = 24 * 3600e3;
 
-// feeds declared in the page: <link rel="alternate" type="application/rss+xml" href="...">
-// the page is given back too: its links name the sections of the site
+// the feed of the comments a WordPress site declares next to its news: justarsenal.com/comments/feed
+// was chosen for "VAR decisions in the Champions League", readers answering each other
+export const isCommentsFeed = (url) => /\/comments\/feed\/?$|[?&]feed=comments-rss2?\b/i.test(url);
+
+// feeds declared in the page: <link rel="alternate" type="application/rss+xml" href="...">, the
+// comments aside. The page is given back too: its links name the sections of the site
 const readPage = async (siteUrl) => {
     const {res, url} = await fetchPublicUrl(siteUrl, {headers: {'User-Agent': USER_AGENT}});
     if (!res.ok) return {feeds: [], html: '', url};
@@ -52,7 +56,7 @@ const readPage = async (siteUrl) => {
                 return null;
             }
         })
-        .filter(Boolean);
+        .filter(link => link && !isCommentsFeed(link));
 
     return {feeds: [...new Set(links)], html: body, url};
 };
