@@ -5,7 +5,7 @@
 //  Description: Tests for the feeds kept for a profile, shared between its interests
 //
 
-import {allocate, staleFeeds} from '../../services/utils/allocation.js'
+import {allocate, staleFeeds, tryPerLanguage} from '../../services/utils/allocation.js'
 
 describe('allocate', () => {
     it('should take the feeds in turn from each interest, the best first', () => {
@@ -23,6 +23,41 @@ describe('allocate', () => {
 
     it('should keep nothing without room', () => {
         expect(allocate([[{url: 'a', score: 1}]], 0)).toEqual([]);
+    });
+});
+
+describe('tryPerLanguage', () => {
+    const medium = (site, lang) => ({site, lang});
+    const feedsOf = (sites) => async (m) => sites.includes(m.site) ? {site: m.site} : null;
+
+    it('should give each language its own tries, not only the most present', async () => {
+        const media = [
+            medium('en1', 'en'), medium('en2', 'en'), medium('en3', 'en'), medium('en4', 'en'),
+            medium('fr1', 'fr'), medium('fr2', 'fr'),
+        ];
+        const found = await tryPerLanguage(media, feedsOf(['en1', 'en2', 'en3', 'fr2']));
+        expect(found.map(feed => feed.site)).toEqual(['en1', 'en2', 'fr2']);
+    });
+
+    it('should go on past the media without a feed, up to the tries allowed', async () => {
+        const media = ['a', 'b', 'c', 'd', 'e', 'f'].map(site => medium(site, 'fr'));
+        const tried = [];
+        const found = await tryPerLanguage(media, async (m) => {
+            tried.push(m.site);
+            return ['e', 'f'].includes(m.site) ? {site: m.site} : null;
+        });
+        expect(found.map(feed => feed.site)).toEqual(['e']);
+        expect(tried).toEqual(['a', 'b', 'c', 'd', 'e']);
+    });
+
+    it('should stop a language once enough are kept', async () => {
+        const media = ['a', 'b', 'c', 'd'].map(site => medium(site, 'en'));
+        const tried = [];
+        await tryPerLanguage(media, async (m) => {
+            tried.push(m.site);
+            return {site: m.site};
+        }, {kept: 2, tried: 5, wave: 2});
+        expect(tried).toEqual(['a', 'b']);
     });
 });
 

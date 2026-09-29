@@ -27,6 +27,31 @@ export const allocate = (perInterest, room) => {
     return kept;
 };
 
+// The media named for an interest tried language by language, each in its order, a wave at a time,
+// until enough of them gave a feed on the subject or enough were tried: taken all together, the six
+// first of a reader of French and English were English (Google News answers up to 100 news in English,
+// 11 to 77 in French) or had no feed (ign, imdb, pokemon.com), and margxt.fr, 10 news in 10 on
+// the Pokémon cards, came 9th. A medium without a feed does not take the place of a kept one.
+// media: [{site, lang, ...}] the most present first; tryOne(medium) answers the feed kept, or null
+export const tryPerLanguage = async (media, tryOne, {kept = 2, tried = 5, wave = 3} = {}) => {
+    const byLanguage = Map.groupBy(media, medium => medium.lang);
+    const found = [];
+
+    for (const candidates of byLanguage.values()) {
+        const queue = candidates.slice(0, tried);
+        let keptHere = 0;
+        while (keptHere < kept && queue.length > 0) {
+            const feeds = await Promise.all(queue.splice(0, wave).map(tryOne));
+            for (const feed of feeds.filter(Boolean)) {
+                if (keptHere === kept) break;
+                found.push(feed);
+                keptHere++;
+            }
+        }
+    }
+    return found;
+};
+
 // The feeds found for a profile that bring nothing on it any more: none of their news of the last
 // days is on one of its interests. A feed just found is given the time to show it, unless it already
 // published enough news to say so; a feed the reader kept stays.

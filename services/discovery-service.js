@@ -15,10 +15,9 @@ import {FeedbackService} from "./feedback-service.js";
 import {search} from "./utils/google-news.js";
 import {findFeeds, isOnSubject, subjectScore} from "./utils/feed-finder.js";
 import {embed, denseSimilarity, parseVector} from "./utils/embedder.js";
-import {mapWithConcurrency} from "./utils/concurrency.js";
 import {nameOf} from "./utils/public-url.js";
 import {parseSearch} from "./utils/profile-ai.js";
-import {allocate, staleFeeds} from "./utils/allocation.js";
+import {allocate, staleFeeds, tryPerLanguage} from "./utils/allocation.js";
 import {FeedModel} from "../models/feed-model.js";
 import {bridgeRoom, MAX_NEW_PROFILE_FEEDS, MAX_PROFILE_FEEDS, withinBridgeRoom} from "./utils/feed-limits.js";
 
@@ -26,7 +25,9 @@ import {bridgeRoom, MAX_NEW_PROFILE_FEEDS, MAX_PROFILE_FEEDS, withinBridgeRoom} 
 // story in 48 hours and a dog owner 2. The feeds found this way brought them to 8 and 32, and the
 // choice of the section cut the chef's feeds from 167 news to 65 for the same relevant ones.
 const SEARCH_DAYS = 7;              // a week of Google News says which media really write on it
-const MEDIA_PER_INTEREST = 6;       // media tried per interest, each costs a few requests
+// per interest and per language read, each medium tried costs a few requests (see tryPerLanguage)
+const KEPT_PER_LANGUAGE = 2;
+const TRIED_PER_LANGUAGE = 5;
 const FIND_CONCURRENCY = 3;
 // A news is on an interest when its cosine with the interest reaches this. Calibrated on the titles
 // judged by hand: it keeps 57% of the fully relevant ones and 11% of the others, which is enough to
@@ -119,21 +120,20 @@ const discover = async (userId) => {
 
     for (const interest of interests) {
         const media = (await mediaOf(interest.searches))
-            .filter(medium => !known.has(nameOf(medium.site)) && !kept.has(nameOf(medium.site)))
-            .slice(0, MEDIA_PER_INTEREST);
+            .filter(medium => !known.has(nameOf(medium.site)) && !kept.has(nameOf(medium.site)));
 
         const subject = [interest.keywords, ...interest.sections].filter(Boolean);
-        const found = await mapWithConcurrency(media, FIND_CONCURRENCY,
-            medium => findFeeds(medium.site, {language: medium.lang, subject, judge, languages}));
-
-        perInterest.push(media.flatMap((medium, i) => {
-            const feed = found[i].status === 'fulfilled' ? found[i].value[0] : null;
-            if (!feed || !isOnSubject(feed)) return [];
-            kept.add(nameOf(medium.site));
+        const found = await tryPerLanguage(media, async (medium) => {
+            const feed = await findFeeds(medium.site, {language: medium.lang, subject, judge, languages})
+                .then(feeds => feeds[0], () => null);
+            if (!feed || !isOnSubject(feed)) return null;
             // the language read in its news: tribuna.com/en/, found by a French search, is in English
-            return [{url: feed.url, site: medium.site, category: interest.category ?? 'world', language: feed.language ?? medium.lang,
-                score: subjectScore(feed)}];
-        }));
+            return {url: feed.url, site: medium.site, category: interest.category ?? 'world', language: feed.language ?? medium.lang,
+                score: subjectScore(feed)};
+        }, {kept: KEPT_PER_LANGUAGE, tried: TRIED_PER_LANGUAGE, wave: FIND_CONCURRENCY});
+
+        found.forEach(feed => kept.add(nameOf(feed.site)));
+        perInterest.push(found);
     }
 
     // the ones read through the bridge only while there is room for them, the next ones take their place
