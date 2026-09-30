@@ -654,7 +654,9 @@ a queue of their own while the media of Google News are tried, and a refusal pau
 The medium of a news read through Google News is the publisher it names, not google.com
 (`db/add_google_news.sql`): two media telling a story through Google are two voices, and a medium met
 again through its own feed is the same one. The posts of social networks and videos, and the pages that
-are no news (a league table, a live blog, where to watch a match), are left out.
+are no news (a league table, a live blog, where to watch a match), are left out. So is, from the
+briefing, a story told only by one title one medium republished over hours (3 links over 2 hours at
+least): the page of a section ("Football : Ligue 1 McDonald's" of canalplus.com), not a news.
 
 Google News is no official API: asked too often from one address it answers 429 or a captcha. So every
 request of the server to Google goes through one queue, never two closer than `GOOGLE_NEWS_INTERVAL_MS`;
