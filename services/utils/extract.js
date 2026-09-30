@@ -135,9 +135,17 @@ ${sentences.map((sentence, i) => `[${i + 1}]${sentence.quote ? ' (quote)' : ''} 
 
 Answer only in JSON: {"topic": "...", "sourcing": "...", "sentences": [numbers of the sentences, the most important first]}`;
 
+// a time of the 12-hour clock written on the 24-hour one, as a translation may: "7 p.m." is "19",
+// "7:30 pm" is "19:30" and "12 a.m." is "0"
+const twentyFourHours = (text) => text.replace(/\b(\d{1,2})(?:[:.](\d{2}))?[\s  ]?([ap])\.?m\.?(?![a-z])/gi,
+    (time, hour, minutes, half) => {
+        if (+hour < 1 || +hour > 12) return time;
+        const hours = +hour % 12 + (half.toLowerCase() === 'p' ? 12 : 0);
+        return minutes ? `${hours}:${minutes}` : `${hours}`;
+    });
 // the figures of a sentence, whatever their separators: "1.1383" and "1,1383", "1,000" and "1 000" are
-// the same figure, and "September 21, 2026" two of them
-const figures = (text) => (text.match(/\d+(?:[.,   ]\d{3}(?!\d))*(?:[.,]\d+)?/g) ?? [])
+// the same figure, "September 21, 2026" two of them, and "7 p.m." the same as "19h00"
+const figures = (text) => (twentyFourHours(text).match(/\d+(?:[.,   ]\d{3}(?!\d))*(?:[.,]\d+)?/g) ?? [])
     .map(figure => figure.replace(/[^\d]/g, ''));
 // a translation keeps every figure of the sentence it translates, checked here rather than trusted
 export const keepsFigures = (original, translation) => {

@@ -324,7 +324,8 @@ passages is shown. A page with fewer than 60 words (a teaser, a paywall) is not 
 When the article is not in the language of the reader, a machine translation is added, marked as such,
 next to the original sentences. It is asked sentence by sentence and checked rather than trusted: a
 translation that loses a figure of its sentence, or does not give one sentence per sentence, is asked
-once more, then left out, and the reader gets the original only.
+once more, then left out, and the reader gets the original only. A figure written the way of the other
+language is the same figure: "1,000" and "1 000", or "7 p.m." and "19h00".
 
 #### Corroboration
 

@@ -87,6 +87,14 @@ describe('keepsFigures', () => {
         expect(keepsFigures('He was fined $10,000.', 'Il a reçu une amende.')).toBe(false);
         expect(keepsFigures('23 goals in 23 games', '23 buts en 32 matchs')).toBe(false);
     });
+
+    it('should take a time of the 12-hour clock written on the 24-hour one', () => {
+        expect(keepsFigures('The crew will speak at 7 p.m. on Monday.', "L'équipage parlera lundi à 19h00.")).toBe(true);
+        expect(keepsFigures('Doors open at 7:30 PM and close at 12 a.m.', 'Les portes ouvrent à 19:30 et ferment à 0 h.')).toBe(true);
+        expect(keepsFigures('It starts at 11am.', 'Cela commence à 11 h.')).toBe(true);
+        expect(keepsFigures('The crew will speak at 7 p.m.', "L'équipage parlera à 17h00.")).toBe(false);
+        expect(keepsFigures('A 5 amp fuse', 'Un fusible de 17 ampères')).toBe(false);
+    });
 });
 
 describe('translatePassages', () => {
