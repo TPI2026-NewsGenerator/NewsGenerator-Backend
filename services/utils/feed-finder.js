@@ -12,14 +12,17 @@ import {Crawlers} from './crawlers.js';
 import {toDate} from './dates.js';
 import {searchDirectory} from './feed-directory.js';
 import {bridgeFeed} from './feed-bridge.js';
-import {assertPublicUrl, fetchPublicUrl, hostOf, isBridgeUrl, nameOf} from './public-url.js';
+import {assertPublicUrl, discardBody, fetchPublicUrl, hostOf, isBridgeUrl, nameOf, readText} from './public-url.js';
 import {feedLinks, feedsPageLink, keywordJudge, sectionLinks, subjectStats, subjectWords} from './site-sections.js';
 import {feedLanguage} from './language.js';
 
-// paths tried when the page declares no feed
+// paths tried when the page declares no feed. The last two are the ones of two publishing systems
+// many newspapers use and never declare: Arc (inquirer.com, washingtonpost.com) and the one of
+// Reach (mirror.co.uk, nottinghampost.com)
 const COMMON_PATHS = [
     '/rss', '/rss.xml', '/feed', '/feed.xml', '/feeds', '/atom.xml', '/index.xml',
     '/rss/news', '/news/rss', '/feeds/rss', '/rss/index.xml',
+    '/arc/outboundfeeds/rss/?outputType=xml', '/?service=rss',
 ];
 const USER_AGENT = 'Mozilla/5.0 (compatible; NewsGenerator/1.0; +RSS reader)';
 const MAX_PAGE_CHARS = 2_000_000;
@@ -39,9 +42,12 @@ export const isCommentsFeed = (url) => /\/comments\/feed\/?$|[?&]feed=comments-r
 // comments aside. The page is given back too: its links name the sections of the site
 const readPage = async (siteUrl) => {
     const {res, url} = await fetchPublicUrl(siteUrl, {headers: {'User-Agent': USER_AGENT}});
-    if (!res.ok) return {feeds: [], html: '', url};
+    if (!res.ok) {
+        await discardBody(res);
+        return {feeds: [], html: '', url};
+    }
 
-    const body = (await res.text()).slice(0, MAX_PAGE_CHARS);
+    const body = (await readText(res)).slice(0, MAX_PAGE_CHARS);
 
     // the address given is the feed itself
     if (/^\s*<(\?xml|rss|feed|rdf:RDF)/i.test(body)) return {feeds: [url], html: '', url};
@@ -64,9 +70,8 @@ const readPage = async (siteUrl) => {
 // a section that can't be read gives no feed, it is only one candidate among others
 const tryPage = (url) => readPage(url).catch(() => ({feeds: [], html: '', url}));
 
-// keep only the candidates that really answer with news. With a judge of the subject (see
-// keywordJudge), each feed also says how much it is on it (see subjectStats)
-const checkFeeds = async (urls, judge = null) => {
+// the candidates that answer with news, read: [{url, items}]. A feed of a private address is ignored
+export const readFeeds = async (urls) => {
     const publicUrls = [];
     for (let url of urls) {
         try {
@@ -76,9 +81,15 @@ const checkFeeds = async (urls, judge = null) => {
         }
     }
 
-    const results = (await Crawlers.Xml(publicUrls.map(url => ({url}))))
+    return (await Crawlers.Xml(publicUrls.map(url => ({url}))))
         .map(result => ({...result, items: result.items.filter(item => item.link)}))
         .filter(result => result.items.length > 0);
+};
+
+// keep only the candidates that really answer with news. With a judge of the subject (see
+// keywordJudge), each feed also says how much it is on it (see subjectStats)
+const checkFeeds = async (urls, judge = null) => {
+    const results = await readFeeds(urls);
 
     return Promise.all(results.map(async ({url, items}) => {
         const dates = items.map(item => toDate(item.pubDate)).filter(Boolean);
@@ -131,6 +142,28 @@ const subjectCandidates = async (home, words, host) => {
     ];
 };
 
+// every feed a site offers, none chosen: the ones its home page declares, the ones its page of feeds
+// lists ("/rss/"), and the ones the directory knows. The sections of a medium already read are
+// looked for among them (see directory-service.js)
+export const siteFeeds = async (site) => {
+    const siteUrl = site.includes('://') ? site : `https://${site}`;
+    if (isBridgeUrl(siteUrl)) return [];
+
+    const home = await tryPage(siteUrl);
+    const feedsPage = feedsPageLink(home.html, home.url);
+    const host = hostOf(siteUrl);
+    const [listing, known] = await Promise.all([
+        feedsPage ? tryPage(feedsPage) : null,
+        host ? directoryFeeds(host).catch(() => []) : [],
+    ]);
+
+    return [...new Set([
+        ...home.feeds,
+        ...(listing ? [...listing.feeds, ...feedLinks(listing.html, listing.url)] : []),
+        ...known,
+    ])].filter(url => !isCommentsFeed(url));
+};
+
 // feeds of a site, the best first. Without a subject the best is the one with the most news. With a
 // subject (keywords, as a search writes them) it is the one most on it: the rugby section of a
 // newspaper rather than its main feed, where rugby is 3 news out of 100. The keywords also name the
@@ -138,8 +171,10 @@ const subjectCandidates = async (home, words, host) => {
 // meaning, see subjectStats), else by the keywords themselves. With 'languages' (those of the reader)
 // a feed written in another is no candidate: favorflav.com, found by a French search, gave its Dutch
 // section, on the subject by meaning (the vectors read every language) but not readable. 'known' are
-// feeds of the site another directory knows (see media-cloud.js), candidates like the others
-export const findFeeds = async (site, {language = null, subject = null, judge = null, languages = null, known = []} = {}) => {
+// feeds of the site another directory knows (see media-cloud.js), candidates like the others. Without
+// 'bridge', a site that publishes no feed gives none: the directory adds hundreds of media, and each
+// one read through the bridge loads its page every time
+export const findFeeds = async (site, {language = null, subject = null, judge = null, languages = null, known = [], bridge = true} = {}) => {
     // "fortune.com" -> https, but "file:///etc/passwd" keeps its protocol so it is refused as such
     const value = site.trim();
     const siteUrl = value.includes('://') ? value : `https://${value}`;
@@ -182,6 +217,8 @@ export const findFeeds = async (site, {language = null, subject = null, judge = 
         const fromDirectory = (await checkFeeds(await directoryFeeds(host))).filter(readable).sort(best);
         if (fromDirectory.length > 0) return fromDirectory;
     }
+
+    if (!bridge) return feeds;
 
     // last resort: nothing published anywhere, or nothing on the subject. The site is read as a page
     // and turned into a feed, of its section on the subject when it has one. This one is built, not

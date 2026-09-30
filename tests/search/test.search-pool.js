@@ -20,6 +20,8 @@ jest.unstable_mockModule('../../models/profile-model.js', () => ({
 }));
 jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {}}));
 jest.unstable_mockModule('../../models/story-model.js', () => ({StoryModel: {}}));
+jest.unstable_mockModule('../../models/directory-model.js', () => ({DirectoryModel: {}}));
+jest.unstable_mockModule('../../services/directory-service.js', () => ({DirectoryService: {}}));
 
 const {searchesOfCategories} = await import('../../services/ingest-service.js');
 

@@ -12,7 +12,7 @@ import { Readability } from '@mozilla/readability';
 import { parseHTML } from 'linkedom';
 import { Parser } from "./parser.js";
 import { mapWithConcurrency } from "./concurrency.js";
-import { fetchPublicUrl, isBridgeUrl } from "./public-url.js";
+import { discardBody, fetchPublicUrl, isBridgeUrl, readText } from "./public-url.js";
 
 const XML_CONCURRENCY = 50;       // number of feeds fetched at the same time
 const XML_TIMEOUT_MS = 8000;      // a slow feed is abandoned after this delay
@@ -59,12 +59,13 @@ const fetchFeed = async ({url, etag, lastModified}) => {
         trusted: bridge,
     });
 
+    if (res.status === 304 || !res.ok) await discardBody(res);
     if (res.status === 304) return { notModified: true, items: [] };
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     return {
         notModified: false,
-        items: await Parser.Xml(await res.text()),
+        items: await Parser.Xml(await readText(res, bridge ? BRIDGE_TIMEOUT_MS : XML_TIMEOUT_MS)),
         etag: res.headers.get('etag'),
         lastModified: res.headers.get('last-modified'),
     };

@@ -26,7 +26,12 @@ jest.unstable_mockModule('../../services/utils/embedder.js', () => ({
     toSparsevec: jest.fn(() => '{}/1'),
 }));
 jest.unstable_mockModule('../../services/utils/search-ai.js', () => ({sortByMeaning: jest.fn()}));
-jest.unstable_mockModule('../../services/ingest-service.js', () => ({searchesOfCategories: jest.fn(async () => [])}));
+jest.unstable_mockModule('../../services/ingest-service.js', () => ({
+    searchesOfCategories: jest.fn(async () => []),
+    GOOGLE_ENABLED: () => false,
+    IngestService: {readNow: jest.fn()},
+}));
+jest.unstable_mockModule('../../models/directory-model.js', () => ({DirectoryModel: {feedUrls: jest.fn(async () => [])}}));
 
 const {NewsService} = await import('../../services/news-service.js');
 const {FeedModel} = await import('../../models/feed-model.js');

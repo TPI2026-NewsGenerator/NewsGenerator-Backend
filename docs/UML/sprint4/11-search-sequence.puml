@@ -8,7 +8,7 @@ participant "newsRouter\n+ jwt" as Router
 participant newsController as Controller
 participant newsService as News
 participant ingestService as Ingest
-participant feedModel as FeedModel
+participant "feedModel\n+ directoryModel" as FeedModel
 participant "embedder\n+ searchAi" as Meaning
 participant "googleNews\n+ crawlers" as Web
 participant extract as Extract
@@ -32,6 +32,9 @@ group the feeds read, all of the language of the search
     else
         News -> Ingest : searchesOfCategories(category, language)
         note right : the Google News searches of\nevery profile, never whose
+    else
+        News -> FeedModel : DirectoryModel.feedUrls(category, language)
+        note right : the feeds the server found itself
     end
     News -> News : + the shared feeds of db/rss-links.js
 end
@@ -53,12 +56,22 @@ else a sentence (anything else)
     News -> Meaning : sortByMeaning(sentence, news)
     Meaning -> Meaning : gemma4:31b: answers and close ones
     note right of Meaning : without the AI: the closest ones,\nmarked unchecked
+    opt fewer than 5 answers, Google News not paused
+        News -> Web : sentenceUrl(sentence, days, language)
+        News -> Ingest : readNow([the feed of the sentence])
+        Ingest -> Web : read the feed of Google News
+        Ingest -> Meaning : embed its news
+        Ingest -> DB : its news and their vectors
+        News -> FeedModel : closestArticles(feeds + it, vectors)
+        News -> Meaning : sortByMeaning(sentence, news)
+        note right of News : answered with web: true;\nGoogle silent: the first answer
+    end
 end
 News -> FeedModel : similarArticlePairs(ids)
 News -> News : groupDuplicates: one card per story
 News -> FeedModel : threadArticles(threads, feeds)
 News -> News : withThreads: the facts of one affair on one card
-News --> Controller : {news, mode, wider, checked}
+News --> Controller : {news, mode, wider, checked, web}
 Controller --> Client : 200, the cards
 
 == The key passages of the cards chosen ==

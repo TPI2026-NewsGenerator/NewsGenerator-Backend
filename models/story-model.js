@@ -18,7 +18,8 @@ export const StoryModel = {
     // otherwise
     pendingArticles: async (since, limit, urls = null) => prisma.$queryRawUnsafe(`
         SELECT a.id, a.title, a.description, f.url AS feed,
-               (SELECT uf.language FROM user_feeds uf WHERE uf.url = f.url AND uf.language IS NOT NULL LIMIT 1) AS feed_language
+               COALESCE((SELECT uf.language FROM user_feeds uf WHERE uf.url = f.url AND uf.language IS NOT NULL LIMIT 1),
+                        (SELECT d.language FROM directory_feeds d WHERE d.url = f.url)) AS feed_language
         FROM articles a
         JOIN feeds f ON f.id = a.id_feed
         WHERE a.embedded_at IS NULL

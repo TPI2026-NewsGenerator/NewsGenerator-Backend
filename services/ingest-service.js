@@ -17,6 +17,8 @@ import {StoryModel} from "../models/story-model.js";
 import {embed, toSparsevec, toVector} from "./utils/embedder.js";
 import {languageOf} from "./utils/language.js";
 import {ProfileModel} from "../models/profile-model.js";
+import {DirectoryModel} from "../models/directory-model.js";
+import {DirectoryService} from "./directory-service.js";
 import {googleAvailable, interestSearchUrls, languageOfSearch} from "./utils/google-news.js";
 
 // A user never waits for a feed: the searches and the briefing read what this has already stored.
@@ -48,7 +50,7 @@ const LOCK_KEY = 'newsgenerator-ingest';
 // hour late costs nothing
 const GOOGLE_EVERY_MINUTES = Number(process.env.GOOGLE_NEWS_EVERY_MINUTES) || 60;
 const MAX_GOOGLE_PER_RUN = 60;
-const GOOGLE_ENABLED = () => process.env.GOOGLE_NEWS !== 'off';
+export const GOOGLE_ENABLED = () => process.env.GOOGLE_NEWS !== 'off';
 
 // the language of each shared feed, from db/rss-links.js
 const sharedLanguage = new Map(Object.entries(rss).flatMap(([language, categories]) =>
@@ -154,11 +156,26 @@ export const searchesOfUser = async (userId) => GOOGLE_ENABLED()
     : [];
 
 export const IngestService = {
+    // These feeds read now and their news given vectors, whatever their date and without waiting for
+    // the run at work: a search waits for them (the search of Google News of a sentence, see
+    // NewsService.getNews). Answers how many news got vectors
+    readNow: async (urls) => {
+        await FeedService.refreshUrls(urls);
+        const since = new Date(Date.now() - RETENTION_DAYS * 24 * 3600e3);
+        let embedded = 0;
+        for (let batch = await embedPending(urls, since); batch > 0; batch = await embedPending(urls, since)) {
+            embedded += batch;
+            if (batch < MAX_EMBEDDED_PER_RUN) break;
+        }
+        return embedded;
+    },
+
     // one pass: every feed read (or only these ones), the new news embedded and grouped
     run: async ({urls = null} = {}) => {
         const started = Date.now();
         const result = await withLock(async () => {
-            const feeds = urls ?? [...new Set([...sharedLanguage.keys(), ...await FeedModel.allUserFeedUrls(), ...await dueSearches()])];
+            const directory = urls ? [] : (await DirectoryModel.all()).map(feed => feed.url);
+            const feeds = urls ?? [...new Set([...sharedLanguage.keys(), ...directory, ...await FeedModel.allUserFeedUrls(), ...await dueSearches()])];
             const refresh = await FeedService.refreshUrls(feeds, {purge: urls === null});
 
             // the embedder may be down: the news are stored anyway, they get their vectors next time
@@ -219,10 +236,18 @@ export const IngestService = {
         return result;
     },
 
-    // a run now, then every INTERVAL_MINUTES, for as long as the server lives
+    // a run now, then every INTERVAL_MINUTES, for as long as the server lives. After each, the
+    // directory looks at a few more media: the feeds it adds are read by the next run
     schedule: () => {
         if (timer) return;
-        const tick = () => IngestService.run().catch(err => console.error(`Ingest failed: ${err.stack ?? err}`));
+        const grow = async () => {
+            const tried = await DirectoryService.grow();
+            const kept = tried.flatMap(medium => medium.kept);
+            if (tried.length > 0) console.log(`Directory: ${tried.length} media looked at, ${kept.length} feeds added (${kept.map(feed => feed.url).join(', ') || 'none'})`);
+        };
+        const tick = () => IngestService.run()
+            .then(grow)
+            .catch(err => console.error(`Ingest failed: ${err.stack ?? err}`));
         tick();
         timer = setInterval(tick, INTERVAL_MINUTES * 60 * 1000);
         timer.unref?.();

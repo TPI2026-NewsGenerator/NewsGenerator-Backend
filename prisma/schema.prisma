@@ -63,6 +63,29 @@ model user_feeds {
   @@index([url], map: "i_user_feeds_url")
 }
 
+// the feeds the server found itself, read by every search of their language (db/add_directory.sql)
+model directory_feeds {
+  url        String   @id
+  medium     String
+  origin     String
+  language   String?
+  category   String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([language], map: "i_directory_feeds_language")
+}
+
+// the media looked at for the directory, found or not (db/add_directory.sql)
+model directory_tries {
+  medium   String
+  origin   String
+  tried_at DateTime @default(now()) @db.Timestamptz(6)
+  kept     Int      @default(0)
+  reason   String?
+
+  @@id([medium, origin])
+}
+
 model users {
   id                Int                 @id @default(autoincrement())
   username          String

@@ -11,7 +11,7 @@ import process from 'node:process'
 import {parseHTML} from 'linkedom';
 import {Crawlers} from './crawlers.js';
 import {toDate} from './dates.js';
-import {fetchPublicUrl, isBridgeUrl} from './public-url.js';
+import {discardBody, fetchPublicUrl, isBridgeUrl} from './public-url.js';
 import {namesSubject, sectionLinks, subjectStats} from './site-sections.js';
 import {feedLanguage} from './language.js';
 
@@ -102,7 +102,10 @@ export const bridgeFeed = async (siteUrl, {language = null, words = [], judge = 
         try {
             // the address of the site is checked here, so the bridge is only ever sent a public one
             const {res} = await fetchPublicUrl(page, {headers: {'User-Agent': BROWSER}});
-            if (!res.ok) return {patterns: [], html: ''};   // 401 and 403: the site refuses robots
+            if (!res.ok) {                                  // 401 and 403: the site refuses robots
+                await discardBody(res);
+                return {patterns: [], html: ''};
+            }
 
             const html = await res.text();
             return {patterns: articlePatterns(html, {language, words}), html};

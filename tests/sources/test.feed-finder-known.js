@@ -13,6 +13,8 @@ const KNOWN = 'http://rssfeeds.freep.com/freep/entertainment';
 jest.unstable_mockModule('../../services/utils/public-url.js', () => ({
     assertPublicUrl: async (value) => new URL(value),
     fetchPublicUrl: async (url) => ({res: {ok: true, text: async () => '<html><body>No feed here</body></html>'}, url}),
+    discardBody: async () => {},
+    readText: async (res) => res.text(),
     hostOf: (value) => {
         try {
             return new URL(value.includes('://') ? value : `https://${value}`).hostname.replace(/^www\./, '');

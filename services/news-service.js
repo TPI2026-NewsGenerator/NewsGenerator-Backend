@@ -7,6 +7,7 @@
 
 "use strict"
 
+import process from "node:process";
 import Links from "./utils/links.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {Filter} from "./utils/filter.js";
@@ -19,8 +20,9 @@ import {corroborationOf} from "./utils/corroboration.js";
 import {dateOf, mediumOfArticle, readingOrder, sourceOf} from "./utils/reading-order.js";
 import {embed, toSparsevec, toVector} from "./utils/embedder.js";
 import {sortByMeaning} from "./utils/search-ai.js";
-import {decodeLinks, isGoogleNewsUrl} from "./utils/google-news.js";
-import {searchesOfCategories} from "./ingest-service.js";
+import {decodeLinks, googleAvailable, isGoogleNewsUrl, sentenceUrl} from "./utils/google-news.js";
+import {GOOGLE_ENABLED, IngestService, searchesOfCategories} from "./ingest-service.js";
+import {DirectoryModel} from "../models/directory-model.js";
 
 export const MAX_SELECTED_NEWS = 10;
 export const MAX_STORY_ARTICLES = 30;  // articles of one card sent to be summarized, a group is never bigger
@@ -192,6 +194,34 @@ const withThreads = async (cards, feedUrls) => {
     return result;
 };
 
+// A subject no profile follows has few news in our feeds: measured against Google News (bench/vs-google.mjs,
+// 15 searches of 7 days), measles gave 1 card to its ~15 stories and the Swiss chocolate 0 to its 4.
+// Under this many answers the sentence is asked to Google News too. It then knows the sentence, never
+// who searched it
+const WEB_MIN_ANSWERS = 5;
+// Google News is asked as far back as the search reads, a month at most (the news are kept 30 days)
+const WEB_MAX_DAYS = 30;
+
+// the feed of Google News for this sentence, read and embedded now: its address, null when Google
+// can't be asked (turned off, for the searches with SEARCH_GOOGLE_NEWS=off, or paused after a block)
+// or did not answer
+const webSearch = async (query, timeframe, language) => {
+    if (!GOOGLE_ENABLED() || process.env.SEARCH_GOOGLE_NEWS === 'off' || !googleAvailable('searches')) return null;
+    const start = timeframe?.start ? new Date(timeframe.start) : null;
+    const days = start && !Number.isNaN(start.getTime())
+        ? Math.min(WEB_MAX_DAYS, Math.max(1, Math.round((Date.now() - start) / (24 * 3600e3))))
+        : WEB_MAX_DAYS;
+    const url = sentenceUrl(query, {days, language});
+    if (!url) return null;
+    try {
+        await IngestService.readNow([url]);
+        return url;
+    } catch (err) {
+        console.log(`Search: Google News not read for "${query}" (${err.message})`);
+        return null;
+    }
+};
+
 export const NewsService = {
     // news list for the selection, read from the RSS cache (no page scraped). A sentence is searched by
     // its meaning (one call to the AI, see searchByMeaning), keywords with operators as written, in SQL
@@ -202,15 +232,24 @@ export const NewsService = {
             // Google News of the profiles. All of the language of the search: a French search gave the
             // cards of si.com. A reader's search of "cartes Pokémon" found 1 news in the shared feeds
             // and their own, 10 with the searches of the profile of another reader (bench/pool-sources.mjs)
-            const [own, others, searches] = await Promise.all([
+            // The feeds of the directory too, found by the server itself (see DirectoryService)
+            const [own, others, searches, directory] = await Promise.all([
                 userId ? FeedModel.userFeedUrls(userId, category, language) : [],
                 FeedModel.publicFeedUrls(category, language),
                 searchesOfCategories(category, language),
+                DirectoryModel.feedUrls(category, language),
             ]);
-            const newsLinks = [...new Set([...Links.getCategoriesLinks(category, language), ...own, ...others, ...searches])];
+            const newsLinks = [...new Set([...Links.getCategoriesLinks(category, language), ...own, ...others, ...searches, ...directory])];
 
             if (!Filter.hasOperators(keywords)) {
-                return await NewsService.searchByMeaning({query: keywords.join(' ').trim(), feedUrls: newsLinks, timeframe});
+                const query = keywords.join(' ').trim();
+                const found = await NewsService.searchByMeaning({query, feedUrls: newsLinks, timeframe});
+                if (found.news.filter(card => card.match !== 'related').length >= WEB_MIN_ANSWERS) return found;
+
+                // few answers: the subject is one no feed of ours follows. Google News is asked the
+                // sentence, once, and its news are searched with the others
+                const web = await webSearch(query, timeframe, language);
+                return web ? {...await NewsService.searchByMeaning({query, feedUrls: [...newsLinks, web], timeframe}), web: true} : found;
             }
 
             // 2. search in SQL (the feeds are read in background, see IngestService: nobody waits for them): keywords, excluded keywords (-word) and publication date

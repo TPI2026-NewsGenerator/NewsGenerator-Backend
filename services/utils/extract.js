@@ -137,7 +137,7 @@ Answer only in JSON: {"topic": "...", "sourcing": "...", "sentences": [numbers o
 
 // a time of the 12-hour clock written on the 24-hour one, as a translation may: "7 p.m." is "19",
 // "7:30 pm" is "19:30" and "12 a.m." is "0"
-const twentyFourHours = (text) => text.replace(/\b(\d{1,2})(?:[:.](\d{2}))?[\s  ]?([ap])\.?m\.?(?![a-z])/gi,
+const twentyFourHours = (text) => text.replace(/\b(\d{1,2})(?:[:.](\d{2}))?[\s\u00a0\u202f]?([ap])\.?m\.?(?![a-z])/gi,
     (time, hour, minutes, half) => {
         if (+hour < 1 || +hour > 12) return time;
         const hours = +hour % 12 + (half.toLowerCase() === 'p' ? 12 : 0);

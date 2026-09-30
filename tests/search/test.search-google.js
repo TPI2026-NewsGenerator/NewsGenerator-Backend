@@ -38,8 +38,15 @@ jest.unstable_mockModule('../../services/utils/extract.js', () => ({
 jest.unstable_mockModule('../../services/utils/google-news.js', () => ({
     decodeLinks: jest.fn(async (links) => new Map(links.map(link => [link, 'https://www.numerama.com/cartes-pokemon']))),
     isGoogleNewsUrl: (url) => url.startsWith('https://news.google.com/'),
+    googleAvailable: () => true,
+    sentenceUrl: () => null,
 }));
-jest.unstable_mockModule('../../services/ingest-service.js', () => ({searchesOfCategories: jest.fn(async () => [])}));
+jest.unstable_mockModule('../../services/ingest-service.js', () => ({
+    searchesOfCategories: jest.fn(async () => []),
+    GOOGLE_ENABLED: () => false,
+    IngestService: {readNow: jest.fn()},
+}));
+jest.unstable_mockModule('../../models/directory-model.js', () => ({DirectoryModel: {feedUrls: jest.fn(async () => [])}}));
 
 const {NewsService} = await import('../../services/news-service.js');
 const {FeedModel} = await import('../../models/feed-model.js');

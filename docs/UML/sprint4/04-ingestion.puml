@@ -5,9 +5,15 @@ title Ingestion — the cache filled in background
 package "Business" {
     class ingestService {
         + run()
+        + readNow()
         + schedule()
         + searchesOfCategories()
         + searchesOfUser()
+    }
+    class directoryService {
+        + grow()
+        + chooseSections()
+        + sectionCategory()
     }
     class feedService {
         + refreshUrls()
@@ -22,6 +28,13 @@ note right of ingestService
     (SQL functions assign_stories and
     assign_threads). News older than the
     retention days are deleted.
+end note
+note left of directoryService
+    After each run, a few more media:
+    the ones Google News names that no
+    feed reads (their main feed), and
+    the sections of the media read
+    that bring what their feeds miss
 end note
 package "Data" {
     class "db/rss-links.js" as rssLinks {
@@ -46,6 +59,14 @@ package "Data" {
     class profileModel {
         + searchesOf()
     }
+    class directoryModel {
+        + all()
+        + namedMedia()
+        + mediaOfFeeds()
+        + linksOf()
+        + addFeeds()
+        + tried()
+    }
 }
 package "utils" {
     class googleNews {
@@ -64,6 +85,11 @@ package "utils" {
     }
     class dates {
         + toDate()
+    }
+    class feedFinder {
+        + findFeeds()
+        + siteFeeds()
+        + readFeeds()
     }
 }
 note bottom of googleNews
@@ -84,6 +110,12 @@ ingestService --> profileModel
 ingestService --> googleNews
 ingestService --> embedder
 ingestService --> language
+ingestService --> directoryModel
+ingestService --> directoryService
+directoryService --> directoryModel
+directoryService --> feedFinder
+feedFinder --> crawlers
+directoryModel --> PostgreSQL
 feedService --> feedModel
 feedService --> crawlers
 feedService --> googleNews

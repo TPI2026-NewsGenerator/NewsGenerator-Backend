@@ -26,15 +26,19 @@ package "Business" {
     }
     class ingestService <<other feature>> {
         + searchesOfCategories()
+        + readNow()
     }
 }
 note left of newsService
     Reads, in the language of the search:
     the shared feeds, the own ones, those
     of the other readers found for a
-    profile or shared, and every Google
-    News search of the profiles. Never
-    narrowed by the profile of the reader.
+    profile or shared, every Google News
+    search of the profiles and the feeds
+    of the directory. Never narrowed by
+    the profile of the reader. A sentence
+    with fewer than 5 answers is asked
+    to Google News too, then searched again.
 end note
 package "Data" as Data {
     class links {
@@ -54,6 +58,9 @@ package "Data" as Data {
     }
     class profileModel <<other feature>> {
         + searchesOf()
+    }
+    class directoryModel <<other feature>> {
+        + feedUrls()
     }
 }
 package "Finding the news" as Finding {
@@ -103,6 +110,8 @@ package "Reading an article" as Reading {
     }
     class googleNews {
         + decodeLinks()
+        + sentenceUrl()
+        + googleAvailable()
     }
 }
 class ollama {

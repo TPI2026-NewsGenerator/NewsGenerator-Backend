@@ -7,6 +7,8 @@
 
 "use strict"
 
+import {discardBody} from "./public-url.js";
+
 // Feedly indexes the feeds people subscribe to, so it knows the ones a site declares nowhere and
 // that are on no usual path: football.london and uefa.com are found here and by nothing else.
 // It answers without a key, but this is not a documented endpoint: it can close any day, so a
@@ -31,7 +33,10 @@ export const searchDirectory = async (query, count = 20) => {
 
     try {
         const res = await fetch(url, {signal: AbortSignal.timeout(TIMEOUT_MS)});
-        if (!res.ok) return [];
+        if (!res.ok) {
+            await discardBody(res);
+            return [];
+        }
 
         const {results} = await res.json();
 

@@ -128,6 +128,8 @@ fp32 on the card too, so they stay the ones of the processor, already stored and
 18. Do the same with "add_signup.sql" (one account per name and per email, whatever their case)
 19. Do the same with "add_threads.sql" (the threads linking the stories of one affair, and the SQL
     function `assign_threads`), then run `node scripts/assign-threads.js` once for the stories already grouped
+20. Do the same with "add_directory.sql" (the feeds the server finds itself, see **The directory** below),
+    then run `node scripts/grow-directory.js` once to fill it
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.
@@ -194,9 +196,12 @@ Optional variables in `.env`:
 | `INGEST_OLDER_BATCHES` | 1 | batches of older news without vectors embedded per run, for the search by meaning |
 | `FEED_RETENTION_DAYS` | 30 | Articles older than this are deleted |
 | `RSS_BRIDGE_URL` | _(none)_ | Address of the RSS-Bridge, step 4 of the sources of a user below. Empty: the sites without a feed are simply out of reach |
-| `GOOGLE_NEWS` | on | `off` stops the searches of Google News of the interests |
+| `GOOGLE_NEWS` | on | `off` stops every request to Google News: the searches of the interests, and the sentence a search asks when our sources answer little |
+| `SEARCH_GOOGLE_NEWS` | on | `off`: a search our sources answer little is not asked to Google News (the searches of the interests go on) |
 | `GOOGLE_NEWS_EVERY_MINUTES` | 60 | each search of Google News is read again after this |
 | `GOOGLE_NEWS_INTERVAL_MS` | 1000 | two requests to Google never closer than this |
+| `DIRECTORY` | on | `off` stops the directory from looking at more media after each run (the feeds it has are still read) |
+| `DIRECTORY_PER_RUN` | 10 | media the directory looks at after each run, of each kind (named by Google News, already read) |
 | `MEDIACLOUD_API_TOKEN` | _(none)_ | key of [Media Cloud](https://search.mediacloud.org) (free account, 8000 requests a week), the second directory of media of the discovery (see **Media Cloud** below). Empty: the discovery asks Google News only |
 
 ### Documentation
@@ -204,7 +209,7 @@ Optional variables in `.env`:
 | Where | What |
 |---|---|
 | `http://localhost:3001/docs` | every route, with its body and its answers (Swagger UI). It is written in `config/swagger.js`, which is the only source: there is no `.yaml` to keep in step with it |
-| `docs/MLD_sprint4.md` | the thirteen tables, their columns and their keys, to redraw the MLD |
+| `docs/MLD_sprint4.md` | the fifteen tables, their columns and their keys, to redraw the MLD |
 | `docs/UML/sprint4/` | the class diagrams, one per feature (accounts, saved searches, search, ingestion, sources, profile, discovery, briefing) and an overview of what links them (`0*`), and the sequence diagrams of the signup, the search, the briefing, the discovery and the ingestion (`1*`), as source and as PNG. Render them again with `java -jar plantuml.jar -charset UTF-8 docs/UML/sprint4/*.puml` |
 | `docs/UML/*-diagram.puml` | the sequence diagrams of the login and of the saved searches, from sprint 1, brought up to date |
 | `docs/*.png` | the MCD, MLD and class diagrams of sprints 1 to 3, kept as they were |
@@ -223,7 +228,9 @@ Optional variables in `.env`:
    - the sources of the user searching, those they added by hand included;
    - the feeds found for the profile of any reader, and the ones a reader chose to share;
    - the searches of Google News of the interests of every profile. They say which subjects are
-     followed, never by whom.
+     followed, never by whom;
+   - the feeds of the directory of the project, found by the server itself, of that language and of
+     those categories or of none (see **The directory** below).
 
    A source added by hand and not shared stays its reader's: nobody else searches it. Measured for
    one reader (`bench/pool-sources.mjs`, French, 30 days): "cartes Pokémon" found 1 news in the shared
@@ -254,6 +261,17 @@ Optional variables in `.env`:
 
      Without the AI, the 30 closest are given, marked as not checked. Without the embedder, the
      sentence cannot be searched: the reader is told to put their words between quotes.
+
+     When fewer than 5 news answer, the subject is one our sources do not follow: Google News is then
+     asked the sentence itself, over the days searched (30 at most), its news are read and embedded at
+     once (`IngestService.readNow`), and the sentence is searched again with them; the reader is told.
+     Google learns the sentence, never who searched it. It is not asked while it is turned off or
+     paused after a block, and a search it does not answer keeps the answer of our sources.
+     Measured on the 15 sentences of `bench/vs-google.mjs` (30.09.2026): Google was asked for 7 of them.
+     "measles outbreaks" went from 1 answer to 10, with 32 close ones all on measles; "the Swiss
+     chocolate industry" from 0 to 4 (Lindt cutting its forecast); the crew of Artemis II from 4 cards to
+     8. A subject Google has nothing on either stays with little ("les vendanges en Valais"). Such a
+     search takes 5 to 11 seconds instead of 2 to 5. `SEARCH_GOOGLE_NEWS=off` turns it off.
    - **Keywords with an operator** (a quote, a comma or a `-word`) are searched as written, in SQL, with
      the excluded keywords and the timeframe. They work like on Google: commas separate alternatives
      (OR), the words of an alternative must all be found (AND), `"quoted text"` is an exact word or
@@ -558,6 +576,53 @@ ready to paste into `db/rss-links.js`, and the ones that only work through RSS-B
 apart. The second group is deliberately **not** put in the shared catalogue, which would make it
 depend on Docker being up; they are meant to be added as user sources.
 
+#### The directory
+
+A search only finds what some feed brings, and most of what Google News finds no feed of ours brings.
+Measured against it (`bench/vs-google.mjs`, 15 sentences in French and English over 7 days, its first
+30 news judged by hand): 76% of its news were in no feed of ours. A third of those came from media we
+read, through a section their feeds miss (the health of nbcnews.com, the missions of nasa.gov), two
+thirds from media we did not read at all. Google publishes no list of its sources, and the paid lists
+(Feeder, NewsAPI...) are only readers of feeds, or send the searches of our readers to someone else.
+So the server grows a directory of its own (`services/directory-service.js`, `db/add_directory.sql`),
+read by every search of its language, from two things it already has:
+
+- **the media Google News names** at least 3 times in 30 days in the searches the server reads: those of
+  the profiles (see **Google News** below), and the sentences a search asked it (medicaldaily.com came
+  from "measles outbreaks"), when no feed every reader can search reads them. A medium says nothing of
+  who searched it. Their main feed is looked for (`findFeeds`, without the bridge: it would load
+  hundreds of pages every 20 minutes) and kept when it
+  has news of the last 7 days, is written in one of our languages (told by its own news: ua.news,
+  named by an English search, is in Ukrainian), is no podcast and holds no key in its address. It goes
+  in no category: a newspaper named by a search on sport writes on everything;
+- **the sections of the media already read**: every feed a site declares, lists on its page of feeds
+  ("/rss/") or the directory of Feedly knows, is read once, and kept when most of its news of the last
+  7 days are news our feeds of that medium miss (3 at least): a feed "all the news" of a medium read
+  through its main feed brings the same news twice, and nothing else. 2 per medium at most, the one
+  bringing the most first, the news of the first counting as read for the second. Its category is
+  read in its address ("/health/" is science), else it is the one of the medium.
+
+A medium looked at is not looked at again before 30 days, found or not. The first time, every medium is
+looked at by `node scripts/grow-directory.js` (30.09.2026: 601 media named, 316 main feeds kept; 480 media read, 112 sections kept; a few minutes); after that, the server looks at
+`DIRECTORY_PER_RUN` more of each kind after each run of the background work, and the feeds it adds are
+read by the next run.
+
+Two addresses were added to the ones `findFeeds` tries when a site declares no feed, the ones of two
+publishing systems many newspapers use without saying so: Arc (`/arc/outboundfeeds/rss/?outputType=xml`,
+inquirer.com) and the one of Reach (`/?service=rss`, mirror.co.uk).
+
+Measured again on the same 15 sentences, the same day: the media we read went from 564 to 880, and the
+share of the first 30 news of Google told by a medium we read from 42% to 51%. But the share of those
+news our feeds brought only went from 12% to 14%: a main feed carries the last 20 to 100 news of its
+medium, a fraction of what it publishes. The answers grew where our sources had the subject (new
+electric models 17 to 21, the budget and the pensions 5 to 10, Taylor Swift 17 to 27, with the release
+of her new songs that was missed); a subject nobody follows is reached by asking Google News the
+sentence (see **How a search works**), not by the directory.
+
+The first read of the new feeds brought 21,935 news, the last 20 to 100 of each. Their vectors took a
+few minutes on the graphics card, but grouping the 12,000 of the last 48 hours into stories goes at about
+75 news a minute, more than two hours, while the lock of the background work is held.
+
 #### RSS-Bridge
 
 Some news sites publish no feed at all. RSS-Bridge reads their page and gives back its articles.
@@ -717,7 +782,7 @@ pnpm run build
 |-- models
 |-- prisma
 |-- routes
-|-- scripts                 # offline tools, run by hand, never by the server (ingest.js and ingest-status.js: pnpm run ingest)
+|-- scripts                 # offline tools, run by hand, never by the server (ingest.js and ingest-status.js: pnpm run ingest, grow-directory.js)
 |-- server.js
 |-- services                # search, briefing, background work (ingest-service.js), sources, profiles
 |   `-- utils               # key passages (extract.js), search by meaning (search-ai.js), Google News, embedder client...

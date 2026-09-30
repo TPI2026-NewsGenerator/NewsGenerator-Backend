@@ -113,6 +113,16 @@ export const searchUrl = (keywords, {days = null, language = 'en'} = {}) => {
     return `${SEARCH_URL}?q=${encodeURIComponent(query)}&hl=${locale.hl}&gl=${locale.gl}&ceid=${locale.ceid}`;
 };
 
+// the feed of a sentence, asked as written: Google reads it like a person would. searchUrl would quote
+// it and ask the exact phrase
+export const sentenceUrl = (sentence, {days = null, language = 'en'} = {}) => {
+    const text = sentence.trim();
+    if (text === '') return null;
+    const locale = LOCALES[language] ?? LOCALES.en;
+    const query = days ? `${text} when:${Math.ceil(days)}d` : text;
+    return `${SEARCH_URL}?q=${encodeURIComponent(query)}&hl=${locale.hl}&gl=${locale.gl}&ceid=${locale.ceid}`;
+};
+
 export const isGoogleNewsUrl = (url) => typeof url === 'string' && url.startsWith('https://news.google.com/');
 
 // the language a feed of Google News was asked in, null for another address

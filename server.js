@@ -12,6 +12,10 @@ import 'dotenv/config';
 import app from './app.js';
 import {FeedService} from './services/feed-service.js';
 import {IngestService} from './services/ingest-service.js';
+import {guardFetch} from './services/utils/public-url.js';
+
+// a bug of fetch must not stop the server (see guardFetch)
+guardFetch();
 
 const port = process.env.PORT || 3000;
 

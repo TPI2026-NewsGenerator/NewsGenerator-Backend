@@ -2,12 +2,13 @@
 
 What to reproduce in the diagram tool. Taken from `prisma/schema.prisma` and the scripts of `db/`,
 which are what a fresh install creates. Brought up to date on 30.09.2026, again after the search read
-the sources of the other readers: no table or column changed, only who reads which rows (see
-`user_feeds`, `profile_interests` and the relations).
+the sources of the other readers (who reads which rows, see `user_feeds`, `profile_interests` and the
+relations), and once more for the directory of the project: two tables, `directory_feeds` and
+`directory_tries` (`db/add_directory.sql`).
 
 ## What changed since the sprint 3 diagram
 
-**Eight tables to add**:
+**Ten tables to add**:
 
 | Table | Why it exists |
 |---|---|
@@ -19,6 +20,8 @@ the sources of the other readers: no table or column changed, only who reads whi
 | `user_profiles` | what a user wants to read, in their own words, and the languages they read |
 | `profile_interests` | that profile split by the AI into interests, one vector each |
 | `briefings` | the stories chosen for a user at one moment, as shown to them, with their thumbs |
+| `directory_feeds` | the feeds the server found itself: the main feed of the media Google News names, the sections of the media already read. Every search of their language reads them |
+| `directory_tries` | the media looked at for the directory, found or not, so none is looked at again before 30 days |
 
 **Two tables to remove** — `filters` and `users_has_last_filters`. They belonged to the "last filter
 applied" feature, which no longer exists. No code references them, no script in `db/` creates them,
@@ -26,7 +29,7 @@ and they are not in `prisma/schema.prisma`. They are still present in the develo
 leftovers of an older `create_insert_NewsGenerator.sql`, so `SELECT` still finds them there — but a
 fresh install has neither.
 
-## The thirteen tables
+## The fifteen tables
 
 Types are the PostgreSQL ones. `id` is always `integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY`,
 and `timestamptz` is `timestamp with time zone`. The vector types come from the `vector` extension
@@ -247,6 +250,31 @@ Index `i_profile_interests_user` on `id_user`. The interests hang on the user, n
 Index `i_briefings_user` on `(id_user, created_at DESC)`. The thumbs have no table of their own: they
 are read from `items` of the briefings of the last 30 days.
 
+### directory_feeds — *new*
+| Column | Type | |
+|---|---|---|
+| url | text | PK — the feed |
+| medium | text | NOT NULL — "nbcnews.com" |
+| origin | text | NOT NULL, CHECK in (`named`, `section`) — `named`: the main feed of a medium Google News names and no feed of ours reads; `section`: a section of a medium already read that brings what its feeds miss |
+| language | text | null — told by its own news |
+| category | text | null — none for a medium on everything, read whatever the categories searched |
+| created_at | timestamptz | NOT NULL, default `now()` |
+
+Index on `language`. A search reads the rows of its language, of its categories or of none
+(`DirectoryModel.feedUrls`); the background work reads them all.
+
+### directory_tries — *new*
+| Column | Type | |
+|---|---|---|
+| medium | text | PK (with origin) |
+| origin | text | PK, CHECK in (`named`, `section`) |
+| tried_at | timestamptz | NOT NULL, default `now()` |
+| kept | integer | NOT NULL, default 0 — the feeds kept |
+| reason | text | null — why none was |
+
+A medium is looked at again only 30 days after `tried_at`. Neither table points to another: a medium is
+a name, and a feed of the directory is read like any other, by its address.
+
 ## Relations
 
 ```
@@ -264,7 +292,8 @@ threads    1 ──< N  stories              (0 or 1 thread per story)
 `feeds`, `articles`, `stories` and `threads` are attached to no user: the cache is shared, and who may
 read which feed is decided by the search: the feeds of `db/rss-links.js` (387, 34 of them taken from
 awesome-rss-feeds by `scripts/import-awesome-feeds.js`), the `user_feeds` of that user, the ones of the
-other readers found for a profile or shared, and the Google News searches of every `profile_interests`.
+other readers found for a profile or shared, the Google News searches of every `profile_interests`, and
+the `directory_feeds`; and, when these answer little, Google News asked the sentence itself.
 The profile of the reader does not narrow a search: it only chooses the briefing.
 `user_feeds` points to a feed by its `url`, not by a key to `feeds`: a source is added before its feed
 is first read.

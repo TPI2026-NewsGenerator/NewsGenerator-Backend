@@ -10,6 +10,9 @@
 import 'dotenv/config';
 import process from 'node:process'
 import {IngestService} from '../services/ingest-service.js';
+import {guardFetch} from '../services/utils/public-url.js';
+
+guardFetch();
 
 const result = await IngestService.run();
 process.exit(result === null ? 1 : 0);
