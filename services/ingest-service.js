@@ -140,6 +140,14 @@ const dueSearches = async () => {
     return FeedModel.dueFeeds(urls, new Date(Date.now() - GOOGLE_EVERY_MINUTES * 60e3), MAX_GOOGLE_PER_RUN);
 };
 
+// the searches of Google News of every reader in this language, for interests of these categories (or
+// of none): they say which subjects are followed, never by whom, and a search reads them
+export const searchesOfCategories = async (categories, language) => GOOGLE_ENABLED()
+    ? [...new Set((await ProfileModel.searchesOf())
+        .filter(({category}) => !category || categories.includes(category))
+        .flatMap(({searches, languages}) => interestSearchUrls(searches, languages.filter(read => read === language))))]
+    : [];
+
 // the searches of Google News of one reader, read with the sources just found for them
 export const searchesOfUser = async (userId) => GOOGLE_ENABLED()
     ? [...new Set((await ProfileModel.searchesOf(userId)).flatMap(({searches, languages}) => interestSearchUrls(searches, languages)))]

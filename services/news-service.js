@@ -13,17 +13,21 @@ import {Filter} from "./utils/filter.js";
 import {FeedModel} from "../models/feed-model.js";
 import {canSummarize, extractArticle, passagesText, translationFor} from "./utils/extract.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
-import {mediumOf} from "./utils/public-url.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {averageLink, unionFind} from "./utils/grouping.js";
 import {corroborationOf} from "./utils/corroboration.js";
 import {dateOf, mediumOfArticle, readingOrder, sourceOf} from "./utils/reading-order.js";
 import {embed, toSparsevec, toVector} from "./utils/embedder.js";
 import {sortByMeaning} from "./utils/search-ai.js";
+import {decodeLinks, isGoogleNewsUrl} from "./utils/google-news.js";
+import {searchesOfCategories} from "./ingest-service.js";
 
 export const MAX_SELECTED_NEWS = 10;
 export const MAX_STORY_ARTICLES = 30;  // articles of one card sent to be summarized, a group is never bigger
 const AI_CONCURRENCY = 5;       // resumes asked to Ollama at the same time
+// real addresses of news of Google News asked for the key passages: 2 per card, 10 cards at most
+const DECODED_PER_STORY = 2;
+const MAX_DECODED = 10;
 // Two titles telling the same news share less than one would think: the Guardian writing "Columbus
 // Crew sack coach Federico Higuain for man's game jibe aimed at female referee" and the Independent
 // writing "Gonzalo Higuain's brother sacked by MLS club after telling female referee this is a man's
@@ -61,11 +65,15 @@ const shorten = (text) => !text || text.length <= CARD_LENGTH
     ? text
     : text.slice(0, CARD_LENGTH).replace(/\s+\S*$/, '') + '…';
 
+// the site an article is shown under: for a news of Google News the publisher Google names, not
+// news.google.com (its link stays the one of Google, which leads the reader to the article)
+const siteOf = (article) => sourceOf(article.source_url ?? article.link);
+
 // cached article -> format sent to the client
 const toNews = (article) => ({
     url: article.link,
     thumbnail: article.thumbnail,
-    source: sourceOf(article.link),
+    source: siteOf(article),
     publishedAt: article.published_at?.toISOString() ?? '',
     title: article.title,
     description: shorten(article.description),
@@ -118,7 +126,7 @@ const groupDuplicates = async (articles) => {
 
         // a medium publishing the same news in two of its feeds is one medium, and two articles
         // written the same way are one wording
-        news.get(group).media.add(mediumOf(sourceOf(article.link)));
+        news.get(group).media.add(mediumOfArticle(article));
         news.get(group).wordings.add(sameCopy(article.id));
     }
 
@@ -159,10 +167,10 @@ const withThreads = async (cards, feedUrls) => {
         const [lead, ...rest] = [...articles].sort((a, b) => dateOf(a) - dateOf(b));
         return {
             ...toNews(lead), story: lead.id_story, thread: lead.id_thread, found: false,
-            sources: rest.map(article => ({url: article.link, source: sourceOf(article.link), title: article.title,
+            sources: rest.map(article => ({url: article.link, source: siteOf(article), title: article.title,
                                            publishedAt: article.published_at?.toISOString() ?? ''})),
             // how many media tell it; the wordings are only counted for the news found
-            corroboration: {media: new Set(articles.map(article => mediumOf(sourceOf(article.link)))).size},
+            corroboration: {media: new Set(articles.map(mediumOfArticle)).size},
         };
     });
 
@@ -189,12 +197,17 @@ export const NewsService = {
     // its meaning (one call to the AI, see searchByMeaning), keywords with operators as written, in SQL
     getNews: async ({keywords, category, timeframe, userId, language = 'en'}) => {
         try {
-            // 1. get links from categories, with the feeds this user added (private to them), of the
-            // language of the search as the shared ones: a French search gave the cards of si.com
-            const newsLinks = [...new Set([
-                ...Links.getCategoriesLinks(category, language),
-                ...(userId ? await FeedModel.userFeedUrls(userId, category, language) : []),
-            ])];
+            // 1. get links from categories, with the feeds this user added (private to them) and those
+            // of every reader that are not private: found for a profile, shared, and the searches of
+            // Google News of the profiles. All of the language of the search: a French search gave the
+            // cards of si.com. A reader's search of "cartes Pokémon" found 1 news in the shared feeds
+            // and their own, 10 with the searches of the profile of another reader (bench/pool-sources.mjs)
+            const [own, others, searches] = await Promise.all([
+                userId ? FeedModel.userFeedUrls(userId, category, language) : [],
+                FeedModel.publicFeedUrls(category, language),
+                searchesOfCategories(category, language),
+            ]);
+            const newsLinks = [...new Set([...Links.getCategoriesLinks(category, language), ...own, ...others, ...searches])];
 
             if (!Filter.hasOperators(keywords)) {
                 return await NewsService.searchByMeaning({query: keywords.join(' ').trim(), feedUrls: newsLinks, timeframe});
@@ -362,8 +375,28 @@ export const NewsService = {
 
         const members = stories.map(story => story.urls.map(url => articles.get(url)));
         const reads = members.map(list => readingOrder(list, trusted));
-        const pages = await Crawlers.Html([...new Set(reads.flat().map(article => article.link))].map(url => ({url})));
-        const pageOf = new Map(pages.filter(page => page.content).map(page => [page.url, page]));
+
+        // a news of Google News is read at its real address, asked to Google only for the cards with
+        // no other article to read and never twice: Google answers 429 soon (see google-news.js)
+        const fromGoogle = (article) => isGoogleNewsUrl(article.feeds?.url ?? '');
+        const toDecode = [...new Set(reads
+            .filter(list => list.every(article => fromGoogle(article) && !article.resolved_link))
+            .flatMap(list => list.slice(0, DECODED_PER_STORY).map(article => article.link)))].slice(0, MAX_DECODED);
+        if (toDecode.length > 0) {
+            const decoded = await decodeLinks(toDecode);
+            for (const article of articles.values()) {
+                if (decoded.has(article.link)) article.resolved_link = decoded.get(article.link);
+            }
+            await FeedModel.saveResolvedLinks([...decoded].map(([link, resolved]) => ({link, resolved})));
+        }
+        // a link of Google News not decoded is not read: it only leads to a redirect
+        const readable = (article) => !fromGoogle(article) || Boolean(article.resolved_link);
+        const addressOf = (article) => article.resolved_link ?? article.link;
+        const pages = await Crawlers.Html([...new Set(reads.flat().filter(readable).map(addressOf))].map(url => ({url})));
+        const byAddress = new Map(pages.filter(page => page.content).map(page => [page.url, page]));
+        const pageOf = new Map(reads.flat()
+            .filter(article => readable(article) && byAddress.has(addressOf(article)))
+            .map(article => [article.link, byAddress.get(addressOf(article))]));
 
         const results = await mapWithConcurrency(reads, AI_CONCURRENCY, async (read) => {
             // the first lines of a page (a teaser, a paywall) do not tell the news
@@ -408,13 +441,15 @@ export const NewsService = {
                 sourcing: done?.sourcing ?? news.sourcing,
                 summaryError: done ? null : result.status === 'rejected'
                     ? "The AI could not choose the key passages of this news, please try again."
-                    : "No article of this news could be read in full (paywall, protected site or its first lines only).",
+                    : !list.some(readable)
+                        ? "This news is only known through Google News, which did not give its address this time: open it with “Read the article”."
+                        : "No article of this news could be read in full (paywall, protected site or its first lines only).",
                 corroboration: {...corroboration, mediaNames: [...new Set(list.map(mediumOfArticle))]},
                 articles: [...list]
                     .sort((a, b) => Number(trusted.has(b.feeds?.url)) - Number(trusted.has(a.feeds?.url)) || dateOf(b) - dateOf(a))
                     .map(article => ({
                         url: article.link,
-                        source: sourceOf(article.link),
+                        source: siteOf(article),
                         title: article.title,
                         publishedAt: article.published_at?.toISOString() ?? '',
                         trusted: trusted.has(article.feeds?.url),

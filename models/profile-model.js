@@ -74,9 +74,9 @@ export const ProfileModel = {
     }),
 
     // the searches of Google News of the interests, with the languages of their reader: of one user,
-    // or of every user. [{searches, languages}]
+    // or of every user. [{searches, languages, category}]
     searchesOf: async (userId = null) => prisma.$queryRawUnsafe(`
-        SELECT pi.searches, up.languages
+        SELECT pi.searches, up.languages, pi.category
         FROM profile_interests pi
         JOIN user_profiles up ON up.id_user = pi.id_user
         WHERE $1::int IS NULL OR pi.id_user = $1::int`,

@@ -12,6 +12,7 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 jest.unstable_mockModule('../../models/feed-model.js', () => ({
     FeedModel: {
         userFeedUrls: jest.fn(async () => []),
+        publicFeedUrls: jest.fn(async () => []),
         searchArticles: jest.fn(),
         closestArticles: jest.fn(),
         similarArticlePairs: jest.fn(),
@@ -25,10 +26,12 @@ jest.unstable_mockModule('../../services/utils/embedder.js', () => ({
     toSparsevec: jest.fn(() => '{}/1'),
 }));
 jest.unstable_mockModule('../../services/utils/search-ai.js', () => ({sortByMeaning: jest.fn()}));
+jest.unstable_mockModule('../../services/ingest-service.js', () => ({searchesOfCategories: jest.fn(async () => [])}));
 
 const {NewsService} = await import('../../services/news-service.js');
 const {FeedModel} = await import('../../models/feed-model.js');
 const {sortByMeaning} = await import('../../services/utils/search-ai.js');
+const {searchesOfCategories} = await import('../../services/ingest-service.js');
 
 const article = (id, host, title, story, thread = null) => ({
     id, id_story: story, id_thread: thread, title, link: `https://${host}/news/${id}`, description: '', thumbnail: null,
@@ -69,12 +72,20 @@ describe('the cards of a search by words', () => {
         expect(news[2].corroboration).toEqual({media: 2, wordings: 1});
     });
 
-    it('should read the own feeds of the reader in the language of the search only', async () => {
+    it('should read the feeds of the reader and the ones of the others not private, in the language of the search', async () => {
         FeedModel.searchArticles.mockResolvedValue([]);
+        FeedModel.userFeedUrls.mockResolvedValue(['https://own.test/rss']);
+        FeedModel.publicFeedUrls.mockResolvedValue(['https://found.test/rss', 'https://own.test/rss']);
+        searchesOfCategories.mockResolvedValue(['https://news.google.com/rss/search?q=cartes']);
 
         await NewsService.getNews({keywords: ['"legal"'], category: ['sport'], userId: 7, language: 'fr'});
 
         expect(FeedModel.userFeedUrls).toHaveBeenCalledWith(7, ['sport'], 'fr');
+        expect(FeedModel.publicFeedUrls).toHaveBeenCalledWith(['sport'], 'fr');
+        expect(searchesOfCategories).toHaveBeenCalledWith(['sport'], 'fr');
+        const read = FeedModel.searchArticles.mock.calls[0][0].feedUrls;
+        expect(read.filter(url => url === 'https://own.test/rss')).toHaveLength(1);
+        expect(read).toEqual(expect.arrayContaining(['https://found.test/rss', 'https://news.google.com/rss/search?q=cartes']));
     });
 });
 

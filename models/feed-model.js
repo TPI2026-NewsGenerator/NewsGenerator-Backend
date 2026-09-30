@@ -67,7 +67,8 @@ export const FeedModel = {
 
         return prisma.$queryRawUnsafe(`
             SELECT a.id, a.id_feed, a.link, a.title, a.description, a.thumbnail, a.category,
-                   a.published_at, a.created_at, a.topic, a.summary, a.sourcing, a.id_story, s.id_thread
+                   a.published_at, a.created_at, a.topic, a.summary, a.sourcing, a.id_story, s.id_thread,
+                   a.source_url, a.resolved_link, a.medium
             FROM articles a
             JOIN feeds f ON f.id = a.id_feed
             LEFT JOIN stories s ON s.id = a.id_story
@@ -87,6 +88,7 @@ export const FeedModel = {
         WITH candidates AS (
             SELECT a.id, a.id_feed, a.link, a.title, a.description, a.thumbnail, a.category,
                    a.published_at, a.created_at, a.topic, a.summary, a.sourcing, a.id_story, s.id_thread,
+                   a.source_url, a.resolved_link, a.medium,
                    -(a.text_dense <#> $4::vector) - $6::real * (a.text_sparse <#> $5::sparsevec) AS score,
                    -(a.text_sparse <#> $5::sparsevec) AS words
             FROM articles a
@@ -122,6 +124,7 @@ export const FeedModel = {
         SELECT * FROM (
             SELECT a.id, a.id_feed, a.link, a.title, a.description, a.thumbnail, a.category,
                    a.published_at, a.created_at, a.topic, a.summary, a.sourcing, a.id_story, facts.id_thread,
+                   a.source_url, a.resolved_link, a.medium,
                    row_number() OVER (PARTITION BY a.id_story ORDER BY COALESCE(a.published_at, a.created_at) DESC) AS n
             FROM facts
             JOIN articles a ON a.id_story = facts.id
@@ -323,6 +326,18 @@ export const FeedModel = {
         JOIN feeds f ON f.id = a.id_feed
         WHERE a.source_url IS NULL AND a.medium IS NOT NULL
           AND f.url NOT LIKE 'https://news.google.com/%'`)).map(row => row.medium),
+    // the feeds of every user a search may read: the ones found for a profile and the ones their reader
+    // shares, of these categories and this language (or of a language not known). A feed added by hand
+    // and not shared stays its reader's
+    publicFeedUrls: async (categories, language) => (await prisma.user_feeds.findMany({
+        where: {
+            category: { in: categories },
+            OR: [{ origin: 'profile' }, { shared: true }],
+            AND: [{ OR: [{ language }, { language: null }] }],
+        },
+        select: { url: true },
+        distinct: ['url'],
+    })).map(feed => feed.url),
     // the feeds of every user, read by the worker (see IngestService.run)
     allUserFeedUrls: async () => {
         const feeds = await prisma.user_feeds.findMany({select: {url: true}, distinct: ['url']});

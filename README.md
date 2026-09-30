@@ -215,9 +215,22 @@ Optional variables in `.env`:
    German, 15 in Italian. A search never mixes two languages, and one in French has no reason to
    read the English sources.
 2. A search fetches no feed: it only reads the `articles` table, filled in background (see
-   **Background work** above), so nobody waits for a feed. The shared feeds of a language and the
-   sources added by a user are two separate groups: the sources of a user are read by the background
-   work like the others, but only searched when that user searches, not when anybody else does.
+   **Background work** above), so nobody waits for a feed. Besides the shared feeds of the language
+   and categories chosen, a search reads the sources of the readers that are not private, of that
+   language and those categories (`FeedModel.publicFeedUrls`, `searchesOfCategories`):
+   - the sources of the user searching, those they added by hand included;
+   - the feeds found for the profile of any reader, and the ones a reader chose to share;
+   - the searches of Google News of the interests of every profile. They say which subjects are
+     followed, never by whom.
+
+   A source added by hand and not shared stays its reader's: nobody else searches it. Measured for
+   one reader (`bench/pool-sources.mjs`, French, 30 days): "cartes Pokémon" found 1 news in the shared
+   feeds and their own, 2 with the feeds found for the other profiles, 10 with their searches of
+   Google News. The briefing still reads only the sources of its reader.
+
+   A news read through Google News is shown under the medium Google names. Its real address is only
+   asked to Google when its key passages are asked for and the card has no other article to read
+   (2 per card, 10 at most), since Google soon answers 429 and every search of Google waits an hour.
 3. What was typed decides how it is searched (`Filter.hasOperators`):
    - **A sentence**, without any operator, is searched by its meaning (`NewsService.searchByMeaning`).
      The embedder gives the vector of the sentence, and `FeedModel.closestArticles` takes, among the
@@ -269,7 +282,7 @@ Optional variables in `.env`:
 5. Each card says what the grouping measured, and nothing more (see **Corroboration** below).
 6. A user can add their own sources (`POST /api/feeds` with a site address): the server finds the
    RSS feed of the site and checks it answers. These sources are **private**, they are only used in
-   the searches of this user. Addresses of private networks are refused, see `services/utils/public-url.js`.
+   the searches of this user, unless they share them. Addresses of private networks are refused, see `services/utils/public-url.js`.
    The feed of a site is looked for in four steps, each one tried only when the one before found
    nothing (`services/utils/feed-finder.js`):
    1. the feed the page declares, `<link rel="alternate" type="application/rss+xml">`, except the
