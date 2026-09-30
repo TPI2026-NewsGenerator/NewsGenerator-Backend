@@ -318,6 +318,14 @@ export const rss = {
             // "https://zeenews.india.com/rss/world-news.xml",
             // media found missing by the search, checked one by one
             "http://feeds.washingtonpost.com/rss/world",
+            // from awesome-rss-feeds (github.com/plenaryapp/awesome-rss-feeds, CC0), read and alive on 30.09.2026
+            "https://rss.dw.com/rdf/rss-en-all",
+            "http://www.independent.co.uk/news/uk/rss",
+            "https://www.cbc.ca/cmlink/rss-topstories",
+            "https://globalnews.ca/feed/",
+            "https://nationalpost.com/feed/",
+            "https://www.huffpost.com/section/world-news/feed",
+            "https://www.cnbc.com/id/100003114/device/rss/rss.html",
         ],
         // no YouTube channel: their videos (shorts, highlights, workouts) are no news, and they came up among
         // the stories of profiles far from sport (bench/base-feeds.mjs, 28.09.2026)
@@ -530,6 +538,8 @@ export const rss = {
             "https://www.football.london/tottenham-hotspur-fc/?service=rss",
             "https://www.uefa.com/rss/uefachampionsleague/rss.xml",
             "https://www.uefa.com/rss/uefaeuro/rss.xml",
+            // from awesome-rss-feeds (github.com/plenaryapp/awesome-rss-feeds, CC0), read and alive on 30.09.2026
+            "https://sports.yahoo.com/rss/",
         ],
         politics: [
             "https://feeds.bloomberg.com/politics/news.rss",
@@ -561,6 +571,9 @@ export const rss = {
             "https://www.investing.com/rss/news.rss",
             "https://seekingalpha.com/market_currents.xml",
             "https://www.forbes.com/business/feed/",
+            // from awesome-rss-feeds (github.com/plenaryapp/awesome-rss-feeds, CC0), read and alive on 30.09.2026
+            "https://economictimes.indiatimes.com/rssfeedsdefault.cms",
+            "https://business.financialpost.com/feed/",
         ],
         technology: [
             "https://feeds.bloomberg.com/technology/news.rss",
@@ -583,6 +596,15 @@ export const rss = {
             "https://www.blog.google/rss/",
             "https://thenextweb.com/feed/",
             "https://www.theregister.com/headlines.rss",
+            // from awesome-rss-feeds (github.com/plenaryapp/awesome-rss-feeds, CC0), read and alive on 30.09.2026
+            "https://www.eurogamer.net/?format=rss",
+            "https://www.gamespot.com/feeds/mashup/",
+            "http://feeds.ign.com/ign/all",
+            "https://kotaku.com/rss",
+            "https://www.polygon.com/rss/index.xml",
+            "http://feeds.feedburner.com/RockPaperShotgun",
+            "https://www.escapistmagazine.com/v2/feed/",
+            "https://indiegamesplus.com/feed",
         ],
         science: [
             "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml",
@@ -614,6 +636,12 @@ export const rss = {
             "https://www.liberation.fr/arc/outboundfeeds/rss-all/?outputType=xml",
             "https://www.20minutes.fr/feeds/rss-une.xml",
             "https://www.nouvelobs.com/a-la-une/rss.xml",
+            // from awesome-rss-feeds (github.com/plenaryapp/awesome-rss-feeds, CC0), read and alive on 30.09.2026
+            "https://www.ouest-france.fr/rss-en-continu.xml",
+            "https://www.sudouest.fr/essentiel/rss.xml",
+            "https://www.ladepeche.fr/rss.xml",
+            "https://www.huffingtonpost.fr/feeds/index.xml",
+            "https://www.lapresse.ca/actualites/rss",
         ],
         sport: [
             "https://www.francetvinfo.fr/sports.rss",
@@ -652,6 +680,10 @@ export const rss = {
             "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada",
             "https://www.lavanguardia.com/rss/home.xml",
             "https://e00-elmundo.uecdn.es/elmundo/rss/portada.xml",
+            // from awesome-rss-feeds (github.com/plenaryapp/awesome-rss-feeds, CC0), read and alive on 30.09.2026
+            "https://rss.elconfidencial.com/espana/",
+            "https://www.eldiario.es/rss/",
+            "https://www.huffingtonpost.es/feeds/index.xml",
         ],
         sport: [
             "https://e00-marca.uecdn.es/rss/portada.xml",
@@ -688,6 +720,8 @@ export const rss = {
             "https://newsfeed.zeit.de/index",
             "https://www.welt.de/feeds/latest.rss",
             "https://www.spiegel.de/schlagzeilen/index.rss",
+            // from awesome-rss-feeds (github.com/plenaryapp/awesome-rss-feeds, CC0), read and alive on 30.09.2026
+            "https://www.faz.net/rss/aktuell/",
         ],
         sport: [
             "https://www.sportschau.de/index~rss2.xml",
@@ -722,9 +756,18 @@ export const rss = {
         press: [
             "https://www.ansa.it/sito/ansait_rss.xml",
             "https://www.repubblica.it/rss/homepage/rss2.0.xml",
+            // from awesome-rss-feeds (github.com/plenaryapp/awesome-rss-feeds, CC0), read and alive on 30.09.2026
+            "https://www.fanpage.it/feed/",
+            "http://rss.adnkronos.com/RSS_PrimaPagina.xml",
+            "https://www.ilmattino.it/?sez=XML&args&p=search&args[box]=Home&limit=20&layout=rss",
+            "https://www.internazionale.it/sitemaps/rss.xml",
+            "https://www.panorama.it/feeds/feed.rss",
+            "https://www.liberoquotidiano.it/rss.xml",
         ],
         sport: [
             "https://www.ansa.it/sito/notizie/sport/sport_rss.xml",
+            // from awesome-rss-feeds (github.com/plenaryapp/awesome-rss-feeds, CC0), read and alive on 30.09.2026
+            "https://www.milannews.it/rss/",
         ],
         politics: [
             "https://www.ansa.it/sito/notizie/politica/politica_rss.xml",

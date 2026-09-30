@@ -534,13 +534,21 @@ these calls use `node:https`, where the timeout is really honoured. A search wai
 most, and gets no suggestion from GDELT rather than a slow answer; the offline script below waits
 30 seconds and retries.
 
-Three scripts do the same work without anybody waiting:
+Four scripts do the same work without anybody waiting:
 
 ```bash
 node scripts/check-coverage.js "referee" sport      # what the cache finds vs what Google News finds
 node scripts/find-feeds.js https://www.skysports.com # the feed of one site, to fill db/rss-links.js
 node scripts/find-missing-sources.js --days 3       # sweeps the accumulated missing media, by batches
+node --env-file=.env scripts/import-awesome-feeds.js # the new feeds of awesome-rss-feeds worth adding
 ```
+
+`import-awesome-feeds.js` reads the lists of [awesome-rss-feeds](https://github.com/plenaryapp/awesome-rss-feeds)
+(CC0) by country and by subject, reads each feed once and prints the ones alive (a news of less than
+30 days, 5 news at least), written in one of our languages, that are no podcast, no video channel, no
+social network and no medium already read in that language and category. Nothing is added by itself:
+the ones chosen are pasted into `db/rss-links.js`; the ones not wanted are set aside in the script, so
+a new run only proposes what is new in their lists. 34 were added this way on 30.09.2026.
 
 `find-missing-sources.js` separates what it finds: the media that publish a real feed are printed
 ready to paste into `db/rss-links.js`, and the ones that only work through RSS-Bridge are printed
