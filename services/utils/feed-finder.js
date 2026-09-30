@@ -137,8 +137,9 @@ const subjectCandidates = async (home, words, host) => {
 // sections to look for; which news are on the subject is decided by 'judge' when one is given (by
 // meaning, see subjectStats), else by the keywords themselves. With 'languages' (those of the reader)
 // a feed written in another is no candidate: favorflav.com, found by a French search, gave its Dutch
-// section, on the subject by meaning (the vectors read every language) but not readable
-export const findFeeds = async (site, {language = null, subject = null, judge = null, languages = null} = {}) => {
+// section, on the subject by meaning (the vectors read every language) but not readable. 'known' are
+// feeds of the site another directory knows (see media-cloud.js), candidates like the others
+export const findFeeds = async (site, {language = null, subject = null, judge = null, languages = null, known = []} = {}) => {
     // "fortune.com" -> https, but "file:///etc/passwd" keeps its protocol so it is refused as such
     const value = site.trim();
     const siteUrl = value.includes('://') ? value : `https://${value}`;
@@ -162,7 +163,9 @@ export const findFeeds = async (site, {language = null, subject = null, judge = 
 
     let candidates = home.feeds.length > 0 ? home.feeds : COMMON_PATHS.map(path => new URL(path, siteUrl).href);
     if (judgeSubject) {
-        candidates = [...new Set([...candidates, ...await subjectCandidates(home, words, host)])].slice(0, MAX_CHECKED);
+        candidates = [...new Set([...candidates, ...await subjectCandidates(home, words, host), ...known])].slice(0, MAX_CHECKED);
+    } else if (known.length > 0) {
+        candidates = [...new Set([...candidates, ...known])].slice(0, MAX_CHECKED);
     }
 
     const best = (a, b) => (judgeSubject ? subjectScore(b) - subjectScore(a) : (b.recent ?? 0) - (a.recent ?? 0)) || b.items - a.items;

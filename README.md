@@ -197,6 +197,7 @@ Optional variables in `.env`:
 | `GOOGLE_NEWS` | on | `off` stops the searches of Google News of the interests |
 | `GOOGLE_NEWS_EVERY_MINUTES` | 60 | each search of Google News is read again after this |
 | `GOOGLE_NEWS_INTERVAL_MS` | 1000 | two requests to Google never closer than this |
+| `MEDIACLOUD_API_TOKEN` | _(none)_ | key of [Media Cloud](https://search.mediacloud.org) (free account, 8000 requests a week), the second directory of media of the discovery (see **Media Cloud** below). Empty: the discovery asks Google News only |
 
 ### Documentation
 
@@ -633,6 +634,22 @@ publisher in clear (`<source url="https://www.bbc.com">`). It is used three ways
 - **the real address of an article**, which Google hides behind a redirect: one page of Google each,
   so it is asked only when a briefing reads the article, at most 10 per briefing and 2 per story, and
   kept once found.
+
+#### Media Cloud
+
+The discovery of the sources of a profile (`services/discovery-service.js`) also asks
+[Media Cloud](https://search.mediacloud.org), which indexes the national and regional press of each
+country and searches the whole text of its news (`services/utils/media-cloud.js`). Its searches are the
+ones of the interests, as a phrase and in their language, over the last 30 days, in the press of that
+language (France, Switzerland and Belgium for French). A medium it names that Google News did not is
+tried after the media of Google, with a budget of its own (2 kept or 3 tried per language), and the
+feeds its directory knows for it are candidates with the ones the site declares.
+
+Measured on three profiles (5 media only it named tried per interest and language): 8 feeds on the
+subject of 11 for the UEFA profile (blick.ch/fr, sudinfo.be, lesoir.be, onzemondial, the sport of the
+Evening Standard), 3 of 10 for astronomy (lalibre.be sciences-espace), none for sailing and 2 of 20 for
+the trading cards: it knows no specialist site. It answers 2 searches a minute, so its searches wait in
+a queue of their own while the media of Google News are tried, and a refusal pauses it 15 minutes.
 
 The medium of a news read through Google News is the publisher it names, not google.com
 (`db/add_google_news.sql`): two media telling a story through Google are two voices, and a medium met

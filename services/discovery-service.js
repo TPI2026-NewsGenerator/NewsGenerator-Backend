@@ -13,6 +13,7 @@ import {knownMedia} from "./source-service.js";
 import {IngestService, searchesOfUser} from "./ingest-service.js";
 import {FeedbackService} from "./feedback-service.js";
 import {search} from "./utils/google-news.js";
+import {knownFeeds, mediaCloudEnabled, mediaFor as pressMediaFor} from "./utils/media-cloud.js";
 import {findFeeds, isOnSubject, subjectScore} from "./utils/feed-finder.js";
 import {parseVector} from "./utils/embedder.js";
 import {JUDGE_THRESHOLD, judgeOf} from "./utils/meaning-judge.js";
@@ -30,6 +31,11 @@ const SEARCH_DAYS = 7;              // a week of Google News says which media re
 const KEPT_PER_LANGUAGE = 2;
 const TRIED_PER_LANGUAGE = 5;
 const FIND_CONCURRENCY = 3;
+// then the press Media Cloud names and Google News did not, with a budget of its own: measured
+// (bench/mc-measure.mjs), 8 feeds on the subject of 11 media tried for the UEFA profile, but 2 of 20
+// for the trading cards, where it only knows newspapers. It must not take the tries of Google News
+const PRESS_KEPT_PER_LANGUAGE = 2;
+const PRESS_TRIED_PER_LANGUAGE = 3;
 // A news is on an interest when its cosine with the interest reaches JUDGE_THRESHOLD (see meaning-judge.js)
 export {JUDGE_THRESHOLD};
 // A feed found for the profile stays while its news are on the profile: on the UEFA profile goal.com
@@ -56,6 +62,21 @@ const mediaOf = async (searches) => {
         }
     }
 
+    return [...media.values()].sort((a, b) => b.news - a.news);
+};
+
+// the media of the press Media Cloud names for the searches of an interest, the most present first.
+// Its searches wait in their own queue (2 a minute): never an error, at worst none
+const pressMediaOf = async (searches) => {
+    const media = new Map();
+    for (const {lang, q} of searches.map(parseSearch).filter(Boolean)) {
+        for (const medium of await pressMediaFor(q, {language: lang})) {
+            const key = nameOf(medium.site);
+            const known = media.get(key) ?? {...medium, news: 0};
+            known.news += medium.news;
+            media.set(key, known);
+        }
+    }
     return [...media.values()].sort((a, b) => b.news - a.news);
 };
 
@@ -107,22 +128,38 @@ const discover = async (userId) => {
     const judge = judgeOf(interests.map(interest => parseVector(interest.dense)));
     const perInterest = [];
 
+    const isNew = (medium) => !known.has(nameOf(medium.site)) && !kept.has(nameOf(medium.site));
     for (const interest of interests) {
-        const media = (await mediaOf(interest.searches))
-            .filter(medium => !known.has(nameOf(medium.site)) && !kept.has(nameOf(medium.site)));
+        // asked at once: its searches wait for their turn while the media of Google News are tried
+        const press = mediaCloudEnabled() ? pressMediaOf(interest.searches) : Promise.resolve([]);
+        const named = await mediaOf(interest.searches);
 
         const subject = [interest.keywords, ...interest.sections].filter(Boolean);
-        const found = await tryPerLanguage(media, async (medium) => {
-            const feed = await findFeeds(medium.site, {language: medium.lang, subject, judge, languages})
+        // 'withKnown': the feeds the directory of Media Cloud knows for the medium are candidates too
+        const tryMedium = (withKnown) => async (medium) => {
+            const listed = withKnown ? await knownFeeds(medium.site) : [];
+            const feed = await findFeeds(medium.site, {language: medium.lang, subject, judge, languages, known: listed})
                 .then(feeds => feeds[0], () => null);
             if (!feed || !isOnSubject(feed)) return null;
             // the language read in its news: tribuna.com/en/, found by a French search, is in English
             return {url: feed.url, site: medium.site, category: interest.category ?? 'world', language: feed.language ?? medium.lang,
                 score: subjectScore(feed)};
-        }, {kept: KEPT_PER_LANGUAGE, tried: TRIED_PER_LANGUAGE, wave: FIND_CONCURRENCY});
-
+        };
+        const found = await tryPerLanguage(named.filter(isNew), tryMedium(false),
+            {kept: KEPT_PER_LANGUAGE, tried: TRIED_PER_LANGUAGE, wave: FIND_CONCURRENCY});
         found.forEach(feed => kept.add(nameOf(feed.site)));
-        perInterest.push(found);
+
+        const byGoogle = new Set(named.map(medium => nameOf(medium.site)));
+        const pressOnly = (await press).filter(medium => isNew(medium) && !byGoogle.has(nameOf(medium.site)));
+        const fromPress = await tryPerLanguage(pressOnly, tryMedium(true),
+            {kept: PRESS_KEPT_PER_LANGUAGE, tried: PRESS_TRIED_PER_LANGUAGE, wave: FIND_CONCURRENCY});
+        fromPress.forEach(feed => kept.add(nameOf(feed.site)));
+        if (mediaCloudEnabled()) {
+            console.log(`Discovery: user ${userId}, interest ${interest.position}: Media Cloud named ${pressOnly.length} new media, `
+                + `kept ${fromPress.map(feed => feed.site).join(', ') || 'none'}`);
+        }
+
+        perInterest.push([...found, ...fromPress]);
     }
 
     // the ones read through the bridge only while there is room for them, the next ones take their place

@@ -259,6 +259,10 @@ package "utils" {
         class gdelt {
             + mediaFor()
         }
+        class mediaCloud {
+            + mediaFor()
+            + knownFeeds()
+        }
         class allocation {
             + allocate()
             + tryPerLanguage()
@@ -337,6 +341,7 @@ package "Infrastructure Layer" {
     class "Embedder (bge-m3, Python)" as EmbedderServer
     class "Google News" as GoogleNewsApi
     class "GDELT DOC 2.0" as GdeltApi
+    class "Media Cloud" as MediaCloudApi
     class "Feed directory" as DirectoryApi
     class "RSS-Bridge" as RssBridge
 }
@@ -430,6 +435,7 @@ discoveryService --> sourceService
 discoveryService --> feedFinder
 discoveryService --> meaningJudge
 discoveryService --> googleNews
+discoveryService --> mediaCloud
 discoveryService --> allocation
 discoveryService --> feedLimits
 briefingService --> briefingModel
@@ -467,6 +473,7 @@ feedBridge --> crawlers
 ' --- infrastructure
 googleNews --> GoogleNewsApi
 gdelt --> GdeltApi
+mediaCloud --> MediaCloudApi
 feedDirectory --> DirectoryApi
 feedBridge --> RssBridge
 ollama --> Ollama
