@@ -283,10 +283,15 @@ export const FeedModel = {
         });
         return count;
     },
-    // urls of the feeds of this user, only those of these categories when they are given
-    userFeedUrls: async (userId, categories = null) => {
+    // urls of the feeds of this user, only those of these categories when they are given, and of this
+    // language: a feed whose language is not known is kept, its news may still be in it
+    userFeedUrls: async (userId, categories = null, language = null) => {
         const feeds = await prisma.user_feeds.findMany({
-            where: { id_user: userId, ...(categories ? { category: { in: categories } } : {}) },
+            where: {
+                id_user: userId,
+                ...(categories ? { category: { in: categories } } : {}),
+                ...(language ? { OR: [{ language }, { language: null }] } : {}),
+            },
             select: { url: true },
             distinct: ['url'],
         });

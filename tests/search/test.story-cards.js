@@ -68,6 +68,14 @@ describe('the cards of a search by words', () => {
         // the same text at 0.85: one wording for two media
         expect(news[2].corroboration).toEqual({media: 2, wordings: 1});
     });
+
+    it('should read the own feeds of the reader in the language of the search only', async () => {
+        FeedModel.searchArticles.mockResolvedValue([]);
+
+        await NewsService.getNews({keywords: ['"legal"'], category: ['sport'], userId: 7, language: 'fr'});
+
+        expect(FeedModel.userFeedUrls).toHaveBeenCalledWith(7, ['sport'], 'fr');
+    });
 });
 
 describe('the cards of a search by meaning', () => {

@@ -189,10 +189,11 @@ export const NewsService = {
     // its meaning (one call to the AI, see searchByMeaning), keywords with operators as written, in SQL
     getNews: async ({keywords, category, timeframe, userId, language = 'en'}) => {
         try {
-            // 1. get links from categories, with the feeds this user added (private to them)
+            // 1. get links from categories, with the feeds this user added (private to them), of the
+            // language of the search as the shared ones: a French search gave the cards of si.com
             const newsLinks = [...new Set([
                 ...Links.getCategoriesLinks(category, language),
-                ...(userId ? await FeedModel.userFeedUrls(userId, category) : []),
+                ...(userId ? await FeedModel.userFeedUrls(userId, category, language) : []),
             ])];
 
             if (!Filter.hasOperators(keywords)) {
