@@ -74,13 +74,16 @@ const search = (path, params) => {
     return run;
 };
 
-// the words of a search asked together: its search reads the whole text with the words OR'ed, and
-// "TCG news" answered every sport page saying "news". Only in the language asked
+// every word of a search asked, as Google News does, and only in the language asked. Its search
+// reads the whole text with the words OR'ed by default: every sport page saying "news" or "games".
+// Asked as a phrase, "Super League Suisse" found 1 medium, all the words 12 (blick.ch, 20min.ch,
+// laliberte.ch): a search of an interest is words, not a sentence someone writes. The noise it lets
+// in ("trading card games": the trading deadline of a league) is judged away by the feeds
 export const toQuery = (q, language) => {
     const words = String(q).replace(/[():"]/g, ' ').trim().split(/\s+/).filter(Boolean);
     if (words.length === 0) return null;
-    const phrase = words.length > 1 ? `"${words.join(' ')}"` : words[0];
-    return `${phrase} AND language:${language}`;
+    const all = words.length > 1 ? `(${words.join(' AND ')})` : words[0];
+    return `${all} AND language:${language}`;
 };
 
 // the media of the press of this language writing on this search, the most present first

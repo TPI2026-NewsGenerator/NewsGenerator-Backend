@@ -22,8 +22,8 @@ afterAll(() => {
 });
 
 describe('toQuery', () => {
-    it('should ask the words of a search together, in its language', () => {
-        expect(toQuery('Ligue des champions', 'fr')).toBe('"Ligue des champions" AND language:fr');
+    it('should ask every word of a search, in its language', () => {
+        expect(toQuery('Super League Suisse', 'fr')).toBe('(Super AND League AND Suisse) AND language:fr');
         expect(toQuery('UEFA', 'en')).toBe('UEFA AND language:en');
         expect(toQuery(' ("x") ', 'en')).toBe('x AND language:en');
         expect(toQuery('  ', 'en')).toBeNull();

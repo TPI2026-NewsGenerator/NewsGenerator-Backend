@@ -640,7 +640,7 @@ publisher in clear (`<source url="https://www.bbc.com">`). It is used three ways
 The discovery of the sources of a profile (`services/discovery-service.js`) also asks
 [Media Cloud](https://search.mediacloud.org), which indexes the national and regional press of each
 country and searches the whole text of its news (`services/utils/media-cloud.js`). Its searches are the
-ones of the interests, as a phrase and in their language, over the last 30 days, in the press of that
+ones of the interests, every word asked and in their language, over the last 30 days, in the press of that
 language (France, Switzerland and Belgium for French). A medium it names that Google News did not is
 tried after the media of Google, with a budget of its own (2 kept or 3 tried per language), and the
 feeds its directory knows for it are candidates with the ones the site declares.
