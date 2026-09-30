@@ -174,9 +174,11 @@ pnpm run ingest          # one run now, by hand (a run of the server at the same
 pnpm run embedder        # starts the embedder on this machine
 ```
 
-The news of the last 48 h are embedded and grouped first, the newest first, `INGEST_BATCHES` batches of
-`INGEST_MAX_EMBEDDED` per run: each batch is grouped in a transaction of its own, and a big backlog (the
-first read of many new feeds) waits for the next runs, which read the feeds before. Grouped in one call,
+The news of the last 48 h are embedded and grouped first, the newest first, by batches of
+`INGEST_MAX_EMBEDDED`, each grouped in a transaction of its own. A run starts no batch once it has
+worked `INGEST_GROUP_MINUTES`, the feeds read included: a big backlog (the first read of many new feeds) waits for the next runs, which
+read the feeds before. A time rather than a number of batches: a batch of 300 took 4 minutes, then 9
+with 31 000 news in the window. Grouped in one call,
 the 12 000 news of the first read of the directory held the ingestion 2 h 10 with no feed read meanwhile,
 and nothing saved before the end. The older news kept (`FEED_RETENTION_DAYS`)
 that have no vectors yet, because the embedder was down longer than the window or a feed came with
@@ -184,7 +186,7 @@ old news, are embedded after them for the search by meaning, `INGEST_OLDER_BATCH
 `INGEST_MAX_EMBEDDED` per run, and join no story. To catch up a long backlog at once:
 
 ```bash
-INGEST_BATCHES=200 INGEST_OLDER_BATCHES=200 pnpm run ingest
+INGEST_GROUP_MINUTES=600 INGEST_OLDER_BATCHES=200 pnpm run ingest
 ```
 
 The searches of Google News of the interests are read by the same runs, less often (see **Google News**
@@ -197,7 +199,7 @@ Optional variables in `.env`:
 | `INGEST_IN_SERVER` | on | `false` leaves the background work to `pnpm run ingest`, run by a scheduler of the system |
 | `INGEST_INTERVAL_MINUTES` | 20 | the time between two runs |
 | `INGEST_MAX_EMBEDDED` | 300 | news embedded, saved and grouped at a time. On a busy processor 1500 news at once took over an hour, all lost if the process stopped before saving them |
-| `INGEST_BATCHES` | 3 | batches of the window embedded and grouped per run, about 4 minutes each: the rest waits for the next run |
+| `INGEST_GROUP_MINUTES` | 10 | a run starts no batch of the window after these minutes, the feeds read included (a batch of 300 takes 4 to 9): the rest waits for the next run |
 | `INGEST_OLDER_BATCHES` | 1 | batches of older news without vectors embedded per run, for the search by meaning |
 | `FEED_RETENTION_DAYS` | 30 | Articles older than this are deleted |
 | `RSS_BRIDGE_URL` | _(none)_ | Address of the RSS-Bridge, step 4 of the sources of a user below. Empty: the sites without a feed are simply out of reach |

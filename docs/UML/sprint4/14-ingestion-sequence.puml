@@ -40,7 +40,7 @@ group the feeds read
     end
 end
 
-loop batches of 300 news of the last 48 hours without vectors, the newest first, 3 at most per scheduled run
+loop batches of 300 news of the last 48 hours without vectors, the newest first, a scheduled run starts none after 10 minutes
     Ingest -> StoryModel : pendingArticles
     Ingest -> Embedder : embed(titles, title + description)
     Embedder --> Ingest : dense + sparse vectors (bge-m3)
@@ -52,7 +52,7 @@ loop batches of 300 news of the last 48 hours without vectors, the newest first,
 end
 opt news with vectors still in no story (a search read Google News, a run stopped)
     Ingest -> StoryModel : assignStories(300), assignThreads(300)
-    note right : again while a batch is full,\nwithin the 3 of the run
+    note right : again while a batch is full,\nwithin the 10 minutes of the run
 end
 note right of Embedder
     The embedder down: the news

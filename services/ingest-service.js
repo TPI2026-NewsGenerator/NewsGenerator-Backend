@@ -32,12 +32,13 @@ const MAX_EMBEDDED_PER_RUN = Number(process.env.INGEST_MAX_EMBEDDED) || 300;
 // retention; they join no story. After the news of the window, and this many batches at most per
 // run: on a processor a batch of 300 is a few minutes
 const OLDER_BATCHES_PER_RUN = Number(process.env.INGEST_OLDER_BATCHES) || 1;
-// Batches of the window embedded and grouped by a scheduled run, the newest news first: the rest waits
-// for the next run, which reads the feeds before. A batch is grouped in one transaction of its own
-// (assign_stories, assign_threads): the 12 000 news of the first read of the directory, grouped at
-// once, held the lock 2 h 10 with no feed read meanwhile and nothing saved before the end. A batch of
-// 300 is grouped in about 4 minutes (75 news a minute with 30 000 news in the window)
-const BATCHES_PER_RUN = Number(process.env.INGEST_BATCHES) || 3;
+// The news of the window are embedded and grouped by batches, the newest first, each batch in one
+// transaction of its own (assign_stories, assign_threads): the 12 000 news of the first read of the
+// directory, grouped at once, held the lock 2 h 10 with no feed read meanwhile and nothing saved before
+// the end. A scheduled run starts no batch once it has worked these minutes (the feeds read included),
+// the rest waits for the next run, which reads the feeds before: the last batch ends before it. A time and not a number of batches: a batch of 300 took 4 minutes, then 9
+// with 31 000 news in the window (each news is compared to all the others)
+const GROUP_MINUTES = Number(process.env.INGEST_GROUP_MINUTES) || 10;
 const DESCRIPTION_CHARS = 400;          // the start of the description read with the title
 const STORY_THRESHOLD = 0.70;           // dense + sparse of the titles, see assign_stories (db/add_briefing.sql)
 const STORY_SPARSE_WEIGHT = 1;
@@ -190,12 +191,12 @@ export const IngestService = {
             let embedded = 0;
             let older = 0;
             let grouping = {grouped: 0, created: 0, threaded: 0, merged: 0};
-            let batches = 0;
             let lastGrouped = 0;
+            const groupingEnds = started + GROUP_MINUTES * 60e3;
+            const timeLeft = () => Date.now() < groupingEnds;
             const group = async () => {
                 const done = await groupPending(MAX_EMBEDDED_PER_RUN);
                 const threads = await threadPending(MAX_EMBEDDED_PER_RUN);
-                batches += 1;
                 lastGrouped = done.grouped;
                 grouping = {
                     grouped: grouping.grouped + done.grouped, created: grouping.created + done.created,
@@ -207,16 +208,16 @@ export const IngestService = {
                 // grouped at once so the briefing can use it without waiting for the others. A run of
                 // some feeds (those just found for a profile) embeds all of theirs, and only theirs:
                 // a new reader had 300 of 564 and waited the next run for the rest, and the backlog
-                // of the others is the work of the scheduled run, BATCHES_PER_RUN at a time
+                // of the others is the work of the scheduled run, for GROUP_MINUTES at a time
                 for (let batch = await embedPending(urls); batch > 0; batch = await embedPending(urls)) {
                     embedded += batch;
                     await group();
-                    if (batch < MAX_EMBEDDED_PER_RUN || (urls === null && batches >= BATCHES_PER_RUN)) break;
+                    if (batch < MAX_EMBEDDED_PER_RUN || (urls === null && !timeLeft())) break;
                 }
                 // news embedded and in no story: by a run that stopped before grouping them, by a search
-                // reading Google News, or more than a batch waiting. As many batches as a run allows
+                // reading Google News, or more than a batch waiting. As long as the run has time
                 if (embedded === 0) await group();
-                while (lastGrouped === MAX_EMBEDDED_PER_RUN && batches < BATCHES_PER_RUN) await group();
+                while (lastGrouped === MAX_EMBEDDED_PER_RUN && timeLeft()) await group();
                 // then the older news, for the search only (the grouping reads the window)
                 if (urls === null) {
                     const retention = new Date(Date.now() - RETENTION_DAYS * 24 * 3600e3);
