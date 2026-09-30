@@ -9,6 +9,10 @@
 
 import {CustomSearchService} from '../services/customsearch-service.js';
 
+// the status the service gives (404: a search that is not this user's), else 500, with its message:
+// an Error sent as JSON is only {}
+const fail = (res, error) => res.status(error?.status || 500).json({error: error?.message ?? String(error)});
+
 export const CustomSearchController = {
     getUserCustomSearch: async (req, res) => {
         // the user id comes from the verified token, never from the request
@@ -24,11 +28,7 @@ export const CustomSearchController = {
             const customSearch = await CustomSearchService.getUserCustomSearch({userId});
             res.status(200).json(customSearch);
         } catch (error) {
-            if (typeof(error) === 'string' && error.includes("None of theses custom searches were found:")) {
-                res.status(400).json({error: error});
-            } else {
-                res.status(500).json({error: error});
-            }
+            fail(res, error);
         }
     },
     postUserCustomSearch: async (req, res) => {
@@ -68,11 +68,7 @@ export const CustomSearchController = {
             const customSearch = await CustomSearchService.postPutUserCustomSearch({id, userId, title, keyword, language, category});
             res.status(200).json(customSearch);
         } catch (error) {
-            if (typeof(error) === 'string' && error.includes("Error saving this custom search:")) {
-                res.status(400).json({error: error});
-            } else {
-                res.status(500).json({error: error});
-            }
+            fail(res, error);
         }
     },
     deleteUserCustomSearch: async (req, res) => {
@@ -93,11 +89,7 @@ export const CustomSearchController = {
             await CustomSearchService.deleteUserCustomSearch({id, userId});
             res.status(200).json({deleted: true});
         } catch (error) {
-            if (typeof(error) === 'string' && error.includes("Error saving this custom search:")) {
-                res.status(400).json({error: error});
-            } else {
-                res.status(500).json({error: error});
-            }
+            fail(res, error);
         }
     },
 }

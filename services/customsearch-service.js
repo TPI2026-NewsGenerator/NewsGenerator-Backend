@@ -9,6 +9,17 @@
 
 import { CustomSearchModel } from '../models/customsearch-model.js'
 
+// Prisma answers P2025 when no row matched the id and the user: a search of another user, or one
+// already deleted. It is a 404, not an error of the server
+const notFound = (error) => {
+    if (error?.code === 'P2025') {
+        const err = new Error(`This custom search does not exist...`);
+        err.status = 404;
+        throw err;
+    }
+    throw error;
+};
+
 export const CustomSearchService = {
     getUserCustomSearch: async ({userId}) => {
         const response = await CustomSearchModel.getUserCustomSearch(parseInt(userId))
@@ -32,18 +43,12 @@ export const CustomSearchService = {
     },
     postPutUserCustomSearch: async ({id, userId, title, keyword, language, category}) => {
         if (id) {
-            return await CustomSearchModel.updateUserCustomSearch(parseInt(id), parseInt(userId), title, keyword, language, category)
+            return await CustomSearchModel.updateUserCustomSearch(parseInt(id), parseInt(userId), title, keyword, language, category).catch(notFound)
         } else {
             return await CustomSearchModel.postUserCustomSearch(parseInt(userId), title, keyword, language, category)
         }
     },
     deleteUserCustomSearch: async ({id, userId}) => {
-        const response = await CustomSearchModel.deleteUserCustomSearch(parseInt(id), parseInt(userId))
-
-        if (!response) {
-            const err = new Error(`No link between the member and the custom search exists...`);
-            err.status = 404;
-            throw err;
-        }
+        await CustomSearchModel.deleteUserCustomSearch(parseInt(id), parseInt(userId)).catch(notFound)
     }
 }

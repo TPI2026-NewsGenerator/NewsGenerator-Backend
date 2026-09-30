@@ -55,16 +55,24 @@ describe('CustomSearchController', () => {
             expect(CustomSearchService.getUserCustomSearch).toHaveBeenCalledWith({ userId: 1 });
         });
 
-        it('should return 400 if service throws a "not found" string error', async () => {
+        it('should answer the status of the service, with its message', async () => {
             mockReq = { query: {}, user: { id: 99 } };
-            const errorMsg = "None of theses custom searches were found: ...";
-
-            CustomSearchService.getUserCustomSearch.mockRejectedValue(errorMsg);
+            CustomSearchService.getUserCustomSearch.mockRejectedValue(Object.assign(new Error('This user_id does not exist...'), {status: 404}));
 
             await CustomSearchController.getUserCustomSearch(mockReq, mockRes);
 
-            expect(mockRes.status).toHaveBeenCalledWith(400);
-            expect(mockRes.json).toHaveBeenCalledWith({ error: errorMsg });
+            expect(mockRes.status).toHaveBeenCalledWith(404);
+            expect(mockRes.json).toHaveBeenCalledWith({ error: 'This user_id does not exist...' });
+        });
+
+        it('should answer 500 with the message of an error without status', async () => {
+            mockReq = { query: {}, user: { id: 1 } };
+            CustomSearchService.getUserCustomSearch.mockRejectedValue(new Error('database down'));
+
+            await CustomSearchController.getUserCustomSearch(mockReq, mockRes);
+
+            expect(mockRes.status).toHaveBeenCalledWith(500);
+            expect(mockRes.json).toHaveBeenCalledWith({ error: 'database down' });
         });
     });
 
@@ -111,6 +119,16 @@ describe('CustomSearchController', () => {
             expect(CustomSearchService.deleteUserCustomSearch).toHaveBeenCalledWith({id: 7, userId: 4});
             expect(mockRes.status).toHaveBeenCalledWith(200);
             expect(mockRes.json).toHaveBeenCalledWith({deleted: true});
+        });
+
+        it('should answer 404 for a search that is not the user\'s', async () => {
+            mockReq = { body: {id: 7}, user: {id: 4} };
+            CustomSearchService.deleteUserCustomSearch.mockRejectedValue(Object.assign(new Error('This custom search does not exist...'), {status: 404}));
+
+            await CustomSearchController.deleteUserCustomSearch(mockReq, mockRes);
+
+            expect(mockRes.status).toHaveBeenCalledWith(404);
+            expect(mockRes.json).toHaveBeenCalledWith({error: 'This custom search does not exist...'});
         });
     });
 });
