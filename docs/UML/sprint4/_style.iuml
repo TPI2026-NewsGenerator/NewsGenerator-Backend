@@ -1,0 +1,26 @@
+' Style shared by the class diagrams of sprint 4. Each box is an ES module of the server, not a class:
+' its methods are the functions of it the feature uses.
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam nodesep 35
+skinparam ranksep 45
+skinparam defaultFontSize 13
+skinparam titleFontSize 18
+skinparam noteBackgroundColor #FFFBE6
+skinparam noteBorderColor #C9B458
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #555555
+    ArrowColor #555555
+}
+skinparam class<<other feature>> {
+    BackgroundColor #EEF3FA
+    BorderColor #7A93B8
+}
+skinparam class<<external>> {
+    BackgroundColor #F2F2F2
+    BorderColor #888888
+}
+hide circle
+hide empty members

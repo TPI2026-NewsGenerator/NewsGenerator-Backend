@@ -1,0 +1,55 @@
+@startuml 00-overview
+!include _style.iuml
+title Backend sprint 4 — the features and what links them
+
+package "Accounts\n(01-accounts)" as Accounts {
+    class loginService
+    class signupService
+}
+package "Saved searches\n(02-saved-searches)" as Saved {
+    class customSearchService
+}
+package "Search\n(03-search)" as Search {
+    class newsService
+}
+package "Ingestion\n(04-ingestion)" as Ingestion {
+    class ingestService
+    class feedService
+}
+package "Sources\n(05-sources)" as Sources {
+    class sourceService
+    class recommendationService
+}
+package "Profile\n(06-profile)" as Profile {
+    class profileService
+}
+package "Discovery\n(07-discovery)" as Discovery {
+    class discoveryService
+}
+package "Briefing\n(08-briefing)" as Briefing {
+    class briefingService
+    class feedbackService
+}
+
+signupService --> profileService : creates the profile\nwith the account
+profileService --> discoveryService : looks for sources\nfor the profile
+profileService --> feedbackService
+briefingService --> discoveryService : prunes the\nsources refused
+briefingService --> feedbackService
+briefingService --> ingestService
+discoveryService --> sourceService
+discoveryService --> ingestService : reads the\nfeeds found
+discoveryService --> feedbackService
+recommendationService --> feedbackService
+recommendationService --> sourceService
+newsService --> ingestService : Google News searches\nof the profiles
+newsService --> feedService
+ingestService --> feedService
+
+note as Legend
+    Every request goes router → controller → service → model → Prisma → PostgreSQL + pgvector.
+    Each package has its own diagram, with its modules, their methods and the outside services.
+    The shared cache (feeds, articles, stories, threads) is filled by the Ingestion in background
+    and read by the Search and the Briefing.
+end note
+@enduml

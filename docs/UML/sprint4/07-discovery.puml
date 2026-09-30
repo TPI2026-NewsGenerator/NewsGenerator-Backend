@@ -1,0 +1,131 @@
+@startuml 07-discovery
+!include _style.iuml
+title Discovery — the sources found for the interests of a profile
+
+class profileService <<other feature>> {
+    + store()
+    + rediscover()
+}
+class briefingService <<other feature>> {
+    + start()
+}
+package "Business" {
+    class discoveryService {
+        + start()
+        + isRunning()
+        + prune()
+    }
+    class sourceService <<other feature>> {
+        + knownMedia()
+    }
+    class ingestService <<other feature>> {
+        + run()
+        + searchesOfUser()
+    }
+    class feedbackService <<other feature>> {
+        + of()
+    }
+}
+note right of discoveryService
+    Per interest and per language read:
+    the media Google News names first,
+    then the press Media Cloud names
+    that Google did not, each with its
+    own budget. The new feeds are read
+    at once.
+end note
+package "Data" as Data {
+    class profileModel {
+        + get()
+        + interestsForDiscovery()
+        + setDiscovery()
+        + addProfileFeeds()
+        + deleteProfileFeeds()
+        + profileFeedRelevance()
+        + keptSources()
+    }
+    class feedModel {
+        + userFeedUrls()
+        + countUserFeeds()
+        + trustedFeedUrls()
+    }
+}
+package "The media of an interest" as Media {
+    class googleNews {
+        + search()
+    }
+    class mediaCloud {
+        + mediaFor()
+        + toQuery()
+        + knownFeeds()
+    }
+    class profileAi {
+        + parseSearch()
+    }
+    class publicUrl {
+        + nameOf()
+    }
+}
+note bottom of mediaCloud
+    Every word of a search (AND), in
+    the language, over 30 days, in the
+    press of its countries. 2 searches
+    a minute, 8000 a week. knownFeeds():
+    the feeds its directory knows.
+end note
+package "The feeds of a medium" as Feeds {
+    class feedFinder {
+        + findFeeds()
+        + isOnSubject()
+        + subjectScore()
+    }
+    class meaningJudge {
+        + judgeOf()
+    }
+    class embedder {
+        + parseVector()
+    }
+}
+note bottom of feedFinder
+    Kept when its news are on the
+    subject. Looks in the page, the
+    sections, the feed directory and
+    RSS-Bridge: see 05-sources
+end note
+package "The budget" as Budget {
+    class allocation {
+        + allocate()
+        + tryPerLanguage()
+        + staleFeeds()
+    }
+    class feedLimits {
+        + withinBridgeRoom()
+        + bridgeRoom()
+    }
+}
+class "Google News" as GoogleNewsApi <<external>>
+class "Media Cloud" as MediaCloudApi <<external>>
+class "Embedder (bge-m3)" as Embedder <<external>>
+class "PostgreSQL + pgvector" as PostgreSQL <<external>>
+
+googleNews -[hidden]down- mediaCloud
+mediaCloud -[hidden]down- profileAi
+feedFinder -[hidden]down- meaningJudge
+allocation -[hidden]down- feedLimits
+
+profileService --> discoveryService
+briefingService --> discoveryService
+discoveryService --> sourceService
+discoveryService --> ingestService
+discoveryService --> feedbackService
+discoveryService --> Data
+discoveryService --> Media
+discoveryService --> Feeds
+discoveryService --> Budget
+mediaCloud --> publicUrl
+meaningJudge --> embedder
+googleNews --> GoogleNewsApi
+mediaCloud --> MediaCloudApi
+embedder --> Embedder
+Data --> PostgreSQL
+@enduml

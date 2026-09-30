@@ -10,15 +10,25 @@ participant "Model" as Model
 database "Storage (DB)" as Storage
 
 
-Client -> Router : POST /customsearch (data)
-Router -> Controller : processRequest(data)
-Controller -> Service : postPutUserCustomSearch(data)
-Service -> Model : updateUserCustomSearch(data)
-Model -> Storage : UPDATE custom_searches
-Storage --> Model : confirm_success
-Model --> Service : confirm_success
-Service --> Controller : confirm_success
-Controller --> Router : HTTP 200
-Router --> Client : Response JSON (confirmation)
+Client -> Router : POST /customsearch (id, title, keyword, language, category)
+Router -> Router : authenticateToken()
+Router -> Controller : postUserCustomSearch(req)
+alt titre, mots, langue ou catégorie manquant
+    Controller --> Client : HTTP 400
+end
+Controller -> Service : postPutUserCustomSearch(data, userId du token)
+note right of Service : avec un id : la recherche est remplacée
+Service -> Model : updateUserCustomSearch(id, userId, data)
+Model -> Storage : UPDATE custom_searches WHERE id et id_user,\nses catégories remplacées
+alt aucune recherche de cet utilisateur avec cet id
+    Storage --> Model : erreur Prisma (P2025)
+    Model --> Service : P2025
+    Service --> Controller : 404
+    Controller --> Client : HTTP 404
+end
+Storage --> Model : la recherche modifiée
+Model --> Service : la recherche modifiée
+Service --> Controller : la recherche modifiée
+Controller --> Client : HTTP 200 (la recherche)
 
 @enduml

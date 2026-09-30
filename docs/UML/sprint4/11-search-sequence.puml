@@ -1,0 +1,94 @@
+@startuml 11-search-sequence
+!include _sequence.iuml
+title Search — the cards, then the key passages of the ones chosen
+
+actor Reader
+participant "Client (React)" as Client
+participant "newsRouter\n+ jwt" as Router
+participant newsController as Controller
+participant newsService as News
+participant ingestService as Ingest
+participant feedModel as FeedModel
+participant "embedder\n+ searchAi" as Meaning
+participant "googleNews\n+ crawlers" as Web
+participant extract as Extract
+database "PostgreSQL" as DB
+
+== The cards ==
+Reader -> Client : words or a sentence,\nlanguage, categories, dates
+Client -> Router : POST /news
+Router -> Router : authenticateToken
+Router -> Controller : getNews(req)
+Controller -> Controller : check the filters and the dates
+Controller -> News : getNews({keywords, category, timeframe, userId, language})
+
+group the feeds read, all of the language of the search
+    par
+        News -> FeedModel : userFeedUrls(userId, category, language)
+        note right : the own feeds, even private
+    else
+        News -> FeedModel : publicFeedUrls(category, language)
+        note right : of the other readers: found\nfor a profile, or shared
+    else
+        News -> Ingest : searchesOfCategories(category, language)
+        note right : the Google News searches of\nevery profile, never whose
+    end
+    News -> News : + the shared feeds of db/rss-links.js
+end
+
+alt exact words (quotes, a comma or -word)
+    News -> FeedModel : searchArticles(feeds, keywords, timeframe)
+    FeedModel -> DB : keyword SQL (pg_trgm)
+    opt almost nothing found
+        News -> FeedModel : searchArticles(the wider search)
+        note right : counted and offered,\nnot done
+    end
+else a sentence (anything else)
+    News -> Meaning : embed(sentence)
+    alt the embedder is down
+        News --> Controller : 503 "put your words between quotes"
+    end
+    News -> FeedModel : closestArticles(feeds, vectors)
+    FeedModel -> DB : dense + sparse cosines (pgvector)
+    News -> Meaning : sortByMeaning(sentence, news)
+    Meaning -> Meaning : gemma4:31b: answers and close ones
+    note right of Meaning : without the AI: the closest ones,\nmarked unchecked
+end
+News -> FeedModel : similarArticlePairs(ids)
+News -> News : groupDuplicates: one card per story
+News -> FeedModel : threadArticles(threads, feeds)
+News -> News : withThreads: the facts of one affair on one card
+News --> Controller : {news, mode, wider, checked}
+Controller --> Client : 200, the cards
+
+== The key passages of the cards chosen ==
+Reader -> Client : ticks up to 10 cards
+Client -> Router : POST /news/summary {stories, language}
+Router -> Controller : getNewsSummary(req)
+Controller -> News : summarizeStories(stories, {userId, language})
+News -> FeedModel : getArticlesByLinks(urls)
+note right : a link not in the cache is refused (400):\nthe API scrapes no page it did not list
+News -> FeedModel : trustedFeedUrls(userId)
+News -> News : readingOrder: a trusted source first,\none article per medium, 5 at most
+opt a card known only through Google News
+    News -> Web : decodeLinks(links)
+    Web --> News : the real addresses, when Google gives them
+    News -> FeedModel : saveResolvedLinks
+end
+News -> Web : Crawlers.Html(the pages to read)
+loop each card, 5 at once
+    alt its passages already saved
+        opt asked in another language
+            News -> Extract : translationFor(passages, language)
+        end
+    else
+        News -> Extract : extractArticle(title, page, language)
+        Extract -> Extract : gemma4:31b picks the sentences,\ncopied word for word from the page
+        News -> FeedModel : saveExtract + saveTranslation
+    end
+    News -> News : corroborationOf(the texts read)
+    note right : how many media, how many wrote it\nthemselves: counted, never a verdict
+end
+News --> Controller : the cards with their passages
+Controller --> Client : 200
+@enduml

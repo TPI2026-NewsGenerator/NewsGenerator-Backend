@@ -1,0 +1,140 @@
+@startuml 03-search
+!include _style.iuml
+title Search — words or a sentence, answered from the cache
+
+class EndUser
+package "Presentation" {
+    class newsRouter
+    class newsController {
+        + getNews()
+        + getCategories()
+        + getNewsContent()
+        + getNewsSummary()
+    }
+}
+package "Business" {
+    class newsService {
+        + getNews()
+        + searchByMeaning()
+        + cachedArticles()
+        + getNewsContent()
+        + summarizeStories()
+    }
+    class feedService <<other feature>> {
+        + languages()
+        + categories()
+    }
+    class ingestService <<other feature>> {
+        + searchesOfCategories()
+    }
+}
+note left of newsService
+    Reads, in the language of the search:
+    the shared feeds, the own ones, those
+    of the other readers found for a
+    profile or shared, and every Google
+    News search of the profiles. Never
+    narrowed by the profile of the reader.
+end note
+package "Data" as Data {
+    class links {
+        + getCategoriesLinks()
+    }
+    class feedModel {
+        + searchArticles()
+        + closestArticles()
+        + threadArticles()
+        + similarArticlePairs()
+        + userFeedUrls()
+        + publicFeedUrls()
+        + getArticlesByLinks()
+        + saveExtract()
+        + saveTranslation()
+        + saveResolvedLinks()
+    }
+    class profileModel <<other feature>> {
+        + searchesOf()
+    }
+}
+package "Finding the news" as Finding {
+    class filter {
+        + parse()
+        + keywordsSql()
+    }
+    class embedder {
+        + embed()
+    }
+    class searchAi {
+        + sortByMeaning()
+    }
+}
+note bottom of Finding
+    Words: keyword SQL on the cache.
+    A sentence: the closest news by
+    their vectors, sorted by the AI.
+end note
+package "Building the cards" as Cards {
+    class grouping {
+        + unionFind()
+        + averageLink()
+    }
+    class corroboration {
+        + corroborationOf()
+    }
+    class hedging {
+        + hedgedBy()
+    }
+    class readingOrder {
+        + readingOrder()
+    }
+}
+note bottom of Cards
+    Cards grouped by story, then by thread.
+    How many media and how many wordings,
+    never a verdict.
+end note
+package "Reading an article" as Reading {
+    class extract {
+        + extractArticle()
+        + translationFor()
+    }
+    class crawlers {
+        + Html()
+    }
+    class googleNews {
+        + decodeLinks()
+    }
+}
+class ollama {
+    + ollamaJson()
+}
+class "Ollama (gemma4:31b)" as Ollama <<external>>
+class "Embedder (bge-m3)" as Embedder <<external>>
+class "Google News" as GoogleNewsApi <<external>>
+class "PostgreSQL + pgvector" as PostgreSQL <<external>>
+
+filter -[hidden]down- embedder
+embedder -[hidden]down- searchAi
+grouping -[hidden]down- corroboration
+corroboration -[hidden]down- hedging
+hedging -[hidden]down- readingOrder
+extract -[hidden]down- crawlers
+crawlers -[hidden]down- googleNews
+
+EndUser --> newsRouter
+newsRouter --> newsController
+newsController --> newsService
+newsController --> feedService
+newsService --> ingestService
+newsService --> Data
+newsService --> Finding
+newsService --> Cards
+newsService --> Reading
+ingestService --> profileModel
+searchAi --> ollama
+extract --> ollama
+ollama --> Ollama
+embedder --> Embedder
+googleNews --> GoogleNewsApi
+feedModel --> PostgreSQL
+@enduml

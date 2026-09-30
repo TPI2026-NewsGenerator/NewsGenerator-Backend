@@ -1,0 +1,72 @@
+@startuml 13-discovery-sequence
+!include _sequence.iuml
+title Discovery — the sources found for the interests of a profile
+
+participant "profileService\n(signup, profile saved,\nfind again)" as Profile
+participant discoveryService as Discovery
+participant profileModel as ProfileModel
+participant "sourceService\n+ feedbackService" as Known
+participant googleNews as Google
+participant mediaCloud as MC
+participant "feedFinder\n+ meaningJudge" as Finder
+participant ingestService as Ingest
+database "PostgreSQL" as DB
+
+Profile -> Discovery : start(userId)
+Discovery -> ProfileModel : setDiscovery('running')
+Discovery -->> Profile : returns at once
+note over Discovery
+    Asked again while it runs, it runs once
+    more after, with the profile as it is then
+end note
+
+Discovery -> Discovery : prune: the feeds found that bring\nnothing on the profile any more, removed
+Discovery -> ProfileModel : interestsForDiscovery, get
+Discovery -> DB : the feeds of the reader, how many for the profile
+note right of Discovery
+    The room of the profile full: no medium
+    is looked for, only the Google News
+    searches of the reader are read
+end note
+Discovery -> Known : the media known and refused
+note right : only new media are looked for
+Discovery -> Discovery : judgeOf(the vectors of the interests)
+
+loop each interest
+    Discovery ->> MC : mediaFor(each search, language)
+    note right of MC
+        asked at once: its queue waits
+        (2 searches a minute) while Google
+        is tried. Every word (AND), 30 days,
+        the press of the countries
+    end note
+    loop each search of the interest
+        Discovery -> Google : search(q, 7 days, language)
+        Google --> Discovery : the media that wrote on it
+    end
+    loop the new media of Google, per language: 2 kept, 5 tried at most
+        Discovery -> Finder : findFeeds(site, subject, judge)
+        Finder -> Finder : the page, the sections, the directory,\nRSS-Bridge; the news judged by meaning
+        Finder --> Discovery : its feed on the subject, or none
+    end
+    MC -->> Discovery : the press media and their news
+    loop the media of Media Cloud Google did not name: 2 kept, 3 tried
+        Discovery -> MC : knownFeeds(site)
+        Discovery -> Finder : findFeeds(site, subject, judge, known)
+    end
+end
+
+Discovery -> Discovery : allocate among the interests,\nwithinBridgeRoom
+Discovery -> ProfileModel : addProfileFeeds(feeds)
+ProfileModel -> DB : user_feeds, origin 'profile'
+Discovery -> Ingest : run({urls: the new feeds +\nthe Google News searches of the reader})
+note right of Ingest
+    read and embedded at once:
+    the next briefing has them
+end note
+alt done
+    Discovery -> ProfileModel : setDiscovery('done')
+else an error
+    Discovery -> ProfileModel : setDiscovery('failed', message)
+end
+@enduml

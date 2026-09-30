@@ -1,0 +1,71 @@
+@startuml 10-signup-sequence
+!include _sequence.iuml
+title Sign up — the account and its profile at once
+
+actor Reader
+participant "Client (React)" as Client
+participant "signupRouter\n+ rateLimit" as Router
+participant signupController as Controller
+participant signupService as Signup
+participant profileService as Profile
+participant profileAi as AI
+participant embedder as Embedder
+participant userModel as UserModel
+participant profileModel as ProfileModel
+participant discoveryService as Discovery
+database "PostgreSQL" as DB
+
+Reader -> Client : name, email, password,\nwhat they want to read, topics, languages
+Client -> Router : POST /signup
+alt more than 5 accounts from this address in an hour
+    Router --> Client : 429
+end
+Router -> Controller : register(req)
+Controller -> Signup : register({username, email, password, text, topics, languages})
+Signup -> Signup : check the name, the email,\nthe password (10 to 72 bytes)
+Signup -> UserModel : taken(name, email)
+UserModel -> DB : SELECT, whatever the case
+alt taken
+    Signup --> Controller : 409
+end
+
+group the profile read before the account is created
+    Signup -> Profile : prepare({text, topics, languages})
+    Profile -> Profile : check the text, the topics, the languages
+    Profile -> AI : interestsOf(profile, categories)
+    AI -> AI : gemma4:31b (Ollama)
+    AI --> Profile : interests, their keywords,\nsections and Google News searches
+    alt no interest in the text
+        Profile --> Signup : 422
+        Signup --> Controller : 422, no account left behind
+    end
+    Profile -> Embedder : embed(the texts of the interests)
+    Embedder --> Profile : dense + sparse vectors (bge-m3)
+    Profile --> Signup : {profile, interests}
+end
+
+Signup -> UserModel : roleId('User')
+Signup -> Signup : hashWithSalt(password) (bcrypt)
+Signup -> UserModel : create(user)
+UserModel -> DB : INSERT users
+Signup -> Profile : store(userId, profile)
+Profile -> ProfileModel : save(userId, profile, interests)
+ProfileModel -> DB : user_profiles + profile_interests
+Profile -> Discovery : start(userId)
+Discovery -> ProfileModel : setDiscovery('running')
+note right of Discovery
+    The sources are looked for in
+    background, see 13-discovery-sequence
+end note
+alt the profile could not be stored
+    Signup -> UserModel : delete(userId)
+    note right of Signup : the name must not stay taken\nby an account without profile
+end
+Signup -> Signup : generateAccessToken(user) (JWT)
+Signup --> Controller : {id_user, token}
+Controller --> Client : 201, signed in at once
+note over Controller
+    An error of the server (500) is not described
+    to the client: anyone can call this route
+end note
+@enduml

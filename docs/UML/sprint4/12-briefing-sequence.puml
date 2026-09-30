@@ -1,0 +1,98 @@
+@startuml 12-briefing-sequence
+!include _sequence.iuml
+title Briefing — written in background, followed by the client, then voted
+
+actor Reader
+participant "Client (React)" as Client
+participant "briefingRouter\n+ briefingController" as Controller
+participant briefingService as Briefing
+participant "discoveryService\n+ feedbackService" as Feedback
+participant "storyModel\n+ feedModel" as Stories
+participant googleNews as Google
+participant profileAi as AI
+participant "crawlers\n+ extract" as Read
+participant briefingModel as BriefingModel
+database "PostgreSQL" as DB
+
+== Asked ==
+Reader -> Client : "New briefing"
+Client -> Controller : POST /briefing
+Controller -> Briefing : start(userId)
+Briefing -> BriefingModel : failAbandoned(30 minutes ago)
+alt a briefing of this reader is already being written
+    Briefing -> BriefingModel : running(userId)
+    Briefing --> Controller : that one
+else
+    Briefing -> BriefingModel : create(userId)
+    BriefingModel -> DB : INSERT briefings (running)
+    Briefing ->> Briefing : write(briefing, userId), not awaited
+    Briefing --> Controller : the briefing, running
+end
+Controller --> Client : 202
+
+== Written in background ==
+group step "ranking"
+    Briefing -> Feedback : DiscoveryService.prune(userId)
+    note right : the sources found that\nbring nothing any more
+    Briefing -> Feedback : FeedbackService.of(userId)
+    Feedback --> Briefing : examples for the AI, sources refused
+    Briefing -> Stories : rank(interests, feeds, 48 h)
+    Stories -> DB : stories closest to the interests (SQL, pgvector)
+    Briefing -> Stories : storyArticles(stories)
+    Briefing -> Google : credibleStory, isRepeatedPage, pickCandidates
+    note right : told by credible media; a title one medium\nrepublishes for hours is left out; 40 stories\nof feeds, 10 more of Google News at most
+end
+group step "choosing"
+    Briefing -> AI : selectStories(profile, candidates, examples)
+    Briefing -> Briefing : balanceSelection: every interest has its share
+end
+group step "checking"
+    par
+        Briefing -> AI : checkStories: the articles that tell\nthe same news as the lead
+    else
+        Briefing -> AI : mergeStories: two cards of one news joined
+    end
+end
+group step "reading"
+    opt a story known only through Google News
+        Briefing -> Google : decodeLinks
+        Briefing -> Stories : saveResolvedLinks
+    end
+    Briefing -> Read : Crawlers.Html(5 articles per story)
+end
+group step "summarizing"
+    loop each story, 5 at once
+        Briefing -> Read : extractArticle(title, page, language)
+        note right : key passages word for word,\nand their translation
+    end
+    Briefing -> AI : reviewCards: a card on what the reader\nrefuses is left out
+end
+alt written
+    Briefing -> BriefingModel : finish(briefing, cards)
+    BriefingModel -> DB : items, status ready
+else an error
+    Briefing -> BriefingModel : fail(briefing, message)
+end
+
+== Followed by the client ==
+loop every 3 seconds while it runs
+    Client -> Controller : GET /briefing
+    Controller -> Briefing : latest(userId)
+    Briefing -> BriefingModel : latest(userId)
+    Controller --> Client : 200 {status, step, items}
+end
+Client --> Reader : the cards
+
+== A thumb ==
+Reader -> Client : thumb up or down on a card
+Client -> Controller : POST /briefing/:id/vote {storyId, vote}
+Controller -> Briefing : vote(userId, id, storyId, vote)
+Briefing -> BriefingModel : vote
+BriefingModel -> DB : vote and votedAt in items
+Controller --> Client : 204
+note over Feedback
+    The thumbs of the last 30 days are the examples of
+    the next choice, and the sources refused again and
+    again are left out of the next briefings
+end note
+@enduml

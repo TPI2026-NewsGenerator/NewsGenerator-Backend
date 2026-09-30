@@ -1,0 +1,96 @@
+@startuml 06-profile
+!include _style.iuml
+title Profile — what a reader wants to read, split into interests
+
+class EndUser
+package "Presentation" {
+    class profileRouter
+    class profileController {
+        + get()
+        + options()
+        + save()
+        + updateInterest()
+        + deleteInterest()
+        + rediscover()
+        + keepSource()
+    }
+}
+package "Business" {
+    class profileService {
+        + topics()
+        + get()
+        + prepare()
+        + store()
+        + save()
+        + updateInterest()
+        + deleteInterest()
+        + rediscover()
+        + keepSource()
+    }
+    class feedService <<other feature>> {
+        + languages()
+    }
+    class discoveryService <<other feature>> {
+        + start()
+    }
+    class feedbackService <<other feature>> {
+        + refusedSources()
+        + keep()
+    }
+}
+note right of profileService
+    prepare(): the AI splits the text into
+    interests, each gets its vectors.
+    store(): saves them all, then starts
+    the discovery of sources.
+    The profile chooses the briefing, it
+    never narrows a search.
+end note
+package "Data" {
+    class profileModel {
+        + get()
+        + interests()
+        + save()
+        + updateInterest()
+        + deleteInterest()
+        + profileFeedRelevance()
+    }
+    class feedModel {
+        + listUserFeeds()
+    }
+}
+package "utils" {
+    class profileAi {
+        + interestsOf()
+    }
+    class embedder {
+        + embed()
+    }
+    class topics {
+        TOPICS
+    }
+    class ollama {
+        + ollamaJson()
+    }
+}
+class "Ollama (gemma4:31b)" as Ollama <<external>>
+class "Embedder (bge-m3)" as Embedder <<external>>
+class "PostgreSQL + pgvector" as PostgreSQL <<external>>
+
+EndUser --> profileRouter
+profileRouter --> profileController
+profileController --> profileService
+profileController --> feedService
+profileService --> profileModel
+profileService --> feedModel
+profileService --> discoveryService
+profileService --> feedbackService
+profileService --> profileAi
+profileService --> embedder
+profileService --> topics
+profileAi --> ollama
+ollama --> Ollama
+embedder --> Embedder
+profileModel --> PostgreSQL
+feedModel --> PostgreSQL
+@enduml

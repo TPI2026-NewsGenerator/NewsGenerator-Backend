@@ -1,0 +1,79 @@
+@startuml 01-accounts
+!include _style.iuml
+title Accounts — log in and sign up
+
+class EndUser
+package "Presentation" {
+    class loginRouter
+    class signupRouter
+    class loginController {
+        + authUser()
+    }
+    class signupController {
+        + register()
+    }
+}
+package "Business" {
+    class loginService {
+        + authUser()
+    }
+    class signupService {
+        + register()
+    }
+    class profileService <<other feature>> {
+        + prepare()
+        + store()
+    }
+}
+note right of signupService
+    The account and its profile in one
+    call: when the profile cannot be
+    stored, the account is deleted again
+end note
+package "Data" {
+    class loginModel {
+        + getUserByUsername()
+    }
+    class userModel {
+        + taken()
+        + roleId()
+        + create()
+        + delete()
+    }
+}
+package "utils" {
+    class pwdHasher {
+        + hashWithSalt()
+        + verifyPassword()
+    }
+    class jwt {
+        + generateAccessToken()
+        + authenticateToken()
+    }
+    class rateLimit {
+        + rateLimit()
+    }
+}
+class bcrypt <<external>>
+class JsonWebToken <<external>>
+class Prisma <<external>>
+
+EndUser --> loginRouter
+EndUser --> signupRouter
+loginRouter --> loginController
+signupRouter --> rateLimit
+signupRouter --> signupController
+loginController --> loginService
+signupController --> signupService
+loginService --> loginModel
+loginService --> pwdHasher
+loginService --> jwt
+signupService --> userModel
+signupService --> profileService
+signupService --> pwdHasher
+signupService --> jwt
+pwdHasher --> bcrypt
+jwt --> JsonWebToken
+loginModel --> Prisma
+userModel --> Prisma
+@enduml

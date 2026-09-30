@@ -1,7 +1,9 @@
 # MLD — sprint 4
 
 What to reproduce in the diagram tool. Taken from `prisma/schema.prisma` and the scripts of `db/`,
-which are what a fresh install creates. Brought up to date on 30.09.2026.
+which are what a fresh install creates. Brought up to date on 30.09.2026, again after the search read
+the sources of the other readers: no table or column changed, only who reads which rows (see
+`user_feeds`, `profile_interests` and the relations).
 
 ## What changed since the sprint 3 diagram
 
@@ -155,12 +157,14 @@ Three extensions are needed in all: `pg_trgm` for the keyword search and the gro
 | origin | text | NOT NULL, default `'user'` — `user` when added by hand, `profile` when found for the profile |
 | language | text | null |
 | trusted | boolean | NOT NULL, default false — a source the reader trusts (`db/add_trusted_sources.sql`) |
-| shared | boolean | NOT NULL, default false — a source the reader shares: it can be suggested to the others (`db/add_source_growth.sql`) |
+| shared | boolean | NOT NULL, default false — a source the reader shares: it can be suggested to the others, and their searches read it (`db/add_source_growth.sql`) |
 
 UNIQUE (id_user, url), indexes on `id_user` and on `url`.
 
 The same feed added by two users is two rows: that is what makes a source private, and the refresh
-groups the feeds by user for the same reason.
+groups the feeds by user for the same reason. A search reads the rows of its reader, and those of every
+reader with `origin = 'profile'` or `shared = true`, of the language of the search: a row added by hand
+and not shared stays its reader's (`FeedModel.publicFeedUrls`).
 
 ### stories — *new*
 | Column | Type | |
@@ -219,7 +223,7 @@ One profile per user: its key is the user.
 | text | text | NOT NULL — "Rugby: Top 14, Six Nations, transfers" |
 | weight | real | NOT NULL, default 1 |
 | keywords | text | NOT NULL, default `''` — to find media and their section |
-| searches | text[] | NOT NULL, default `{}` — short searches for Google News |
+| searches | text[] | NOT NULL, default `{}` — short searches for Google News, read by the ingestion and by the search of every reader of that language (never who follows them) |
 | sections | text[] | NOT NULL, default `{}` — names of the section of a newspaper |
 | category | text | null — one of `db/rss-links.js`, given to the feeds found for it |
 | dense | vector(1024) | null |
@@ -258,6 +262,9 @@ threads    1 ──< N  stories              (0 or 1 thread per story)
 ```
 
 `feeds`, `articles`, `stories` and `threads` are attached to no user: the cache is shared, and who may
-read which feed is decided by the search, from `db/rss-links.js` plus the `user_feeds` of that user.
+read which feed is decided by the search: the feeds of `db/rss-links.js` (387, 34 of them taken from
+awesome-rss-feeds by `scripts/import-awesome-feeds.js`), the `user_feeds` of that user, the ones of the
+other readers found for a profile or shared, and the Google News searches of every `profile_interests`.
+The profile of the reader does not narrow a search: it only chooses the briefing.
 `user_feeds` points to a feed by its `url`, not by a key to `feeds`: a source is added before its feed
 is first read.

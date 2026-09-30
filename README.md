@@ -205,7 +205,8 @@ Optional variables in `.env`:
 |---|---|
 | `http://localhost:3001/docs` | every route, with its body and its answers (Swagger UI). It is written in `config/swagger.js`, which is the only source: there is no `.yaml` to keep in step with it |
 | `docs/MLD_sprint4.md` | the thirteen tables, their columns and their keys, to redraw the MLD |
-| `docs/UML/class-diagram-backend-sprint4.puml` | the class diagram, as source. Render it with `java -jar plantuml.jar docs/UML/class-diagram-backend-sprint4.puml` |
+| `docs/UML/sprint4/` | the class diagrams, one per feature (accounts, saved searches, search, ingestion, sources, profile, discovery, briefing) and an overview of what links them (`0*`), and the sequence diagrams of the signup, the search, the briefing, the discovery and the ingestion (`1*`), as source and as PNG. Render them again with `java -jar plantuml.jar -charset UTF-8 docs/UML/sprint4/*.puml` |
+| `docs/UML/*-diagram.puml` | the sequence diagrams of the login and of the saved searches, from sprint 1, brought up to date |
 | `docs/*.png` | the MCD, MLD and class diagrams of sprints 1 to 3, kept as they were |
 
 ### How a search works

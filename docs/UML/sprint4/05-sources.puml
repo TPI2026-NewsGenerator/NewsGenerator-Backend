@@ -1,0 +1,136 @@
+@startuml 05-sources
+!include _style.iuml
+title Sources — the feeds a reader adds, finds or is recommended
+
+class EndUser
+package "Presentation" {
+    class feedRouter
+    class feedController {
+        + getUserFeeds()
+        + addUserFeed()
+        + updateUserFeed()
+        + deleteUserFeed()
+        + suggestSources()
+        + searchSources()
+        + importSources()
+        + getRecommended()
+        + addRecommended()
+    }
+}
+package "Business" {
+    class sourceService {
+        + searchDirectory()
+        + searchWeb()
+        + suggest()
+        + knownMedia()
+    }
+    class recommendationService {
+        + list()
+        + add()
+    }
+    class feedbackService <<other feature>> {
+        + of()
+    }
+    class ingestService <<other feature>> {
+        + run()
+    }
+}
+note right of recommendationService
+    Feeds found for another profile or
+    shared, never one added by hand
+    and kept private
+end note
+package "Data" as Data {
+    class feedModel {
+        + listUserFeeds()
+        + getUserFeed()
+        + addUserFeed()
+        + updateUserFeed()
+        + deleteUserFeed()
+        + countUserFeeds()
+        + userFeedUrls()
+        + recommendedFeeds()
+        + articleHosts()
+    }
+}
+package "Media on a subject" as Looking {
+    class googleNews {
+        + search()
+    }
+    class gdelt {
+        + mediaFor()
+    }
+    class feedDirectory {
+        + searchDirectory()
+    }
+}
+package "The feed of a site" as OnSite {
+    class feedFinder {
+        + findFeeds()
+        + isOnSubject()
+    }
+    class siteSections {
+        + sectionLinks()
+        + keywordJudge()
+    }
+    class feedBridge {
+        + bridgeFeed()
+    }
+    class meaningJudge {
+        + judgeOf()
+    }
+    class crawlers {
+        + Html()
+        + Xml()
+    }
+}
+note bottom of feedBridge
+    A site with no feed: RSS-Bridge
+    makes one from its pages
+end note
+package "Limits and safety" as Limits {
+    class feedLimits {
+        + bridgeRoom()
+        + looksPrivate()
+    }
+    class publicUrl {
+        + assertPublicUrl()
+        + isBridgeUrl()
+    }
+}
+class "Google News" as GoogleNewsApi <<external>>
+class "GDELT DOC 2.0" as GdeltApi <<external>>
+class "Feed directory" as DirectoryApi <<external>>
+class "RSS-Bridge" as RssBridge <<external>>
+class "Embedder (bge-m3)" as Embedder <<external>>
+class "PostgreSQL + pgvector" as PostgreSQL <<external>>
+
+googleNews -[hidden]down- gdelt
+gdelt -[hidden]down- feedDirectory
+feedFinder -[hidden]down- siteSections
+siteSections -[hidden]down- feedBridge
+feedLimits -[hidden]down- publicUrl
+
+EndUser --> feedRouter
+feedRouter --> feedController
+feedController --> sourceService
+feedController --> recommendationService
+feedController --> ingestService
+feedController --> Data
+feedController --> OnSite
+feedController --> Limits
+sourceService --> Data
+sourceService --> Looking
+sourceService --> OnSite
+recommendationService --> sourceService
+recommendationService --> feedbackService
+recommendationService --> Data
+recommendationService --> Limits
+feedFinder --> feedDirectory
+googleNews --> GoogleNewsApi
+gdelt --> GdeltApi
+feedDirectory --> DirectoryApi
+feedBridge --> RssBridge
+meaningJudge --> Embedder
+Data --> PostgreSQL
+@enduml

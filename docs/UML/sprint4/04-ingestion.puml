@@ -1,0 +1,97 @@
+@startuml 04-ingestion
+!include _style.iuml
+title Ingestion — the cache filled in background
+
+package "Business" {
+    class ingestService {
+        + run()
+        + schedule()
+        + searchesOfCategories()
+        + searchesOfUser()
+    }
+    class feedService {
+        + refreshUrls()
+        + syncCategories()
+    }
+}
+note right of ingestService
+    Every few minutes: reads the feeds due
+    and the Google News searches of the
+    interests, embeds the new news, then
+    groups them into stories and threads
+    (SQL functions assign_stories and
+    assign_threads). News older than the
+    retention days are deleted.
+end note
+package "Data" {
+    class "db/rss-links.js" as rssLinks {
+        387 shared feeds
+    }
+    class feedModel {
+        + dueFeeds()
+        + allUserFeedUrls()
+        + syncFeeds()
+        + syncCategories()
+        + insertArticles()
+        + updateFeed()
+        + deleteArticlesOlderThan()
+    }
+    class storyModel {
+        + pendingArticles()
+        + saveVectors()
+        + assignStories()
+        + assignThreads()
+        + deleteEmptyStories()
+    }
+    class profileModel {
+        + searchesOf()
+    }
+}
+package "utils" {
+    class googleNews {
+        + readSearches()
+        + interestSearchUrls()
+        + googleAvailable()
+    }
+    class crawlers {
+        + Xml()
+    }
+    class embedder {
+        + embed()
+    }
+    class language {
+        + languageOf()
+    }
+    class dates {
+        + toDate()
+    }
+}
+note bottom of googleNews
+    Two pauses: a blocked article page
+    stops only the decoding of the links,
+    a blocked search stops both
+end note
+class "Google News" as GoogleNewsApi <<external>>
+class "Embedder (bge-m3)" as Embedder <<external>>
+class Crawlee <<external>>
+class "PostgreSQL + pgvector" as PostgreSQL <<external>>
+
+ingestService --> rssLinks
+ingestService --> feedService
+ingestService --> feedModel
+ingestService --> storyModel
+ingestService --> profileModel
+ingestService --> googleNews
+ingestService --> embedder
+ingestService --> language
+feedService --> feedModel
+feedService --> crawlers
+feedService --> googleNews
+feedService --> dates
+googleNews --> GoogleNewsApi
+crawlers --> Crawlee
+embedder --> Embedder
+feedModel --> PostgreSQL
+storyModel --> PostgreSQL
+profileModel --> PostgreSQL
+@enduml

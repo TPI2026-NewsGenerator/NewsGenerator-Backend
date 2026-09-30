@@ -1,0 +1,44 @@
+@startuml 02-saved-searches
+!include _style.iuml
+title Saved searches — the forms of the Search page a reader keeps
+
+class EndUser
+package "Presentation" {
+    class customSearchRouter
+    class customSearchController {
+        + getUserCustomSearch()
+        + postUserCustomSearch()
+        + deleteUserCustomSearch()
+    }
+}
+package "Business" {
+    class customSearchService {
+        + getUserCustomSearch()
+        + postPutUserCustomSearch()
+        + deleteUserCustomSearch()
+    }
+}
+note right of customSearchService
+    With an id: replaces that search,
+    without: saves a new one
+end note
+package "Data" {
+    class customSearchModel {
+        + getUserCustomSearch()
+        + postUserCustomSearch()
+        + updateUserCustomSearch()
+        + deleteUserCustomSearch()
+    }
+}
+class jwt {
+    + authenticateToken()
+}
+class Prisma <<external>>
+
+EndUser --> customSearchRouter
+customSearchRouter --> jwt
+customSearchRouter --> customSearchController
+customSearchController --> customSearchService
+customSearchService --> customSearchModel
+customSearchModel --> Prisma
+@enduml

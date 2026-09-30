@@ -1,0 +1,63 @@
+@startuml 14-ingestion-sequence
+!include _sequence.iuml
+title Ingestion — one run of the background work
+
+participant "server start\n(timer, every 20 min)" as Timer
+participant ingestService as Ingest
+participant feedService as Feeds
+participant "crawlers\n+ googleNews" as Web
+participant feedModel as FeedModel
+participant storyModel as StoryModel
+participant embedder as Embedder
+database "PostgreSQL" as DB
+
+Timer -> Ingest : run()
+Ingest -> DB : pg_try_advisory_lock
+alt another run holds it
+    Ingest --> Timer : skipped
+    note right : with urls (a discovery): those\nfeeds are read anyway
+end
+
+group the feeds read
+    Ingest -> Ingest : db/rss-links.js + the feeds of every reader
+    opt Google News not paused
+        Ingest -> DB : the searches of the interests\nnot read for an hour (60 at most)
+    end
+    Ingest -> Feeds : refreshUrls(feeds, purge)
+    Feeds -> FeedModel : syncFeeds(urls)
+    par the feeds, all at once
+        Feeds -> Web : Crawlers.Xml(feeds, etag, last-modified)
+        note right : an unchanged feed answers 304
+    else the searches, one after the other
+        Feeds -> Web : readSearches(urls)
+        note right : Google blocking: the searches pause
+    end
+    Feeds -> FeedModel : updateFeed(etag, error, failures)
+    Feeds -> FeedModel : insertArticles(news)
+    FeedModel -> DB : INSERT articles, a link once per feed
+    opt purge
+        Feeds -> FeedModel : deleteArticlesOlderThan(retention)
+    end
+end
+
+loop batches of 300 news of the last 48 hours without vectors
+    Ingest -> StoryModel : pendingArticles
+    Ingest -> Embedder : embed(titles, title + description)
+    Embedder --> Ingest : dense + sparse vectors (bge-m3)
+    Ingest -> StoryModel : saveVectors(vectors, language)
+    Ingest -> StoryModel : assignStories
+    StoryModel -> DB : assign_stories(): join a story or start one
+    Ingest -> StoryModel : assignThreads
+    StoryModel -> DB : assign_threads(): the stories of one affair
+end
+note right of Embedder
+    The embedder down: the news
+    are stored anyway and get their
+    vectors at the next run
+end note
+opt a scheduled run
+    Ingest -> StoryModel : the older news without vectors,\nfor the search by meaning
+    Ingest -> StoryModel : deleteEmptyStories
+end
+Ingest -> DB : pg_advisory_unlock
+@enduml

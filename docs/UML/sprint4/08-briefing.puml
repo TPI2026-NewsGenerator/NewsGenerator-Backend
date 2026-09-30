@@ -1,0 +1,139 @@
+@startuml 08-briefing
+!include _style.iuml
+title Briefing — the stories chosen for a reader, and their thumbs
+
+class EndUser
+package "Presentation" {
+    class briefingRouter
+    class briefingController {
+        + latest()
+        + start()
+        + vote()
+    }
+}
+package "Business" {
+    class briefingService {
+        + latest()
+        + start()
+        + vote()
+    }
+    class feedbackService {
+        + of()
+        + refusedSources()
+        + keep()
+    }
+    class discoveryService <<other feature>> {
+        + prune()
+    }
+    class ingestService <<other feature>> {
+        + searchesOfUser()
+    }
+}
+note left of briefingService
+    Stories ranked in SQL on the
+    interests, the AI chooses among
+    them and checks the cards, then
+    the key passages are taken word
+    for word from the articles.
+end note
+note right of feedbackService
+    The thumbs of the last 30 days:
+    examples for the AI, and the
+    sources refused again and again
+end note
+package "Data" as Data {
+    class briefingModel {
+        + create()
+        + step()
+        + finish()
+        + fail()
+        + latest()
+        + vote()
+        + votes()
+    }
+    class storyModel {
+        + rank()
+        + storyArticles()
+    }
+    class profileModel {
+        + get()
+        + interests()
+        + keptSources()
+        + keepSource()
+    }
+    class feedModel {
+        + feedMedia()
+        + userFeedUrls()
+        + trustedFeedUrls()
+        + saveResolvedLinks()
+    }
+}
+package "Choosing the stories" as Choosing {
+    class googleNews {
+        + pickCandidates()
+        + credibleStory()
+        + isRepeatedPage()
+        + isNotNews()
+        + decodeLinks()
+    }
+    class profileAi {
+        + selectStories()
+        + balanceSelection()
+        + reviewCards()
+        + checkStories()
+        + mergeStories()
+    }
+    class corroboration {
+        + corroborationOf()
+    }
+}
+note bottom of googleNews
+    Candidates told by credible media;
+    a title one medium republishes
+    for hours is left out
+end note
+package "Writing the cards" as Writing {
+    class extract {
+        + extractArticle()
+        + passagesText()
+    }
+    class crawlers {
+        + Html()
+    }
+    class hedging {
+        + hedgedBy()
+    }
+}
+class feedback {
+    + examplesOf()
+    + refusedCounts()
+}
+class ollama {
+    + ollamaJson()
+}
+class "Ollama (gemma4:31b)" as Ollama <<external>>
+class "Google News" as GoogleNewsApi <<external>>
+class "PostgreSQL + pgvector" as PostgreSQL <<external>>
+
+googleNews -[hidden]down- profileAi
+profileAi -[hidden]down- corroboration
+extract -[hidden]down- crawlers
+crawlers -[hidden]down- hedging
+
+EndUser --> briefingRouter
+briefingRouter --> briefingController
+briefingController --> briefingService
+briefingService --> feedbackService
+briefingService --> discoveryService
+briefingService --> ingestService
+briefingService --> Data
+briefingService --> Choosing
+briefingService --> Writing
+feedbackService --> feedback
+feedbackService --> Data
+profileAi --> ollama
+extract --> ollama
+ollama --> Ollama
+googleNews --> GoogleNewsApi
+Data --> PostgreSQL
+@enduml

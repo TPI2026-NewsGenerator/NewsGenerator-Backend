@@ -9,18 +9,27 @@ participant "Service" as Service
 participant "Model" as Model
 database "Storage (DB)" as Storage
 
-Client -> Router : POST /login (user_cred)
-Router -> Controller : request(user_cred)
-Controller -> Service : authUser(user_cred)
-Service -> Model : authUser(user_cred)
+Client -> Router : POST /login (username, password)
+Router -> Controller : authUser(req)
+alt nom ou mot de passe vide
+    Controller --> Client : HTTP 400
+end
+Controller -> Service : authUser(username, password)
+Service -> Model : getUserByUsername(username)
 Model -> Storage : findFirst(username)
 Storage --> Model : user_data
 Model --> Service : user_data
-Service --> Service : verifyPassword()
-Service --> Service : generateAccessToken()
-Service --> Controller : user_id + JWT
-Controller --> Router : HTTP 200 + JWT
-Router --> Client : success_confirmation
-
+alt utilisateur inconnu
+    Service --> Controller : 404
+    Controller --> Client : HTTP 404
+end
+Service -> Service : verifyPassword() (bcrypt)
+alt mot de passe faux
+    Service --> Controller : 401
+    Controller --> Client : HTTP 401
+end
+Service -> Service : generateAccessToken() (JWT)
+Service --> Controller : {id_user, token}
+Controller --> Client : HTTP 200 {id_user, token}
 
 @enduml
