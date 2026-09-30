@@ -63,6 +63,7 @@ else a sentence (anything else)
         Ingest -> Meaning : embed its news
         Ingest -> DB : its news and their vectors
         News -> FeedModel : closestArticles(feeds + it, vectors)
+        note right : its 40 closest news always among\nthe ones the AI reads
         News -> Meaning : sortByMeaning(sentence, news)
         note right of News : answered with web: true;\nGoogle silent: the first answer
     end

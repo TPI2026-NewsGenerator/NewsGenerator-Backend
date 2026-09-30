@@ -265,7 +265,9 @@ Optional variables in `.env`:
      When fewer than 5 news answer, the subject is one our sources do not follow: Google News is then
      asked the sentence itself, over the days searched (30 at most), its news are read and embedded at
      once (`IngestService.readNow`), and the sentence is searched again with them; the reader is told.
-     Google learns the sentence, never who searched it. It is not asked while it is turned off or
+     The 40 closest news of that Google feed are read by the AI whatever the others: among every
+     feed, the vectors ranked "Claude Sonnet 5.5" 151st for "new AI models for programming" and the
+     AI, reading the first 110, never saw it (4 cards, 12 with them). Google learns the sentence, never who searched it. It is not asked while it is turned off or
      paused after a block, and a search it does not answer keeps the answer of our sources.
      Measured on the 15 sentences of `bench/vs-google.mjs` (30.09.2026): Google was asked for 7 of them.
      "measles outbreaks" went from 1 answer to 10, with 32 close ones all on measles; "the Swiss

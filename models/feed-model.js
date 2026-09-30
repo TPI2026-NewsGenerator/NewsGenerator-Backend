@@ -84,7 +84,8 @@ export const FeedModel = {
     // byWords with the most words of it (the sparse vector alone), which keeps the news naming what the
     // sentence names when their meaning is further. dense, sparse: the vectors of the sentence as
     // pgvector reads them (toVector, toSparsevec). The news without vectors yet are not found.
-    closestArticles: async ({feedUrls, timeframe = {}, dense, sparse, sparseWeight, byMeaning, byWords}) => prisma.$queryRawUnsafe(`
+    // givenFeeds: feeds whose byGiven closest news are always among them, whatever the others
+    closestArticles: async ({feedUrls, timeframe = {}, dense, sparse, sparseWeight, byMeaning, byWords, givenFeeds = [], byGiven = 0}) => prisma.$queryRawUnsafe(`
         WITH candidates AS (
             SELECT a.id, a.id_feed, a.link, a.title, a.description, a.thumbnail, a.category,
                    a.published_at, a.created_at, a.topic, a.summary, a.sourcing, a.id_story, s.id_thread,
@@ -102,8 +103,11 @@ export const FeedModel = {
         SELECT * FROM (SELECT * FROM candidates ORDER BY score DESC LIMIT $7::int) closest
         UNION
         SELECT * FROM (SELECT * FROM candidates ORDER BY words DESC LIMIT $8::int) named
+        UNION
+        SELECT * FROM (SELECT * FROM candidates WHERE id_feed IN (SELECT id FROM feeds WHERE url = ANY($9::text[]))
+                       ORDER BY score DESC LIMIT $10::int) given
         ORDER BY score DESC`,
-        feedUrls, timeframe.start ?? null, timeframe.end ?? null, dense, sparse, sparseWeight, byMeaning, byWords),
+        feedUrls, timeframe.start ?? null, timeframe.end ?? null, dense, sparse, sparseWeight, byMeaning, byWords, givenFeeds, byGiven),
     // The other facts of these threads (db/add_threads.sql), for the search to show an affair whole:
     // the articles of these feeds in the stories of the threads, whatever their date, the stories
     // already found left out. At most maxStories stories per thread, the closest in time to the ones

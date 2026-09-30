@@ -70,6 +70,19 @@ describe('a sentence our feeds answer little', () => {
         expect(result.news).toHaveLength(6);
     });
 
+    it('should give the AI the news of Google News for the sentence, whatever their vectors say', async () => {
+        FeedModel.closestArticles.mockResolvedValueOnce([article(1)]).mockResolvedValueOnce([1, 2, 3, 4, 5, 6].map(article));
+        sortByMeaning.mockImplementationOnce(answering(1)).mockImplementationOnce(answering(6));
+
+        await search();
+
+        const [[urls]] = IngestService.readNow.mock.calls;
+        const [[first], [second]] = FeedModel.closestArticles.mock.calls;
+        expect(first.givenFeeds).toEqual([]);
+        expect(second.givenFeeds).toEqual(urls);
+        expect(second.byGiven).toBeGreaterThan(0);
+    });
+
     it('should not ask it when the feeds answer enough', async () => {
         FeedModel.closestArticles.mockResolvedValueOnce([1, 2, 3, 4, 5].map(article));
         sortByMeaning.mockImplementationOnce(answering(5));

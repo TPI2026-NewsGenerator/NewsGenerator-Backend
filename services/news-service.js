@@ -56,6 +56,11 @@ const MIN_RESULTS = 5;          // under this, a search asking for every word is
 // (a name the meaning of the news is far from). 80 + 30 are 4000 to 7000 tokens, answered in 1 to 3 s
 const BY_MEANING = 80;
 const BY_WORDS = 30;
+// The news Google News gives for a sentence are read by the AI whatever their vectors say: with
+// every feed, bge-m3 ranked "Claude Sonnet 5.5" 151st for "new AI models for programming", Copilot
+// 691st and Gemini 4 1050th, and the AI never saw them (bench/why-rank.mjs). Google ranked them
+// for the sentence already; its feed gives up to 100, the closest 40 are read
+const BY_GOOGLE = 40;
 const MEANING_SPARSE_WEIGHT = 0.5;  // as the briefing ranks the news of an interest (rank_stories)
 const UNCHECKED_RESULTS = 30;       // the closest given when the AI does not answer
 
@@ -249,7 +254,7 @@ export const NewsService = {
                 // few answers: the subject is one no feed of ours follows. Google News is asked the
                 // sentence, once, and its news are searched with the others
                 const web = await webSearch(query, timeframe, language);
-                return web ? {...await NewsService.searchByMeaning({query, feedUrls: [...newsLinks, web], timeframe}), web: true} : found;
+                return web ? {...await NewsService.searchByMeaning({query, feedUrls: [...newsLinks, web], timeframe, googleFeed: web}), web: true} : found;
             }
 
             // 2. search in SQL (the feeds are read in background, see IngestService: nobody waits for them): keywords, excluded keywords (-word) and publication date
@@ -303,7 +308,7 @@ export const NewsService = {
     // (see search-ai.js). The cards come in its order, the answers first, each with 'match'. Without
     // the AI the closest ones are given, 'checked' false; without the embedder the sentence can't be
     // searched, the reader is told to use exact words.
-    searchByMeaning: async ({query, feedUrls, timeframe = {}}) => {
+    searchByMeaning: async ({query, feedUrls, timeframe = {}, googleFeed = null}) => {
         let vector;
         try {
             [vector] = await embed([query]);
@@ -319,6 +324,8 @@ export const NewsService = {
             sparseWeight: MEANING_SPARSE_WEIGHT,
             byMeaning: BY_MEANING,
             byWords: BY_WORDS,
+            givenFeeds: googleFeed ? [googleFeed] : [],
+            byGiven: googleFeed ? BY_GOOGLE : 0,
         });
         if (candidates.length === 0) return {totalResults: 0, news: [], wider: null, mode: 'meaning', checked: true};
 
