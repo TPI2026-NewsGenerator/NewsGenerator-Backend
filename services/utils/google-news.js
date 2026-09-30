@@ -37,7 +37,10 @@ const LOCALES = {
 // Google News is no official API: asked too often from one address it answers 429 or a captcha,
 // and the discovery of every reader stops with it. So every request of the server to Google goes
 // through one queue, never two closer than the interval, and the first sign of a block pauses them
-// all for an hour.
+// for an hour.
+// Google limits the pages of the articles far sooner than the searches: measured on 30.09.2026, a
+// 429 on the page of an article while the searches still answered. So a block of the pages pauses
+// only the real addresses ('articles'); a block of a search pauses everything ('searches').
 const INTERVAL_MS = () => Number(process.env.GOOGLE_NEWS_INTERVAL_MS) || 1000;
 const PAGE_INTERVAL_MS = 1000;      // the page of an article: Google blocks them sooner than the searches
 const PAUSE_MS = 60 * 60e3;
@@ -48,16 +51,18 @@ export class GoogleBlocked extends Error {}
 
 let queue = Promise.resolve();
 let lastAt = 0;
-let pausedUntil = 0;
+const pausedUntil = {searches: 0, articles: 0};
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// true while Google News can be asked
-export const googleAvailable = () => Date.now() >= pausedUntil;
+// true while Google News can be asked for this kind of request: 'searches' or 'articles'
+export const googleAvailable = (kind = 'searches') => Date.now() >= pausedUntil[kind];
 
-const pause = (why) => {
-    pausedUntil = Date.now() + PAUSE_MS;
-    console.error(`Google News: ${why}, no request for ${PAUSE_MS / 60e3} minutes`);
+const pause = (kind, why) => {
+    const until = Date.now() + PAUSE_MS;
+    pausedUntil.articles = until;
+    if (kind === 'searches') pausedUntil.searches = until;
+    console.error(`Google News: ${why}, no ${kind === 'searches' ? 'request' : 'article page'} for ${PAUSE_MS / 60e3} minutes`);
     return new GoogleBlocked(`Google News is paused (${why}).`);
 };
 
@@ -65,9 +70,9 @@ const pause = (why) => {
 const isBlocked = (status, url = '') => status === 429 || status === 503 || /consent\.google\.|google\.[a-z.]+\/sorry\//.test(url);
 
 // task run in the queue, after the others and the interval
-const politely = (task, interval = INTERVAL_MS()) => {
+const politely = (task, {kind = 'searches', interval = INTERVAL_MS()} = {}) => {
     const run = queue.then(async () => {
-        if (!googleAvailable()) throw new GoogleBlocked('Google News is paused after a block.');
+        if (!googleAvailable(kind)) throw new GoogleBlocked('Google News is paused after a block.');
         const wait = lastAt + interval - Date.now();
         if (wait > 0) await sleep(wait);
         lastAt = Date.now();
@@ -81,7 +86,7 @@ const politely = (task, interval = INTERVAL_MS()) => {
 const readFeed = (url) => politely(async () => {
     const [feed] = await Crawlers.Xml([{url}]);
     const status = Number(feed.error?.match(/HTTP (\d{3})/)?.[1]);
-    if (isBlocked(status)) throw pause(`HTTP ${status}`);
+    if (isBlocked(status)) throw pause('searches', `HTTP ${status}`);
     return feed;
 });
 
@@ -236,8 +241,8 @@ export const articleIdOf = (link) => {
 const signatureOf = async (id) => {
     for (const url of [`https://news.google.com/articles/${id}`, `https://news.google.com/rss/articles/${id}`]) {
         const res = await politely(() => fetch(url, {headers: {'User-Agent': BROWSER}, signal: AbortSignal.timeout(TIMEOUT_MS)}),
-            PAGE_INTERVAL_MS);
-        if (isBlocked(res.status, res.url)) throw pause(`HTTP ${res.status} on ${new URL(res.url).host}`);
+            {kind: 'articles', interval: PAGE_INTERVAL_MS});
+        if (isBlocked(res.status, res.url)) throw pause('articles', `HTTP ${res.status} on ${new URL(res.url).host}`);
         if (!res.ok) continue;
         const html = await res.text();
         const signature = html.match(/data-n-a-sg="([^"]+)"/)?.[1];
@@ -273,10 +278,10 @@ const resolve = (articles) => politely(async () => {
         body: `f.req=${encodeURIComponent(JSON.stringify(request))}`,
         signal: AbortSignal.timeout(TIMEOUT_MS),
     });
-    if (isBlocked(res.status, res.url)) throw pause(`HTTP ${res.status} on batchexecute`);
+    if (isBlocked(res.status, res.url)) throw pause('articles', `HTTP ${res.status} on batchexecute`);
     if (!res.ok) throw new Error(`batchexecute answered ${res.status}`);
     return parseBatchAnswer(await res.text(), articles.length);
-}, PAGE_INTERVAL_MS);
+}, {kind: 'articles', interval: PAGE_INTERVAL_MS});
 
 // the real address of these links of Google News: Map link -> address, without the ones that could
 // not be found. Never throws: a briefing reads what it can, the others stay unread

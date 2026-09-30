@@ -230,7 +230,8 @@ Optional variables in `.env`:
 
    A news read through Google News is shown under the medium Google names. Its real address is only
    asked to Google when its key passages are asked for and the card has no other article to read
-   (2 per card, 10 at most), since Google soon answers 429 and every search of Google waits an hour.
+   (2 per card, 10 at most), since Google soon answers 429 on the pages of its articles, and then no
+   real address is asked for an hour (the searches of Google go on).
 3. What was typed decides how it is searched (`Filter.hasOperators`):
    - **A sentence**, without any operator, is searched by its meaning (`NewsService.searchByMeaning`).
      The embedder gives the vector of the sentence, and `FeedModel.closestArticles` takes, among the
@@ -633,8 +634,10 @@ are no news (a league table, a live blog, where to watch a match), are left out.
 Google News is no official API: asked too often from one address it answers 429 or a captcha. So every
 request of the server to Google goes through one queue, never two closer than `GOOGLE_NEWS_INTERVAL_MS`;
 each search is read again after `GOOGLE_NEWS_EVERY_MINUTES`, at most 60 per run; and the first sign of a
-block pauses them all for an hour. The article pages are blocked the soonest (after about 40 requests
-in an hour), which is why they are kept so few.
+block pauses them for an hour. The article pages are blocked the soonest (after about 40 requests
+in an hour), which is why they are kept so few. Google limits them apart from the searches (a 429 on
+an article page while the searches still answered, 30.09.2026): a block of an article page pauses only
+the real addresses, a block of a search pauses everything.
 
 Its news get a place of their own in the briefing. On the UEFA profile, the stories told only
 through Google took 30 of the 40 places: their titles are made of the words of the interests ("UEFA
