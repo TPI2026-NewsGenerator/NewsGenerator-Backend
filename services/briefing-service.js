@@ -24,7 +24,7 @@ import {hedgedBy} from "./utils/hedging.js";
 import {languageOf} from "./utils/language.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {hostOf, mediumOf} from "./utils/public-url.js";
-import {credibleStory, decodeLinks, isGoogleNewsUrl, isNotNews, pickCandidates} from "./utils/google-news.js";
+import {credibleStory, decodeLinks, isGoogleNewsUrl, isNotNews, isRepeatedPage, pickCandidates} from "./utils/google-news.js";
 import {searchesOfUser} from "./ingest-service.js";
 
 // Measured on four profiles and 249 stories judged by hand:
@@ -230,7 +230,7 @@ const write = async (briefingId, userId) => {
         }];
     }));
     const candidates = pickCandidates([...byId.values()]
-        .filter(story => story.best && credibleStory(story.members, media))
+        .filter(story => story.best && credibleStory(story.members, media) && !isRepeatedPage(story.members))
         .sort((a, b) => b.score - a.score), {fromFeeds: CANDIDATES, extra: GOOGLE_CANDIDATES, perMedium: GOOGLE_PER_MEDIUM});
 
     // 2. the AI chooses, against the whole profile and what it refuses

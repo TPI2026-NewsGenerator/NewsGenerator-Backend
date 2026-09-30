@@ -8,7 +8,7 @@
 
 import {describe, expect, it} from '@jest/globals';
 import {
-    articleIdOf, credibleStory, interestSearchUrls, isNotNews, isPlatform, pickCandidates, isGoogleNewsUrl, languageOfSearch, parseBatchAnswer,
+    articleIdOf, credibleStory, interestSearchUrls, isNotNews, isPlatform, isRepeatedPage, pickCandidates, isGoogleNewsUrl, languageOfSearch, parseBatchAnswer,
     searchUrl, withoutPublisher,
 } from '../../services/utils/google-news.js';
 
@@ -113,6 +113,26 @@ describe('isNotNews', () => {
         expect(isNotNews('Election results: what they mean for Europe', 'https://www.bbc.com/news/election-results-2026')).toBe(false);
         expect(isNotNews('Tickets for the final sold out in minutes')).toBe(false);
         expect(isNotNews('Turquie - France : les notes des Bleus', 'https://www.lequipe.fr/Football/Actualites/notes/123')).toBe(false);
+    });
+});
+
+describe('isRepeatedPage', () => {
+    const at = (hour) => new Date(Date.UTC(2026, 8, 30, hour, 0));
+    const page = (i, hour, medium = 'canalplus.com', title = "Football : Ligue 1 McDonald's") =>
+        ({medium, title, link: `https://news.google.com/rss/articles/${i}`, at: at(hour)});
+
+    it('should leave out a title one medium published again and again over hours', () => {
+        expect(isRepeatedPage([page(1, 0), page(2, 1), page(3, 3), page(4, 4)])).toBe(true);
+    });
+
+    it('should keep one article met through several feeds within the hour', () => {
+        const wsj = (i) => ({medium: 'wsj.com', title: 'Nvidia Adds Record $150 Billion to Stock Buyback', link: `https://wsj.com/a?feed=${i}`, at: at(10)});
+        expect(isRepeatedPage([wsj(1), wsj(2), wsj(3)])).toBe(false);
+    });
+
+    it('should keep a story another medium or another title tells too', () => {
+        expect(isRepeatedPage([page(1, 0), page(2, 3), page(3, 5), page(4, 5, 'lequipe.fr', 'La Ligue 1 change de diffuseur')])).toBe(false);
+        expect(isRepeatedPage([page(1, 0), page(2, 5)])).toBe(false);
     });
 });
 

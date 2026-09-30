@@ -200,6 +200,23 @@ export const isNotNews = (title, link = null) => {
     }
 };
 
+// A page that comes back under the same title is no news either, whatever the feed: "Football : Ligue
+// 1 McDonald's" of canalplus.com, 5 links of Google News between 00:44 and 04:54, a page of its section
+// with no text to read, was a card of a briefing; so are "Mise au Point" of rts.ch and "LdN : les
+// résultats de la soirée". The same article met through several feeds has the same title too (wsj.com,
+// swissinfo.ch, 3 feeds each), but all within the hour: a story told only by such a title, of one
+// medium, over hours, is left out
+const REPEATS = 3;
+const REPEATED_OVER_MS = 2 * 3600e3;
+// members: [{medium, title, link, at}]
+export const isRepeatedPage = (members) => {
+    const media = new Set(members.map(article => article.medium));
+    const titles = new Set(members.map(article => article.title));
+    if (media.size !== 1 || titles.size !== 1 || new Set(members.map(article => article.link)).size < REPEATS) return false;
+    const times = members.map(article => new Date(article.at).getTime()).filter(Number.isFinite);
+    return times.length > 0 && Math.max(...times) - Math.min(...times) >= REPEATED_OVER_MS;
+};
+
 // Feeds of Google News read one after the other, in the shape of Crawlers.Xml: the title without
 // its publisher, the publisher in 'source', no description (Google only gives a list of links).
 // Once Google blocks, the feeds left are answered {skipped: true}: they are read next time.
