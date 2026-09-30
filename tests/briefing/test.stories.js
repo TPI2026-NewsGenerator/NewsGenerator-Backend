@@ -83,6 +83,22 @@ const assign = async (client, sparseWeight = 1) => (await client.query('SELECT *
         expect(await storyOf(client, c)).not.toBe(await storyOf(client, a));
     }));
 
+    it('should group only the newest news asked for, and leave the others to the next call', () => inTransaction(async (client, feed) => {
+        const oldest = await news(client, feed, {minute: 1, title: dense(1, 0)});
+        const newer = await news(client, feed, {minute: 2, title: dense(0, 1)});
+        const newest = await news(client, feed, {minute: 3, title: dense(1, 1, 1)});
+
+        const {rows: [first]} = await client.query('SELECT * FROM public.assign_stories($1, $2, $3, $4, $5, $6, $7, $8)',
+            [SINCE, THRESHOLD, 1, SAME_MEDIUM_MARGIN, TEXT_THRESHOLD, IDLE_DECAY, IDLE_GRACE, 2]);
+        expect(first.grouped).toBe(2);
+        expect(await storyOf(client, newest)).not.toBeNull();
+        expect(await storyOf(client, newer)).not.toBeNull();
+        expect(await storyOf(client, oldest)).toBeNull();
+
+        expect((await assign(client)).grouped).toBe(1);
+        expect(await storyOf(client, oldest)).not.toBeNull();
+    }));
+
     it('should join a story on the average of its members, not on one of them', () => inTransaction(async (client, feed) => {
         const {rows: [{id: story}]} = await client.query("INSERT INTO stories (lang) VALUES ('en') RETURNING id");
         await news(client, feed, {title: dense(1, 0, 0), story});

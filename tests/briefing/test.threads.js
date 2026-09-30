@@ -41,6 +41,9 @@ const inTransaction = async (test) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
+        // the stories of the real news waiting for their thread are left out, in the transaction only:
+        // judged with the test ones, thousands of them after a first read took minutes
+        await client.query("UPDATE stories SET threaded_at = now() WHERE grouped_at > COALESCE(threaded_at, '-infinity')");
         const {rows: [feed]} = await client.query("INSERT INTO feeds (url) VALUES ('https://test.invalid/feed') RETURNING id");
         await test(client, feed.id);
     } finally {
@@ -82,6 +85,19 @@ const assign = async (client) => (await client.query('SELECT * FROM public.assig
 
         expect(await threadOf(client, result)).toBe(await threadOf(client, preview));
         expect(await threadOf(client, other)).not.toBe(await threadOf(client, preview));
+    }));
+
+    it('should judge only the oldest stories asked for, and leave the others to the next call', () => inTransaction(async (client, feed) => {
+        const first = await story(client, feed, {hours: 1, text: dense(1, 0)});
+        const second = await story(client, feed, {hours: 2, text: dense(0, 1)});
+
+        await client.query('SELECT * FROM public.assign_threads($1, $2, $3, $4, $5)',
+            [THRESHOLD, SAME_MEDIUM_MARGIN, MERGE_THRESHOLD, ACTIVE_DAYS, 1]);
+        expect(await threadOf(client, first)).not.toBeNull();
+        expect(await threadOf(client, second)).toBeNull();
+
+        await assign(client);
+        expect(await threadOf(client, second)).not.toBeNull();
     }));
 
     it('should keep apart the series of one medium unless almost the same', () => inTransaction(async (client, feed) => {

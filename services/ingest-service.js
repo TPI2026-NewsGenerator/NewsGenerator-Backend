@@ -32,6 +32,12 @@ const MAX_EMBEDDED_PER_RUN = Number(process.env.INGEST_MAX_EMBEDDED) || 300;
 // retention; they join no story. After the news of the window, and this many batches at most per
 // run: on a processor a batch of 300 is a few minutes
 const OLDER_BATCHES_PER_RUN = Number(process.env.INGEST_OLDER_BATCHES) || 1;
+// Batches of the window embedded and grouped by a scheduled run, the newest news first: the rest waits
+// for the next run, which reads the feeds before. A batch is grouped in one transaction of its own
+// (assign_stories, assign_threads): the 12 000 news of the first read of the directory, grouped at
+// once, held the lock 2 h 10 with no feed read meanwhile and nothing saved before the end. A batch of
+// 300 is grouped in about 4 minutes (75 news a minute with 30 000 news in the window)
+const BATCHES_PER_RUN = Number(process.env.INGEST_BATCHES) || 3;
 const DESCRIPTION_CHARS = 400;          // the start of the description read with the title
 const STORY_THRESHOLD = 0.70;           // dense + sparse of the titles, see assign_stories (db/add_briefing.sql)
 const STORY_SPARSE_WEIGHT = 1;
@@ -90,16 +96,17 @@ const embedPending = async (urls = null, since = new Date(Date.now() - WINDOW_HO
 };
 
 // the stories grouped since their thread was judged join the threads of their affair
-export const threadPending = () => StoryModel.assignThreads({
+export const threadPending = (maxStories = null) => StoryModel.assignThreads({
     threshold: THREAD_THRESHOLD,
     sameMediumMargin: THREAD_SAME_MEDIUM_MARGIN,
     mergeThreshold: THREAD_MERGE_THRESHOLD,
     activeDays: THREAD_ACTIVE_DAYS,
+    maxStories,
 });
 
 // the news with vectors and no story join the stories of the window, or start new ones: done in the
 // database, where the vectors are (see assign_stories in db/add_briefing.sql)
-const groupPending = () => StoryModel.assignStories({
+const groupPending = (maxNews) => StoryModel.assignStories({
     since: new Date(Date.now() - WINDOW_HOURS * 3600e3),
     threshold: STORY_THRESHOLD,
     sparseWeight: STORY_SPARSE_WEIGHT,
@@ -107,6 +114,7 @@ const groupPending = () => StoryModel.assignStories({
     textThreshold: STORY_TEXT_THRESHOLD,
     idleDecay: STORY_IDLE_DECAY,
     idleGrace: STORY_IDLE_GRACE,
+    maxNews,
 });
 
 // Two runs must never overlap: the server runs one every few minutes and "pnpm run ingest" can run
@@ -182,9 +190,13 @@ export const IngestService = {
             let embedded = 0;
             let older = 0;
             let grouping = {grouped: 0, created: 0, threaded: 0, merged: 0};
+            let batches = 0;
+            let lastGrouped = 0;
             const group = async () => {
-                const done = await groupPending();
-                const threads = await threadPending();
+                const done = await groupPending(MAX_EMBEDDED_PER_RUN);
+                const threads = await threadPending(MAX_EMBEDDED_PER_RUN);
+                batches += 1;
+                lastGrouped = done.grouped;
                 grouping = {
                     grouped: grouping.grouped + done.grouped, created: grouping.created + done.created,
                     threaded: grouping.threaded + threads.touched, merged: grouping.merged + threads.merged,
@@ -195,14 +207,16 @@ export const IngestService = {
                 // grouped at once so the briefing can use it without waiting for the others. A run of
                 // some feeds (those just found for a profile) embeds all of theirs, and only theirs:
                 // a new reader had 300 of 564 and waited the next run for the rest, and the backlog
-                // of the others is the work of the scheduled run
+                // of the others is the work of the scheduled run, BATCHES_PER_RUN at a time
                 for (let batch = await embedPending(urls); batch > 0; batch = await embedPending(urls)) {
                     embedded += batch;
                     await group();
-                    if (batch < MAX_EMBEDDED_PER_RUN) break;
+                    if (batch < MAX_EMBEDDED_PER_RUN || (urls === null && batches >= BATCHES_PER_RUN)) break;
                 }
-                // news embedded by a run that stopped before grouping them
+                // news embedded and in no story: by a run that stopped before grouping them, by a search
+                // reading Google News, or more than a batch waiting. As many batches as a run allows
                 if (embedded === 0) await group();
+                while (lastGrouped === MAX_EMBEDDED_PER_RUN && batches < BATCHES_PER_RUN) await group();
                 // then the older news, for the search only (the grouping reads the window)
                 if (urls === null) {
                     const retention = new Date(Date.now() - RETENTION_DAYS * 24 * 3600e3);

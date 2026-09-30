@@ -76,8 +76,11 @@ CREATE INDEX IF NOT EXISTS i_stories_to_thread ON public.stories (grouped_at) WH
 -- 55 of 74 search cards of one news in one thread (33 as stories); 23 of 30 threads read at random were
 -- one affair, 3 a series of one medium, 4 too broad (qualifiers of a whole competition). Without the
 -- joining 53 cards and 72% of the affairs; joining without the margin brought the series back.
+-- max_stories: the stories judged by this call, the oldest first, the others left to the next (all
+-- when null): one call is one transaction, see assign_stories
+DROP FUNCTION IF EXISTS public.assign_threads(real, real, real, integer);
 CREATE OR REPLACE FUNCTION public.assign_threads(threshold real, same_medium_margin real, merge_threshold real,
-                                                 active_days integer)
+                                                 active_days integer, max_stories integer DEFAULT NULL)
     RETURNS TABLE (touched integer, created integer, merged integer)
     LANGUAGE plpgsql
 AS $$
@@ -113,6 +116,7 @@ BEGIN
         FROM stories
         WHERE grouped_at > COALESCE(threaded_at, '-infinity') AND centroid IS NOT NULL
         ORDER BY updated_at, id
+        LIMIT max_stories
     LOOP
         UPDATE stories SET id_thread = NULL WHERE id = s.id;
         best := NULL;

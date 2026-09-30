@@ -121,9 +121,13 @@ CREATE INDEX IF NOT EXISTS i_articles_grouped ON public.articles (lang, (COALESC
 DROP FUNCTION IF EXISTS public.assign_stories(timestamptz, real, real);
 DROP FUNCTION IF EXISTS public.assign_stories(timestamptz, real, real, real);
 DROP FUNCTION IF EXISTS public.assign_stories(timestamptz, real, real, real, real);
+-- max_news: the newest news grouped by this call, the others left to the next (all when null). One
+-- call is one transaction: the 12 000 news of a first read of the directory held it 2 h 10, nothing
+-- saved before the end and the ingestion waiting on it
+DROP FUNCTION IF EXISTS public.assign_stories(timestamptz, real, real, real, real, real, real);
 CREATE OR REPLACE FUNCTION public.assign_stories(since timestamptz, threshold real, sparse_weight real,
                                                  same_medium_margin real, text_threshold real,
-                                                 idle_decay real, idle_grace real)
+                                                 idle_decay real, idle_grace real, max_news integer DEFAULT NULL)
     RETURNS TABLE (grouped integer, created integer)
     LANGUAGE plpgsql
 AS $$
@@ -141,6 +145,7 @@ BEGIN
           AND a.id_story IS NULL
           AND COALESCE(a.published_at, a.created_at) >= since
         ORDER BY COALESCE(a.published_at, a.created_at) DESC, a.id
+        LIMIT max_news
     LOOP
         SELECT m.id_story INTO story
         FROM articles m

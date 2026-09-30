@@ -52,20 +52,21 @@ export const StoryModel = {
     },
 
     // the news embedded and in no story join the stories of the window, in the database
-    // (assign_stories): {grouped, created}
-    assignStories: async ({since, threshold, sparseWeight, sameMediumMargin, textThreshold, idleDecay, idleGrace}) => {
+    // (assign_stories), the newest maxNews of them (all when null): {grouped, created}
+    assignStories: async ({since, threshold, sparseWeight, sameMediumMargin, textThreshold, idleDecay, idleGrace, maxNews = null}) => {
         const [result] = await prisma.$queryRawUnsafe(
-            'SELECT grouped, created FROM public.assign_stories($1::timestamptz, $2::real, $3::real, $4::real, $5::real, $6::real, $7::real)',
-            since, threshold, sparseWeight, sameMediumMargin, textThreshold, idleDecay, idleGrace);
+            'SELECT grouped, created FROM public.assign_stories($1::timestamptz, $2::real, $3::real, $4::real, $5::real, $6::real, $7::real, $8::int)',
+            since, threshold, sparseWeight, sameMediumMargin, textThreshold, idleDecay, idleGrace, maxNews);
         return result;
     },
 
     // the stories grouped since their thread was judged join the threads of their affair, in the
-    // database (assign_threads, db/add_threads.sql): {touched, created, merged}
-    assignThreads: async ({threshold, sameMediumMargin, mergeThreshold, activeDays}) => {
+    // database (assign_threads, db/add_threads.sql), the oldest maxStories of them (all when null):
+    // {touched, created, merged}
+    assignThreads: async ({threshold, sameMediumMargin, mergeThreshold, activeDays, maxStories = null}) => {
         const [result] = await prisma.$queryRawUnsafe(
-            'SELECT touched, created, merged FROM public.assign_threads($1::real, $2::real, $3::real, $4::int)',
-            threshold, sameMediumMargin, mergeThreshold, activeDays);
+            'SELECT touched, created, merged FROM public.assign_threads($1::real, $2::real, $3::real, $4::int, $5::int)',
+            threshold, sameMediumMargin, mergeThreshold, activeDays, maxStories);
         return result;
     },
 
