@@ -338,6 +338,8 @@ Optional variables in `.env`:
 6. A user can add their own sources (`POST /api/feeds` with a site address): the server finds the
    RSS feed of the site and checks it answers. These sources are **private**, they are only used in
    the searches of this user, unless they share them. Addresses of private networks are refused, see `services/utils/public-url.js`.
+   500 at most (`MAX_USER_FEEDS`): a reader's list of the football media of Europe had 180 feeds,
+   about 500 news a day for the 108 the server did not read yet.
    The feed of a site is looked for in four steps, each one tried only when the one before found
    nothing (`services/utils/feed-finder.js`):
    1. the feed the page declares, `<link rel="alternate" type="application/rss+xml">`, except the
