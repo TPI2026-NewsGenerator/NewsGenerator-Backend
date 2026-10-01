@@ -43,6 +43,7 @@ jest.unstable_mockModule('../../services/utils/google-news.js', () => ({
 }));
 jest.unstable_mockModule('../../services/ingest-service.js', () => ({
     searchesOfCategories: jest.fn(async () => []),
+    sentenceFeeds: jest.fn(async () => []),
     GOOGLE_ENABLED: () => false,
     IngestService: {readNow: jest.fn()},
 }));

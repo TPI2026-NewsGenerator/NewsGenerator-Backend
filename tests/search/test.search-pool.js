@@ -3,7 +3,7 @@
 //  Date: 30.09.2026
 //  File: test.search-pool.js
 //  Description: The searches of Google News of the profiles a search reads: of its language, and of
-//               the interests of its categories
+//               the interests of its categories. And the sentences searched before, of its language
 //
 
 import {describe, expect, it, jest} from '@jest/globals';
@@ -18,12 +18,14 @@ jest.unstable_mockModule('../../models/profile-model.js', () => ({
         ]),
     },
 }));
-jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {}}));
+jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {googleSearchFeeds: jest.fn()}}));
 jest.unstable_mockModule('../../models/story-model.js', () => ({StoryModel: {}}));
 jest.unstable_mockModule('../../models/directory-model.js', () => ({DirectoryModel: {}}));
 jest.unstable_mockModule('../../services/directory-service.js', () => ({DirectoryService: {}}));
 
-const {searchesOfCategories} = await import('../../services/ingest-service.js');
+const {searchesOfCategories, sentenceFeeds} = await import('../../services/ingest-service.js');
+const {FeedModel} = await import('../../models/feed-model.js');
+const {sentenceUrl} = await import('../../services/utils/google-news.js');
 
 describe('searchesOfCategories', () => {
     it('should give the searches in the language asked, of the interests of these categories or of none', async () => {
@@ -34,5 +36,18 @@ describe('searchesOfCategories', () => {
         expect(queries[0]).toMatch(/^cartes Pokémon/);
         expect(queries[1]).toMatch(/^voile/);
         expect(urls.every(url => url.includes('hl=fr'))).toBe(true);
+    });
+});
+
+describe('sentenceFeeds', () => {
+    it('should give the sentences searched in the language asked, not the searches of the profiles', async () => {
+        const [profile] = await searchesOfCategories(['technology'], 'fr');
+        const french = sentenceUrl("les prix de l'immobilier en Suisse", {days: 7, language: 'fr'});
+        const english = sentenceUrl('measles outbreaks', {days: 7, language: 'en'});
+        FeedModel.googleSearchFeeds.mockResolvedValueOnce([profile, french, english]);
+
+        expect(await sentenceFeeds('fr')).toEqual([french]);
+        const [[since]] = FeedModel.googleSearchFeeds.mock.calls;
+        expect(Date.now() - since.getTime()).toBeGreaterThan(29 * 24 * 3600e3);
     });
 });

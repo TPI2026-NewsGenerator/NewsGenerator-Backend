@@ -27,6 +27,7 @@ jest.unstable_mockModule('../../services/utils/embedder.js', () => ({
 jest.unstable_mockModule('../../services/utils/search-ai.js', () => ({sortByMeaning: jest.fn()}));
 jest.unstable_mockModule('../../services/ingest-service.js', () => ({
     searchesOfCategories: jest.fn(async () => []),
+    sentenceFeeds: jest.fn(async () => []),
     GOOGLE_ENABLED: jest.fn(() => true),
     IngestService: {readNow: jest.fn(async () => 3)},
 }));
@@ -37,7 +38,7 @@ jest.unstable_mockModule('../../models/directory-model.js', () => ({
 const {NewsService} = await import('../../services/news-service.js');
 const {FeedModel} = await import('../../models/feed-model.js');
 const {sortByMeaning} = await import('../../services/utils/search-ai.js');
-const {GOOGLE_ENABLED, IngestService} = await import('../../services/ingest-service.js');
+const {GOOGLE_ENABLED, IngestService, sentenceFeeds} = await import('../../services/ingest-service.js');
 const {DirectoryModel} = await import('../../models/directory-model.js');
 
 const article = (id) => ({
@@ -83,15 +84,31 @@ describe('a sentence our feeds answer little', () => {
         expect(second.byGiven).toBeGreaterThan(0);
     });
 
-    it('should not ask it when the feeds answer enough', async () => {
+    it('should ask it even when the feeds answer enough, for the next searches, without waiting for it', async () => {
+        let read;
+        IngestService.readNow.mockImplementationOnce(() => new Promise(resolve => { read = resolve; }));
         FeedModel.closestArticles.mockResolvedValueOnce([1, 2, 3, 4, 5].map(article));
         sortByMeaning.mockImplementationOnce(answering(5));
 
         const result = await search();
 
-        expect(IngestService.readNow).not.toHaveBeenCalled();
+        expect(IngestService.readNow).toHaveBeenCalledTimes(1);
+        expect(FeedModel.closestArticles).toHaveBeenCalledTimes(1);
         expect(result.web).toBeUndefined();
         expect(result.news).toHaveLength(5);
+        read(3);
+    });
+
+    it('should search the sentences searched before with the other feeds', async () => {
+        const before = 'https://news.google.com/rss/search?q=measles+when%3A7d&hl=en-US&gl=US&ceid=US:en';
+        sentenceFeeds.mockResolvedValueOnce([before]);
+        FeedModel.closestArticles.mockResolvedValueOnce([1, 2, 3, 4, 5].map(article));
+        sortByMeaning.mockImplementationOnce(answering(5));
+
+        await search();
+
+        expect(sentenceFeeds).toHaveBeenCalledWith('en');
+        expect(feedsRead(0)).toContain(before);
     });
 
     it('should give the answer of the feeds when Google News can not be asked', async () => {

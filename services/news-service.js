@@ -21,7 +21,7 @@ import {dateOf, mediumOfArticle, readingOrder, sourceOf} from "./utils/reading-o
 import {embed, toSparsevec, toVector} from "./utils/embedder.js";
 import {sortByMeaning} from "./utils/search-ai.js";
 import {decodeLinks, googleAvailable, isGoogleNewsUrl, sentenceUrl} from "./utils/google-news.js";
-import {GOOGLE_ENABLED, IngestService, searchesOfCategories} from "./ingest-service.js";
+import {GOOGLE_ENABLED, IngestService, searchesOfCategories, sentenceFeeds} from "./ingest-service.js";
 import {DirectoryModel} from "../models/directory-model.js";
 
 export const MAX_SELECTED_NEWS = 10;
@@ -199,10 +199,12 @@ const withThreads = async (cards, feedUrls) => {
     return result;
 };
 
-// A subject no profile follows has few news in our feeds: measured against Google News (bench/vs-google.mjs,
-// 15 searches of 7 days), measles gave 1 card to its ~15 stories and the Swiss chocolate 0 to its 4.
-// Under this many answers the sentence is asked to Google News too. It then knows the sentence, never
-// who searched it
+// Every sentence is asked to Google News too, while our feeds are searched. It then knows the sentence,
+// never who searched it. Measured against Google News (bench/vs-google.mjs, 15 searches of 7 days):
+// asked only when our feeds answered little, 40% of its first 30 news were in no feed of ours, all of
+// them from the searches it was not asked (measles had 1 card to its ~15 stories before). Under this
+// many answers the search waits for its news and searches again with them; above, it answers at once
+// and its news join the database for the next searches (see sentenceFeeds)
 const WEB_MIN_ANSWERS = 5;
 // Google News is asked as far back as the search reads, a month at most (the news are kept 30 days)
 const WEB_MAX_DAYS = 30;
@@ -237,23 +239,27 @@ export const NewsService = {
             // Google News of the profiles. All of the language of the search: a French search gave the
             // cards of si.com. A reader's search of "cartes Pokémon" found 1 news in the shared feeds
             // and their own, 10 with the searches of the profile of another reader (bench/pool-sources.mjs)
-            // The feeds of the directory too, found by the server itself (see DirectoryService)
-            const [own, others, searches, directory] = await Promise.all([
+            // The feeds of the directory too, found by the server itself (see DirectoryService), and the
+            // feeds of Google News of the sentences already searched (see sentenceFeeds)
+            const [own, others, searches, directory, sentences] = await Promise.all([
                 userId ? FeedModel.userFeedUrls(userId, category, language) : [],
                 FeedModel.publicFeedUrls(category, language),
                 searchesOfCategories(category, language),
                 DirectoryModel.feedUrls(category, language),
+                sentenceFeeds(language),
             ]);
-            const newsLinks = [...new Set([...Links.getCategoriesLinks(category, language), ...own, ...others, ...searches, ...directory])];
+            const newsLinks = [...new Set([...Links.getCategoriesLinks(category, language), ...own, ...others, ...searches, ...directory, ...sentences])];
 
             if (!Filter.hasOperators(keywords)) {
                 const query = keywords.join(' ').trim();
+                // Google News is asked the sentence at once, while our feeds are searched
+                const asked = webSearch(query, timeframe, language).catch(() => null);
                 const found = await NewsService.searchByMeaning({query, feedUrls: newsLinks, timeframe});
+                // enough answers: its news are still read, for the next searches, nobody waits for them
                 if (found.news.filter(card => card.match !== 'related').length >= WEB_MIN_ANSWERS) return found;
 
-                // few answers: the subject is one no feed of ours follows. Google News is asked the
-                // sentence, once, and its news are searched with the others
-                const web = await webSearch(query, timeframe, language);
+                // few answers: the subject is one no feed of ours follows, its news are searched with the others
+                const web = await asked;
                 return web ? {...await NewsService.searchByMeaning({query, feedUrls: [...newsLinks, web], timeframe, googleFeed: web}), web: true} : found;
             }
 

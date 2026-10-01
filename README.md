@@ -219,7 +219,7 @@ Optional variables in `.env`:
 | `FEED_RETENTION_DAYS` | 30 | Articles older than this are deleted |
 | `RSS_BRIDGE_URL` | _(none)_ | Address of the RSS-Bridge, step 4 of the sources of a user below. Empty: the sites without a feed are simply out of reach |
 | `GOOGLE_NEWS` | on | `off` stops every request to Google News: the searches of the interests, and the sentence a search asks when our sources answer little |
-| `SEARCH_GOOGLE_NEWS` | on | `off`: a search our sources answer little is not asked to Google News (the searches of the interests go on) |
+| `SEARCH_GOOGLE_NEWS` | on | `off`: the sentences searched are not asked to Google News (the searches of the interests go on) |
 | `GOOGLE_NEWS_EVERY_MINUTES` | 60 | each search of Google News is read again after this |
 | `GOOGLE_NEWS_INTERVAL_MS` | 1000 | two requests to Google never closer than this |
 | `DIRECTORY` | on | `off` stops the directory from looking at more media after each run (the feeds it has are still read) |
@@ -284,18 +284,25 @@ Optional variables in `.env`:
      Without the AI, the 30 closest are given, marked as not checked. Without the embedder, the
      sentence cannot be searched: the reader is told to put their words between quotes.
 
-     When fewer than 5 news answer, the subject is one our sources do not follow: Google News is then
-     asked the sentence itself, over the days searched (30 at most), its news are read and embedded at
-     once (`IngestService.readNow`), and the sentence is searched again with them; the reader is told.
-     The 40 closest news of that Google feed are read by the AI whatever the others: among every
-     feed, the vectors ranked "Claude Sonnet 5.5" 151st for "new AI models for programming" and the
-     AI, reading the first 110, never saw it (4 cards, 12 with them). Google learns the sentence, never who searched it. It is not asked while it is turned off or
-     paused after a block, and a search it does not answer keeps the answer of our sources.
-     Measured on the 15 sentences of `bench/vs-google.mjs` (30.09.2026): Google was asked for 7 of them.
-     "measles outbreaks" went from 1 answer to 10, with 32 close ones all on measles; "the Swiss
-     chocolate industry" from 0 to 4 (Lindt cutting its forecast); the crew of Artemis II from 4 cards to
-     8. A subject Google has nothing on either stays with little ("les vendanges en Valais"). Such a
-     search takes 5 to 11 seconds instead of 2 to 5. `SEARCH_GOOGLE_NEWS=off` turns it off.
+     Google News is asked every sentence too, over the days searched (30 at most), while our sources
+     are searched; its news are read and embedded at once (`IngestService.readNow`). Google learns the
+     sentence, never who searched it. It is not asked while it is turned off or paused after a block,
+     and a search it does not answer keeps the answer of our sources.
+     - When fewer than 5 news answer, the subject is one our sources do not follow: the search waits
+       for Google and searches again with its news; the reader is told. The 40 closest news of that
+       Google feed are read by the AI whatever the others: among every feed, the vectors ranked
+       "Claude Sonnet 5.5" 151st for "new AI models for programming" and the AI, reading the first 110,
+       never saw it (4 cards, 12 with them). Measured on the 15 sentences of `bench/vs-google.mjs`
+       (30.09.2026): "measles outbreaks" went from 1 answer to 10, with 32 close ones all on measles;
+       "the Swiss chocolate industry" from 0 to 11. A subject Google has nothing on either stays with
+       little ("les vendanges en Valais"). Such a search takes 5 to 11 seconds instead of 2 to 5.
+     - Otherwise the search answers at once, and Google's news join the database for the searches after
+       it: every search reads the feeds of Google News of the sentences searched in its language during
+       the retention, as it reads the searches of the profiles. Asked only for the searches answering
+       little, 40% of Google's first 30 news were in none of our feeds (01.10.2026), all of them from
+       the 8 searches it was not asked.
+
+     `SEARCH_GOOGLE_NEWS=off` turns both off.
    - **Keywords with an operator** (a quote, a comma or a `-word`) are searched as written, in SQL, with
      the excluded keywords and the timeframe. They work like on Google: commas separate alternatives
      (OR), the words of an alternative must all be found (AND), `"quoted text"` is an exact word or

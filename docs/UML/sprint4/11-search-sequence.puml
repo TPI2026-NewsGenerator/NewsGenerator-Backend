@@ -35,6 +35,9 @@ group the feeds read, all of the language of the search
     else
         News -> FeedModel : DirectoryModel.feedUrls(category, language)
         note right : the feeds the server found itself
+    else
+        News -> Ingest : sentenceFeeds(language)
+        note right : the sentences searched before,\nnever by whom
     end
     News -> News : + the shared feeds of db/rss-links.js
 end
@@ -47,21 +50,24 @@ alt exact words (quotes, a comma or -word)
         note right : counted and offered,\nnot done
     end
 else a sentence (anything else)
-    News -> Meaning : embed(sentence)
-    alt the embedder is down
-        News --> Controller : 503 "put your words between quotes"
-    end
-    News -> FeedModel : closestArticles(feeds, vectors)
-    FeedModel -> DB : dense + sparse cosines (pgvector)
-    News -> Meaning : sortByMeaning(sentence, news)
-    Meaning -> Meaning : gemma4:31b: answers and close ones
-    note right of Meaning : without the AI: the closest ones,\nmarked unchecked
-    opt fewer than 5 answers, Google News not paused
+    par
         News -> Web : sentenceUrl(sentence, days, language)
         News -> Ingest : readNow([the feed of the sentence])
-        Ingest -> Web : read the feed of Google News
-        Ingest -> Meaning : embed its news
-        Ingest -> DB : its news and their vectors
+        note right of Ingest : Google News asked every sentence,\nits news embedded and stored
+    else
+        News -> Meaning : embed(sentence)
+        alt the embedder is down
+            News --> Controller : 503 "put your words between quotes"
+        end
+        News -> FeedModel : closestArticles(feeds, vectors)
+        FeedModel -> DB : dense + sparse cosines (pgvector)
+        News -> Meaning : sortByMeaning(sentence, news)
+        Meaning -> Meaning : gemma4:31b: answers and close ones
+        note right of Meaning : without the AI: the closest ones,\nmarked unchecked
+    end
+    note over News : 5 answers or more: answered at once,\nthe news of Google stored for the next searches
+    opt fewer than 5 answers, Google News not paused
+        News -> News : wait for the feed of the sentence
         News -> FeedModel : closestArticles(feeds + it, vectors)
         note right : its 40 closest news always among\nthe ones the AI reads
         News -> Meaning : sortByMeaning(sentence, news)

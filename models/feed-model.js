@@ -342,6 +342,10 @@ export const FeedModel = {
         select: { url: true },
         distinct: ['url'],
     })).map(feed => feed.url),
+    // the searches of Google News read since this date (of the profiles, and the sentences searched)
+    googleSearchFeeds: async (since) => (await prisma.$queryRawUnsafe(`
+        SELECT url FROM feeds WHERE url LIKE 'https://news.google.com/rss/search?%' AND last_fetched_at >= $1::timestamptz`,
+        since)).map(row => row.url),
     // the feeds of every user, read by the worker (see IngestService.run)
     allUserFeedUrls: async () => {
         const feeds = await prisma.user_feeds.findMany({select: {url: true}, distinct: ['url']});

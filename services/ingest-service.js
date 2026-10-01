@@ -159,6 +159,20 @@ export const searchesOfCategories = async (categories, language) => GOOGLE_ENABL
         .flatMap(({searches, languages}) => interestSearchUrls(searches, languages.filter(read => read === language))))]
     : [];
 
+// The feeds of Google News of the sentences searched in this language, during the retention: Google
+// News is asked every sentence (see NewsService.getNews), and its news are read by every search after,
+// as the searches of the profiles, never saying who searched. The searches of the profiles are left
+// out: searchesOfCategories gives them, of the categories asked
+export const sentenceFeeds = async (language) => {
+    if (!GOOGLE_ENABLED()) return [];
+    const [read, profiles] = await Promise.all([
+        FeedModel.googleSearchFeeds(new Date(Date.now() - RETENTION_DAYS * 24 * 3600e3)),
+        ProfileModel.searchesOf(),
+    ]);
+    const ofProfiles = new Set(profiles.flatMap(({searches, languages}) => interestSearchUrls(searches, languages)));
+    return read.filter(url => !ofProfiles.has(url) && languageOfSearch(url) === language);
+};
+
 // the searches of Google News of one reader, read with the sources just found for them
 export const searchesOfUser = async (userId) => GOOGLE_ENABLED()
     ? [...new Set((await ProfileModel.searchesOf(userId)).flatMap(({searches, languages}) => interestSearchUrls(searches, languages)))]

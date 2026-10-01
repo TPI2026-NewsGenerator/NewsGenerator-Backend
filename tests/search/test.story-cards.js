@@ -28,6 +28,7 @@ jest.unstable_mockModule('../../services/utils/embedder.js', () => ({
 jest.unstable_mockModule('../../services/utils/search-ai.js', () => ({sortByMeaning: jest.fn()}));
 jest.unstable_mockModule('../../services/ingest-service.js', () => ({
     searchesOfCategories: jest.fn(async () => []),
+    sentenceFeeds: jest.fn(async () => []),
     GOOGLE_ENABLED: () => false,
     IngestService: {readNow: jest.fn()},
 }));
