@@ -118,6 +118,21 @@ export const FeedModel = {
         WHERE by_meaning <= $7::int OR by_words <= $8::int OR (given AND by_given <= $10::int)
         ORDER BY score DESC`,
         feedUrls, timeframe.start ?? null, timeframe.end ?? null, dense, sparse, sparseWeight, byMeaning, byWords, givenFeeds, byGiven, language),
+    // The cards of a search in two languages whose texts are close: members [{card, id}] (the articles
+    // of each card), the pairs of cards [{a, b, similarity}] with two of their articles in two languages
+    // at least 'threshold' alike (text_dense), a < b
+    crossLanguagePairs: async (members, threshold) => members.length < 2 ? [] : prisma.$queryRawUnsafe(`
+        WITH m AS (
+            SELECT u.card, a.lang, a.text_dense
+            FROM unnest($1::int[], $2::int[]) AS u(card, id)
+            JOIN articles a ON a.id = u.id
+            WHERE a.text_dense IS NOT NULL AND a.lang IS NOT NULL
+        )
+        SELECT x.card AS a, y.card AS b, max(-(x.text_dense <#> y.text_dense)) AS similarity
+        FROM m x JOIN m y ON x.card < y.card AND x.lang <> y.lang
+        GROUP BY x.card, y.card
+        HAVING max(-(x.text_dense <#> y.text_dense)) >= $3::real`,
+        members.map(member => member.card), members.map(member => member.id), threshold),
     // The other facts of these threads (db/add_threads.sql), for the search to show an affair whole:
     // the articles of these feeds in the stories of the threads, whatever their date, the stories
     // already found left out. At most maxStories stories per thread, the closest in time to the ones

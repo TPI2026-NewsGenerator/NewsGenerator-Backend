@@ -21,6 +21,7 @@ import {corroborationOf} from "./utils/corroboration.js";
 import {dateOf, mediumOfArticle, readingOrder, sourceOf} from "./utils/reading-order.js";
 import {embed, toSparsevec, toVector} from "./utils/embedder.js";
 import {sortByMeaning} from "./utils/search-ai.js";
+import {mergeStories} from "./utils/profile-ai.js";
 import {decodeLinks, googleAvailable, isGoogleNewsUrl, sentenceUrl} from "./utils/google-news.js";
 import {GOOGLE_ENABLED, IngestService, searchesOfCategories, sentenceFeeds} from "./ingest-service.js";
 import {DirectoryModel} from "../models/directory-model.js";
@@ -157,6 +158,52 @@ const groupDuplicates = async (articles) => {
         ...item,
         corroboration: {media: media.size, wordings: Math.min(wordings.size, media.size)},
     }));
+};
+
+// A news is grouped with the others of its language only (see assign_stories): read in every language,
+// a search showed the Negreira affair on nine cards, one per language. The cards of two languages are
+// joined when the AI says they tell the same fact (the prompt of the briefing, see mergeStories), asked
+// only of the cards with two articles in two languages this close in their texts: the vectors alone
+// put the inflation of Belgium with the one of Germany (0.885) above most real pairs. Measured on 10
+// searches (bench/cross-language-merge.mjs): 35 cards joined, 34 telling the same fact, the inflations
+// left apart, 1 to 4 s more and no call when no pair is that close. A card is only joined to one it
+// was asked with: the AI joined others of one language, or of two that were not close
+const JOIN_SIMILARITY = 0.75;
+const MAX_JOINED_CARDS = 30;        // the first cards of a pair asked, in their order
+
+const linksOf = (card) => [card.url, ...card.sources.map(source => source.url)];
+
+// articleOf: link -> the article of the cache
+const joinLanguages = async (cards, articleOf) => {
+    const members = cards.flatMap((card, i) => linksOf(card)
+        .map(link => articleOf.get(link)?.id).filter(id => id != null).map(id => ({card: i, id})));
+    const pairs = await FeedModel.crossLanguagePairs(members, JOIN_SIMILARITY);
+    const asked = [...new Set(pairs.flatMap(pair => [pair.a, pair.b]))].sort((a, b) => a - b).slice(0, MAX_JOINED_CARDS);
+    if (asked.length < 2) return cards;
+
+    const close = new Set(pairs.map(pair => `${pair.a}:${pair.b}`));
+    const merges = await mergeStories(asked.map(i => ({id: String(i), lead: {title: cards[i].title, description: (cards[i].description ?? '').slice(0, 160)}})))
+        .catch(err => {
+            console.log(`Search: the cards of two languages were not joined (${err.message})`);
+            return new Map();
+        });
+    const joined = new Map();       // card -> the card above it telling the same fact
+    for (const [id, into] of merges) {
+        const [card, above] = [Number(id), Number(into)];
+        if (close.has(`${above}:${card}`)) joined.set(card, above);
+    }
+
+    const result = cards.map(card => ({...card, sources: [...card.sources], corroboration: {...card.corroboration}}));
+    for (const [i, into] of joined) {
+        const [card, target] = [result[i], result[into]];
+        target.sources.push({url: card.url, source: card.source, title: card.title, publishedAt: card.publishedAt}, ...card.sources);
+        // a medium writing in two languages is one medium; two languages are two wordings
+        const media = new Set(linksOf(target).map(link => articleOf.get(link)).filter(Boolean).map(mediumOfArticle));
+        target.corroboration.media = Math.max(media.size, target.corroboration.media);
+        target.corroboration.wordings = Math.min(target.corroboration.wordings + card.corroboration.wordings, target.corroboration.media);
+        if (card.match === 'answer') target.match = 'answer';
+    }
+    return result.filter((_, i) => !joined.has(i));
 };
 
 // A thread links the facts of one affair followed over days: the preview of a match, its result, the
@@ -382,10 +429,12 @@ export const NewsService = {
 
         // a card answers when one of its articles does, and comes at the place of its best one
         const best = (card) => Math.min(...[card.url, ...card.sources.map(source => source.url)].map(link => placeOfLink.get(link) ?? Infinity));
-        const facts = (await groupDuplicates(kept))
+        const sortedCards = (await groupDuplicates(kept))
             .map(card => ({card, at: best(card)}))
             .sort((a, b) => a.at - b.at)
             .map(({card, at}) => ({...card, match: !checked ? null : at < sorted.answers.length ? 'answer' : 'related'}));
+        // the cards of one fact in several languages joined, led by the first one
+        const facts = await joinLanguages(sortedCards, new Map(kept.map(article => [article.link, article])));
         // the facts of one affair on one card, led by the one the AI put first
         const news = await withThreads(facts, feedUrls);
 
