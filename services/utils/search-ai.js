@@ -24,7 +24,12 @@ const DESCRIPTION_CHARS = 160;      // the start of the description read with th
 // said during his visit"): without it, on 14 sentences asked 4 times (bench/meaning-variants.mjs),
 // those came back and nothing off the subject came in, only a sentence excluding something lost a
 // few answers. Counting "the same subject without the precision of the sentence" as close brought
-// AI in general for "AI at the hospital".
+// AI in general for "AI at the hospital". A word of the sentence inside a name took the place of its
+// meaning: "les prix de l'immobilier en Suisse" answered "remise des Prix de l'immobilier romand", an
+// awards evening, first, 5 times in 5 on the candidates with Google News, and kept the rents of
+// Switzerland as close only. Told that the words count for their meaning, not their form, the AI
+// still did; told that a word only in a name does not count either, it left the evening out 5 times
+// in 5 and answered the rents, with no change on the 14 other sentences (bench/meaning-sense.mjs).
 export const searchPrompt = (query, candidates) => `Un lecteur cherche des nouvelles avec cette phrase : """${query}"""
 
 Voici des articles, chacun avec son identifiant entre crochets :
@@ -33,7 +38,7 @@ ${candidates.map(c => `[${c.id}] ${c.title}${c.description ? ` — ${c.descripti
 Classe les articles qui concernent sa recherche en deux listes, chacune du plus au moins pertinent :
 - "answers" : ceux qui répondent à sa phrase, même avec d'autres mots (un synonyme, une partie ou un cas particulier du sujet répondent aussi). Quand sa phrase précise quelque chose (une personne, une organisation, un lieu, une période, un aspect), l'article en parle.
 - "related" : ceux qui parlent directement du même sujet sans répondre à toute sa phrase (une autre précision, un autre lieu, un autre aspect).
-Les autres articles, qui touchent seulement le même domaine, ne sont dans aucune liste. Ce que sa phrase exclut n'est dans aucune liste, même quand l'article touche le sujet.
+Les autres articles, qui touchent seulement le même domaine, ne sont dans aucune liste. Les mots de sa phrase comptent pour leur sens, pas pour leur forme : un article qui les emploie dans un autre sens, ou seulement dans un nom (d'une récompense, d'un événement, d'une œuvre, d'une organisation), ne la concerne pas. Ce que sa phrase exclut n'est dans aucune liste, même quand l'article touche le sujet.
 Juge seulement sur le titre et la description.
 Réponds uniquement en JSON : {"answers": ["identifiant", ...], "related": ["identifiant", ...]}`;
 
