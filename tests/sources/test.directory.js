@@ -40,6 +40,12 @@ describe('chooseSections', () => {
     it('should leave out a feed asleep: its news are not of these days', () => {
         expect(chooseSections([feed('https://www.nbcnews.com/old/rss', links('old', 10), 24 * 30)], [])).toEqual([]);
     });
+
+    it('should leave out a feed holding too many news at once: a flood, or an archive', () => {
+        const flood = feed('https://www.nbcnews.com/markets/rss', links('markets', 301));
+        const health = feed('https://www.nbcnews.com/health/rss', links('health', 300));
+        expect(chooseSections([flood, health], [])).toEqual([health]);
+    });
 });
 
 describe('sectionCategory', () => {

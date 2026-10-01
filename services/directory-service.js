@@ -34,6 +34,11 @@ const MIN_RECENT = 3;               // news of these days: under this the feed i
 // a medium read through its main feed brings its news twice, and nothing else
 const MIN_NEW_SHARE = 0.5;
 const MAX_SECTIONS = 2;             // per medium: each one is read every 20 minutes
+// A feed holding more news at once is a flood or an archive, not a feed of news: gurufocus.com/rss.php
+// held 3611 notes on stocks, 2539 of the last 48 h, an hour of the processor of the embedder. Of the
+// 1231 feeds read on 2026-10-01 half held 24 news at most in a read, 99% 256. Only the feeds the
+// directory chooses for everyone are judged by it: a reader keeps a feed they add themselves
+const MAX_ITEMS = 300;
 const MAX_CANDIDATES = 20;          // feeds of a site read to choose its sections, each is a request
 const CONCURRENCY = 3;
 // per run of the ingestion, so it never waits on hundreds of sites (the first time, see
@@ -96,7 +101,8 @@ const recentItems = (items) => items
 // The sections worth adding among the feeds read ([{url, items}]), the best first: each one must bring
 // MIN_RECENT recent news that 'known' (the addresses already read) misses, the most of its news. One
 // taken, its news count as read for the next: two sections carrying the same news are not both taken
-export const chooseSections = (feeds, known, max = MAX_SECTIONS) => {
+export const chooseSections = (allFeeds, known, max = MAX_SECTIONS) => {
+    const feeds = allFeeds.filter(feed => feed.items.length <= MAX_ITEMS);
     const seen = new Set(known);
     const chosen = [];
     const recent = new Map(feeds.map(feed => [feed, recentItems(feed.items)]));
@@ -153,11 +159,12 @@ const sharedUrls = () => Object.values(rss).flatMap(categories => Object.values(
 const tryNamed = async (medium) => {
     const feeds = (await findFeeds(medium.site ?? medium.medium, {languages: LANGUAGES, bridge: false}).catch(() => []))
         .filter(feed => isOwnFeed(feed.url) && feed.recent >= MIN_RECENT && LANGUAGES.includes(feed.language));
-    for (const feed of feeds) {
+    for (const feed of feeds.filter(feed => feed.items <= MAX_ITEMS)) {
         if (await isPodcast(feed.url)) continue;
         return {kept: [{url: feed.url, medium: medium.medium, origin: 'named', language: feed.language, category: null}]};
     }
-    return {kept: [], reason: 'no feed of news of these days in one of our languages'};
+    const flood = feeds.find(feed => feed.items > MAX_ITEMS);
+    return {kept: [], reason: flood ? `${flood.url} holds ${flood.items} news at once (over ${MAX_ITEMS})` : 'no feed of news of these days in one of our languages'};
 };
 
 // A medium already read: its sections that bring the news its feeds miss

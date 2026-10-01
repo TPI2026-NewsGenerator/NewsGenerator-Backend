@@ -648,6 +648,11 @@ read by every search of its language, from two things it already has:
   bringing the most first, the news of the first counting as read for the second. Its category is
   read in its address ("/health/" is science), else it is the one of the medium.
 
+Neither kind of feed is kept when it holds more than 300 news at once: a flood or an archive, not a feed
+of news (gurufocus.com/rss.php held 3611 notes on stocks, 2539 of the last 48 h, an hour of the
+processor of the embedder; 99% of the feeds read hold 256 at most). A feed a reader adds themselves is
+never judged by this.
+
 A medium looked at is not looked at again before 30 days, found or not. The first time, every medium is
 looked at by `node scripts/grow-directory.js` (30.09.2026: 601 media named, 316 main feeds kept; 480 media read, 112 sections kept; a few minutes); after that, the server looks at
 `DIRECTORY_PER_RUN` more of each kind after each run of the background work, and the feeds it adds are
