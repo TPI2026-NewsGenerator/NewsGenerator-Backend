@@ -2,7 +2,7 @@
 //  Author: Fabian Rostello
 //  Date: 19.05.2026
 //  File: ollama.js
-//  Description: Ollama import
+//  Description: Ollama import, and the Gemini API taking its place when it fails
 //
 
 "use strict"
@@ -26,33 +26,86 @@ const ollama = new Ollama({
     headers: process.env.OLLAMA_API_KEY ? {Authorization: 'Bearer ' + process.env.OLLAMA_API_KEY} : {},
 })
 
+// The same model on the Gemini API (Google AI Studio), free, when Ollama fails: its quota used up, a
+// key refused, the service down. Only then: measured on 8 calls, 30 to 86 s each where Ollama
+// answers in 1 to 7, and 2 of them an immediate error 500, asked again once. The free tier lets
+// Google read the prompts. No key, no fallback
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemma-4-31b-it';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const GEMINI_TIMEOUT_MS = 180e3;
+// Ollama refusing for its quota or its key refuses the next calls too: they go to Gemini at once for
+// this long, then Ollama is asked again
+const OLLAMA_PAUSE_MS = 15 * 60e3;
+let ollamaPausedUntil = 0;
+
 // The tokens of the calls, added to 'usage' when one is given: {calls, input, output}. 'output'
 // counts the reasoning of the model too, it is paid as any other token.
 export const newUsage = () => ({calls: 0, input: 0, output: 0});
-const count = (usage, response) => {
+const count = (usage, input, output) => {
     if (!usage) return;
     usage.calls += 1;
-    usage.input += response.prompt_eval_count ?? 0;
-    usage.output += response.eval_count ?? 0;
+    usage.input += input ?? 0;
+    usage.output += output ?? 0;
 };
 
-// returns the resume of a news, always about the same length, and its topic
-// one call gives both: the AI reads the article once. 'language' is the one the resume is written in
+const askOllama = async (messages, usage, think) => {
+    const response = await ollama.chat({
+        model: MODEL,
+        format: 'json',
+        messages,
+        ...(think ? {think} : {}),
+        options: {temperature: 0.1},
+    });
+    count(usage, response.prompt_eval_count, response.eval_count);
+    return response.message.content;
+};
+
+// format: 'json' of the API answers an error 500 for this model: the prompts ask for JSON already.
+// Its reasoning is kept minimal unless the call asks for it, the reasoning comes in parts of its own
+const askGemini = async (messages, usage, think) => {
+    const call = () => fetch(GEMINI_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'x-goog-api-key': process.env.AISTUDIO_API_KEY},
+        body: JSON.stringify({
+            contents: messages.map(({role, content}) => ({role: role === 'assistant' ? 'model' : 'user', parts: [{text: content}]})),
+            generationConfig: {temperature: 0.1, ...(think ? {} : {thinkingConfig: {thinkingLevel: 'minimal'}})},
+        }),
+        signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
+    });
+    let response = await call();
+    if (response.status >= 500) response = await call();
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw Object.assign(new Error(`Gemini: ${body.error?.message ?? `HTTP ${response.status}`}`), {status: 502});
+
+    const {promptTokenCount, candidatesTokenCount, thoughtsTokenCount} = body.usageMetadata ?? {};
+    count(usage, promptTokenCount, (candidatesTokenCount ?? 0) + (thoughtsTokenCount ?? 0));
+    return (body.candidates?.[0]?.content?.parts ?? []).filter(part => !part.thought).map(part => part.text ?? '').join('');
+};
+
+// Ollama first, Gemini when it fails and a key is given. An answer of Ollama that is no JSON is no
+// failure of Ollama: the caller asks again
+const ask = async (messages, usage, think) => {
+    const gemini = Boolean(process.env.AISTUDIO_API_KEY);
+    if (gemini && Date.now() < ollamaPausedUntil) return askGemini(messages, usage, think);
+    try {
+        return await askOllama(messages, usage, think);
+    } catch (err) {
+        if (!gemini) throw err;
+        // 401, 403: the key, 429: the quota. Else a call that failed alone (5xx, network)
+        if ([401, 403, 429].includes(err.status_code)) ollamaPausedUntil = Date.now() + OLLAMA_PAUSE_MS;
+        console.error(`AI: Ollama failed (${err.status_code ?? ''} ${err.message}), Gemini asked`);
+        return askGemini(messages, usage, think);
+    }
+};
+
 // an answer of the AI as JSON, for the calls that return data rather than text (the interests of a
 // profile, the stories of a briefing). format: 'json' is asked, but the model sometimes still wraps
 // its answer in a markdown json block, so that is removed before reading it. A conversation can be
 // given for the prompt, to ask again after an answer
 export const ollamaJson = async (prompt, usage = null, {think} = {}) => {
-    const response = await ollama.chat({
-        model: MODEL,
-        format: 'json',
-        messages: Array.isArray(prompt) ? prompt : [{role: 'user', content: prompt}],
-        ...(think ? {think} : {}),
-        options: {temperature: 0.1},
-    });
-    count(usage, response);
+    const content = await ask(Array.isArray(prompt) ? prompt : [{role: 'user', content: prompt}], usage, think);
 
-    const raw = response.message.content.replace(/^\s*```(?:json)?\s*|\s*```\s*$/g, '');
+    const raw = content.replace(/^\s*```(?:json)?\s*|\s*```\s*$/g, '');
     try {
         return JSON.parse(raw);
     } catch {

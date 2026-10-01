@@ -20,6 +20,8 @@ article credits its sources. That describes what was measured, never whether the
   - model: gemma4:31b (`OLLAMA_MODEL` to change it). Measured against
     gpt-oss:20b, gpt-oss:120b and nemotron-3-nano:30b: the best choice and check of the stories, and 5 to 10
     times fewer tokens, because it does not reason before answering. It can be hosted on one GPU.
+  - fallback: the same model on the [Gemini API](https://ai.google.dev/) (gemma-4-31b-it, free), asked
+    when Ollama fails (`AISTUDIO_API_KEY`, see **Ollama** below)
 - **Vectors of the news:** [bge-m3](https://huggingface.co/BAAI/bge-m3), dense and sparse, computed by a
   Python process of its own with [FlagEmbedding](https://github.com/FlagOpen/FlagEmbedding) and
   [PyTorch](https://pytorch.org/) (`embedder/`, see **Embedder** below). Ollama serves bge-m3 too, but only
@@ -71,6 +73,12 @@ OLLAMA_API_KEY=your_api_key
 
 3. Optional: `OLLAMA_MODEL` changes the model (gemma4:31b by default), `OLLAMA_HOST` names an Ollama server
 of our own instead of Ollama cloud (`http://127.0.0.1:11434`), which needs no key.
+
+4. Optional: `AISTUDIO_API_KEY`, a key of [Google AI Studio](https://aistudio.google.com/apikey) (free): the
+same model on the Gemini API answers when Ollama fails (`services/utils/ollama.js`). A refused quota or
+key leaves Ollama aside for 15 minutes, a service down only that call. A fallback only: measured on 8
+calls, 30 to 86 s each where Ollama answers in 1 to 7, 2 of them an immediate error 500 (asked again
+once), and its JSON mode answers an error 500 for this model. The free tier lets Google read the prompts.
 
 #### Embedder
 
