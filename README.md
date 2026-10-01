@@ -167,10 +167,26 @@ pnpm run server
 
 ### Background work: feeds, vectors, stories and threads
 
-The server reads every feed every `INGEST_INTERVAL_MINUTES` (20 by default, from the start of the
-last run, or at once after a run that worked longer), gives the new news their
+Every `INGEST_INTERVAL_MINUTES` (1 by default, from the start of the last run, or at once after a run
+that worked longer), the server reads the feeds due, gives the new news their
 bge-m3 vectors, groups them into stories and links the stories of one affair into threads
-(`services/ingest-service.js`). Nobody waits for it: the
+(`services/ingest-service.js`). A feed is due by its rhythm, the news it gave in the last 24 hours:
+
+| News in 24 h | Read every |
+|---|---|
+| 72 and more (3 an hour) | 2 min |
+| 24 to 71 | 5 min |
+| 6 to 23 | 15 min |
+| 1 to 5 | 30 min |
+| none | 60 min |
+
+A feed failing is read twice less often per failure in a row, every hour at most; a search of Google
+News every `GOOGLE_NEWS_EVERY_MINUTES`. Every feed read every 20 minutes, a news waited 19 minutes in
+the median to be read and 28 to have its vectors, half of them more; every feed read every minute would
+be 24 requests a second to sites whose feed changes every few minutes at best. With these rhythms, 220
+requests a minute (77 before), the 200 feeds giving two thirds of the news read every 2 minutes, and
+each run embeds and groups the few news it found. The old news are dropped once an hour, and the
+directory looks at more media every 20 minutes. Nobody waits for it: the
 searches and the briefing read what it has already stored. The vectors come from the embedder, a
 Python process (`embedder/server.py`, on this machine or another one with a graphics card, see
 `EMBEDDER_URL` in `.env.example`); while it is down the news are stored anyway and get their vectors
@@ -223,9 +239,9 @@ Optional variables in `.env`:
 | Variable | Default | Description |
 |---|---|---|
 | `INGEST_IN_SERVER` | on | `false` leaves the background work to `pnpm run ingest`, run by a scheduler of the system |
-| `INGEST_INTERVAL_MINUTES` | 20 | the time between the starts of two runs (the next one at once after a longer run) |
-| `INGEST_MAX_EMBEDDED` | 300 | news embedded, saved and grouped at a time. On a busy processor 1500 news at once took over an hour, all lost if the process stopped before saving them |
-| `INGEST_GROUP_MINUTES` | 10 | a run starts no batch of the window after these minutes, the feeds read included (a batch of 300 takes about 4): the rest waits for the next run |
+| `INGEST_INTERVAL_MINUTES` | 1 | the time between the starts of two runs (the next one at once after a longer run), each reading the feeds due |
+| `INGEST_MAX_EMBEDDED` | 100 | news embedded, saved and grouped at a time, the newest first. On a busy processor 1500 news at once took over an hour, all lost if the process stopped before saving them; 300 took 4 to 5 minutes on the processor alone, the busiest feeds read every 5 minutes instead of 2 |
+| `INGEST_GROUP_MINUTES` | 1 | a run starts no batch of the window after these minutes, the feeds read included: the rest waits for the next run, the busiest feeds read before |
 | `INGEST_OLDER_BATCHES` | 1 | batches of older news without vectors embedded per run, for the search by meaning |
 | `FEED_RETENTION_DAYS` | 30 | Articles older than this are deleted |
 | `RSS_BRIDGE_URL` | _(none)_ | Address of the RSS-Bridge, step 4 of the sources of a user below. Empty: the sites without a feed are simply out of reach |
@@ -233,8 +249,8 @@ Optional variables in `.env`:
 | `SEARCH_GOOGLE_NEWS` | on | `off`: the sentences searched are not asked to Google News (the searches of the interests go on) |
 | `GOOGLE_NEWS_EVERY_MINUTES` | 60 | each search of Google News is read again after this |
 | `GOOGLE_NEWS_INTERVAL_MS` | 1000 | two requests to Google never closer than this |
-| `DIRECTORY` | on | `off` stops the directory from looking at more media after each run (the feeds it has are still read) |
-| `DIRECTORY_PER_RUN` | 10 | media the directory looks at after each run, of each kind (named by Google News, already read) |
+| `DIRECTORY` | on | `off` stops the directory from looking at more media every 20 minutes (the feeds it has are still read) |
+| `DIRECTORY_PER_RUN` | 10 | media the directory looks at every 20 minutes, of each kind (named by Google News, already read) |
 | `MEDIACLOUD_API_TOKEN` | _(none)_ | key of [Media Cloud](https://search.mediacloud.org) (free account, 8000 requests a week), the second directory of media of the discovery (see **Media Cloud** below). Empty: the discovery asks Google News only |
 
 ### Documentation
@@ -687,8 +703,8 @@ never judged by this.
 
 A medium looked at is not looked at again before 30 days, found or not. The first time, every medium is
 looked at by `node scripts/grow-directory.js` (30.09.2026: 601 media named, 316 main feeds kept; 480 media read, 112 sections kept; a few minutes); after that, the server looks at
-`DIRECTORY_PER_RUN` more of each kind after each run of the background work, and the feeds it adds are
-read by the next run.
+`DIRECTORY_PER_RUN` more of each kind every 20 minutes, after a run of the background work, and the
+feeds it adds are read by the next run.
 
 Two addresses were added to the ones `findFeeds` tries when a site declares no feed, the ones of two
 publishing systems many newspapers use without saying so: Arc (`/arc/outboundfeeds/rss/?outputType=xml`,
@@ -729,7 +745,7 @@ of filling the cache with menus and contact pages.
 
 It costs far more than a feed: the page of the site and up to 15 of its articles. Measured on 10 sites
 (1.10.2026): 1 to 12 s a build, 3 KB to 1.4 MB, and RSS-Bridge keeps it an hour, so the reads of the
-next 20 minutes answer at once. A reader can have 50 sites read this way (`MAX_BRIDGE_FEEDS`), about
+hour after answer at once, however often its rhythm reads it. A reader can have 50 sites read this way (`MAX_BRIDGE_FEEDS`), about
 50 builds an hour, 7 minutes of the bridge and 16 pages of each site.
 
 The address of a feed built this way starts with the address of the bridge. When the bridge moves,
@@ -853,7 +869,7 @@ machines.
 
 ## Deployment
 
-The background work reads the feeds every 20 minutes, day and night: it runs on a machine that stays
+The background work reads the feeds due every minute, day and night: it runs on a machine that stays
 on, with the database, in Docker (`deploy/compose.yml`):
 
 | Container | What | Listens on |

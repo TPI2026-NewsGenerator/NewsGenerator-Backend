@@ -344,6 +344,20 @@ export const FeedModel = {
         ORDER BY f.last_fetched_at NULLS FIRST
         LIMIT $3::int`,
         urls, before, limit)).map(row => row.url),
+    // what says when these feeds are read again (see IngestService.run): [{url, last_fetched_at,
+    // failures, news}], 'news' the news they gave since 'since' and published since, the news of
+    // their first read published before left out
+    feedRhythms: async (urls, since) => prisma.$queryRawUnsafe(`
+        SELECT u.url, f.last_fetched_at, coalesce(f.failures, 0) AS failures, coalesce(r.news, 0)::int AS news
+        FROM unnest($1::text[]) AS u(url)
+        LEFT JOIN feeds f ON f.url = u.url
+        LEFT JOIN (
+            SELECT id_feed, count(*) AS news
+            FROM articles
+            WHERE created_at > $2::timestamptz AND coalesce(published_at, created_at) > $2::timestamptz
+            GROUP BY id_feed
+        ) r ON r.id_feed = f.id`,
+        urls, since),
     // the real address of news of Google News, once a briefing found it: links [{link, resolved}]
     saveResolvedLinks: async (links) => {
         if (links.length === 0) return 0;

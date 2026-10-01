@@ -2,7 +2,7 @@
 //  Author: Fabian Rostello
 //  Date: 24.09.2026
 //  File: ingest-service.js
-//  Description: The work done in background every few minutes: read every feed, give the new news
+//  Description: The work done in background every minute: read the feeds due, give the new news
 //               their vectors, group them into stories, and the stories into threads
 //
 
@@ -19,14 +19,32 @@ import {languageOf} from "./utils/language.js";
 import {ProfileModel} from "../models/profile-model.js";
 import {DirectoryModel} from "../models/directory-model.js";
 import {DirectoryService} from "./directory-service.js";
-import {googleAvailable, interestSearchUrls, languageOfSearch} from "./utils/google-news.js";
+import {googleAvailable, interestSearchUrls, isGoogleNewsUrl, languageOfSearch} from "./utils/google-news.js";
 
 // A user never waits for a feed: the searches and the briefing read what this has already stored.
-const INTERVAL_MINUTES = Number(process.env.INGEST_INTERVAL_MINUTES) || 20;
+// A run every minute reads the feeds due by their rhythm (see READ_EVERY), not all the feeds: read all
+// every 20 minutes, a news waited 19 minutes in the median to be read, 28 to have its vectors
+const INTERVAL_MINUTES = Number(process.env.INGEST_INTERVAL_MINUTES) || 1;
+// Minutes between two reads of a feed, by the news it gave in the last 24 hours: read every minute,
+// the 1500 feeds made 24 requests a second to sites whose feed changes every few minutes at best (and
+// often cached by them as long). The 200 feeds giving 3 news an hour or more are read every 2 minutes;
+// a feed of 24 hours without news every hour, a failing one twice less often per failure in a row,
+// every hour at most. 220 requests a minute, 77 when every feed was read every 20
+const READ_EVERY = [[72, 2], [24, 5], [6, 15], [1, 30], [0, 60]];
+const RHYTHM_HOURS = 24;
+// the old news dropped and the empty stories deleted this often, the directory grown this often:
+// not every minute
+const HOUSEKEEPING_MINUTES = 60;
+const GROW_EVERY_MINUTES = 20;
 export const WINDOW_HOURS = 48;         // news older than this get no vectors and join no story
 // News embedded, saved and grouped at a time. On a busy processor 1500 news took over an hour, all
-// lost if the process stopped before saving them; grouping costs the same per news in small batches
-const MAX_EMBEDDED_PER_RUN = Number(process.env.INGEST_MAX_EMBEDDED) || 300;
+// lost if the process stopped before saving them; grouping costs the same per news in small batches.
+// 100: a batch of 300 took 4 to 5 minutes on the processor alone (the graphics card off), the feeds of
+// 2 minutes were read every 5 meanwhile; 100 is a run of about 1.5 minutes, the newest news first
+const MAX_EMBEDDED_PER_RUN = Number(process.env.INGEST_MAX_EMBEDDED) || 100;
+// stories judged for their thread at a time: each news grouped marks its story again, at 100 a call
+// the stories waiting would never drain (a call is a fraction of a second)
+const THREADED_PER_CALL = 300;
 // The news older than the window without vectors (published before the embedder ran, or during a
 // stop longer than the window) get theirs too, for the search by meaning, which reads the whole
 // retention; they join no story. Once the news of the window all have their vectors and stories and
@@ -37,9 +55,11 @@ const OLDER_BATCHES_PER_RUN = Number(process.env.INGEST_OLDER_BATCHES) || 1;
 // transaction of its own (assign_stories, assign_threads): the 12 000 news of the first read of the
 // directory, grouped at once, held the lock 2 h 10 with no feed read meanwhile and nothing saved before
 // the end. A scheduled run starts no batch once it has worked these minutes (the feeds read included),
-// the rest waits for the next run, which reads the feeds before: the last batch ends before it. A time and not a number of batches: a batch of 300 took 4 minutes, then 9
-// with 31 000 news in the window (each news is compared to all the others)
-const GROUP_MINUTES = Number(process.env.INGEST_GROUP_MINUTES) || 10;
+// the rest waits for the next run, which reads the feeds due before. A time and not a number of
+// batches: a batch of 300 took 4 minutes, then 9 with 31 000 news in the window (each news is compared
+// to all the others). Short: the feeds of 2 minutes wait no longer for a backlog, each run takes the
+// newest of it
+const GROUP_MINUTES = Number(process.env.INGEST_GROUP_MINUTES) || 1;
 const DESCRIPTION_CHARS = 400;          // the start of the description read with the title
 const STORY_THRESHOLD = 0.70;           // dense + sparse of the titles, see assign_stories (db/add_briefing.sql)
 const STORY_SPARSE_WEIGHT = 1;
@@ -143,6 +163,19 @@ const withLock = async (task) => {
 };
 
 let timer = null;
+let lastHousekeeping = 0;
+
+// the minutes until a feed is read again: by its news, GOOGLE_EVERY_MINUTES for a search of Google
+export const readEvery = ({url, news, failures}) => {
+    const minutes = isGoogleNewsUrl(url) ? GOOGLE_EVERY_MINUTES : READ_EVERY.find(([least]) => news >= least)[1];
+    return Math.min(minutes * 2 ** Math.min(failures, 6), Math.max(60, minutes));
+};
+
+// the feeds to read now of these rows (FeedModel.feedRhythms): never read, or read longer ago than
+// their rhythm
+export const feedsDue = (rows, now = Date.now()) => rows
+    .filter(row => !row.last_fetched_at || new Date(row.last_fetched_at).getTime() + readEvery(row) * 60e3 <= now)
+    .map(row => row.url);
 
 // the searches of Google News of every reader not read for GOOGLE_EVERY_MINUTES
 const dueSearches = async () => {
@@ -196,13 +229,20 @@ export const IngestService = {
         return embedded;
     },
 
-    // one pass: every feed read (or only these ones), the new news embedded and grouped
+    // one pass: the feeds due read (or these ones), the new news embedded and grouped
     run: async ({urls = null} = {}) => {
         const started = Date.now();
         const result = await withLock(async () => {
-            const directory = urls ? [] : (await DirectoryModel.all()).map(feed => feed.url);
-            const feeds = urls ?? [...new Set([...sharedLanguage.keys(), ...directory, ...await FeedModel.allUserFeedUrls(), ...await dueSearches()])];
-            const refresh = await FeedService.refreshUrls(feeds, {purge: urls === null});
+            let feeds = urls;
+            let purge = false;
+            if (!urls) {
+                const directory = (await DirectoryModel.all()).map(feed => feed.url);
+                const every = [...new Set([...sharedLanguage.keys(), ...directory, ...await FeedModel.allUserFeedUrls()])];
+                const due = feedsDue(await FeedModel.feedRhythms(every, new Date(Date.now() - RHYTHM_HOURS * 3600e3)));
+                feeds = [...new Set([...due, ...await dueSearches()])];
+                purge = Date.now() - lastHousekeeping >= HOUSEKEEPING_MINUTES * 60e3;
+            }
+            const refresh = await FeedService.refreshUrls(feeds, {purge});
 
             // the embedder may be down: the news are stored anyway, they get their vectors next time
             let embedded = 0;
@@ -213,7 +253,7 @@ export const IngestService = {
             const timeLeft = () => Date.now() < groupingEnds;
             const group = async () => {
                 const done = await groupPending(MAX_EMBEDDED_PER_RUN);
-                const threads = await threadPending(MAX_EMBEDDED_PER_RUN);
+                const threads = await threadPending(THREADED_PER_CALL);
                 lastGrouped = done.grouped;
                 grouping = {
                     grouped: grouping.grouped + done.grouped, created: grouping.created + done.created,
@@ -254,7 +294,10 @@ export const IngestService = {
                 console.error(`Ingest: vectors not computed (${err.message})`);
             }
 
-            if (urls === null) await StoryModel.deleteEmptyStories();
+            if (purge) {
+                await StoryModel.deleteEmptyStories();
+                lastHousekeeping = Date.now();
+            }
             return {feeds: feeds.length, inserted: refresh?.inserted ?? 0, embedded, older, ...grouping};
         });
 
@@ -274,14 +317,17 @@ export const IngestService = {
         return result;
     },
 
-    // a run now, then every INTERVAL_MINUTES, for as long as the server lives. After each, the
-    // directory looks at a few more media: the feeds it adds are read by the next run. Each run
-    // plans the next one INTERVAL_MINUTES after its own start, or at once when it worked longer: a
-    // fixed timer fell 6 s before the end of a run of 20 min on the processor, that tick was skipped
-    // and nothing ran for the next 20 minutes
+    // a run now, then every INTERVAL_MINUTES, for as long as the server lives. Every GROW_EVERY_MINUTES,
+    // the directory looks at a few more media after the run: the feeds it adds are read by the next
+    // one. Each run plans the next one INTERVAL_MINUTES after its own start, or at once when it worked
+    // longer: a fixed timer fell 6 s before the end of a run of 20 min on the processor, that tick was
+    // skipped and nothing ran for the next 20 minutes
     schedule: () => {
         if (timer) return;
+        let lastGrow = 0;
         const grow = async () => {
+            if (Date.now() - lastGrow < GROW_EVERY_MINUTES * 60e3) return;
+            lastGrow = Date.now();
             const tried = await DirectoryService.grow();
             const kept = tried.flatMap(medium => medium.kept);
             if (tried.length > 0) console.log(`Directory: ${tried.length} media looked at, ${kept.length} feeds added (${kept.map(feed => feed.url).join(', ') || 'none'})`);
