@@ -96,9 +96,9 @@ and the `.env` of the server gives its address and the same secret:
 
 | Variable | Default | Description |
 |---|---|---|
-| `EMBEDDER_URL` | `http://127.0.0.1:8020` | where the embedder answers |
+| `EMBEDDER_URL` | `http://127.0.0.1:8020` | where the embedder answers. Several, separated by commas: the first that answers is used, the ones before it are asked again every minute (see below) |
 | `EMBEDDER_TOKEN` | _(none)_ | the same secret as the embedder |
-| `EMBEDDER_BATCH` | 16 | texts per request. On a busy processor 64 texts took up to 310 s, and `fetch` gives up at 300 s. A graphics card answers 16 texts in a fraction of a second: 128 saves the round trips |
+| `EMBEDDER_BATCH` | 16 | texts per request. On a busy processor 64 texts took up to 310 s, and `fetch` gives up at 300 s. A graphics card answers 16 texts in a fraction of a second: 128 saves the round trips. An embedder saying it runs on a processor always gets 16 |
 
 The firewall of that machine should also let only the server reach the port. The vectors are computed in
 fp32 on the card too, so they stay the ones of the processor, already stored and measured on the benches.
@@ -166,6 +166,21 @@ searches and the briefing read what it has already stored. The vectors come from
 Python process (`embedder/server.py`, on this machine or another one with a graphics card, see
 `EMBEDDER_URL` in `.env.example`); while it is down the news are stored anyway and get their vectors
 at the next run.
+
+Two embedders can share the work: a graphics card that is not always on, then a machine that is.
+Measured on 512 texts of news: 57 a second on an RTX 4070 Ti, 2.6 on the 6 cores of an i5-12400T
+(12 threads gave no more), the same vectors (cosine 1.000000). The processor keeps up with the feeds
+(about 1600 news an hour, a third of what it can do), but a search Google News completes waits about
+a minute for its 70 news instead of 3 seconds: the graphics card goes first, the processor takes over
+while it is off, and gives the work back a minute after it answers again. On a machine without
+Python packages, the embedder runs in Docker (`embedder/Dockerfile`, PyTorch for the processor only):
+
+```bash
+docker build -t newsgenerator-embedder:cpu embedder
+docker run -d --name newsgenerator-embedder --restart unless-stopped --cpus 6 --memory 6g -p <its address>:8020:8020 --env-file token.env -v ./cache:/cache newsgenerator-embedder:cpu
+```
+
+`token.env` holds `EMBEDDER_TOKEN=` and the same secret as the server, readable by its owner only.
 
 ```bash
 pnpm run ingest:status   # where it stands: news of the window with their vectors, waiting ones, pace, time left

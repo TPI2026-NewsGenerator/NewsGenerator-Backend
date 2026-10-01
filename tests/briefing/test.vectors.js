@@ -5,6 +5,7 @@
 //  Description: Tests for the bge-m3 vectors as pgvector reads them, and the language of a news
 //
 
+import process from 'node:process'
 import {jest} from '@jest/globals'
 import {denseSimilarity, embed, parseVector, SPARSE_DIMENSIONS, toSparsevec, toVector} from '../../services/utils/embedder.js'
 import {feedLanguage, languageOf} from '../../services/utils/language.js'
@@ -23,34 +24,51 @@ describe('denseSimilarity', () => {
 });
 
 describe('embed', () => {
-    const realFetch = global.fetch;
-    afterEach(() => { global.fetch = realFetch; });
+    const realFetch = globalThis.fetch;
+    afterEach(() => {
+        globalThis.fetch = realFetch;
+        delete process.env.EMBEDDER_URL;
+        delete process.env.EMBEDDER_BATCH;
+    });
+
+    const healthy = (device) => ({ok: true, status: 200, json: async () => ({status: 'ok', ...(device ? {device} : {})})});
+    const vectorsOf = (texts) => ({ok: true, status: 200, json: async () => ({
+        dense: texts.map(text => [text.length]),
+        sparse: texts.map(() => ({})),
+    })});
+    const down = () => Promise.reject(Object.assign(new TypeError('fetch failed'), {cause: {code: 'UND_ERR_CONNECT_TIMEOUT'}}));
+    // fetch answering /health with 'health' and /embed with 'answer', both given the host asked
+    const fakeFetch = ({health = () => healthy(), answer = (host, texts) => vectorsOf(texts)} = {}) => jest.fn(async (url, options) => {
+        const {host, pathname} = new URL(url);
+        return pathname === '/health' ? health(host) : answer(host, JSON.parse(options.body).texts);
+    });
+    // the requests of texts: [[host, number of texts]]
+    const sent = () => globalThis.fetch.mock.calls
+        .filter(([url]) => url.endsWith('/embed'))
+        .map(([url, {body}]) => [new URL(url).host, JSON.parse(body).texts.length]);
 
     it('should send one request at a time, the others wait here and not at the embedder', async () => {
         let inFlight = 0;
         let most = 0;
-        global.fetch = jest.fn(async (url, {body}) => {
-            const {texts} = JSON.parse(body);
+        globalThis.fetch = fakeFetch({answer: async (host, texts) => {
             most = Math.max(most, ++inFlight);
             await new Promise(resolve => setTimeout(resolve, 20));
             inFlight--;
-            return {ok: true, status: 200, json: async () => ({
-                dense: texts.map(text => [text.length]),
-                sparse: texts.map(() => ({})),
-            })};
-        });
+            return vectorsOf(texts);
+        }});
 
         const [a, b] = await Promise.all([embed(['one']), embed(['three'])]);
         expect(most).toBe(1);
-        expect(global.fetch).toHaveBeenCalledTimes(2);
+        expect(sent()).toHaveLength(2);
         expect([...a[0].dense]).toEqual([3]);
         expect([...b[0].dense]).toEqual([5]);
     });
 
     it('should say why the embedder did not answer, and let the next request go', async () => {
-        global.fetch = jest.fn()
-            .mockRejectedValueOnce(Object.assign(new TypeError('fetch failed'), {cause: {code: 'UND_ERR_HEADERS_TIMEOUT'}}))
-            .mockResolvedValueOnce({ok: true, status: 200, json: async () => ({dense: [[1]], sparse: [{}]})});
+        let calls = 0;
+        globalThis.fetch = fakeFetch({answer: (host, texts) => ++calls === 1
+            ? Promise.reject(Object.assign(new TypeError('fetch failed'), {cause: {code: 'UND_ERR_HEADERS_TIMEOUT'}}))
+            : vectorsOf(texts)});
 
         await expect(embed(['a'])).rejects.toThrow('fetch failed: UND_ERR_HEADERS_TIMEOUT');
         expect((await embed(['b']))[0].sparse).toEqual({});
@@ -59,12 +77,12 @@ describe('embed', () => {
     it('should send the token of an embedder on another machine, and say when it is refused', async () => {
         process.env.EMBEDDER_TOKEN = 'a-secret-of-the-embedder';
         try {
-            global.fetch = jest.fn()
-                .mockResolvedValueOnce({ok: true, status: 200, json: async () => ({dense: [[1]], sparse: [{}]})})
-                .mockResolvedValueOnce({ok: false, status: 401});
+            let calls = 0;
+            globalThis.fetch = fakeFetch({answer: (host, texts) => ++calls === 1 ? vectorsOf(texts) : {ok: false, status: 401}});
 
             await embed(['a']);
-            expect(global.fetch.mock.calls[0][1].headers.Authorization).toBe('Bearer a-secret-of-the-embedder');
+            const [[, first]] = globalThis.fetch.mock.calls.filter(([url]) => url.endsWith('/embed'));
+            expect(first.headers.Authorization).toBe('Bearer a-secret-of-the-embedder');
             await expect(embed(['b'])).rejects.toThrow('EMBEDDER_TOKEN must be the same on both sides');
         } finally {
             delete process.env.EMBEDDER_TOKEN;
@@ -72,9 +90,70 @@ describe('embed', () => {
     });
 
     it('should send no token to an embedder of this machine', async () => {
-        global.fetch = jest.fn().mockResolvedValueOnce({ok: true, status: 200, json: async () => ({dense: [[1]], sparse: [{}]})});
+        globalThis.fetch = fakeFetch();
         await embed(['a']);
-        expect(global.fetch.mock.calls[0][1].headers.Authorization).toBeUndefined();
+        const [[, first]] = globalThis.fetch.mock.calls.filter(([url]) => url.endsWith('/embed'));
+        expect(first.headers.Authorization).toBeUndefined();
+    });
+
+    it('should use the first embedder of the list that answers, with small batches on a processor', async () => {
+        process.env.EMBEDDER_URL = 'http://gaming-a:8020, http://server-a:8020';
+        process.env.EMBEDDER_BATCH = '128';
+        globalThis.fetch = fakeFetch({health: (host) => host === 'gaming-a:8020' ? down() : healthy('cpu')});
+
+        const vectors = await embed(Array.from({length: 20}, (_, i) => `text ${i}`));
+        expect(vectors).toHaveLength(20);
+        expect(sent()).toEqual([['server-a:8020', 16], ['server-a:8020', 4]]);
+    });
+
+    it('should hand the rest to the next embedder when the first stops answering', async () => {
+        process.env.EMBEDDER_URL = 'http://gaming-b:8020,http://server-b:8020';
+        process.env.EMBEDDER_BATCH = '2';
+        let switchedOff = false;
+        globalThis.fetch = fakeFetch({
+            health: (host) => host === 'gaming-b:8020' && switchedOff ? down() : healthy(host === 'server-b:8020' ? 'cpu' : 'cuda'),
+            answer: (host, texts) => {
+                if (host !== 'gaming-b:8020') return vectorsOf(texts);
+                if (sent().length > 1) {
+                    switchedOff = true;
+                    return down();
+                }
+                return vectorsOf(texts);
+            },
+        });
+
+        const vectors = await embed(['a', 'bb', 'ccc', 'dddd', 'eeeee']);
+        expect(vectors.map(vector => vector.dense[0])).toEqual([1, 2, 3, 4, 5]);
+        expect(sent()).toEqual([['gaming-b:8020', 2], ['gaming-b:8020', 2], ['server-b:8020', 3]]);
+    });
+
+    it('should give the work back to the first embedder a minute after it answers again', async () => {
+        process.env.EMBEDDER_URL = 'http://gaming-c:8020,http://server-c:8020';
+        let gamingOn = false;
+        globalThis.fetch = fakeFetch({health: (host) => host === 'gaming-c:8020' && !gamingOn ? down() : healthy()});
+        const now = jest.spyOn(Date, 'now');
+        try {
+            now.mockReturnValue(1000000);
+            await embed(['a']);
+            gamingOn = true;
+            now.mockReturnValue(1030000);
+            await embed(['b']);
+            now.mockReturnValue(1061000);
+            await embed(['c']);
+        } finally {
+            now.mockRestore();
+        }
+        expect(sent().map(([host]) => host)).toEqual(['server-c:8020', 'server-c:8020', 'gaming-c:8020']);
+    });
+
+    it('should name every embedder when none answers', async () => {
+        process.env.EMBEDDER_URL = 'http://gaming-d:8020,http://server-d:8020';
+        globalThis.fetch = fakeFetch({health: () => down()});
+
+        await expect(embed(['a'])).rejects.toMatchObject({
+            status: 503,
+            message: expect.stringContaining('http://gaming-d:8020 nor at http://server-d:8020'),
+        });
     });
 });
 

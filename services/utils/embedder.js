@@ -15,7 +15,13 @@ import process from 'node:process'
 // Measured on the stories judged by hand, the best similarity is dense + sparse: the dense finds two
 // titles saying the same thing in other words, the sparse keeps apart two templates sharing none of
 // their names. They are stored and compared by pgvector (see db/add_briefing.sql).
-const EMBEDDER_URL = () => process.env.EMBEDDER_URL ?? 'http://127.0.0.1:8020';
+// The embedders to use, the first that answers: EMBEDDER_URL lists them, in order, separated by commas
+// ("http://gaming-pc:8020,http://server:8020"). The vectors are the same everywhere (bge-m3 in fp32,
+// cosine 1.000000 between a graphics card and a processor), only the speed changes: 57 texts a second
+// on an RTX 4070 Ti, 2.6 on the 6 cores of an i5-12400T. A machine that is not always on goes first,
+// one that is goes after it and takes over while the first is off.
+const URLS = () => (process.env.EMBEDDER_URL ?? 'http://127.0.0.1:8020')
+    .split(',').map(url => url.trim().replace(/\/+$/, '')).filter(Boolean);
 // the secret the embedder asks for when it runs on another machine (its EMBEDDER_TOKEN)
 const HEADERS = () => ({
     'Content-Type': 'application/json',
@@ -24,9 +30,16 @@ const HEADERS = () => ({
 // Texts per request. fetch gives up after 300 s without an answer whatever TIMEOUT_MS says, and on a
 // busy processor 64 texts took up to 310 s: a batch must stay short enough to wait behind the one of
 // another process (the server and "pnpm run ingest") and still be answered in time. A graphics card
-// answers 16 texts in a fraction of a second, EMBEDDER_BATCH=128 there saves the round trips.
+// answers 16 texts in a fraction of a second, EMBEDDER_BATCH=128 there saves the round trips. An
+// embedder saying it runs on a processor always gets CPU_BATCH: a search would wait behind 128 texts
+// for about 50 s.
 const BATCH = () => Number(process.env.EMBEDDER_BATCH) || 16;
+const CPU_BATCH = 16;
 const TIMEOUT_MS = 10 * 60 * 1000;
+const HEALTH_TIMEOUT_MS = 2000;
+// While another one than the first works, the ones before it are asked again this often: a machine
+// switched on again takes back the work
+const RECHECK_MS = 60 * 1000;
 export const DIMENSIONS = 1024;
 
 // One request at a time from this process. The embedder encodes one batch at a time anyway, so
@@ -35,8 +48,8 @@ export const DIMENSIONS = 1024;
 // while the ingestion embedded lost both its feeds and the batch of the ingestion.
 let queue = Promise.resolve();
 
-const post = (batch) => {
-    const request = queue.then(() => fetch(`${EMBEDDER_URL()}/embed`, {
+const post = (url, batch) => {
+    const request = queue.then(() => fetch(`${url}/embed`, {
         method: 'POST',
         headers: HEADERS(),
         body: JSON.stringify({texts: batch}),
@@ -46,40 +59,80 @@ const post = (batch) => {
     return request;
 };
 
-// the vectors of these texts, in the same order: [{dense: Float32Array, sparse: {token: weight}}]
+// {url, batch, at} when this embedder answers, null otherwise. An embedder older than the "device" of
+// its answer is taken as it was configured, with EMBEDDER_BATCH
+const health = async (url) => {
+    try {
+        const res = await fetch(`${url}/health`, {signal: AbortSignal.timeout(HEALTH_TIMEOUT_MS)});
+        if (!res.ok) return null;
+        const {device} = await res.json().catch(() => ({}));
+        return {url, batch: device === 'cpu' ? CPU_BATCH : BATCH(), at: Date.now()};
+    } catch {
+        return null;
+    }
+};
+
+// the embedder in use: the first of the list kept as long as it answers, another one for RECHECK_MS
+let chosen = null;
+
+// the first embedder of the list that answers, null when none does
+const choose = async () => {
+    const urls = URLS();
+    if (chosen && urls.includes(chosen.url) && (chosen.url === urls[0] || Date.now() - chosen.at < RECHECK_MS)) return chosen;
+    for (const url of urls) {
+        const up = await health(url);
+        if (up) {
+            if (chosen?.url !== url && urls.length > 1) console.log(`Embedder: ${url} (${up.batch === CPU_BATCH ? 'processor' : 'graphics card'})`);
+            chosen = up;
+            return chosen;
+        }
+    }
+    chosen = null;
+    return null;
+};
+
+const notAnswering = (detail) => Object.assign(
+    new Error(`The embedder does not answer at ${URLS().join(' nor at ')}${detail ? ` (${detail})` : ''}. Start it with "pnpm run embedder".`),
+    {status: 503});
+
+// the vectors of these texts, in the same order: [{dense: Float32Array, sparse: {token: weight}}]. An
+// embedder that stops answering in the middle hands the rest to the next one of the list
 export const embed = async (texts) => {
     const vectors = [];
 
-    const size = BATCH();
-    for (let i = 0; i < texts.length; i += size) {
-        const batch = texts.slice(i, i + size);
+    let failures = 0;
+    for (let i = 0; i < texts.length;) {
+        const target = await choose();
+        if (!target) throw notAnswering();
+
+        const batch = texts.slice(i, i + target.batch);
         let res;
         try {
-            res = await post(batch);
+            res = await post(target.url, batch);
         } catch (err) {
             // "fetch failed" alone does not say whether it was refused, reset or too slow
             const reason = [err.message, err.cause?.code ?? err.cause?.message].filter(Boolean).join(': ');
-            throw Object.assign(new Error(`The embedder does not answer at ${EMBEDDER_URL()} (${reason}). Start it with "pnpm run embedder".`), {status: 503});
+            chosen = null;      // the list is asked again, from its first one
+            if (++failures < URLS().length) {
+                console.log(`Embedder: ${target.url} did not answer (${reason})`);
+                continue;
+            }
+            throw notAnswering(`${target.url}: ${reason}`);
         }
-        if (res.status === 401) throw Object.assign(new Error(`The embedder at ${EMBEDDER_URL()} refused the token: EMBEDDER_TOKEN must be the same on both sides.`), {status: 502});
+        if (res.status === 401) throw Object.assign(new Error(`The embedder at ${target.url} refused the token: EMBEDDER_TOKEN must be the same on both sides.`), {status: 502});
         if (!res.ok) throw Object.assign(new Error(`The embedder failed: HTTP ${res.status}`), {status: 502});
 
         const {dense, sparse} = res.body;
         batch.forEach((_, j) => vectors.push({dense: Float32Array.from(dense[j]), sparse: sparse[j] ?? {}}));
+        i += batch.length;
+        failures = 0;
     }
 
     return vectors;
 };
 
-// is the embedder running, without waiting for it
-export const embedderIsUp = async () => {
-    try {
-        const res = await fetch(`${EMBEDDER_URL()}/health`, {signal: AbortSignal.timeout(2000)});
-        return res.ok;
-    } catch {
-        return false;
-    }
-};
+// is an embedder running, without waiting long for it
+export const embedderIsUp = async () => (await choose()) !== null;
 
 // cosine of two dense vectors (both normalized by bge-m3), for the texts that are not stored
 // (the stored ones are compared by pgvector, see db/add_briefing.sql)

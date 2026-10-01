@@ -99,7 +99,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == '/health':
-            return self.answer(200, {'status': 'ok', 'model': MODEL_NAME})
+            # the device tells the server how many texts to send at once (see embedder.js)
+            return self.answer(200, {'status': 'ok', 'model': MODEL_NAME, 'device': 'cuda' if GPU else 'cpu'})
         return self.answer(404, {'error': 'Not found'})
 
     def authorized(self):
