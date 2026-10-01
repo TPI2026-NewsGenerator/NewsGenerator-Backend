@@ -340,6 +340,13 @@ Optional variables in `.env`:
    the searches of this user, unless they share them. Addresses of private networks are refused, see `services/utils/public-url.js`.
    500 at most (`MAX_USER_FEEDS`): a reader's list of the football media of Europe had 180 feeds,
    about 500 news a day for the 108 the server did not read yet.
+   A **list** can be imported from a file of the reader (Excel `.xlsx`, CSV, OPML or text): the client
+   reads every address in it, wherever it is (`client/src/features/briefing/importFile.js`, the file
+   never leaves the browser), and sends them 25 at a time to `POST /api/feeds/check`, which finds the
+   feed of each as for one site and says what keeps it out: no feed (read from its page through the
+   bridge), fewer than 3 news in 7 days, more than 300 news at once (a flood or an archive), already
+   added. The reader ticks the ones to keep, added by `POST /api/feeds/import`. The 495 sites of that
+   list took about 4 minutes.
    The feed of a site is looked for in four steps, each one tried only when the one before found
    nothing (`services/utils/feed-finder.js`):
    1. the feed the page declares, `<link rel="alternate" type="application/rss+xml">`, except the

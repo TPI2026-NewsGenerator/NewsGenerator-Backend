@@ -23,6 +23,11 @@ export const MAX_NEW_PROFILE_FEEDS = 20;    // found by one discovery
 // A site without a feed is read through our RSS-Bridge, which loads its page every time: those
 // cost far more than a feed, and the bridge is shared by every reader
 export const MAX_BRIDGE_FEEDS = 15;
+// A feed holding more news at once is a flood or an archive, not a feed of news: gurufocus.com/rss.php
+// held 3611 notes on stocks, 2539 of the last 48 h, an hour of the processor of the embedder. Of the
+// 1231 feeds read on 2026-10-01 half held 24 news at most in a read, 99% 256. The directory refuses
+// them; a reader importing a list is told, and decides
+export const MAX_FEED_ITEMS = 300;
 
 // how many feeds read through the bridge this reader can still get, among all their feeds
 export const bridgeRoom = (urls) => Math.max(0, MAX_BRIDGE_FEEDS - urls.filter(isBridgeUrl).length);

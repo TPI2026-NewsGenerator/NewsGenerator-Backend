@@ -16,7 +16,7 @@ import {findFeeds, readFeeds, siteFeeds} from "./utils/feed-finder.js";
 import {isGoogleNewsUrl, isPlatform} from "./utils/google-news.js";
 import {feedLanguage, LANGUAGES} from "./utils/language.js";
 import {fetchPublicUrl, isBridgeUrl, readText} from "./utils/public-url.js";
-import {looksPrivate} from "./utils/feed-limits.js";
+import {looksPrivate, MAX_FEED_ITEMS} from "./utils/feed-limits.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {toDate} from "./utils/dates.js";
 
@@ -34,11 +34,9 @@ const MIN_RECENT = 3;               // news of these days: under this the feed i
 // a medium read through its main feed brings its news twice, and nothing else
 const MIN_NEW_SHARE = 0.5;
 const MAX_SECTIONS = 2;             // per medium: each one is read every 20 minutes
-// A feed holding more news at once is a flood or an archive, not a feed of news: gurufocus.com/rss.php
-// held 3611 notes on stocks, 2539 of the last 48 h, an hour of the processor of the embedder. Of the
-// 1231 feeds read on 2026-10-01 half held 24 news at most in a read, 99% 256. Only the feeds the
-// directory chooses for everyone are judged by it: a reader keeps a feed they add themselves
-const MAX_ITEMS = 300;
+// a feed holding more news at once is a flood or an archive (see feed-limits.js). Only the feeds the
+// directory chooses for everyone are refused for it: a reader keeps a feed they add themselves
+const MAX_ITEMS = MAX_FEED_ITEMS;
 const MAX_CANDIDATES = 20;          // feeds of a site read to choose its sections, each is a request
 const CONCURRENCY = 3;
 // per run of the ingestion, so it never waits on hundreds of sites (the first time, see

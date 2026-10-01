@@ -14,7 +14,8 @@ import {search} from "./utils/google-news.js";
 import {searchDirectory as directoryFeeds} from "./utils/feed-directory.js";
 import {mediaFor as gdeltMedia} from "./utils/gdelt.js";
 import {findFeeds, isOnSubject} from "./utils/feed-finder.js";
-import {hostOf, nameOf} from "./utils/public-url.js";
+import {hostOf, isBridgeUrl, nameOf} from "./utils/public-url.js";
+import {MAX_FEED_ITEMS} from "./utils/feed-limits.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {embed} from "./utils/embedder.js";
 import {judgeOf} from "./utils/meaning-judge.js";
@@ -24,6 +25,17 @@ const FIND_CONCURRENCY = 4;
 const MAX_NEWS = 25;            // news shown for reading, the rest would only be noise
 const MAX_DIRECTORY_RESULTS = 15;   // feeds answered to a search of the directory
 const WEB_DAYS = 30;                // a subject the directory does not name: the media of its news of these days
+const CHECK_CONCURRENCY = 6;        // sites of an imported list looked at together
+const CHECK_TIMEOUT_MS = 60000;     // a site that keeps redirecting or answering slowly is given up
+const MIN_RECENT = 3;               // news of the last 7 days: under this a feed is asleep
+
+const withTimeout = (promise, ms) => {
+    let timer;
+    const late = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error('The site took too long to answer.')), ms);
+    });
+    return Promise.race([promise, late]).finally(() => clearTimeout(timer));
+};
 
 // media already searched for this user: the feeds of db/rss-links.js and the ones they added.
 // The address of a feed does not always name its medium ("feeds.content.dowjones.io" is the WSJ,
@@ -124,6 +136,45 @@ export const SourceService = {
             console.log(`Source search, Google News: ${err.message}`);
             return [];
         }
+    },
+
+    // The sites of a list the reader imports (a file of theirs, read by the client), a few at a time:
+    // the feed found for each, as the one added by hand would be, and what keeps it out. status:
+    //  'ready'     a feed with news of these days
+    //  'bridge'    no feed: read through our bridge, which counts in its own limit (see feed-limits.js)
+    //  'asleep'    a feed, but fewer than MIN_RECENT news of the last days
+    //  'flood'     a feed holding more than MAX_FEED_ITEMS news at once: told, the reader decides
+    //  'added'     already among their sources
+    //  'none'      no feed and no page to build one from
+    // A list of 495 sites of a reader took about 4 minutes, 6 at a time
+    checkSites: async ({sites, userId, language = 'en'}) => {
+        const added = new Set(await FeedModel.userFeedUrls(userId));
+        const results = await mapWithConcurrency(sites, CHECK_CONCURRENCY, async (site) => {
+            let feeds = [];
+            try {
+                feeds = await withTimeout(findFeeds(site, {language}), CHECK_TIMEOUT_MS);
+            } catch (err) {
+                return {site, status: 'none', reason: err.message};
+            }
+            const feed = feeds.find(found => found.recent >= MIN_RECENT) ?? feeds[0];
+            if (!feed) return {site, status: 'none', reason: 'No feed found, and no page to read instead.'};
+
+            const bridge = isBridgeUrl(feed.url);
+            const status = added.has(feed.url) ? 'added'
+                : feed.items > MAX_FEED_ITEMS ? 'flood'
+                : feed.recent < MIN_RECENT ? 'asleep'
+                : bridge ? 'bridge' : 'ready';
+            return {
+                site, status,
+                name: hostOf(site) ?? site,
+                feed: feed.url,
+                language: feed.language ?? null,
+                recent: feed.recent ?? null,
+                items: feed.items ?? null,
+                sample: feed.titles?.[0] ?? null,
+            };
+        });
+        return results.map((result, i) => result.value ?? {site: sites[i], status: 'none', reason: String(result.reason?.message ?? result.reason)});
     },
 
     // what this search misses. Google News is asked the same keywords in one call: the news of the

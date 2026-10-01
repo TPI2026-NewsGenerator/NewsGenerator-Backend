@@ -16,6 +16,9 @@ import {assertPublicUrl, hostOf, isBridgeUrl} from '../services/utils/public-url
 import {IngestService} from '../services/ingest-service.js';
 import {bridgeRoom, looksPrivate, MAX_USER_FEEDS} from '../services/utils/feed-limits.js';
 import {Crawlers} from '../services/utils/crawlers.js';
+import {feedLanguage} from '../services/utils/language.js';
+
+const MAX_CHECKED_SITES = 25;       // per request: the client sends a long list a part at a time
 
 const TOO_MANY = `You can't have more than ${MAX_USER_FEEDS} sources.`;
 const NO_BRIDGE_ROOM = "You have as many sites without a feed as the server can read for you: this one publishes none.";
@@ -140,6 +143,30 @@ export const FeedController = {
         }
     },
 
+    // {sites, language}: addresses of a list the reader imports (a file of theirs, read by the client),
+    // MAX_CHECKED_SITES at most: the feed found for each and what keeps it out (SourceService.checkSites).
+    // They are added by POST /feeds/import, which reads them again
+    checkSites: async (req, res) => {
+        const {sites, language} = req.body ?? {};
+
+        if (!Array.isArray(sites) || sites.length === 0 || !sites.every(site => typeof site === 'string' && site.trim())) {
+            return res.status(400).json({error: "Send the addresses of the sites to check."});
+        }
+        if (sites.length > MAX_CHECKED_SITES) {
+            return res.status(400).json({error: `At most ${MAX_CHECKED_SITES} sites at a time.`});
+        }
+
+        try {
+            res.status(200).json({sites: await SourceService.checkSites({
+                sites: [...new Set(sites.map(site => site.trim().slice(0, 500)))],
+                userId: req.user.id,
+                language: FeedService.languages().includes(language) ? language : 'en',
+            })});
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
     // add several suggested sources at once, their feed is checked again here: what the client sends
     // back is never trusted, it could be any address, and a directory can name a feed that died
     importSources: async (req, res) => {
@@ -172,6 +199,7 @@ export const FeedController = {
 
         for (let {site, feed, category} of sources) {
             const name = String(site ?? '').trim();
+            let language = null;
 
             if (count >= MAX_USER_FEEDS) {
                 errors.push({site, error: TOO_MANY});
@@ -199,12 +227,15 @@ export const FeedController = {
                     continue;
                 }
                 feed = found[0].url;        // findFeeds has just read it, so it answers and has news
+                language = found[0].language;
             } else {
                 const read = checked.get(feed);
                 if (read && (read.error || read.items.length === 0)) {
                     errors.push({site, error: read.error ? `This feed does not answer (${read.error}).` : "This feed has no news."});
                     continue;
                 }
+                // told by its own news: the language of the search it was found from is not always its
+                language = read ? feedLanguage(read.items.map(item => `${item.title ?? ''} ${item.description ?? ''}`)) : null;
             }
 
             try {
@@ -214,8 +245,10 @@ export const FeedController = {
                 added.push(toFeed(await FeedModel.addUserFeed({
                     userId: req.user.id,
                     url: url,
-                    site: name || url,
+                    // an address of a list is named after its site, as one added by hand: "derstandard.at"
+                    site: name.includes('://') ? hostOf(name) ?? name : name || url,
                     category: category,
+                    language: language,
                 })));
                 count++;
                 if (fromBridge) bridge--;

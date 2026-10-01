@@ -317,6 +317,61 @@ const options = {
                     }
                 }
             },
+            "/feeds/check": {
+                "post": {
+                    "tags": ["Feeds"],
+                    "summary": "Check the sites of a list the reader imports",
+                    "description": "The client reads the file of the reader (CSV, Excel, OPML or text) and sends its addresses 25 at most at a time. For each one the feed is found as for a site added by hand, and its status says what keeps it out: `ready` (a feed with news of these days), `bridge` (no feed, read through our RSS-Bridge, in its own limit), `asleep` (fewer than 3 news in 7 days), `flood` (more than 300 news at once: a flood or an archive, the reader decides), `added` (already a source of theirs), `none`. Nothing is added: the chosen ones go to POST /feeds/import. 40 requests per hour per address.",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "sites": {"type": "array", "maxItems": 25, "items": {"type": "string", "example": "https://www.kicker.de"}},
+                                        "language": {"type": "string", "example": "en", "description": "Steers which section of a site is read when its feed has to be built from the page."}
+                                    },
+                                    "required": ["sites"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "One answer per site",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "sites": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "site": {"type": "string"},
+                                                        "status": {"type": "string", "enum": ["ready", "bridge", "asleep", "flood", "added", "none"]},
+                                                        "name": {"type": "string"},
+                                                        "feed": {"type": "string", "format": "uri"},
+                                                        "language": {"type": "string", "nullable": true},
+                                                        "recent": {"type": "integer", "description": "news of the last 7 days"},
+                                                        "items": {"type": "integer", "description": "news in the feed at once"},
+                                                        "sample": {"type": "string", "nullable": true},
+                                                        "reason": {"type": "string", "description": "why nothing was found"}
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "400": {"description": "No site, or more than 25"},
+                        "429": {"description": "Too many sites checked in the last hour"}
+                    }
+                }
+            },
             "/feeds/import": {
                 "post": {
                     "tags": ["Feeds"],

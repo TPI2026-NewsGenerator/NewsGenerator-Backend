@@ -3,7 +3,7 @@
 //  Date: 29.09.2026
 //  File: test.source-suggest.js
 //  Description: What a search misses on the web: the media offered only with a feed on it, judged
-//               by meaning
+//               by meaning. And the sites of a list a reader imports, with what keeps each out
 //
 
 import {jest} from '@jest/globals';
@@ -27,6 +27,7 @@ const {SourceService} = await import('../../services/source-service.js');
 const {search} = await import('../../services/utils/google-news.js');
 const {findFeeds} = await import('../../services/utils/feed-finder.js');
 const {embed} = await import('../../services/utils/embedder.js');
+const {FeedModel} = await import('../../models/feed-model.js');
 
 const item = (id, site, title, day) => ({title, url: `https://news.google.com/${id}`, site, name: site, publishedAt: `2026-09-${day}T10:00:00Z`});
 const NEWS = [
@@ -68,5 +69,35 @@ describe('SourceService.suggest', () => {
 
         expect(found.sources).toHaveLength(2);
         expect(findFeeds.mock.calls[0][1].judge).toBeUndefined();
+    });
+});
+
+describe('SourceService.checkSites', () => {
+    const found = (url, changes = {}) => ({url, recent: 40, items: 50, language: 'de', titles: ['Bayern gewinnt'], ...changes});
+
+    beforeEach(() => {
+        process.env.RSS_BRIDGE_URL = 'http://rss-bridge';
+        FeedModel.userFeedUrls.mockResolvedValue(['https://www.tipsbladet.dk/rss']);
+        findFeeds.mockImplementation(async (site) => ({
+            'https://www.kicker.de': [found('https://newsfeed.kicker.de/news/aktuell')],
+            'https://www.vi.nl': [found('http://rss-bridge/?action=display&url=vi.nl')],
+            'https://www.irishfa.com': [found('https://www.irishfa.com/rss', {items: 5882})],
+            'https://www.gibraltarfa.com': [found('https://www.gibraltarfa.com/feed', {recent: 1})],
+            'https://www.tipsbladet.dk': [found('https://www.tipsbladet.dk/rss')],
+            'https://www.uefa.com': [],
+        })[site] ?? Promise.reject(new Error('"www.nowhere.ad" does not exist.')));
+    });
+    afterEach(() => {
+        delete process.env.RSS_BRIDGE_URL;
+    });
+
+    it('should tell for each site of a list its feed and what keeps it out', async () => {
+        const sites = ['https://www.kicker.de', 'https://www.vi.nl', 'https://www.irishfa.com', 'https://www.gibraltarfa.com',
+            'https://www.tipsbladet.dk', 'https://www.uefa.com', 'https://www.nowhere.ad'];
+        const checked = await SourceService.checkSites({sites, userId: 1, language: 'en'});
+
+        expect(checked.map(site => site.status)).toEqual(['ready', 'bridge', 'flood', 'asleep', 'added', 'none', 'none']);
+        expect(checked[0]).toMatchObject({site: 'https://www.kicker.de', feed: 'https://newsfeed.kicker.de/news/aktuell', language: 'de', recent: 40, sample: 'Bayern gewinnt'});
+        expect(checked[6].reason).toBe('"www.nowhere.ad" does not exist.');
     });
 });
