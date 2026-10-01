@@ -2,7 +2,7 @@
 //  Author: Fabian Rostello
 //  Date: 01.10.2026
 //  File: test.search-languages.js
-//  Description: A search reads every language: the cards of two languages telling the same fact are
+//  Description: A search reads every language: the cards telling the same fact, in one language or two, are
 //               joined when the AI says so, asked only of the cards whose texts are close
 //
 
@@ -13,7 +13,7 @@ jest.unstable_mockModule('../../models/feed-model.js', () => ({
         closestArticles: jest.fn(),
         similarArticlePairs: jest.fn(async () => []),
         threadArticles: jest.fn(async () => []),
-        crossLanguagePairs: jest.fn(async () => []),
+        closeCardPairs: jest.fn(async () => []),
     },
 }));
 jest.unstable_mockModule('../../services/utils/crawlers.js', () => ({Crawlers: {Html: jest.fn()}}));
@@ -58,7 +58,7 @@ beforeEach(() => {
 
 describe('the cards of a fact in several languages', () => {
     it('should join the cards the AI says tell the same fact, led by the first, their media counted', async () => {
-        FeedModel.crossLanguagePairs.mockResolvedValueOnce([{a: 0, b: 1, similarity: 0.92}, {a: 0, b: 2, similarity: 0.88}, {a: 1, b: 3, similarity: 0.76}]);
+        FeedModel.closeCardPairs.mockResolvedValueOnce([{a: 0, b: 1, similarity: 0.92}, {a: 0, b: 2, similarity: 0.88}, {a: 1, b: 3, similarity: 0.76}]);
         mergeStories.mockResolvedValueOnce(new Map([['1', '0'], ['2', '0']]));
 
         const {news} = await search();
@@ -76,7 +76,7 @@ describe('the cards of a fact in several languages', () => {
             article(3, 'kicker.de', 'UEFA nimmt Fall Negreira wieder auf', 'de'),
             article(4, 'espn.com', 'Barcelona coach angry at referees', 'en'),
         ]);
-        FeedModel.crossLanguagePairs.mockResolvedValueOnce([{a: 0, b: 1, similarity: 0.92}, {a: 0, b: 2, similarity: 0.88}]);
+        FeedModel.closeCardPairs.mockResolvedValueOnce([{a: 0, b: 1, similarity: 0.92}, {a: 0, b: 2, similarity: 0.88}]);
         mergeStories.mockResolvedValueOnce(new Map([['1', '0'], ['2', '0']]));
 
         const {news} = await search();
@@ -85,7 +85,7 @@ describe('the cards of a fact in several languages', () => {
     });
 
     it('should not join two cards that were not close, whatever the AI says', async () => {
-        FeedModel.crossLanguagePairs.mockResolvedValueOnce([{a: 0, b: 1, similarity: 0.92}, {a: 1, b: 3, similarity: 0.76}]);
+        FeedModel.closeCardPairs.mockResolvedValueOnce([{a: 0, b: 1, similarity: 0.92}, {a: 1, b: 3, similarity: 0.76}]);
         mergeStories.mockResolvedValueOnce(new Map([['3', '0']]));
 
         const {news} = await search();
@@ -93,7 +93,28 @@ describe('the cards of a fact in several languages', () => {
         expect(news).toHaveLength(4);
     });
 
-    it('should not ask the AI when no cards of two languages are close', async () => {
+    it('should join a card close to one card of the fact, not to the one leading it', async () => {
+        // the analysis of the BBC leads, the one of ESPN is close to it, the report of L'Equipe only to ESPN
+        FeedModel.closeCardPairs.mockResolvedValueOnce([{a: 0, b: 1, similarity: 0.72}, {a: 1, b: 2, similarity: 0.65}]);
+        mergeStories.mockResolvedValueOnce(new Map([['1', '0'], ['2', '0']]));
+
+        const {news} = await search();
+
+        expect(news.map(card => card.url)).toEqual(['https://lequipe.fr/news/1', 'https://espn.com/news/4']);
+        expect(news[0].sources.map(source => source.url)).toEqual(['https://bbc.co.uk/news/2', 'https://kicker.de/news/3']);
+    });
+
+    it('should join two cards of one language telling the same fact', async () => {
+        FeedModel.closeCardPairs.mockResolvedValueOnce([{a: 1, b: 3, similarity: 0.8}]);
+        mergeStories.mockResolvedValueOnce(new Map([['3', '1']]));
+
+        const {news} = await search();
+
+        expect(news.map(card => card.url)).toEqual(['https://lequipe.fr/news/1', 'https://bbc.co.uk/news/2', 'https://kicker.de/news/3']);
+        expect(news[1].sources.map(source => source.url)).toEqual(['https://espn.com/news/4']);
+    });
+
+    it('should not ask the AI when no cards are close', async () => {
         const {news} = await search();
 
         expect(mergeStories).not.toHaveBeenCalled();
@@ -101,7 +122,7 @@ describe('the cards of a fact in several languages', () => {
     });
 
     it('should give the cards apart when the AI fails', async () => {
-        FeedModel.crossLanguagePairs.mockResolvedValueOnce([{a: 0, b: 1, similarity: 0.92}]);
+        FeedModel.closeCardPairs.mockResolvedValueOnce([{a: 0, b: 1, similarity: 0.92}]);
         mergeStories.mockRejectedValueOnce(new Error('The AI did not answer in JSON.'));
 
         const {news} = await search();

@@ -161,36 +161,58 @@ const groupDuplicates = async (articles) => {
 };
 
 // A news is grouped with the others of its language only (see assign_stories): read in every language,
-// a search showed the Negreira affair on nine cards, one per language. The cards of two languages are
-// joined when the AI says they tell the same fact (the prompt of the briefing, see mergeStories), asked
-// only of the cards with two articles in two languages this close in their texts: the vectors alone
-// put the inflation of Belgium with the one of Germany (0.885) above most real pairs. Measured on 10
-// searches (bench/cross-language-merge.mjs): 35 cards joined, 34 telling the same fact, the inflations
-// left apart, 1 to 4 s more and no call when no pair is that close. A card is only joined to one it
-// was asked with: the AI joined others of one language, or of two that were not close
-const JOIN_SIMILARITY = 0.75;
+// a search showed the Negreira affair on nine cards, one per language. The cards telling the same fact
+// are joined when the AI says so (the prompt of the briefing, see mergeStories), asked only of the
+// cards with two articles this close in their texts: the vectors alone put the inflation of Belgium
+// with the one of Germany (0.885) above most real pairs. The cards of one language too: the grouping
+// left apart an analysis of the BBC and one of ESPN on one penalty (0.72). A card joins the fact the
+// AI gives it when it is close to one card of that fact, not only to the first. Measured on 12
+// searches (bench/join-cards.mjs, judged by hand): at 0.65 about 50 cards joined, 2 wrongly (a call
+// for referees with their appointments, the ECB with the inflation); at 0.55 a quarter of the joins
+// below 0.75 were wrong, a live report taking the moments of a visit; 0.60 joined a review of the
+// press. The report of L'Equipe on that penalty stays apart: the English texts never name the club
+// facing Arsenal, and the AI, in doubt, joins nothing. The AI joined others that were not close
+const JOIN_SIMILARITY = 0.65;
 const MAX_JOINED_CARDS = 30;        // the first cards of a pair asked, in their order
 
 const linksOf = (card) => [card.url, ...card.sources.map(source => source.url)];
 
 // articleOf: link -> the article of the cache
-const joinLanguages = async (cards, articleOf) => {
+const joinFacts = async (cards, articleOf) => {
     const members = cards.flatMap((card, i) => linksOf(card)
         .map(link => articleOf.get(link)?.id).filter(id => id != null).map(id => ({card: i, id})));
-    const pairs = await FeedModel.crossLanguagePairs(members, JOIN_SIMILARITY);
+    const pairs = await FeedModel.closeCardPairs(members, JOIN_SIMILARITY);
     const asked = [...new Set(pairs.flatMap(pair => [pair.a, pair.b]))].sort((a, b) => a - b).slice(0, MAX_JOINED_CARDS);
     if (asked.length < 2) return cards;
 
     const close = new Set(pairs.map(pair => `${pair.a}:${pair.b}`));
+    const isClose = (a, b) => close.has(`${Math.min(a, b)}:${Math.max(a, b)}`);
     const merges = await mergeStories(asked.map(i => ({id: String(i), lead: {title: cards[i].title, description: (cards[i].description ?? '').slice(0, 160)}})))
         .catch(err => {
-            console.log(`Search: the cards of two languages were not joined (${err.message})`);
+            console.log(`Search: the cards of one fact were not joined (${err.message})`);
             return new Map();
         });
-    const joined = new Map();       // card -> the card above it telling the same fact
+    // the cards the AI puts under each lead, in their order: each joins when close to the lead or to
+    // one joined before it
+    const byLead = new Map();
     for (const [id, into] of merges) {
-        const [card, above] = [Number(id), Number(into)];
-        if (close.has(`${above}:${card}`)) joined.set(card, above);
+        const [card, lead] = [Number(id), Number(into)];
+        if (!byLead.has(lead)) byLead.set(lead, []);
+        byLead.get(lead).push(card);
+    }
+    const joined = new Map();       // card -> the card above it telling the same fact
+    for (const [lead, others] of byLead) {
+        const fact = [lead];
+        let left = others.sort((a, b) => a - b);
+        for (let grew = true; grew;) {
+            const next = left.filter(card => !fact.some(member => isClose(member, card)));
+            grew = next.length < left.length;
+            left.filter(card => !next.includes(card)).forEach(card => {
+                fact.push(card);
+                joined.set(card, lead);
+            });
+            left = next;
+        }
     }
 
     const result = cards.map(card => ({...card, sources: [...card.sources], corroboration: {...card.corroboration}}));
@@ -433,8 +455,8 @@ export const NewsService = {
             .map(card => ({card, at: best(card)}))
             .sort((a, b) => a.at - b.at)
             .map(({card, at}) => ({...card, match: !checked ? null : at < sorted.answers.length ? 'answer' : 'related'}));
-        // the cards of one fact in several languages joined, led by the first one
-        const facts = await joinLanguages(sortedCards, new Map(kept.map(article => [article.link, article])));
+        // the cards of one fact joined, led by the first one
+        const facts = await joinFacts(sortedCards, new Map(kept.map(article => [article.link, article])));
         // the facts of one affair on one card, led by the one the AI put first
         const news = await withThreads(facts, feedUrls);
 

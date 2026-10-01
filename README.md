@@ -350,11 +350,13 @@ Optional variables in `.env`:
    `NewsService.translateNews`): 20 texts per call, each figure checked as in the key passages, a text
    translated once per language. The card says it is a machine translation and shows the text as
    written on demand. A card of the search is grouped with the others of its language only (see
-   below): the cards of two languages are joined when the AI says they tell the same fact (the prompt
-   of the briefing, `mergeStories`), asked only of the cards with two articles in two languages at
-   least 0.75 alike in their texts. The vectors alone put the inflation of Belgium with the one of
-   Germany (0.885) above most real pairs; asked, the AI joined 35 cards on 10 searches, 34 of the same
-   fact, for 1 to 4 seconds more (`bench/cross-language-merge.mjs`).
+   below): the cards telling the same fact are joined when the AI says so (the prompt of the briefing,
+   `mergeStories`), asked only of the cards with two articles at least 0.65 alike in their texts, in
+   two languages or in one (two stories of one fact told from two angles), a card joining the fact
+   when it is close to one of its cards. The vectors alone put the inflation of Belgium with the one
+   of Germany (0.885) above most real pairs. Judged by hand on 12 searches (`bench/join-cards.mjs`):
+   about 50 cards joined, 2 wrongly; at 0.55 a quarter of the joins below 0.75 were wrong. A card
+   whose text does not say enough stays apart: in doubt, the AI joins nothing.
 5. News telling the same story are grouped: one card, with the other sources listed under it. The
    list of a search is grouped here, with the trigrams of the titles; the briefing reads the stories
    built in background with the vectors instead (see **How the groups are built** below). An

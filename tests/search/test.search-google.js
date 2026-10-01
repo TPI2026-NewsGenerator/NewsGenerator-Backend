@@ -21,7 +21,7 @@ jest.unstable_mockModule('../../models/feed-model.js', () => ({
         publicFeedUrls: jest.fn(async () => []),
         similarArticlePairs: jest.fn(async () => []),
         threadArticles: jest.fn(async () => []),
-        crossLanguagePairs: jest.fn(async () => []),
+        closeCardPairs: jest.fn(async () => []),
         getArticlesByLinks: jest.fn(),
         trustedFeedUrls: jest.fn(async () => []),
         saveResolvedLinks: jest.fn(async () => 1),

@@ -17,7 +17,7 @@ jest.unstable_mockModule('../../models/feed-model.js', () => ({
         closestArticles: jest.fn(),
         similarArticlePairs: jest.fn(),
         threadArticles: jest.fn(async () => []),
-        crossLanguagePairs: jest.fn(async () => []),
+        closeCardPairs: jest.fn(async () => []),
     },
 }));
 jest.unstable_mockModule('../../services/utils/crawlers.js', () => ({Crawlers: {Html: jest.fn()}}));
