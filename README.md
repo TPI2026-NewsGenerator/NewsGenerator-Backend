@@ -198,8 +198,9 @@ briefing**). Grouped in one call,
 the 12 000 news of the first read of the directory held the ingestion 2 h 10 with no feed read meanwhile,
 and nothing saved before the end. The older news kept (`FEED_RETENTION_DAYS`)
 that have no vectors yet, because the embedder was down longer than the window or a feed came with
-old news, are embedded after them for the search by meaning, `INGEST_OLDER_BATCHES` batches of
-`INGEST_MAX_EMBEDDED` per run, and join no story. To catch up a long backlog at once:
+old news, are embedded for the search by meaning once those of the window all have their vectors and
+stories and while the run has time, `INGEST_OLDER_BATCHES` batches of `INGEST_MAX_EMBEDDED` per run,
+and join no story (on the processor alone a batch of them took the place of one of the window). To catch up a long backlog at once:
 
 ```bash
 INGEST_GROUP_MINUTES=600 INGEST_OLDER_BATCHES=200 pnpm run ingest

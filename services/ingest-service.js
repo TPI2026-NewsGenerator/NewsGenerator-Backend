@@ -29,8 +29,9 @@ export const WINDOW_HOURS = 48;         // news older than this get no vectors a
 const MAX_EMBEDDED_PER_RUN = Number(process.env.INGEST_MAX_EMBEDDED) || 300;
 // The news older than the window without vectors (published before the embedder ran, or during a
 // stop longer than the window) get theirs too, for the search by meaning, which reads the whole
-// retention; they join no story. After the news of the window, and this many batches at most per
-// run: on a processor a batch of 300 is a few minutes
+// retention; they join no story. Once the news of the window all have their vectors and stories and
+// while the run has time, and this many batches at most per run: on a processor a batch of 300 is
+// 3 to 4 minutes, which took the place of a batch of the window while the graphics card was off
 const OLDER_BATCHES_PER_RUN = Number(process.env.INGEST_OLDER_BATCHES) || 1;
 // The news of the window are embedded and grouped by batches, the newest first, each batch in one
 // transaction of its own (assign_stories, assign_threads): the 12 000 news of the first read of the
@@ -223,17 +224,23 @@ export const IngestService = {
                 // some feeds (those just found for a profile) embeds all of theirs, and only theirs:
                 // a new reader had 300 of 564 and waited the next run for the rest, and the backlog
                 // of the others is the work of the scheduled run, for GROUP_MINUTES at a time
+                let windowLeft = false;     // news of the window still without vectors or story
                 for (let batch = await embedPending(urls); batch > 0; batch = await embedPending(urls)) {
                     embedded += batch;
                     await group();
-                    if (batch < MAX_EMBEDDED_PER_RUN || (urls === null && !timeLeft())) break;
+                    if (batch < MAX_EMBEDDED_PER_RUN) break;
+                    if (urls === null && !timeLeft()) {
+                        windowLeft = true;
+                        break;
+                    }
                 }
                 // news embedded and in no story: by a run that stopped before grouping them, by a search
                 // reading Google News, or more than a batch waiting. As long as the run has time
                 if (embedded === 0) await group();
                 while (lastGrouped === MAX_EMBEDDED_PER_RUN && timeLeft()) await group();
+                if (lastGrouped === MAX_EMBEDDED_PER_RUN) windowLeft = true;
                 // then the older news, for the search only (the grouping reads the window)
-                if (urls === null) {
+                if (urls === null && !windowLeft && timeLeft()) {
                     const retention = new Date(Date.now() - RETENTION_DAYS * 24 * 3600e3);
                     for (let run = 0; run < OLDER_BATCHES_PER_RUN; run++) {
                         const batch = await embedPending(null, retention);
