@@ -13,6 +13,7 @@ import {Crawlers} from "./utils/crawlers.js";
 import {Filter} from "./utils/filter.js";
 import {FeedModel} from "../models/feed-model.js";
 import {canSummarize, extractArticle, passagesText, translationFor} from "./utils/extract.js";
+import {languageOf} from "./utils/language.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {averageLink, unionFind} from "./utils/grouping.js";
@@ -76,6 +77,9 @@ const shorten = (text) => !text || text.length <= CARD_LENGTH
 // news.google.com (its link stays the one of Google, which leads the reader to the article)
 const siteOf = (article) => sourceOf(article.source_url ?? article.link);
 
+// the language of an article: told when it got its vectors, else read from its title and description
+const languageOfArticle = (article) => article.lang ?? languageOf(`${article.title} ${article.description ?? ''}`);
+
 // cached article -> format sent to the client
 const toNews = (article) => ({
     url: article.link,
@@ -84,6 +88,8 @@ const toNews = (article) => ({
     publishedAt: article.published_at?.toISOString() ?? '',
     title: article.title,
     description: shorten(article.description),
+    // the language it is written in: a search reads every language
+    language: languageOfArticle(article),
     topic: article.topic,
     // who the article credits for what it reports, answered by the AI with the summary
     sourcing: article.sourcing,
@@ -236,31 +242,34 @@ export const NewsService = {
         try {
             // 1. get links from categories, with the feeds this user added (private to them) and those
             // of every reader that are not private: found for a profile, shared, and the searches of
-            // Google News of the profiles. All of the language of the search: a French search gave the
-            // cards of si.com. A reader's search of "cartes Pokémon" found 1 news in the shared feeds
-            // and their own, 10 with the searches of the profile of another reader (bench/pool-sources.mjs)
-            // The feeds of the directory too, found by the server itself (see DirectoryService), and the
-            // feeds of Google News of the sentences already searched (see sentenceFeeds)
+            // Google News of the profiles. A reader's search of "cartes Pokémon" found 1 news in the
+            // shared feeds and their own, 10 with the searches of the profile of another reader
+            // (bench/pool-sources.mjs). The feeds of the directory too, found by the server itself (see
+            // DirectoryService), and the feeds of Google News of the sentences already searched (see
+            // sentenceFeeds). Of every language: the language chosen is the one the cards are shown in.
+            // Read in the language searched only, a search
+            // of a reader with sources in 34 languages found 4 news for "Schiedsrichter im Fußball" and 28
+            // in the languages of their profile (bench/search-languages.mjs)
             const [own, others, searches, directory, sentences] = await Promise.all([
-                userId ? FeedModel.userFeedUrls(userId, category, language) : [],
-                FeedModel.publicFeedUrls(category, language),
-                searchesOfCategories(category, language),
-                DirectoryModel.feedUrls(category, language),
-                sentenceFeeds(language),
+                userId ? FeedModel.userFeedUrls(userId, category) : [],
+                FeedModel.publicFeedUrls(category),
+                searchesOfCategories(category),
+                DirectoryModel.feedUrls(category),
+                sentenceFeeds(),
             ]);
-            const newsLinks = [...new Set([...Links.getCategoriesLinks(category, language), ...own, ...others, ...searches, ...directory, ...sentences])];
+            const newsLinks = [...new Set([...Links.getAllLanguagesLinks(category, language), ...own, ...others, ...searches, ...directory, ...sentences])];
 
             if (!Filter.hasOperators(keywords)) {
                 const query = keywords.join(' ').trim();
                 // Google News is asked the sentence at once, while our feeds are searched
                 const asked = webSearch(query, timeframe, language).catch(() => null);
-                const found = await NewsService.searchByMeaning({query, feedUrls: newsLinks, timeframe});
+                const found = await NewsService.searchByMeaning({query, feedUrls: newsLinks, timeframe, language});
                 // enough answers: its news are still read, for the next searches, nobody waits for them
                 if (found.news.filter(card => card.match !== 'related').length >= WEB_MIN_ANSWERS) return found;
 
                 // few answers: the subject is one no feed of ours follows, its news are searched with the others
                 const web = await asked;
-                return web ? {...await NewsService.searchByMeaning({query, feedUrls: [...newsLinks, web], timeframe, googleFeed: web}), web: true} : found;
+                return web ? {...await NewsService.searchByMeaning({query, feedUrls: [...newsLinks, web], timeframe, googleFeed: web, language}), web: true} : found;
             }
 
             // 2. search in SQL (the feeds are read in background, see IngestService: nobody waits for them): keywords, excluded keywords (-word) and publication date
@@ -314,7 +323,7 @@ export const NewsService = {
     // (see search-ai.js). The cards come in its order, the answers first, each with 'match'. Without
     // the AI the closest ones are given, 'checked' false; without the embedder the sentence can't be
     // searched, the reader is told to use exact words.
-    searchByMeaning: async ({query, feedUrls, timeframe = {}, googleFeed = null}) => {
+    searchByMeaning: async ({query, feedUrls, timeframe = {}, googleFeed = null, language = null}) => {
         let vector;
         try {
             [vector] = await embed([query]);
@@ -332,6 +341,7 @@ export const NewsService = {
             byWords: BY_WORDS,
             givenFeeds: googleFeed ? [googleFeed] : [],
             byGiven: googleFeed ? BY_GOOGLE : 0,
+            language,
         });
         if (candidates.length === 0) return {totalResults: 0, news: [], wider: null, mode: 'meaning', checked: true};
 

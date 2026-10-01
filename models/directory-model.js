@@ -13,13 +13,13 @@ import {prisma} from '../config/db.js';
 const GOOGLE_FEEDS = 'https://news.google.com/%';
 
 export const DirectoryModel = {
-    // the feeds a search of these categories reads in this language: those of a medium on everything
-    // (no category) too
-    feedUrls: async (categories, language) => (await prisma.directory_feeds.findMany({
+    // the feeds a search of these categories reads in this language (every language without one): those
+    // of a medium on everything (no category) too
+    feedUrls: async (categories, language = null) => (await prisma.directory_feeds.findMany({
         where: {
             AND: [
                 {OR: [{category: null}, {category: {in: categories}}]},
-                {OR: [{language}, {language: null}]},
+                ...(language ? [{OR: [{language}, {language: null}]}] : []),
             ],
         },
         select: {url: true},

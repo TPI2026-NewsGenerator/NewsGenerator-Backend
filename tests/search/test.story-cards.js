@@ -38,6 +38,7 @@ const {NewsService} = await import('../../services/news-service.js');
 const {FeedModel} = await import('../../models/feed-model.js');
 const {sortByMeaning} = await import('../../services/utils/search-ai.js');
 const {searchesOfCategories} = await import('../../services/ingest-service.js');
+const {default: Links} = await import('../../services/utils/links.js');
 
 const article = (id, host, title, story, thread = null) => ({
     id, id_story: story, id_thread: thread, title, link: `https://${host}/news/${id}`, description: '', thumbnail: null,
@@ -78,7 +79,7 @@ describe('the cards of a search by words', () => {
         expect(news[2].corroboration).toEqual({media: 2, wordings: 1});
     });
 
-    it('should read the feeds of the reader and the ones of the others not private, in the language of the search', async () => {
+    it('should read the feeds of the reader and the ones of the others not private, of every language', async () => {
         FeedModel.searchArticles.mockResolvedValue([]);
         FeedModel.userFeedUrls.mockResolvedValue(['https://own.test/rss']);
         FeedModel.publicFeedUrls.mockResolvedValue(['https://found.test/rss', 'https://own.test/rss']);
@@ -86,12 +87,19 @@ describe('the cards of a search by words', () => {
 
         await NewsService.getNews({keywords: ['"legal"'], category: ['sport'], userId: 7, language: 'fr'});
 
-        expect(FeedModel.userFeedUrls).toHaveBeenCalledWith(7, ['sport'], 'fr');
-        expect(FeedModel.publicFeedUrls).toHaveBeenCalledWith(['sport'], 'fr');
-        expect(searchesOfCategories).toHaveBeenCalledWith(['sport'], 'fr');
+        expect(FeedModel.userFeedUrls).toHaveBeenCalledWith(7, ['sport']);
+        expect(FeedModel.publicFeedUrls).toHaveBeenCalledWith(['sport']);
+        expect(searchesOfCategories).toHaveBeenCalledWith(['sport']);
         const read = FeedModel.searchArticles.mock.calls[0][0].feedUrls;
         expect(read.filter(url => url === 'https://own.test/rss')).toHaveLength(1);
         expect(read).toEqual(expect.arrayContaining(['https://found.test/rss', 'https://news.google.com/rss/search?q=cartes']));
+        // the shared feeds of sport in French and in the other languages
+        expect(read).toEqual(expect.arrayContaining([...Links.getCategoriesLinks(['sport'], 'fr'), ...Links.getCategoriesLinks(['sport'], 'de')]));
+    });
+
+    it('should refuse a category the language searched has not', async () => {
+        await expect(NewsService.getNews({keywords: ['"legal"'], category: ['knitting'], language: 'fr'}))
+            .rejects.toMatch(/None of theses categories were found/);
     });
 });
 

@@ -68,7 +68,7 @@ export const FeedModel = {
         return prisma.$queryRawUnsafe(`
             SELECT a.id, a.id_feed, a.link, a.title, a.description, a.thumbnail, a.category,
                    a.published_at, a.created_at, a.topic, a.summary, a.sourcing, a.id_story, s.id_thread,
-                   a.source_url, a.resolved_link, a.medium
+                   a.source_url, a.resolved_link, a.medium, a.lang
             FROM articles a
             JOIN feeds f ON f.id = a.id_feed
             LEFT JOIN stories s ON s.id = a.id_story
@@ -84,14 +84,20 @@ export const FeedModel = {
     // byWords with the most words of it (the sparse vector alone), which keeps the news naming what the
     // sentence names when their meaning is further. dense, sparse: the vectors of the sentence as
     // pgvector reads them (toVector, toSparsevec). The news without vectors yet are not found.
-    // givenFeeds: feeds whose byGiven closest news are always among them, whatever the others
-    closestArticles: async ({feedUrls, timeframe = {}, dense, sparse, sparseWeight, byMeaning, byWords, givenFeeds = [], byGiven = 0}) => prisma.$queryRawUnsafe(`
+    // givenFeeds: feeds whose byGiven closest news are always among them, whatever the others.
+    // language: the news in it and the news in the other languages each get byMeaning and byWords:
+    // taken together, the news of every language buried the ones of the language searched (the two
+    // French answers of "les décisions d'arbitrage et la VAR en Ligue des champions" were left out
+    // among the English ones, bench/search-languages.mjs)
+    closestArticles: async ({feedUrls, timeframe = {}, dense, sparse, sparseWeight, byMeaning, byWords, givenFeeds = [], byGiven = 0, language = null}) => prisma.$queryRawUnsafe(`
         WITH candidates AS (
             SELECT a.id, a.id_feed, a.link, a.title, a.description, a.thumbnail, a.category,
                    a.published_at, a.created_at, a.topic, a.summary, a.sourcing, a.id_story, s.id_thread,
-                   a.source_url, a.resolved_link, a.medium,
+                   a.source_url, a.resolved_link, a.medium, a.lang,
                    -(a.text_dense <#> $4::halfvec) - $6::real * (a.text_sparse <#> $5::sparsevec) AS score,
-                   -(a.text_sparse <#> $5::sparsevec) AS words
+                   -(a.text_sparse <#> $5::sparsevec) AS words,
+                   COALESCE(a.lang = $11::text, $11::text IS NULL) AS searched_language,
+                   a.id_feed IN (SELECT id FROM feeds WHERE url = ANY($9::text[])) AS given
             FROM articles a
             JOIN feeds f ON f.id = a.id_feed
             LEFT JOIN stories s ON s.id = a.id_story
@@ -99,15 +105,19 @@ export const FeedModel = {
               AND a.embedded_at IS NOT NULL
               AND ($2::timestamptz IS NULL OR COALESCE(a.published_at, a.created_at) >= $2::timestamptz)
               AND ($3::timestamptz IS NULL OR COALESCE(a.published_at, a.created_at) <= $3::timestamptz)
+        ), ranked AS (
+            SELECT *,
+                   row_number() OVER (PARTITION BY searched_language ORDER BY score DESC) AS by_meaning,
+                   row_number() OVER (PARTITION BY searched_language ORDER BY words DESC) AS by_words,
+                   row_number() OVER (PARTITION BY given ORDER BY score DESC) AS by_given
+            FROM candidates
         )
-        SELECT * FROM (SELECT * FROM candidates ORDER BY score DESC LIMIT $7::int) closest
-        UNION
-        SELECT * FROM (SELECT * FROM candidates ORDER BY words DESC LIMIT $8::int) named
-        UNION
-        SELECT * FROM (SELECT * FROM candidates WHERE id_feed IN (SELECT id FROM feeds WHERE url = ANY($9::text[]))
-                       ORDER BY score DESC LIMIT $10::int) given
+        SELECT id, id_feed, link, title, description, thumbnail, category, published_at, created_at, topic,
+               summary, sourcing, id_story, id_thread, source_url, resolved_link, medium, lang, score, words
+        FROM ranked
+        WHERE by_meaning <= $7::int OR by_words <= $8::int OR (given AND by_given <= $10::int)
         ORDER BY score DESC`,
-        feedUrls, timeframe.start ?? null, timeframe.end ?? null, dense, sparse, sparseWeight, byMeaning, byWords, givenFeeds, byGiven),
+        feedUrls, timeframe.start ?? null, timeframe.end ?? null, dense, sparse, sparseWeight, byMeaning, byWords, givenFeeds, byGiven, language),
     // The other facts of these threads (db/add_threads.sql), for the search to show an affair whole:
     // the articles of these feeds in the stories of the threads, whatever their date, the stories
     // already found left out. At most maxStories stories per thread, the closest in time to the ones
@@ -128,7 +138,7 @@ export const FeedModel = {
         SELECT * FROM (
             SELECT a.id, a.id_feed, a.link, a.title, a.description, a.thumbnail, a.category,
                    a.published_at, a.created_at, a.topic, a.summary, a.sourcing, a.id_story, facts.id_thread,
-                   a.source_url, a.resolved_link, a.medium,
+                   a.source_url, a.resolved_link, a.medium, a.lang,
                    row_number() OVER (PARTITION BY a.id_story ORDER BY COALESCE(a.published_at, a.created_at) DESC) AS n
             FROM facts
             JOIN articles a ON a.id_story = facts.id
@@ -337,13 +347,13 @@ export const FeedModel = {
         WHERE a.source_url IS NULL AND a.medium IS NOT NULL
           AND f.url NOT LIKE 'https://news.google.com/%'`)).map(row => row.medium),
     // the feeds of every user a search may read: the ones found for a profile and the ones their reader
-    // shares, of these categories and this language (or of a language not known). A feed added by hand
-    // and not shared stays its reader's
-    publicFeedUrls: async (categories, language) => (await prisma.user_feeds.findMany({
+    // shares, of these categories and this language (or of a language not known; every language without
+    // one). A feed added by hand and not shared stays its reader's
+    publicFeedUrls: async (categories, language = null) => (await prisma.user_feeds.findMany({
         where: {
             category: { in: categories },
             OR: [{ origin: 'profile' }, { shared: true }],
-            AND: [{ OR: [{ language }, { language: null }] }],
+            ...(language ? { AND: [{ OR: [{ language }, { language: null }] }] } : {}),
         },
         select: { url: true },
         distinct: ['url'],

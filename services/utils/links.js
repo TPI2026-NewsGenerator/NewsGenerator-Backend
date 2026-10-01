@@ -51,6 +51,16 @@ const Links = {
         newsLinks = newsLinks.flat();
 
         return newsLinks;
+    },
+
+    // feeds of these categories in every language: a search reads them all, the language chosen is
+    // the one it is shown in. The categories are checked against 'language' (see getCategoriesLinks)
+    getAllLanguagesLinks(category, language = DEFAULT_LANGUAGE) {
+        Links.getCategoriesLinks(category, language);
+        return Links.languages().flatMap(other => {
+            const known = category.filter(c => c.toLowerCase() in rss[other]);
+            return known.length > 0 ? Links.getCategoriesLinks(known, other) : [];
+        });
     }
 }
 

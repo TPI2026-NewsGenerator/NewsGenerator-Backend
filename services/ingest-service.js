@@ -152,26 +152,28 @@ const dueSearches = async () => {
     return FeedModel.dueFeeds(urls, new Date(Date.now() - GOOGLE_EVERY_MINUTES * 60e3), MAX_GOOGLE_PER_RUN);
 };
 
-// the searches of Google News of every reader in this language, for interests of these categories (or
-// of none): they say which subjects are followed, never by whom, and a search reads them
-export const searchesOfCategories = async (categories, language) => GOOGLE_ENABLED()
+// the searches of Google News of every reader in this language (every language without one), for
+// interests of these categories (or of none): they say which subjects are followed, never by whom,
+// and a search reads them
+export const searchesOfCategories = async (categories, language = null) => GOOGLE_ENABLED()
     ? [...new Set((await ProfileModel.searchesOf())
         .filter(({category}) => !category || categories.includes(category))
-        .flatMap(({searches, languages}) => interestSearchUrls(searches, languages.filter(read => read === language))))]
+        .flatMap(({searches, languages}) => interestSearchUrls(searches, languages.filter(read => !language || read === language))))]
     : [];
 
-// The feeds of Google News of the sentences searched in this language, during the retention: Google
+// The feeds of Google News of the sentences searched in this language (every language without one),
+// during the retention: Google
 // News is asked every sentence (see NewsService.getNews), and its news are read by every search after,
 // as the searches of the profiles, never saying who searched. The searches of the profiles are left
 // out: searchesOfCategories gives them, of the categories asked
-export const sentenceFeeds = async (language) => {
+export const sentenceFeeds = async (language = null) => {
     if (!GOOGLE_ENABLED()) return [];
     const [read, profiles] = await Promise.all([
         FeedModel.googleSearchFeeds(new Date(Date.now() - RETENTION_DAYS * 24 * 3600e3)),
         ProfileModel.searchesOf(),
     ]);
     const ofProfiles = new Set(profiles.flatMap(({searches, languages}) => interestSearchUrls(searches, languages)));
-    return read.filter(url => !ofProfiles.has(url) && languageOfSearch(url) === language);
+    return read.filter(url => !ofProfiles.has(url) && (!language || languageOfSearch(url) === language));
 };
 
 // the searches of Google News of one reader, read with the sources just found for them

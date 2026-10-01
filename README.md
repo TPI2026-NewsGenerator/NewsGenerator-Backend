@@ -242,20 +242,22 @@ Optional variables in `.env`:
 ### How a search works
 
 1. The feeds of `db/rss-links.js` are grouped by language, then by category (world, press, sport,
-   politics, economy, technology, science). The user chooses the language and the categories, that
-   is the first filter. There are 415 feeds: 335 in English, 25 in French, 20 in Spanish, 20 in
-   German, 15 in Italian. A search never mixes two languages, and one in French has no reason to
-   read the English sources.
+   politics, economy, technology, science). The user chooses the categories, that is the first
+   filter, and the language the cards are **shown** in. There are 415 feeds: 335 in English, 25 in
+   French, 20 in Spanish, 20 in German, 15 in Italian. A search reads the feeds of **every language**:
+   read in the language searched only, a reader with sources in 34 languages found 4 news for
+   "Schiedsrichter im Fußball" and 28 in the languages of their profile, 11 and 28 for "les
+   désignations d'arbitres" (`bench/search-languages.mjs`).
 2. A search fetches no feed: it only reads the `articles` table, filled in background (see
-   **Background work** above), so nobody waits for a feed. Besides the shared feeds of the language
-   and categories chosen, a search reads the sources of the readers that are not private, of that
-   language and those categories (`FeedModel.publicFeedUrls`, `searchesOfCategories`):
+   **Background work** above), so nobody waits for a feed. Besides the shared feeds of the categories
+   chosen, a search reads the sources of the readers that are not private, of every language and
+   those categories (`FeedModel.publicFeedUrls`, `searchesOfCategories`):
    - the sources of the user searching, those they added by hand included;
    - the feeds found for the profile of any reader, and the ones a reader chose to share;
    - the searches of Google News of the interests of every profile. They say which subjects are
      followed, never by whom;
-   - the feeds of the directory of the project, found by the server itself, of that language and of
-     those categories or of none (see **The directory** below).
+   - the feeds of the directory of the project, found by the server itself, of those categories or of
+     none (see **The directory** below).
 
    A source added by hand and not shared stays its reader's: nobody else searches it. Measured for
    one reader (`bench/pool-sources.mjs`, French, 30 days): "cartes Pokémon" found 1 news in the shared
@@ -272,7 +274,9 @@ Optional variables in `.env`:
      news of the chosen feeds and timeframe that have their vectors, the **80 closest** (dense + 0.5 ×
      sparse, as the briefing ranks the news of an interest) and the **30 with the most of its words**
      (the sparse vector alone), which keeps the news naming what the sentence names when their meaning
-     is further. The AI then reads their titles and the start of their descriptions, each title once,
+     is further. The news in the language searched and the news in the others each get their 80 and
+     30: taken together, the news of every language buried the ones of the language searched (the two
+     French answers of "les décisions d'arbitrage et la VAR en Ligue des champions" were left out). The AI then reads their titles and the start of their descriptions, each title once,
      and sorts them into two lists (`services/utils/search-ai.js`): the **answers** to the sentence, and
      the news that are only **related** to it (another place, another aspect). The cards come in its
      order, the answers first, and the news in no list are left out.
@@ -300,8 +304,9 @@ Optional variables in `.env`:
        "the Swiss chocolate industry" from 0 to 11. A subject Google has nothing on either stays with
        little ("les vendanges en Valais"). Such a search takes 5 to 11 seconds instead of 2 to 5.
      - Otherwise the search answers at once, and Google's news join the database for the searches after
-       it: every search reads the feeds of Google News of the sentences searched in its language during
-       the retention, as it reads the searches of the profiles. Asked only for the searches answering
+       it: every search reads the feeds of Google News of the sentences searched during the retention,
+       in every language, as it reads the searches of the profiles. Google is asked in the language
+       searched. Asked only for the searches answering
        little, 40% of Google's first 30 news were in none of our feeds (01.10.2026), all of them from
        the 8 searches it was not asked.
 
@@ -640,7 +645,7 @@ read, through a section their feeds miss (the health of nbcnews.com, the mission
 thirds from media we did not read at all. Google publishes no list of its sources, and the paid lists
 (Feeder, NewsAPI...) are only readers of feeds, or send the searches of our readers to someone else.
 So the server grows a directory of its own (`services/directory-service.js`, `db/add_directory.sql`),
-read by every search of its language, from two things it already has:
+read by every search, from two things it already has:
 
 - **the media Google News names** at least 3 times in 30 days in the searches the server reads: those of
   the profiles (see **Google News** below), and the sentences a search asked it (medicaldaily.com came

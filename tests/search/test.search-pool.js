@@ -39,6 +39,16 @@ describe('searchesOfCategories', () => {
     });
 });
 
+describe('searchesOfCategories of every language', () => {
+    it('should give the searches of every language of the readers', async () => {
+        const urls = await searchesOfCategories(['technology']);
+
+        expect(urls.some(url => url.includes('hl=fr'))).toBe(true);
+        expect(urls.some(url => url.includes('hl=en'))).toBe(true);
+        expect(urls.map(url => new URL(url).searchParams.get('q')).some(q => /arbitrage/.test(q))).toBe(false);
+    });
+});
+
 describe('sentenceFeeds', () => {
     it('should give the sentences searched in the language asked, not the searches of the profiles', async () => {
         const [profile] = await searchesOfCategories(['technology'], 'fr');
@@ -49,5 +59,14 @@ describe('sentenceFeeds', () => {
         expect(await sentenceFeeds('fr')).toEqual([french]);
         const [[since]] = FeedModel.googleSearchFeeds.mock.calls;
         expect(Date.now() - since.getTime()).toBeGreaterThan(29 * 24 * 3600e3);
+    });
+
+    it('should give the sentences of every language without one', async () => {
+        const [profile] = await searchesOfCategories(['technology'], 'fr');
+        const french = sentenceUrl("les prix de l'immobilier en Suisse", {days: 7, language: 'fr'});
+        const english = sentenceUrl('measles outbreaks', {days: 7, language: 'en'});
+        FeedModel.googleSearchFeeds.mockResolvedValueOnce([profile, french, english]);
+
+        expect(await sentenceFeeds()).toEqual([french, english]);
     });
 });

@@ -107,7 +107,8 @@ describe('a sentence our feeds answer little', () => {
 
         await search();
 
-        expect(sentenceFeeds).toHaveBeenCalledWith('en');
+        // of every language: the language chosen is the one the cards are shown in
+        expect(sentenceFeeds).toHaveBeenCalledWith();
         expect(feedsRead(0)).toContain(before);
     });
 
@@ -147,14 +148,38 @@ describe('a sentence our feeds answer little', () => {
     });
 });
 
-describe('the feeds of the directory', () => {
-    it('should be read by a search, of its categories and language', async () => {
+describe('the languages of a search', () => {
+    it('should give the news in the language searched their own share of the candidates', async () => {
         FeedModel.closestArticles.mockResolvedValueOnce([1, 2, 3, 4, 5].map(article));
         sortByMeaning.mockImplementationOnce(answering(5));
 
         await search();
 
-        expect(DirectoryModel.feedUrls).toHaveBeenCalledWith(['science'], 'en');
+        expect(FeedModel.closestArticles.mock.calls[0][0].language).toBe('en');
+    });
+
+    it('should tell the language of each card, read from its text when it got no vectors', async () => {
+        FeedModel.closestArticles.mockResolvedValueOnce([
+            {...article(1), lang: 'de'},
+            {...article(2), title: 'Les cas de rougeole augmentent dans le canton', description: 'Les autorités sanitaires du canton appellent à se faire vacciner contre la rougeole.'},
+            ...[3, 4, 5].map(id => ({...article(id), lang: 'en'})),
+        ]);
+        sortByMeaning.mockImplementationOnce(answering(5));
+
+        const {news} = await search();
+
+        expect(news.map(card => card.language)).toEqual(['de', 'fr', 'en', 'en', 'en']);
+    });
+});
+
+describe('the feeds of the directory', () => {
+    it('should be read by a search, of its categories and every language', async () => {
+        FeedModel.closestArticles.mockResolvedValueOnce([1, 2, 3, 4, 5].map(article));
+        sortByMeaning.mockImplementationOnce(answering(5));
+
+        await search();
+
+        expect(DirectoryModel.feedUrls).toHaveBeenCalledWith(['science']);
         expect(feedsRead(0)).toContain('https://www.nbcnews.com/health/rss');
     });
 });

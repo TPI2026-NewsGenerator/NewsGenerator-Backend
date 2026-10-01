@@ -78,8 +78,8 @@ export const NewsController = {
             timeframeDates[bound] = date;
         }
 
-        // a search reads the sources of one language, the categories of db/rss-links.js are filed
-        // under it: asking for a language we have no source for gives nothing, so it is refused here
+        // a search reads the sources of every language and shows its cards in this one, the categories
+        // of db/rss-links.js are filed under it: a language we have no source for is refused here
         const searched = language || 'en';
         if (!FeedService.languages().includes(searched)) {
             const err = new Error(`No source in "${searched}" yet. Available: ${FeedService.languages().join(', ')}.`);
