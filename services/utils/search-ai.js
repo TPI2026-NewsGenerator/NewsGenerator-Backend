@@ -30,17 +30,26 @@ const DESCRIPTION_CHARS = 160;      // the start of the description read with th
 // Switzerland as close only. Told that the words count for their meaning, not their form, the AI
 // still did; told that a word only in a name does not count either, it left the evening out 5 times
 // in 5 and answered the rents, with no change on the 14 other sentences (bench/meaning-sense.mjs).
+// Asked for two lists, the AI kept them short once Google News doubled the candidates: 8 answers of
+// 82 news on forest fires ("98 000 hectares burned" close only), 6 of 29 on Taylor Swift, and
+// another split each time (bench/split.mjs, 17 sentences asked 2 or 3 times). Asked a verdict for
+// each article in the order given, it answered 77 of the fires and 79 of Taylor Swift, the same each
+// time, but called close anything of the same field (52 news of rugby or other leagues for "video
+// refereeing in Ligue 1", 5 before), and writing a verdict for all of them took 9 to 14 s instead of
+// 2. Written only for the articles concerning the search, prudent when in doubt, the verdicts kept
+// the answers (78 of the fires, 79 of Taylor Swift), 14 close for Ligue 1, for 0.4 to 2.3 s more.
+// The answers come in the order of the candidates, the closest in meaning first.
 export const searchPrompt = (query, candidates) => `Un lecteur cherche des nouvelles avec cette phrase : """${query}"""
 
 Voici des articles, chacun avec son identifiant entre crochets :
 ${candidates.map(c => `[${c.id}] ${c.title}${c.description ? ` — ${c.description}` : ''}`).join('\n')}
 
-Classe les articles qui concernent sa recherche en deux listes, chacune du plus au moins pertinent :
-- "answers" : ceux qui répondent à sa phrase, même avec d'autres mots (un synonyme, une partie ou un cas particulier du sujet répondent aussi). Quand sa phrase précise quelque chose (une personne, une organisation, un lieu, une période, un aspect), l'article en parle.
-- "related" : ceux qui parlent directement du même sujet sans répondre à toute sa phrase (une autre précision, un autre lieu, un autre aspect).
-Les autres articles, qui touchent seulement le même domaine, ne sont dans aucune liste. Les mots de sa phrase comptent pour leur sens, pas pour leur forme : un article qui les emploie dans un autre sens, ou seulement dans un nom (d'une récompense, d'un événement, d'une œuvre, d'une organisation), ne la concerne pas. Ce que sa phrase exclut n'est dans aucune liste, même quand l'article touche le sujet.
-Juge seulement sur le titre et la description.
-Réponds uniquement en JSON : {"answers": ["identifiant", ...], "related": ["identifiant", ...]}`;
+Pour chaque article, dis s'il concerne sa recherche :
+- "reponse" : il répond à sa phrase, même avec d'autres mots (un synonyme, une partie ou un cas particulier du sujet répondent aussi). Quand sa phrase précise quelque chose (une personne, une organisation, un lieu, une période, un aspect), l'article en parle.
+- "proche" : il parle directement du même sujet sans répondre à toute sa phrase (une autre précision, un autre lieu, un autre aspect).
+- "non" : il touche seulement le même domaine, ou parle d'autre chose. Les mots de sa phrase comptent pour leur sens, pas pour leur forme : un article qui les emploie dans un autre sens, ou seulement dans un nom (d'une récompense, d'un événement, d'une œuvre, d'une organisation), est "non". Ce que sa phrase exclut est "non", même quand l'article touche le sujet.
+Juge chaque article pour lui-même, seulement sur son titre et sa description. Dans le doute entre "proche" et "non", réponds "non".
+Parcours les articles dans l'ordre donné, mais n'écris que ceux qui sont "reponse" ou "proche" : les autres sont "non". Réponds uniquement en JSON : {"avis": [{"id": "identifiant", "avis": "reponse"}, ...]}`;
 
 // the ids of the answers and of the news close to them, only among the ones given, each once
 export const normalizeSorting = (answer, knownIds) => {
@@ -55,6 +64,15 @@ export const normalizeSorting = (answer, knownIds) => {
     return {answers, related: pick(answer?.related)};
 };
 
+// the verdicts of the AI ({"avis": [{id, avis}]}) as the two lists: "reponse" the answers, "proche"
+// the close ones, in the order written. "réponse" with its accent and "Reponse" count too
+export const readVerdicts = (answer, knownIds) => {
+    const verdicts = Array.isArray(answer?.avis) ? answer.avis : [];
+    const kind = (verdict) => String(verdict?.avis ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const of = (word) => verdicts.filter(verdict => kind(verdict).startsWith(word)).map(verdict => verdict?.id);
+    return normalizeSorting({answers: of('rep'), related: of('proche')}, knownIds);
+};
+
 // candidates: [{id, title, description}] -> {answers: [id], related: [id]}. Asked once more when the
 // AI does not answer in JSON (1 search in 13 of the bench)
 export const sortByMeaning = async (query, candidates, usage = null) => {
@@ -64,5 +82,5 @@ export const sortByMeaning = async (query, candidates, usage = null) => {
         description: (description ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, DESCRIPTION_CHARS),
     })));
     const answer = await ollamaJson(prompt, usage).catch(() => ollamaJson(prompt, usage));
-    return normalizeSorting(answer, candidates.map(c => c.id));
+    return readVerdicts(answer, candidates.map(c => c.id));
 };
