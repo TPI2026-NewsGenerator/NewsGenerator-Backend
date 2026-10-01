@@ -624,6 +624,36 @@ const options = {
                     }
                 }
             },
+            "/news/translations": {
+                "post": {
+                    "tags": ["News"],
+                    "summary": "The news found, translated into the language of the search",
+                    "description": "A search reads every language: the client asks for the cards the reader reaches. The titles and descriptions of 'news', and the titles only of 'titles' (the facts of an affair), are translated by the AI when they are written in another language than 'language'. Only news of the cache. A translation that lost a figure of its text is not given; a text is translated once per language.",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "news": {"type": "array", "maxItems": 30, "items": {"type": "string", "format": "uri"}},
+                                        "titles": {"type": "array", "maxItems": 60, "items": {"type": "string", "format": "uri"}},
+                                        "language": {"type": "string", "enum": ["en", "fr", "es", "de", "it"], "example": "fr"}
+                                    },
+                                    "required": ["language"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "{translations: [{url, language, title, description}]}: only the news with a translation; language is the one they are written in, description null when not asked or not translated."
+                        },
+                        "400": {"description": "No url, too many, an url not found in the news cache, or an unknown language"},
+                        "403": {"description": "Invalid or expired token"}
+                    }
+                }
+            },
             "/customsearch": {
                 "get": {
                     "tags": ["Custom searches"],
@@ -806,7 +836,7 @@ const options = {
                         },
                         "language": {
                             "type": "string",
-                            "description": "ISO 639-1 language code. A search never mixes two languages: only the feeds of this language are read. GET /news/categories answers the ones that have sources.",
+                            "description": "ISO 639-1 language code of the language the cards are shown in. A search reads the feeds of every language; a sentence gets its candidates from the news in this language and from the news in the others, each its own share. The cards in another language carry it (language), POST /news/translations gives their translation. GET /news/categories answers the ones that can be chosen.",
                             "enum": ["en", "fr", "es", "de", "it"],
                             "example": "en",
                             "default": "en"
@@ -880,7 +910,12 @@ const options = {
                         },
                         "lang": {
                             "type": "string",
-                            "description": "News language."
+                            "description": "News language, read on its page (only in POST /news/content)."
+                        },
+                        "language": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "The language the news is written in (POST /news): another one than the language searched is translated with POST /news/translations."
                         },
                         "description": {
                             "type": "string",

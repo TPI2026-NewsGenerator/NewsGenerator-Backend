@@ -183,6 +183,33 @@ export const translatePassages = async (passages, from, to, usage = null) => {
     return null;
 };
 
+const textsPrompt = (texts, to) => `Translate these titles and descriptions of news articles into ${to}. Each one
+says its language between parentheses before it.
+Translate each one faithfully and completely: the same facts, the same figures, the same names, the
+same certainty (may, reportedly, alleged, planned), nothing added and nothing left out. Names of
+people, organisations and places stay as they are. A text cut at its end stays cut.
+
+${texts.map(({text, from}, i) => `[${i + 1}] (${from}) ${text}`).join('\n')}
+
+Answer only in JSON: {"translations": ["...", one per text, in the same order]}`;
+
+// Titles and descriptions of several languages translated into 'to' (a language name) in one call:
+// texts [{text, from}], 'from' a language name. Answers one translation per text, null for one that
+// dropped a figure; all null when the AI does not answer one per text, asked once more first
+export const translateTexts = async (texts, to, usage = null) => {
+    for (let attempt = 0; attempt < 2; attempt++) {
+        const answer = await ollamaJson(textsPrompt(texts, to), usage).catch(() => null);
+        const translations = answer?.translations;
+        if (!Array.isArray(translations) || translations.length !== texts.length) continue;
+        return texts.map(({text}, i) => {
+            // the AI often writes the number of the text again, its language sometimes: "[1] (German) ..."
+            const translation = typeof translations[i] === 'string' ? translations[i].replace(/^\s*\[\d+\]\s*(?:\([^)]*\)\s*)?/, '').trim() : '';
+            return translation && keepsFigures(text, translation) ? translation : null;
+        });
+    }
+    return texts.map(() => null);
+};
+
 // The language of passages and their translation for a reader of 'language' (a code), null when they
 // are in that language already or could not be translated safely: {from, translation}
 export const translationFor = async (passages, language, usage = null, fallback = null) => {

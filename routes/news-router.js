@@ -26,5 +26,7 @@ router.get('/categories', NewsController.getCategories);
 router.post('/content', authenticateToken, NewsController.getNewsContent);
 // AI resume of the news selected by the user (10 max)
 router.post('/summary', authenticateToken, NewsController.getNewsSummary);
+// titles and descriptions of the news found, translated into the language of the search
+router.post('/translations', authenticateToken, NewsController.translateNews);
 
 export default router;

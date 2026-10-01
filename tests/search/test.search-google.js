@@ -34,6 +34,7 @@ jest.unstable_mockModule('../../services/utils/extract.js', () => ({
     extractArticle: jest.fn(async () => ({passages: ['La phrase.'], translation: null, topic: 'jeux', sourcing: 'named'})),
     passagesText: (passages) => passages?.join('\n') ?? null,
     translationFor: jest.fn(),
+    translateTexts: jest.fn(),
 }));
 jest.unstable_mockModule('../../services/utils/google-news.js', () => ({
     decodeLinks: jest.fn(async (links) => new Map(links.map(link => [link, 'https://www.numerama.com/cartes-pokemon']))),

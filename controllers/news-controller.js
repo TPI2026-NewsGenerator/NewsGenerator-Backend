@@ -10,6 +10,10 @@
 import {NewsService, MAX_SELECTED_NEWS, MAX_STORY_ARTICLES} from '../services/news-service.js';
 import {FeedService} from '../services/feed-service.js';
 
+// the cards and the facts of their affairs translated in one request, as the reader reaches them
+const MAX_TRANSLATED_NEWS = 30;
+const MAX_TRANSLATED_TITLES = 60;
+
 // validate the urls of the selected news, then answer with the result of 'serviceFn'
 const respondWithSelectedNews = async (req, res, serviceFn) => {
     const {urls} = req.body;
@@ -117,6 +121,25 @@ export const NewsController = {
 
     getNewsContent: async (req, res) => {
         await respondWithSelectedNews(req, res, NewsService.getNewsContent);
+    },
+
+    // body: {news: [url], titles: [url], language}: the cards the reader reaches, their title and
+    // description translated, and the facts of their affairs, their title only
+    translateNews: async (req, res) => {
+        const {news = [], titles = [], language} = req.body;
+        const urls = (list, max) => Array.isArray(list) && list.length <= max && list.every(url => typeof url === 'string');
+        if (!urls(news, MAX_TRANSLATED_NEWS) || !urls(titles, MAX_TRANSLATED_TITLES) || news.length + titles.length === 0) {
+            return res.status(400).json({error: `Up to ${MAX_TRANSLATED_NEWS} news and ${MAX_TRANSLATED_TITLES} titles at once.`});
+        }
+        if (typeof language !== 'string' || !FeedService.languages().includes(language)) {
+            return res.status(400).json({error: `Unknown language: ${language}`});
+        }
+
+        try {
+            res.status(200).json({translations: await NewsService.translateNews({news, titles, language})});
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? error});
+        }
     },
 
     // body: {stories: [{urls}], language}, the cards chosen with their articles, the lead first.

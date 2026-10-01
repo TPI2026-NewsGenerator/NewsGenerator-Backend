@@ -321,7 +321,12 @@ Optional variables in `.env`:
    than five news, the wider search asking for *any* of the words is counted and **offered**, not
    done — widening `"red card"` on its own would answer everything about red or about card. See
    `canWiden` and `widen` in `services/utils/filter.js`.
-4. News telling the same story are grouped: one card, with the other sources listed under it. The
+4. The cards written in another language than the one searched carry their language, and their title
+   and description are translated by the AI when the reader reaches them (`POST /news/translations`,
+   `NewsService.translateNews`): 20 texts per call, each figure checked as in the key passages, a text
+   translated once per language. The card says it is a machine translation and shows the text as
+   written on demand.
+5. News telling the same story are grouped: one card, with the other sources listed under it. The
    list of a search is grouped here, with the trigrams of the titles; the briefing reads the stories
    built in background with the vectors instead (see **How the groups are built** below). An
    article joins the group it resembles **on average** above **0.25** of trigram similarity — under
@@ -339,8 +344,8 @@ Optional variables in `.env`:
    result and the reactions are three facts, shown under the card in their order, with the facts of
    the affair the search did not find, read from the feeds of this user only. Each fact can be chosen
    for its key passages.
-5. Each card says what the grouping measured, and nothing more (see **Corroboration** below).
-6. A user can add their own sources (`POST /api/feeds` with a site address): the server finds the
+6. Each card says what the grouping measured, and nothing more (see **Corroboration** below).
+7. A user can add their own sources (`POST /api/feeds` with a site address): the server finds the
    RSS feed of the site and checks it answers. These sources are **private**, they are only used in
    the searches of this user, unless they share them. Addresses of private networks are refused, see `services/utils/public-url.js`.
    500 at most (`MAX_USER_FEEDS`): a reader's list of the football media of Europe had 180 feeds,
@@ -364,9 +369,9 @@ Optional variables in `.env`:
 
    On 30 media that searches were missing, 17 publish a feed, 6 more are reached by step 4, and 7
    answer 401 or 403 to any server and stay out of reach (Reuters, AP, Man City).
-7. The media the search missed are named to the user, so the list of sources grows from what the
+8. The media the search missed are named to the user, so the list of sources grows from what the
    searches actually lacked (see **Missing sources** below).
-8. The pages are read and the AI is called **only** on the cards selected by the user
+9. The pages are read and the AI is called **only** on the cards selected by the user
    (`NewsService.summarizeStories`, at most 10 cards). Up to 5 articles of each card are read, one per
    medium and a source the reader trusts first: their texts say how many were written apart from the
    others (no AI, see **Corroboration** below). The first one that can be read in full gives the

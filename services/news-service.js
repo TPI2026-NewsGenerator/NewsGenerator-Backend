@@ -12,8 +12,8 @@ import Links from "./utils/links.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {Filter} from "./utils/filter.js";
 import {FeedModel} from "../models/feed-model.js";
-import {canSummarize, extractArticle, passagesText, translationFor} from "./utils/extract.js";
-import {languageOf} from "./utils/language.js";
+import {canSummarize, extractArticle, passagesText, translateTexts, translationFor} from "./utils/extract.js";
+import {languageOf, writtenIn} from "./utils/language.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {averageLink, unionFind} from "./utils/grouping.js";
@@ -65,6 +65,13 @@ const BY_GOOGLE = 40;
 const MEANING_SPARSE_WEIGHT = 0.5;  // as the briefing ranks the news of an interest (rank_stories)
 const UNCHECKED_RESULTS = 30;       // the closest given when the AI does not answer
 
+// A search reads every language and shows its cards in the one chosen: the titles and descriptions in
+// another are translated as the reader reaches them (see translateNews), this many in one call to the
+// AI. A text is translated once per language, whatever the search showing it: the last ones are kept
+const TEXTS_PER_CALL = 20;
+const MAX_KEPT_TRANSLATIONS = 20000;
+const translated = new Map();       // language and text -> its translation, null when it could not be
+
 // a feed built from a page (see feed-bridge.js) gives the whole article as its description, where a
 // published feed gives a few lines. The card only shows the beginning, the whole text stays in the
 // database for the search to read.
@@ -88,7 +95,7 @@ const toNews = (article) => ({
     publishedAt: article.published_at?.toISOString() ?? '',
     title: article.title,
     description: shorten(article.description),
-    // the language it is written in: a search reads every language
+    // the language it is written in, its title shown translated in the one searched (see translateNews)
     language: languageOfArticle(article),
     topic: article.topic,
     // who the article credits for what it reports, answered by the AI with the summary
@@ -246,8 +253,8 @@ export const NewsService = {
             // shared feeds and their own, 10 with the searches of the profile of another reader
             // (bench/pool-sources.mjs). The feeds of the directory too, found by the server itself (see
             // DirectoryService), and the feeds of Google News of the sentences already searched (see
-            // sentenceFeeds). Of every language: the language chosen is the one the cards are shown in.
-            // Read in the language searched only, a search
+            // sentenceFeeds). Of every language: the language chosen is the one the cards are shown in
+            // (their titles translated, see translateNews). Read in the language searched only, a search
             // of a reader with sources in 34 languages found 4 news for "Schiedsrichter im Fußball" and 28
             // in the languages of their profile (bench/search-languages.mjs)
             const [own, others, searches, directory, sentences] = await Promise.all([
@@ -383,6 +390,48 @@ export const NewsService = {
         const news = await withThreads(facts, feedUrls);
 
         return {totalResults: news.length, news, wider: null, mode: 'meaning', checked};
+    },
+
+    // The titles of these news, and the descriptions of the cards ('news'), translated into 'language'
+    // (a code) when they are written in another: [{url, language, title, description}], the language
+    // they were written in, only the news with a translation, a text that lost a figure untranslated.
+    // Only news of the cache: the AI is no translator for any text
+    translateNews: async ({news = [], titles = [], language}) => {
+        const urls = [...new Set([...news, ...titles])];
+        const articles = await NewsService.cachedArticles(urls);
+        const to = writtenIn(language);
+        const withDescription = new Set(news);
+        const wanted = urls.flatMap(url => {
+            const article = articles.get(url);
+            const from = languageOfArticle(article);
+            if (!to || !from || from === language || !writtenIn(from)) return [];
+            const description = withDescription.has(url) ? shorten(article.description) : null;
+            return [{url, from, field: 'title', text: article.title},
+                    ...(description ? [{url, from, field: 'description', text: description}] : [])];
+        });
+
+        const keyOf = (text) => `${language}\n${text}`;
+        const missing = [...new Map(wanted.filter(item => !translated.has(keyOf(item.text)))
+            .map(item => [item.text, {text: item.text, from: writtenIn(item.from)}])).values()];
+        const calls = [];
+        for (let i = 0; i < missing.length; i += TEXTS_PER_CALL) calls.push(missing.slice(i, i + TEXTS_PER_CALL));
+        await mapWithConcurrency(calls, AI_CONCURRENCY, async (texts) => {
+            const translations = await translateTexts(texts, to);
+            texts.forEach(({text}, i) => translated.set(keyOf(text), translations[i]));
+        });
+        for (const key of translated.keys()) {
+            if (translated.size <= MAX_KEPT_TRANSLATIONS) break;
+            translated.delete(key);
+        }
+
+        const byUrl = new Map();
+        for (const {url, from, field, text} of wanted) {
+            const translation = translated.get(keyOf(text));
+            if (!translation) continue;
+            if (!byUrl.has(url)) byUrl.set(url, {url, language: from, title: null, description: null});
+            byUrl.get(url)[field] = translation;
+        }
+        return [...byUrl.values()];
     },
 
     // articles of the cache for these urls, refuses an url that is not in the cache so the API

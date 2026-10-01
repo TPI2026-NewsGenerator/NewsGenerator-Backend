@@ -10,7 +10,7 @@ import {describe, expect, it, jest} from '@jest/globals';
 
 const chat = jest.fn();
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
-const {buildExtract, canSummarize, extractArticle, keepsFigures, passagesText, sentencesOf, splitSentences, translatePassages} =
+const {buildExtract, canSummarize, extractArticle, keepsFigures, passagesText, sentencesOf, splitSentences, translatePassages, translateTexts} =
     await import('../../services/utils/extract.js');
 const {newUsage} = await import('../../services/utils/ollama.js');
 
@@ -115,6 +115,34 @@ describe('translatePassages', () => {
         chat.mockReset().mockResolvedValue(json({translations: ['Il a reçu une amende.']}));
         expect(await translatePassages(passages, 'English', 'French')).toBeNull();
         expect(chat).toHaveBeenCalledTimes(2);
+    });
+});
+
+describe('translateTexts', () => {
+    const texts = [{text: 'Bayern gewinnt 3:1 in Dortmund', from: 'German'}, {text: 'El árbitro anuló el gol', from: 'Spanish'}];
+
+    it('should name the language of each text and translate them all in one call', async () => {
+        chat.mockReset().mockResolvedValueOnce(json({translations: ['Le Bayern gagne 3-1 à Dortmund', "L'arbitre a annulé le but"]}));
+        expect(await translateTexts(texts, 'French')).toEqual(['Le Bayern gagne 3-1 à Dortmund', "L'arbitre a annulé le but"]);
+        const prompt = chat.mock.calls[0][0].messages.at(-1).content;
+        expect(prompt).toContain('[1] (German) Bayern gewinnt 3:1 in Dortmund');
+        expect(prompt).toContain('[2] (Spanish) El árbitro anuló el gol');
+    });
+
+    it('should not keep the number and the language the AI writes again before a translation', async () => {
+        chat.mockReset().mockResolvedValueOnce(json({translations: ['[1] Le Bayern gagne 3-1 à Dortmund', "[2] (Spanish) L'arbitre a annulé le but"]}));
+        expect(await translateTexts(texts, 'French')).toEqual(['Le Bayern gagne 3-1 à Dortmund', "L'arbitre a annulé le but"]);
+    });
+
+    it('should leave out a translation that lost a figure, and ask again an answer of another length', async () => {
+        chat.mockReset()
+            .mockResolvedValueOnce(json({translations: ['Le Bayern gagne']}))
+            .mockResolvedValueOnce(json({translations: ['Le Bayern gagne à Dortmund', "L'arbitre a annulé le but"]}));
+        expect(await translateTexts(texts, 'French')).toEqual([null, "L'arbitre a annulé le but"]);
+        expect(chat).toHaveBeenCalledTimes(2);
+
+        chat.mockReset().mockResolvedValue(json({nothing: true}));
+        expect(await translateTexts(texts, 'French')).toEqual([null, null]);
     });
 });
 
