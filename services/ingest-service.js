@@ -273,7 +273,10 @@ export const IngestService = {
     },
 
     // a run now, then every INTERVAL_MINUTES, for as long as the server lives. After each, the
-    // directory looks at a few more media: the feeds it adds are read by the next run
+    // directory looks at a few more media: the feeds it adds are read by the next run. Each run
+    // plans the next one INTERVAL_MINUTES after its own start, or at once when it worked longer: a
+    // fixed timer fell 6 s before the end of a run of 20 min on the processor, that tick was skipped
+    // and nothing ran for the next 20 minutes
     schedule: () => {
         if (timer) return;
         const grow = async () => {
@@ -281,11 +284,17 @@ export const IngestService = {
             const kept = tried.flatMap(medium => medium.kept);
             if (tried.length > 0) console.log(`Directory: ${tried.length} media looked at, ${kept.length} feeds added (${kept.map(feed => feed.url).join(', ') || 'none'})`);
         };
-        const tick = () => IngestService.run()
-            .then(grow)
-            .catch(err => console.error(`Ingest failed: ${err.stack ?? err}`));
+        const tick = () => {
+            const started = Date.now();
+            IngestService.run()
+                .then(grow)
+                .catch(err => console.error(`Ingest failed: ${err.stack ?? err}`))
+                .finally(() => {
+                    timer = setTimeout(tick, Math.max(0, started + INTERVAL_MINUTES * 60e3 - Date.now()));
+                    timer.unref?.();
+                });
+        };
+        timer = true;   // scheduled: a second call does nothing
         tick();
-        timer = setInterval(tick, INTERVAL_MINUTES * 60 * 1000);
-        timer.unref?.();
     },
 };

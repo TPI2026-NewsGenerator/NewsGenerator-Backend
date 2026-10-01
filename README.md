@@ -159,7 +159,8 @@ pnpm run server
 
 ### Background work: feeds, vectors, stories and threads
 
-The server reads every feed every `INGEST_INTERVAL_MINUTES` (20 by default), gives the new news their
+The server reads every feed every `INGEST_INTERVAL_MINUTES` (20 by default, from the start of the
+last run, or at once after a run that worked longer), gives the new news their
 bge-m3 vectors, groups them into stories and links the stories of one affair into threads
 (`services/ingest-service.js`). Nobody waits for it: the
 searches and the briefing read what it has already stored. The vectors come from the embedder, a
@@ -214,7 +215,7 @@ Optional variables in `.env`:
 | Variable | Default | Description |
 |---|---|---|
 | `INGEST_IN_SERVER` | on | `false` leaves the background work to `pnpm run ingest`, run by a scheduler of the system |
-| `INGEST_INTERVAL_MINUTES` | 20 | the time between two runs |
+| `INGEST_INTERVAL_MINUTES` | 20 | the time between the starts of two runs (the next one at once after a longer run) |
 | `INGEST_MAX_EMBEDDED` | 300 | news embedded, saved and grouped at a time. On a busy processor 1500 news at once took over an hour, all lost if the process stopped before saving them |
 | `INGEST_GROUP_MINUTES` | 10 | a run starts no batch of the window after these minutes, the feeds read included (a batch of 300 takes about 4): the rest waits for the next run |
 | `INGEST_OLDER_BATCHES` | 1 | batches of older news without vectors embedded per run, for the search by meaning |
