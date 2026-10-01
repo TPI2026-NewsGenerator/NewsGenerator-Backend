@@ -37,9 +37,9 @@ export const StoryModel = {
             await prisma.$executeRawUnsafe(`
                 UPDATE articles a
                 SET lang = v.lang,
-                    title_dense = v.title_dense::vector,
+                    title_dense = v.title_dense::halfvec,
                     title_sparse = v.title_sparse::sparsevec,
-                    text_dense = v.text_dense::vector,
+                    text_dense = v.text_dense::halfvec,
                     text_sparse = v.text_sparse::sparsevec,
                     embedded_at = now()
                 FROM unnest($1::int[], $2::text[], $3::text[], $4::text[], $5::text[], $6::text[])

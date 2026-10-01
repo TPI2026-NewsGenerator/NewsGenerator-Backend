@@ -58,6 +58,12 @@ ALTER TABLE public.stories ALTER COLUMN centroid SET STORAGE PLAIN;
 ALTER TABLE public.threads ALTER COLUMN centroid SET STORAGE PLAIN;
 -- the stories grouped since their thread was judged, few among many
 CREATE INDEX IF NOT EXISTS i_stories_to_thread ON public.stories (grouped_at) WHERE grouped_at IS NOT NULL;
+-- the stories waiting for their thread, as assign_threads asks for them: without it each call read the
+-- 43 000 stories twice (0.9 s with none waiting, the tests of the threads went over their 5 s)
+CREATE INDEX IF NOT EXISTS i_stories_waiting ON public.stories (updated_at, id)
+    WHERE grouped_at > COALESCE(threaded_at, '-infinity'::timestamptz);
+-- the stories of one language a story is compared with: a language of few stories reads only them
+CREATE INDEX IF NOT EXISTS i_stories_lang ON public.stories (lang) WHERE centroid IS NOT NULL;
 
 -- The stories that got news since their thread was judged take the centroid of their news now and
 -- are judged again: each leaves its thread and joins the thread of its language, active in the last
@@ -100,14 +106,18 @@ DECLARE
     n_created integer := 0;
     n_merged integer := 0;
 BEGIN
+    -- each story waiting reads its own news (LATERAL): joined, Postgres read every news of a story,
+    -- a page each since their vectors are in the row (1.4 s for one story waiting)
     UPDATE stories st
     SET centroid = l2_normalize(m.centroid)::halfvec(1024), media = m.media
     FROM (
-        SELECT a.id_story, avg(a.text_dense) AS centroid,
-               COALESCE(array_agg(DISTINCT a.medium) FILTER (WHERE a.medium IS NOT NULL), '{}') AS media
-        FROM articles a JOIN stories x ON x.id = a.id_story
-        WHERE x.grouped_at > COALESCE(x.threaded_at, '-infinity') AND a.text_dense IS NOT NULL
-        GROUP BY a.id_story
+        SELECT x.id AS id_story, news.centroid, news.media
+        FROM stories x,
+             LATERAL (SELECT avg(a.text_dense) AS centroid,
+                             COALESCE(array_agg(DISTINCT a.medium) FILTER (WHERE a.medium IS NOT NULL), '{}') AS media
+                      FROM articles a
+                      WHERE a.id_story = x.id AND a.text_dense IS NOT NULL) news
+        WHERE x.grouped_at > COALESCE(x.threaded_at, '-infinity') AND news.centroid IS NOT NULL
     ) m
     WHERE st.id = m.id_story;
 

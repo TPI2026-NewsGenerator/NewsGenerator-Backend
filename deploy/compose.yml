@@ -1,0 +1,51 @@
+# NewsGenerator on the machine that stays on: the database, the API with its background work (the
+# ingestion) and RSS-Bridge. Sent and started by deploy/deploy.sh, from ~/newsgenerator/server.
+# The embedder runs apart (embedder/Dockerfile), as the graphics card of another machine does: the
+# API asks the addresses of EMBEDDER_URL in their order.
+#
+# Next to the code, never sent with it (one variable per line, readable by their owner only):
+#   ~/newsgenerator/db.env    POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
+#   ~/newsgenerator/api.env   the .env of the server, DATABASE_URL to db:5432 and RSS_BRIDGE_URL to
+#                             http://rss-bridge
+#
+# Only the database and the API listen on the network, on the address of the machine (HOST_IP):
+# the API for the client, the database for the server run by hand on another machine while coding.
+
+name: newsgenerator
+
+services:
+  db:
+    image: pgvector/pgvector:pg18
+    container_name: newsgenerator-db
+    restart: unless-stopped
+    env_file: ../../db.env
+    # Postgres keeps 128 MB in memory by default: the 48 h window of the news read by the grouping
+    # (about 300 MB with their vectors) and the stories (110 MB) were read again at each news
+    command: postgres -c shared_buffers=2GB -c effective_cache_size=6GB -c work_mem=32MB -c maintenance_work_mem=512MB
+    shm_size: 1g
+    volumes:
+      - db:/var/lib/postgresql
+    ports:
+      - "${HOST_IP:-192.168.1.135}:5433:5432"
+
+  api:
+    build: ..
+    container_name: newsgenerator-api
+    restart: unless-stopped
+    env_file: ../../api.env
+    depends_on:
+      - db
+      - rss-bridge
+    ports:
+      - "${HOST_IP:-192.168.1.135}:3001:3001"
+
+  rss-bridge:
+    image: rssbridge/rss-bridge:latest
+    container_name: newsgenerator-rss-bridge
+    restart: unless-stopped
+    # reached by the API only, at http://rss-bridge (see docker-compose.yml)
+    volumes:
+      - ../docker/rss-bridge:/config:ro
+
+volumes:
+  db:

@@ -1,0 +1,8 @@
+node_modules
+generated
+bench
+docs
+tests
+embedder
+.env
+db/create_insert_NewsGenerator.sql

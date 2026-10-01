@@ -66,7 +66,7 @@ const story = async (client, feed, {text, medium = `m${++counter}`, hours = 0, l
     }
     await client.query(`
         INSERT INTO articles (id_feed, link, title, published_at, lang, text_dense, embedded_at, id_story)
-        VALUES ($1, $2, 'test', timestamptz '2100-01-01T00:00:00Z' + make_interval(hours => $3), $4, $5::vector, now(), $6)`,
+        VALUES ($1, $2, 'test', timestamptz '2100-01-01T00:00:00Z' + make_interval(hours => $3), $4, $5::halfvec, now(), $6)`,
         [feed, `https://${medium}.invalid/${++counter}`, hours, lang, text, id]);
     return id;
 };

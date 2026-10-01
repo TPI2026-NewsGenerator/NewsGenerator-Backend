@@ -90,7 +90,7 @@ export const FeedModel = {
             SELECT a.id, a.id_feed, a.link, a.title, a.description, a.thumbnail, a.category,
                    a.published_at, a.created_at, a.topic, a.summary, a.sourcing, a.id_story, s.id_thread,
                    a.source_url, a.resolved_link, a.medium,
-                   -(a.text_dense <#> $4::vector) - $6::real * (a.text_sparse <#> $5::sparsevec) AS score,
+                   -(a.text_dense <#> $4::halfvec) - $6::real * (a.text_sparse <#> $5::sparsevec) AS score,
                    -(a.text_sparse <#> $5::sparsevec) AS words
             FROM articles a
             JOIN feeds f ON f.id = a.id_feed

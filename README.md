@@ -193,7 +193,8 @@ The news of the last 48 h are embedded and grouped first, the newest first, by b
 `INGEST_MAX_EMBEDDED`, each grouped in a transaction of its own. A run starts no batch once it has
 worked `INGEST_GROUP_MINUTES`, the feeds read included: a big backlog (the first read of many new feeds) waits for the next runs, which
 read the feeds before. A time rather than a number of batches: a batch of 300 took 4 minutes, then 9
-with 31 000 news in the window. Grouped in one call,
+with 31 000 news in the window, 4 since the vectors are in half precision (see **The stories of the
+briefing**). Grouped in one call,
 the 12 000 news of the first read of the directory held the ingestion 2 h 10 with no feed read meanwhile,
 and nothing saved before the end. The older news kept (`FEED_RETENTION_DAYS`)
 that have no vectors yet, because the embedder was down longer than the window or a feed came with
@@ -214,7 +215,7 @@ Optional variables in `.env`:
 | `INGEST_IN_SERVER` | on | `false` leaves the background work to `pnpm run ingest`, run by a scheduler of the system |
 | `INGEST_INTERVAL_MINUTES` | 20 | the time between two runs |
 | `INGEST_MAX_EMBEDDED` | 300 | news embedded, saved and grouped at a time. On a busy processor 1500 news at once took over an hour, all lost if the process stopped before saving them |
-| `INGEST_GROUP_MINUTES` | 10 | a run starts no batch of the window after these minutes, the feeds read included (a batch of 300 takes 4 to 9): the rest waits for the next run |
+| `INGEST_GROUP_MINUTES` | 10 | a run starts no batch of the window after these minutes, the feeds read included (a batch of 300 takes about 4): the rest waits for the next run |
 | `INGEST_OLDER_BATCHES` | 1 | batches of older news without vectors embedded per run, for the search by meaning |
 | `FEED_RETENTION_DAYS` | 30 | Articles older than this are deleted |
 | `RSS_BRIDGE_URL` | _(none)_ | Address of the RSS-Bridge, step 4 of the sources of a user below. Empty: the sites without a feed are simply out of reach |
@@ -502,6 +503,18 @@ No HNSW index on the vectors, on purpose: the comparisons are always made on the
 hours (a few thousand rows, already narrowed by the indexes), and exactly. An approximate "nearest k"
 does not answer an average over the members of a story, and an exact scan takes milliseconds.
 
+The dense vectors of the news are stored in half precision (`halfvec`, 2 KB) kept in the row. As
+`vector(1024)`, 4 KB each, Postgres stored them apart (TOAST, 1.15 GB of the 1.48 GB of the table) and
+read them back each time a likeness used them, several times per news: a batch of 300 news took 9
+minutes to group, less than the news coming in. Half precision moves a likeness by at most 0.0001
+(`bench/halfvec-precision.mjs`, on the real news): the same story for 120 news of 120, no threshold
+crossed over 740 000 stories compared, the same 80 news given to the AI for 15 sentences of 17 (the
+80th swapped for the 2 others), the same 50 news for each of the 15 interests of the profiles. With
+each likeness computed once (`OFFSET 0`) and an index for the same news met again, the score of a
+news against its window went from 1.9 s to 0.23 s on a copy of three days (`bench/halfvec-speed2.mjs`),
+and a batch of 300 from 541 s to 235 s with the threads, the rest read again from outside the memory of
+Postgres (128 MB of `shared_buffers`). The table went from 1.48 GB to 0.99 GB.
+
 No threshold of the vectors separates every pair of facts, so the few stories of a briefing are read
 once more by the AI before they are shown (see **The briefing** below).
 
@@ -778,11 +791,34 @@ machines.
 
 ## Deployment
 
-To run for production:
+The background work reads the feeds every 20 minutes, day and night: it runs on a machine that stays
+on, with the database, in Docker (`deploy/compose.yml`):
+
+| Container | What | Listens on |
+|---|---|---|
+| `newsgenerator-db` | PostgreSQL 18 + pgvector, 2 GB of `shared_buffers` | the address of the machine, port 5433 |
+| `newsgenerator-api` | this server and its background work (`Dockerfile`) | the address of the machine, port 3001 |
+| `newsgenerator-rss-bridge` | RSS-Bridge | the API only (`http://rss-bridge`) |
+| `newsgenerator-embedder` | the embedder on the processor (`embedder/Dockerfile`), started apart | the address of the machine, port 8020 |
+
+Split over two machines, the database on a laptop and the embedder on another, everything stopped
+as soon as either one did: on the night of 1.10 the laptop restarted for an update at 3:36, then slept
+until noon, and no feed was read for 8 hours. Together on one machine, the graphics card of another
+one stays first in `EMBEDDER_URL` when it is on, the embedder of the machine takes over when it is off.
+
+Next to the code, in `~/newsgenerator` on the machine, readable by its owner only and never sent with
+the code: `db.env` (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`) and `api.env`, the `.env` of
+the server with `DATABASE_URL` to `db:5432` and `RSS_BRIDGE_URL=http://rss-bridge`.
+
+To send the code and start it again (from any machine reaching it by ssh):
 
 ```bash
-pnpm run build
+bash deploy/deploy.sh
 ```
+
+A change of `db/*.sql` is run by hand on the database, as on the first install. While coding on
+another machine, the server run by hand reads the same database (`DATABASE_URL` to the machine,
+port 5433) with `INGEST_IN_SERVER=false`: the background work stays on the machine that stays on.
 
 [//]: # ([### 1.3.1. On dev environment)
 
@@ -804,6 +840,7 @@ pnpm run build
 |-- config
 |-- controllers
 |-- db                      # SQL scripts (with assign_stories and rank_stories) and the shared list of feeds (rss-links.js)
+|-- deploy                  # the containers of the machine that stays on (compose.yml) and deploy.sh, which sends the code there
 |-- docker
 |   `-- rss-bridge          # configuration of the RSS-Bridge container
 |-- docs

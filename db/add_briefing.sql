@@ -28,12 +28,35 @@ ALTER TABLE public.stories ADD COLUMN IF NOT EXISTS grouped_at timestamp with ti
 --  dense: its meaning, normalized, so the inner product of two of them is their cosine
 --  sparse: the weight of each word, over the 250002 tokens of the vocabulary of bge-m3
 ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS lang text;
-ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS title_dense vector(1024);
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS title_dense halfvec(1024);
 ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS title_sparse sparsevec(250002);
-ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS text_dense vector(1024);
+ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS text_dense halfvec(1024);
 ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS text_sparse sparsevec(250002);
 ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS embedded_at timestamp with time zone;
 ALTER TABLE public.articles ADD COLUMN IF NOT EXISTS id_story integer;
+
+-- The dense vectors in half precision (2 KB) kept in the row, as the centroids of the stories (see
+-- db/add_threads.sql). As vector(1024), 4 KB each, Postgres stored them apart (TOAST: 1.15 GB of the
+-- 1.48 GB of the table) and read them back through an index each time a query used them: the grouping
+-- of 300 news took 9 minutes, less than the news coming in. Measured on the copies of 47 000 news of three
+-- days (bench/halfvec-speed2.mjs): the scores of a news against the stories of its window 1.9 s,
+-- 0.23 s in half precision kept in the row and computed once each (see assign_stories), with the same
+-- stories. Half precision moves a cosine by at most 0.0001 (bench/halfvec-precision.mjs): the same story
+-- for 120 news of 120 and no threshold crossed over 740 000 stories compared, the same 80 news for a
+-- search by sentence (15 sentences of 17, the 80th swapped for the 2 others), the same 50 for each of
+-- the 15 interests of the profiles. toast_tuple_target: a row is not shortened before 8 KB, so its
+-- title, link and description stay in it too (Postgres would put them apart from 2 KB on)
+ALTER TABLE public.articles SET (toast_tuple_target = 8160);
+DO $$
+BEGIN
+    IF (SELECT format_type(atttypid, atttypmod) FROM pg_attribute
+        WHERE attrelid = 'public.articles'::regclass AND attname = 'title_dense') <> 'halfvec(1024)' THEN
+        ALTER TABLE public.articles
+            ALTER COLUMN title_dense TYPE halfvec(1024) USING title_dense::halfvec(1024),
+            ALTER COLUMN text_dense TYPE halfvec(1024) USING text_dense::halfvec(1024);
+    END IF;
+END $$;
+ALTER TABLE public.articles ALTER COLUMN title_dense SET STORAGE PLAIN, ALTER COLUMN text_dense SET STORAGE PLAIN;
 
 -- The medium of a news, as mediumOf (services/utils/public-url.js) names it from its link:
 -- "https://edition.cnn.com/x" -> "cnn.com", "https://www.bbc.co.uk/x" -> "bbc.co.uk"
@@ -74,6 +97,11 @@ CREATE INDEX IF NOT EXISTS i_articles_not_embedded ON public.articles (created_a
 CREATE INDEX IF NOT EXISTS i_articles_published ON public.articles ((COALESCE(published_at, created_at)));
 -- the stories of the last hours in one language, what a new news is compared with
 CREATE INDEX IF NOT EXISTS i_articles_grouped ON public.articles (lang, (COALESCE(published_at, created_at))) WHERE id_story IS NOT NULL;
+-- the same news met again (same link or same title, see assign_stories): without them each news read
+-- every news of its window, a page each since their vectors are in the row (145 ms). Hash: a title or
+-- a link may be longer than what a btree takes
+CREATE INDEX IF NOT EXISTS i_articles_link ON public.articles USING hash (link) WHERE id_story IS NOT NULL;
+CREATE INDEX IF NOT EXISTS i_articles_title ON public.articles USING hash (title) WHERE id_story IS NOT NULL;
 
 -- No HNSW index on the vectors, on purpose. The comparisons are always made on the news of the last
 -- 48 hours (a few thousand rows, already narrowed by the indexes above), and exactly: a news joins a
@@ -133,6 +161,15 @@ CREATE OR REPLACE FUNCTION public.assign_stories(since timestamptz, threshold re
 AS $$
 DECLARE
     news record;
+    -- typed copies of the news judged: read through the record, Postgres plans the scores again for
+    -- each news (see assign_threads)
+    title_vector halfvec(1024);
+    title_words sparsevec(250002);
+    text_vector halfvec(1024);
+    news_lang text;
+    news_medium text;
+    news_figures text[];
+    news_at timestamptz;
     story integer;
     n_grouped integer := 0;
     n_created integer := 0;
@@ -147,12 +184,15 @@ BEGIN
         ORDER BY COALESCE(a.published_at, a.created_at) DESC, a.id
         LIMIT max_news
     LOOP
+        title_vector := news.title_dense; title_words := news.title_sparse; text_vector := news.text_dense;
+        news_lang := news.lang; news_medium := news.medium; news_figures := news.title_figures; news_at := news.at;
+
         SELECT m.id_story INTO story
         FROM articles m
         WHERE m.id_story IS NOT NULL
-          AND m.lang = news.lang
+          AND m.lang = news_lang
           AND COALESCE(m.published_at, m.created_at) >= since
-          AND m.medium IS NOT DISTINCT FROM news.medium
+          AND m.medium IS NOT DISTINCT FROM news_medium
           AND (m.link = news.link OR m.title = news.title)
         LIMIT 1;
 
@@ -169,20 +209,21 @@ BEGIN
                            WHEN NOT bool_or(pairs.other_figures) THEN AVG(pairs.similarity) - same_medium_margin
                        END
                        -- a story quiet for a while asks more
-                       - idle_decay * GREATEST(0, EXTRACT(EPOCH FROM news.at - MAX(pairs.at)) / 3600 - idle_grace) AS score
+                       - idle_decay * GREATEST(0, EXTRACT(EPOCH FROM news_at - MAX(pairs.at)) / 3600 - idle_grace) AS score
                 FROM (
                     -- <#> is the negative inner product
                     SELECT m.id_story,
-                           -(m.title_dense <#> news.title_dense) - sparse_weight * (m.title_sparse <#> news.title_sparse) AS similarity,
-                           -(m.text_dense <#> news.text_dense) AS text_similarity,
-                           m.medium IS NOT DISTINCT FROM news.medium AS same_medium,
+                           -(m.title_dense <#> title_vector) - sparse_weight * (m.title_sparse <#> title_words) AS similarity,
+                           -(m.text_dense <#> text_vector) AS text_similarity,
+                           m.medium IS NOT DISTINCT FROM news_medium AS same_medium,
                            COALESCE(m.published_at, m.created_at) AS at,
-                           cardinality(m.title_figures) > 0 AND cardinality(news.title_figures) > 0
-                               AND m.title_figures <> news.title_figures AS other_figures
+                           cardinality(m.title_figures) > 0 AND cardinality(news_figures) > 0
+                               AND m.title_figures <> news_figures AS other_figures
                     FROM articles m
                     WHERE m.id_story IS NOT NULL
-                      AND m.lang = news.lang
+                      AND m.lang = news_lang
                       AND COALESCE(m.published_at, m.created_at) >= since
+                    OFFSET 0    -- each likeness computed once, not once per aggregate that reads it
                 ) pairs
                 GROUP BY pairs.id_story
             ) scored

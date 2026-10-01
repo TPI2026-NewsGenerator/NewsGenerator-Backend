@@ -62,7 +62,7 @@ const news = async (client, feed, {minute = 0, lang = 'en', title, text, titleWo
     const {rows: [row]} = await client.query(`
         INSERT INTO articles (id_feed, link, title, published_at, lang, title_dense, title_sparse, text_dense, text_sparse, embedded_at, id_story)
         VALUES ($1, $2, $3, timestamptz '2100-01-01T00:00:00Z' + make_interval(mins => $4), $5,
-                $6::vector, $7::sparsevec, $8::vector, $9::sparsevec, now(), $10)
+                $6::halfvec, $7::sparsevec, $8::halfvec, $9::sparsevec, now(), $10)
         RETURNING id`,
         [feed, link ?? `https://${medium ?? word()}.invalid/${word()}`, heading ?? `test ${word()}`, minute, lang, title ?? text, titleWords, text ?? title, textWords, story]);
     return row.id;

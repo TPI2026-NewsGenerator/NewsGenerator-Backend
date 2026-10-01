@@ -134,9 +134,9 @@ model articles {
   search_text   String?                           @default(dbgenerated("article_search_text(title, description, category)"))
   // bge-m3 vectors (pgvector), written and compared in SQL only (db/add_briefing.sql, models/story-model.js)
   lang          String?
-  title_dense   Unsupported("vector(1024)")?
+  title_dense   Unsupported("halfvec(1024)")?
   title_sparse  Unsupported("sparsevec(250002)")?
-  text_dense    Unsupported("vector(1024)")?
+  text_dense    Unsupported("halfvec(1024)")?
   text_sparse   Unsupported("sparsevec(250002)")?
   embedded_at   DateTime?                         @db.Timestamptz(6)
   id_story      Int?
