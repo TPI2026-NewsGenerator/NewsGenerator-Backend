@@ -2,6 +2,9 @@
 # stays on (see deploy/compose.yml). Every dependency is installed: express-validator, used by the
 # routes, is listed among the devDependencies
 FROM node:24-slim
+# ps: Crawlee reads the memory of the machine with it before reading the pages of the articles, the
+# slim image has none and every briefing failed ("spawn ps ENOENT")
+RUN apt-get update && apt-get install -y --no-install-recommends procps && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10.33.2 --activate
 COPY package.json pnpm-lock.yaml ./
