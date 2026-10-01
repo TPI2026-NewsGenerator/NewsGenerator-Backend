@@ -704,6 +704,18 @@ A feed built this way is a scraper: it breaks the day the site changes its pages
 keeps one when the articles have a real headline and a date, so a wrong reading is refused instead
 of filling the cache with menus and contact pages.
 
+It costs far more than a feed: the page of the site and up to 15 of its articles. Measured on 10 sites
+(1.10.2026): 1 to 12 s a build, 3 KB to 1.4 MB, and RSS-Bridge keeps it an hour, so the reads of the
+next 20 minutes answer at once. A reader can have 50 sites read this way (`MAX_BRIDGE_FEEDS`), about
+50 builds an hour, 7 minutes of the bridge and 16 pages of each site.
+
+The address of a feed built this way starts with the address of the bridge. When the bridge moves,
+they are rewritten on the new one, or the server refuses them as private addresses:
+
+```bash
+node scripts/move-bridge-feeds.js http://127.0.0.1:3002 http://rss-bridge
+```
+
 ### The briefing
 
 A reader writes a profile in their own words ("I follow rugby and fashion, no football") and the

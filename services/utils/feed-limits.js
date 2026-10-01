@@ -20,9 +20,12 @@ export const MAX_USER_FEEDS = 500;          // added by hand, from a file or fro
 // nothing on the profile any more is removed (see DiscoveryService.prune)
 export const MAX_PROFILE_FEEDS = 60;
 export const MAX_NEW_PROFILE_FEEDS = 20;    // found by one discovery
-// A site without a feed is read through our RSS-Bridge, which loads its page every time: those
-// cost far more than a feed, and the bridge is shared by every reader
-export const MAX_BRIDGE_FEEDS = 15;
+// A site without a feed is read through our RSS-Bridge, which loads its page and up to 15 of its
+// articles: those cost far more than a feed, and the bridge is shared by every reader. Measured on
+// 2026-10-01 (10 sites): 1 to 12 s a build, 3 KB to 1.4 MB, and the bridge keeps it an hour, the reads
+// of the next 20 minutes answer at once. 50 sites of a reader are about 50 builds an hour, 7 minutes
+// of the bridge and 16 pages per site. 15 at first, a guess never measured
+export const MAX_BRIDGE_FEEDS = 50;
 // A feed holding more news at once is a flood or an archive, not a feed of news: gurufocus.com/rss.php
 // held 3611 notes on stocks, 2539 of the last 48 h, an hour of the processor of the embedder. Of the
 // 1231 feeds read on 2026-10-01 half held 24 news at most in a read, 99% 256. The directory refuses
