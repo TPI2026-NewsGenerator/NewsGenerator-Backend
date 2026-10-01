@@ -127,6 +127,38 @@ describe('embed', () => {
         expect(sent()).toEqual([['gaming-b:8020', 2], ['gaming-b:8020', 2], ['server-b:8020', 3]]);
     });
 
+    it('should hand the rest to the next embedder when the first keeps failing but still answers its health', async () => {
+        process.env.EMBEDDER_URL = 'http://gaming-d:8020,http://server-d:8020';
+        globalThis.fetch = fakeFetch({
+            health: (host) => healthy(host === 'server-d:8020' ? 'cpu' : 'cuda'),
+            answer: (host, texts) => host === 'gaming-d:8020'
+                ? Promise.reject(Object.assign(new TypeError('fetch failed'), {cause: {code: 'UND_ERR_SOCKET'}}))
+                : vectorsOf(texts),
+        });
+
+        const vectors = await embed(['a', 'bb']);
+        expect(vectors.map(vector => vector.dense[0])).toEqual([1, 2]);
+        // a connection closed is asked again once, then the next one takes the work
+        expect(sent()).toEqual([['gaming-d:8020', 2], ['gaming-d:8020', 2], ['server-d:8020', 2]]);
+    });
+
+    it('should ask again an embedder that closed the connection once, and keep it', async () => {
+        process.env.EMBEDDER_URL = 'http://gaming-e:8020,http://server-e:8020';
+        let closed = false;
+        globalThis.fetch = fakeFetch({
+            answer: (host, texts) => {
+                if (!closed) {
+                    closed = true;
+                    return Promise.reject(Object.assign(new TypeError('fetch failed'), {cause: {code: 'UND_ERR_SOCKET'}}));
+                }
+                return vectorsOf(texts);
+            },
+        });
+
+        await embed(['a']);
+        expect(sent()).toEqual([['gaming-e:8020', 1], ['gaming-e:8020', 1]]);
+    });
+
     it('should give the work back to the first embedder a minute after it answers again', async () => {
         process.env.EMBEDDER_URL = 'http://gaming-c:8020,http://server-c:8020';
         let gamingOn = false;

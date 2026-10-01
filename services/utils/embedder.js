@@ -40,6 +40,7 @@ const HEALTH_TIMEOUT_MS = 2000;
 // While another one than the first works, the ones before it are asked again this often: a machine
 // switched on again takes back the work
 const RECHECK_MS = 60 * 1000;
+const CLOSED = new Set(['UND_ERR_SOCKET', 'ECONNRESET']);     // the connection closed, not refused nor too slow
 export const DIMENSIONS = 1024;
 
 // One request at a time from this process. The embedder encodes one batch at a time anyway, so
@@ -75,11 +76,14 @@ const health = async (url) => {
 // the embedder in use: the first of the list kept as long as it answers, another one for RECHECK_MS
 let chosen = null;
 
-// the first embedder of the list that answers, null when none does
-const choose = async () => {
+// the first embedder of the list that answers, null when none does. 'skip': the ones that just failed
+// a request, even if they still answer to their health
+const choose = async (skip = new Set()) => {
     const urls = URLS();
-    if (chosen && urls.includes(chosen.url) && (chosen.url === urls[0] || Date.now() - chosen.at < RECHECK_MS)) return chosen;
+    if (chosen && urls.includes(chosen.url) && !skip.has(chosen.url)
+        && (chosen.url === urls[0] || Date.now() - chosen.at < RECHECK_MS)) return chosen;
     for (const url of urls) {
+        if (skip.has(url)) continue;
         const up = await health(url);
         if (up) {
             if (chosen?.url !== url && urls.length > 1) console.log(`Embedder: ${url} (${up.batch === CPU_BATCH ? 'processor' : 'graphics card'})`);
@@ -100,9 +104,16 @@ const notAnswering = (detail) => Object.assign(
 export const embed = async (texts) => {
     const vectors = [];
 
-    let failures = 0;
+    // The embedders that failed a request of this call are skipped for its rest: the graphics card
+    // reset a connection twice on 1.10 while still answering to its health, was chosen again and
+    // failed again, and the processor next to it was never asked
+    const failed = new Set();
+    // A connection closed by the other side between two batches (UND_ERR_SOCKET) is no embedder off:
+    // it happened every few runs with the graphics card, which answered the next request. That one
+    // is asked again once before the next one is
+    const retried = new Set();
     for (let i = 0; i < texts.length;) {
-        const target = await choose();
+        const target = await choose(failed);
         if (!target) throw notAnswering();
 
         const batch = texts.slice(i, i + target.batch);
@@ -112,8 +123,15 @@ export const embed = async (texts) => {
         } catch (err) {
             // "fetch failed" alone does not say whether it was refused, reset or too slow
             const reason = [err.message, err.cause?.code ?? err.cause?.message].filter(Boolean).join(': ');
-            chosen = null;      // the list is asked again, from its first one
-            if (++failures < URLS().length) {
+            if (CLOSED.has(err.cause?.code) && !retried.has(target.url)) {
+                retried.add(target.url);
+                console.log(`Embedder: ${target.url} closed the connection (${reason}), asked again`);
+                continue;
+            }
+            // the list is asked again without it: the next one keeps the work for RECHECK_MS
+            chosen = null;
+            failed.add(target.url);
+            if (failed.size < URLS().length) {
                 console.log(`Embedder: ${target.url} did not answer (${reason})`);
                 continue;
             }
@@ -125,7 +143,6 @@ export const embed = async (texts) => {
         const {dense, sparse} = res.body;
         batch.forEach((_, j) => vectors.push({dense: Float32Array.from(dense[j]), sparse: sparse[j] ?? {}}));
         i += batch.length;
-        failures = 0;
     }
 
     return vectors;
