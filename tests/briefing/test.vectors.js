@@ -89,6 +89,14 @@ describe('embed', () => {
         }
     });
 
+    it('should send half of a character as the replacement character, the tokenizer refuses it', async () => {
+        globalThis.fetch = fakeFetch();
+        // a description cut at 400 units inside an emoji
+        await embed(['Rich & Ken with Ted Johnson \uD83C']);
+        const [[, first]] = globalThis.fetch.mock.calls.filter(([url]) => url.endsWith('/embed'));
+        expect(JSON.parse(first.body).texts).toEqual(['Rich & Ken with Ted Johnson �']);
+    });
+
     it('should send no token to an embedder of this machine', async () => {
         globalThis.fetch = fakeFetch();
         await embed(['a']);

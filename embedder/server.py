@@ -132,8 +132,15 @@ class Handler(BaseHTTPRequestHandler):
             return self.answer(200, {'dense': [], 'sparse': []})
 
         started = time.time()
-        # an empty text gives no vector: a single space is encoded instead, it matches nothing
-        result = embed([text if text.strip() else ' ' for text in texts])
+        # an empty text gives no vector: a single space is encoded instead, it matches nothing. Half of
+        # a character (a text cut inside an emoji) is refused by the tokenizer: it is replaced
+        texts = [text.encode('utf-8', 'replace').decode('utf-8') for text in texts]
+        try:
+            result = embed([text if text.strip() else ' ' for text in texts])
+        except Exception as err:
+            # an answer rather than a connection dropped: the server says why the batch failed
+            print(f'{len(texts)} texts failed: {err!r}', flush=True)
+            return self.answer(500, {'error': f'The texts could not be encoded: {err}'})
         print(f'{len(texts)} texts in {time.time() - started:.1f} s', flush=True)
         return self.answer(200, result)
 

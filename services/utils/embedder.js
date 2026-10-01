@@ -49,11 +49,15 @@ export const DIMENSIONS = 1024;
 // while the ingestion embedded lost both its feeds and the batch of the ingestion.
 let queue = Promise.resolve();
 
+// A text cut in the middle of a character (a description cut at 400 units inside an emoji) holds
+// half of it, which the tokenizer of the embedder refuses: it dropped the connection, the batch failed
+// on every embedder, and each run of the ingestion stopped on the same news, leaving the older ones
+// without vectors (1.10.2026, one news of 8905). The half is sent as the replacement character
 const post = (url, batch) => {
     const request = queue.then(() => fetch(`${url}/embed`, {
         method: 'POST',
         headers: HEADERS(),
-        body: JSON.stringify({texts: batch}),
+        body: JSON.stringify({texts: batch.map(text => text.toWellFormed())}),
         signal: AbortSignal.timeout(TIMEOUT_MS),
     }).then(async res => ({ok: res.ok, status: res.status, body: res.ok ? await res.json() : null})));
     queue = request.catch(() => {});
