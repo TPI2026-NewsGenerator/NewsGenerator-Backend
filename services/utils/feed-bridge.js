@@ -164,7 +164,7 @@ export const bridgeFeed = async (siteUrl, {language = null, words = [], judge = 
             newest: dates.sort((a, b) => b - a)[0] ?? null,
             titles: [...new Set([stats?.sample, ...articles.map(item => item.title)])].filter(Boolean).slice(0, 3),
             pattern: pattern,           // shown to the user: this feed is built, not published
-            language: feedLanguage(articles.map(item => `${item.title} ${item.description ?? ''}`)),
+            language: feedLanguage(articles.map(item => `${item.title} ${item.description ?? ''}`), page),
             ...(stats ? {onSubject: stats.onSubject, judged: stats.judged, onSubjectPerDay: stats.onSubjectPerDay} : {}),
         };
     }

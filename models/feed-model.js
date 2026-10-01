@@ -224,6 +224,12 @@ export const FeedModel = {
 
         return userFeeds.map(feed => ({ ...feed, ...status.get(feed.url) }));
     },
+    // the languages the sources of this reader are written in, told by their news: ['hu', 'el']
+    userLanguages: async (userId) => (await prisma.user_feeds.findMany({
+        where: {id_user: userId, language: {not: null}},
+        select: {language: true},
+        distinct: ['language'],
+    })).map(feed => feed.language),
     // the feeds added by hand by default, the ones found for the profile have their own limit
     // (see utils/feed-limits.js)
     countUserFeeds: async (userId, origin = 'user') => {

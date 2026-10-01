@@ -33,6 +33,17 @@ const LOCALES = {
     de: {hl: 'de', gl: 'DE', ceid: 'DE:de'},
     it: {hl: 'it', gl: 'IT', ceid: 'IT:it'},
 };
+// the other languages a reader can read (the ones of their sources): the edition of the country where
+// most of its readers live. Without it, Dutch, Portuguese, Czech and Polish were asked in English
+const COUNTRY = {
+    nl: 'NL', pt: 'PT', cs: 'CZ', pl: 'PL', hu: 'HU', el: 'GR', hr: 'HR', sr: 'RS', bs: 'BA', sv: 'SE', da: 'DK',
+    no: 'NO', fi: 'FI', ro: 'RO', bg: 'BG', ru: 'RU', uk: 'UA', be: 'BY', tr: 'TR', sk: 'SK', sl: 'SI', et: 'EE',
+    lv: 'LV', lt: 'LT', ka: 'GE', hy: 'AM', az: 'AZ', kk: 'KZ', mk: 'MK', sq: 'AL', he: 'IL', ca: 'ES', gl: 'ES',
+    ar: 'EG', fa: 'IR', ur: 'PK', hi: 'IN', bn: 'BD', zh: 'CN', ja: 'JP', ko: 'KR', id: 'ID', ms: 'MY', vi: 'VN',
+    th: 'TH', sw: 'KE', af: 'ZA', tl: 'PH', uz: 'UZ',
+};
+const localeOf = (language) => LOCALES[language]
+    ?? (COUNTRY[language] ? {hl: language, gl: COUNTRY[language], ceid: `${COUNTRY[language]}:${language}`} : LOCALES.en);
 
 // Google News is no official API: asked too often from one address it answers 429 or a captcha,
 // and the discovery of every reader stops with it. So every request of the server to Google goes
@@ -109,7 +120,7 @@ export const toQuery = (keywords, days) => {
 export const searchUrl = (keywords, {days = null, language = 'en'} = {}) => {
     if (toQuery(keywords).trim() === '') return null;          // "when:2d" alone searches everything
     const query = toQuery(keywords, days);
-    const locale = LOCALES[language] ?? LOCALES.en;
+    const locale = localeOf(language);
     return `${SEARCH_URL}?q=${encodeURIComponent(query)}&hl=${locale.hl}&gl=${locale.gl}&ceid=${locale.ceid}`;
 };
 
@@ -118,7 +129,7 @@ export const searchUrl = (keywords, {days = null, language = 'en'} = {}) => {
 export const sentenceUrl = (sentence, {days = null, language = 'en'} = {}) => {
     const text = sentence.trim();
     if (text === '') return null;
-    const locale = LOCALES[language] ?? LOCALES.en;
+    const locale = localeOf(language);
     const query = days ? `${text} when:${Math.ceil(days)}d` : text;
     return `${SEARCH_URL}?q=${encodeURIComponent(query)}&hl=${locale.hl}&gl=${locale.gl}&ceid=${locale.ceid}`;
 };
@@ -129,8 +140,9 @@ export const isGoogleNewsUrl = (url) => typeof url === 'string' && url.startsWit
 export const languageOfSearch = (url) => {
     if (!isGoogleNewsUrl(url)) return null;
     try {
-        const ceid = new URL(url).searchParams.get('ceid');
-        return Object.entries(LOCALES).find(([, locale]) => locale.ceid === ceid)?.[0] ?? null;
+        // "US:en", "HU:hu"
+        const language = new URL(url).searchParams.get('ceid')?.split(':')[1] ?? null;
+        return language && (LOCALES[language] || COUNTRY[language]) ? language : null;
     } catch {
         return null;
     }

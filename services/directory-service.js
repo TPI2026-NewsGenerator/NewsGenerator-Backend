@@ -124,11 +124,8 @@ export const chooseSections = (allFeeds, known, max = MAX_SECTIONS) => {
     return chosen;
 };
 
-// the language of a feed from its news, when it is one of ours
-const languageOfFeed = (items) => {
-    const language = feedLanguage(items.map(item => `${item.title ?? ''} ${item.description ?? ''}`));
-    return LANGUAGES.includes(language) ? language : null;
-};
+// the language of a feed from its news, null when they can't tell it
+const languageOfFeed = (feed) => feedLanguage(feed.items.map(item => `${item.title ?? ''} ${item.description ?? ''}`), feed.url);
 
 // the media of db/rss-links.js: [{medium, language, urls}], the medium read in the news of each feed:
 // the address of a feed does not always name it ("feeds.content.dowjones.io" is the WSJ)
@@ -174,15 +171,19 @@ const trySections = async (medium, readByUrl) => {
     if (candidates.length === 0) return {kept: [], reason: 'no other feed'};
 
     const [feeds, links] = await Promise.all([readFeeds(candidates), DirectoryModel.linksOf(medium.urls, DAYS)]);
+    // a section in another language than ours is left out, not given the one of its medium: sections
+    // in Arabic, Turkish or Albanian of media read in English had been taken for English
     const chosen = [];
     for (const feed of chooseSections(feeds, links.map(normalized))) {
-        if (!await isPodcast(feed.url)) chosen.push(feed);
+        const language = languageOfFeed(feed);
+        if (language && !LANGUAGES.includes(language)) continue;
+        if (!await isPodcast(feed.url)) chosen.push({...feed, language});
     }
     if (chosen.length === 0) return {kept: [], reason: `${feeds.length} feeds, none brings what is missed`};
 
     return {kept: chosen.map(feed => ({
         url: feed.url, medium: medium.medium, origin: 'section',
-        language: languageOfFeed(feed.items) ?? medium.language,
+        language: feed.language ?? medium.language,
         category: sectionCategory(feed.url),
     }))};
 };

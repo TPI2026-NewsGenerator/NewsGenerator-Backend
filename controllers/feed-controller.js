@@ -235,7 +235,7 @@ export const FeedController = {
                     continue;
                 }
                 // told by its own news: the language of the search it was found from is not always its
-                language = read ? feedLanguage(read.items.map(item => `${item.title ?? ''} ${item.description ?? ''}`)) : null;
+                language = read ? feedLanguage(read.items.map(item => `${item.title ?? ''} ${item.description ?? ''}`), read.url) : null;
             }
 
             try {

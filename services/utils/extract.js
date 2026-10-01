@@ -10,7 +10,7 @@
 "use strict"
 
 import {TOPICS, isTopic} from './topics.js';
-import {languageOf, WRITTEN_IN} from './language.js';
+import {languageOf, writtenIn} from './language.js';
 import {ollamaJson} from './ollama.js';
 
 // Summaries written by the AI changed what the article says in 4 of 30 articles, 3 of them again in
@@ -187,8 +187,8 @@ export const translatePassages = async (passages, from, to, usage = null) => {
 // are in that language already or could not be translated safely: {from, translation}
 export const translationFor = async (passages, language, usage = null, fallback = null) => {
     const from = languageOf(passages.flat().map(sentence => sentence.text).join(' '), fallback);
-    const translation = passages.length > 0 && from && from !== language && WRITTEN_IN[from] && WRITTEN_IN[language]
-        ? await translatePassages(passages, WRITTEN_IN[from], WRITTEN_IN[language], usage)
+    const translation = passages.length > 0 && from && from !== language && writtenIn(from) && writtenIn(language)
+        ? await translatePassages(passages, writtenIn(from), writtenIn(language), usage)
         : null;
     return {from, translation};
 };

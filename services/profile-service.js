@@ -18,6 +18,7 @@ import {interestsOf} from "./utils/profile-ai.js";
 import {TOPICS} from "./utils/topics.js";
 import {MAX_PROFILE_FEEDS} from "./utils/feed-limits.js";
 import {searchesOfUser} from "./ingest-service.js";
+import {KNOWN_LANGUAGES} from "./utils/language.js";
 
 const MIN_TEXT = 20;            // "rugby" says too little to split into interests
 const MAX_TEXT = 2000;
@@ -61,8 +62,16 @@ const withVectors = async (interests) => {
 export const ProfileService = {
     topics: () => PROFILE_TOPICS,
 
+    // The languages a reader can read the news in: the ones the shared feeds are in, and the ones of
+    // their own sources ("hu" once they add Nemzeti Sport): their briefing only shows the news of the
+    // languages they chose (rank_stories). Without a reader, the shared ones
+    languagesOf: async (userId = null) => {
+        const own = userId ? await FeedModel.userLanguages(userId) : [];
+        return [...new Set([...FeedService.languages(), ...own.filter(language => KNOWN_LANGUAGES.includes(language))])];
+    },
+
     get: async (userId) => {
-        const [profile, interests, feeds, refusedSources, relevance, searches] = await Promise.all([
+        const [profile, interests, feeds, refusedSources, relevance, searches, languages] = await Promise.all([
             ProfileModel.get(userId),
             ProfileModel.interests(userId),
             FeedModel.listUserFeeds(userId),
@@ -72,6 +81,7 @@ export const ProfileService = {
                 threshold: JUDGE_THRESHOLD,
             }),
             searchesOfUser(userId),
+            ProfileService.languagesOf(userId),
         ]);
         const relevant = new Map(relevance.map(row => [row.id, row.relevant]));
 
@@ -91,6 +101,8 @@ export const ProfileService = {
                 relevant: relevant.get(feed.id) ?? 0,
             })),
             limits: {profileFeeds: MAX_PROFILE_FEEDS, relevanceDays: RELEVANCE_DAYS},
+            // the languages they can choose: the shared ones and the ones of their sources
+            languages,
             // the searches of Google News of the interests, read like feeds for this reader only
             googleSearches: searches.length,
             // the sources found for the profile the thumbs of the reader left out: [{url, site, refused, liked}]
@@ -107,7 +119,7 @@ export const ProfileService = {
 
     // a profile checked and split into interests by the AI, each with its vector, not saved yet: the
     // signup reads it before the account is created, so a text with no interest creates no account
-    prepare: async ({text, topics = [], languages = []}) => {
+    prepare: async ({text, topics = [], languages = []}, userId = null) => {
         const written = typeof text === 'string' ? text.trim() : '';
         if (written.length < MIN_TEXT || written.length > MAX_TEXT) {
             throw badRequest(`Describe what you want to read in ${MIN_TEXT} to ${MAX_TEXT} characters.`);
@@ -115,7 +127,7 @@ export const ProfileService = {
         if (!Array.isArray(topics) || !topics.every(topic => PROFILE_TOPICS.includes(topic))) {
             throw badRequest(`Topics must be among: ${PROFILE_TOPICS.join(', ')}.`);
         }
-        const spoken = FeedService.languages();
+        const spoken = await ProfileService.languagesOf(userId);
         if (!Array.isArray(languages) || languages.length === 0 || !languages.every(language => spoken.includes(language))) {
             throw badRequest(`Choose at least one language among: ${spoken.join(', ')}.`);
         }
@@ -138,7 +150,7 @@ export const ProfileService = {
     // the profile written again: the AI splits it into interests, each gets its vector, and the
     // sources are found again in background
     save: async (userId, written) => {
-        await ProfileService.store(userId, await ProfileService.prepare(written));
+        await ProfileService.store(userId, await ProfileService.prepare(written, userId));
         return ProfileService.get(userId);
     },
 

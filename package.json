@@ -26,6 +26,7 @@
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "fast-xml-parser": "^5.5.5",
+    "franc": "^6.2.0",
     "jsonwebtoken": "^9.0.3",
     "linkedom": "^0.18.12",
     "ollama": "^0.6.3",

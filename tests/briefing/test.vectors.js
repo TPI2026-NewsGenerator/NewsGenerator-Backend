@@ -213,4 +213,32 @@ describe('feedLanguage', () => {
         ])).toBeNull();
         expect(feedLanguage([])).toBeNull();
     });
+
+    // the news of a Hungarian feed: "a" and "is" are English short words too
+    const hungarian = [
+        'A Ferencváros nyert a bajnokság rangadóján, és a csapat továbbra is vezeti a tabellát a hétvége után',
+        'Az edző szerint a csapat jól játszott, de a második félidőben fáradtak voltak a játékosok',
+        'A válogatott keretét kedden hirdeti ki a szövetségi kapitány, több új játékos is bekerülhet',
+        'Hosszabbított a klub a csatárával, aki még három évig marad a fővárosi együttesnél',
+        'A bajnokság következő fordulójában a listavezető idegenben lép pályára szombat este',
+    ];
+
+    it('should tell a language the short words do not know from the news joined, and keep it for its news', () => {
+        expect(languageOf(hungarian[0])).toBe('en');        // what the short words alone say
+        expect(feedLanguage(hungarian)).toBe('hu');
+        expect(languageOf(hungarian[0], 'hu')).toBe('hu');
+        expect(languageOf(hungarian.join(' '))).toBe('hu');  // a long text without its feed
+    });
+
+    it('should let the country of the site decide between Croatian, Bosnian and Serbian', () => {
+        const croatian = [
+            'Dinamo je pobijedio Hajduk u derbiju i preuzeo vodstvo na ljestvici nakon desetog kola prvenstva',
+            'Trener je nakon utakmice rekao da je momčad igrala odlično i da zaslužuje pobjedu pred navijačima',
+            'Reprezentacija se okuplja u ponedjeljak, a izbornik će objaviti popis igrača za kvalifikacije',
+            'Klub je produžio ugovor s napadačem koji će ostati još tri godine u Zagrebu',
+            'Sljedeće kolo donosi gostovanje vodećeg kluba u Osijeku u subotu navečer',
+        ];
+        expect(feedLanguage(croatian, 'https://www.index.hr/rss')).toBe('hr');
+        expect(feedLanguage(croatian, 'https://sportsport.ba/feed')).toBe('bs');
+    });
 });

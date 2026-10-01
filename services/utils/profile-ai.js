@@ -10,6 +10,7 @@
 "use strict"
 
 import {ollamaJson} from './ollama.js';
+import {languageName} from './language.js';
 
 export const MAX_INTERESTS = 6;
 export const MAX_BRIEFING = 10;
@@ -19,9 +20,8 @@ export const MAX_CHOSEN = MAX_BRIEFING + 5;
 const MAX_KEYWORDS_CHARS = 400;
 const MAX_SEARCHES_PER_LANGUAGE = 2;
 
-export const LANGUAGE_NAMES = {fr: 'français', en: 'anglais', es: 'espagnol', de: 'allemand', it: 'italien'};
-// the language a text of the AI is written in, for the prompts asking it to write
-export {WRITTEN_IN} from './language.js';
+// the languages read, named in French as the prompt is written: "hongrois", "grec"
+const frenchName = (language) => languageName(language, 'fr');
 
 // The keywords are written for Filter (commas = alternatives, spaces = all the words), and the rules
 // are the ones the benches needed: without them the AI wrote phrases ("chef biographie / chef
@@ -40,7 +40,7 @@ const today = () => new Date().toLocaleDateString('fr-CH', {day: 'numeric', mont
 
 export const interestsPrompt = ({text, topics, languages, categories}) => `Nous sommes le ${today()}. Voici le profil d'un lecteur de nouvelles, écrit par lui-même :
 """${text}"""
-${topics.length > 0 ? `Thèmes qu'il a cochés : ${topics.join(', ')}.\n` : ''}Il lit les nouvelles en : ${languages.map(language => LANGUAGE_NAMES[language] ?? language).join(', ')}.
+${topics.length > 0 ? `Thèmes qu'il a cochés : ${topics.join(', ')}.\n` : ''}Il lit les nouvelles en : ${languages.map(frenchName).join(', ')}.
 
 Découpe ce profil en 1 à ${MAX_INTERESTS} intérêts distincts. Ce que le lecteur dit ne pas vouloir n'est pas un intérêt : ne le mets dans aucun intérêt, mets-le dans "refused".
 Pour chaque intérêt, donne :
