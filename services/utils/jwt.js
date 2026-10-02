@@ -2,28 +2,59 @@
 //  Author: Fabian Rostello
 //  Date: 19.05.2026
 //  File: jwt.js
-//  Description: JSONWebToken generation and verification
+//  Description: JSONWebToken generation and verification, kept in a cookie the page cannot read
 //
 
 import process from 'node:process'
 import 'dotenv/config';
 import jwt from 'jsonwebtoken'
 
+// The token lives in an HttpOnly cookie: a script of the page (a dependency gone bad, a hole in the
+// rendering of a title of a feed) cannot read it, as it could in the storage of the browser. Strict:
+// the browser never sends it with a request another site starts. Secure when the reader came through
+// https (the tunnel of Cloudflare, see app.js), so the API still answers on the local network in http
+export const SESSION_COOKIE = 'session';
+const SESSION_DAYS = 7;
+// a session in use is renewed once a day: a reader who comes back within a week stays signed in
+const RENEW_SECONDS = 24 * 3600;
+const EXPIRED = 'Forbidden, invalid or expired token... Please try to log in';
 
-export const generateAccessToken = (user) => {
-    return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'});
-}
+export const generateAccessToken = ({id, username, email, role}) =>
+    jwt.sign({id, username, email, role}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: `${SESSION_DAYS}d`});
+
+const cookieOptions = (res) => ({
+    httpOnly: true,
+    sameSite: 'strict',
+    secure: res.req?.secure === true,
+    path: '/api',
+});
+
+export const startSession = (res, token) =>
+    res.cookie(SESSION_COOKIE, token, {...cookieOptions(res), maxAge: SESSION_DAYS * 24 * 3600e3});
+
+export const endSession = (res) => res.clearCookie(SESSION_COOKIE, cookieOptions(res));
+
+// the value of a cookie of the request, null when it has none
+export const cookieOf = (req, name) => {
+    for (const part of (req.get('Cookie') ?? '').split(';')) {
+        const [key, ...value] = part.trim().split('=');
+        if (key === name) {
+            try {
+                return decodeURIComponent(value.join('='));
+            } catch {
+                return null;
+            }
+        }
+    }
+    return null;
+};
 
 export const authenticateToken = (req, res, next) => {
-    const authHeader = req.get('Authorization')
-    const token = authHeader && authHeader.split(' ')[1];
-
     try {
-        req.user = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-        next(); // Continue to the next middleware or route
-    } catch (e) {
-        return res.status(403).json({
-            error: 'Forbidden, invalid or expired token... Please try to log in',
-        });
+        req.user = jwt.verify(cookieOf(req, SESSION_COOKIE) ?? '', process.env.ACCESS_TOKEN_SECRET);
+    } catch {
+        return res.status(403).json({error: EXPIRED});
     }
+    if (Date.now() / 1000 - req.user.iat > RENEW_SECONDS) startSession(res, generateAccessToken(req.user));
+    next(); // Continue to the next middleware or route
 };

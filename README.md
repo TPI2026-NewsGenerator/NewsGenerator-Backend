@@ -914,8 +914,19 @@ on, with the database, in Docker (`deploy/compose.yml`):
 |---|---|---|
 | `newsgenerator-db` | PostgreSQL 18 + pgvector, 2 GB of `shared_buffers` | the address of the machine, port 5433 |
 | `newsgenerator-api` | this server and its background work (`Dockerfile`) | the address of the machine, port 3001 |
+| `newsgenerator-web` | Caddy: the client built by `deploy.sh` and `/api` sent to the API, on one address (`deploy/Caddyfile`) | the address of the machine, port 8080, and the tunnel |
+| `newsgenerator-tunnel` | the tunnel of Cloudflare to `news.fabianrostello.com`, started when `tunnel.env` is there | nothing: it goes out to Cloudflare |
 | `newsgenerator-rss-bridge` | RSS-Bridge | the API only (`http://rss-bridge`) |
 | `newsgenerator-embedder` | the embedder on the processor (`embedder/Dockerfile`), started apart | the address of the machine, port 8020 |
+
+Nothing listens on the internet: the tunnel goes out to Cloudflare, which ends the https and sends
+`news.fabianrostello.com` to `http://web:80` (a public hostname of the tunnel, set on the dashboard
+of Cloudflare). The page and its API being on one address, the session is a cookie of the site:
+`HttpOnly` (no script of the page reads it), `SameSite=Strict` (never sent with a request another
+site starts), `Secure` when the reader came through https, valid 7 days and renewed once a day while
+used (`services/utils/jwt.js`, `GET` and `DELETE /api/session`). The sign-in allows 10 attempts per
+address in 15 minutes: the API reads the address of the reader the tunnel and Caddy forward (`trust
+proxy` on private addresses, `app.js`).
 
 Split over two machines, the database on a laptop and the embedder on another, everything stopped
 as soon as either one did: on the night of 1.10 the laptop restarted for an update at 3:36, then slept
@@ -923,8 +934,10 @@ until noon, and no feed was read for 8 hours. Together on one machine, the graph
 one stays first in `EMBEDDER_URL` when it is on, the embedder of the machine takes over when it is off.
 
 Next to the code, in `~/newsgenerator` on the machine, readable by its owner only and never sent with
-the code: `db.env` (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`) and `api.env`, the `.env` of
-the server with `DATABASE_URL` to `db:5432` and `RSS_BRIDGE_URL=http://rss-bridge`.
+the code: `db.env` (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`), `api.env`, the `.env` of
+the server with `DATABASE_URL` to `db:5432` and `RSS_BRIDGE_URL=http://rss-bridge`, and `tunnel.env`
+(`TUNNEL_TOKEN`, given by Cloudflare when the tunnel is created). The client built is sent to
+`~/newsgenerator/client-dist`.
 
 To send the code and start it again (from any machine reaching it by ssh):
 

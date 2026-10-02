@@ -51,13 +51,13 @@ const options = {
                 "description": "The stories of the last 48 hours chosen for the profile, read, summarized and counted"
             }
         ],
-        // every route but /login needs the token, so it is asked once at the top of the page
-        "security": [{"bearerAuth": []}],
+        // every route but /login and /signup needs the session cookie they set
+        "security": [{"cookieAuth": []}],
         "paths": {
             "/login": {
                 "post": {
                     "tags": ["Login"],
-                    "summary": "Sign in and get a token",
+                    "summary": "Sign in: the session is set in an HttpOnly cookie",
                     "security": [],
                     "requestBody": {
                         "required": true,
@@ -76,23 +76,54 @@ const options = {
                     },
                     "responses": {
                         "200": {
-                            "description": "The user and the token to send as `Authorization: Bearer <token>`",
+                            "description": "The user; the browser keeps the `session` cookie and sends it with every request to /api",
                             "content": {
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
                                         "properties": {
-                                            "id_user": {"type": "integer"},
-                                            "token": {"type": "string"}
+                                            "id_user": {"type": "integer"}
                                         }
                                     }
                                 }
                             }
                         },
                         "400": {"description": "Username or password missing"},
+                        "429": {"description": "More than 10 attempts from this address in 15 minutes"},
                         "401": {"description": "Wrong password"},
                         "404": {"description": "No such user"}
                     }
+                }
+            },
+            "/session": {
+                "get": {
+                    "tags": ["Login"],
+                    "summary": "The signed in user, read from the session cookie",
+                    "responses": {
+                        "200": {
+                            "description": "The user",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {"type": "integer"},
+                                            "username": {"type": "string"},
+                                            "email": {"type": "string"},
+                                            "role": {"type": "integer"}
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "403": {"description": "No session, or an expired one"}
+                    }
+                },
+                "delete": {
+                    "tags": ["Login"],
+                    "summary": "Sign out: the session cookie is removed",
+                    "security": [],
+                    "responses": {"204": {"description": "Signed out"}}
                 }
             },
             "/signup": {
@@ -122,14 +153,13 @@ const options = {
                     },
                     "responses": {
                         "201": {
-                            "description": "The account, signed in as by POST /login",
+                            "description": "The account, signed in as by POST /login (the `session` cookie)",
                             "content": {
                                 "application/json": {
                                     "schema": {
                                         "type": "object",
                                         "properties": {
-                                            "id_user": {"type": "integer"},
-                                            "token": {"type": "string"}
+                                            "id_user": {"type": "integer"}
                                         }
                                     }
                                 }
@@ -1106,11 +1136,11 @@ const options = {
                 }
             },
             "securitySchemes": {
-                "bearerAuth": {
-                    "type": "http",
-                    "scheme": "bearer",
-                    "bearerFormat": "JWT",
-                    "description": "The token answered by POST /login. The user is always read from it, never from the request, so a user can only ever reach their own sources and searches."
+                "cookieAuth": {
+                    "type": "apiKey",
+                    "in": "cookie",
+                    "name": "session",
+                    "description": "The token set by POST /login, in an HttpOnly cookie the page cannot read, valid 7 days and renewed once a day while used. The user is always read from it, never from the request, so a user can only ever reach their own sources and searches."
                 }
             }
         }

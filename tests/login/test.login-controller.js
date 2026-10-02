@@ -24,14 +24,14 @@ describe('authUser', () => {
     beforeEach(() => {
         mockRes = {
             status: jest.fn().mockReturnThis(), // permet de chainer .status().json()
-            json: jest.fn().mockReturnThis()
+            json: jest.fn().mockReturnThis(),
+            cookie: jest.fn().mockReturnThis(),
         };
     });
 
-    it('should return status 200 with user id + jwt token', async () => {
+    it('should return status 200 with the user id, the token in an HttpOnly cookie only', async () => {
         // given
-        const mockControllerResponse = {id_user: 1, token: 'mock-token'}
-        LoginService.authUser.mockResolvedValue(mockControllerResponse);
+        LoginService.authUser.mockResolvedValue({id_user: 1, token: 'mock-token'});
         mockReq = { body: { username: "joe", password: "strongPass" }}
 
         // when
@@ -39,7 +39,8 @@ describe('authUser', () => {
 
         // then
         expect(result.status).toHaveBeenCalledWith(200);
-        expect(result.json).toHaveBeenCalledWith(mockControllerResponse);
+        expect(result.json).toHaveBeenCalledWith({id_user: 1});
+        expect(result.cookie).toHaveBeenCalledWith('session', 'mock-token', expect.objectContaining({httpOnly: true, sameSite: 'strict', path: '/api'}));
     });
 
     it('should return status 404 if service has no username', async () => {

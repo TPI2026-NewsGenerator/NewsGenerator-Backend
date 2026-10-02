@@ -7,9 +7,12 @@
 #   ~/newsgenerator/db.env    POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
 #   ~/newsgenerator/api.env   the .env of the server, DATABASE_URL to db:5432 and RSS_BRIDGE_URL to
 #                             http://rss-bridge
+#   ~/newsgenerator/tunnel.env  TUNNEL_TOKEN of the tunnel of Cloudflare (optional: without it the
+#                             site is served on the local network only, see deploy.sh)
 #
-# Only the database and the API listen on the network, on the address of the machine (HOST_IP):
-# the API for the client, the database for the server run by hand on another machine while coding.
+# Only the database, the API and the site listen on the network, on the address of the machine
+# (HOST_IP): the site and the API for the local network, the database for the server run by hand on
+# another machine while coding. The internet reaches the site through the tunnel only.
 
 name: newsgenerator
 
@@ -39,6 +42,32 @@ services:
     ports:
       - "${HOST_IP:-192.168.1.135}:3001:3001"
 
+  # the page and its API on one address (Caddyfile), the client built by deploy.sh
+  web:
+    image: caddy:2.11-alpine
+    container_name: newsgenerator-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../../client-dist:/srv:ro
+      - web-data:/data
+    ports:
+      - "${HOST_IP:-192.168.1.135}:8080:80"
+
+  # news.fabianrostello.com -> http://web:80, set in the tunnel on the dashboard of Cloudflare.
+  # Started only with ~/newsgenerator/tunnel.env (the profile "tunnel", see deploy.sh)
+  tunnel:
+    image: cloudflare/cloudflared:2026.9.3
+    container_name: newsgenerator-tunnel
+    restart: unless-stopped
+    profiles: ["tunnel"]
+    command: tunnel --no-autoupdate run
+    env_file: ../../tunnel.env
+    depends_on:
+      - web
+
   rss-bridge:
     image: rssbridge/rss-bridge:latest
     container_name: newsgenerator-rss-bridge
@@ -49,3 +78,4 @@ services:
 
 volumes:
   db:
+  web-data:

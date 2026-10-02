@@ -15,6 +15,9 @@ import swaggerSpec from './config/swagger.js';
 
 
 const app = express();
+// served behind Caddy and the tunnel of Cloudflare (deploy/Caddyfile): the address of the reader is
+// the one they forward, the limits of the login and the signup count per reader (see rate-limit.js)
+app.set('trust proxy', 'loopback, uniquelocal');
 app.use(express.json());
 app.use(cors());
 

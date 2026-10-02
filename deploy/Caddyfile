@@ -1,0 +1,38 @@
+# The site of NewsGenerator: the page (the client built by deploy.sh, in /srv) and its API on the same
+# address, so the session cookie is of the site (see services/utils/jwt.js). Reached through the
+# tunnel of Cloudflare (compose.yml), which ends the https: nothing listens on the internet here.
+{
+	auto_https off
+	# the tunnel and the local network are private addresses: the address of the reader and the
+	# https they forward are kept for the API (rate limits, Secure cookie)
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+:80 {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	handle /api/* {
+		reverse_proxy api:3001
+	}
+
+	# the files of a build are named by their content: kept a year; the page itself asked each time
+	@assets path /assets/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+
+	handle {
+		root * /srv
+		header Cache-Control "no-cache"
+		# the routes of the app (/briefing, /profile...) are the page
+		try_files {path} /index.html
+		file_server
+	}
+}

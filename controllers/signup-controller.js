@@ -8,13 +8,17 @@
 "use strict"
 
 import {SignupService} from "../services/signup-service.js";
+import {startSession} from "../services/utils/jwt.js";
 
 export const SignupController = {
     register: async (req, res) => {
         const {username, email, password, text, topics, language} = req.body ?? {};
 
         try {
-            return res.status(201).json(await SignupService.register({username, email, password, text, topics, language}));
+            // signed in at once, the token in a cookie as for the login
+            const {token, ...account} = await SignupService.register({username, email, password, text, topics, language});
+            startSession(res, token);
+            return res.status(201).json(account);
         } catch (error) {
             // anyone can call this route: what failed inside (the embedder, its address) stays here
             const status = error.status || 500;
