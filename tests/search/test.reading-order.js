@@ -22,9 +22,9 @@ describe('readingOrder', () => {
         expect(order[0]).toBe(lead);
     });
 
-    it('should read a source the reader trusts first, so the resume is written from it', () => {
-        const trusted = article('lequipe.fr', 5);
-        const order = readingOrder([article('lemonde.fr', 3), trusted], new Set([trusted.feeds.url]));
+    it('should read a medium the reader trusts first, through any of its feeds, so the resume is written from it', () => {
+        const trusted = article('lequipe.fr', 5, 'https://dwh.lequipe.fr/api/edito/rss?path=/Football/');
+        const order = readingOrder([article('lemonde.fr', 3), trusted], new Set(['lequipe.fr']));
         expect(order[0]).toBe(trusted);
     });
 

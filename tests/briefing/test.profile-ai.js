@@ -157,6 +157,15 @@ describe('the share of each interest in a briefing', () => {
         expect(selectionPrompt("Le tennis et l'IA.", candidates, undefined, ['Tennis : circuit ATP', 'IA : modèles'])).toContain('Ses intérêts :\n- Tennis : circuit ATP\n- IA : modèles');
         expect(selectionPrompt('Le tennis.', candidates, undefined, ['Tennis : circuit ATP'])).not.toContain('Ses intérêts');
     });
+
+    it('should mark the stories of a medium the reader trusts, and say so only when there are some', () => {
+        const candidates = [{id: '1', title: 'Arthur Fils dans le Top 10', others: [], trusted: true}, {id: '2', title: 'Sinner gagne', others: []}];
+        const prompt = selectionPrompt('Le tennis.', candidates);
+        expect(prompt).toContain('[1] Arthur Fils dans le Top 10 (source de confiance du lecteur)');
+        expect(prompt).toContain('[2] Sinner gagne\n');
+        expect(prompt).toContain('à pertinence égale, préfère-les');
+        expect(selectionPrompt('Le tennis.', [candidates[1]])).not.toContain('source de confiance');
+    });
 });
 
 describe('normalizeCheck', () => {

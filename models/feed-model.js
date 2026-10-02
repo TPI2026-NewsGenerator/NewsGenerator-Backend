@@ -9,6 +9,7 @@
 
 import {prisma} from '../config/db.js';
 import {Filter} from '../services/utils/filter.js';
+import {mediumOf} from '../services/utils/public-url.js';
 
 const INSERT_SLICE = 1000;      // rows per INSERT, 7 values each: far under the 65535 of Postgres
 // A feed is shown as not working once it failed this many times in a row: once is often the site
@@ -309,6 +310,18 @@ export const FeedModel = {
         where: { id_user: userId, trusted: true },
         select: { url: true },
     })).map(feed => feed.url),
+    // the media the reader trusts: of the site of each trusted source, and the one its news link to the
+    // most (the feed of bbc.com links to bbc.co.uk, the one of dailymail.co.uk to dailymail.com). A
+    // medium is trusted through any of its feeds and through Google News: its news on the UEFA came
+    // through a shared feed of another address (milannews.it/rss/ for milannews.it/rss)
+    trustedMedia: async (userId) => (await prisma.$queryRawUnsafe(`
+        SELECT uf.site,
+               (SELECT a.medium FROM articles a JOIN feeds f ON f.id = a.id_feed
+                WHERE f.url = uf.url AND a.source_url IS NULL AND a.medium IS NOT NULL
+                GROUP BY a.medium ORDER BY count(*) DESC LIMIT 1) AS medium
+        FROM user_feeds uf
+        WHERE uf.id_user = $1 AND uf.trusted`, userId))
+        .flatMap(row => [mediumOf(row.site.replace(/^www\./, '')), row.medium].filter(Boolean)),
     deleteUserFeed: async (userId, id) => {
         const { count } = await prisma.user_feeds.deleteMany({
             where: { id: id, id_user: userId },

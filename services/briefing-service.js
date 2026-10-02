@@ -44,11 +44,13 @@ const GOOGLE_CANDIDATES = 10;
 const GOOGLE_PER_MEDIUM = 2;
 // the closest stories ranked: the ones known only through Google News take many of the first places
 const RANKED = 150;
-// A story told by a source the reader trusts gets TRUST_BONUS, among the TRUST_POOL closest stories
-// only: a trusted source never brings a story far from the profile. On the UEFA profile the scores
-// were 0.516 at rank 40 and 0.502 at rank 60: the bonus lifts a story from about 60th to 35th
+// A story told by a medium the reader trusts (see FeedModel.trustedMedia), among the TRUST_POOL closest
+// stories, is given to the AI besides the CANDIDATES, TRUSTED_CANDIDATES at most: a trusted source never
+// brings a story far from the profile, and never takes the place of a closer one. A bonus of the score
+// did (bench/trust-thumbs.mjs, the UEFA reader with 4 media trusted): 2 stories of one of them off the
+// profile went into the 40, the AI left them out, and the 40th it would have chosen was gone
 const TRUST_POOL = 60;
-const TRUST_BONUS = 0.02;
+const TRUSTED_CANDIDATES = 10;
 const READ_PER_STORY = 5;           // articles of a story read to count who wrote it themselves
 const AI_CONCURRENCY = 5;
 const DESCRIPTION_CHARS = 200;
@@ -100,12 +102,15 @@ const siteOf = (article) => hostOf(article.source_url ?? article.link) ?? '';
 const mediumOfArticle = (article) => mediumOf(siteOf(article));
 const addressOf = (article) => article.resolved_link ?? article.link;
 
+// trusted: the media the reader trusts
+const isTrusted = (article, trusted) => trusted.has(mediumOfArticle(article));
+
 const toArticle = (article, trusted = new Set()) => ({
     title: article.title,
     url: addressOf(article),        // a link of Google News not decoded: the browser follows it
     source: siteOf(article),
     publishedAt: article.at?.toISOString?.() ?? null,
-    trusted: trusted.has(article.feed_url),         // from a source the reader trusts
+    trusted: isTrusted(article, trusted),           // of a medium the reader trusts
 });
 
 // the articles of a story to read: one of a source the reader trusts first (the summary is written
@@ -118,7 +123,8 @@ const toArticle = (article, trusted = new Set()) => ({
 const toRead = (story, trusted = new Set(), language = null) => {
     const inLanguage = (article) => Boolean(language) && article.lang === language;
     const newest = [...story.members].sort((a, b) => b.at - a.at);
-    const first = story.members.find(article => trusted.has(article.feed_url))
+    const first = story.members.find(article => isTrusted(article, trusted) && !fromGoogle(article))
+        ?? story.members.find(article => isTrusted(article, trusted))
         ?? (inLanguage(story.best) ? story.best : null)
         ?? newest.find(article => inLanguage(article) && !fromGoogle(article))
         ?? newest.find(inLanguage)
@@ -242,8 +248,8 @@ const write = async (briefingId, userId) => {
     const feedback = await FeedbackService.of(userId);
     const refused = new Set(feedback.refused);
     const feedUrls = (await feedsOf(userId)).filter(url => !refused.has(url));
-    // the sources the reader trusts: their stories get a bonus, among the TRUST_POOL closest only
-    const trusted = new Set(await FeedModel.trustedFeedUrls(userId));
+    // the media the reader trusts: their stories among the TRUST_POOL closest are candidates too
+    const trusted = new Set(await FeedModel.trustedMedia(userId));
     const ranked = await StoryModel.rank({
         userId, feedUrls, since,
         languages: null,
@@ -262,21 +268,25 @@ const write = async (briefingId, userId) => {
     const media = await established();
     const byId = new Map(ranked.map((row, rank) => {
         const news = members.get(row.id_story);
-        // the bonus only among the TRUST_POOL closest: a trusted source never brings a story far
-        // from the profile
-        const told = rank < TRUST_POOL && news.some(article => trusted.has(article.feed_url));
         return [String(row.id_story), {
             storyId: row.id_story,
             best: news.find(article => article.id === row.id_article) ?? news[0],
             interestId: row.id_interest,
             interest: interests.find(interest => interest.id === row.id_interest)?.text ?? null,
             members: news,
-            score: Number(row.score) + (told ? TRUST_BONUS : 0),
+            score: Number(row.score),
+            // told by a medium the reader trusts: the AI is told so; a candidate besides the closest
+            // among the TRUST_POOL first only
+            told: news.some(article => isTrusted(article, trusted)),
+            pooled: rank < TRUST_POOL,
         }];
     }));
-    const candidates = pickCandidates([...byId.values()]
+    const choosable = [...byId.values()]
         .filter(story => story.best && credibleStory(story.members, media) && !isRepeatedPage(story.members))
-        .sort((a, b) => b.score - a.score), {fromFeeds: CANDIDATES, extra: GOOGLE_CANDIDATES, perMedium: GOOGLE_PER_MEDIUM});
+        .sort((a, b) => b.score - a.score);
+    const closest = pickCandidates(choosable, {fromFeeds: CANDIDATES, extra: GOOGLE_CANDIDATES, perMedium: GOOGLE_PER_MEDIUM});
+    const kept = new Set([...closest, ...choosable.filter(story => story.told && story.pooled && !closest.includes(story)).slice(0, TRUSTED_CANDIDATES)]);
+    const candidates = choosable.filter(story => kept.has(story));
 
     // 2. the AI chooses, against the whole profile and what it refuses
     await step('choosing');
@@ -285,6 +295,7 @@ const write = async (briefingId, userId) => {
         title: story.best.title,
         description: (story.best.description ?? '').slice(0, DESCRIPTION_CHARS),
         others: story.members.filter(article => article !== story.best).map(article => article.title).slice(0, 3),
+        trusted: story.told,
     })), usage.choosing, feedback.examples, interests.map(interest => interest.text));
     const selected = balanceSelection(chosenByAi, id => byId.get(id)?.interestId, interests);
     if (selected.length === 0) return [];
@@ -411,7 +422,7 @@ const write = async (briefingId, userId) => {
                 mediaNames: [...new Set(members.map(mediumOfArticle))],
             },
             // the ones of a trusted source first: its star was sixth of eleven, behind "show all"
-            articles: onceEach([...members].sort((a, b) => trusted.has(b.feed_url) - trusted.has(a.feed_url)),
+            articles: onceEach([...members].sort((a, b) => isTrusted(b, trusted) - isTrusted(a, trusted)),
                 {medium: mediumOfArticle, fromGoogle})
                 .map(article => toArticle(article, trusted)),
         };

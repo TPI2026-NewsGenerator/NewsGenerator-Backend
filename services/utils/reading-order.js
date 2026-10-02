@@ -44,8 +44,9 @@ ${titleOf(article)}`;
 // articles: rows of the cache with the url of their feed ({feeds: {url}}), the lead of the card first.
 // One of a source the reader trusts comes first (the resume is written from the first one that can be
 // read), else the lead, then one per other medium, the newest first
+// trusted: the media the reader trusts (see FeedModel.trustedMedia)
 export const readingOrder = (articles, trusted = new Set()) => {
-    const first = articles.find(article => trusted.has(article.feeds?.url)) ?? articles[0];
+    const first = articles.find(article => trusted.has(mediumOfArticle(article))) ?? articles[0];
     const byMedium = new Map();
     for (const article of [first, ...[...articles].sort((a, b) => dateOf(b) - dateOf(a))]) {
         const medium = mediumOfArticle(article);

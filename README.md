@@ -796,9 +796,14 @@ stories built by the background work, and goes through these steps:
    translated with its passages.
    Each news scores its best interest, weight × (dense + 0.5 × sparse) of its title and the start of
    its description, and a story scores its best news. A story already shown can come back: the reader
-   passes it, and leaving out every card shown left fewer news to choose from. A story told by a source the reader trusts gets a small bonus, among the 60 closest only: a
-   trusted source never brings a story far from the profile. The AI chooses from the 40 best stories
-   told by a feed, and at most 10 known only through Google News (see **Google News** below).
+   passes it, and leaving out every card shown left fewer news to choose from. The AI chooses from the
+   40 best stories told by a feed, and at most 10 known only through Google News (see **Google News**
+   below). A source the reader trusts counts for its medium (`FeedModel.trustedMedia`: the medium of
+   its site and the one its news link to), through any feed and through Google News: its stories among
+   the 60 closest are candidates too, 10 at most, besides the 40. A trusted source never brings a story
+   far from the profile, and never takes the place of a closer one: a bonus of the score did
+   (`bench/trust-thumbs.mjs`), 2 stories of a trusted medium off the profile went into the 40 and the
+   40th, chosen before, was gone.
 2. **Choosing.** The AI reads the candidates against the whole profile, with the cards the reader
    gave a thumb as examples, and chooses up to 15. The refusals of the profile are left to it: as
    vectors they removed good stories with the bad. Then each interest gets its share of the 10 places,

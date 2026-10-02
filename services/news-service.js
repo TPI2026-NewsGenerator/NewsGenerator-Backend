@@ -556,7 +556,7 @@ export const NewsService = {
     // language searched. The passages of an article are kept, a news asked twice costs nothing.
     summarizeStories: async (stories, {userId = null, language = 'en'} = {}) => {
         const articles = await NewsService.cachedArticles([...new Set(stories.flatMap(story => story.urls))]);
-        const trusted = new Set(userId ? await FeedModel.trustedFeedUrls(userId) : []);
+        const trusted = new Set(userId ? await FeedModel.trustedMedia(userId) : []);
 
         const members = stories.map(story => story.urls.map(url => articles.get(url)));
         const reads = members.map(list => readingOrder(list, trusted));
@@ -642,13 +642,13 @@ export const NewsService = {
                         : "No article of this news could be read in full (paywall, protected site or its first lines only).",
                 corroboration: {...corroboration, mediaNames: [...new Set(list.map(mediumOfArticle))]},
                 articles: onceEach([...list]
-                    .sort((a, b) => Number(trusted.has(b.feeds?.url)) - Number(trusted.has(a.feeds?.url)) || dateOf(b) - dateOf(a)), {fromGoogle})
+                    .sort((a, b) => Number(trusted.has(mediumOfArticle(b))) - Number(trusted.has(mediumOfArticle(a))) || dateOf(b) - dateOf(a)), {fromGoogle})
                     .map(article => ({
                         url: article.link,
                         source: siteOf(article),
                         title: article.title,
                         publishedAt: article.published_at?.toISOString() ?? '',
-                        trusted: trusted.has(article.feeds?.url),
+                        trusted: trusted.has(mediumOfArticle(article)),
                     })),
             };
         });

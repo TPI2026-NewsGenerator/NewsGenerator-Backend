@@ -185,22 +185,26 @@ ${liked.length > 0 ? `il les a trouvées bonnes pour lui :\n${liked.map(title =>
 // tennis, AI and Swiss politics, 1 or 2 on tennis with 12 to 14 tennis candidates. Its interests are
 // given, it chooses up to MAX_CHOSEN and the briefing keeps a share of each (see balanceSelection).
 // The rules other steps do were taken out: two stories of one news (merged by mergeStories before any
-// summary), a precision read out of its subject (the review of the cards with their summary), the
-// trusted sources (a bonus of their score, TRUST_BONUS). The others are said for any subject, the
+// summary), a precision read out of its subject (the review of the cards with their summary). The
+// stories of a medium the reader trusts are marked, to be preferred at equal relevance: replayed on the
+// UEFA reader with 4 media trusted (bench/trust-thumbs.mjs), 2 cards of them in 5 runs of 5, 1 in 4 of
+// 5 unmarked, and never one off the profile (2 of the candidates were). The others are said for any subject, the
 // refusals with the example of the review (a looser one cost the reader of food 1 or 2 cards of 5 on
 // restaurants as "people"). Measured on the 3 accounts, 2 to 4 runs each: the same share of each
 // interest, 5 cards on refereeing of 10 for the UEFA one (3 before)
+const TRUSTED_MARK = ' (source de confiance du lecteur)';
+
 export const selectionPrompt = (profileText, candidates, examples = {liked: [], refused: []}, interests = []) => `Voici le profil d'un lecteur, écrit par lui-même :
 """${profileText}"""
 ${interests.length > 1 ? `Ses intérêts :\n${interests.map(interest => `- ${interest}`).join('\n')}\n` : ''}${feedbackBlock(examples)}
 Voici des histoires d'actualité du jour, chacune avec son identifiant entre crochets :
-${candidates.map(c => `[${c.id}] ${c.title}${c.description ? ` — ${c.description}` : ''}${c.others.length > 0 ? ` (aussi : ${c.others.join(' / ')})` : ''}`).join('\n')}
+${candidates.map(c => `[${c.id}] ${c.title}${c.trusted ? TRUSTED_MARK : ''}${c.description ? ` — ${c.description}` : ''}${c.others.length > 0 ? ` (aussi : ${c.others.join(' / ')})` : ''}`).join('\n')}
 
 Choisis au plus ${MAX_CHOSEN} histoires qui correspondent vraiment à ce que ce lecteur demande, de la plus à la moins pertinente.${interests.length > 1 ? `
 Couvre tous ses intérêts : pour chacun, donne les histoires qui lui conviennent, même quand un autre intérêt en a de plus fortes. Son résumé en gardera ${MAX_BRIEFING}, réparties entre ses intérêts.` : ''}
 Ce qu'il dit ne pas vouloir est exclu, même quand l'histoire touche un de ses intérêts et même quand son titre ne le nomme pas (une équipe d'un sport refusé, un parti d'une politique refusée).
 S'il y en a moins de ${MAX_CHOSEN} qui conviennent, n'en rends que celles-là : une liste courte vaut mieux qu'une histoire hors sujet.
-Varie : pas deux histoires sur la même personne, la même organisation ou le même événement, sauf si ce sont deux nouvelles importantes et différentes.
+${candidates.some(c => c.trusted) ? `Les histoires marquées « source de confiance du lecteur » sont racontées par un média qu'il a mis en favori : à pertinence égale, préfère-les. Ne choisis jamais pour cela une histoire qui ne correspond pas à ce qu'il demande.\n` : ''}Varie : pas deux histoires sur la même personne, la même organisation ou le même événement, sauf si ce sont deux nouvelles importantes et différentes.
 Préfère les faits du jour (décisions, annonces, résultats, déclarations) aux pronostics, conseils et guides, sauf si le lecteur les demande. Ne choisis jamais une page qui n'apporte aucun fait nouveau : présentation générale d'un sujet, guide pratique, billetterie, classement, calendrier, direct, compilation.
 Pour chacune, "why" est une phrase courte qui dit au lecteur pourquoi elle est pour lui, dans la langue de son profil, tirée seulement de ce que disent son titre et sa description : si le lien avec le profil n'y est pas, ne la choisis pas.
 Réponds uniquement en JSON : {"selected": [{"id": "...", "why": "une phrase courte"}]}`;
@@ -245,7 +249,8 @@ export const balanceSelection = (selected, interestOf, interests) => {
     return selected.filter(item => kept.has(item));
 };
 
-// candidates: [{id, title, description, others: [titles]}]
+// candidates: [{id, title, description, others: [titles], trusted}], trusted when a medium the reader
+// trusts tells it
 // examples: {liked: [titles], refused: [titles]}, the thumbs of the reader (see utils/feedback.js)
 // interests: the texts of the interests of the reader
 export const selectStories = async (profileText, candidates, usage = null, examples = undefined, interests = []) =>
