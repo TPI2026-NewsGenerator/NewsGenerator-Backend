@@ -27,6 +27,20 @@ export const allocate = (perInterest, room) => {
     return kept;
 };
 
+// The searches of an interest asked to Media Cloud: both of the language of the reader and of English,
+// the first one only of the others. It answers 2 searches a minute; measured on 5 profiles
+// (bench/mc-one-search.mjs), one search per language halved the queue (27 to 13 minutes) but lost 2
+// media of 13, all of them found by the second search in French or English; the other languages lost
+// none. searches: [{lang, q}] in their order
+export const pressSearches = (searches, readerLanguage) => {
+    const seen = new Set();
+    return searches.filter(({lang}) => {
+        const first = !seen.has(lang);
+        seen.add(lang);
+        return first || lang === readerLanguage || lang === 'en';
+    });
+};
+
 // The media named for an interest tried language by language, each in its order, a wave at a time,
 // until enough of them gave a feed on the subject or enough were tried: taken all together, the six
 // first of a reader of French and English were English (Google News answers up to 100 news in English,

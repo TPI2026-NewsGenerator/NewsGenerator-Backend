@@ -5,7 +5,7 @@
 //  Description: Tests for the feeds kept for a profile, shared between its interests
 //
 
-import {allocate, staleFeeds, tryPerLanguage} from '../../services/utils/allocation.js'
+import {allocate, pressSearches, staleFeeds, tryPerLanguage} from '../../services/utils/allocation.js'
 
 describe('allocate', () => {
     it('should take the feeds in turn from each interest, the best first', () => {
@@ -88,5 +88,22 @@ describe('staleFeeds', () => {
             {id: 2, url: 'kept', created_at: daysAgo(30), news: 50, relevant: 0},
         ];
         expect(staleFeeds(rows, {...options, kept: ['kept']}).map(row => row.id)).toEqual([1]);
+    });
+});
+
+describe('pressSearches', () => {
+    it('should ask both searches of the language of the reader and of English, the first only of the others', () => {
+        const searches = [
+            {lang: 'fr', q: 'arbitrage football'}, {lang: 'fr', q: 'analyse VAR'},
+            {lang: 'en', q: 'football referee'}, {lang: 'en', q: 'VAR analysis'},
+            {lang: 'es', q: 'arbitraje fútbol'}, {lang: 'es', q: 'decisión VAR'},
+            {lang: 'it', q: 'arbitraggio calcio'},
+        ];
+        expect(pressSearches(searches, 'fr').map(search => search.q)).toEqual([
+            'arbitrage football', 'analyse VAR', 'football referee', 'VAR analysis', 'arbitraje fútbol', 'arbitraggio calcio',
+        ]);
+        expect(pressSearches(searches, 'es').map(search => search.q)).toEqual([
+            'arbitrage football', 'football referee', 'VAR analysis', 'arbitraje fútbol', 'decisión VAR', 'arbitraggio calcio',
+        ]);
     });
 });

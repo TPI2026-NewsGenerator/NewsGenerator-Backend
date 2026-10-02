@@ -19,7 +19,8 @@ import {parseVector} from "./utils/embedder.js";
 import {JUDGE_THRESHOLD, judgeOf} from "./utils/meaning-judge.js";
 import {nameOf} from "./utils/public-url.js";
 import {confirmOnSubject, parseSearch} from "./utils/profile-ai.js";
-import {allocate, staleFeeds, tryPerLanguage} from "./utils/allocation.js";
+import {allocate, pressSearches, staleFeeds, tryPerLanguage} from "./utils/allocation.js";
+import {readerLanguage} from "./utils/language.js";
 import {FeedModel} from "../models/feed-model.js";
 import {bridgeRoom, MAX_NEW_PROFILE_FEEDS, MAX_PROFILE_FEEDS, withinBridgeRoom} from "./utils/feed-limits.js";
 
@@ -68,9 +69,9 @@ const mediaOf = async (searches) => {
 
 // the media of the press Media Cloud names for the searches of an interest, the most present first.
 // Its searches wait in their own queue (2 a minute): never an error, at worst none
-const pressMediaOf = async (searches) => {
+const pressMediaOf = async (searches, readerLanguage) => {
     const media = new Map();
-    for (const {lang, q} of searches.map(parseSearch).filter(Boolean)) {
+    for (const {lang, q} of pressSearches(searches.map(parseSearch).filter(Boolean), readerLanguage)) {
         for (const medium of await pressMediaFor(q, {language: lang})) {
             const key = nameOf(medium.site);
             const known = media.get(key) ?? {...medium, news: 0};
@@ -131,7 +132,8 @@ const discover = async (userId) => {
     // The press of every interest asked at once: its searches wait for their turn (2 a minute) while
     // the media of Google News are tried. Asked interest after interest, the queue stood still during
     // the tries of each: 14 minutes for a reader of 3 interests, the queue alone needs 4 per interest
-    const pressOf = interests.map(interest => mediaCloudEnabled() ? pressMediaOf(interest.searches) : Promise.resolve([]));
+    const language = readerLanguage(await ProfileModel.get(userId) ?? {});
+    const pressOf = interests.map(interest => mediaCloudEnabled() ? pressMediaOf(interest.searches, language) : Promise.resolve([]));
     for (const [index, interest] of interests.entries()) {
         const press = pressOf[index];
         const named = await mediaOf(interest.searches);

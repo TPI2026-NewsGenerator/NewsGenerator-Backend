@@ -874,7 +874,11 @@ the trading cards: it knows no specialist site. It answers 2 searches a minute, 
 a queue of their own while the media of Google News are tried, and a refusal pauses it 15 minutes. The
 searches of every interest are asked at the start of the discovery, and an answer is kept a day: a reader
 of 3 interests in 4 languages needs 12 minutes of the queue, which stood still before during the tries of
-each interest (14 minutes in all for the UEFA profile, 8 for one of 2 interests).
+each interest (14 minutes in all for the UEFA profile, 8 for one of 2 interests). Both searches of an
+interest are asked in the language of the reader and in English, the first one only in the others:
+measured on 5 profiles (`bench/mc-one-search.mjs`), one search everywhere halved the queue but lost 2
+media of 13, all from the second search in French or English; the other languages lost none (24
+searches instead of 18 for the UEFA profile, in 4 languages).
 
 A discovery runs in the memory of the server: one a restart stopped (a deploy) is started again when the
 server starts, instead of staying "running" for good.
