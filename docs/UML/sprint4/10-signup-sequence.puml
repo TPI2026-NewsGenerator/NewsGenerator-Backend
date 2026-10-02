@@ -15,13 +15,13 @@ participant profileModel as ProfileModel
 participant discoveryService as Discovery
 database "PostgreSQL" as DB
 
-Reader -> Client : name, email, password,\nwhat they want to read, topics, languages
+Reader -> Client : name, email, password,\nwhat they want to read, language
 Client -> Router : POST /signup
 alt more than 5 accounts from this address in an hour
     Router --> Client : 429
 end
 Router -> Controller : register(req)
-Controller -> Signup : register({username, email, password, text, topics, languages})
+Controller -> Signup : register({username, email, password, text, language})
 Signup -> Signup : check the name, the email,\nthe password (10 to 72 bytes)
 Signup -> UserModel : taken(name, email)
 UserModel -> DB : SELECT, whatever the case
@@ -30,11 +30,11 @@ alt taken
 end
 
 group the profile read before the account is created
-    Signup -> Profile : prepare({text, topics, languages})
-    Profile -> Profile : check the text, the topics, the languages
+    Signup -> Profile : prepare({text, language})
+    Profile -> Profile : check the text and the language
     Profile -> AI : interestsOf(profile, categories)
     AI -> AI : gemma4:31b (Ollama)
-    AI --> Profile : interests, their keywords,\nsections and Google News searches
+    AI --> Profile : interests, their keywords,\nsections and Google News searches;\nwhat the reader refuses, apart
     alt no interest in the text
         Profile --> Signup : 422
         Signup --> Controller : 422, no account left behind
@@ -63,7 +63,9 @@ alt the profile could not be stored
 end
 Signup -> Signup : generateAccessToken(user) (JWT)
 Signup --> Controller : {id_user, token}
-Controller --> Client : 201, signed in at once
+Controller -> Controller : startSession(token):\nHttpOnly cookie "session"
+Controller --> Client : 201 {id_user}, signed in at once
+note over Client : then GET /session: the page cannot\nread the cookie, it asks who is signed in
 note over Controller
     An error of the server (500) is not described
     to the client: anyone can call this route

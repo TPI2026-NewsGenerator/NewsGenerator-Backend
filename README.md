@@ -140,6 +140,8 @@ fp32 on the card too, so they stay the ones of the processor, already stored and
     then run `node scripts/grow-directory.js` once to fill it
 21. Do the same with "drop_profile_topics.sql" (the themes ticked with a profile, no longer used: the
     interests are read from its text alone)
+22. Do the same with "add_profile_refused.sql" (what a reader says they do not want, shown on their
+    profile; filled when a profile is saved again)
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.

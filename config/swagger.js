@@ -1063,7 +1063,8 @@ const options = {
                     "properties": {
                         "profile": {"type": "object", "nullable": true, "properties": {
                             "text": {"type": "string"},
-                            "languages": {"type": "array", "items": {"type": "string"}},
+                            "language": {"type": "string", "example": "fr", "description": "The language the news are shown in"},
+                            "refused": {"type": "array", "items": {"type": "string"}, "example": ["le football féminin"], "description": "What the reader says they do not want, as the AI read it in the text: never an interest, the briefing leaves it out"},
                             "discovery": {"type": "object", "properties": {
                                 "status": {"type": "string", "enum": ["idle", "running", "done", "failed"]},
                                 "error": {"type": "string", "nullable": true},

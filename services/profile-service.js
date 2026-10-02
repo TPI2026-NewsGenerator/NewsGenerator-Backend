@@ -29,6 +29,8 @@ const toProfile = (row) => row && ({
     text: row.text,
     // the language the news are shown in, of every language they are written in
     language: readerLanguage(row),
+    // what the AI read the reader does not want, in their words: no interest, the briefing leaves it out
+    refused: row.refused ?? [],
     discovery: {
         status: row.discovery_status,           // idle, running, done, failed
         error: row.discovery_error,
@@ -114,8 +116,8 @@ export const ProfileService = {
         }
 
         // the column keeps one language now: the news of every language are read for the reader
-        const profile = {text: written, languages: [language]};
-        const interests = await interestsOf({text: written, language, categories: FeedService.categories()});
+        const {interests, refused} = await interestsOf({text: written, language, categories: FeedService.categories()});
+        const profile = {text: written, languages: [language], refused};
         if (interests.length === 0) {
             throw Object.assign(new Error('No interest could be read in this text, describe the subjects you want to follow.'), {status: 422});
         }

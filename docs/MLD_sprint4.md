@@ -207,13 +207,13 @@ Index `i_threads_lang_updated` on `(lang, updated_at)`. Filled by the SQL functi
 |---|---|---|
 | id_user | integer | PK, FK → users.id, ON DELETE CASCADE |
 | text | text | NOT NULL — the profile in the words of the user |
-| topics | text[] | NOT NULL, default `{}` — the themes ticked at the start |
 | languages | text[] | NOT NULL, default `{}` — the languages they read |
 | discovery_status | text | NOT NULL, default `'idle'` — the search of sources for the profile: idle, running, done, failed |
 | discovery_error | text | null |
 | discovered_at | timestamptz | null |
 | updated_at | timestamptz | NOT NULL, default `now()` |
 | kept_sources | text[] | NOT NULL, default `{}` — feeds kept by the reader after their thumbs left them out |
+| refused | text[] | NOT NULL, default `{}` — what the reader says they do not want, as the AI read it in the text |
 
 One profile per user: its key is the user.
 

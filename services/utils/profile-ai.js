@@ -59,7 +59,7 @@ Pour chaque intérêt, donne :
 - "searches" : des recherches pour trouver dans Google News les médias qui publient sur ce sujet, dans chacune de ses "languages". Par langue, ${MAX_SEARCHES_PER_LANGUAGE} recherches courtes (1 à 3 mots), des mots qu'un titre d'article contiendrait, pas des phrases. "lang" est le code de la langue ("fr", "en", "sr").
 - "sections" : 1 mot par langue de ses "searches" qui nomme la rubrique d'un journal où ce sujet est publié, comme "jardin", "musique", "transports", "technologie".
 - "category" : la rubrique la plus proche parmi : ${categories.join(', ')}.
-Dans "refused", mets ce que le lecteur dit ne pas vouloir, avec ses mots, et [] s'il ne refuse rien.
+Dans "refused", mets chaque sujet que le lecteur dit ne pas vouloir, nommé seul avec ses mots, sans les mots du refus (« la téléréalité », pas « je ne veux pas de téléréalité »), et [] s'il ne refuse rien.
 Réponds uniquement en JSON : {"interests": [{"text": "...", "weight": 1, "keywords": "...", "languages": ["${language}"], "searches": [{"q": "...", "lang": "${language}"}], "sections": ["..."], "category": "${categories[0]}"}], "refused": ["..."]}`;
 
 const cleanText = (value, max) => typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, max) : '';
@@ -106,6 +106,13 @@ export const normalizeInterests = (answer, {categories}) => {
         .slice(0, MAX_INTERESTS);
 };
 
+export const MAX_REFUSED = 6;
+
+// what the reader says they do not want, in their words: shown on their profile so they see it was
+// read. The choice and the review of a briefing read it in the profile text itself
+export const normalizeRefused = (answer) => [...new Set((Array.isArray(answer?.refused) ? answer.refused : [])
+    .map(refused => cleanText(refused, 200)).filter(Boolean))].slice(0, MAX_REFUSED);
+
 // a search kept as "fr:Top 14", read back as {lang, q}
 export const parseSearch = (search) => {
     const [, lang, q] = String(search).match(/^([a-z]{2}):(.+)$/) ?? [];
@@ -115,7 +122,7 @@ export const parseSearch = (search) => {
 // Words of a profile that say how it is written, not what it is about: they are never looked for in
 // the interests
 const PROFILE_WORDS = new Set(`
-    intéresse intéressent intéresser intérêt intérêts surtout aussi tout toute tous toutes touche touchent
+    intéresse intéressent intéresser intéressé intéressée intérêt intérêts contre surtout aussi tout toute tous toutes touche touchent
     près enfin veux voudrais aime aimerais adore suivre suis rien mais plus moins très beaucoup peu
     actualité actualités nouvelles nouvelle info infos information informations sujet sujets thème thèmes
     cela ceux celles celle celui leurs notamment comme entre avec dans pour sans sont être avoir fait faire
@@ -152,13 +159,15 @@ export const missingWords = (profileText, interests, refused = []) => {
 // a secondary interest), twice each: the prompt asking for all the words of the reader left none out
 // (the one before: "nominations" and "changements" of the UEFA profile). A profile is split once when
 // it is saved, so when a word still misses the AI is asked once more, and its second answer kept only
-// when it misses fewer
+// when it misses fewer. {interests, refused}: what the reader refuses is never an interest, its vector
+// would bring the news refused
 export const interestsOf = async (profile) => {
     const prompt = interestsPrompt(profile);
     const answer = await ollamaJson(prompt);
     const interests = normalizeInterests(answer, profile);
     const missing = missingWords(profile.text, interests, answer?.refused);
-    if (missing.length === 0 || interests.length === 0) return interests;
+    const first = {interests, refused: normalizeRefused(answer)};
+    if (missing.length === 0 || interests.length === 0) return first;
 
     const again = await ollamaJson([
         {role: 'user', content: prompt},
@@ -166,7 +175,8 @@ export const interestsOf = async (profile) => {
         {role: 'user', content: `Ces mots du profil ne sont dans aucun "text" ni dans "refused" : ${missing.join(', ')}. Redonne toute ta réponse en ajoutant chacun, avec les mots qui l'entourent dans le profil, au "text" de l'intérêt qu'il précise, ou à "refused" si le lecteur le refuse. Ignore un mot qui ne dit aucun sujet.`},
     ]).catch(() => null);
     const retried = normalizeInterests(again, profile);
-    return retried.length > 0 && missingWords(profile.text, retried, again?.refused).length < missing.length ? retried : interests;
+    return retried.length > 0 && missingWords(profile.text, retried, again?.refused).length < missing.length
+        ? {interests: retried, refused: normalizeRefused(again)} : first;
 };
 
 // What the reader said of cards before, as examples: they say what the profile text does not ("no

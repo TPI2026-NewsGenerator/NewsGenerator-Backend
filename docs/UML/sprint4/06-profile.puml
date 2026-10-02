@@ -17,7 +17,6 @@ package "Presentation" {
 }
 package "Business" {
     class profileService {
-        + topics()
         + get()
         + prepare()
         + store()
@@ -40,7 +39,9 @@ package "Business" {
 }
 note right of profileService
     prepare(): the AI splits the text into
-    interests, each gets its vectors.
+    interests, each gets its vectors; what
+    the reader refuses is kept apart, never
+    an interest, and shown on the profile.
     store(): saves them all, then starts
     the discovery of sources.
     The profile chooses the briefing, it
@@ -66,9 +67,6 @@ package "utils" {
     class embedder {
         + embed()
     }
-    class topics {
-        TOPICS
-    }
     class ollama {
         + ollamaJson()
     }
@@ -87,7 +85,6 @@ profileService --> discoveryService
 profileService --> feedbackService
 profileService --> profileAi
 profileService --> embedder
-profileService --> topics
 profileAi --> ollama
 ollama --> Ollama
 embedder --> Embedder

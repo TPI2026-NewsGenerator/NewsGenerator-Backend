@@ -90,10 +90,11 @@ describe('interestsOf', () => {
     it('should ask once more when a word of the profile is missing, and keep the answer that misses fewer', async () => {
         ollamaJson
             .mockResolvedValueOnce({interests: [{text: 'Arbitrage du football : VAR'}], refused: []})
-            .mockResolvedValueOnce({interests: [{text: 'Arbitrage du football : VAR, nominations des arbitres'}], refused: []});
+            .mockResolvedValueOnce({interests: [{text: 'Arbitrage du football : VAR, nominations des arbitres'}], refused: ['le football féminin']});
 
-        const interests = await interestsOf(profile);
+        const {interests, refused} = await interestsOf(profile);
         expect(interests.map(interest => interest.text)).toEqual(['Arbitrage du football : VAR, nominations des arbitres']);
+        expect(refused).toEqual(['le football féminin']);
         const [conversation] = ollamaJson.mock.calls[1];
         expect(conversation.at(-1).content).toContain('nominations');
     });
@@ -102,7 +103,7 @@ describe('interestsOf', () => {
         ollamaJson
             .mockResolvedValueOnce({interests: [{text: 'Arbitrage du football : VAR'}]})
             .mockRejectedValueOnce(new Error('The AI did not answer in JSON.'));
-        expect((await interestsOf(profile))[0].text).toBe('Arbitrage du football : VAR');
+        expect((await interestsOf(profile)).interests[0].text).toBe('Arbitrage du football : VAR');
 
         ollamaJson.mockReset().mockResolvedValueOnce({interests: [{text: 'Arbitrage du football : VAR, nominations des arbitres'}]});
         await interestsOf(profile);
