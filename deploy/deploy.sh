@@ -13,8 +13,13 @@ set -euo pipefail
 HOST="${DEPLOY_HOST:-fabich@192.168.1.135}"
 cd "$(dirname "$0")/.."
 
-# the page calls its API on its own address (see deploy/Caddyfile)
-VITE_API_URL=/api pnpm --dir ../client run build
+# the page calls its API on its own address (see deploy/Caddyfile). Git Bash on Windows turns a value
+# starting with "/" into a path of Windows ("C:/Program Files/Git/api"): not for these variables
+MSYS2_ENV_CONV_EXCL='*' MSYS_NO_PATHCONV=1 VITE_API_URL=/api pnpm --dir ../client run build
+if grep -rq 'Program Files' ../client/dist/assets; then
+    echo 'The address of the API was turned into a path of Windows, nothing deployed.' >&2
+    exit 1
+fi
 tar -c -C ../client/dist . |
 ssh "$HOST" "set -e
     rm -rf ~/newsgenerator/client-dist.new && mkdir -p ~/newsgenerator/client-dist.new
