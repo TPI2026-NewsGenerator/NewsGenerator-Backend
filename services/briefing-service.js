@@ -61,6 +61,15 @@ const ABANDONED_MINUTES = 30;
 const MAX_DECODED = 10;
 const DECODED_PER_STORY = 2;
 const FEED_MEDIA_MINUTES = 60;      // the media read through a feed, asked again after this
+// A story is of one language (db/add_briefing.sql): a card chosen in another language than the reader's
+// asks the AI which of the VERSIONS_PER_STORY stories of the reader's language closest to it, from
+// VERSION_LIKENESS, tell its news, and those join it. Measured on a briefing of a reader of French with
+// 7 cards in 4 other languages (bench/lead-language-close.mjs, bench/versions-replay.mjs): the French
+// versions of the Negreira affair, of the UEFA payments and of Ceferin against Infantino were at 0.79
+// to 0.91 and the AI joined the 4 asked, other news of UEFA were below 0.71. The search joins the cards of two languages from 0.75 on, the AI confirming: 34 of
+// 35 right (bench/cross-language-merge.mjs)
+const VERSION_LIKENESS = 0.75;
+const VERSIONS_PER_STORY = 2;
 
 const running = new Set();          // users whose briefing is being written by this server
 
@@ -99,13 +108,22 @@ const toArticle = (article, trusted = new Set()) => ({
 });
 
 // the articles of a story to read: one of a source the reader trusts first (the summary is written
-// from the first one that can be read), else its best one, then one per other medium, the newest
-// first. A medium met through its feed and through Google News is read from its feed: no address
-// to ask Google for
-const toRead = (story, trusted = new Set()) => {
-    const first = story.members.find(article => trusted.has(article.feed_url)) ?? story.best;
+// from the first one that can be read), else its best one when written in the language of the reader,
+// else the newest one in that language (one of a feed before one of Google News, whose address must be
+// asked), else its best one; then one per other medium, the newest first. The articles in the
+// language of the reader come from its versions (see VERSION_LIKENESS): a story is of one language.
+// A medium met through its feed and through Google News is read from its feed: no address to ask
+// Google for
+const toRead = (story, trusted = new Set(), language = null) => {
+    const inLanguage = (article) => Boolean(language) && article.lang === language;
+    const newest = [...story.members].sort((a, b) => b.at - a.at);
+    const first = story.members.find(article => trusted.has(article.feed_url))
+        ?? (inLanguage(story.best) ? story.best : null)
+        ?? newest.find(article => inLanguage(article) && !fromGoogle(article))
+        ?? newest.find(inLanguage)
+        ?? story.best;
     const byMedium = new Map();
-    for (const article of [first, story.best, ...[...story.members].sort((a, b) => b.at - a.at)]) {
+    for (const article of [first, story.best, ...newest]) {
         const medium = mediumOfArticle(article);
         const kept = byMedium.get(medium);
         if (!kept || (fromGoogle(kept) && !fromGoogle(article))) byMedium.set(medium, article);
@@ -134,9 +152,10 @@ const brief = (article, chars) => ({
 // the chosen stories keep only the articles the AI says tell the news of their best one, and a card
 // telling the news of a card above it joins that card with its articles (two calls sent together).
 // One news is often several stories (the French and the English articles of the verdict of
-// Manchester City). If the AI fails, the stories are shown as the vectors grouped them: the check
-// must never cost the briefing
-const keepSameNews = async (stories, usage) => {
+// Manchester City). The versions in the language of the reader (see versionsOf) are asked after the
+// cards, and join the one whose news they tell: the card is then read in that language. If the AI
+// fails, the stories are shown as the vectors grouped them: the check must never cost the briefing
+const keepSameNews = async (stories, usage, versions = []) => {
     const asked = stories
         .map(story => ({story, others: toCheck(story)}))
         .filter(({others}) => others.length > 0);
@@ -149,7 +168,7 @@ const keepSameNews = async (stories, usage) => {
             console.error(`Briefing: the stories were not checked (${err.message})`);
             return new Map();
         }),
-        mergeStories(stories.map(story => ({id: String(story.storyId), lead: brief(story.best, DESCRIPTION_CHARS)})), usage.merging)
+        mergeStories([...stories, ...versions].map(story => ({id: String(story.storyId), lead: brief(story.best, DESCRIPTION_CHARS)})), usage.merging)
             .catch(err => {
                 console.error(`Briefing: the cards of one news were not joined (${err.message})`);
                 return new Map();
@@ -163,14 +182,37 @@ const keepSameNews = async (stories, usage) => {
         return same ? {...story, members: [story.best, ...same]} : {...story};
     });
 
-    const byId = new Map(cards.map(card => [String(card.storyId), card]));
+    const byId = new Map([...cards, ...versions].map(card => [String(card.storyId), card]));
+    const isCard = new Set(cards.map(card => String(card.storyId)));
     for (const [id, into] of merges) {
+        // a version joins a card, never another version
+        if (!isCard.has(into)) continue;
         const card = byId.get(into);
         const links = new Set(card.members.map(article => article.link));
         card.members = [...card.members, ...byId.get(id).members.filter(article => !links.has(article.link))];
         card.mergedStoryIds = [...(card.mergedStoryIds ?? []), byId.get(id).storyId];
     }
+    const joined = [...merges].filter(([id, into]) => !isCard.has(id) && isCard.has(into)).length;
+    if (joined > 0) console.log(`Briefing: ${joined} versions in the language of the reader joined their card`);
     return cards.filter(card => !merges.has(String(card.storyId)));
+};
+
+// the stories in the language of the reader closest to the chosen ones written in another, with the
+// news of them the reader can read (see VERSION_LIKENESS): [{storyId, best, members}]
+const versionsOf = async (stories, {language, feedUrls, since}) => {
+    const rows = await StoryModel.versionsIn({
+        storyIds: stories.map(story => story.storyId), language, feedUrls, since,
+        likeness: VERSION_LIKENESS, perStory: VERSIONS_PER_STORY,
+    });
+    const chosen = new Set(stories.map(story => story.storyId));
+    const ids = [...new Set(rows.map(row => row.id_version))].filter(id => !chosen.has(id));
+    if (ids.length === 0) return [];
+    const members = new Map(ids.map(id => [id, []]));
+    for (const article of await StoryModel.storyArticles({storyIds: ids, feedUrls, since})) {
+        members.get(article.id_story).push(article);
+    }
+    return ids.filter(id => members.get(id).length > 0)
+        .map(id => ({storyId: id, best: members.get(id)[0], members: members.get(id)}));
 };
 
 const write = async (briefingId, userId) => {
@@ -246,16 +288,28 @@ const write = async (briefingId, userId) => {
     const selected = balanceSelection(chosenByAi, id => byId.get(id)?.interestId, interests);
     if (selected.length === 0) return [];
 
-    // 3. the AI checks which articles of each story tell the news of its best one
+    // 3. the AI checks which articles of each story tell the news of its best one, and which versions
+    // in the language of the reader tell the news of a card in another
     await step('checking');
-    const chosen = await keepSameNews(selected.map(item => ({...byId.get(item.id), why: item.why})), usage);
+    const language = readerLanguage(profile);
+    const picked = selected.map(item => ({...byId.get(item.id), why: item.why}));
+    const versions = await versionsOf(picked, {language, feedUrls, since})
+        .catch(err => {
+            console.error(`Briefing: no version in the language of the reader looked for (${err.message})`);
+            return [];
+        });
+    const chosen = await keepSameNews(picked, usage, versions);
 
     // 4. the chosen stories read: their texts say who wrote them and give the summary
     await step('reading');
-    // the real address of the news of Google News to read, never asked twice (see google-news.js)
-    const toDecode = [...new Set(chosen.map(story => toRead(story, trusted))
-        .filter(articles => articles.every(article => fromGoogle(article) && !article.resolved_link))
-        .flatMap(articles => articles.slice(0, DECODED_PER_STORY).map(article => article.link)))].slice(0, MAX_DECODED);
+    // the real address of the news of Google News to read, never asked twice (see google-news.js): of
+    // the stories no feed lets read, and of the article in the language of the reader read first (the
+    // French version of a card in Albanian was known in the last hours through Google News only)
+    const undecoded = (article) => fromGoogle(article) && !article.resolved_link;
+    const toDecode = [...new Set(chosen.map(story => toRead(story, trusted, language))
+        .flatMap(articles => articles.every(undecoded) ? articles.slice(0, DECODED_PER_STORY)
+            : undecoded(articles[0]) && articles[0].lang === language ? [articles[0]] : [])
+        .map(article => article.link))].slice(0, MAX_DECODED);
     if (toDecode.length > 0) {
         const decoded = await decodeLinks(toDecode);
         console.log(`Briefing: ${decoded.size} of ${toDecode.length} addresses of Google News found`);
@@ -272,7 +326,7 @@ const write = async (briefingId, userId) => {
         return [{...story, members, best: members.includes(story.best) ? story.best : members[0]}];
     });
     if (stories.length < chosen.length) console.log(`Briefing: ${chosen.length - stories.length} chosen stories of Google News were no news`);
-    const reads = stories.map(story => toRead(story, trusted));
+    const reads = stories.map(story => toRead(story, trusted, language));
     // a link of Google News not decoded is not read: it only leads to a redirect
     const readable = (article) => !fromGoogle(article) || Boolean(article.resolved_link);
     const pages = await Crawlers.Html([...new Set(reads.flat().filter(readable).map(addressOf))]);
@@ -284,7 +338,6 @@ const write = async (briefingId, userId) => {
     // 5. the key passages of each story, as published (see extract.js), translated for a reader of
     // another language
     await step('summarizing');
-    const language = readerLanguage(profile);
     const summaries = await mapWithConcurrency(stories, AI_CONCURRENCY, async (story, i) => {
         // the first lines of a page (a teaser, a paywall) do not tell the news
         const readable = reads[i].find(article => canSummarize(content.get(article.link)?.content));

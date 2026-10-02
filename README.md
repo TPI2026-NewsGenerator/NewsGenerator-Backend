@@ -805,8 +805,16 @@ stories built by the background work, and goes through these steps:
    articles of each story tell the news of its best one, up to 12 read per story, one per medium first;
    the card counts and lists only those. `mergeStories`: two cards telling the same news become one. If
    the AI fails, the stories are shown as the vectors grouped them: the check never costs the briefing.
-4. **Reading.** Up to 5 articles per story, one of a source the reader trusts first, then one per
-   medium. The real address of a news of Google News is asked only for the stories no feed lets read.
+   A story is of one language: a card in another language than the reader's brings to that call the 2
+   stories of the reader's language closest to it (centroids, from 0.75, `StoryModel.versionsIn`), and
+   the ones the AI says tell its news join it. Replayed on a briefing of a reader of French with 7 cards
+   in 4 other languages (`bench/versions-replay.mjs`): the French versions of the Negreira affair (2),
+   of the UEFA payments and of Ceferin against Infantino joined, 4 of 4 right; another news of the same
+   club association (0.765) stayed apart, and the 2 Romanian cards had no French version.
+4. **Reading.** Up to 5 articles per story, one of a source the reader trusts first, else one in the
+   language of the reader (the card is then summarized from it, with no translation), then one per
+   medium. The real address of a news of Google News is asked only for the stories no feed lets read,
+   and for the article in the language of the reader read first.
 5. **Key passages** of the first article read in full, translated for a reader of another language
    (see **Key passages** above), and who wrote the story apart from the others (see **Corroboration**).
 6. **Review.** The cards are read once more with their passages, which say what a title may not, and

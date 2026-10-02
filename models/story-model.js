@@ -85,6 +85,29 @@ export const StoryModel = {
         'SELECT * FROM public.rank_stories($1::int, $2::text[], $3::text[], $4::timestamptz, $5::real, $6::int[], $7::int)',
         userId, feedUrls, languages, since, sparseWeight, [], limit),
 
+    // The stories of one language closest to these stories of other languages, by the centroids of
+    // their articles (db/add_threads.sql): [{id_story, id_version, likeness}], the perStory closest of
+    // each from likeness on, of the last hours and told by a feed the user reads. A story is of one
+    // language: the version of a news in the language of the reader is another story
+    versionsIn: async ({storyIds, language, feedUrls, since, likeness, perStory}) => prisma.$queryRawUnsafe(`
+        SELECT s.id AS id_story, v.id AS id_version, v.likeness
+        FROM stories s
+        CROSS JOIN LATERAL (
+            SELECT o.id, -(o.centroid <#> s.centroid)::real AS likeness
+            FROM stories o
+            WHERE o.lang = $2 AND o.centroid IS NOT NULL AND o.updated_at >= $4::timestamptz
+            ORDER BY o.centroid <#> s.centroid
+            LIMIT $6::int
+            OFFSET 0
+        ) v
+        WHERE s.id = ANY($1::int[]) AND s.lang <> $2 AND s.centroid IS NOT NULL
+          AND v.likeness >= $5::real
+          AND EXISTS (SELECT 1 FROM articles a JOIN feeds f ON f.id = a.id_feed
+                      WHERE a.id_story = v.id AND f.url = ANY($3::text[])
+                        AND COALESCE(a.published_at, a.created_at) >= $4::timestamptz)
+        ORDER BY s.id, v.likeness DESC`,
+        storyIds, language, feedUrls, since, likeness, perStory),
+
     // the news of these stories the user can read, once per link, the newest first
     storyArticles: async ({storyIds, feedUrls, since}) => prisma.$queryRawUnsafe(`
         SELECT * FROM (
