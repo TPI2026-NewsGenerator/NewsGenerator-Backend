@@ -10,7 +10,8 @@
 import {prisma} from '../config/db.js';
 
 export const BriefingModel = {
-    create: async (userId) => prisma.briefings.create({data: {id_user: userId, status: 'running', step: 'starting'}}),
+    // hours: of news it is written from
+    create: async (userId, hours) => prisma.briefings.create({data: {id_user: userId, status: 'running', step: 'starting', hours}}),
 
     step: async (id, step) => prisma.briefings.update({where: {id}, data: {step}}),
 

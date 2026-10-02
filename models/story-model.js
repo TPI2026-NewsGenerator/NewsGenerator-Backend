@@ -108,6 +108,10 @@ export const StoryModel = {
         ORDER BY s.id, v.likeness DESC`,
         storyIds, language, feedUrls, since, likeness, perStory),
 
+    // the thread (the affair followed over days, db/add_threads.sql) of each of these stories: [{id, id_thread}]
+    threadsOf: async (storyIds) => prisma.$queryRawUnsafe(
+        'SELECT id, id_thread FROM stories WHERE id = ANY($1::int[])', storyIds),
+
     // the news of these stories the user can read, once per link, the newest first
     storyArticles: async ({storyIds, feedUrls, since}) => prisma.$queryRawUnsafe(`
         SELECT * FROM (

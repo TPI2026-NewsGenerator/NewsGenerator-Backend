@@ -880,8 +880,9 @@ const options = {
                 "post": {
                     "tags": ["Briefing"],
                     "summary": "Write a new briefing",
-                    "description": "In background: answers the briefing running, GET /briefing until its status is 'ready' or 'failed'. One at a time per user. A story already shown can be chosen again; two stories telling the same news are one card.",
-                    "responses": {"202": {"description": "{briefing: Briefing} running"}}
+                    "description": "In background: answers the briefing running, GET /briefing until its status is 'ready' or 'failed'. One at a time per user. A story already shown can be chosen again; two stories telling the same news are one card.\n\n`hours`: of news it is written from, 48 when not given. A briefing of 168 hours (the week) gives one card per affair followed over the days, and prefers the news told by several media.",
+                    "requestBody": {"required": false, "content": {"application/json": {"schema": {"type": "object", "properties": {"hours": {"type": "integer", "enum": [24, 48, 168], "default": 48}}}}}},
+                    "responses": {"202": {"description": "{briefing: Briefing} running"}, "400": {"description": "hours is not 24, 48 or 168"}}
                 }
             },
             "/briefing/{id}/vote": {
@@ -1152,6 +1153,7 @@ const options = {
                         "status": {"type": "string", "enum": ["running", "ready", "failed"]},
                         "step": {"type": "string", "nullable": true, "enum": ["starting", "ranking", "choosing", "checking", "reading", "summarizing"]},
                         "error": {"type": "string", "nullable": true},
+                        "hours": {"type": "integer", "enum": [24, 48, 168], "description": "Of news it was written from"},
                         "createdAt": {"type": "string", "format": "date-time"},
                         "items": {"type": "array", "items": {"type": "object", "properties": {
                             "storyId": {"type": "integer"},

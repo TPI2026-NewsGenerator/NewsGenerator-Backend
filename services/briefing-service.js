@@ -35,7 +35,16 @@ import {onceEach} from "./utils/reading-order.js";
 // The refusals of the user are left to the AI: as vectors they removed good stories with the bad.
 // Then the AI checks what the chosen stories group (see checkStories): the vectors join two media
 // writing on one subject without telling the same fact.
-const WINDOW_HOURS = 48;
+// The hours of news a briefing is written from, chosen by the reader: 48 by default, the window of
+// every bench. Over 7 days the ranking took the same 2 to 3 s and the same 40 candidates go to the AI,
+// so a briefing of the week costs no more (bench/briefing-window.mjs). A month is not offered: the
+// articles are kept 30 days, the oldest would be leaving as it is written
+const WINDOWS = [24, 48, 168];
+const DEFAULT_HOURS = 48;
+// From this many hours a briefing is one of the week. Its 40 closest stories were 34 affairs of
+// several days (threads, db/add_threads.sql), and guides of no day rose among them: one candidate per
+// thread, and the AI is told how many media told each to prefer what mattered (see selectionPrompt)
+const WEEK_FROM_HOURS = 72;
 const SPARSE_WEIGHT = 0.5;
 const CANDIDATES = 40;              // stories the AI chooses from, told by at least one feed
 // and at most this many known only through Google News, GOOGLE_PER_MEDIUM of one medium (see
@@ -75,6 +84,9 @@ const VERSION_LIKENESS = 0.75;
 const VERSIONS_PER_STORY = 2;
 
 const running = new Set();          // users whose briefing is being written by this server
+
+// "48 hours", "7 days": said in the messages
+const spanOf = (hours) => hours > DEFAULT_HOURS ? `${hours / 24} days` : `${hours} hours`;
 
 // the feeds this user reads: the shared ones of every language, their own, and the searches of Google
 // News of their interests. Every language is read and translated: replayed on a reader of 7 languages
@@ -222,7 +234,21 @@ const versionsOf = async (stories, {language, feedUrls, since}) => {
         .map(id => ({storyId: id, best: members.get(id)[0], members: members.get(id)}));
 };
 
-const write = async (briefingId, userId) => {
+// the closest story of each thread, the stories in their order: an affair followed over days is one card
+const oncePerThread = async (stories) => {
+    const threads = new Map((await StoryModel.threadsOf(stories.map(story => story.storyId))).map(row => [row.id, row.id_thread]));
+    const seen = new Set();
+    return stories.filter(story => {
+        const thread = threads.get(story.storyId);
+        if (thread === null || thread === undefined) return true;
+        if (seen.has(thread)) return false;
+        seen.add(thread);
+        return true;
+    });
+};
+
+// hours: of news it is written from, one of WINDOWS
+const write = async (briefingId, userId, hours) => {
     const usage = {choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), reviewing: newUsage()};
     const [profile, interests] = await Promise.all([ProfileModel.get(userId), ProfileModel.interests(userId)]);
     if (!profile || interests.length === 0) throw Object.assign(new Error('Write your profile first.'), {status: 400});
@@ -239,7 +265,8 @@ const write = async (briefingId, userId) => {
     // 1. the stories of the last hours closest to the interests: scored in the
     // database, where the vectors are (see rank_stories in db/add_briefing.sql)
     await step('ranking');
-    const since = new Date(Date.now() - WINDOW_HOURS * 3600e3);
+    const since = new Date(Date.now() - hours * 3600e3);
+    const week = hours >= WEEK_FROM_HOURS;
     // the sources found for the profile that bring nothing on it any more are removed first; the
     // briefing never waits on it failing
     await DiscoveryService.prune(userId).catch(err => console.error(`Briefing: the sources were not pruned (${err.message})`));
@@ -257,7 +284,7 @@ const write = async (briefingId, userId) => {
         limit: RANKED,
     });
     if (ranked.length === 0) {
-        throw new Error('No story to choose from: the news of the last 48 hours are not read and embedded yet. The background work runs every few minutes, try again soon.');
+        throw new Error(`No story to choose from: the news of the last ${spanOf(hours)} are not read and embedded yet. The background work runs every few minutes, try again soon.`);
     }
 
     // the news of those stories the user can read, with the one that scored the best
@@ -281,9 +308,10 @@ const write = async (briefingId, userId) => {
             pooled: rank < TRUST_POOL,
         }];
     }));
-    const choosable = [...byId.values()]
+    const closestFirst = [...byId.values()]
         .filter(story => story.best && credibleStory(story.members, media) && !isRepeatedPage(story.members))
         .sort((a, b) => b.score - a.score);
+    const choosable = week ? await oncePerThread(closestFirst) : closestFirst;
     const closest = pickCandidates(choosable, {fromFeeds: CANDIDATES, extra: GOOGLE_CANDIDATES, perMedium: GOOGLE_PER_MEDIUM});
     const kept = new Set([...closest, ...choosable.filter(story => story.told && story.pooled && !closest.includes(story)).slice(0, TRUSTED_CANDIDATES)]);
     const candidates = choosable.filter(story => kept.has(story));
@@ -296,7 +324,8 @@ const write = async (briefingId, userId) => {
         description: (story.best.description ?? '').slice(0, DESCRIPTION_CHARS),
         others: story.members.filter(article => article !== story.best).map(article => article.title).slice(0, 3),
         trusted: story.told,
-    })), usage.choosing, feedback.examples, interests.map(interest => interest.text));
+        media: new Set(story.members.map(mediumOfArticle)).size,
+    })), usage.choosing, feedback.examples, interests.map(interest => interest.text), week);
     const selected = balanceSelection(chosenByAi, id => byId.get(id)?.interestId, interests);
     if (selected.length === 0) return [];
 
@@ -438,6 +467,7 @@ const toBriefing = (row) => row && ({
     step: row.step,                 // ranking, choosing, reading, summarizing
     error: row.error,
     items: row.items ?? [],
+    hours: row.hours,               // of news it was written from
     createdAt: row.created_at,
     finishedAt: row.finished_at,
 });
@@ -458,16 +488,18 @@ export const BriefingService = {
         }
     },
 
-    // a new briefing, written in background: the answer is the briefing still running, the client
-    // asks for it again until it is ready. Only one at a time per user
-    start: async (userId) => {
+    // a new briefing, written in background from the news of the last 'hours' (one of WINDOWS): the
+    // answer is the briefing still running, the client asks for it again until it is ready. Only one
+    // at a time per user
+    start: async (userId, hours = DEFAULT_HOURS) => {
+        if (!WINDOWS.includes(hours)) throw Object.assign(new Error(`hours: ${WINDOWS.join(', ')}.`), {status: 400});
         await BriefingModel.failAbandoned(new Date(Date.now() - ABANDONED_MINUTES * 60 * 1000));
         if (running.has(userId)) return toBriefing(await BriefingModel.running(userId));
 
-        const briefing = await BriefingModel.create(userId);
+        const briefing = await BriefingModel.create(userId, hours);
         running.add(userId);
 
-        write(briefing.id, userId)
+        write(briefing.id, userId, hours)
             .then(items => BriefingModel.finish(briefing.id, items))
             .catch(err => {
                 console.error(`Briefing ${briefing.id} failed: ${err.stack ?? err}`);

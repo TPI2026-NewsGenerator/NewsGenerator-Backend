@@ -204,18 +204,25 @@ ${liked.length > 0 ? `il les a trouvées bonnes pour lui :\n${liked.map(title =>
 // interest, 5 cards on refereeing of 10 for the UEFA one (3 before)
 const TRUSTED_MARK = ' (source de confiance du lecteur)';
 
-export const selectionPrompt = (profileText, candidates, examples = {liked: [], refused: []}, interests = []) => `Voici le profil d'un lecteur, écrit par lui-même :
+// A briefing of the week (see briefing-service.js) chooses among stories ranked on their likeness to
+// the interests only: over 7 days, guides and explainers of no day rose among the closest
+// (bench/briefing-window.mjs). The AI is told how many media told each story and to prefer the news
+// that mattered. The prompt of a briefing of one or two days stays the one measured
+const mediaMark = (media) => ` (${media} ${media === 1 ? 'média' : 'médias'})`;
+
+// week: the stories are of the last 7 days, each with its number of media (media)
+export const selectionPrompt = (profileText, candidates, examples = {liked: [], refused: []}, interests = [], week = false) => `Voici le profil d'un lecteur, écrit par lui-même :
 """${profileText}"""
 ${interests.length > 1 ? `Ses intérêts :\n${interests.map(interest => `- ${interest}`).join('\n')}\n` : ''}${feedbackBlock(examples)}
-Voici des histoires d'actualité du jour, chacune avec son identifiant entre crochets :
-${candidates.map(c => `[${c.id}] ${c.title}${c.trusted ? TRUSTED_MARK : ''}${c.description ? ` — ${c.description}` : ''}${c.others.length > 0 ? ` (aussi : ${c.others.join(' / ')})` : ''}`).join('\n')}
+Voici des histoires d'actualité ${week ? "des 7 derniers jours, chacune avec son identifiant entre crochets et le nombre de médias qui l'ont racontée" : "du jour, chacune avec son identifiant entre crochets"} :
+${candidates.map(c => `[${c.id}] ${c.title}${week ? mediaMark(c.media) : ''}${c.trusted ? TRUSTED_MARK : ''}${c.description ? ` — ${c.description}` : ''}${c.others.length > 0 ? ` (aussi : ${c.others.join(' / ')})` : ''}`).join('\n')}
 
 Choisis au plus ${MAX_CHOSEN} histoires qui correspondent vraiment à ce que ce lecteur demande, de la plus à la moins pertinente.${interests.length > 1 ? `
 Couvre tous ses intérêts : pour chacun, donne les histoires qui lui conviennent, même quand un autre intérêt en a de plus fortes. Son résumé en gardera ${MAX_BRIEFING}, réparties entre ses intérêts.` : ''}
 Ce qu'il dit ne pas vouloir est exclu, même quand l'histoire touche un de ses intérêts et même quand son titre ne le nomme pas (une équipe d'un sport refusé, un parti d'une politique refusée).
 S'il y en a moins de ${MAX_CHOSEN} qui conviennent, n'en rends que celles-là : une liste courte vaut mieux qu'une histoire hors sujet.
 ${candidates.some(c => c.trusted) ? `Les histoires marquées « source de confiance du lecteur » sont racontées par un média qu'il a mis en favori : à pertinence égale, préfère-les. Ne choisis jamais pour cela une histoire qui ne correspond pas à ce qu'il demande.\n` : ''}Varie : pas deux histoires sur la même personne, la même organisation ou le même événement, sauf si ce sont deux nouvelles importantes et différentes.
-Préfère les faits du jour (décisions, annonces, résultats, déclarations) aux pronostics, conseils et guides, sauf si le lecteur les demande. Ne choisis jamais une page qui n'apporte aucun fait nouveau : présentation générale d'un sujet, guide pratique, billetterie, classement, calendrier, direct, compilation.
+${week ? `C'est le résumé de sa semaine : préfère les nouvelles qui ont compté, racontées par plusieurs médias ou qui ont fait avancer une affaire, à un fait mineur raconté par un seul. Ne choisis jamais pour cela une histoire qui ne correspond pas à ce qu'il demande.\n` : ''}Préfère les faits ${week ? 'de la semaine' : 'du jour'} (décisions, annonces, résultats, déclarations) aux pronostics, conseils et guides, sauf si le lecteur les demande. Ne choisis jamais une page qui n'apporte aucun fait nouveau : présentation générale d'un sujet, guide pratique, billetterie, classement, calendrier, direct, compilation.
 Pour chacune, "why" est une phrase courte qui dit au lecteur pourquoi elle est pour lui, dans la langue de son profil, tirée seulement de ce que disent son titre et sa description : si le lien avec le profil n'y est pas, ne la choisis pas.
 Réponds uniquement en JSON : {"selected": [{"id": "...", "why": "une phrase courte"}]}`;
 
@@ -259,12 +266,13 @@ export const balanceSelection = (selected, interestOf, interests) => {
     return selected.filter(item => kept.has(item));
 };
 
-// candidates: [{id, title, description, others: [titles], trusted}], trusted when a medium the reader
-// trusts tells it
+// candidates: [{id, title, description, others: [titles], trusted, media}], trusted when a medium the
+// reader trusts tells it, media: how many media told it
 // examples: {liked: [titles], refused: [titles]}, the thumbs of the reader (see utils/feedback.js)
 // interests: the texts of the interests of the reader
-export const selectStories = async (profileText, candidates, usage = null, examples = undefined, interests = []) =>
-    normalizeSelection(await ollamaJson(selectionPrompt(profileText, candidates, examples, interests), usage), candidates.map(c => c.id));
+// week: the candidates are of the last 7 days (see selectionPrompt)
+export const selectStories = async (profileText, candidates, usage = null, examples = undefined, interests = [], week = false) =>
+    normalizeSelection(await ollamaJson(selectionPrompt(profileText, candidates, examples, interests, week), usage), candidates.map(c => c.id));
 
 // The choice reads a title and the start of a description, which may not name what a story is about:
 // "L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Winsley Boteli?" is the Swiss

@@ -167,6 +167,20 @@ describe('the share of each interest in a briefing', () => {
         expect(prompt).toContain('à pertinence égale, préfère-les');
         expect(selectionPrompt('Le tennis.', [candidates[1]])).not.toContain('source de confiance');
     });
+
+    it('should say how many media told each story and ask for the news that mattered, for a briefing of the week only', () => {
+        const candidates = [{id: '1', title: 'Sinner gagne', others: [], media: 6}, {id: '2', title: 'Fils perd', others: [], media: 1}];
+        const week = selectionPrompt('Le tennis.', candidates, undefined, [], true);
+        expect(week).toContain('des 7 derniers jours');
+        expect(week).toContain('[1] Sinner gagne (6 médias)\n[2] Fils perd (1 média)');
+        expect(week).toContain('préfère les nouvelles qui ont compté');
+        expect(week).toContain('Préfère les faits de la semaine');
+
+        const day = selectionPrompt('Le tennis.', candidates);
+        expect(day).toContain("d'actualité du jour");
+        expect(day).toContain('[1] Sinner gagne\n[2] Fils perd\n');
+        expect(day).not.toContain('qui ont compté');
+    });
 });
 
 describe('normalizeCheck', () => {

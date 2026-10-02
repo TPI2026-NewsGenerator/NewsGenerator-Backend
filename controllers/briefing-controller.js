@@ -29,10 +29,11 @@ export const BriefingController = {
         }
     },
 
-    // a new briefing, written in background: 202 with the briefing running, asked again until ready
+    // {hours}: a new briefing of the news of the last hours, written in background: 202 with the
+    // briefing running, asked again until ready
     start: async (req, res) => {
         try {
-            res.status(202).json({briefing: await BriefingService.start(req.user.id)});
+            res.status(202).json({briefing: await BriefingService.start(req.user.id, req.body?.hours ?? undefined)});
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});
         }
