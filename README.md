@@ -936,8 +936,17 @@ one stays first in `EMBEDDER_URL` when it is on, the embedder of the machine tak
 Next to the code, in `~/newsgenerator` on the machine, readable by its owner only and never sent with
 the code: `db.env` (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`), `api.env`, the `.env` of
 the server with `DATABASE_URL` to `db:5432` and `RSS_BRIDGE_URL=http://rss-bridge`, and `tunnel.env`
-(`TUNNEL_TOKEN`, given by Cloudflare when the tunnel is created). The client built is sent to
-`~/newsgenerator/client-dist`.
+(`TUNNEL_TOKEN`, given by Cloudflare when the tunnel is created), and `web.env` (`SITE_USER` and
+`SITE_PASSWORD_HASH`, between single quotes): the whole site is behind a name and a password the
+browser asks (`basic_auth` of Caddy) before the accounts of the app, so nobody else reaches the
+signup. The hash is made on the machine, the password typed there only:
+
+```bash
+docker run --rm -it caddy:2.11-alpine caddy hash-password
+```
+
+These files belong to the user running Docker: it refuses one owned by root. The client built is sent
+to `~/newsgenerator/client-dist`.
 
 To send the code and start it again (from any machine reaching it by ssh):
 
