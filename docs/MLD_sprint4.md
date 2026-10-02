@@ -50,6 +50,7 @@ precision), `sparsevec(250002)` the weight of each word of its vocabulary.
 | email | text | NOT NULL |
 | password | text | NOT NULL, bcrypt hash |
 | role | integer | NOT NULL, FK → roles.id |
+| password_changed_at | timestamptz | null — the last change of password: the sessions opened before are refused |
 
 UNIQUE (username, email), and since the signup (`db/add_signup.sql`) two unique indexes whatever the
 case: `u_users_username_ci` on `lower(username)`, `u_users_email_ci` on `lower(email)`.

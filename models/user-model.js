@@ -19,6 +19,32 @@ export const UserModel = {
         select: {id: true},
     })),
 
+    // another account using this name, whatever its case: a reader may change the case of their own
+    nameTakenByOther: async (username, id) => Boolean(await prisma.users.findFirst({
+        where: {username: {equals: username, mode: 'insensitive'}, NOT: {id}},
+        select: {id: true},
+    })),
+
+    // the account with its password hash, to check it before a change
+    withPassword: async (id) => prisma.users.findUnique({
+        where: {id},
+        select: {id: true, username: true, email: true, role: true, password: true},
+    }),
+
+    // the second of its last change of password, 0 when never, null when there is no such account
+    passwordChangedAt: async (id) => {
+        const user = await prisma.users.findUnique({where: {id}, select: {password_changed_at: true}});
+        if (!user) return null;
+        return user.password_changed_at ? Math.floor(user.password_changed_at.getTime() / 1000) : 0;
+    },
+
+    // data: {username} or {password, password_changed_at}, the password already hashed
+    update: async (id, data) => prisma.users.update({
+        where: {id},
+        data,
+        select: {id: true, username: true, email: true, role: true},
+    }),
+
     roleId: async (role) => (await prisma.roles.findUnique({where: {role}}))?.id ?? null,
 
     // password: already hashed

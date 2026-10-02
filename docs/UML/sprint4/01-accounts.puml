@@ -1,6 +1,6 @@
 @startuml 01-accounts
 !include _style.iuml
-title Accounts — log in, sign up and the session
+title Accounts — log in, sign up, the session and the settings
 
 class EndUser
 package "Presentation" {
@@ -10,11 +10,19 @@ package "Presentation" {
         + GET /session
         + DELETE /session
     }
+    class accountRouter {
+        + PUT /account/username
+        + PUT /account/password
+    }
     class loginController {
         + authUser()
     }
     class signupController {
         + register()
+    }
+    class accountController {
+        + rename()
+        + changePassword()
     }
 }
 package "Business" {
@@ -23,6 +31,10 @@ package "Business" {
     }
     class signupService {
         + register()
+    }
+    class accountService {
+        + rename()
+        + changePassword()
     }
     class profileService <<other feature>> {
         + prepare()
@@ -34,6 +46,10 @@ note right of signupService
     call: when the profile cannot be
     stored, the account is deleted again
 end note
+note left of accountService
+    Each change asks the current password;
+    the session starts again with the account
+end note
 package "Data" {
     class loginModel {
         + getUserByUsername()
@@ -43,6 +59,10 @@ package "Data" {
         + roleId()
         + create()
         + delete()
+        + nameTakenByOther()
+        + withPassword()
+        + passwordChangedAt()
+        + update()
     }
 }
 package "utils" {
@@ -59,12 +79,22 @@ package "utils" {
     class rateLimit {
         + rateLimit()
     }
+    class passwordChanges {
+        + passwordChangedAt()
+        + notePasswordChange()
+    }
+    class accountRules {
+        + isUsername()
+        + isPassword()
+    }
 }
 note right of jwt
     The token is set in an HttpOnly cookie
     (SameSite=Strict, Secure through https),
     never answered to the page: 7 days,
-    renewed once a day while used
+    renewed once a day while used; one opened
+    before the last change of password is
+    refused (passwordChanges)
 end note
 class bcrypt <<external>>
 class JsonWebToken <<external>>
@@ -73,6 +103,20 @@ class Prisma <<external>>
 EndUser --> loginRouter
 EndUser --> signupRouter
 EndUser --> sessionRouter
+EndUser --> accountRouter
+accountRouter --> jwt
+accountRouter --> rateLimit
+accountRouter --> accountController
+accountController --> accountService
+accountController --> jwt
+accountService --> userModel
+accountService --> pwdHasher
+accountService --> accountRules
+accountService --> jwt
+signupService --> accountRules
+accountService --> passwordChanges
+jwt --> passwordChanges
+passwordChanges --> userModel
 loginRouter --> rateLimit
 loginRouter --> loginController
 sessionRouter --> jwt

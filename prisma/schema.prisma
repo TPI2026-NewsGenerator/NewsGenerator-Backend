@@ -92,6 +92,8 @@ model users {
   email             String
   password          String
   role              Int
+  // the last change of password: the sessions opened before are refused (db/add_password_changed.sql)
+  password_changed_at DateTime?         @db.Timestamptz(6)
   custom_searches   custom_searches[]
   user_feeds        user_feeds[]
   user_profiles     user_profiles?

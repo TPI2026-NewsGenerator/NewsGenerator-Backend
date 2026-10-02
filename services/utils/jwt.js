@@ -8,6 +8,7 @@
 import process from 'node:process'
 import 'dotenv/config';
 import jwt from 'jsonwebtoken'
+import {passwordChangedAt} from './password-changes.js';
 
 // The token lives in an HttpOnly cookie: a script of the page (a dependency gone bad, a hole in the
 // rendering of a title of a feed) cannot read it, as it could in the storage of the browser. Strict:
@@ -49,11 +50,20 @@ export const cookieOf = (req, name) => {
     return null;
 };
 
-export const authenticateToken = (req, res, next) => {
+// A token is valid until it expires: a password changed must still end the sessions of the other
+// devices. One opened before the last change of password, or of an account gone, is refused
+export const authenticateToken = async (req, res, next) => {
     try {
         req.user = jwt.verify(cookieOf(req, SESSION_COOKIE) ?? '', process.env.ACCESS_TOKEN_SECRET);
     } catch {
         return res.status(403).json({error: EXPIRED});
+    }
+    try {
+        const changedAt = await passwordChangedAt(req.user.id);
+        if (changedAt === null || changedAt > req.user.iat) return res.status(403).json({error: EXPIRED});
+    } catch (error) {
+        console.error(`Session: not checked (${error.message})`);
+        return res.status(503).json({error: 'Your session could not be checked, try again in a moment.'});
     }
     if (Date.now() / 1000 - req.user.iat > RENEW_SECONDS) startSession(res, generateAccessToken(req.user));
     next(); // Continue to the next middleware or route

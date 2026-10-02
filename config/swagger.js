@@ -126,6 +126,65 @@ const options = {
                     "responses": {"204": {"description": "Signed out"}}
                 }
             },
+            "/account/username": {
+                "put": {
+                    "tags": ["Login"],
+                    "summary": "Change the username of the signed in user",
+                    "description": "Asks the current password. The session cookie starts again with the new name. At most 10 changes per address in 15 minutes, with the ones of the password.",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "username": {"type": "string", "example": "lecteur.2", "description": "3 to 30 letters, digits, dots, dashes or underscores"},
+                                        "password": {"type": "string", "description": "The current password"}
+                                    },
+                                    "required": ["username", "password"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {"description": "The user as the session tells it: {id, username, email, role}"},
+                        "400": {"description": "Not a username"},
+                        "401": {"description": "Not the current password"},
+                        "403": {"description": "No session, or an expired one"},
+                        "409": {"description": "Used by another account, whatever its case"},
+                        "429": {"description": "Too many changes tried"}
+                    }
+                }
+            },
+            "/account/password": {
+                "put": {
+                    "tags": ["Login"],
+                    "summary": "Change the password of the signed in user",
+                    "description": "Asks the current password. The sessions opened before, on the other devices, are refused from then on (403); the one of this device starts again. At most 10 changes per address in 15 minutes, with the ones of the username.",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "password": {"type": "string", "description": "The current password"},
+                                        "newPassword": {"type": "string", "description": "10 to 72 bytes"}
+                                    },
+                                    "required": ["password", "newPassword"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {"description": "The user as the session tells it: {id, username, email, role}"},
+                        "400": {"description": "A new password too short, too long, or the current one"},
+                        "401": {"description": "Not the current password"},
+                        "403": {"description": "No session, or an expired one"},
+                        "429": {"description": "Too many changes tried"}
+                    }
+                }
+            },
             "/signup": {
                 "post": {
                     "tags": ["Login"],

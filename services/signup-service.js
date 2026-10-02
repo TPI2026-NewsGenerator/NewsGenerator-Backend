@@ -8,23 +8,17 @@
 
 "use strict"
 
-import {Buffer} from 'node:buffer';
 import {hashWithSalt} from './utils/pwd-hasher.js';
 import {generateAccessToken} from './utils/jwt.js';
 import {UserModel} from '../models/user-model.js';
 import {ProfileService} from './profile-service.js';
+import {isPassword, isTaken, isUsername, PASSWORD_RULE, USERNAME_RULE} from './utils/account-rules.js';
 
-const USERNAME = /^[\p{L}\p{N}._-]{3,30}$/u;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_EMAIL = 254;
-const MIN_PASSWORD = 10;
-const MAX_PASSWORD_BYTES = 72;      // bcrypt reads no further: two passwords sharing them would be one
 const READER_ROLE = 'User';
 
 const fail = (status, message) => Object.assign(new Error(message), {status});
-
-// a unique index refusing the account: the name or the email was taken meanwhile
-const isTaken = (error) => error?.code === 'P2002' || /23505|unique constraint/i.test(error?.message ?? '');
 
 export const SignupService = {
     // -> {id_user, token}, as the login: the reader is signed in at once
@@ -32,14 +26,14 @@ export const SignupService = {
         const name = typeof username === 'string' ? username.trim() : '';
         const mail = typeof email === 'string' ? email.trim() : '';
 
-        if (!USERNAME.test(name)) {
-            throw fail(400, 'A username is 3 to 30 letters, digits, dots, dashes or underscores.');
+        if (!isUsername(name)) {
+            throw fail(400, USERNAME_RULE);
         }
         if (mail.length > MAX_EMAIL || !EMAIL.test(mail)) {
             throw fail(400, 'Enter a valid email.');
         }
-        if (typeof password !== 'string' || password.length < MIN_PASSWORD || Buffer.byteLength(password) > MAX_PASSWORD_BYTES) {
-            throw fail(400, `A password is ${MIN_PASSWORD} to ${MAX_PASSWORD_BYTES} characters.`);
+        if (!isPassword(password)) {
+            throw fail(400, PASSWORD_RULE);
         }
         // before the AI reads the profile: a name taken costs nothing
         if (await UserModel.taken(name, mail)) {
