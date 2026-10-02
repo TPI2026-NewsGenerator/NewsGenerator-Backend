@@ -759,9 +759,9 @@ node scripts/move-bridge-feeds.js http://127.0.0.1:3002 http://rss-bridge
 
 ### The briefing
 
-A reader writes a profile in their own words ("I follow rugby and fashion, no football") and the
-languages they read: the ones of the shared feeds (English, French, Spanish, German, Italian), and the
-ones of the sources they added (Hungarian once they add Nemzeti Sport). The language of a feed is told
+A reader writes a profile in their own words ("I follow rugby and fashion, no football") and chooses
+the one language they read in (English, French, Spanish, German, Italian). It is no filter: the
+briefing and the search read the news of every language and translate them into it. The language of a feed is told
 by its news (`services/utils/language.js`): the short words of 9 languages on each news, and franc
 (the groups of letters, 160 languages) on its 30 last news joined, when the words tell none or franc
 tells a language outside them. Measured on 1056 feeds (`bench/language-rules.mjs`): the 385 shared
@@ -771,7 +771,13 @@ directory the words had taken for English were in Arabic, Turkish, Albanian or V
 do not know keeps the language of its feed: "a" and "is" made Hungarian titles English (94.5% right
 against 76.2%). Croatian, Bosnian and Serbian are told apart by the country of the site.
 The AI splits it once, when it is saved, into at most 6 **interests**, each with
-its own vector, a weight, keywords to find media and short searches for Google News. One vector per
+its own vector, a weight, keywords to find media and short searches for Google News. It chooses the
+languages of the searches of each interest: the reader's, English, and the ones of the countries the
+subject is about, 4 at most. Measured (`bench/search-languages-ai.mjs`, 8 test profiles and 5 written
+ones, twice): Serbian football got Serbian, the Swiss votes German and Italian, Japanese politics
+Japanese, the European refereeing of a French reader Spanish and Italian; subjects of no country
+(astronomy, AI, sailing) the reader's language and English only. Asked to name the languages before the
+searches: written in the same rule, the European subjects got French and English only. One vector per
 interest and not one for the whole profile: the average of rugby and fashion is football, and the words
 a reader refuses pull it.
 
@@ -780,8 +786,11 @@ running, the client asks for it again until it is ready, one at a time per reade
 stories built by the background work, and goes through these steps:
 
 1. **Ranking**, in SQL (`rank_stories` in `db/add_briefing.sql`). The news of the last 48 hours of the
-   feeds of the reader (the shared ones of their languages, their own sources, the searches of Google
-   News of their interests, without the sources their thumbs left out), in the languages they read.
+   feeds of the reader (every shared feed, their own sources, the searches of Google News of their
+   interests, without the sources their thumbs left out), in every language. Replayed on a reader of 7
+   languages with sources in 30 (`bench/briefing-languages.mjs`): the other languages took 13 of the 42
+   candidates and 2 of the 10 cards, both on the profile; the title of a card in another language is
+   translated with its passages.
    Each news scores its best interest, weight × (dense + 0.5 × sparse) of its title and the start of
    its description, and a story scores its best news. A story already shown can come back: the reader
    passes it, and leaving out every card shown left fewer news to choose from. A story told by a source the reader trusts gets a small bonus, among the 60 closest only: a
@@ -814,7 +823,7 @@ publisher in clear (`<source url="https://www.bbc.com">`). It is used three ways
 (`services/utils/google-news.js`):
 
 - **the searches of the interests**, read like feeds by the background work: one feed per search the AI
-  wrote for an interest ("fr:arbitrage football"), in the languages of the reader, on the last 2 days,
+  wrote for an interest ("fr:arbitrage football"), in the languages it chose for it, on the last 2 days,
   each in the edition of the country of its language (`localeOf`: Dutch had been asked in English).
   The same search of two readers is one feed, read once. They never go in the sources of a reader: they
   say what their reader follows. Measured on the UEFA profile over 48 hours, its searches gave 676

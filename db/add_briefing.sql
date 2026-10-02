@@ -303,7 +303,7 @@ AS $$
         FROM articles a
         JOIN feeds f ON f.id = a.id_feed
         WHERE f.url = ANY(feed_urls)
-          AND a.lang = ANY(languages)
+          AND (languages IS NULL OR a.lang = ANY(languages))   -- NULL: every language, translated for the reader
           AND a.embedded_at IS NOT NULL
           AND a.id_story IS NOT NULL
           AND a.id_story <> ALL(COALESCE(excluded, '{}'))

@@ -11,6 +11,7 @@
 
 import {ollamaJson} from './ollama.js';
 import {languageName} from './language.js';
+import {isSearchLanguage} from './google-news.js';
 
 export const MAX_INTERESTS = 6;
 export const MAX_BRIEFING = 10;
@@ -19,9 +20,15 @@ export const MAX_BRIEFING = 10;
 export const MAX_CHOSEN = MAX_BRIEFING + 5;
 const MAX_KEYWORDS_CHARS = 400;
 const MAX_SEARCHES_PER_LANGUAGE = 2;
+// The briefing and the search read every language and translate into the one of the reader: the AI
+// chooses where to look for the media of each interest, the language of the reader, English, and the
+// ones of the countries the subject is about (a Serbian club is followed by the Serbian press)
+const MAX_SEARCH_LANGUAGES = 4;
 
-// the languages read, named in French as the prompt is written: "hongrois", "grec"
+// a language named in French, as the prompt is written: "hongrois", "grec"
 const frenchName = (language) => languageName(language, 'fr');
+// the languages every interest is searched in: the one of the reader, and English
+const firstLanguages = (language) => language === 'en' ? "l'anglais" : `le ${frenchName(language)} et l'anglais`;
 
 // The keywords are written for Filter (commas = alternatives, spaces = all the words), and the rules
 // are the ones the benches needed: without them the AI wrote phrases ("chef biographie / chef
@@ -38,21 +45,22 @@ const frenchName = (language) => languageName(language, 'fr');
 // governance 6 times of 6, it only takes the precisions that name no subject
 const today = () => new Date().toLocaleDateString('fr-CH', {day: 'numeric', month: 'long', year: 'numeric'});
 
-export const interestsPrompt = ({text, topics, languages, categories}) => `Nous sommes le ${today()}. Voici le profil d'un lecteur de nouvelles, écrit par lui-même :
+export const interestsPrompt = ({text, topics, language, categories}) => `Nous sommes le ${today()}. Voici le profil d'un lecteur de nouvelles, écrit par lui-même :
 """${text}"""
-${topics.length > 0 ? `Thèmes qu'il a cochés : ${topics.join(', ')}.\n` : ''}Il lit les nouvelles en : ${languages.map(frenchName).join(', ')}.
+${topics.length > 0 ? `Thèmes qu'il a cochés : ${topics.join(', ')}.\n` : ''}Il lit en ${frenchName(language)} : les nouvelles de toutes les langues lui sont traduites.
 
 Découpe ce profil en 1 à ${MAX_INTERESTS} intérêts distincts. Ce que le lecteur dit ne pas vouloir n'est pas un intérêt : ne le mets dans aucun intérêt, mets-le dans "refused".
 Pour chaque intérêt, donne :
 - "text" : le sujet de l'intérêt, puis TOUT ce que le lecteur en cite, avec ses propres mots et sans en résumer ni en enlever aucun, comme "Opéra : nouvelles productions de l'Opéra de Paris et de la Scala, nominations des directeurs et des chefs d'orchestre". Chaque précision du lecteur compte et reste telle quelle : "les expositions et les ventes aux enchères d'art contemporain" ne devient pas "art contemporain". Le texte se lit seul : il nomme toujours son sujet ("les nouvelles lignes de TGV", pas "les nouvelles lignes"). Une précision qui ne nomme aucun sujet ("des règles", "des prix") va dans l'intérêt du sujet qu'elle précise, dans chacun s'il y en a plusieurs : elle ne fait jamais un intérêt à elle seule. Il laisse de côté les mots qui disent combien le lecteur l'aime ("j'adore", "un peu"). N'ajoute ni date, ni année, ni nom qu'il n'a pas écrit.
 - "weight" : 1 pour un intérêt principal, 0.85 pour un intérêt que le lecteur dit secondaire.
-- "keywords" : 8 à 12 alternatives séparées par des virgules, dans les langues qu'il lit. CHAQUE alternative, à elle seule, doit désigner le sujet de cet intérêt : un article qui la contient en parle presque sûrement. Une alternative est un mot, ou 2 ou 3 mots qui doivent tous être dans l'article, séparés par des espaces. Si un mot seul est trop général, ajoute-lui le mot du sujet ("taille rosier" et pas "taille"). Jamais d'article ni de préposition, pas de barre oblique, pas de mot général seul ("actualités", "news", "nouveauté", "interview"). Pour les noms propres (produits, événements, personnes), ne cite que ceux qui sont actuels et certains, jamais l'édition d'une année passée : sans année si tu ne connais pas l'édition en cours.
+- "keywords" : 8 à 12 alternatives séparées par des virgules, dans les langues de ses "searches". CHAQUE alternative, à elle seule, doit désigner le sujet de cet intérêt : un article qui la contient en parle presque sûrement. Une alternative est un mot, ou 2 ou 3 mots qui doivent tous être dans l'article, séparés par des espaces. Si un mot seul est trop général, ajoute-lui le mot du sujet ("taille rosier" et pas "taille"). Jamais d'article ni de préposition, pas de barre oblique, pas de mot général seul ("actualités", "news", "nouveauté", "interview"). Pour les noms propres (produits, événements, personnes), ne cite que ceux qui sont actuels et certains, jamais l'édition d'une année passée : sans année si tu ne connais pas l'édition en cours.
   Exemple pour "le jardinage bio" : "potager bio, compost jardin, permaculture, semis tomate, purin ortie, paillage potager, jardin sans pesticide, organic gardening, vegetable garden, composting"
-- "searches" : ${MAX_SEARCHES_PER_LANGUAGE} recherches courtes (1 à 3 mots) par langue qu'il lit, pour trouver dans Google News les médias qui publient sur ce sujet. Des mots qu'un titre d'article contiendrait, pas des phrases.
-- "sections" : 1 mot par langue qu'il lit qui nomme la rubrique d'un journal où ce sujet est publié, comme "jardin", "musique", "transports", "technologie".
+- "languages" : les langues où chercher les médias de ce sujet, en codes ("fr", "en", "sr") : ${firstLanguages(language)}, puis la langue de chaque pays ou région dont ce sujet parle directement (un club, une compétition, une élection, une entreprise, un lieu de ce pays). Un sujet qui couvre plusieurs pays (un continent, une compétition entre clubs ou pays de plusieurs pays) prend aussi les langues de ses plus grands pays sur ce sujet. ${MAX_SEARCH_LANGUAGES} langues au plus, aucune autre.
+- "searches" : des recherches pour trouver dans Google News les médias qui publient sur ce sujet, dans chacune de ses "languages". Par langue, ${MAX_SEARCHES_PER_LANGUAGE} recherches courtes (1 à 3 mots), des mots qu'un titre d'article contiendrait, pas des phrases. "lang" est le code de la langue ("fr", "en", "sr").
+- "sections" : 1 mot par langue de ses "searches" qui nomme la rubrique d'un journal où ce sujet est publié, comme "jardin", "musique", "transports", "technologie".
 - "category" : la rubrique la plus proche parmi : ${categories.join(', ')}.
 Dans "refused", mets ce que le lecteur dit ne pas vouloir, avec ses mots, et [] s'il ne refuse rien.
-Réponds uniquement en JSON : {"interests": [{"text": "...", "weight": 1, "keywords": "...", "searches": [{"q": "...", "lang": "${languages[0]}"}], "sections": ["..."], "category": "${categories[0]}"}], "refused": ["..."]}`;
+Réponds uniquement en JSON : {"interests": [{"text": "...", "weight": 1, "keywords": "...", "languages": ["${language}"], "searches": [{"q": "...", "lang": "${language}"}], "sections": ["..."], "category": "${categories[0]}"}], "refused": ["..."]}`;
 
 const cleanText = (value, max) => typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, max) : '';
 
@@ -64,8 +72,8 @@ const withoutPastYears = (keywords) => keywords.split(',').map(keyword => keywor
     .filter(keyword => keyword && !pastYear(keyword)).join(', ');
 
 // the answer of the AI made safe: at most MAX_INTERESTS interests with a text, weights between 0.5
-// and 1, searches only in the languages read, a category of the list
-export const normalizeInterests = (answer, {languages, categories}) => {
+// and 1, searches in at most MAX_SEARCH_LANGUAGES languages Google News has, a category of the list
+export const normalizeInterests = (answer, {categories}) => {
     const interests = Array.isArray(answer?.interests) ? answer.interests : [];
 
     return interests
@@ -77,7 +85,8 @@ export const normalizeInterests = (answer, {languages, categories}) => {
             for (const search of Array.isArray(interest?.searches) ? interest.searches : []) {
                 const q = cleanText(search?.q, 80);
                 const count = (perLanguage.get(search?.lang) ?? 0) + 1;
-                if (!q || pastYear(q) || !languages.includes(search?.lang) || count > MAX_SEARCHES_PER_LANGUAGE) continue;
+                if (!q || pastYear(q) || !isSearchLanguage(search?.lang) || count > MAX_SEARCHES_PER_LANGUAGE) continue;
+                if (!perLanguage.has(search.lang) && perLanguage.size >= MAX_SEARCH_LANGUAGES) continue;
 
                 perLanguage.set(search.lang, count);
                 searches.push(`${search.lang}:${q}`);

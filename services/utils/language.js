@@ -128,6 +128,15 @@ export const languageName = (code, locale = 'en') => {
     }
 };
 
+// The one language a reader reads in: the briefing and the search read the news of every language and
+// translate them into it. A profile saved before it had several languages ticked: the one its text is
+// written in among them, else the first
+export const readerLanguage = ({text = '', languages = []} = {}) => {
+    if (languages.length <= 1) return languages[0] ?? 'en';
+    const written = languageOf(text);
+    return languages.includes(written) ? written : languages[0];
+};
+
 // the name in English of a language a text can be told in, for the prompts of the AI; null otherwise
 export const writtenIn = (code) => KNOWN_LANGUAGES.includes(code) ? languageName(code) : null;
 

@@ -11,10 +11,10 @@ import {describe, expect, it, jest} from '@jest/globals';
 jest.unstable_mockModule('../../models/profile-model.js', () => ({
     ProfileModel: {
         searchesOf: jest.fn(async () => [
-            {searches: ['fr:cartes Pokémon', 'en:Pokemon TCG'], languages: ['fr', 'en'], category: 'technology'},
-            {searches: ['fr:arbitrage football'], languages: ['fr'], category: 'sport'},
-            {searches: ['fr:voile'], languages: ['fr'], category: null},
-            {searches: ['fr:jeux de cartes'], languages: ['en'], category: 'technology'},
+            {searches: ['fr:cartes Pokémon', 'en:Pokemon TCG'], category: 'technology'},
+            {searches: ['fr:arbitrage football'], category: 'sport'},
+            {searches: ['fr:voile'], category: null},
+            {searches: ['de:Sammelkarten'], category: 'technology'},
         ]),
     },
 }));

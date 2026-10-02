@@ -13,7 +13,7 @@ const {ollamaJson} = await import('../../services/utils/ollama.js');
 const {selectionPrompt} = await import('../../services/utils/profile-ai.js');
 const {balanceSelection, interestsOf, missingWords, normalizeCheck, normalizeInterests, normalizeMerges, normalizeReview, normalizeSelection, parseSearch, reviewPrompt} = await import('../../services/utils/profile-ai.js');
 
-const options = {languages: ['fr', 'en'], categories: ['world', 'sport', 'technology']};
+const options = {language: 'fr', categories: ['world', 'sport', 'technology']};
 
 describe('normalizeInterests', () => {
     it('should keep the interests as the AI gave them when they are right', () => {
@@ -32,14 +32,14 @@ describe('normalizeInterests', () => {
     it('should correct what the AI gets wrong', () => {
         const [interest] = normalizeInterests({interests: [{
             text: '  Chefs   cuisiniers ', weight: 7, keywords: 'chef biographie / chef biography',
-            searches: [{q: 'chef', lang: 'fr'}, {q: 'chef étoilé', lang: 'fr'}, {q: 'cuoco', lang: 'fr'}, {q: 'koch', lang: 'de'}, {q: '', lang: 'en'}],
+            searches: [{q: 'chef', lang: 'fr'}, {q: 'chef étoilé', lang: 'fr'}, {q: 'cuoco', lang: 'fr'}, {q: 'koch', lang: 'de'}, {q: '', lang: 'en'}, {q: 'chef', lang: 'xx'}],
             category: 'cuisine',
         }]}, options);
 
         expect(interest.text).toBe('Chefs cuisiniers');
         expect(interest.weight).toBe(1);
         expect(interest.keywords).toBe('chef biographie, chef biography');
-        expect(interest.searches).toEqual(['fr:chef', 'fr:chef étoilé']);       // 2 per language read, none in German
+        expect(interest.searches).toEqual(['fr:chef', 'fr:chef étoilé', 'de:koch']);   // 2 per language, none in a language Google has not
         expect(interest.category).toBe('world');
         expect(interest.sections).toEqual([]);
     });
@@ -52,6 +52,13 @@ describe('normalizeInterests', () => {
         }]}, options);
         expect(interest.keywords).toBe(`UEFA, Euro ${year + 2}, Ligue des champions ${year}`);
         expect(interest.searches).toEqual(['fr:Ligue des champions']);
+    });
+
+    it('should search in four languages at most, the first ones the AI chose', () => {
+        const [interest] = normalizeInterests({interests: [{
+            text: 'Football européen', searches: ['fr', 'en', 'es', 'it', 'de'].map(lang => ({q: 'UEFA', lang})),
+        }]}, options);
+        expect(interest.searches).toEqual(['fr:UEFA', 'en:UEFA', 'es:UEFA', 'it:UEFA']);
     });
 
     it('should drop the interests without a text and keep six at most', () => {
@@ -76,7 +83,7 @@ describe('the words of a profile its interests leave out', () => {
 });
 
 describe('interestsOf', () => {
-    const profile = {text: "L'arbitrage du football : VAR, nominations des arbitres.", topics: [], languages: ['fr'], categories: ['sport']};
+    const profile = {text: "L'arbitrage du football : VAR, nominations des arbitres.", topics: [], language: 'fr', categories: ['sport']};
 
     beforeEach(() => ollamaJson.mockReset());
 

@@ -42,6 +42,8 @@ const COUNTRY = {
     ar: 'EG', fa: 'IR', ur: 'PK', hi: 'IN', bn: 'BD', zh: 'CN', ja: 'JP', ko: 'KR', id: 'ID', ms: 'MY', vi: 'VN',
     th: 'TH', sw: 'KE', af: 'ZA', tl: 'PH', uz: 'UZ',
 };
+// a language Google News has an edition in, so a search can be asked in it
+export const isSearchLanguage = (language) => Boolean(LOCALES[language] || COUNTRY[language]);
 const localeOf = (language) => LOCALES[language]
     ?? (COUNTRY[language] ? {hl: language, gl: COUNTRY[language], ceid: `${COUNTRY[language]}:${language}`} : LOCALES.en);
 
@@ -358,13 +360,14 @@ export const credibleStory = (members, established, minMedia = 2) => {
 };
 
 // The feeds of Google News read for the interests: one per search the AI wrote for them ("fr:arbitrage
-// football"), in the languages of the reader, on the window of the stories. The same search of two
+// football"), in the languages it chose for each interest (only 'languages' when given), on the window
+// of the stories. The same search of two
 // readers is one feed, read once. They never go in user_feeds: they say what their reader follows,
 // and the sources recommended to the others are taken from there (see RecommendationService)
 export const SEARCH_DAYS = 2;
-export const interestSearchUrls = (searches, languages) => [...new Set(searches
+export const interestSearchUrls = (searches, languages = null) => [...new Set(searches
     .map(search => String(search).match(/^([a-z]{2}):(.+)$/))
-    .filter(match => match && languages.includes(match[1]))
+    .filter(match => match && (!languages || languages.includes(match[1])))
     .map(([, language, query]) => searchUrl([query.trim()], {days: SEARCH_DAYS, language}))
     .filter(Boolean))];
 

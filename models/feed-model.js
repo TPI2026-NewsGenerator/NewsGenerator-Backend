@@ -249,12 +249,6 @@ export const FeedModel = {
 
         return userFeeds.map(feed => ({ ...feed, ...status.get(feed.url) }));
     },
-    // the languages the sources of this reader are written in, told by their news: ['hu', 'el']
-    userLanguages: async (userId) => (await prisma.user_feeds.findMany({
-        where: {id_user: userId, language: {not: null}},
-        select: {language: true},
-        distinct: ['language'],
-    })).map(feed => feed.language),
     // the feeds added by hand by default, the ones found for the profile have their own limit
     // (see utils/feed-limits.js)
     countUserFeeds: async (userId, origin = 'user') => {
@@ -297,7 +291,7 @@ export const FeedModel = {
                     WHERE i.id_user = $1::int AND i.dense IS NOT NULL) AS score
             FROM candidates c
             JOIN articles a ON a.id_feed = c.id
-            WHERE a.embedded_at IS NOT NULL AND a.created_at >= $4::timestamptz AND a.lang = ANY($3::text[])
+            WHERE a.embedded_at IS NOT NULL AND a.created_at >= $4::timestamptz AND ($3::text[] IS NULL OR a.lang = ANY($3::text[]))
         )
         SELECT c.id, c.url, c.category, c.language,
                count(*)::int AS news,

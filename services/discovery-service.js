@@ -101,13 +101,11 @@ const prune = async (userId) => {
 
 const discover = async (userId) => {
     await prune(userId);
-    const [interests, feeds, profileCount, profile] = await Promise.all([
+    const [interests, feeds, profileCount] = await Promise.all([
         ProfileModel.interestsForDiscovery(userId),
         FeedModel.userFeedUrls(userId),
         FeedModel.countUserFeeds(userId, 'profile'),
-        ProfileModel.get(userId),
     ]);
-    const languages = profile?.languages?.length ? profile.languages : null;
     const room = Math.min(MAX_NEW_PROFILE_FEEDS, MAX_PROFILE_FEEDS - profileCount);
     if (room <= 0) {
         console.log(`Discovery: user ${userId} has ${profileCount} feeds for the profile already, none looked for`);
@@ -138,7 +136,7 @@ const discover = async (userId) => {
         // 'withKnown': the feeds the directory of Media Cloud knows for the medium are candidates too
         const tryMedium = (withKnown) => async (medium) => {
             const listed = withKnown ? await knownFeeds(medium.site) : [];
-            const feed = await findFeeds(medium.site, {language: medium.lang, subject, judge, languages, known: listed})
+            const feed = await findFeeds(medium.site, {language: medium.lang, subject, judge, known: listed})
                 .then(feeds => feeds[0], () => null);
             if (!feed || !isOnSubject(feed)) return null;
             // the language read in its news: tribuna.com/en/, found by a French search, is in English

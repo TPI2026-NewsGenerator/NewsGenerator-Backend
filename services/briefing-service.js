@@ -17,11 +17,11 @@ import {FeedbackService} from "./feedback-service.js";
 import {DiscoveryService} from "./discovery-service.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {newUsage} from "./utils/ollama.js";
-import {canSummarize, extractArticle, passagesText} from "./utils/extract.js";
+import {canSummarize, extractArticle, passagesText, translateTexts} from "./utils/extract.js";
 import {balanceSelection, checkStories, mergeStories, reviewCards, selectStories} from "./utils/profile-ai.js";
 import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
-import {languageOf} from "./utils/language.js";
+import {readerLanguage, writtenIn} from "./utils/language.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {hostOf, mediumOf} from "./utils/public-url.js";
 import {credibleStory, decodeLinks, isGoogleNewsUrl, isNotNews, isRepeatedPage, pickCandidates} from "./utils/google-news.js";
@@ -64,10 +64,12 @@ const FEED_MEDIA_MINUTES = 60;      // the media read through a feed, asked agai
 
 const running = new Set();          // users whose briefing is being written by this server
 
-// the feeds this user reads: the shared ones of their languages, their own, and the searches of
-// Google News of their interests
-const feedsOf = async (userId, languages) => [...new Set([
-    ...languages.flatMap(language => Object.values(rss[language] ?? {}).flat()),
+// the feeds this user reads: the shared ones of every language, their own, and the searches of Google
+// News of their interests. Every language is read and translated: replayed on a reader of 7 languages
+// with sources in 30 (bench/briefing-languages.mjs), the others took 13 of the 42 candidates and 2 of
+// the 10 cards, both on the profile (the UEFA president on Infantino in Albanian)
+const feedsOf = async (userId) => [...new Set([
+    ...Object.values(rss).flatMap(categories => Object.values(categories).flat()),
     ...await FeedModel.userFeedUrls(userId),
     ...await searchesOfUser(userId),
 ])];
@@ -196,12 +198,12 @@ const write = async (briefingId, userId) => {
     // cards were refused again and again are left out
     const feedback = await FeedbackService.of(userId);
     const refused = new Set(feedback.refused);
-    const feedUrls = (await feedsOf(userId, profile.languages)).filter(url => !refused.has(url));
+    const feedUrls = (await feedsOf(userId)).filter(url => !refused.has(url));
     // the sources the reader trusts: their stories get a bonus, among the TRUST_POOL closest only
     const trusted = new Set(await FeedModel.trustedFeedUrls(userId));
     const ranked = await StoryModel.rank({
         userId, feedUrls, since,
-        languages: profile.languages,
+        languages: null,
         sparseWeight: SPARSE_WEIGHT,
         limit: RANKED,
     });
@@ -282,7 +284,7 @@ const write = async (briefingId, userId) => {
     // 5. the key passages of each story, as published (see extract.js), translated for a reader of
     // another language
     await step('summarizing');
-    const language = languageOf(profile.text, profile.languages[0]) ?? 'en';
+    const language = readerLanguage(profile);
     const summaries = await mapWithConcurrency(stories, AI_CONCURRENCY, async (story, i) => {
         // the first lines of a page (a teaser, a paywall) do not tell the news
         const readable = reads[i].find(article => canSummarize(content.get(article.link)?.content));
@@ -296,14 +298,23 @@ const write = async (briefingId, userId) => {
 
     // 6. the cards read once more with their summary, which says what a title may not: the ones on
     // what the reader refuses are left out (see reviewCards). The briefing never waits on it failing
-    const leftOut = await reviewCards(profile.text, stories.map((story, i) => ({
-        id: String(story.storyId),
-        title: (story.members.find(article => article.link === summaryOf(i)?.from) ?? story.best).title,
-        summary: summaryOf(i)?.summary ?? null,
-    })), usage.reviewing).catch(err => {
-        console.error(`Briefing: the cards were not read again (${err.message})`);
-        return new Map();
-    });
+    const leadOf = (story, i) => story.members.find(article => article.link === summaryOf(i)?.from) ?? story.best;
+    const leads = stories.map(leadOf);
+    // and the titles written in another language than the reader's translated, as their passages
+    const foreign = leads.filter(lead => lead.lang && lead.lang !== language && writtenIn(lead.lang) && writtenIn(language));
+    const [leftOut, titleTranslations] = await Promise.all([
+        reviewCards(profile.text, stories.map((story, i) => ({
+            id: String(story.storyId),
+            title: leads[i].title,
+            summary: summaryOf(i)?.summary ?? null,
+        })), usage.reviewing).catch(err => {
+            console.error(`Briefing: the cards were not read again (${err.message})`);
+            return new Map();
+        }),
+        foreign.length === 0 ? [] : translateTexts(foreign.map(lead => ({text: lead.title, from: writtenIn(lead.lang)})),
+            writtenIn(language), usage.summarizing),
+    ]);
+    const titleTranslation = new Map(foreign.map((lead, i) => [lead, titleTranslations[i]]));
     if (leftOut.size > 0) console.log(`Briefing: ${leftOut.size} cards on what the reader refuses left out (${[...leftOut.values()].join(' / ')})`);
     await step(null);
     console.log(`Briefing ${briefingId}: tokens ${JSON.stringify(usage)}, seconds ${JSON.stringify(seconds)}`);
@@ -311,7 +322,7 @@ const write = async (briefingId, userId) => {
     return stories.flatMap((story, i) => {
         if (leftOut.has(String(story.storyId))) return [];
         const summary = summaryOf(i);
-        const lead = story.members.find(article => article.link === summary?.from) ?? story.best;
+        const lead = leads[i];
         const members = [...story.members].sort((a, b) => b.at - a.at);
 
         return {
@@ -322,6 +333,9 @@ const write = async (briefingId, userId) => {
             // never on a search of Google News, which is the interest itself
             feedUrls: [...new Set(story.members.map(article => article.feed_url).filter(url => url && !isGoogleNewsUrl(url)))],
             title: lead.title,
+            // the title in the language of the reader when it is written in another, and that language
+            titleTranslation: titleTranslation.get(lead) ?? null,
+            language: lead.lang ?? null,
             why: story.why,
             interest: story.interest,
             // the key sentences of the article as published, a paragraph per passage (see extract.js)

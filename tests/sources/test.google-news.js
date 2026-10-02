@@ -15,13 +15,17 @@ import {
 const GOOGLE = 'https://news.google.com/rss/search?q=x&hl=fr&gl=FR&ceid=FR:fr';
 
 describe('interestSearchUrls', () => {
-    it('should give one feed per search of the interests, in the languages of the reader only', () => {
+    it('should give one feed per search of the interests, in the languages asked only', () => {
         const urls = interestSearchUrls(['fr:arbitrage football', 'en:football VAR', 'es:árbitro', 'fr:arbitrage football'], ['fr', 'en']);
         expect(urls).toEqual([
             'https://news.google.com/rss/search?q=arbitrage%20football%20when%3A2d&hl=fr&gl=FR&ceid=FR:fr',
             'https://news.google.com/rss/search?q=football%20VAR%20when%3A2d&hl=en-US&gl=US&ceid=US:en',
         ]);
         expect(urls.map(languageOfSearch)).toEqual(['fr', 'en']);
+    });
+
+    it('should give the searches of every language when none is asked', () => {
+        expect(interestSearchUrls(['fr:arbitrage football', 'sr:srpski fudbal']).map(languageOfSearch)).toEqual(['fr', 'sr']);
     });
 
     it('should ignore a search without its language', () => {

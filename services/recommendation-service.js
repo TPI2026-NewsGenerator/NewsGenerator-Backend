@@ -42,7 +42,7 @@ const recommended = async (userId) => {
     const [{refused}, known] = await Promise.all([FeedbackService.of(userId), knownMedia(userId)]);
     const rows = await FeedModel.recommendedFeeds(userId, {
         excluded: [...shared, ...refused],
-        languages: profile.languages,
+        languages: null,                // the reader reads every language
         since: new Date(Date.now() - RECENT_DAYS * 24 * 3600e3),
         threshold: JUDGE_THRESHOLD,
         minRelevant: MIN_RELEVANT,
@@ -63,7 +63,7 @@ const toRecommendation = (row) => ({
     url: isBridgeUrl(row.url) ? null : row.url,
     category: row.category,
     language: row.language,
-    news: row.news,                 // its news of the last days in the languages of the reader
+    news: row.news,                 // its news of the last days
     relevant: row.relevant,         // how many of them are on the interests of the reader
     samples: row.samples,           // the titles closest to them
 });

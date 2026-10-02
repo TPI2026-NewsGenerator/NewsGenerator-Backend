@@ -89,7 +89,7 @@ export const StoryModel = {
     storyArticles: async ({storyIds, feedUrls, since}) => prisma.$queryRawUnsafe(`
         SELECT * FROM (
             SELECT DISTINCT ON (a.link)
-                   a.id, a.id_story, a.link, a.title, a.description, a.thumbnail, f.url AS feed_url,
+                   a.id, a.id_story, a.link, a.title, a.description, a.thumbnail, a.lang, f.url AS feed_url,
                    a.medium, a.source_url, a.resolved_link,
                    COALESCE(a.published_at, a.created_at) AS at
             FROM articles a

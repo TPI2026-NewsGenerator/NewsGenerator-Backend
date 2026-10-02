@@ -168,9 +168,8 @@ export const siteFeeds = async (site) => {
 // subject (keywords, as a search writes them) it is the one most on it: the rugby section of a
 // newspaper rather than its main feed, where rugby is 3 news out of 100. The keywords also name the
 // sections to look for; which news are on the subject is decided by 'judge' when one is given (by
-// meaning, see subjectStats), else by the keywords themselves. With 'languages' (those of the reader)
-// a feed written in another is no candidate: favorflav.com, found by a French search, gave its Dutch
-// section, on the subject by meaning (the vectors read every language) but not readable. 'known' are
+// meaning, see subjectStats), else by the keywords themselves. With 'languages' a feed written in
+// another is no candidate (the directory keeps the languages it can tell). 'known' are
 // feeds of the site another directory knows (see media-cloud.js), candidates like the others. Without
 // 'bridge', a site that publishes no feed gives none: the directory adds hundreds of media, and each
 // one read through the bridge loads its page every time

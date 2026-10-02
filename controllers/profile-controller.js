@@ -32,8 +32,8 @@ export const ProfileController = {
     }),
 
     save: (req, res) => {
-        const {text, topics, languages} = req.body ?? {};
-        return respond(res, () => ProfileService.save(req.user.id, {text, topics, languages}));
+        const {text, topics, language} = req.body ?? {};
+        return respond(res, () => ProfileService.save(req.user.id, {text, topics, language}));
     },
 
     updateInterest: (req, res) => {

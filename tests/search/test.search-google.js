@@ -42,6 +42,7 @@ jest.unstable_mockModule('../../services/utils/google-news.js', () => ({
     isGoogleNewsUrl: (url) => url.startsWith('https://news.google.com/'),
     googleAvailable: () => true,
     sentenceUrl: () => null,
+    isSearchLanguage: () => true,
 }));
 jest.unstable_mockModule('../../services/ingest-service.js', () => ({
     searchesOfCategories: jest.fn(async () => []),

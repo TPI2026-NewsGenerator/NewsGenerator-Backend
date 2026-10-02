@@ -257,9 +257,10 @@ const assign = async (client, sparseWeight = 1) => (await client.query('SELECT *
         expect(await rank(client, t.user, {feeds: ['https://test.invalid/another']})).toEqual([]);
     }));
 
-    it('should leave out the news in a language the user does not read', () => inTransaction(async (client, feed) => {
+    it('should leave out the news in the languages not asked, and read every language without one', () => inTransaction(async (client, feed) => {
         const t = await setUp(client, feed);
         expect(await rank(client, t.user, {languages: ['fr', 'es']})).toEqual([]);
+        expect((await rank(client, t.user, {languages: null})).map(row => row.id_story)).toEqual([t.s1, t.s2, t.s3]);
     }));
 
     it('should give a secondary interest less weight', () => inTransaction(async (client, feed) => {

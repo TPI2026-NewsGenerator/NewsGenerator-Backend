@@ -180,8 +180,7 @@ export const feedsDue = (rows, now = Date.now()) => rows
 // the searches of Google News of every reader not read for GOOGLE_EVERY_MINUTES
 const dueSearches = async () => {
     if (!GOOGLE_ENABLED() || !googleAvailable()) return [];
-    const urls = [...new Set((await ProfileModel.searchesOf())
-        .flatMap(({searches, languages}) => interestSearchUrls(searches, languages)))];
+    const urls = [...new Set((await ProfileModel.searchesOf()).flatMap(({searches}) => interestSearchUrls(searches)))];
     return FeedModel.dueFeeds(urls, new Date(Date.now() - GOOGLE_EVERY_MINUTES * 60e3), MAX_GOOGLE_PER_RUN);
 };
 
@@ -191,7 +190,7 @@ const dueSearches = async () => {
 export const searchesOfCategories = async (categories, language = null) => GOOGLE_ENABLED()
     ? [...new Set((await ProfileModel.searchesOf())
         .filter(({category}) => !category || categories.includes(category))
-        .flatMap(({searches, languages}) => interestSearchUrls(searches, languages.filter(read => !language || read === language))))]
+        .flatMap(({searches}) => interestSearchUrls(searches, language ? [language] : null)))]
     : [];
 
 // The feeds of Google News of the sentences searched in this language (every language without one),
@@ -205,13 +204,13 @@ export const sentenceFeeds = async (language = null) => {
         FeedModel.googleSearchFeeds(new Date(Date.now() - RETENTION_DAYS * 24 * 3600e3)),
         ProfileModel.searchesOf(),
     ]);
-    const ofProfiles = new Set(profiles.flatMap(({searches, languages}) => interestSearchUrls(searches, languages)));
+    const ofProfiles = new Set(profiles.flatMap(({searches}) => interestSearchUrls(searches)));
     return read.filter(url => !ofProfiles.has(url) && (!language || languageOfSearch(url) === language));
 };
 
 // the searches of Google News of one reader, read with the sources just found for them
 export const searchesOfUser = async (userId) => GOOGLE_ENABLED()
-    ? [...new Set((await ProfileModel.searchesOf(userId)).flatMap(({searches, languages}) => interestSearchUrls(searches, languages)))]
+    ? [...new Set((await ProfileModel.searchesOf(userId)).flatMap(({searches}) => interestSearchUrls(searches)))]
     : [];
 
 export const IngestService = {
