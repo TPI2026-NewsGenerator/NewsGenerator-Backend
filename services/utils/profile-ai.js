@@ -45,9 +45,9 @@ const firstLanguages = (language) => language === 'en' ? "l'anglais" : `le ${fre
 // governance 6 times of 6, it only takes the precisions that name no subject
 const today = () => new Date().toLocaleDateString('fr-CH', {day: 'numeric', month: 'long', year: 'numeric'});
 
-export const interestsPrompt = ({text, topics, language, categories}) => `Nous sommes le ${today()}. Voici le profil d'un lecteur de nouvelles, écrit par lui-même :
+export const interestsPrompt = ({text, language, categories}) => `Nous sommes le ${today()}. Voici le profil d'un lecteur de nouvelles, écrit par lui-même :
 """${text}"""
-${topics.length > 0 ? `Thèmes qu'il a cochés : ${topics.join(', ')}.\n` : ''}Il lit en ${frenchName(language)} : les nouvelles de toutes les langues lui sont traduites.
+Il lit en ${frenchName(language)} : les nouvelles de toutes les langues lui sont traduites.
 
 Découpe ce profil en 1 à ${MAX_INTERESTS} intérêts distincts. Ce que le lecteur dit ne pas vouloir n'est pas un intérêt : ne le mets dans aucun intérêt, mets-le dans "refused".
 Pour chaque intérêt, donne :

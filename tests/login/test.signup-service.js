@@ -61,7 +61,7 @@ describe('SignupService.register', () => {
         await expect(SignupService.register(request)).resolves.toEqual({id_user: 300, token: 'token'});
 
         expect(UserModel.create).toHaveBeenCalledWith({username: 'lecteur', email: 'lecteur@example.org', password: 'hashed', role: 2});
-        expect(ProfileService.prepare).toHaveBeenCalledWith({text: request.text, topics: undefined, language: 'en'});
+        expect(ProfileService.prepare).toHaveBeenCalledWith({text: request.text, language: 'en'});
         expect(ProfileService.store).toHaveBeenCalledWith(300, prepared);
     });
 

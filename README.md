@@ -138,6 +138,8 @@ fp32 on the card too, so they stay the ones of the processor, already stored and
     function `assign_threads`), then run `node scripts/assign-threads.js` once for the stories already grouped
 20. Do the same with "add_directory.sql" (the feeds the server finds itself, see **The directory** below),
     then run `node scripts/grow-directory.js` once to fill it
+21. Do the same with "drop_profile_topics.sql" (the themes ticked with a profile, no longer used: the
+    interests are read from its text alone)
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.

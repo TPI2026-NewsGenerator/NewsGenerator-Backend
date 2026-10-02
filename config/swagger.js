@@ -143,8 +143,7 @@ const options = {
                                         "email": {"type": "string", "format": "email", "description": "Unique whatever its case"},
                                         "password": {"type": "string", "format": "password", "description": "10 to 72 characters"},
                                         "text": {"type": "string", "description": "The profile in the reader's words, 20 to 2000 characters"},
-                                        "languages": {"type": "array", "items": {"type": "string"}, "example": ["fr", "en"]},
-                                        "topics": {"type": "array", "items": {"type": "string"}, "description": "Optional, among GET /profile/options"}
+                                        "languages": {"type": "array", "items": {"type": "string"}, "example": ["fr", "en"]}
                                     },
                                     "required": ["username", "email", "password", "text", "languages"]
                                 }
@@ -757,7 +756,6 @@ const options = {
                             "type": "object",
                             "properties": {
                                 "text": {"type": "string", "minLength": 20, "maxLength": 2000, "example": "Je suis passionné de rugby (Top 14, Six Nations). J'aime aussi la mode. Pas de football."},
-                                "topics": {"type": "array", "items": {"type": "string"}, "example": ["sport", "culture"]},
                                 "languages": {"type": "array", "items": {"type": "string"}, "example": ["fr", "en"]}
                             },
                             "required": ["text", "languages"]
@@ -765,7 +763,7 @@ const options = {
                     },
                     "responses": {
                         "200": {"description": "The profile written", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ProfileResponse"}}}},
-                        "400": {"description": "Text too short or too long, unknown topic or language"},
+                        "400": {"description": "Text too short or too long, or unknown language"},
                         "422": {"description": "The AI read no interest in the text"},
                         "503": {"description": "The embedder does not answer"}
                     }
@@ -774,9 +772,9 @@ const options = {
             "/profile/options": {
                 "get": {
                     "tags": ["Profile"],
-                    "summary": "The topics and languages a profile can choose",
+                    "summary": "The languages a profile can choose",
                     "security": [],
-                    "responses": {"200": {"description": "{topics: [...], languages: [...]}"}}
+                    "responses": {"200": {"description": "{languages: [...]}"}}
                 }
             },
             "/profile/interests/{id}": {
@@ -1065,7 +1063,6 @@ const options = {
                     "properties": {
                         "profile": {"type": "object", "nullable": true, "properties": {
                             "text": {"type": "string"},
-                            "topics": {"type": "array", "items": {"type": "string"}},
                             "languages": {"type": "array", "items": {"type": "string"}},
                             "discovery": {"type": "object", "properties": {
                                 "status": {"type": "string", "enum": ["idle", "running", "done", "failed"]},

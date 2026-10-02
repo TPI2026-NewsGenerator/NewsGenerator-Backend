@@ -192,7 +192,6 @@ model threads {
 model user_profiles {
   id_user          Int       @id
   text             String
-  topics           String[]  @default([])
   languages        String[]  @default([])
   discovery_status String    @default("idle")
   discovery_error  String?

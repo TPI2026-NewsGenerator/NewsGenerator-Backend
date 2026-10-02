@@ -37,11 +37,11 @@ export const ProfileModel = {
 
     // the profile and its interests, the old interests replaced at once
     // interests: [{text, weight, keywords, searches, sections, category, dense, sparse}], vectors as text
-    save: async (userId, {text, topics, languages}, interests) => prisma.$transaction([
+    save: async (userId, {text, languages}, interests) => prisma.$transaction([
         prisma.user_profiles.upsert({
             where: {id_user: userId},
-            create: {id_user: userId, text, topics, languages},
-            update: {text, topics, languages, updated_at: new Date()},
+            create: {id_user: userId, text, languages},
+            update: {text, languages, updated_at: new Date()},
         }),
         prisma.profile_interests.deleteMany({where: {id_user: userId}}),
         prisma.profile_interests.createMany({

@@ -83,7 +83,7 @@ describe('the words of a profile its interests leave out', () => {
 });
 
 describe('interestsOf', () => {
-    const profile = {text: "L'arbitrage du football : VAR, nominations des arbitres.", topics: [], language: 'fr', categories: ['sport']};
+    const profile = {text: "L'arbitrage du football : VAR, nominations des arbitres.", language: 'fr', categories: ['sport']};
 
     beforeEach(() => ollamaJson.mockReset());
 

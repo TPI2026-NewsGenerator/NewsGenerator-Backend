@@ -15,7 +15,6 @@ import {DiscoveryService, JUDGE_THRESHOLD, RELEVANCE_DAYS} from "./discovery-ser
 import {FeedbackService} from "./feedback-service.js";
 import {embed, toSparsevec, toVector} from "./utils/embedder.js";
 import {interestsOf} from "./utils/profile-ai.js";
-import {TOPICS} from "./utils/topics.js";
 import {MAX_PROFILE_FEEDS} from "./utils/feed-limits.js";
 import {searchesOfUser} from "./ingest-service.js";
 import {readerLanguage} from "./utils/language.js";
@@ -24,14 +23,10 @@ const MIN_TEXT = 20;            // "rugby" says too little to split into interes
 const MAX_TEXT = 2000;
 const MAX_INTEREST_TEXT = 300;
 
-// the themes a user can tick at the start, the ones the AI gives to a news
-export const PROFILE_TOPICS = TOPICS.filter(topic => topic !== 'other');
-
 const badRequest = (message) => Object.assign(new Error(message), {status: 400});
 
 const toProfile = (row) => row && ({
     text: row.text,
-    topics: row.topics,
     // the language the news are shown in, of every language they are written in
     language: readerLanguage(row),
     discovery: {
@@ -61,8 +56,6 @@ const withVectors = async (interests) => {
 };
 
 export const ProfileService = {
-    topics: () => PROFILE_TOPICS,
-
     get: async (userId) => {
         const [profile, interests, feeds, refusedSources, relevance, searches] = await Promise.all([
             ProfileModel.get(userId),
@@ -111,21 +104,18 @@ export const ProfileService = {
 
     // a profile checked and split into interests by the AI, each with its vector, not saved yet: the
     // signup reads it before the account is created, so a text with no interest creates no account
-    prepare: async ({text, topics = [], language}) => {
+    prepare: async ({text, language}) => {
         const written = typeof text === 'string' ? text.trim() : '';
         if (written.length < MIN_TEXT || written.length > MAX_TEXT) {
             throw badRequest(`Describe what you want to read in ${MIN_TEXT} to ${MAX_TEXT} characters.`);
-        }
-        if (!Array.isArray(topics) || !topics.every(topic => PROFILE_TOPICS.includes(topic))) {
-            throw badRequest(`Topics must be among: ${PROFILE_TOPICS.join(', ')}.`);
         }
         if (!FeedService.languages().includes(language)) {
             throw badRequest(`Choose the language you read in among: ${FeedService.languages().join(', ')}.`);
         }
 
         // the column keeps one language now: the news of every language are read for the reader
-        const profile = {text: written, topics: [...new Set(topics)], languages: [language]};
-        const interests = await interestsOf({text: written, topics: profile.topics, language, categories: FeedService.categories()});
+        const profile = {text: written, languages: [language]};
+        const interests = await interestsOf({text: written, language, categories: FeedService.categories()});
         if (interests.length === 0) {
             throw Object.assign(new Error('No interest could be read in this text, describe the subjects you want to follow.'), {status: 422});
         }

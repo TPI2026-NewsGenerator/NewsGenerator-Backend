@@ -27,13 +27,12 @@ export const ProfileController = {
 
     // what can be chosen when writing a profile
     options: (req, res) => res.status(200).json({
-        topics: ProfileService.topics(),
         languages: FeedService.languages(),
     }),
 
     save: (req, res) => {
-        const {text, topics, language} = req.body ?? {};
-        return respond(res, () => ProfileService.save(req.user.id, {text, topics, language}));
+        const {text, language} = req.body ?? {};
+        return respond(res, () => ProfileService.save(req.user.id, {text, language}));
     },
 
     updateInterest: (req, res) => {

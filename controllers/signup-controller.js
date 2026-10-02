@@ -12,11 +12,11 @@ import {startSession} from "../services/utils/jwt.js";
 
 export const SignupController = {
     register: async (req, res) => {
-        const {username, email, password, text, topics, language} = req.body ?? {};
+        const {username, email, password, text, language} = req.body ?? {};
 
         try {
             // signed in at once, the token in a cookie as for the login
-            const {token, ...account} = await SignupService.register({username, email, password, text, topics, language});
+            const {token, ...account} = await SignupService.register({username, email, password, text, language});
             startSession(res, token);
             return res.status(201).json(account);
         } catch (error) {

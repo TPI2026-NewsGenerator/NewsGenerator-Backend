@@ -13,7 +13,7 @@ const router = express.Router();
 
 router.get('', authenticateToken, ProfileController.get);
 router.put('', authenticateToken, ProfileController.save);
-// the topics and languages a profile can choose from
+// the languages a profile can choose from
 router.get('/options', ProfileController.options);
 router.patch('/interests/:id', authenticateToken, ProfileController.updateInterest);
 router.delete('/interests/:id', authenticateToken, ProfileController.deleteInterest);

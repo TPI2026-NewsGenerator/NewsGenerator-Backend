@@ -28,7 +28,7 @@ const isTaken = (error) => error?.code === 'P2002' || /23505|unique constraint/i
 
 export const SignupService = {
     // -> {id_user, token}, as the login: the reader is signed in at once
-    register: async ({username, email, password, text, topics, language}) => {
+    register: async ({username, email, password, text, language}) => {
         const name = typeof username === 'string' ? username.trim() : '';
         const mail = typeof email === 'string' ? email.trim() : '';
 
@@ -48,7 +48,7 @@ export const SignupService = {
 
         // the profile is read before the account is created: a text the AI finds no interest in
         // leaves no account behind, the reader only writes it again
-        const profile = await ProfileService.prepare({text, topics, language});
+        const profile = await ProfileService.prepare({text, language});
 
         const role = await UserModel.roleId(READER_ROLE);
         if (role === null) throw fail(500, `The role "${READER_ROLE}" is missing from the database.`);
