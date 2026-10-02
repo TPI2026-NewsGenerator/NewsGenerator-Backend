@@ -1171,8 +1171,11 @@ const options = {
                                 "agencies": {"type": "array", "items": {"type": "string"}, "example": ["AFP"]},
                                 "mediaNames": {"type": "array", "items": {"type": "string"}}
                             }},
+                            "lead": {"type": "object", "description": "The article of the title and of the passages, the one the card sends to read (absent from the briefings made before 02.10.2026)", "properties": {
+                                "title": {"type": "string"}, "url": {"type": "string"}, "source": {"type": "string"}, "publishedAt": {"type": "string"}, "trusted": {"type": "boolean"}
+                            }},
                             "articles": {"type": "array", "items": {"type": "object", "properties": {
-                                "title": {"type": "string"}, "url": {"type": "string"}, "source": {"type": "string"}, "publishedAt": {"type": "string"}
+                                "title": {"type": "string"}, "url": {"type": "string"}, "source": {"type": "string"}, "publishedAt": {"type": "string"}, "trusted": {"type": "boolean"}
                             }}}
                         }}}
                     }

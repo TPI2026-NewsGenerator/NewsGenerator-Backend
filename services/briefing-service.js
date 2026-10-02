@@ -398,6 +398,9 @@ const write = async (briefingId, userId) => {
             // never on a search of Google News, which is the interest itself
             feedUrls: [...new Set(story.members.map(article => article.feed_url).filter(url => url && !isGoogleNewsUrl(url)))],
             title: lead.title,
+            // the article of the title and of the passages, the one the card sends to read: the reader
+            // could not tell which of its articles the passages were of
+            lead: toArticle(lead, trusted),
             // the title in the language of the reader when it is written in another, and that language
             titleTranslation: titleTranslation.get(lead) ?? null,
             language: lead.lang ?? null,
