@@ -64,7 +64,7 @@ package "Data" as Data {
     class feedModel {
         + feedMedia()
         + userFeedUrls()
-        + trustedFeedUrls()
+        + trustedMedia()
         + saveResolvedLinks()
     }
 }

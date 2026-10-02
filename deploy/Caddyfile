@@ -16,7 +16,17 @@
 	# the whole site behind a name and a password the browser asks, before the accounts of the app
 	# (web.env, see compose.yml): nobody else reaches the signup. The app sends its session in a
 	# cookie, so the Authorization header stays the one of this password
-	basic_auth {
+	# What a shared link shows: the robots of the previews (WhatsApp, iMessage, Slack, Discord...) get
+	# the page and its pictures without the password, never the API. The page holds no data, a robot
+	# named falsely reaches nothing more
+	@locked {
+		not path /og-image.png /favicon.ico /favicon-*.png /apple-touch-icon.png /icon-*.png /site.webmanifest
+		not {
+			header_regexp preview User-Agent (?i)(facebookexternalhit|facebot|twitterbot|slackbot|slack-imgproxy|discordbot|telegrambot|whatsapp|linkedinbot|skypeuripreview|redditbot|applebot|iframely|embedly|pinterestbot|mastodon)
+			not path /api/*
+		}
+	}
+	basic_auth @locked {
 		{$SITE_USER} {$SITE_PASSWORD_HASH}
 	}
 

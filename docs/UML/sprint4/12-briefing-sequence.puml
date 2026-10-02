@@ -39,11 +39,13 @@ group step "ranking"
     Briefing -> Stories : rank(interests, feeds, 48 h)
     Stories -> DB : stories closest to the interests (SQL, pgvector)
     Briefing -> Stories : storyArticles(stories)
+    Briefing -> Stories : trustedMedia(userId)
     Briefing -> Google : credibleStory, isRepeatedPage, pickCandidates
-    note right : told by credible media; a title one medium\nrepublishes for hours is left out; 40 stories\nof feeds, 10 more of Google News at most
+    note right : told by credible media; a title one medium\nrepublishes for hours is left out; 40 stories\nof feeds, 10 more of Google News at most;\nthe stories of a trusted medium among the\n60 closest besides them, 10 at most
 end
 group step "choosing"
     Briefing -> AI : selectStories(profile, candidates, examples)
+    note right : a story of a trusted medium is marked:\npreferred at equal relevance
     Briefing -> Briefing : balanceSelection: every interest has its share
 end
 group step "checking"

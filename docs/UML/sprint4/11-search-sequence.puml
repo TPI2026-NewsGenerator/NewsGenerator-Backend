@@ -88,8 +88,8 @@ Router -> Controller : getNewsSummary(req)
 Controller -> News : summarizeStories(stories, {userId, language})
 News -> FeedModel : getArticlesByLinks(urls)
 note right : a link not in the cache is refused (400):\nthe API scrapes no page it did not list
-News -> FeedModel : trustedFeedUrls(userId)
-News -> News : readingOrder: a trusted source first,\none article per medium, 5 at most
+News -> FeedModel : trustedMedia(userId)
+News -> News : readingOrder: a trusted medium first,\none article per medium, 5 at most
 opt a card known only through Google News
     News -> Web : decodeLinks(links)
     Web --> News : the real addresses, when Google gives them

@@ -1,11 +1,15 @@
 @startuml 01-accounts
 !include _style.iuml
-title Accounts — log in and sign up
+title Accounts — log in, sign up and the session
 
 class EndUser
 package "Presentation" {
     class loginRouter
     class signupRouter
+    class sessionRouter {
+        + GET /session
+        + DELETE /session
+    }
     class loginController {
         + authUser()
     }
@@ -48,23 +52,36 @@ package "utils" {
     }
     class jwt {
         + generateAccessToken()
+        + startSession()
+        + endSession()
         + authenticateToken()
     }
     class rateLimit {
         + rateLimit()
     }
 }
+note right of jwt
+    The token is set in an HttpOnly cookie
+    (SameSite=Strict, Secure through https),
+    never answered to the page: 7 days,
+    renewed once a day while used
+end note
 class bcrypt <<external>>
 class JsonWebToken <<external>>
 class Prisma <<external>>
 
 EndUser --> loginRouter
 EndUser --> signupRouter
+EndUser --> sessionRouter
+loginRouter --> rateLimit
 loginRouter --> loginController
+sessionRouter --> jwt
 signupRouter --> rateLimit
 signupRouter --> signupController
 loginController --> loginService
+loginController --> jwt
 signupController --> signupService
+signupController --> jwt
 loginService --> loginModel
 loginService --> pwdHasher
 loginService --> jwt
