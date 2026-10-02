@@ -103,7 +103,8 @@ const checkFeeds = async (urls, judge = null) => {
             // the sample shown to the user is a news on the subject when there is one
             titles: [...new Set([stats?.sample, ...items.map(item => item.title)])].filter(Boolean).slice(0, 3),
             language: feedLanguage(items.map(item => `${item.title ?? ''} ${item.description ?? ''}`), url),
-            ...(stats ? {onSubject: stats.onSubject, judged: stats.judged, onSubjectPerDay: stats.onSubjectPerDay} : {}),
+            ...(stats ? {onSubject: stats.onSubject, judged: stats.judged, onSubjectPerDay: stats.onSubjectPerDay,
+                onSubjectTitles: stats.onSubjectTitles} : {}),
         };
     }));
 };

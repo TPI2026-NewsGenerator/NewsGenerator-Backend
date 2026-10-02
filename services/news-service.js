@@ -18,7 +18,7 @@ import {mapWithConcurrency} from "./utils/concurrency.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {averageLink, unionFind} from "./utils/grouping.js";
 import {corroborationOf} from "./utils/corroboration.js";
-import {dateOf, mediumOfArticle, readingOrder, sourceOf} from "./utils/reading-order.js";
+import {dateOf, mediumOfArticle, onceEach, readingOrder, sourceOf} from "./utils/reading-order.js";
 import {embed, toSparsevec, toVector} from "./utils/embedder.js";
 import {sortByMeaning} from "./utils/search-ai.js";
 import {mergeStories} from "./utils/profile-ai.js";
@@ -239,12 +239,14 @@ const MAX_THREAD_FACTS = 12;    // facts not found shown on a card, the closest 
 
 const timeOf = (item) => Date.parse(item.publishedAt) || 0;
 
-const withThreads = async (cards, feedUrls) => {
+// 'kept': for a search by exact words, the facts not found holding a word the reader excluded (-word)
+// are left out, as the news found (see Filter.matcher): "-Barça" still showed them on the Negreira card
+const withThreads = async (cards, feedUrls, kept = null) => {
     const threadIds = [...new Set(cards.map(card => card.thread).filter(id => id != null))];
     const foundStoryIds = [...new Set(cards.map(card => card.story).filter(id => id != null))];
-    const others = await FeedModel.threadArticles({
+    const others = (await FeedModel.threadArticles({
         feedUrls, threadIds, foundStoryIds, maxStories: MAX_THREAD_FACTS, maxArticles: MAX_STORY_ARTICLES,
-    });
+    })).filter(article => !kept || kept([article.title, article.description ?? '', ...(article.category ?? [])].join(' | ')));
 
     // the facts not found, one per story: its first report leads it, as a news breaks
     const byStory = new Map();
@@ -380,7 +382,8 @@ export const NewsService = {
             // 3. once per link (a news can be in several feeds), then group the news telling the same story
             const uniqueArticles = [...new Map(articles.map(article => [article.link, article])).values()];
             // 4. the news of one affair on one card, with the facts of the affair not found
-            const news = await withThreads(await groupDuplicates(uniqueArticles), newsLinks);
+            const news = await withThreads(await groupDuplicates(uniqueArticles), newsLinks,
+                parsed.excluded.length > 0 ? Filter.matcher({groups: [], excluded: parsed.excluded}) : null);
 
             return {
                 totalResults: news.length,
@@ -599,11 +602,20 @@ export const NewsService = {
             return {from, passages, translation, topic, sourcing};
         });
 
+        const leads = members.map((list, i) => (results[i].status === 'fulfilled' ? results[i].value : null)?.from ?? list[0]);
+        // the titles written in another language than the one searched translated, as their passages:
+        // the list of the search asked most of them already (see translateNews)
+        const titleTranslations = new Map((await NewsService.translateNews({titles: leads.map(lead => lead.link), language})
+            .catch(err => {
+                console.error(`Key passages: the titles were not translated (${err.message})`);
+                return [];
+            })).map(translation => [translation.url, translation.title]));
+
         return members.map((list, i) => {
             const result = results[i];
             const done = result.status === 'fulfilled' ? result.value : null;
             if (result.status === 'rejected') console.log(`Key passages failed for ${list[0].link}: ${result.reason}`);
-            const lead = done?.from ?? list[0];
+            const lead = leads[i];
             const news = toNews(lead);
             const corroboration = corroborationOf(list.map(article => ({
                 medium: mediumOfArticle(article),
@@ -615,6 +627,8 @@ export const NewsService = {
                 ...news,
                 // the card chosen is known by the url of its lead, whatever article was summarized
                 id: list[0].link,
+                // the title in the language searched when it is written in another (news.language)
+                titleTranslation: titleTranslations.get(lead.link) ?? null,
                 // the sentences of the article as published, a paragraph per passage
                 summary: passagesText(done?.passages),
                 // their machine translation, when the article is not in the language searched
@@ -627,8 +641,8 @@ export const NewsService = {
                         ? "This news is only known through Google News, which did not give its address this time: open it with “Read the article”."
                         : "No article of this news could be read in full (paywall, protected site or its first lines only).",
                 corroboration: {...corroboration, mediaNames: [...new Set(list.map(mediumOfArticle))]},
-                articles: [...list]
-                    .sort((a, b) => Number(trusted.has(b.feeds?.url)) - Number(trusted.has(a.feeds?.url)) || dateOf(b) - dateOf(a))
+                articles: onceEach([...list]
+                    .sort((a, b) => Number(trusted.has(b.feeds?.url)) - Number(trusted.has(a.feeds?.url)) || dateOf(b) - dateOf(a)), {fromGoogle})
                     .map(article => ({
                         url: article.link,
                         source: siteOf(article),

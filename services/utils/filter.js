@@ -59,14 +59,17 @@ const CASE_SENSITIVE = '(?c)';
 const isAcronym = (text) =>
     text.length <= SHORT_WORD_LENGTH && text === text.toUpperCase() && text !== text.toLowerCase();
 
-// Postgres regex of a term, used case-insensitive with ~* (acronyms turn it case-sensitive, see CASE_SENSITIVE)
+// Postgres regex of a term, used case-insensitive with ~* (acronyms turn it case-sensitive, see CASE_SENSITIVE).
+// Its letters are searched with and without their accents, as the JavaScript matcher below: "-Barça"
+// left the news writing "Barca", "Zürich" found 52 news of 30 days and 218 with "Zurich"
 const toPattern = ({ text, exact }) => {
     const options = isAcronym(text) ? CASE_SENSITIVE : '';
+    const literal = (part) => anyAccent(escapeRegex(part));
     if (exact) {
-        return options + WORD_START + text.split(/\s+/).map(escapeRegex).join('[[:space:]]+') + WORD_END;
+        return options + WORD_START + text.split(/\s+/).map(literal).join('[[:space:]]+') + WORD_END;
     }
     const end = text.length <= SHORT_WORD_LENGTH ? WORD_END : '';
-    return options + WORD_START + escapeRegex(text) + end;
+    return options + WORD_START + literal(text) + end;
 };
 
 // SQL condition on 'column' (the text searched, see articles.search_text in db/add_articles_search.sql),
@@ -106,6 +109,21 @@ const widen = ({groups, excluded}) => ({groups: groups.flat().map(term => [term]
 // The letters and digits are listed without the i flag: under /iu a negated \p{} class also refuses
 // the capitals, so the case is removed from the text instead
 const withoutAccents = (text) => text.normalize('NFD').replace(/\p{M}/gu, '');
+
+// The letters of Latin-1 with an accent, by the letter without it: "e" -> "èéêë". A letter of a term
+// is searched as any of them ("Barça" -> "B[aàáâãäå]r[cç][aàáâãäå]"), the other scripts as written.
+// Measured on 30 days (bench/accent-patterns.mjs): 8 to 100 ms a term, the trigram index still used;
+// with Latin Extended-A too (Polish, Czech...) up to 330 ms, and 1 s with every Latin letter
+const ACCENTED = new Map();
+for (let code = 0xC0; code <= 0xFF; code++) {
+    const letter = String.fromCodePoint(code);
+    const base = withoutAccents(letter);
+    if (/^[A-Za-z]$/.test(base) && base !== letter) ACCENTED.set(base, (ACCENTED.get(base) ?? '') + letter);
+}
+const anyAccent = (text) => [...text].map(char => {
+    const base = withoutAccents(char);
+    return /^[A-Za-z]$/.test(base) && ACCENTED.has(base) ? `[${base}${ACCENTED.get(base)}]` : char;
+}).join('');
 const WORD_START_JS = '(?:^|[^\\p{L}\\p{N}])';
 const WORD_END_JS = '(?=[^\\p{L}\\p{N}]|$)';
 

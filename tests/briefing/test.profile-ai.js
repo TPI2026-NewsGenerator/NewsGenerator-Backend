@@ -11,7 +11,7 @@ import {jest} from '@jest/globals'
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson: jest.fn()}));
 const {ollamaJson} = await import('../../services/utils/ollama.js');
 const {selectionPrompt} = await import('../../services/utils/profile-ai.js');
-const {balanceSelection, interestsOf, missingWords, normalizeCheck, normalizeInterests, normalizeMerges, normalizeReview, normalizeSelection, parseSearch, reviewPrompt} = await import('../../services/utils/profile-ai.js');
+const {balanceSelection, confirmOnSubject, confirmPrompt, interestsOf, missingWords, normalizeCheck, normalizeInterests, normalizeMerges, normalizeReview, normalizeSelection, parseSearch, reviewPrompt} = await import('../../services/utils/profile-ai.js');
 
 const options = {language: 'fr', categories: ['world', 'sport', 'technology']};
 
@@ -229,5 +229,29 @@ describe('the cards read again with their summary', () => {
         expect(prompt).toContain("[8234] Une nouvelle Nati\nL'équipe nationale de Suisse de football débute à Skopje.");
         expect(prompt).toContain('[1090] Anthropic Science Lab\n(pas de résumé)');
         expect(prompt).toContain("S'il n'écrit rien de tel, n'enlève aucune carte.");
+    });
+});
+
+describe('confirmOnSubject', () => {
+    const interests = ['Le tennis : les tournois ATP et WTA'];
+
+    it('should keep only the numbers of the titles given, counted from 1', async () => {
+        ollamaJson.mockResolvedValueOnce({onSubject: [1, '[3]', 3, 9, 0, 'x']});
+        expect(await confirmOnSubject(interests, ['Un tournoi', 'Un match de cricket', 'Un classement'])).toEqual(new Set([0, 2]));
+    });
+
+    it('should answer null when the AI gives no list, and ask nothing without titles', async () => {
+        ollamaJson.mockResolvedValueOnce({titles: 'none'});
+        expect(await confirmOnSubject(interests, ['Un tournoi'])).toBeNull();
+        ollamaJson.mockClear();
+        expect(await confirmOnSubject(interests, [])).toEqual(new Set());
+        expect(ollamaJson).not.toHaveBeenCalled();
+    });
+
+    it('should give the AI each interest and each title with its number', () => {
+        const prompt = confirmPrompt(interests, ['Un tournoi', 'Un classement']);
+        expect(prompt).toContain('- Le tennis : les tournois ATP et WTA');
+        expect(prompt).toContain('[1] Un tournoi\n[2] Un classement');
+        expect(prompt).toContain('Dans le doute, compte-le.');
     });
 });

@@ -18,7 +18,7 @@ import {findFeeds, isOnSubject, subjectScore} from "./utils/feed-finder.js";
 import {parseVector} from "./utils/embedder.js";
 import {JUDGE_THRESHOLD, judgeOf} from "./utils/meaning-judge.js";
 import {nameOf} from "./utils/public-url.js";
-import {parseSearch} from "./utils/profile-ai.js";
+import {confirmOnSubject, parseSearch} from "./utils/profile-ai.js";
 import {allocate, staleFeeds, tryPerLanguage} from "./utils/allocation.js";
 import {FeedModel} from "../models/feed-model.js";
 import {bridgeRoom, MAX_NEW_PROFILE_FEEDS, MAX_PROFILE_FEEDS, withinBridgeRoom} from "./utils/feed-limits.js";
@@ -31,6 +31,7 @@ const SEARCH_DAYS = 7;              // a week of Google News says which media re
 const KEPT_PER_LANGUAGE = 2;
 const TRIED_PER_LANGUAGE = 5;
 const FIND_CONCURRENCY = 3;
+const CONFIRMED_TITLES = 12;        // news judged on the profile by the vectors the AI reads, the newest
 // then the press Media Cloud names and Google News did not, with a budget of its own: measured
 // (bench/mc-measure.mjs), 8 feeds on the subject of 11 media tried for the UEFA profile, but 2 of 20
 // for the trading cards, where it only knows newspapers. It must not take the tries of Google News
@@ -139,6 +140,18 @@ const discover = async (userId) => {
             const feed = await findFeeds(medium.site, {language: medium.lang, subject, judge, known: listed})
                 .then(feeds => feeds[0], () => null);
             if (!feed || !isOnSubject(feed)) return null;
+            // the AI reads the news the vectors put on the interests: chance ones are near the threshold
+            // (see confirmOnSubject). The discovery never waits on it failing
+            const titles = (feed.onSubjectTitles ?? []).slice(0, CONFIRMED_TITLES);
+            const confirmed = await confirmOnSubject(interests.map(interest => interest.text), titles)
+                .catch(err => {
+                    console.error(`Discovery: the news of ${feed.url} were not read by the AI (${err.message})`);
+                    return null;
+                });
+            if (confirmed && !isOnSubject({onSubject: confirmed.size})) {
+                console.log(`Discovery: ${feed.url} left out, the AI found ${confirmed.size} of its ${titles.length} news on the profile`);
+                return null;
+            }
             // the language read in its news: tribuna.com/en/, found by a French search, is in English
             return {url: feed.url, site: medium.site, category: interest.category ?? 'world', language: feed.language ?? medium.lang,
                 score: subjectScore(feed)};

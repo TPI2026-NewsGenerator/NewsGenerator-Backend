@@ -55,22 +55,28 @@ describe('Filter.parse', () => {
 
 describe('Filter.toPattern', () => {
     it('should escape regex characters', () => {
-        expect(Filter.toPattern({text: 'c++', exact: false})).toBe('(^|[^[:alnum:]])c\\+\\+([^[:alnum:]]|$)');
+        expect(Filter.toPattern({text: 'c++', exact: false})).toBe('(^|[^[:alnum:]])[cç]\\+\\+([^[:alnum:]]|$)');
     });
 
     it('should need a whole word for short words and exact terms only', () => {
         expect(Filter.toPattern({text: 'var', exact: false})).toMatch(/\|\$\)$/);
-        expect(Filter.toPattern({text: 'referee', exact: false})).toBe('(^|[^[:alnum:]])referee');
-        expect(Filter.toPattern({text: 'referee', exact: true})).toBe('(^|[^[:alnum:]])referee([^[:alnum:]]|$)');
+        expect(Filter.toPattern({text: 'ref', exact: false})).toBe('(^|[^[:alnum:]])r[eèéêë]f([^[:alnum:]]|$)');
+        expect(Filter.toPattern({text: 'referee', exact: false})).not.toMatch(/\|\$\)$/);
+        expect(Filter.toPattern({text: 'referee', exact: true})).toMatch(/\|\$\)$/);
     });
 
     it('should make short words in capitals (acronyms) case-sensitive only', () => {
-        expect(Filter.toPattern({text: 'AI', exact: false})).toBe('(?c)(^|[^[:alnum:]])AI([^[:alnum:]]|$)');
+        expect(Filter.toPattern({text: 'AI', exact: false})).toBe('(?c)(^|[^[:alnum:]])[AÀÁÂÃÄÅ][IÌÍÎÏ]([^[:alnum:]]|$)');
         expect(Filter.toPattern({text: 'NFL', exact: true})).toMatch(/^\(\?c\)/);
         expect(Filter.toPattern({text: 'ai', exact: false})).not.toMatch(/^\(\?c\)/);
         expect(Filter.toPattern({text: 'Var', exact: false})).not.toMatch(/^\(\?c\)/);
         expect(Filter.toPattern({text: 'NASA', exact: false})).not.toMatch(/^\(\?c\)/);
         expect(Filter.toPattern({text: '100', exact: false})).not.toMatch(/^\(\?c\)/);
+    });
+
+    it('should search a Latin letter with and without its accents, and the other scripts as written', () => {
+        expect(Filter.toPattern({text: 'Barça', exact: false})).toBe('(^|[^[:alnum:]])B[aàáâãäå]r[cç][aàáâãäå]');
+        expect(Filter.toPattern({text: 'Ολυμπιακός', exact: false})).toBe('(^|[^[:alnum:]])Ολυμπιακός');
     });
 });
 
@@ -201,6 +207,13 @@ const titles = async (newsList, keywords) => {
         expect(await titles(mockNewsList, ['réchauffe'])).toHaveLength(1);
         expect(await titles([{ title: 'La préchauffe du four' }], ['réchauffe'])).toEqual([]);
         expect(await titles([{ title: 'C++ is 40 years old' }], ['c++'])).toHaveLength(1);
+    });
+
+    it('should find and exclude a word with or without its accents', async () => {
+        const news = [{title: 'Le Barça répond'}, {title: 'Barca: the answer'}, {title: 'Zurich vote'}];
+        expect(await titles(news, ['barca'])).toEqual(['Le Barça répond', 'Barca: the answer']);
+        expect(await titles(news, ['zürich'])).toEqual(['Zurich vote']);
+        expect(await titles(news, ['vote, answer -Barça'])).toEqual(['Zurich vote']);
     });
 
     describe('description and Google-like keywords', () => {

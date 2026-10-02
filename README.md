@@ -338,7 +338,10 @@ Optional variables in `.env`:
    - **Keywords with an operator** (a quote, a comma or a `-word`) are searched as written, in SQL, with
      the excluded keywords and the timeframe. They work like on Google: commas separate alternatives
      (OR), the words of an alternative must all be found (AND), `"quoted text"` is an exact word or
-     phrase and `-word` excludes.
+     phrase and `-word` excludes. A Latin letter is searched with and without its accents (`Zürich`
+     finds `Zurich`, `-Barça` leaves out `Barca`: 8 to 100 ms a term with the trigram index,
+     `bench/accent-patterns.mjs`), and the facts of an affair shown on a card are left out too when
+     they hold an excluded word.
 
    In the keyword search, asking for every word at once is strict: `"referee" football soccer` wants
    the three of them in the same news, and almost none has all three. So when a search finds fewer
@@ -858,6 +861,17 @@ subject of 11 for the UEFA profile (blick.ch/fr, sudinfo.be, lesoir.be, onzemond
 Evening Standard), 3 of 10 for astronomy (lalibre.be sciences-espace), none for sailing and 2 of 20 for
 the trading cards: it knows no specialist site. It answers 2 searches a minute, so its searches wait in
 a queue of their own while the media of Google News are tried, and a refusal pauses it 15 minutes.
+
+A feed of a medium, from Google or Media Cloud, is kept when the vectors put 2 of its last 30 news on an
+interest (0.45, as above). For a precise subject a good general feed has no more (2 of 30 for the
+refereeing of football in the feeds of L'Equipe and So Foot), but news of other subjects reach 0.45
+too: a cricket feed and the home of a newspaper were kept on 2 of them. So the AI reads the titles the
+vectors put on the profile, 12 at most, and the feed is kept on the ones it confirms
+(`confirmOnSubject`). Replayed on 4 profiles (`bench/discovery-confirm.mjs`): it left out the home of a
+newspaper (judo, a court ruling), a feed of match previews for refereeing, the guides of a mobile game
+and two video game feeds for trading cards, and kept the 8 feeds on their subject. A share of the news
+on the subject was measured first and left out: the right feeds of a precise profile had no higher
+share than the wrong ones (`bench/discovery-share.mjs`).
 
 The medium of a news read through Google News is the publisher it names, not google.com
 (`db/add_google_news.sql`): two media telling a story through Google are two voices, and a medium met

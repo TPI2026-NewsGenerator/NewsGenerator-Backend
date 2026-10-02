@@ -26,6 +26,7 @@ import {mapWithConcurrency} from "./utils/concurrency.js";
 import {hostOf, mediumOf} from "./utils/public-url.js";
 import {credibleStory, decodeLinks, isGoogleNewsUrl, isNotNews, isRepeatedPage, pickCandidates} from "./utils/google-news.js";
 import {searchesOfUser} from "./ingest-service.js";
+import {onceEach} from "./utils/reading-order.js";
 
 // Measured on four profiles and 249 stories judged by hand:
 //  - one vector per interest, dense + half the sparse: 88% of relevant cards (one vector for the
@@ -410,7 +411,8 @@ const write = async (briefingId, userId) => {
                 mediaNames: [...new Set(members.map(mediumOfArticle))],
             },
             // the ones of a trusted source first: its star was sixth of eleven, behind "show all"
-            articles: [...members].sort((a, b) => trusted.has(b.feed_url) - trusted.has(a.feed_url))
+            articles: onceEach([...members].sort((a, b) => trusted.has(b.feed_url) - trusted.has(a.feed_url)),
+                {medium: mediumOfArticle, fromGoogle})
                 .map(article => toArticle(article, trusted)),
         };
     });

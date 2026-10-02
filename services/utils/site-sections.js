@@ -112,6 +112,8 @@ export const subjectStats = async (items, judge) => {
         judged: newest.length,
         onSubjectPerDay: onSubject.length / days,
         sample: onSubject[0]?.item.title ?? null,
+        // the titles judged on it, the newest first: the discovery has the AI read them (see confirmOnSubject)
+        onSubjectTitles: onSubject.map(({item}) => item.title).filter(Boolean),
     };
 };
 

@@ -285,6 +285,37 @@ export const normalizeReview = (answer, knownIds) => {
     return refused;
 };
 
+// The discovery keeps a feed when the vectors put 2 of its last 30 news on an interest (see
+// isOnSubject). For a precise subject a good general feed has no more: 2 of 30 for the refereeing of
+// football in the feeds of L'Equipe and So Foot. But news of other subjects reach the threshold too,
+// close in meaning without being on it (the umpires of another sport, a decision of a government), and
+// a cricket feed or the home of a newspaper was kept on 2 of them. The AI reads the titles the vectors
+// put on the interests, and the feed is kept on the ones it confirms. Replayed on 4 profiles
+// (bench/discovery-confirm.mjs): left out the home of a newspaper (judo, a court ruling), a feed of
+// match previews for refereeing, the guides of a mobile game and two video game feeds for trading
+// cards; kept the 8 feeds on their subject. Asked to judge "the subject itself, in its domain", it also
+// left out the governance of a federation it did not list: in doubt, the title counts
+export const confirmPrompt = (interests, titles) => `Voici les centres d'intérêt d'un lecteur :
+${interests.map(text => `- ${text}`).join('\n')}
+
+Voici des titres récents d'une source d'information, chacun avec son numéro entre crochets :
+${titles.map((title, i) => `[${i + 1}] ${title}`).join('\n')}
+
+Dis quels titres parlent d'un de ces centres d'intérêt, sous n'importe quel angle, même un aspect que sa description ne liste pas. Un titre qui n'en partage que des mots, ou le même genre d'événement dans un autre domaine (un autre sport, une autre activité que celle nommée), n'en parle pas. Dans le doute, compte-le.
+Réponds uniquement en JSON : {"onSubject": [les numéros des titres qui en parlent]}`;
+
+// the numbers of the titles on the interests, among the ones given: Set of indexes from 0
+export const normalizeConfirmed = (answer, count) => new Set((Array.isArray(answer?.onSubject) ? answer.onSubject : [])
+    .map(number => Number(String(number).replace(/^\[|\]$/g, '')) - 1)
+    .filter(index => Number.isInteger(index) && index >= 0 && index < count));
+
+// interests: their texts; titles: the ones the vectors put on them. null when the AI did not answer
+export const confirmOnSubject = async (interests, titles, usage = null) => {
+    if (titles.length === 0) return new Set();
+    const answer = await ollamaJson(confirmPrompt(interests, titles), usage);
+    return Array.isArray(answer?.onSubject) ? normalizeConfirmed(answer, titles.length) : null;
+};
+
 // cards: [{id, title, summary}]
 export const reviewCards = async (profileText, cards, usage = null) =>
     cards.length === 0 ? new Map() : normalizeReview(await ollamaJson(reviewPrompt(profileText, cards), usage), cards.map(card => card.id));

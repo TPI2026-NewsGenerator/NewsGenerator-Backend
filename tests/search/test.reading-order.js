@@ -5,7 +5,7 @@
 //  Description: Which articles of a card of the search are read for its resume and its count
 //
 
-import {readingOrder} from '../../services/utils/reading-order.js'
+import {onceEach, readingOrder} from '../../services/utils/reading-order.js'
 
 const article = (medium, hours, feed = `https://${medium}/rss`) => ({
     link: `https://${medium}/news-${hours}`,
@@ -31,5 +31,25 @@ describe('readingOrder', () => {
     it('should read five articles at most', () => {
         const many = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((medium, i) => article(`${medium}.fr`, i));
         expect(readingOrder(many)).toHaveLength(5);
+    });
+});
+
+describe('onceEach', () => {
+    const news = (link, title, feed = 'https://feeds.test/rss') => ({link, title, feeds: {url: feed}});
+    const fromGoogle = (item) => item.feeds.url.includes('news.google.com');
+
+    it('should list one title of one medium once, from its feed before Google News', () => {
+        const google = news('https://news.google.com/rss/articles/1', "L'UEFA a reçu des documents", 'https://news.google.com/rss/search?q=uefa');
+        const feed = news('https://www.lequipe.fr/a/1', "L’UEFA a reçu des documents");
+        const other = news('https://www.sofoot.com/a/1', "L'UEFA a reçu des documents");
+        expect(onceEach([google, feed, other], {medium: (item) => item.link.includes('google') ? 'lequipe.fr' : new URL(item.link).hostname.replace(/^www\./, ''), fromGoogle}))
+            .toEqual([feed, other]);
+    });
+
+    it('should list the news of two addresses of one medium once, and keep two titles of it', () => {
+        const a = news('https://news.maxifoot.fr/a', 'Real : Negreira, le communiqué du club');
+        const b = news('https://m.maxifoot.fr/a', 'Real : Negreira, le communiqué du club');
+        const c = news('https://m.maxifoot.fr/b', 'Barça : la réponse du club');
+        expect(onceEach([a, b, c])).toEqual([a, c]);
     });
 });
