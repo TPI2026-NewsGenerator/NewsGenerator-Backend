@@ -86,12 +86,29 @@ export const toQuery = (q, language) => {
     return `${all} AND language:${language}`;
 };
 
+// The press of a month changes little in a day, and each search waits half a minute in the queue: a
+// profile saved then searched again, or two readers of one subject, ask it once a day
+const CACHE_MS = 24 * 3600e3;
+const answered = new Map();         // query -> {at, media}
+
 // the media of the press of this language writing on this search, the most present first
 // [{site, name, news, lang}]
 export const mediaFor = async (q, {language = 'en', days = DAYS} = {}) => {
     const query = toQuery(q, language);
     const collections = COLLECTIONS[language];
     if (!mediaCloudEnabled() || !query || !collections) return [];
+
+    const key = `${query}|${days}`;
+    const cached = answered.get(key);
+    if (cached && Date.now() - cached.at < CACHE_MS) return cached.media;
+    const media = await searchMedia(q, query, collections, language, days);
+    // a refusal or a failure is not kept: asked again next time
+    if (media) answered.set(key, {at: Date.now(), media});
+    return media ?? [];
+};
+
+// null when Media Cloud did not answer
+const searchMedia = async (q, query, collections, language, days) => {
 
     const end = new Date();
     const start = new Date(end.getTime() - days * 24 * 3600e3);
@@ -109,7 +126,7 @@ export const mediaFor = async (q, {language = 'en', days = DAYS} = {}) => {
             .sort((a, b) => b.news - a.news);
     } catch (err) {
         console.log(`Media Cloud: no media for "${q}" (${err.message})`);
-        return [];
+        return null;
     }
 };
 

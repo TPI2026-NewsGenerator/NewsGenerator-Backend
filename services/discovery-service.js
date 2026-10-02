@@ -128,9 +128,12 @@ const discover = async (userId) => {
     const perInterest = [];
 
     const isNew = (medium) => !known.has(nameOf(medium.site)) && !kept.has(nameOf(medium.site));
-    for (const interest of interests) {
-        // asked at once: its searches wait for their turn while the media of Google News are tried
-        const press = mediaCloudEnabled() ? pressMediaOf(interest.searches) : Promise.resolve([]);
+    // The press of every interest asked at once: its searches wait for their turn (2 a minute) while
+    // the media of Google News are tried. Asked interest after interest, the queue stood still during
+    // the tries of each: 14 minutes for a reader of 3 interests, the queue alone needs 4 per interest
+    const pressOf = interests.map(interest => mediaCloudEnabled() ? pressMediaOf(interest.searches) : Promise.resolve([]));
+    for (const [index, interest] of interests.entries()) {
+        const press = pressOf[index];
         const named = await mediaOf(interest.searches);
 
         const subject = [interest.keywords, ...interest.sections].filter(Boolean);
@@ -208,6 +211,14 @@ export const DiscoveryService = {
     },
 
     isRunning: (userId) => running.has(userId),
+
+    // A discovery lives in the memory of the server: a restart (a deploy) left it 'running' for good,
+    // and the profile page waiting on it. Started again at the start of the server
+    resumeInterrupted: async () => {
+        const users = await ProfileModel.discovering();
+        if (users.length > 0) console.log(`Discovery: started again for users ${users.join(', ')}, stopped by a restart`);
+        for (const userId of users) await DiscoveryService.start(userId);
+    },
 
     // the feeds found for the profile that bring nothing on it any more, removed (before each briefing)
     prune,

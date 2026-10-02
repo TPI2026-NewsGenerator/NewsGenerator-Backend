@@ -43,6 +43,28 @@ describe('mediaFor', () => {
         expect(asked.pathname).toBe('/api/search/sources');
         expect(asked.searchParams.get('cs').split(',')).toContain('34411591');     // Switzerland - National
         expect(globalThis.fetch.mock.calls[0][1].headers.Authorization).toBe('Token test-token');
+
+        // asked again the same day: answered without waiting in the queue
+        expect(await mediaFor('Ligue des champions', {language: 'fr'})).toEqual(media);
+        expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('should ask again a search Media Cloud did not answer', async () => {
+        globalThis.fetch = jest.fn()
+            .mockResolvedValueOnce({ok: false, status: 500})
+            .mockResolvedValueOnce(answer({sources: [{source: 'blick.ch', count: 4}]}));
+        // each search waits its gap in the queue
+        jest.useFakeTimers();
+        try {
+            const failed = mediaFor('Super League', {language: 'de'});
+            await jest.advanceTimersByTimeAsync(40000);
+            expect(await failed).toEqual([]);
+            const again = mediaFor('Super League', {language: 'de'});
+            await jest.advanceTimersByTimeAsync(40000);
+            expect((await again).map(medium => medium.site)).toEqual(['blick.ch']);
+        } finally {
+            jest.useRealTimers();
+        }
     });
 
     it('should ask nothing without a key or for a language it has no press of', async () => {

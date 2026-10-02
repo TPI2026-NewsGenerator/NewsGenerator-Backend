@@ -869,7 +869,13 @@ Measured on three profiles (5 media only it named tried per interest and languag
 subject of 11 for the UEFA profile (blick.ch/fr, sudinfo.be, lesoir.be, onzemondial, the sport of the
 Evening Standard), 3 of 10 for astronomy (lalibre.be sciences-espace), none for sailing and 2 of 20 for
 the trading cards: it knows no specialist site. It answers 2 searches a minute, so its searches wait in
-a queue of their own while the media of Google News are tried, and a refusal pauses it 15 minutes.
+a queue of their own while the media of Google News are tried, and a refusal pauses it 15 minutes. The
+searches of every interest are asked at the start of the discovery, and an answer is kept a day: a reader
+of 3 interests in 4 languages needs 12 minutes of the queue, which stood still before during the tries of
+each interest (14 minutes in all for the UEFA profile, 8 for one of 2 interests).
+
+A discovery runs in the memory of the server: one a restart stopped (a deploy) is started again when the
+server starts, instead of staying "running" for good.
 
 A feed of a medium, from Google or Media Cloud, is kept when the vectors put 2 of its last 30 news on an
 interest (0.45, as above). For a precise subject a good general feed has no more (2 of 30 for the

@@ -64,6 +64,12 @@ export const ProfileModel = {
         return count;
     },
 
+    // the users whose discovery is said running
+    discovering: async () => (await prisma.user_profiles.findMany({
+        where: {discovery_status: 'running'},
+        select: {id_user: true},
+    })).map(row => row.id_user),
+
     setDiscovery: async (userId, status, error = null) => prisma.user_profiles.update({
         where: {id_user: userId},
         data: {
