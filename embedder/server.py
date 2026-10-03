@@ -6,8 +6,16 @@
 #
 # Ollama serves bge-m3 but only its dense vector. The sparse part, the weight bge-m3 gives to each
 # word of a text, is what keeps two templates apart ("Egypt vs Angola - Betting Tips" and "Togo vs
-# Burundi - Betting Tips" share a meaning but no name), and it is only produced by FlagEmbedding.
-# Measured on the stories judged by hand: dense + sparse gave 96% of right stories, dense alone less.
+# Burundi - Betting Tips" share a meaning but no name), and it comes from a layer of its own
+# (sparse_linear.pt of the model). Measured on the stories judged by hand: dense + sparse gave 96% of
+# right stories, dense alone less.
+#
+# A graphics card encodes with FlagEmbedding (PyTorch). A processor encodes with ONNX Runtime, on the
+# ONNX file of the BAAI repo: the same vectors (cosine 0.99997 with the stored ones, no likeness moved
+# across a threshold, bench/int8 3.10.2026) 1.6 times faster on the 6 cores of the server (2.9 texts a
+# second instead of 1.75). Without onnxruntime installed, the processor uses FlagEmbedding too.
+# bge-m3 in int8 was 3 to 6 times faster but moved 10 to 15% of the closest news of a search or an
+# interest: not used.
 #
 #   python embedder/server.py            listens on 127.0.0.1:8020 (EMBEDDER_PORT to change it)
 #
@@ -20,11 +28,12 @@
 #
 # POST /embed  {"texts": ["...", "..."]}   with "Authorization: Bearer <token>" when a token is set
 #   -> {"dense": [[1024 floats], ...], "sparse": [{"token id": weight, ...}, ...]}
-# GET /health  -> {"status": "ok", "model": "BAAI/bge-m3"}
+# GET /health  -> {"status": "ok", "model": "BAAI/bge-m3", "device": "cpu" | "cuda", "engine": "onnx" | "pytorch"}
 
 import hmac
 import json
 import os
+import shutil
 import sys
 import threading
 import time
@@ -66,25 +75,97 @@ if HOST not in ('127.0.0.1', '::1', 'localhost') and len(TOKEN) < MIN_TOKEN:
 
 print(f'Loading {MODEL_NAME}...', flush=True)
 import torch  # noqa: E402  (slow imports, after the message)
-from FlagEmbedding import BGEM3FlagModel  # noqa: E402
 
 GPU = torch.cuda.is_available()
 BATCH_SIZE = 128 if GPU else 32
-# fp32 on the graphics card too: the vectors stay those of the processor, the ones already stored and
-# measured on the benches, and a card of 12 GB is fast enough without halving the precision
-model = BGEM3FlagModel(MODEL_NAME, use_fp16=False, devices=['cuda:0' if GPU else 'cpu'])
-print(f'Encoding on {torch.cuda.get_device_name(0) if GPU else "the processor"}', flush=True)
+try:
+    import onnxruntime  # noqa: E402
+    ENGINE = 'pytorch' if GPU else 'onnx'
+except ImportError:
+    ENGINE = 'pytorch'
 lock = threading.Lock()         # one encoding at a time: the model already uses every core, or the card
+
+
+def onnx_folder():
+    """The onnx/ folder of the model in a real folder next to the cache of Hugging Face (copied once
+    from it, downloaded first when missing): ONNX Runtime refuses the external data of model.onnx
+    behind the links of the cache ("External data path escapes model directory")"""
+    from huggingface_hub import snapshot_download
+    snapshot = snapshot_download(MODEL_NAME, allow_patterns=['onnx/*', 'sparse_linear.pt', '*.json', '*.model'])
+    target = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(snapshot))), 'newsgenerator-bge-m3-onnx')
+    os.makedirs(target, exist_ok=True)
+    for name in os.listdir(os.path.join(snapshot, 'onnx')):
+        source, copy = os.path.join(snapshot, 'onnx', name), os.path.join(target, name)
+        if not os.path.exists(copy) or os.path.getsize(copy) != os.path.getsize(source):
+            print(f'Copying onnx/{name} out of the cache...', flush=True)
+            shutil.copyfile(source, copy + '.part')
+            os.replace(copy + '.part', copy)
+    return snapshot, target
+
+
+if ENGINE == 'pytorch':
+    from FlagEmbedding import BGEM3FlagModel  # noqa: E402
+    # fp32 on the graphics card too: the vectors stay those of the processor, the ones already stored
+    # and measured on the benches, and a card of 12 GB is fast enough without halving the precision
+    model = BGEM3FlagModel(MODEL_NAME, use_fp16=False, devices=['cuda:0' if GPU else 'cpu'])
+
+    def encode(texts):
+        out = model.encode(texts, batch_size=BATCH_SIZE, max_length=MAX_LENGTH,
+                           return_dense=True, return_sparse=True, return_colbert_vecs=False)
+        return out['dense_vecs'], out['lexical_weights']
+else:
+    import numpy as np  # noqa: E402
+    from transformers import AutoTokenizer  # noqa: E402
+
+    snapshot, folder = onnx_folder()
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    session = onnxruntime.InferenceSession(os.path.join(folder, 'model.onnx'), providers=['CPUExecutionProvider'])
+    # the layer giving each token its weight, as FlagEmbedding: relu(sparse_linear(last hidden state))
+    sparse_linear = torch.load(os.path.join(snapshot, 'sparse_linear.pt'), map_location='cpu', weights_only=True)
+    SPARSE_WEIGHT = sparse_linear['weight'].numpy().reshape(-1)
+    SPARSE_BIAS = float(sparse_linear['bias'].numpy().reshape(-1)[0])
+    # tokens that are no word, left out of the sparse vector as FlagEmbedding does
+    UNUSED = {tokenizer.convert_tokens_to_ids(tokenizer.special_tokens_map[name])
+              for name in ('cls_token', 'eos_token', 'pad_token', 'unk_token') if name in tokenizer.special_tokens_map}
+
+    def encode(texts):
+        """dense: the first hidden state, normalized; sparse: the highest weight of each word. The
+        texts go by length, as in FlagEmbedding, so a batch holds little padding"""
+        dense, sparse = [None] * len(texts), [None] * len(texts)
+        ids = tokenizer(texts, truncation=True, max_length=MAX_LENGTH)['input_ids']
+        order = np.argsort([-len(tokens) for tokens in ids], kind='stable')
+        for start in range(0, len(order), BATCH_SIZE):
+            batch = order[start:start + BATCH_SIZE]
+            width = max(len(ids[i]) for i in batch)
+            input_ids = np.full((len(batch), width), tokenizer.pad_token_id, dtype=np.int64)
+            mask = np.zeros((len(batch), width), dtype=np.int64)
+            for row, i in enumerate(batch):
+                input_ids[row, :len(ids[i])] = ids[i]
+                mask[row, :len(ids[i])] = 1
+            hidden = session.run(['token_embeddings'], {'input_ids': input_ids, 'attention_mask': mask})[0]
+            first = hidden[:, 0]
+            first = first / np.linalg.norm(first, axis=1, keepdims=True)
+            weights = np.maximum(hidden @ SPARSE_WEIGHT + SPARSE_BIAS, 0)
+            for row, i in enumerate(batch):
+                dense[i] = first[row]
+                words = {}
+                for weight, token in zip(weights[row, :len(ids[i])], ids[i]):
+                    if token not in UNUSED and weight > 0 and weight > words.get(token, 0):
+                        words[token] = weight
+                sparse[i] = words
+        return dense, sparse
+
+print(f'Encoding on {torch.cuda.get_device_name(0) if GPU else "the processor"} with '
+      f'{"ONNX Runtime" if ENGINE == "onnx" else "PyTorch"}', flush=True)
 
 
 def embed(texts):
     with lock:
-        out = model.encode(texts, batch_size=BATCH_SIZE, max_length=MAX_LENGTH,
-                           return_dense=True, return_sparse=True, return_colbert_vecs=False)
+        dense, sparse = encode(texts)
     return {
-        'dense': [[round(float(x), 6) for x in vector] for vector in out['dense_vecs']],
+        'dense': [[round(float(x), 6) for x in vector] for vector in dense],
         'sparse': [{str(token): round(float(weight), 5) for token, weight in weights.items()}
-                   for weights in out['lexical_weights']],
+                   for weights in sparse],
     }
 
 
@@ -100,7 +181,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == '/health':
             # the device tells the server how many texts to send at once (see embedder.js)
-            return self.answer(200, {'status': 'ok', 'model': MODEL_NAME, 'device': 'cuda' if GPU else 'cpu'})
+            return self.answer(200, {'status': 'ok', 'model': MODEL_NAME, 'device': 'cuda' if GPU else 'cpu',
+                                     'engine': ENGINE})
         return self.answer(404, {'error': 'Not found'})
 
     def authorized(self):

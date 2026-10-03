@@ -1,2 +1,4 @@
 FlagEmbedding>=1.3
 torch>=2.2
+# encodes on a processor (without it, PyTorch does, 1.6 times slower)
+onnxruntime>=1.20

@@ -23,9 +23,9 @@ article credits its sources. That describes what was measured, never whether the
   - fallback: the same model on the [Gemini API](https://ai.google.dev/) (gemma-4-31b-it, free), asked
     when Ollama fails (`AISTUDIO_API_KEY`, see **Ollama** below)
 - **Vectors of the news:** [bge-m3](https://huggingface.co/BAAI/bge-m3), dense and sparse, computed by a
-  Python process of its own with [FlagEmbedding](https://github.com/FlagOpen/FlagEmbedding) and
-  [PyTorch](https://pytorch.org/) (`embedder/`, see **Embedder** below). Ollama serves bge-m3 too, but only
-  its dense vector.
+  Python process of its own (`embedder/`, see **Embedder** below): [FlagEmbedding](https://github.com/FlagOpen/FlagEmbedding)
+  and [PyTorch](https://pytorch.org/) on a graphics card, [ONNX Runtime](https://onnxruntime.ai/) on a
+  processor (the same vectors, 1.6 times faster). Ollama serves bge-m3 too, but only its dense vector.
 - **Scraper:** [Crawlee](https://crawlee.dev/js) [v3.16.0]
 - **Parsers:**
   - HTML: [LinkeDOM](https://www.npmjs.com/package/linkedom) [v0.18.12] and [Readability](https://github.com/mozilla/readability) [v0.6.0] to extract content
@@ -200,11 +200,18 @@ at the next run.
 
 Two embedders can share the work: a graphics card that is not always on, then a machine that is.
 Measured on 512 texts of news: 57 a second on an RTX 4070 Ti, 2.6 on the 6 cores of an i5-12400T
-(12 threads gave no more), the same vectors (cosine 1.000000). The processor keeps up with the feeds
+(12 threads gave no more), the same vectors (cosine 1.000000). On a processor the embedder now uses
+ONNX Runtime and the ONNX file of the bge-m3 repo instead of PyTorch: the same vectors again (cosine
+0.99997, no likeness moved across a threshold of the grouping), 2.9 texts a second instead of 1.75 on
+the 6 cores of the server while it ingests (bench/int8, 3.10.2026). bge-m3 in int8 was 3 to 6 times
+faster but changed 10 to 15% of the closest news of a search or an interest: not used. The first start
+copies the 2.3 GB of the ONNX file out of the cache of Hugging Face (`hub/newsgenerator-bge-m3-onnx`),
+whose links ONNX Runtime refuses. The processor keeps up with the feeds
 (about 1600 news an hour, a third of what it can do), but a search Google News completes waits about
 a minute for its 70 news instead of 3 seconds: the graphics card goes first, the processor takes over
 while it is off, and gives the work back a minute after it answers again. On a machine without
-Python packages, the embedder runs in Docker (`embedder/Dockerfile`, PyTorch for the processor only):
+Python packages, the embedder runs in Docker (`embedder/Dockerfile`, ONNX Runtime and PyTorch for the
+processor only):
 
 ```bash
 docker build -t newsgenerator-embedder:cpu embedder
