@@ -241,6 +241,18 @@ export const IngestService = {
                 feeds = [...new Set([...due, ...await dueSearches()])];
                 purge = Date.now() - lastHousekeeping >= HOUSEKEEPING_MINUTES * 60e3;
             }
+            // The embedder encodes a batch while the one before is grouped, and while the feeds are read
+            // the news already waiting: it worked 35 s of each run of 95 s, then waited for the grouping
+            // (30 s) and the feeds of the next run (27 s) (3.10.2026). A batch in advance is caught at
+            // once (an embedder down would stop the server), its error comes back where it is awaited
+            const nextBatch = () => {
+                const batch = embedPending(urls);
+                batch.catch(() => {});
+                return batch;
+            };
+            // a run of some feeds embeds theirs, read first
+            let embedding = urls === null ? nextBatch() : null;
+            let early = embedding !== null;     // a batch taken before the feeds were read: more may follow
             const refresh = await FeedService.refreshUrls(feeds, {purge});
 
             // the embedder may be down: the news are stored anyway, they get their vectors next time
@@ -266,12 +278,18 @@ export const IngestService = {
                 // a new reader had 300 of 564 and waited the next run for the rest, and the backlog
                 // of the others is the work of the scheduled run, for GROUP_MINUTES at a time
                 let windowLeft = false;     // news of the window still without vectors or story
-                for (let batch = await embedPending(urls); batch > 0; batch = await embedPending(urls)) {
+                embedding ??= nextBatch();
+                for (;;) {
+                    const batch = await embedding;
                     embedded += batch;
-                    await group();
-                    if (batch < MAX_EMBEDDED_PER_RUN) break;
-                    if (urls === null && !timeLeft()) {
-                        windowLeft = true;
+                    const full = batch === MAX_EMBEDDED_PER_RUN;
+                    // after a batch taken early, one at least of the news just read, as before
+                    const more = early || (full && (urls !== null || timeLeft()));
+                    early = false;
+                    embedding = more ? nextBatch() : null;
+                    if (batch > 0) await group();
+                    if (!more) {
+                        windowLeft = full && urls === null;
                         break;
                     }
                 }

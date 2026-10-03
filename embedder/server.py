@@ -24,6 +24,7 @@
 #   EMBEDDER_HOST=0.0.0.0              the address to listen on, 127.0.0.1 when not given
 #   EMBEDDER_TOKEN=<32+ characters>    the secret the server sends (its EMBEDDER_TOKEN), required as soon
 #                                      as the address is not this machine only
+#   EMBEDDER_THREADS=<n>               the threads of ONNX Runtime, one per core when not given
 # The firewall of that machine should also let only the server reach the port.
 #
 # POST /embed  {"texts": ["...", "..."]}   with "Authorization: Bearer <token>" when a token is set
@@ -119,7 +120,13 @@ else:
 
     snapshot, folder = onnx_folder()
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-    session = onnxruntime.InferenceSession(os.path.join(folder, 'model.onnx'), providers=['CPUExecutionProvider'])
+    # the threads encoding a batch: one per core by default; EMBEDDER_THREADS gives another number
+    # (the 12 threads of the 6 cores of the server, --cpus 9 of its container)
+    options = onnxruntime.SessionOptions()
+    if os.environ.get('EMBEDDER_THREADS'):
+        options.intra_op_num_threads = int(os.environ['EMBEDDER_THREADS'])
+    session = onnxruntime.InferenceSession(os.path.join(folder, 'model.onnx'), sess_options=options,
+                                           providers=['CPUExecutionProvider'])
     # the layer giving each token its weight, as FlagEmbedding: relu(sparse_linear(last hidden state))
     sparse_linear = torch.load(os.path.join(snapshot, 'sparse_linear.pt'), map_location='cpu', weights_only=True)
     SPARSE_WEIGHT = sparse_linear['weight'].numpy().reshape(-1)

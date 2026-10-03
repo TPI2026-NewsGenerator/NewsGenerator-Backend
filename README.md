@@ -215,10 +215,13 @@ processor only):
 
 ```bash
 docker build -t newsgenerator-embedder:cpu embedder
-docker run -d --name newsgenerator-embedder --restart unless-stopped --cpus 6 --memory 6g -p <its address>:8020:8020 --env-file token.env -v ./cache:/cache newsgenerator-embedder:cpu
+docker run -d --name newsgenerator-embedder --restart unless-stopped --cpus 6 --cpu-shares 256 --memory 6g -p <its address>:8020:8020 --env-file token.env -v ./cache:/cache newsgenerator-embedder:cpu
 ```
 
 `token.env` holds `EMBEDDER_TOKEN=` and the same secret as the server, readable by its owner only.
+`--cpu-shares 256` (a quarter of the weight of the other containers): the embedder takes the processor
+when it is free and leaves it to the site and the other work of the machine when they need it.
+`EMBEDDER_THREADS` in `token.env` would change the threads of ONNX Runtime, one per core by default.
 
 ```bash
 pnpm run ingest:status   # where it stands: news of the window with their vectors, waiting ones, pace, time left
