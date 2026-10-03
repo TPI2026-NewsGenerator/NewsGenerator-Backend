@@ -247,6 +247,7 @@ Index `i_profile_interests_user` on `id_user`. The interests hang on the user, n
 | items | jsonb | NOT NULL, default `[]` — the cards as shown, and the thumb of the reader on each (`vote`, `votedAt`) |
 | created_at | timestamptz | NOT NULL, default `now()` |
 | finished_at | timestamptz | null |
+| hours | integer | NOT NULL, default `48` — the news it was written from: the last 24, 48 or 168 hours, chosen by the reader (`db/add_briefing_window.sql`) |
 
 Index `i_briefings_user` on `(id_user, created_at DESC)`. The thumbs have no table of their own: they
 are read from `items` of the briefings of the last 30 days.

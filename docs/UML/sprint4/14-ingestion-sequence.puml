@@ -2,7 +2,7 @@
 !include _sequence.iuml
 title Ingestion — one run of the background work
 
-participant "server start\n(timer, every 20 min)" as Timer
+participant "server start\n(timer, every minute)" as Timer
 participant ingestService as Ingest
 participant feedService as Feeds
 participant "crawlers\n+ googleNews" as Web
@@ -40,19 +40,30 @@ group the feeds read
     end
 end
 
-loop batches of 300 news of the last 48 hours without vectors, the newest first, a scheduled run starts none after 10 minutes
-    Ingest -> StoryModel : pendingArticles
-    Ingest -> Embedder : embed(titles, title + description)
-    Embedder --> Ingest : dense + sparse vectors (bge-m3)
-    Ingest -> StoryModel : saveVectors(vectors, language)
-    Ingest -> StoryModel : assignStories(300)
-    StoryModel -> DB : assign_stories(): join a story or start one
-    Ingest -> StoryModel : assignThreads(300)
-    StoryModel -> DB : assign_threads(): the stories of one affair
+loop batches of 100 news of the last 48 hours without vectors, the newest first, a scheduled run starts none after 1 minute
+    par the next batch encoded while this one is grouped
+        Ingest ->> Ingest : embedPending (next batch)
+        Ingest -> StoryModel : pendingArticles
+        Ingest -> Embedder : embed(titles, title + description)
+        Embedder --> Ingest : dense + sparse vectors (bge-m3)
+        Ingest -> StoryModel : saveVectors(vectors, language)
+    else
+        Ingest -> StoryModel : assignStories(100)
+        StoryModel -> DB : assign_stories(): join a story or start one,\nnot one of another match
+        Ingest -> StoryModel : assignThreads(300)
+        StoryModel -> DB : assign_threads(): the stories of one affair
+    end
 end
+note right of Ingest
+    The first batch is encoded while the feeds
+    are read (or was left encoding by the run
+    before); a scheduled run out of time with
+    more news waiting leaves the next batch
+    encoding for the next run
+end note
 opt news with vectors still in no story (a search read Google News, a run stopped)
-    Ingest -> StoryModel : assignStories(300), assignThreads(300)
-    note right : again while a batch is full,\nwithin the 10 minutes of the run
+    Ingest -> StoryModel : assignStories(100), assignThreads(300)
+    note right : again while a batch is full,\nwithin the minute of the run
 end
 note right of Embedder
     The embedder down: the news

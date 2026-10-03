@@ -30,8 +30,10 @@ package "Business" {
     }
 }
 note left of briefingService
-    Stories ranked in SQL on the
-    interests, the AI chooses among
+    Stories of the last 24 hours, 2 days
+    or 7 days (one per thread) ranked
+    in SQL on the interests, in every
+    language; the AI chooses among
     them and checks the cards, then
     the key passages are taken word
     for word from the articles.
@@ -54,6 +56,8 @@ package "Data" as Data {
     class storyModel {
         + rank()
         + storyArticles()
+        + threadsOf()
+        + versionsIn()
     }
     class profileModel {
         + get()

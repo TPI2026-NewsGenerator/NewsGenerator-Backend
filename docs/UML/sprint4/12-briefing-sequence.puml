@@ -15,17 +15,17 @@ participant briefingModel as BriefingModel
 database "PostgreSQL" as DB
 
 == Asked ==
-Reader -> Client : "New briefing"
-Client -> Controller : POST /briefing
-Controller -> Briefing : start(userId)
+Reader -> Client : "New briefing", of the last 24 hours, 2 days or 7 days
+Client -> Controller : POST /briefing {hours}
+Controller -> Briefing : start(userId, hours)
 Briefing -> BriefingModel : failAbandoned(30 minutes ago)
 alt a briefing of this reader is already being written
     Briefing -> BriefingModel : running(userId)
     Briefing --> Controller : that one
 else
-    Briefing -> BriefingModel : create(userId)
-    BriefingModel -> DB : INSERT briefings (running)
-    Briefing ->> Briefing : write(briefing, userId), not awaited
+    Briefing -> BriefingModel : create(userId, hours)
+    BriefingModel -> DB : INSERT briefings (running, hours)
+    Briefing ->> Briefing : write(briefing, userId, hours), not awaited
     Briefing --> Controller : the briefing, running
 end
 Controller --> Client : 202
@@ -36,23 +36,29 @@ group step "ranking"
     note right : the sources found that\nbring nothing any more
     Briefing -> Feedback : FeedbackService.of(userId)
     Feedback --> Briefing : examples for the AI, sources refused
-    Briefing -> Stories : rank(interests, feeds, 48 h)
+    Briefing -> Stories : rank(interests, feeds, hours, every language)
     Stories -> DB : stories closest to the interests (SQL, pgvector)
     Briefing -> Stories : storyArticles(stories)
     Briefing -> Stories : trustedMedia(userId)
     Briefing -> Google : credibleStory, isRepeatedPage, pickCandidates
     note right : told by credible media; a title one medium\nrepublishes for hours is left out; 40 stories\nof feeds, 10 more of Google News at most;\nthe stories of a trusted medium among the\n60 closest besides them, 10 at most
+    opt 7 days
+        Briefing -> Stories : threadsOf(stories)
+        note right : one candidate per thread, the closest:\nan affair of several days is one card
+    end
 end
 group step "choosing"
     Briefing -> AI : selectStories(profile, candidates, examples)
-    note right : a story of a trusted medium is marked:\npreferred at equal relevance
+    note right : a story of a trusted medium is marked:\npreferred at equal relevance; over 7 days\nthe media of each story are counted
     Briefing -> Briefing : balanceSelection: every interest has its share
 end
 group step "checking"
+    Briefing -> Stories : versionsIn(cards in another language)
+    note right : the 2 stories of the reader's language\nclosest to each (centroids, from 0.75)
     par
         Briefing -> AI : checkStories: the articles that tell\nthe same news as the lead
     else
-        Briefing -> AI : mergeStories: two cards of one news joined
+        Briefing -> AI : mergeStories: two cards of one news joined,\nand the versions telling its news
     end
 end
 group step "reading"
@@ -67,7 +73,11 @@ group step "summarizing"
         Briefing -> Read : extractArticle(title, page, language)
         note right : key passages word for word,\nand their translation
     end
-    Briefing -> AI : reviewCards: a card on what the reader\nrefuses is left out
+    par
+        Briefing -> AI : reviewCards: a card on what the reader\nrefuses is left out
+    else
+        Briefing -> AI : translateTexts: the titles in another\nlanguage than the reader's
+    end
 end
 alt written
     Briefing -> BriefingModel : finish(briefing, cards)

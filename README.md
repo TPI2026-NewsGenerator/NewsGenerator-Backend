@@ -99,6 +99,7 @@ So the embedder can run on another machine. There, `embedder/.env` (or the envir
 | `EMBEDDER_HOST` | the address it listens on, `127.0.0.1` when not given. `0.0.0.0` to open it to the network |
 | `EMBEDDER_PORT` | `8020` when not given |
 | `EMBEDDER_TOKEN` | the secret the server must send, at least 32 characters. Required as soon as the address is not this machine only: the embedder refuses to start without it |
+| `EMBEDDER_THREADS` | the threads of ONNX Runtime on a processor, one per core when not given |
 
 and the `.env` of the server gives its address and the same secret:
 
@@ -237,7 +238,12 @@ read the feeds before. A time rather than a number of batches: a batch of 300 to
 with 31 000 news in the window, 4 since the vectors are in half precision (see **The stories of the
 briefing**). Grouped in one call,
 the 12 000 news of the first read of the directory held the ingestion 2 h 10 with no feed read meanwhile,
-and nothing saved before the end. The older news kept (`FEED_RETENTION_DAYS`)
+and nothing saved before the end. The embedder works while the database groups: a run encodes the news
+already waiting while the feeds are read, and each next batch while the one before is grouped; a run of
+the server out of time with more news waiting leaves the next batch encoding, and the next run groups it
+first. The embedder worked 35 s of each run of 95 s before, waiting for the grouping (30 s) and the feeds
+of the next run (27 s): 200 news a run instead of 100 (3.10.2026). The grouping is now the slower part
+(`assign_threads` 30 to 70 s a batch). The older news kept (`FEED_RETENTION_DAYS`)
 that have no vectors yet, because the embedder was down longer than the window or a feed came with
 old news, are embedded for the search by meaning once those of the window all have their vectors and
 stories and while the run has time, `INGEST_OLDER_BATCHES` batches of `INGEST_MAX_EMBEDDED` per run,
@@ -545,7 +551,7 @@ by another of the same run. The resemblance is dense + sparse of the titles, abo
 the stories judged by hand: 96% of the cards gave the right count of media, against 82% for the
 trigrams of the titles, and it barely depends on the order.
 
-Four rules were added, each one measured:
+Five rules were added, each one measured:
 
 - **A story is judged on the other media.** A medium repeats its own templates ("Is Portugal v Wales
   on TV?", "Is Netherlands v Germany on TV?"), so two of its titles look alike without telling the
@@ -569,6 +575,22 @@ Four rules were added, each one measured:
   drifted stories cut instead of 4, 2 of 12 stories of one fact instead of 1, and 80 search cards right
   of 128 instead of 75. Hard limits (a story at most 24 hours old) cut the stories of one fact as much
   as the drifted ones.
+- **A match stays out of a story of another match.** Previews, odds and "how to watch" pages are
+  written the same way for every match, by several media, so a story of one match took the next ones
+  (Spain-Croatia with Czechia-England, Wales-Denmark with Wales-Norway): the two Betting Tips above
+  score 0.79 together. `matchup_of` reads the teams of a title, the words on each side of its first
+  "vs", "v" or "versus" when it opens the title or a part of it (4 words at most before it), a team
+  being the first 3 letters of a name written with a capital ("Bucs" and "Buccaneers" meet, not TBD).
+  `different_matches` says that two titles name two matches: each names a team the other does not
+  hold among its names, and they share a team or neither holds a team of the other. A story above the
+  threshold is skipped when most of its members of the window naming a match name another one; the
+  vote is asked of those candidates only (in the scoring query it cost 13 s a news, about 35 ms now).
+  Replayed on 36 hours of English news (`bench/matchup-replay.py`): 19 of 1075 decisions changed, 12
+  rightly (Italy-Turkey out of France-Italy), 2 neutral, 5 one match cut in two by the aliases of a
+  team (RDC and DR Congo, Washington and Commanders). Rejected: the spaced dash and "contre" as
+  separators ("Galeria-Krise", "Maison-Blanche"), 2 words per side (the "Prediction" of a template met),
+  any word and not only names ("Canada" met the "canal" of "canal tv"). The stories mixed before the
+  rule were split once by `bench/split-mixed-stories.mjs` (3.10.2026, about 90 stories).
 
 No HNSW index on the vectors, on purpose: the comparisons are always made on the news of the last 48
 hours (a few thousand rows, already narrowed by the indexes), and exactly. An approximate "nearest k"
@@ -801,10 +823,17 @@ interest and not one for the whole profile: the average of rugby and fashion is 
 a reader refuses pull it.
 
 A briefing is written in background (`services/briefing-service.js`): the answer is the briefing still
-running, the client asks for it again until it is ready, one at a time per reader. It reads only the
-stories built by the background work, and goes through these steps:
+running, the client asks for it again until it is ready, one at a time per reader. The reader chooses
+the news it is written from: the last 24 hours, 2 days (the default, the window of every bench) or 7
+days (`hours` of `POST /briefing`, kept in `briefings.hours`). A month is not offered: the articles are
+kept 30 days. Over 7 days the ranking took the same 2 to 3 s (5 s against 3 for 2 days on 3.10.2026,
+the ingestion working) and the same 40 candidates go to the AI, so a briefing of the week costs no more
+(`bench/briefing-window.mjs`); but its 40 closest stories were 34
+affairs of several days and guides of no day rose among them, so it keeps one candidate per thread
+(the closest) and tells the AI how many media told each story, to prefer the news that mattered. It
+reads only the stories built by the background work, and goes through these steps:
 
-1. **Ranking**, in SQL (`rank_stories` in `db/add_briefing.sql`). The news of the last 48 hours of the
+1. **Ranking**, in SQL (`rank_stories` in `db/add_briefing.sql`). The news of the hours chosen of the
    feeds of the reader (every shared feed, their own sources, the searches of Google News of their
    interests, without the sources their thumbs left out), in every language. Replayed on a reader of 7
    languages with sources in 30 (`bench/briefing-languages.mjs`): the other languages took 13 of the 42
@@ -842,7 +871,8 @@ stories built by the background work, and goes through these steps:
 5. **Key passages** of the first article read in full, translated for a reader of another language
    (see **Key passages** above), and who wrote the story apart from the others (see **Corroboration**).
 6. **Review.** The cards are read once more with their passages, which say what a title may not, and
-   the ones on what the reader refuses are left out.
+   the ones on what the reader refuses are left out. Meanwhile the titles written in another language
+   than the reader's are translated, as their passages.
 
 Measured on four profiles and 249 stories judged by hand: one vector per interest gave 88% of relevant
 cards, and 95% once the AI chose among the 40 best. One vector for the whole profile gave 38%, worse than
