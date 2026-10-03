@@ -204,6 +204,18 @@ const assign = async (client, sparseWeight = 1) => (await client.query('SELECT *
         expect(await storyOf(client, again)).toBe(await storyOf(client, a));
     }));
 
+    // previews of every match written the same way: their vectors meet, their teams do not
+    it('should keep a match out of a story of another match', () => inTransaction(async (client, feed) => {
+        const {rows: [{id: story}]} = await client.query("INSERT INTO stories (lang) VALUES ('en') RETURNING id");
+        await news(client, feed, {title: dense(1, 0), story, heading: 'Spain vs Croatia Prediction and Betting Tips'});
+        await news(client, feed, {title: dense(1, 0), story, heading: 'PREVIEW | Spain vs Croatia: team news, lineups'});
+        const other = await news(client, feed, {minute: 5, title: dense(1, 0), heading: 'Czechia vs England Prediction and Betting Tips'});
+        const same = await news(client, feed, {minute: 6, title: dense(1, 0), heading: 'How to watch Spain vs Croatia: TV channel'});
+        await assign(client);
+        expect(await storyOf(client, other)).not.toBe(story);
+        expect(await storyOf(client, same)).toBe(story);
+    }));
+
     it('should date a story from its newest news', () => inTransaction(async (client, feed) => {
         const a = await news(client, feed, {minute: 1, title: dense(1, 0)});
         await news(client, feed, {minute: 30, title: dense(1, 0)});
@@ -211,6 +223,38 @@ const assign = async (client, sparseWeight = 1) => (await client.query('SELECT *
         const {rows: [story]} = await client.query('SELECT updated_at FROM stories WHERE id = $1', [await storyOf(client, a)]);
         expect(story.updated_at.toISOString()).toBe('2100-01-01T00:30:00.000Z');
     }));
+});
+
+(dbAvailable ? describe : describe.skip)('matchup_of and different_matches', () => {
+    const matchup = async (title) => (await pool.query('SELECT public.matchup_of($1) AS teams', [title])).rows[0].teams;
+    const different = async (a, b) => (await pool.query(
+        'SELECT public.different_matches(public.matchup_of($1), public.title_names($1), $2) AS different', [a, b])).rows[0].different;
+
+    it('should read the match a title opens with', async () => {
+        expect(await matchup('Spain vs Croatia Prediction and Betting Tips | September 29th 2026')).toEqual(['spa', 'cro']);
+        expect(await matchup('Prediction: Croatia vs England')).toEqual(['cro', 'eng']);
+        expect(await matchup('How to watch Belgium vs. Türkiye: Free streams')).toEqual(['bel', 'tur']);
+        expect(await matchup('Belgium vs. Türkiye Lineups')).toEqual(['bel', 'tur']);
+    });
+
+    it('should read no match in a sentence, a word without a capital or an opponent not known yet', async () => {
+        expect(await matchup('Browns Fans Turnaround in Win vs. Steelers')).toBeNull();
+        expect(await matchup('Jerry Jones update on his status vs. Texans')).toBeNull();
+        expect(await matchup('TBD vs Karen Khachanov · Quarterfinal')).toBeNull();
+        expect(await matchup('Galeria-Krise: die Lage spitzt sich zu')).toBeNull();
+    });
+
+    it('should tell two matches apart, and one match written two ways', async () => {
+        expect(await different('Egypt vs Angola - Betting Tips', 'Togo vs Burundi - Betting Tips')).toBe(true);
+        expect(await different('Wales vs Denmark - prediction', 'Wales v Norway kick-off time')).toBe(true);
+        expect(await different('Czech Republic v England LIVE', 'England Player Ratings vs. Czechia')).toBe(false);
+        expect(await different('Bucs vs. Packers: What To Watch For', 'Buccaneers vs. Packers: injury report')).toBe(false);
+        // "Game" is no team: each title holds a team of the other
+        expect(await different('Giants Ready for Game vs. Cards', 'New York Giants vs. Arizona Cardinals')).toBe(false);
+        // the words without a capital are no names: "canal" is not Canada
+        expect(await different('Dónde ver Brasil vs India: canal tv', 'Dónde ver Perú vs Canadá: canal tv')).toBe(true);
+        expect(await different('Spain vs Croatia preview', 'Real Madrid sign a striker')).toBeNull();
+    });
 });
 
 (dbAvailable ? describe : describe.skip)('rank_stories', () => {

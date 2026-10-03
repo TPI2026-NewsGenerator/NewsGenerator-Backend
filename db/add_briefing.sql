@@ -146,6 +146,85 @@ CREATE INDEX IF NOT EXISTS i_articles_title ON public.articles USING hash (title
 -- before) and 2 of 12 stories of one fact (1 before), and the search cards judged by hand 80 right of
 -- 128 (75 before). Hard limits (a story at most 24 hours old, idle at most 12 hours) cut the drifted
 -- stories as well as the stories of one fact.
+--
+-- Previews, odds and "how to watch" pages are written the same way for every match ("Spain vs Croatia
+-- Prediction and Betting Tips", "Czechia vs England Prediction and Betting Tips"): their titles and
+-- texts meet above the thresholds, and the other media write the same templates, so a story of one
+-- match took the next ones (Spain-Croatia with Czechia-England, Wales-Denmark with Wales-Norway). So
+-- a story whose members naming a match name mostly ANOTHER match than the news is no candidate
+-- (matchup_of, different_matches below). Measured on the English news of 36 hours (bench/
+-- matchup-replay.py), the decisions of the 1075 news naming a match taken again: 19 changed, 12 of
+-- them another match rightly left (Italy-Turkey out of France-Italy, Netherlands-Serbia out of
+-- Germany-Serbia), 2 neither better nor worse, 5 one match cut in two because a team has two names
+-- (RDC and DR Congo, Washington and Commanders) or the word before "vs" is no team. Leaving out only
+-- the members of another match was worse: the members left raised the average, "Commanders vs
+-- Seahawks" joined Commanders-Colts.
+
+-- The names of a title: its words written with a capital (or in a script without capitals), without
+-- accents, in small letters, of 3 letters or more. Not its other words: the "can" of Canada met the
+-- "canal" of "Dónde ver Brasil vs India: canal tv", the "par" of Paraguay its "partido"
+CREATE OR REPLACE FUNCTION public.title_names(title text)
+    RETURNS text[]
+    LANGUAGE sql IMMUTABLE PARALLEL SAFE
+AS $$
+    SELECT COALESCE(array_agg(lower(word)), '{}')
+    FROM regexp_split_to_table(regexp_replace(normalize(title, NFKD), '[\u0300-\u036f]', '', 'g'), '[^[:alnum:]]+') AS word
+    WHERE length(word) >= 3
+      AND (word ~ '^[[:upper:]]' OR (word ~ '^[[:alpha:]]' AND upper(left(word, 1)) = lower(left(word, 1))))
+$$;
+
+-- A team of a match, by the first 3 letters of its name ("Bucs" and "Buccaneers", "Czechia" and
+-- "Czech Republic" meet): a name ("status vs. Texans" names no team), not "TBD"
+CREATE OR REPLACE FUNCTION public.matchup_team(word text)
+    RETURNS text
+    LANGUAGE sql IMMUTABLE PARALLEL SAFE
+AS $$
+    SELECT CASE WHEN first NOT IN ('tbd', 'tba') THEN left(first, 3) END
+    FROM (SELECT (public.title_names(regexp_replace(clean, '^.*-', '')))[1] AS first
+          FROM (SELECT split_part(split_part(regexp_replace(word, '^[^[:alnum:]]+|[^[:alnum:]]+$', '', 'g'), '''', 1), '’', 1) AS clean) cleaned) teams
+$$;
+
+-- The match a title names: the word on each side of its first "vs" / "v" / "versus", when the match
+-- opens the title or a part of it (after ":", "|", a spaced dash, a bracket; at most 4 words before
+-- "vs"): "Spain vs Croatia Prediction", "Prediction: Croatia vs England", "How to watch Belgium vs
+-- Turkey", not "Browns Fans Turnaround in Win vs. Steelers". A hyphen between two names was measured
+-- too: mostly no match ("Galeria-Krise", "Maison-Blanche", "Eight-Hour Sprint")
+CREATE OR REPLACE FUNCTION public.matchup_of(title text)
+    RETURNS text[]
+    LANGUAGE sql IMMUTABLE PARALLEL SAFE
+AS $$
+    SELECT CASE WHEN a IS NOT NULL AND b IS NOT NULL AND a <> b THEN ARRAY[a, b] END
+    FROM (SELECT CASE WHEN cardinality(left_words) <= 4 THEN public.matchup_team(left_words[cardinality(left_words)]) END AS a,
+                 public.matchup_team(right_word) AS b
+          FROM (SELECT regexp_split_to_array(btrim(regexp_replace(before, '^.*([:|(\[]|\s[-–—]\s)', '')), '\s+') AS left_words, right_word
+                -- the shortest text before a "vs" (the first one), the whole word after it
+                FROM (SELECT substring(spaced from '(?i)^(.*?)\s(?:vs\.?|v\.?|versus)\s+\S') AS before,
+                             substring(spaced from '(?i)\s(?:vs\.?|v\.?|versus)\s+(\S+)') AS right_word
+                      -- the no-break spaces ("vs.\u00a0Türkiye") as spaces
+                      FROM (SELECT regexp_replace(title, '[\u00a0\u2000-\u200b\u202f\u205f\u3000]', ' ', 'g') AS spaced) s) found) parts) teams
+$$;
+
+-- Whether a title names another match than the one of a news (its teams and names): each names a team
+-- the other title does not hold among its names, and they share a team ("Wales vs Denmark" / "Wales vs
+-- Norway") or neither title holds a team of the other ("Spain vs Croatia" / "Czechia vs England"). Not
+-- "Game vs. Cards" / "Giants vs. Arizona Cardinals": each title holds a team of the other. Null when
+-- the title names no match
+-- (dropped first: a parameter of an earlier version had another name)
+DROP FUNCTION IF EXISTS public.different_matches(text[], text[], text);
+CREATE OR REPLACE FUNCTION public.different_matches(teams text[], names text[], other text)
+    RETURNS boolean
+    LANGUAGE sql IMMUTABLE PARALLEL SAFE
+AS $$
+    SELECT mine_there < 2 AND theirs_here < 2 AND (teams && other_teams OR mine_there + theirs_here = 0)
+    FROM (SELECT other_teams,
+                 (SELECT count(*) FROM unnest(teams) team
+                  WHERE EXISTS (SELECT 1 FROM unnest(other_names) name WHERE name LIKE team || '%' OR team LIKE name || '%')) AS mine_there,
+                 (SELECT count(*) FROM unnest(other_teams) team
+                  WHERE EXISTS (SELECT 1 FROM unnest(names) name WHERE name LIKE team || '%' OR team LIKE name || '%')) AS theirs_here
+          FROM (SELECT public.matchup_of(other) AS other_teams, public.title_names(other) AS other_names) o
+          WHERE other_teams IS NOT NULL) seen
+$$;
+
 DROP FUNCTION IF EXISTS public.assign_stories(timestamptz, real, real);
 DROP FUNCTION IF EXISTS public.assign_stories(timestamptz, real, real, real);
 DROP FUNCTION IF EXISTS public.assign_stories(timestamptz, real, real, real, real);
@@ -170,6 +249,10 @@ DECLARE
     news_medium text;
     news_figures text[];
     news_at timestamptz;
+    news_teams text[];      -- the match the title names, if any (matchup_of)
+    news_names text[];
+    candidate record;
+    other_match boolean;
     story integer;
     n_grouped integer := 0;
     n_created integer := 0;
@@ -186,6 +269,8 @@ BEGIN
     LOOP
         title_vector := news.title_dense; title_words := news.title_sparse; text_vector := news.text_dense;
         news_lang := news.lang; news_medium := news.medium; news_figures := news.title_figures; news_at := news.at;
+        news_teams := public.matchup_of(news.title);
+        news_names := CASE WHEN news_teams IS NOT NULL THEN public.title_names(news.title) END;
 
         SELECT m.id_story INTO story
         FROM articles m
@@ -197,7 +282,8 @@ BEGIN
         LIMIT 1;
 
         IF story IS NULL THEN
-            SELECT scored.id_story INTO story
+            FOR candidate IN
+            SELECT scored.id_story
             FROM (
                 SELECT pairs.id_story,
                        CASE
@@ -229,7 +315,24 @@ BEGIN
             ) scored
             WHERE scored.score >= threshold
             ORDER BY scored.score DESC
-            LIMIT 1;
+            LOOP
+                -- a news naming a match: the members of the story naming one name mostly another? Asked
+                -- of the few candidates above the threshold only: of every member holding a "vs", in the
+                -- query above, it cost 13 s a news naming a match
+                IF news_teams IS NOT NULL THEN
+                    SELECT count(*) FILTER (WHERE vote.other) > count(*) FILTER (WHERE NOT vote.other) INTO other_match
+                    FROM (SELECT public.different_matches(news_teams, news_names, m.title) AS other
+                          FROM articles m
+                          WHERE m.id_story = candidate.id_story
+                            AND m.lang = news_lang
+                            AND COALESCE(m.published_at, m.created_at) >= since
+                            -- the titles that may name a match (matchup_of reads them), cheaply
+                            AND m.title ~* '[^[:alnum:]](vs|v|versus)[^[:alnum:]]') vote;
+                    CONTINUE WHEN other_match;
+                END IF;
+                story := candidate.id_story;
+                EXIT;
+            END LOOP;
         END IF;
 
         IF story IS NULL THEN
