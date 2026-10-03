@@ -163,6 +163,8 @@ const withLock = async (task) => {
 };
 
 let timer = null;
+// the batch a scheduled run left encoding when its time was up, taken by the next one (see run)
+let ahead = null;
 let lastHousekeeping = 0;
 
 // the minutes until a feed is read again: by its news, GOOGLE_EVERY_MINUTES for a search of Google
@@ -243,15 +245,18 @@ export const IngestService = {
             }
             // The embedder encodes a batch while the one before is grouped, and while the feeds are read
             // the news already waiting: it worked 35 s of each run of 95 s, then waited for the grouping
-            // (30 s) and the feeds of the next run (27 s) (3.10.2026). A batch in advance is caught at
-            // once (an embedder down would stop the server), its error comes back where it is awaited
+            // (30 s) and the feeds of the next run (27 s) (3.10.2026). Then 20 to 35 s still, the
+            // grouping of the last batch: a run out of time leaves the next batch encoding, the next
+            // run groups it. A batch in advance is caught at once (an embedder down would stop the
+            // server), its error comes back where it is awaited
             const nextBatch = () => {
                 const batch = embedPending(urls);
                 batch.catch(() => {});
                 return batch;
             };
             // a run of some feeds embeds theirs, read first
-            let embedding = urls === null ? nextBatch() : null;
+            let embedding = urls === null ? (ahead ?? nextBatch()) : null;
+            if (urls === null) ahead = null;
             let early = embedding !== null;     // a batch taken before the feeds were read: more may follow
             const refresh = await FeedService.refreshUrls(feeds, {purge});
 
@@ -286,12 +291,14 @@ export const IngestService = {
                     // after a batch taken early, one at least of the news just read, as before
                     const more = early || (full && (urls !== null || timeLeft()));
                     early = false;
+                    windowLeft = !more && full && urls === null;
                     embedding = more ? nextBatch() : null;
+                    // out of time with more waiting: the next batch encodes during this grouping
+                    // and the end of the run, for the next run of the server (not for "pnpm run
+                    // ingest", which stops after its run)
+                    if (windowLeft && timer !== null) ahead = nextBatch();
                     if (batch > 0) await group();
-                    if (!more) {
-                        windowLeft = full && urls === null;
-                        break;
-                    }
+                    if (!more) break;
                 }
                 // news embedded and in no story: by a run that stopped before grouping them, by a search
                 // reading Google News, or more than a batch waiting. As long as the run has time
