@@ -33,11 +33,28 @@ const stripHtml = (value) => value
     .replace(/<[^>]*>/g, ' ')
     .replace(/[ \t]{2,}/g, ' ');
 
+// a CDATA section written escaped ("&lt;![CDATA[ title ]]&gt;", record.pt) is still one once decoded,
+// and stripHtml took it for a tag: every title of the feed was empty
+const unwrapCdata = (value) => value.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
+
 // get the text of a node which can be a string or an object with attributes ({ "#text": ... })
 const text = (node) => {
     if (node === undefined || node === null) return '';
     const value = typeof node === 'object' ? String(node["#text"] ?? '') : String(node);
-    return stripHtml(decodeEntities(value)).trim();
+    return stripHtml(unwrapCdata(decodeEntities(value))).trim();
+};
+
+// Some feeds give no title and put it in the description (uol.com.br, 984 of its 1181 news): the
+// description is the title then, whole when it is as short as one (160 characters, longer than 99%
+// of the titles), else cut at a word. An empty title made every news of such a medium the same news
+// in assign_stories (db/add_briefing.sql)
+const MAX_TITLE_CHARS = 160;
+const withTitle = (item) => {
+    if (item.title || !item.description) return item;
+    if (item.description.length <= MAX_TITLE_CHARS) return {...item, title: item.description, description: ''};
+    const start = item.description.slice(0, MAX_TITLE_CHARS);
+    const end = start.lastIndexOf(' ');
+    return {...item, title: `${(end > 0 ? start.slice(0, end) : start).trimEnd()}…`};
 };
 
 // get the biggest thumbnail url
@@ -91,15 +108,15 @@ export const Parser = {
         const data = parser.parse(xml);
 
         if (data.rss) {
-            return (data.rss.channel?.item ?? []).map(fromRssItem);
+            return (data.rss.channel?.item ?? []).map(item => withTitle(fromRssItem(item)));
         }
         // RDF: the items are next to the channel, not inside it
         if (data['rdf:RDF']) {
             const rdf = data['rdf:RDF'];
-            return (rdf.item ?? rdf.channel?.item ?? []).map(fromRssItem);
+            return (rdf.item ?? rdf.channel?.item ?? []).map(item => withTitle(fromRssItem(item)));
         }
         if (data.feed) {
-            return (data.feed.entry ?? []).map(fromAtomEntry);
+            return (data.feed.entry ?? []).map(entry => withTitle(fromAtomEntry(entry)));
         }
 
         return [];

@@ -107,6 +107,42 @@ describe('Parser.Xml', () => {
         expect(items[0].description).toBe('The competition belongs to no one Javier Tebas hit out on Tuesday .');
     });
 
+    // record.pt: "<title>&lt;![CDATA[ Jesus voltou a ajoelhar no Dragão ]]&gt;</title>"
+    it('should read a title written as an escaped CDATA section', async () => {
+        const items = await Parser.Xml(`<rss><channel><item>
+            <title>&lt;![CDATA[ Jesus voltou a ajoelhar no Dragão ]]&gt;</title>
+            <description>Ludopédio</description>
+            <link>https://x</link>
+        </item></channel></rss>`);
+        expect(items[0].title).toBe('Jesus voltou a ajoelhar no Dragão');
+        expect(items[0].description).toBe('Ludopédio');
+    });
+
+    // uol.com.br: no <title>, the title is the description
+    it('should take a short description as the title of an item without one', async () => {
+        const items = await Parser.Xml(`<rss><channel><item>
+            <description><![CDATA[ Flávio vence em 14 estados e no DF; Lula supera em 12 ]]></description>
+            <link>https://x</link>
+        </item></channel></rss>`);
+        expect(items[0].title).toBe('Flávio vence em 14 estados e no DF; Lula supera em 12');
+        expect(items[0].description).toBe('');
+    });
+
+    it('should cut a long description at a word for the title, and keep it whole', async () => {
+        const description = `${'mot '.repeat(39)}fin du titre et bien plus encore`;
+        const items = await Parser.Xml(`<feed xmlns="http://www.w3.org/2005/Atom"><entry>
+            <title></title><link href="https://x/a"/><summary>${description}</summary>
+        </entry></feed>`);
+        expect(items[0].title).toBe(`${'mot '.repeat(39)}fin…`);
+        expect(items[0].title.length).toBeLessThanOrEqual(161);
+        expect(items[0].description).toBe(description);
+    });
+
+    it('should leave the title empty when there is no description either', async () => {
+        const items = await Parser.Xml(`<rss><channel><item><title> </title><link>https://x</link></item></channel></rss>`);
+        expect(items[0].title).toBe('');
+    });
+
     it('should return nothing for an unknown format', async () => {
         expect(await Parser.Xml('<html><body>Not a feed</body></html>')).toEqual([]);
     });

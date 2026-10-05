@@ -70,6 +70,7 @@ const doRefresh = async (urls, {purge = false} = {}) => {
 
         for (let news of result.items) {
             if (!news.link) continue;   // podcasts episodes without article page
+            if (!news.title) continue;  // neither title nor description (see withTitle in parser.js): nothing to show
             articles.push({
                 id_feed: feed.id,
                 link: news.link,

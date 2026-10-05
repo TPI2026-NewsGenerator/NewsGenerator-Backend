@@ -107,6 +107,27 @@ export const guardFetch = () => {
     });
 };
 
+// The text of an answer in the charset it is written in: res.text() reads UTF-8 only, and a feed in
+// ISO-8859-1 (record.pt) was saved with its accents broken ("Drag�o"). The charset of Content-Type
+// first, else the one the document itself declares in its first bytes (<?xml encoding="..."?>,
+// <meta charset>), else UTF-8. A declaration in ASCII cannot be UTF-16: ignored, as browsers do
+const declaredCharset = (bytes, contentType) => {
+    if (bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) return 'utf-8';
+    const header = /charset\s*=\s*["']?([\w.:-]+)/i.exec(contentType ?? '')?.[1];
+    if (header) return header;
+    const start = new TextDecoder('latin1').decode(bytes.subarray(0, 1024));
+    const declared = (/<\?xml[^>]*encoding\s*=\s*["']([\w.:-]+)/i.exec(start) ?? /<meta[^>]*charset\s*=\s*["']?([\w.:-]+)/i.exec(start))?.[1];
+    return declared && !/^utf-?16/i.test(declared) ? declared : 'utf-8';
+};
+export const decodeBody = (buffer, contentType) => {
+    const bytes = new Uint8Array(buffer);
+    try {
+        return new TextDecoder(declaredCharset(bytes, contentType)).decode(bytes);
+    } catch {
+        return new TextDecoder().decode(bytes);   // a charset TextDecoder does not know
+    }
+};
+
 // The text of an answer, or an error after 'timeoutMs': the body of the answer the bug above broke
 // never ends, and the timeout of fetch no longer applies once the headers came
 export const readText = (res, timeoutMs = 15000) => {
@@ -117,7 +138,8 @@ export const readText = (res, timeoutMs = 15000) => {
             reject(new Error('The answer was not read in time.'));
         }, timeoutMs);
     });
-    return Promise.race([res.text(), late]).finally(() => clearTimeout(timer));
+    const text = res.arrayBuffer().then(buffer => decodeBody(buffer, res.headers.get('content-type')));
+    return Promise.race([text, late]).finally(() => clearTimeout(timer));
 };
 
 // fetch following the redirects one by one, checking each of them (a public url can redirect to a private one)
