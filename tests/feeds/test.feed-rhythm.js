@@ -32,6 +32,21 @@ describe('the rhythm of a feed', () => {
             .toEqual([2, 4, 8, 16, 32, 60, 60]);
     });
 
+    it('should read a feed failing for 3 days once a day, and at its rhythm again once it works', () => {
+        const days = (n) => minutesAgo(n * 24 * 60);
+        const read = (failures, lastSuccess) => readEvery({url: 'https://a.ch/rss', news: 100, failures, last_success_at: lastSuccess}, NOW);
+        expect(read(40, days(3))).toBe(24 * 60);
+        expect(read(40, days(2.9))).toBe(60);
+        expect(read(0, days(10))).toBe(2);     // read again since: not failing
+        expect(read(40, null)).toBe(60);       // never read
+    });
+
+    it('should leave a feed failing for days until a day after its last read', () => {
+        const failing = (url, readMinutesAgo) => ({...feed(url, 100, readMinutesAgo, 40), last_success_at: minutesAgo(4 * 24 * 60)});
+        expect(feedsDue([failing('https://soon.ch/rss', 23 * 60), failing('https://due.ch/rss', 24 * 60)], NOW))
+            .toEqual(['https://due.ch/rss']);
+    });
+
     it('should read a search of Google News every hour, whatever its news', () => {
         expect(readEvery({url: 'https://news.google.com/rss/search?q=VAR', news: 500, failures: 0})).toBe(60);
     });

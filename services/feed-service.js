@@ -64,6 +64,7 @@ const doRefresh = async (urls, {purge = false} = {}) => {
             etag: result.etag ?? feed.etag,
             last_modified: result.lastModified ?? feed.last_modified,
             last_fetched_at: now,
+            last_success_at: now,
             last_error: null,
             failures: 0,
         });

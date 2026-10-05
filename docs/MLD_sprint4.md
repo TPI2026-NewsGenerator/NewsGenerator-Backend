@@ -95,6 +95,7 @@ UNIQUE (id_custom_search, id_category)
 | last_fetched_at | timestamptz | null — null means never read |
 | last_error | text | null — why the last refresh failed, shown to the user for their own sources |
 | failures | integer | NOT NULL, default 0 — refreshes failed in a row (`db/add_feed_failures.sql`) |
+| last_success_at | timestamptz | NOT NULL, default now() — last refresh that worked; failing for 3 days, the feed is read once a day (`db/add_feed_failures.sql`) |
 
 ### articles — *new*
 | Column | Type | |

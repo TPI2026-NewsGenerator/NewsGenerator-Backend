@@ -381,10 +381,10 @@ export const FeedModel = {
         LIMIT $3::int`,
         urls, before, limit)).map(row => row.url),
     // what says when these feeds are read again (see IngestService.run): [{url, last_fetched_at,
-    // failures, news}], 'news' the news they gave since 'since' and published since, the news of
-    // their first read published before left out
+    // failures, last_success_at, news}], 'news' the news they gave since 'since' and published since,
+    // the news of their first read published before left out
     feedRhythms: async (urls, since) => prisma.$queryRawUnsafe(`
-        SELECT u.url, f.last_fetched_at, coalesce(f.failures, 0) AS failures, coalesce(r.news, 0)::int AS news
+        SELECT u.url, f.last_fetched_at, coalesce(f.failures, 0) AS failures, f.last_success_at, coalesce(r.news, 0)::int AS news
         FROM unnest($1::text[]) AS u(url)
         LEFT JOIN feeds f ON f.url = u.url
         LEFT JOIN (

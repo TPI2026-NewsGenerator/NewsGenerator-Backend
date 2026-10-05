@@ -190,8 +190,17 @@ let timer = null;
 let ahead = null;
 let lastHousekeeping = 0;
 
+// A feed failing for FAILING_DAYS is read once a day, not every hour: a site refusing the server
+// (saba.ye, cleantechnica.com: 403 at every read, 5.10.2026) or closed. One read that works and it
+// is read at its rhythm again
+const FAILING_DAYS = 3;
+const FAILING_EVERY_MINUTES = 24 * 60;
+
 // the minutes until a feed is read again: by its news, GOOGLE_EVERY_MINUTES for a search of Google
-export const readEvery = ({url, news, failures}) => {
+export const readEvery = ({url, news, failures, last_success_at}, now = Date.now()) => {
+    if (failures > 0 && last_success_at && now - new Date(last_success_at).getTime() >= FAILING_DAYS * 24 * 3600e3) {
+        return FAILING_EVERY_MINUTES;
+    }
     const minutes = isGoogleNewsUrl(url) ? GOOGLE_EVERY_MINUTES : READ_EVERY.find(([least]) => news >= least)[1];
     return Math.min(minutes * 2 ** Math.min(failures, 6), Math.max(60, minutes));
 };
@@ -199,7 +208,7 @@ export const readEvery = ({url, news, failures}) => {
 // the feeds to read now of these rows (FeedModel.feedRhythms): never read, or read longer ago than
 // their rhythm
 export const feedsDue = (rows, now = Date.now()) => rows
-    .filter(row => !row.last_fetched_at || new Date(row.last_fetched_at).getTime() + readEvery(row) * 60e3 <= now)
+    .filter(row => !row.last_fetched_at || new Date(row.last_fetched_at).getTime() + readEvery(row, now) * 60e3 <= now)
     .map(row => row.url);
 
 // the searches of Google News of every reader not read for GOOGLE_EVERY_MINUTES
