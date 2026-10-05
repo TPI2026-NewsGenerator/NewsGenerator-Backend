@@ -34,6 +34,7 @@ jest.unstable_mockModule('../../services/utils/extract.js', () => ({
     canSummarize: (text) => Boolean(text),
     extractArticle: jest.fn(async () => ({passages: ['La phrase.'], translation: null, topic: 'jeux', sourcing: 'named'})),
     passagesText: (passages) => passages?.join('\n') ?? null,
+    sentencesOf: () => [],      // read by contested.js, which news-service.js imports
     translationFor: jest.fn(),
     translateTexts: jest.fn(),
 }));
