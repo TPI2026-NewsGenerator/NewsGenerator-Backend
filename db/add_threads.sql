@@ -114,6 +114,19 @@ DECLARE
     best_score real;
     changed integer[] := '{}';
     candidates integer[];
+    -- A thread is joined to the one it resembles most, scanning every thread of its language: 80 to
+    -- 250 ms each, for 150 to 300 threads touched a call (5.10.2026). Its score is at most the product of
+    -- the centroids. A thread of one story judged in this call has the centroid of that story, whose
+    -- products with every thread were just ordered for its shortlist: when none reached merge_threshold
+    -- (its own thread left out), only the threads changed since (by this call, or by a join below) can,
+    -- and only they are scanned. 163 of 300 threads touched in 20 minutes were such ones. The same
+    -- stories end together (bench/thread-merge-replay.mjs)
+    top_likeness real;
+    top_product double precision;
+    judged integer[] := '{}';       -- the stories judged here whose threads were all under merge_threshold
+    joined integer[] := '{}';       -- the threads that took another one below
+    n integer;
+    only_story integer;
     n_touched integer := 0;
     n_created integer := 0;
     n_merged integer := 0;
@@ -146,10 +159,15 @@ BEGIN
 
         -- the threads closest by their centroid, plus the threads of this call (their centroid is
         -- computed at its end, a new one has none yet)
-        candidates := ARRAY(SELECT u.id FROM threads u
-                            WHERE u.lang = l AND u.updated_at >= active AND u.centroid IS NOT NULL
-                            ORDER BY u.centroid <#> v
-                            LIMIT shortlist) || changed;
+        -- its own thread holds it: the thread it ends in, or one changed by this call
+        SELECT COALESCE(array_agg(closest.id), '{}'), max(closest.likeness) FILTER (WHERE closest.id IS DISTINCT FROM s.id_thread)
+        INTO candidates, top_likeness
+        FROM (SELECT u.id, -(u.centroid <#> v) AS likeness FROM threads u
+              WHERE u.lang = l AND u.updated_at >= active AND u.centroid IS NOT NULL
+              ORDER BY u.centroid <#> v
+              LIMIT shortlist) closest;
+        candidates := candidates || changed;
+        IF top_likeness IS NULL OR top_likeness < merge_threshold THEN judged := judged || s.id; END IF;
 
         SELECT scored.id_thread, scored.score INTO best, best_score
         FROM (
@@ -200,15 +218,37 @@ BEGIN
     FOR t IN SELECT DISTINCT unnest(changed) AS id LOOP
         -- joined to another one meanwhile, or left without story
         v := NULL;
-        SELECT centroid, media, lang INTO v, m, l FROM threads WHERE id = t.id;
+        SELECT centroid, media, lang, n_stories INTO v, m, l, n FROM threads WHERE id = t.id;
         CONTINUE WHEN v IS NULL;
+        only_story := NULL;
+        IF n = 1 THEN SELECT id INTO only_story FROM stories WHERE id_thread = t.id; END IF;
 
-        SELECT u.id, -(u.centroid <#> v) - CASE WHEN u.media && m THEN same_medium_margin ELSE 0 END
-        INTO best, best_score
-        FROM threads u
-        WHERE u.lang = l AND u.id <> t.id AND u.updated_at >= active AND u.centroid IS NOT NULL
-        ORDER BY 2 DESC
-        LIMIT 1;
+        IF only_story = ANY(judged) THEN
+            SELECT u.id, -(u.centroid <#> v) - CASE WHEN u.media && m THEN same_medium_margin ELSE 0 END
+            INTO best, best_score
+            FROM threads u
+            WHERE u.id = ANY(changed || joined)
+              AND u.lang = l AND u.id <> t.id AND u.updated_at >= active AND u.centroid IS NOT NULL
+            ORDER BY 2 DESC
+            LIMIT 1;
+        ELSE
+            -- the media of every thread compared were most of the time (270 of 350 ms): only the
+            -- threads within same_medium_margin of the closest one can be the best, and none under
+            -- merge_threshold joins
+            best := NULL;
+            SELECT max(-(u.centroid <#> v)) INTO top_product
+            FROM threads u
+            WHERE u.lang = l AND u.id <> t.id AND u.updated_at >= active AND u.centroid IS NOT NULL;
+            IF top_product::real >= merge_threshold THEN
+                SELECT u.id, -(u.centroid <#> v) - CASE WHEN u.media && m THEN same_medium_margin ELSE 0 END
+                INTO best, best_score
+                FROM threads u
+                WHERE u.lang = l AND u.id <> t.id AND u.updated_at >= active AND u.centroid IS NOT NULL
+                  AND -(u.centroid <#> v) >= top_product - same_medium_margin
+                ORDER BY 2 DESC
+                LIMIT 1;
+            END IF;
+        END IF;
 
         IF best IS NOT NULL AND best_score >= merge_threshold THEN
             UPDATE stories SET id_thread = best WHERE id_thread = t.id;
@@ -219,6 +259,7 @@ BEGIN
             FROM (SELECT avg(centroid) AS centroid, count(*) AS n FROM stories WHERE id_thread = best AND centroid IS NOT NULL) mean
             WHERE th.id = best;
             DELETE FROM threads WHERE id = t.id;
+            joined := joined || best;
             n_merged := n_merged + 1;
         END IF;
     END LOOP;
