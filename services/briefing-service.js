@@ -21,6 +21,7 @@ import {canSummarize, extractArticle, passagesText, translateTexts} from "./util
 import {balanceSelection, checkStories, mergeStories, reviewCards, selectStories} from "./utils/profile-ai.js";
 import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
+import {contestedOf} from "./utils/contested.js";
 import {readerLanguage, writtenIn} from "./utils/language.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {hostOf, mediumOf} from "./utils/public-url.js";
@@ -249,7 +250,7 @@ const oncePerThread = async (stories) => {
 
 // hours: of news it is written from, one of WINDOWS
 const write = async (briefingId, userId, hours) => {
-    const usage = {choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), reviewing: newUsage()};
+    const usage = {choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), contesting: newUsage(), reviewing: newUsage()};
     const [profile, interests] = await Promise.all([ProfileModel.get(userId), ProfileModel.interests(userId)]);
     if (!profile || interests.length === 0) throw Object.assign(new Error('Write your profile first.'), {status: 400});
 
@@ -377,16 +378,24 @@ const write = async (briefingId, userId, hours) => {
         .map(article => [article.link, byAddress.get(addressOf(article))]));
 
     // 5. the key passages of each story, as published (see extract.js), translated for a reader of
-    // another language
+    // another language; and the denials of its news its articles report (see contested.js), asked
+    // together
     await step('summarizing');
     const summaries = await mapWithConcurrency(stories, AI_CONCURRENCY, async (story, i) => {
         // the first lines of a page (a teaser, a paywall) do not tell the news
         const readable = reads[i].find(article => canSummarize(content.get(article.link)?.content));
         if (!readable) return null;
-        const {passages, translation, topic, sourcing} = await extractArticle(readable.title, content.get(readable.link),
-            {language, usage: usage.summarizing});
+        const texts = reads[i].filter(article => content.has(article.link))
+            .map(article => ({...toArticle(article), page: content.get(article.link)}));
+        const [{passages, translation, topic, sourcing}, contested] = await Promise.all([
+            extractArticle(readable.title, content.get(readable.link), {language, usage: usage.summarizing}),
+            contestedOf(readable.title, texts, {language, usage: usage.contesting}).catch(err => {
+                console.error(`Briefing: the denials of story ${story.storyId} were not read (${err.message})`);
+                return [];
+            }),
+        ]);
         if (passages.length === 0) return null;
-        return {summary: passagesText(passages), translation: passagesText(translation), topic, sourcing, from: readable.link};
+        return {summary: passagesText(passages), translation: passagesText(translation), topic, sourcing, contested, from: readable.link};
     });
     const summaryOf = (i) => summaries[i].status === 'fulfilled' ? summaries[i].value : null;
 
@@ -443,6 +452,9 @@ const write = async (briefingId, userId, hours) => {
             sourcing: summary?.sourcing ?? null,
             // the words the article itself used to say it has no confirmation
             hedged: hedgedBy(lead.title, lead.description),
+            // someone named who denies the news, in the words of one of its articles:
+            // [{by, sentence, translation, language, source, url, publishedAt}]
+            contested: summary?.contested ?? [],
             thumbnail: members.find(article => article.thumbnail)?.thumbnail ?? null,
             publishedAt: members[0].at?.toISOString?.() ?? null,
             corroboration: {

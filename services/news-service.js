@@ -16,6 +16,7 @@ import {canSummarize, extractArticle, passagesText, translateTexts, translationF
 import {languageOf, writtenIn} from "./utils/language.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {hedgedBy} from "./utils/hedging.js";
+import {contestedOf} from "./utils/contested.js";
 import {averageLink, unionFind} from "./utils/grouping.js";
 import {corroborationOf} from "./utils/corroboration.js";
 import {dateOf, mediumOfArticle, onceEach, readingOrder, sourceOf} from "./utils/reading-order.js";
@@ -583,6 +584,15 @@ export const NewsService = {
             .filter(article => readable(article) && byAddress.has(addressOf(article)))
             .map(article => [article.link, byAddress.get(addressOf(article))]));
 
+        // the denials of the news its articles report (see contested.js), asked with the passages
+        const contesting = mapWithConcurrency(reads, AI_CONCURRENCY, async (read) => {
+            const texts = read.filter(article => pageOf.has(article.link)).map(article => ({
+                source: siteOf(article), url: addressOf(article), publishedAt: article.published_at?.toISOString() ?? null,
+                page: pageOf.get(article.link),
+            }));
+            const lead = read.find(article => canSummarize(pageOf.get(article.link)?.content));
+            return lead ? contestedOf(lead.title, texts, {language}) : [];
+        });
         const results = await mapWithConcurrency(reads, AI_CONCURRENCY, async (read) => {
             // the first lines of a page (a teaser, a paywall) do not tell the news
             const from = read.find(article => canSummarize(pageOf.get(article.link)?.content));
@@ -601,6 +611,7 @@ export const NewsService = {
             await FeedModel.saveTranslation(from.link, translation, language);
             return {from, passages, translation, topic, sourcing};
         });
+        const contested = await contesting;
 
         const leads = members.map((list, i) => (results[i].status === 'fulfilled' ? results[i].value : null)?.from ?? list[0]);
         // the titles written in another language than the one searched translated, as their passages:
@@ -635,6 +646,8 @@ export const NewsService = {
                 translation: passagesText(done?.translation),
                 topic: done?.topic ?? news.topic,
                 sourcing: done?.sourcing ?? news.sourcing,
+                // someone named who denies the news, in the words of one of its articles
+                contested: contested[i].status === 'fulfilled' ? contested[i].value : [],
                 summaryError: done ? null : result.status === 'rejected'
                     ? "The AI could not choose the key passages of this news, please try again."
                     : !list.some(readable)
