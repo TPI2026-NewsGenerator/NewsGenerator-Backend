@@ -254,6 +254,15 @@ DECLARE
     candidate record;
     other_match boolean;
     story integer;
+    -- A news is scored on the news of these stories only: the closest of its window by their centroid
+    -- (the mean of the texts of their news, see add_threads.sql), and the stories without one yet, made
+    -- since the threads last ran. Every news of its language was 78 000 in English, 150 to
+    -- 290 ms a news and most of a run once the threads were shortlisted (5.10.2026). Measured on 450 news
+    -- of 6 hours (bench/story-shortlist.mjs; the sources of a reader, at random, in stories of several
+    -- media), 297 of them joining a story: the same story for all, at 50 and at 100, 60 ms a news instead
+    -- of 145; at 100 the same first 3 stories for 449 (a news naming a match may refuse the first)
+    shortlist constant integer := 100;
+    candidates integer[];
     n_grouped integer := 0;
     n_created integer := 0;
 BEGIN
@@ -282,6 +291,11 @@ BEGIN
         LIMIT 1;
 
         IF story IS NULL THEN
+            candidates := ARRAY(SELECT s.id FROM stories s
+                                WHERE s.lang = news_lang AND s.updated_at >= since AND s.centroid IS NOT NULL
+                                ORDER BY s.centroid <#> COALESCE(text_vector, title_vector)
+                                LIMIT shortlist)
+                       || ARRAY(SELECT s.id FROM stories s WHERE s.lang = news_lang AND s.centroid IS NULL);
             FOR candidate IN
             SELECT scored.id_story
             FROM (
@@ -306,7 +320,7 @@ BEGIN
                            cardinality(m.title_figures) > 0 AND cardinality(news_figures) > 0
                                AND m.title_figures <> news_figures AS other_figures
                     FROM articles m
-                    WHERE m.id_story IS NOT NULL
+                    WHERE m.id_story = ANY(candidates)
                       AND m.lang = news_lang
                       AND COALESCE(m.published_at, m.created_at) >= since
                     OFFSET 0    -- each likeness computed once, not once per aggregate that reads it

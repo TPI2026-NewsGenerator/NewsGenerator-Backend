@@ -64,6 +64,9 @@ CREATE INDEX IF NOT EXISTS i_stories_waiting ON public.stories (updated_at, id)
     WHERE grouped_at > COALESCE(threaded_at, '-infinity'::timestamptz);
 -- the stories of one language a story is compared with: a language of few stories reads only them
 CREATE INDEX IF NOT EXISTS i_stories_lang ON public.stories (lang) WHERE centroid IS NOT NULL;
+-- the stories a news is scored on besides the closest ones (assign_stories): made since the threads
+-- last ran, few among many
+CREATE INDEX IF NOT EXISTS i_stories_no_centroid ON public.stories (lang) WHERE centroid IS NULL;
 
 -- The stories that got news since their thread was judged take the centroid of their news now and
 -- are judged again: each leaves its thread and joins the thread of its language, active in the last
