@@ -247,6 +247,10 @@ DECLARE
     text_vector halfvec(1024);
     news_lang text;
     news_medium text;
+    -- its title to find it met again, null when empty: some feeds give none (uol.com.br, or record.pt
+    -- writing it as escaped CDATA), and every news of such a medium met all the others, 459 in one
+    -- story in 48 h (5.10.2026)
+    news_title text;
     news_figures text[];
     news_at timestamptz;
     news_teams text[];      -- the match the title names, if any (matchup_of)
@@ -278,6 +282,7 @@ BEGIN
     LOOP
         title_vector := news.title_dense; title_words := news.title_sparse; text_vector := news.text_dense;
         news_lang := news.lang; news_medium := news.medium; news_figures := news.title_figures; news_at := news.at;
+        news_title := CASE WHEN news.title ~ '[^[:space:]]' THEN news.title END;
         news_teams := public.matchup_of(news.title);
         news_names := CASE WHEN news_teams IS NOT NULL THEN public.title_names(news.title) END;
 
@@ -287,7 +292,7 @@ BEGIN
           AND m.lang = news_lang
           AND COALESCE(m.published_at, m.created_at) >= since
           AND m.medium IS NOT DISTINCT FROM news_medium
-          AND (m.link = news.link OR m.title = news.title)
+          AND (m.link = news.link OR m.title = news_title)
         LIMIT 1;
 
         IF story IS NULL THEN

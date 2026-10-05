@@ -183,6 +183,21 @@ const assign = async (client, sparseWeight = 1) => (await client.query('SELECT *
         expect(await storyOf(client, a)).toBe(await storyOf(client, b));
     }));
 
+    // some feeds give no title (uol.com.br puts it in the description): an empty title is not the same
+    // news met again, it put every news of such a medium in one story (459 in 48 h, 5.10.2026). The
+    // embedder gives them all the same title vector and no words: too little for one medium alone
+    it('should not take an empty title for the same news, but still a same link', () => inTransaction(async (client, feed) => {
+        const {rows: [{id: other}]} = await client.query("INSERT INTO feeds (url) VALUES ('https://test.invalid/other') RETURNING id");
+        const a = await news(client, feed, {minute: 1, medium: 'paper', heading: '', title: dense(1, 0), text: dense(1, 0, 0)});
+        const b = await news(client, feed, {minute: 2, medium: 'paper', heading: '', title: dense(1, 0), text: dense(0, 1, 0)});
+        const c = await news(client, feed, {minute: 3, medium: 'paper', heading: ' \t', title: dense(1, 0), text: dense(0, 0, 1)});
+        const again = await news(client, other, {minute: 4, link: (await client.query('SELECT link FROM articles WHERE id = $1', [a])).rows[0].link,
+                                                 heading: '', title: dense(1, 0), text: dense(1, 0, 0)});
+        await assign(client);
+        expect(new Set([await storyOf(client, a), await storyOf(client, b), await storyOf(client, c)]).size).toBe(3);
+        expect(await storyOf(client, again)).toBe(await storyOf(client, a));
+    }));
+
     // 0.75 on the titles: enough a few hours later, not a day and a half later (0.003 * (36 - 6) = 0.09
     // less), unless the news is almost the same. Grouped run by run, as the news come
     it('should take a news close enough a few hours later', () => inTransaction(async (client, feed) => {
