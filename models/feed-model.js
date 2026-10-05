@@ -42,6 +42,29 @@ export const FeedModel = {
             data: data,
         });
     },
+    // The articles that are not a news their feed gave already under another link: the same title
+    // published at the same time. agenzianova.com puts a new token in each link at each read
+    // ("/a/6ac3b35c7c5536.59305803/7848675/..."): its 1,088 news of a day were 7,440 rows, embedded and
+    // grouped each time. 7,734 such repeats in a day in 297 feeds (2026-10-05), tf1info.fr 415. A news
+    // without a date of publication is kept: two of them may share a title
+    withoutRepeats: async (articles) => {
+        const key = (article) => `${article.id_feed}\n${article.title}\n${article.published_at.getTime()}`;
+        // each feed and date asked once: a feed read again gives the same dates as at its last read
+        const asked = [...new Map(articles.filter(article => article.published_at && article.title)
+            .map(article => [`${article.id_feed} ${article.published_at.getTime()}`, article])).values()];
+        const seen = new Set(asked.length === 0 ? [] : (await prisma.$queryRawUnsafe(`
+            SELECT a.id_feed, a.title, a.published_at
+            FROM unnest($1::int[], $2::timestamptz[]) AS n(id_feed, published_at)
+            JOIN articles a ON a.id_feed = n.id_feed AND a.published_at = n.published_at`,
+            asked.map(article => article.id_feed), asked.map(article => article.published_at))).map(key));
+        // the same news twice in one read of a feed is kept once too
+        return articles.filter(article => {
+            if (!article.published_at || !article.title) return true;
+            if (seen.has(key(article))) return false;
+            seen.add(key(article));
+            return true;
+        });
+    },
     // articles already saved (same feed and link) are ignored
     // A refresh of every feed gives thousands of rows. Prisma (7.8 to 7.10) cuts such a createMany into
     // several INSERTs of one transaction and sends them together on its connection, which pg 8 only

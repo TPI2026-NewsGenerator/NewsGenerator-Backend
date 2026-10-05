@@ -84,7 +84,8 @@ const doRefresh = async (urls, {purge = false} = {}) => {
         }
     }
 
-    const inserted = await FeedModel.insertArticles(articles);
+    // a news its feed gave already under another link is not saved again (see withoutRepeats)
+    const inserted = await FeedModel.insertArticles(await FeedModel.withoutRepeats(articles));
 
     // the old articles are dropped once, with the shared feeds, not at every refresh of a user
     const deleted = purge
