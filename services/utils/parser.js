@@ -48,8 +48,12 @@ const text = (node) => {
 // description is the title then, whole when it is as short as one (160 characters, longer than 99%
 // of the titles), else cut at a word. An empty title made every news of such a medium the same news
 // in assign_stories (db/add_briefing.sql)
+// A title left as the variable of its template ("Vidéo. $content.TitleNoTags", every video of the 9
+// papers of EBRA, 70 news in 48 h on 5.10.2026; "{{title}}") is no title either
 const MAX_TITLE_CHARS = 160;
+const isTemplate = (title) => /\$\{?[a-z_]\w*\.\w|\{\{[^}]*\}\}/.test(title);
 const withTitle = (item) => {
+    if (isTemplate(item.title)) item = {...item, title: ''};
     if (item.title || !item.description) return item;
     if (item.description.length <= MAX_TITLE_CHARS) return {...item, title: item.description, description: ''};
     const start = item.description.slice(0, MAX_TITLE_CHARS);

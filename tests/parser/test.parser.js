@@ -138,6 +138,16 @@ describe('Parser.Xml', () => {
         expect(items[0].description).toBe(description);
     });
 
+    // the videos of the papers of EBRA (lalsace.fr, dna.fr, leprogres.fr...)
+    it('should take the description for a title left as the variable of its template', async () => {
+        const items = await Parser.Xml(`<rss><channel>
+            <item><title>Vidéo. $content.TitleNoTags</title><description>Ces élus refusent de renommer une école</description><link>https://x/1</link></item>
+            <item><title>{{ title }}</title><description>Autre vidéo</description><link>https://x/2</link></item>
+            <item><title>Apple's $3.5bn deal: $AAPL.O shares up</title><link>https://x/3</link></item>
+        </channel></rss>`);
+        expect(items.map(item => item.title)).toEqual(['Ces élus refusent de renommer une école', 'Autre vidéo', "Apple's $3.5bn deal: $AAPL.O shares up"]);
+    });
+
     it('should leave the title empty when there is no description either', async () => {
         const items = await Parser.Xml(`<rss><channel><item><title> </title><link>https://x</link></item></channel></rss>`);
         expect(items[0].title).toBe('');
