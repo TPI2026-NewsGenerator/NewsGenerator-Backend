@@ -82,6 +82,7 @@ CREATE INDEX IF NOT EXISTS i_stories_lang ON public.stories (lang) WHERE centroi
 -- 55 of 74 search cards of one news in one thread (33 as stories); 23 of 30 threads read at random were
 -- one affair, 3 a series of one medium, 4 too broad (qualifiers of a whole competition). Without the
 -- joining 53 cards and 72% of the affairs; joining without the margin brought the series back.
+-- The threads a story is scored on are first shortlisted by their centroid (see shortlist below).
 -- max_stories: the stories judged by this call, the oldest first, the others left to the next (all
 -- when null): one call is one transaction, see assign_stories
 DROP FUNCTION IF EXISTS public.assign_threads(real, real, real, integer);
@@ -92,6 +93,13 @@ CREATE OR REPLACE FUNCTION public.assign_threads(threshold real, same_medium_mar
 AS $$
 DECLARE
     active constant timestamptz := now() - make_interval(days => active_days);
+    -- A story is scored on the stories of these threads only, the closest by the mean of their stories
+    -- (a product with it is the average likeness, the score without the margin of shared media). Every
+    -- story of its language was 100 000 in English, 0.4 s a story and most of a run (5.10.2026).
+    -- Measured on 800 stories of 24 hours (bench/thread-shortlist.mjs; the sources of a reader, at random,
+    -- through shared media, already in a thread), 322 of them joining a thread: the same thread for all
+    -- at 10 and at 20, 50 ms a story instead of 250
+    shortlist constant integer := 20;
     s record;
     t record;
     -- typed copies of the story or thread judged: the plans of the queries below are kept from one to
@@ -102,6 +110,7 @@ DECLARE
     best integer;
     best_score real;
     changed integer[] := '{}';
+    candidates integer[];
     n_touched integer := 0;
     n_created integer := 0;
     n_merged integer := 0;
@@ -132,6 +141,13 @@ BEGIN
         best := NULL;
         v := s.centroid; m := s.media; l := s.lang;
 
+        -- the threads closest by their centroid, plus the threads of this call (their centroid is
+        -- computed at its end, a new one has none yet)
+        candidates := ARRAY(SELECT u.id FROM threads u
+                            WHERE u.lang = l AND u.updated_at >= active AND u.centroid IS NOT NULL
+                            ORDER BY u.centroid <#> v
+                            LIMIT shortlist) || changed;
+
         SELECT scored.id_thread, scored.score INTO best, best_score
         FROM (
             SELECT pairs.id_thread,
@@ -142,7 +158,8 @@ BEGIN
             FROM (
                 SELECT o.id_thread, -(o.centroid <#> v) AS similarity, o.media && m AS shared
                 FROM stories o JOIN threads th ON th.id = o.id_thread
-                WHERE o.lang = l AND th.updated_at >= active AND o.centroid IS NOT NULL
+                WHERE o.id_thread = ANY(candidates)
+                  AND o.lang = l AND th.updated_at >= active AND o.centroid IS NOT NULL
                 OFFSET 0    -- each likeness computed once, not once per aggregate that reads it
             ) pairs
             GROUP BY pairs.id_thread
