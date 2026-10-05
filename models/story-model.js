@@ -13,10 +13,11 @@ import {prisma} from '../config/db.js';
 const UPDATE_CHUNK = 200;       // news written in one statement
 
 export const StoryModel = {
-    // the news still without vectors, published since 'since', the newest first. The language of
-    // their feed is given when the feed says it (a feed of a user or of a profile), the text decides
+    // the news still without vectors, published since 'since', the newest first, the ones of the
+    // feeds 'last' (the floods, see FLOOD_NEWS_PER_DAY) after all the others. The language of their
+    // feed is given when the feed says it (a feed of a user or of a profile), the text decides
     // otherwise
-    pendingArticles: async (since, limit, urls = null) => prisma.$queryRawUnsafe(`
+    pendingArticles: async (since, limit, urls = null, last = []) => prisma.$queryRawUnsafe(`
         SELECT a.id, a.title, a.description, f.url AS feed,
                COALESCE((SELECT uf.language FROM user_feeds uf WHERE uf.url = f.url AND uf.language IS NOT NULL LIMIT 1),
                         (SELECT d.language FROM directory_feeds d WHERE d.url = f.url)) AS feed_language
@@ -25,9 +26,14 @@ export const StoryModel = {
         WHERE a.embedded_at IS NULL
           AND COALESCE(a.published_at, a.created_at) >= $1::timestamptz
           AND ($3::text[] IS NULL OR f.url = ANY($3::text[]))
-        ORDER BY COALESCE(a.published_at, a.created_at) DESC
+        ORDER BY f.url = ANY($4::text[]), COALESCE(a.published_at, a.created_at) DESC
         LIMIT $2::int`,
-        since, limit, urls),
+        since, limit, urls, last),
+
+    // how many news published since 'since' still have no vectors
+    pendingCount: async (since) => Number((await prisma.$queryRawUnsafe(`
+        SELECT count(*) AS waiting FROM articles
+        WHERE embedded_at IS NULL AND COALESCE(published_at, created_at) >= $1::timestamptz`, since))[0].waiting),
 
     // rows: [{id, lang, titleDense, titleSparse, textDense, textSparse}], the vectors as pgvector
     // reads them (see toVector and toSparsevec in embedder.js)

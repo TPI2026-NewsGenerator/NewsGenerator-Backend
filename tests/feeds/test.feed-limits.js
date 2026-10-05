@@ -6,7 +6,7 @@
 //
 
 import {afterAll, beforeAll, describe, expect, it} from '@jest/globals';
-import {bridgeRoom, looksPrivate, MAX_BRIDGE_FEEDS, withinBridgeRoom} from '../../services/utils/feed-limits.js';
+import {bridgeRoom, FLOOD_NEWS_PER_DAY, isFlood, looksPrivate, MAX_BRIDGE_FEEDS, withinBridgeRoom} from '../../services/utils/feed-limits.js';
 
 const BRIDGE = 'http://127.0.0.1:3002';
 const bridged = (site) => `${BRIDGE}/?action=display&bridge=CssSelectorBridge&home_page=${encodeURIComponent(`https://${site}/`)}`;
@@ -58,5 +58,12 @@ describe('bridge room', () => {
     it('should drop the feeds of the bridge once there is no room, and keep the others in order', () => {
         const feeds = [{url: bridged('a.com')}, {url: 'https://b.com/rss'}, {url: bridged('c.com')}, {url: 'https://d.com/rss'}];
         expect(withinBridgeRoom(feeds, 1).map(feed => feed.url)).toEqual([bridged('a.com'), 'https://b.com/rss', 'https://d.com/rss']);
+    });
+});
+
+describe('isFlood', () => {
+    it('should call a flood a feed giving 500 news a day or more, and nothing else', () => {
+        expect(FLOOD_NEWS_PER_DAY).toBe(500);
+        expect([7440, 500, 499, 20, 0, undefined, null].map(isFlood)).toEqual([true, true, false, false, false, false, false]);
     });
 });

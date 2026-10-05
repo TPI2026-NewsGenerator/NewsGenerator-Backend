@@ -32,6 +32,14 @@ export const MAX_BRIDGE_FEEDS = 50;
 // them; a reader importing a list is told, and decides
 export const MAX_FEED_ITEMS = 300;
 
+// A feed giving more news a day than this is a flood: its news get their vectors after the news of
+// every other feed (see ingest-service.js), and the reader who added it is told. On 2026-10-05, of the
+// 1817 feeds that gave news in 24 hours, half gave 20 at most, 90% 134, 99% 525; the 22 over 500 gave
+// 25,317 of the 109,753 news, while the embedder does about 4,100 an hour: the news of 1817 feeds came
+// late because agenzianova.com gave the same 1,088 news 7 times over (see FeedModel.withoutRepeats)
+export const FLOOD_NEWS_PER_DAY = 500;
+export const isFlood = (newsPerDay) => (newsPerDay ?? 0) >= FLOOD_NEWS_PER_DAY;
+
 // how many feeds read through the bridge this reader can still get, among all their feeds
 export const bridgeRoom = (urls) => Math.max(0, MAX_BRIDGE_FEEDS - urls.filter(isBridgeUrl).length);
 

@@ -16,6 +16,7 @@ import {FeedModel} from "../models/feed-model.js";
 import {StoryModel} from "../models/story-model.js";
 import {embed, toSparsevec, toVector} from "./utils/embedder.js";
 import {languageOf} from "./utils/language.js";
+import {FLOOD_NEWS_PER_DAY, isFlood} from "./utils/feed-limits.js";
 import {ProfileModel} from "../models/profile-model.js";
 import {DirectoryModel} from "../models/directory-model.js";
 import {DirectoryService} from "./directory-service.js";
@@ -32,6 +33,16 @@ const INTERVAL_MINUTES = Number(process.env.INGEST_INTERVAL_MINUTES) || 1;
 // every hour at most. 220 requests a minute, 77 when every feed was read every 20
 const READ_EVERY = [[72, 2], [24, 5], [6, 15], [1, 30], [0, 60]];
 const RHYTHM_HOURS = 24;
+// the feeds over FLOOD_NEWS_PER_DAY at the last reading of the rhythms: their news are embedded last
+let floods = [];
+// Over this many news of the window without vectors, about 2 hours of the embedder (about 4,100 news
+// an hour on the server, 2026-10-05), the log says so and names the feeds that gave the most news in
+// the last LATE_HOURS, once an hour at most: a flood of a source was seen by chance after a day
+const LATE_NEWS = 8000;
+const LATE_HOURS = 3;
+const LATE_EVERY_MINUTES = 60;
+const BUSIEST_FEEDS = 5;
+let lastLate = 0;
 // the old news dropped and the empty stories deleted this often, the directory grown this often:
 // not every minute
 const HOUSEKEEPING_MINUTES = 60;
@@ -93,7 +104,7 @@ export const richText = (title, description) => {
 // the vectors of the news published in the window that have none yet: of every feed, or of these ones.
 // 'since' further back for the older news
 const embedPending = async (urls = null, since = new Date(Date.now() - WINDOW_HOURS * 3600e3)) => {
-    const pending = await StoryModel.pendingArticles(since, MAX_EMBEDDED_PER_RUN, urls);
+    const pending = await StoryModel.pendingArticles(since, MAX_EMBEDDED_PER_RUN, urls, floods);
     if (pending.length === 0) return 0;
 
     // a news in several feeds, or a title republished, is encoded once
@@ -115,6 +126,18 @@ const embedPending = async (urls = null, since = new Date(Date.now() - WINDOW_HO
     }));
 
     return pending.length;
+};
+
+// the log told when the embedder is late (see LATE_NEWS), with the feeds that gave the most news
+const warnIfLate = async () => {
+    if (Date.now() - lastLate < LATE_EVERY_MINUTES * 60e3) return;
+    const waiting = await StoryModel.pendingCount(new Date(Date.now() - WINDOW_HOURS * 3600e3));
+    if (waiting < LATE_NEWS) return;
+    lastLate = Date.now();
+    const busiest = await FeedModel.busiestFeeds(new Date(Date.now() - LATE_HOURS * 3600e3), BUSIEST_FEEDS);
+    console.warn(`Ingest late: ${waiting} news of the last ${WINDOW_HOURS} hours without vectors. `
+        + `The feeds that gave the most news in the last ${LATE_HOURS} hours: ${busiest.map(feed => `${feed.url} (${feed.news})`).join(', ')}. `
+        + `Embedded last: ${floods.length} feeds over ${FLOOD_NEWS_PER_DAY} news a day`);
 };
 
 // the stories grouped since their thread was judged join the threads of their affair
@@ -239,7 +262,9 @@ export const IngestService = {
             if (!urls) {
                 const directory = (await DirectoryModel.all()).map(feed => feed.url);
                 const every = [...new Set([...sharedLanguage.keys(), ...directory, ...await FeedModel.allUserFeedUrls()])];
-                const due = feedsDue(await FeedModel.feedRhythms(every, new Date(Date.now() - RHYTHM_HOURS * 3600e3)));
+                const rhythms = await FeedModel.feedRhythms(every, new Date(Date.now() - RHYTHM_HOURS * 3600e3));
+                floods = rhythms.filter(row => isFlood(row.news)).map(row => row.url);
+                const due = feedsDue(rhythms);
                 feeds = [...new Set([...due, ...await dueSearches()])];
                 purge = Date.now() - lastHousekeeping >= HOUSEKEEPING_MINUTES * 60e3;
             }
@@ -338,6 +363,7 @@ export const IngestService = {
             return null;
         }
         console.log(`Ingest: ${JSON.stringify({...result, seconds: Math.round((Date.now() - started) / 1000)})}`);
+        if (urls === null) await warnIfLate().catch(err => console.error(`Ingest: the delay was not measured (${err.message})`));
         return result;
     },
 

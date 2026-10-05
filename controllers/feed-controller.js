@@ -14,7 +14,7 @@ import {RecommendationService} from '../services/recommendation-service.js';
 import {findFeeds} from '../services/utils/feed-finder.js';
 import {assertPublicUrl, hostOf, isBridgeUrl} from '../services/utils/public-url.js';
 import {IngestService} from '../services/ingest-service.js';
-import {bridgeRoom, looksPrivate, MAX_USER_FEEDS} from '../services/utils/feed-limits.js';
+import {bridgeRoom, isFlood, looksPrivate, MAX_USER_FEEDS} from '../services/utils/feed-limits.js';
 import {Crawlers} from '../services/utils/crawlers.js';
 import {feedLanguage} from '../services/utils/language.js';
 
@@ -41,6 +41,8 @@ const toFeed = (feed) => ({
     createdAt: feed.created_at,
     error: feed.last_error ?? null,             // why the last refresh of this feed failed
     lastFetchedAt: feed.last_fetched_at ?? null,
+    newsPerDay: feed.news_per_day ?? 0,         // news it saved in the last 24 hours
+    flood: isFlood(feed.news_per_day),          // over FLOOD_NEWS_PER_DAY: its news get their vectors last
 });
 
 export const FeedController = {

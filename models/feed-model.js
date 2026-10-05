@@ -270,8 +270,14 @@ export const FeedModel = {
             ...feed,
             last_error: feed.failures >= FAILURES_SHOWN ? feed.last_error : null,
         }]));
+        // the news each one saved in the last 24 hours: a flood is shown to its reader (see FLOOD_NEWS_PER_DAY)
+        const saved = new Map((await prisma.$queryRawUnsafe(`
+            SELECT f.url, count(*)::int AS news
+            FROM feeds f JOIN articles a ON a.id_feed = f.id
+            WHERE f.url = ANY($1::text[]) AND a.created_at > now() - interval '24 hours'
+            GROUP BY f.url`, userFeeds.map(feed => feed.url))).map(row => [row.url, row.news]));
 
-        return userFeeds.map(feed => ({ ...feed, ...status.get(feed.url) }));
+        return userFeeds.map(feed => ({ ...feed, ...status.get(feed.url), news_per_day: saved.get(feed.url) ?? 0 }));
     },
     // the feeds added by hand by default, the ones found for the profile have their own limit
     // (see utils/feed-limits.js)
@@ -388,6 +394,13 @@ export const FeedModel = {
             GROUP BY id_feed
         ) r ON r.id_feed = f.id`,
         urls, since),
+    // the feeds that saved the most news since 'since': [{url, news}]
+    busiestFeeds: async (since, limit) => prisma.$queryRawUnsafe(`
+        SELECT f.url, count(*)::int AS news
+        FROM articles a JOIN feeds f ON f.id = a.id_feed
+        WHERE a.created_at > $1::timestamptz
+        GROUP BY f.url ORDER BY news DESC LIMIT $2::int`,
+        since, limit),
     // the real address of news of Google News, once a briefing found it: links [{link, resolved}]
     saveResolvedLinks: async (links) => {
         if (links.length === 0) return 0;

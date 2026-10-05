@@ -15,7 +15,7 @@ import {DiscoveryService, JUDGE_THRESHOLD, RELEVANCE_DAYS} from "./discovery-ser
 import {FeedbackService} from "./feedback-service.js";
 import {embed, toSparsevec, toVector} from "./utils/embedder.js";
 import {interestsOf} from "./utils/profile-ai.js";
-import {MAX_PROFILE_FEEDS} from "./utils/feed-limits.js";
+import {isFlood, MAX_PROFILE_FEEDS} from "./utils/feed-limits.js";
 import {searchesOfUser} from "./ingest-service.js";
 import {readerLanguage} from "./utils/language.js";
 
@@ -84,6 +84,8 @@ export const ProfileService = {
                 language: feed.language,
                 trusted: feed.trusted ?? false,
                 error: feed.last_error ?? null,
+                newsPerDay: feed.news_per_day ?? 0,
+                flood: isFlood(feed.news_per_day),
                 // its news of the last RELEVANCE_DAYS on the interests: at 0 it is removed, once it had the time
                 relevant: relevant.get(feed.id) ?? 0,
             })),
