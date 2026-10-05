@@ -249,7 +249,10 @@ DECLARE
     news_medium text;
     -- its title to find it met again, null when empty: some feeds give none (uol.com.br, or record.pt
     -- writing it as escaped CDATA), and every news of such a medium met all the others, 459 in one
-    -- story in 48 h (5.10.2026)
+    -- story in 48 h (5.10.2026). Without a title a news has nothing to be judged on either: every empty
+    -- title, and every empty text, has the same vectors (0.99997), and news of two media without
+    -- title nor description met at 1.0 on both. It is a story of its own, and the members without
+    -- title are not compared
     news_title text;
     news_figures text[];
     news_at timestamptz;
@@ -286,16 +289,20 @@ BEGIN
         news_teams := public.matchup_of(news.title);
         news_names := CASE WHEN news_teams IS NOT NULL THEN public.title_names(news.title) END;
 
+        -- the same news met again: its link, or its title if the texts meet too. A medium may give one
+        -- title to news of their own ("AO VIVO" on uol.com.br, "Vidéo. $content.TitleNoTags" on the 9
+        -- papers of EBRA, "Émission du lundi 5 octobre 2026"): 368 pairs of one medium and one title
+        -- in 48 h had texts apart (< 0.6), 26 189 of 26 557 met (5.10.2026)
         SELECT m.id_story INTO story
         FROM articles m
         WHERE m.id_story IS NOT NULL
           AND m.lang = news_lang
           AND COALESCE(m.published_at, m.created_at) >= since
           AND m.medium IS NOT DISTINCT FROM news_medium
-          AND (m.link = news.link OR m.title = news_title)
+          AND (m.link = news.link OR (m.title = news_title AND -(m.text_dense <#> text_vector) >= text_threshold))
         LIMIT 1;
 
-        IF story IS NULL THEN
+        IF story IS NULL AND news_title IS NOT NULL THEN
             candidates := ARRAY(SELECT s.id FROM stories s
                                 WHERE s.lang = news_lang AND s.updated_at >= since AND s.centroid IS NOT NULL
                                 ORDER BY s.centroid <#> COALESCE(text_vector, title_vector)
@@ -328,6 +335,7 @@ BEGIN
                     WHERE m.id_story = ANY(candidates)
                       AND m.lang = news_lang
                       AND COALESCE(m.published_at, m.created_at) >= since
+                      AND m.title ~ '[^[:space:]]'
                     OFFSET 0    -- each likeness computed once, not once per aggregate that reads it
                 ) pairs
                 GROUP BY pairs.id_story

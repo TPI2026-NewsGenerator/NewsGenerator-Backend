@@ -198,6 +198,28 @@ const assign = async (client, sparseWeight = 1) => (await client.query('SELECT *
         expect(await storyOf(client, again)).toBe(await storyOf(client, a));
     }));
 
+    // without title nor description, every news has the vectors of an empty text: two media met at 1.0
+    it('should judge no news without title, nor on a member without title', () => inTransaction(async (client, feed) => {
+        const a = await news(client, feed, {minute: 1, medium: 'paper', heading: '', title: dense(1, 0), text: dense(1, 0)});
+        const b = await news(client, feed, {minute: 2, medium: 'other', heading: '', title: dense(1, 0), text: dense(1, 0)});
+        await assign(client);
+        expect(await storyOf(client, a)).not.toBe(await storyOf(client, b));
+
+        const titled = await news(client, feed, {minute: 3, medium: 'third', title: dense(1, 0), text: dense(1, 0)});
+        await assign(client);
+        expect([await storyOf(client, a), await storyOf(client, b)]).not.toContain(await storyOf(client, titled));
+    }));
+
+    // "AO VIVO" on uol.com.br, "Vidéo. $content.TitleNoTags" on the papers of EBRA: one title, other news
+    it('should take one title of a medium for the same news only when the texts meet too', () => inTransaction(async (client, feed) => {
+        const a = await news(client, feed, {minute: 1, medium: 'paper', heading: 'AO VIVO', title: dense(1, 0), text: dense(1, 0, 0)});
+        const b = await news(client, feed, {minute: 2, medium: 'paper', heading: 'AO VIVO', title: dense(1, 0), text: dense(0, 1, 0)});
+        const again = await news(client, feed, {minute: 3, medium: 'paper', heading: 'AO VIVO', title: dense(1, 0), text: dense(1, 0.1, 0)});
+        await assign(client);
+        expect(await storyOf(client, b)).not.toBe(await storyOf(client, a));
+        expect(await storyOf(client, again)).toBe(await storyOf(client, a));
+    }));
+
     // 0.75 on the titles: enough a few hours later, not a day and a half later (0.003 * (36 - 6) = 0.09
     // less), unless the news is almost the same. Grouped run by run, as the news come
     it('should take a news close enough a few hours later', () => inTransaction(async (client, feed) => {
