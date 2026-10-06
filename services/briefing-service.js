@@ -314,8 +314,9 @@ const oncePerThread = async (stories) => {
     });
 };
 
-// hours: of news it is written from, one of WINDOWS
-const write = async (briefingId, userId, hours) => {
+// hours: of news it is written from, one of WINDOWS. Exported for the benches, which write a briefing
+// without saving it (bench/briefing-relevance.mjs)
+export const write = async (briefingId, userId, hours) => {
     const usage = {choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), contesting: newUsage(), reviewing: newUsage()};
     const [profile, interests] = await Promise.all([ProfileModel.get(userId), ProfileModel.interests(userId)]);
     if (!profile || interests.length === 0) throw Object.assign(new Error('Write your profile first.'), {status: 400});
