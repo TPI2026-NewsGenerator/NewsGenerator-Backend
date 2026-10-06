@@ -34,6 +34,8 @@ const toProfile = (row) => row && ({
     discovery: {
         status: row.discovery_status,           // idle, running, done, failed
         error: row.discovery_error,
+        // while it runs: 'google' (the first sources, a few minutes), then 'press' (see DiscoveryService)
+        phase: DiscoveryService.phaseOf(row.id_user),
         at: row.discovered_at,
     },
     updatedAt: row.updated_at,

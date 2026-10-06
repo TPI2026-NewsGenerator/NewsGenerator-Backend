@@ -927,6 +927,16 @@ measured on 5 profiles (`bench/mc-one-search.mjs`), one search everywhere halved
 media of 13, all from the second search in French or English; the other languages lost none (24
 searches instead of 18 for the UEFA profile, in 4 languages).
 
+The discovery goes in two steps: the feeds of Google News are added and read as soon as their media are
+tried, then the ones of the press, while the queue of Media Cloud answers. The profile page says which
+step runs (`discovery.phase`: `google`, then `press`). Measured on 06.10.2026 without saving anything
+(`bench/discovery-phases.mjs`, profiles as at their signup, the embedder on the processor and busy with
+the reading of the feeds): sailing and astronomy got its 7 feeds at 7 minutes instead of 14, the press
+adding none; the UEFA profile got 8 at 18 minutes instead of none for 43, the press adding 3 (Mirror,
+Manchester Evening News, Tuttosport). The same media as in one step (for 2 of the 11 another section of
+the same medium, as between two runs). When a discovery finds more feeds than it has room for, the ones
+of Google News now go first.
+
 A discovery runs in the memory of the server: one a restart stopped (a deploy) is started again when the
 server starts, instead of staying "running" for good.
 
