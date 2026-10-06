@@ -28,6 +28,7 @@ import {hostOf, mediumOf} from "./utils/public-url.js";
 import {credibleStory, decodeLinks, isGoogleNewsUrl, isNotNews, isRepeatedPage, pickCandidates} from "./utils/google-news.js";
 import {searchesOfUser} from "./ingest-service.js";
 import {onceEach} from "./utils/reading-order.js";
+import {readableCards} from "./utils/readable-cards.js";
 
 // Measured on four profiles and 249 stories judged by hand:
 //  - one vector per interest, dense + half the sparse: 88% of relevant cards (one vector for the
@@ -235,6 +236,71 @@ const versionsOf = async (stories, {language, feedUrls, since}) => {
         .map(id => ({storyId: id, best: members.get(id)[0], members: members.get(id)}));
 };
 
+// Chosen stories read: their texts say who wrote them and give the summary. Their pages are added to
+// 'content' (link -> page), which counts who wrote each card. Answers [{story, unreadable, summary}]:
+// unreadable when no article of the story could be read in full (a paywall, a protected site, its
+// first lines only), summary null when the AI failed on a page read. A story of Google News only
+// whose page is no news is left out
+export const readStories = async (chosen, {trusted = new Set(), language = null, usage, content = new Map(), first = false, step = async () => {}}) => {
+    // the real address of the news of Google News to read, never asked twice (see google-news.js): of
+    // the stories no feed lets read, and of the article in the language of the reader read first (the
+    // French version of a card in Albanian was known in the last hours through Google News only)
+    const undecoded = (article) => fromGoogle(article) && !article.resolved_link;
+    const toDecode = [...new Set(chosen.map(story => toRead(story, trusted, language))
+        .flatMap(articles => articles.every(undecoded) ? articles.slice(0, DECODED_PER_STORY)
+            : undecoded(articles[0]) && articles[0].lang === language ? [articles[0]] : [])
+        .map(article => article.link))].slice(0, MAX_DECODED);
+    if (toDecode.length > 0) {
+        const decoded = await decodeLinks(toDecode);
+        console.log(`Briefing: ${decoded.size} of ${toDecode.length} addresses of Google News found`);
+        for (const article of chosen.flatMap(story => story.members)) {
+            if (decoded.has(article.link)) article.resolved_link = decoded.get(article.link);
+        }
+        await FeedModel.saveResolvedLinks([...decoded].map(([link, resolved]) => ({link, resolved})));
+    }
+    // a page of Google News its address shows is no news (a live blog, a table) is left out, and the
+    // story with it when it had nothing else
+    const stories = chosen.flatMap(story => {
+        const members = story.members.filter(article => !fromGoogle(article) || !isNotNews(article.title, article.resolved_link));
+        if (members.length === 0) return [];
+        return [{...story, members, best: members.includes(story.best) ? story.best : members[0]}];
+    });
+    if (stories.length < chosen.length) console.log(`Briefing: ${chosen.length - stories.length} chosen stories of Google News were no news`);
+    const reads = stories.map(story => toRead(story, trusted, language));
+    // a link of Google News not decoded is not read: it only leads to a redirect
+    const readable = (article) => !fromGoogle(article) || Boolean(article.resolved_link);
+    const pages = await Crawlers.Html([...new Set(reads.flat().filter(readable).map(addressOf))]);
+    const byAddress = new Map(pages.map(page => [page.url, page]));
+    for (const article of stories.flatMap(story => story.members)) {
+        if (readable(article) && byAddress.has(addressOf(article))) content.set(article.link, byAddress.get(addressOf(article)));
+    }
+
+    // the key passages of each story, as published (see extract.js), translated for a reader of
+    // another language; and the denials of its news its articles report (see contested.js), asked
+    // together
+    if (first) await step('summarizing');
+    const summaries = await mapWithConcurrency(stories, AI_CONCURRENCY, async (story, i) => {
+        // the first lines of a page (a teaser, a paywall) do not tell the news
+        const lead = reads[i].find(article => canSummarize(content.get(article.link)?.content));
+        if (!lead) return {unreadable: true};
+        const texts = reads[i].filter(article => content.has(article.link))
+            .map(article => ({...toArticle(article), page: content.get(article.link)}));
+        const [{passages, translation, topic, sourcing}, contested] = await Promise.all([
+            extractArticle(lead.title, content.get(lead.link), {language, usage: usage.summarizing}),
+            contestedOf(lead.title, texts, {language, usage: usage.contesting}).catch(err => {
+                console.error(`Briefing: the denials of story ${story.storyId} were not read (${err.message})`);
+                return [];
+            }),
+        ]);
+        // no passage of the news in its page: what was read is not the article
+        if (passages.length === 0) return {unreadable: true};
+        return {summary: {summary: passagesText(passages), translation: passagesText(translation), topic, sourcing, contested, from: lead.link}};
+    });
+    return stories.map((story, i) => summaries[i].status === 'fulfilled'
+        ? {story, unreadable: Boolean(summaries[i].value.unreadable), summary: summaries[i].value.summary ?? null}
+        : {story, unreadable: false, summary: null});
+};
+
 // the closest story of each thread, the stories in their order: an affair followed over days is one card
 const oncePerThread = async (stories) => {
     const threads = new Map((await StoryModel.threadsOf(stories.map(story => story.storyId))).map(row => [row.id, row.id_thread]));
@@ -329,75 +395,35 @@ const write = async (briefingId, userId, hours) => {
     })), usage.choosing, feedback.examples, interests.map(interest => interest.text), week);
     const selected = balanceSelection(chosenByAi, id => byId.get(id)?.interestId, interests);
     if (selected.length === 0) return [];
+    // the next stories the AI chose, in its order: they replace a card no article of which can be read
+    const reserved = chosenByAi.filter(item => !selected.includes(item));
 
     // 3. the AI checks which articles of each story tell the news of its best one, and which versions
-    // in the language of the reader tell the news of a card in another
+    // in the language of the reader tell the news of a card in another. The reserve with them: one of
+    // them telling the news of a card joins it, never comes as a second card
     await step('checking');
     const language = readerLanguage(profile);
     const picked = selected.map(item => ({...byId.get(item.id), why: item.why}));
-    const versions = await versionsOf(picked, {language, feedUrls, since})
+    const reserve = reserved.map(item => ({...byId.get(item.id), why: item.why, reserve: true}));
+    const versions = await versionsOf([...picked, ...reserve], {language, feedUrls, since})
         .catch(err => {
             console.error(`Briefing: no version in the language of the reader looked for (${err.message})`);
             return [];
         });
-    const chosen = await keepSameNews(picked, usage, versions);
+    const checked = await keepSameNews([...picked, ...reserve], usage, versions);
 
-    // 4. the chosen stories read: their texts say who wrote them and give the summary
-    await step('reading');
-    // the real address of the news of Google News to read, never asked twice (see google-news.js): of
-    // the stories no feed lets read, and of the article in the language of the reader read first (the
-    // French version of a card in Albanian was known in the last hours through Google News only)
-    const undecoded = (article) => fromGoogle(article) && !article.resolved_link;
-    const toDecode = [...new Set(chosen.map(story => toRead(story, trusted, language))
-        .flatMap(articles => articles.every(undecoded) ? articles.slice(0, DECODED_PER_STORY)
-            : undecoded(articles[0]) && articles[0].lang === language ? [articles[0]] : [])
-        .map(article => article.link))].slice(0, MAX_DECODED);
-    if (toDecode.length > 0) {
-        const decoded = await decodeLinks(toDecode);
-        console.log(`Briefing: ${decoded.size} of ${toDecode.length} addresses of Google News found`);
-        for (const article of chosen.flatMap(story => story.members)) {
-            if (decoded.has(article.link)) article.resolved_link = decoded.get(article.link);
-        }
-        await FeedModel.saveResolvedLinks([...decoded].map(([link, resolved]) => ({link, resolved})));
-    }
-    // a page of Google News its address shows is no news (a live blog, a table) is left out, and the
-    // story with it when it had nothing else
-    const stories = chosen.flatMap(story => {
-        const members = story.members.filter(article => !fromGoogle(article) || !isNotNews(article.title, article.resolved_link));
-        if (members.length === 0) return [];
-        return [{...story, members, best: members.includes(story.best) ? story.best : members[0]}];
-    });
-    if (stories.length < chosen.length) console.log(`Briefing: ${chosen.length - stories.length} chosen stories of Google News were no news`);
-    const reads = stories.map(story => toRead(story, trusted, language));
-    // a link of Google News not decoded is not read: it only leads to a redirect
-    const readable = (article) => !fromGoogle(article) || Boolean(article.resolved_link);
-    const pages = await Crawlers.Html([...new Set(reads.flat().filter(readable).map(addressOf))]);
-    const byAddress = new Map(pages.map(page => [page.url, page]));
-    const content = new Map(stories.flatMap(story => story.members)
-        .filter(article => readable(article) && byAddress.has(addressOf(article)))
-        .map(article => [article.link, byAddress.get(addressOf(article))]));
-
-    // 5. the key passages of each story, as published (see extract.js), translated for a reader of
-    // another language; and the denials of its news its articles report (see contested.js), asked
-    // together
-    await step('summarizing');
-    const summaries = await mapWithConcurrency(stories, AI_CONCURRENCY, async (story, i) => {
-        // the first lines of a page (a teaser, a paywall) do not tell the news
-        const readable = reads[i].find(article => canSummarize(content.get(article.link)?.content));
-        if (!readable) return null;
-        const texts = reads[i].filter(article => content.has(article.link))
-            .map(article => ({...toArticle(article), page: content.get(article.link)}));
-        const [{passages, translation, topic, sourcing}, contested] = await Promise.all([
-            extractArticle(readable.title, content.get(readable.link), {language, usage: usage.summarizing}),
-            contestedOf(readable.title, texts, {language, usage: usage.contesting}).catch(err => {
-                console.error(`Briefing: the denials of story ${story.storyId} were not read (${err.message})`);
-                return [];
-            }),
-        ]);
-        if (passages.length === 0) return null;
-        return {summary: passagesText(passages), translation: passagesText(translation), topic, sourcing, contested, from: readable.link};
-    });
-    const summaryOf = (i) => summaries[i].status === 'fulfilled' ? summaries[i].value : null;
+    // 4. and 5. the chosen stories read, the ones of the reserve when one of them can't be
+    const content = new Map();
+    let rounds = 0;
+    const read = async (chosen) => {
+        const first = rounds++ === 0;
+        if (first) await step('reading');
+        return readStories(chosen, {trusted, language, usage, content, first, step});
+    };
+    const {cards, unreadable} = await readableCards(checked.filter(story => !story.reserve), checked.filter(story => story.reserve), read);
+    if (unreadable > 0) console.log(`Briefing: ${unreadable} chosen stories could not be read, ${cards.filter(card => card.story.reserve).length} of the reserve took their place`);
+    const stories = cards.map(card => card.story);
+    const summaryOf = (i) => cards[i].summary;
 
     // 6. the cards read once more with their summary, which says what a title may not: the ones on
     // what the reader refuses are left out (see reviewCards). The briefing never waits on it failing
@@ -446,6 +472,8 @@ const write = async (briefingId, userId, hours) => {
             interest: story.interest,
             // the key sentences of the article as published, a paragraph per passage (see extract.js)
             summary: summary?.summary ?? null,
+            // a card is read (see readableCards): without passages, the AI failed on its article
+            summaryError: summary ? null : 'The passages of its article could not be chosen: the AI did not answer.',
             // their machine translation, when the article is not in the language of the reader
             translation: summary?.translation ?? null,
             topic: summary?.topic ?? null,

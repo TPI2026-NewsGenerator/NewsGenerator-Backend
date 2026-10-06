@@ -448,6 +448,13 @@ those sentences **word for word, as the article published them**, back in the or
 about 170 words at most; sentences that follow each other make one passage, and a gap between two
 passages is shown. A page with fewer than 60 words (a teaser, a paywall) is not used.
 
+A story no article of which can be read that way (a paywall, a protected site, its first lines only)
+never becomes a card: it only showed its title and "No article could be read". The AI chooses up to 15
+stories for the 10 cards, and the next ones it chose take the places left, read only when a card is
+missing, two more rounds at most (`services/utils/readable-cards.js`). When even those can't be read,
+the briefing has fewer cards. A card whose article was read but whose passages the AI failed to choose
+is kept, and says so.
+
 When the article is not in the language of the reader, a machine translation is added, marked as such,
 next to the original sentences. It is asked sentence by sentence and checked rather than trusted: a
 translation that loses a figure of its sentence, or does not give one sentence per sentence, is asked
