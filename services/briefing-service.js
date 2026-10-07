@@ -18,7 +18,7 @@ import {DiscoveryService} from "./discovery-service.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {newUsage} from "./utils/ollama.js";
 import {canSummarize, extractArticle, passagesText, translateTexts} from "./utils/extract.js";
-import {balanceSelection, checkStories, mergeStories, reviewCards, selectStories} from "./utils/profile-ai.js";
+import {balanceSelection, checkStories, mergeStories, reviewCards, selectStories, shareOut} from "./utils/profile-ai.js";
 import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {contestedOf} from "./utils/contested.js";
@@ -53,8 +53,11 @@ const CANDIDATES = 40;              // stories the AI chooses from, told by at l
 // pickCandidates): the AI leaves the pages that are no news out
 const GOOGLE_CANDIDATES = 10;
 const GOOGLE_PER_MEDIUM = 2;
-// the closest stories ranked: the ones known only through Google News take many of the first places
+// the closest stories ranked: the ones known only through Google News take many of the first places.
+// Each interest has its share of them by its weight among the RANKED_POOL closest, as of the
+// CANDIDATES (see shareOut): ranking 600 takes the same time as 150, the scores are all computed
 const RANKED = 150;
+const RANKED_POOL = 600;
 // A story told by a medium the reader trusts (see FeedModel.trustedMedia), among the TRUST_POOL closest
 // stories, is given to the AI besides the CANDIDATES, TRUSTED_CANDIDATES at most: a trusted source never
 // brings a story far from the profile, and never takes the place of a closer one. A bonus of the score
@@ -345,12 +348,12 @@ export const write = async (briefingId, userId, hours) => {
     const feedUrls = (await feedsOf(userId)).filter(url => !refused.has(url));
     // the media the reader trusts: their stories among the TRUST_POOL closest are candidates too
     const trusted = new Set(await FeedModel.trustedMedia(userId));
-    const ranked = await StoryModel.rank({
+    const ranked = shareOut(await StoryModel.rank({
         userId, feedUrls, since,
         languages: null,
         sparseWeight: SPARSE_WEIGHT,
-        limit: RANKED,
-    });
+        limit: RANKED_POOL,
+    }), RANKED, row => row.id_interest, interests);
     if (ranked.length === 0) {
         throw new Error(`No story to choose from: the news of the last ${spanOf(hours)} are not read and embedded yet. The background work runs every few minutes, try again soon.`);
     }
@@ -380,7 +383,10 @@ export const write = async (briefingId, userId, hours) => {
         .filter(story => story.best && credibleStory(story.members, media) && !isRepeatedPage(story.members))
         .sort((a, b) => b.score - a.score);
     const choosable = week ? await oncePerThread(closestFirst) : closestFirst;
-    const closest = pickCandidates(choosable, {fromFeeds: CANDIDATES, extra: GOOGLE_CANDIDATES, perMedium: GOOGLE_PER_MEDIUM});
+    const closest = pickCandidates(choosable, {
+        fromFeeds: CANDIDATES, extra: GOOGLE_CANDIDATES, perMedium: GOOGLE_PER_MEDIUM,
+        first: (stories, size) => shareOut(stories, size, story => story.interestId, interests),
+    });
     const kept = new Set([...closest, ...choosable.filter(story => story.told && story.pooled && !closest.includes(story)).slice(0, TRUSTED_CANDIDATES)]);
     const candidates = choosable.filter(story => kept.has(story));
 

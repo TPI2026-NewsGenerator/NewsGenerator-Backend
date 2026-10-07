@@ -11,7 +11,7 @@ import {jest} from '@jest/globals'
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson: jest.fn()}));
 const {ollamaJson} = await import('../../services/utils/ollama.js');
 const {selectionPrompt} = await import('../../services/utils/profile-ai.js');
-const {balanceSelection, confirmOnSubject, confirmPrompt, interestsOf, missingWords, normalizeCheck, normalizeInterests, normalizeMerges, normalizeReview, normalizeSelection, parseSearch, reviewPrompt} = await import('../../services/utils/profile-ai.js');
+const {balanceSelection, confirmOnSubject, confirmPrompt, interestsOf, missingWords, normalizeCheck, normalizeInterests, normalizeMerges, normalizeReview, normalizeSelection, parseSearch, reviewPrompt, shareOut} = await import('../../services/utils/profile-ai.js');
 
 const options = {language: 'fr', categories: ['world', 'sport', 'technology']};
 
@@ -151,6 +151,15 @@ describe('the share of each interest in a briefing', () => {
         const kept = balanceSelection(many, interestOf, secondary).map(item => item.id);
         expect(kept.filter(id => id[0] === '1')).toHaveLength(5);      // floor(10 * 0.85 / 1.85) = 4, then the first left
         expect(kept.filter(id => id[0] === '2')).toHaveLength(5);
+    });
+
+    it('should share the stories ranked among the interests by their weights, the closest first', () => {
+        // 8 stories on Swiss football (interest 1) before 2 on French football (2)
+        const ranked = ['10', '11', '12', '13', '14', '15', '20', '16', '17', '21', '22'];
+        expect(shareOut(ranked, 6, interestOf, [{id: 1, weight: 1}, {id: 2, weight: 1}])).toEqual(['10', '11', '12', '20', '21', '22']);
+        // an interest with too few stories leaves its places to the next, whatever their interest
+        expect(shareOut(ranked.slice(0, 8), 6, interestOf, [{id: 1, weight: 1}, {id: 2, weight: 1}])).toEqual(['10', '11', '12', '13', '14', '20']);
+        expect(shareOut(ranked, 4, interestOf, [{id: 1, weight: 3}, {id: 2, weight: 1}])).toEqual(['10', '11', '12', '20']);
     });
 
     it('should give the AI the interests only when there are several', () => {

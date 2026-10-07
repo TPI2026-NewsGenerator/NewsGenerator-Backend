@@ -378,7 +378,8 @@ export const interestSearchUrls = (searches, languages = null) => [...new Set(se
 // ("UEFA Champions League live streams", "Classement Ligue des Champions | CANAL+ Madagascar",
 // four ticket pages of one site), while the real news among them were few.
 // stories: sorted the best first, each with its members [{feed_url, medium}] and its best one
-export const pickCandidates = (stories, {fromFeeds, extra, perMedium}) => {
+// first: the 'fromFeeds' kept of the stories of the feeds, by default the first ones
+export const pickCandidates = (stories, {fromFeeds, extra, perMedium, first = (list, size) => list.slice(0, size)}) => {
     const onlyGoogle = (story) => story.members.every(article => isGoogleNewsUrl(article.feed_url));
     const byMedium = new Map();
     const google = stories.filter(onlyGoogle).filter(story => {
@@ -386,6 +387,6 @@ export const pickCandidates = (stories, {fromFeeds, extra, perMedium}) => {
         byMedium.set(story.best.medium, count + 1);
         return count < perMedium;
     }).slice(0, extra);
-    const kept = new Set([...stories.filter(story => !onlyGoogle(story)).slice(0, fromFeeds), ...google]);
+    const kept = new Set([...first(stories.filter(story => !onlyGoogle(story)), fromFeeds), ...google]);
     return stories.filter(story => kept.has(story));
 };

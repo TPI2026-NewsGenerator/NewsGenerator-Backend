@@ -240,6 +240,25 @@ export const normalizeSelection = (answer, knownIds) => {
     return [...selected.values()].slice(0, MAX_CHOSEN);
 };
 
+// The 'size' first of 'items', each interest first given its share of them by its weight (its first
+// ones), then the places left to the next whatever their interest; in the order of 'items'. For the
+// stories ranked and the candidates of a briefing: by score alone, a wide interest took the places of
+// a narrow one (bench/interest-quota.mjs, 24 h): Swiss football 40 of the 50 candidates against 10 for
+// French football, 7 cards of 10, two of them French news classed Swiss; shared, 24 and 26, 5 cards each
+// items: in their order, interestOf: item -> the id of its interest, interests: [{id, weight}]
+export const shareOut = (items, size, interestOf, interests) => {
+    const total = interests.reduce((sum, interest) => sum + interest.weight, 0);
+    const kept = new Set();
+    for (const interest of interests) {
+        const share = Math.floor(size * interest.weight / total);
+        items.filter(item => interestOf(item) === interest.id).slice(0, share).forEach(item => kept.add(item));
+    }
+    for (const item of items) {
+        if (kept.size < size) kept.add(item);
+    }
+    return items.filter(item => kept.has(item));
+};
+
 // The MAX_BRIEFING stories of a briefing among the ones the AI chose, in its order: each interest first
 // gets its share of the places, by its weight (3 of 10 for each of 3 interests), then the places left
 // go to the next stories of the AI whatever their interest. An interest with no story that fits leaves

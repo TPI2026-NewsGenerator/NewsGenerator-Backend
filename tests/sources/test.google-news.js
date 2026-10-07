@@ -158,4 +158,10 @@ describe('pickCandidates', () => {
         expect(picked.map(s => s.id)).toEqual(['g1', 'g2', 'f1', 'f2']);
         expect(pickCandidates(stories, {fromFeeds: 2, extra: 3, perMedium: 1}).map(s => s.id)).toEqual(['g1', 'f1', 'g4', 'f2']);
     });
+
+    it('should let the stories of the feeds be chosen otherwise, the ones of Google as before', () => {
+        const stories = [story('f1', 'tribuna.com', [feed]), story('g1', 'canalplus.com', [GOOGLE]), story('f2', 'tribuna.com', [feed]), story('f3', 'tribuna.com', [feed])];
+        const last = (list, size) => list.slice(-size);
+        expect(pickCandidates(stories, {fromFeeds: 2, extra: 1, perMedium: 1, first: last}).map(s => s.id)).toEqual(['g1', 'f2', 'f3']);
+    });
 });
