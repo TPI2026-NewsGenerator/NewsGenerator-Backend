@@ -10,6 +10,7 @@
 import {prisma} from '../config/db.js';
 import {Filter} from '../services/utils/filter.js';
 import {mediumOf} from '../services/utils/public-url.js';
+import {looksPrivate} from '../services/utils/feed-limits.js';
 
 const INSERT_SLICE = 1000;      // rows per INSERT, 7 values each: far under the 65535 of Postgres
 // A feed is shown as not working once it failed this many times in a row: once is often the site
@@ -254,11 +255,11 @@ export const FeedModel = {
             data: { translation, translation_language: language },
         });
     },
-    // feeds added by a user, they are private: only used in the searches of this user
+    // feeds of a profile, they are private: only used in the searches and briefings of its user
     // with the state of the last refresh of each feed, so the user sees a source that stopped working
-    listUserFeeds: async (userId) => {
+    listUserFeeds: async (profileId) => {
         const userFeeds = await prisma.user_feeds.findMany({
-            where: { id_user: userId },
+            where: { id_profile: profileId },
             orderBy: { created_at: 'desc' },
         });
 
@@ -281,44 +282,42 @@ export const FeedModel = {
     },
     // the feeds added by hand by default, the ones found for the profile have their own limit
     // (see utils/feed-limits.js)
-    countUserFeeds: async (userId, origin = 'user') => {
-        return prisma.user_feeds.count({ where: { id_user: userId, origin: origin } });
+    countUserFeeds: async (profileId, origin = 'user') => {
+        return prisma.user_feeds.count({ where: { id_profile: profileId, origin: origin } });
     },
-    addUserFeed: async ({userId, url, site, category, language = null}) => {
+    addUserFeed: async ({userId, profileId, url, site, category, language = null}) => {
         return prisma.user_feeds.create({
-            data: { id_user: userId, url: url, site: site, category: category, language: language },
+            data: { id_user: userId, id_profile: profileId, url: url, site: site, category: category, language: language },
         });
     },
     // {trusted} on any source, {shared} only on one added by hand: one found for the profile is
     // already a public find (see RecommendationService)
-    updateUserFeed: async (userId, id, data) => {
+    updateUserFeed: async (profileId, id, data) => {
         const { count } = await prisma.user_feeds.updateMany({
-            where: { id: id, id_user: userId, ...('shared' in data ? { origin: 'user' } : {}) },
+            where: { id: id, id_profile: profileId, ...('shared' in data ? { origin: 'user' } : {}) },
             data: data,
         });
         return count;
     },
-    getUserFeed: async (userId, id) => prisma.user_feeds.findFirst({ where: { id: id, id_user: userId } }),
-    // The feeds this reader could add: the ones read for other readers for a public reason, found by
-    // the discovery of a profile or shared by the reader who added them, never a feed another reader
-    // only added by hand. Those whose news of the last days are on the interests of this reader, with
+    getUserFeed: async (profileId, id) => prisma.user_feeds.findFirst({ where: { id: id, id_profile: profileId } }),
+    // The feeds this reader could add: the ones of the other readers, found for their profiles or added
+    // by hand (every source is for everyone, those that may hold a key aside, see looksPrivate). Those whose news of the last days are on the interests of this reader, with
     // how many: their title reaches 'threshold' with one of them, as for the discovery.
     // excluded: feeds never suggested (the shared ones, the ones the thumbs of this reader left out)
     // [{id, url, site, category, language, news, relevant, samples}], the most relevant first
-    recommendedFeeds: async (userId, {excluded, languages, since, threshold, minRelevant, minShare = 0, limit}) => prisma.$queryRawUnsafe(`
+    recommendedFeeds: async (profileId, {excluded, languages, since, threshold, minRelevant, minShare = 0, limit}) => prisma.$queryRawUnsafe(`
         WITH candidates AS (
             SELECT DISTINCT ON (uf.url) f.id, uf.url, uf.category, uf.language
             FROM user_feeds uf
             JOIN feeds f ON f.url = uf.url
-            WHERE uf.id_user <> $1::int
-              AND (uf.origin = 'profile' OR uf.shared)
+            WHERE uf.id_profile IS DISTINCT FROM $1::int
               AND uf.url <> ALL($2::text[])
-              AND NOT EXISTS (SELECT 1 FROM user_feeds mine WHERE mine.id_user = $1::int AND mine.url = uf.url)
+              AND NOT EXISTS (SELECT 1 FROM user_feeds mine WHERE mine.id_profile = $1::int AND mine.url = uf.url)
             ORDER BY uf.url, (uf.origin = 'profile') DESC, uf.created_at
         ), scored AS (
             SELECT c.id, a.title,
                    (SELECT max(-(a.title_dense <#> i.dense)) FROM profile_interests i
-                    WHERE i.id_user = $1::int AND i.dense IS NOT NULL) AS score
+                    WHERE i.id_profile = $1::int AND i.dense IS NOT NULL) AS score
             FROM candidates c
             JOIN articles a ON a.id_feed = c.id
             WHERE a.embedded_at IS NOT NULL AND a.created_at >= $4::timestamptz AND ($3::text[] IS NULL OR a.lang = ANY($3::text[]))
@@ -334,35 +333,35 @@ export const FeedModel = {
            AND count(*) FILTER (WHERE s.score >= $5::real) >= $8::real * count(*)
         ORDER BY relevant DESC, news
         LIMIT $7::int`,
-        userId, excluded, languages, since, threshold, minRelevant, limit, minShare),
-    trustedFeedUrls: async (userId) => (await prisma.user_feeds.findMany({
-        where: { id_user: userId, trusted: true },
+        profileId, excluded, languages, since, threshold, minRelevant, limit, minShare),
+    trustedFeedUrls: async (profileId) => (await prisma.user_feeds.findMany({
+        where: { id_profile: profileId, trusted: true },
         select: { url: true },
     })).map(feed => feed.url),
     // the media the reader trusts: of the site of each trusted source, and the one its news link to the
     // most (the feed of bbc.com links to bbc.co.uk, the one of dailymail.co.uk to dailymail.com). A
     // medium is trusted through any of its feeds and through Google News: its news on the UEFA came
     // through a shared feed of another address (milannews.it/rss/ for milannews.it/rss)
-    trustedMedia: async (userId) => (await prisma.$queryRawUnsafe(`
+    trustedMedia: async (profileId) => (await prisma.$queryRawUnsafe(`
         SELECT uf.site,
                (SELECT a.medium FROM articles a JOIN feeds f ON f.id = a.id_feed
                 WHERE f.url = uf.url AND a.source_url IS NULL AND a.medium IS NOT NULL
                 GROUP BY a.medium ORDER BY count(*) DESC LIMIT 1) AS medium
         FROM user_feeds uf
-        WHERE uf.id_user = $1 AND uf.trusted`, userId))
+        WHERE uf.id_profile = $1 AND uf.trusted`, profileId))
         .flatMap(row => [mediumOf(row.site.replace(/^www\./, '')), row.medium].filter(Boolean)),
-    deleteUserFeed: async (userId, id) => {
+    deleteUserFeed: async (profileId, id) => {
         const { count } = await prisma.user_feeds.deleteMany({
-            where: { id: id, id_user: userId },
+            where: { id: id, id_profile: profileId },
         });
         return count;
     },
-    // urls of the feeds of this user, only those of these categories when they are given, and of this
+    // urls of the feeds of this profile, only those of these categories when they are given, and of this
     // language: a feed whose language is not known is kept, its news may still be in it
-    userFeedUrls: async (userId, categories = null, language = null) => {
+    userFeedUrls: async (profileId, categories = null, language = null) => {
         const feeds = await prisma.user_feeds.findMany({
             where: {
-                id_user: userId,
+                id_profile: profileId,
                 ...(categories ? { category: { in: categories } } : {}),
                 ...(language ? { OR: [{ language }, { language: null }] } : {}),
             },
@@ -418,18 +417,21 @@ export const FeedModel = {
         JOIN feeds f ON f.id = a.id_feed
         WHERE a.source_url IS NULL AND a.medium IS NOT NULL
           AND f.url NOT LIKE 'https://news.google.com/%'`)).map(row => row.medium),
-    // the feeds of every user a search may read: the ones found for a profile and the ones their reader
-    // shares, of these categories and this language (or of a language not known; every language without
-    // one). A feed added by hand and not shared stays its reader's
+    // the feeds of every user a search may read, of these categories and this language (or of a language
+    // not known; every language without one): every source is for everyone, those that may hold a key of
+    // their reader aside (see looksPrivate)
     publicFeedUrls: async (categories, language = null) => (await prisma.user_feeds.findMany({
         where: {
             category: { in: categories },
-            OR: [{ origin: 'profile' }, { shared: true }],
             ...(language ? { AND: [{ OR: [{ language }, { language: null }] }] } : {}),
         },
         select: { url: true },
         distinct: ['url'],
-    })).map(feed => feed.url),
+    })).map(feed => feed.url).filter(url => !looksPrivate(url)),
+    // the sources of every reader, read for the briefings of all (see feedsOf in briefing-service.js),
+    // those that may hold a key of their reader aside
+    everyoneFeedUrls: async () => (await prisma.user_feeds.findMany({select: {url: true}, distinct: ['url']}))
+        .map(feed => feed.url).filter(url => !looksPrivate(url)),
     // the searches of Google News read since this date (of the profiles, and the sentences searched)
     googleSearchFeeds: async (since) => (await prisma.$queryRawUnsafe(`
         SELECT url FROM feeds WHERE url LIKE 'https://news.google.com/rss/search?%' AND last_fetched_at >= $1::timestamptz`,

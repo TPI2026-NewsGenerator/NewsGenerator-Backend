@@ -14,10 +14,15 @@ import {languageName} from './language.js';
 import {isSearchLanguage} from './google-news.js';
 
 export const MAX_INTERESTS = 6;
-export const MAX_BRIEFING = 10;
-// the stories the AI may choose: more than a briefing shows, so that each interest can have its share
-// of it (see balanceSelection)
-export const MAX_CHOSEN = MAX_BRIEFING + 5;
+// the cards of a briefing, chosen by the reader
+export const BRIEFING_SIZES = [10, 20, 30];
+export const MAX_BRIEFING = BRIEFING_SIZES[0];
+// The stories the AI may choose: more than a briefing shows, so that each interest can have its share
+// of it (see balanceSelection), and the next ones are the reserve that replaces a card that can't be
+// read or is left out (see readableCards). 5 more were too few: 5 pages of 10 unreadable (a site
+// blocking the reading, Google refusing to give the addresses) left a briefing at 6 cards
+export const chosenFor = (size) => size + Math.max(10, Math.round(size / 2));
+export const MAX_CHOSEN = chosenFor(MAX_BRIEFING);
 const MAX_KEYWORDS_CHARS = 400;
 const MAX_SEARCHES_PER_LANGUAGE = 2;
 // The briefing and the search read every language and translate into the one of the reader: the AI
@@ -211,23 +216,24 @@ const TRUSTED_MARK = ' (source de confiance du lecteur)';
 const mediaMark = (media) => ` (${media} ${media === 1 ? 'média' : 'médias'})`;
 
 // week: the stories are of the last 7 days, each with its number of media (media)
-export const selectionPrompt = (profileText, candidates, examples = {liked: [], refused: []}, interests = [], week = false) => `Voici le profil d'un lecteur, écrit par lui-même :
+// size: the cards of the briefing (see BRIEFING_SIZES)
+export const selectionPrompt = (profileText, candidates, examples = {liked: [], refused: []}, interests = [], week = false, size = MAX_BRIEFING) => `Voici le profil d'un lecteur, écrit par lui-même :
 """${profileText}"""
 ${interests.length > 1 ? `Ses intérêts :\n${interests.map(interest => `- ${interest}`).join('\n')}\n` : ''}${feedbackBlock(examples)}
 Voici des histoires d'actualité ${week ? "des 7 derniers jours, chacune avec son identifiant entre crochets et le nombre de médias qui l'ont racontée" : "du jour, chacune avec son identifiant entre crochets"} :
 ${candidates.map(c => `[${c.id}] ${c.title}${week ? mediaMark(c.media) : ''}${c.trusted ? TRUSTED_MARK : ''}${c.description ? ` — ${c.description}` : ''}${c.others.length > 0 ? ` (aussi : ${c.others.join(' / ')})` : ''}`).join('\n')}
 
-Choisis au plus ${MAX_CHOSEN} histoires qui correspondent vraiment à ce que ce lecteur demande, de la plus à la moins pertinente.${interests.length > 1 ? `
-Couvre tous ses intérêts : pour chacun, donne les histoires qui lui conviennent, même quand un autre intérêt en a de plus fortes. Son résumé en gardera ${MAX_BRIEFING}, réparties entre ses intérêts.` : ''}
+Choisis au plus ${chosenFor(size)} histoires qui correspondent vraiment à ce que ce lecteur demande, de la plus à la moins pertinente.${interests.length > 1 ? `
+Couvre tous ses intérêts : pour chacun, donne les histoires qui lui conviennent, même quand un autre intérêt en a de plus fortes. Son résumé en gardera ${size}, réparties entre ses intérêts.` : ''}
 Ce qu'il dit ne pas vouloir est exclu, même quand l'histoire touche un de ses intérêts et même quand son titre ne le nomme pas (une équipe d'un sport refusé, un parti d'une politique refusée).
-S'il y en a moins de ${MAX_CHOSEN} qui conviennent, n'en rends que celles-là : une liste courte vaut mieux qu'une histoire hors sujet.
+S'il y en a moins de ${chosenFor(size)} qui conviennent, n'en rends que celles-là : une liste courte vaut mieux qu'une histoire hors sujet.
 ${candidates.some(c => c.trusted) ? `Les histoires marquées « source de confiance du lecteur » sont racontées par un média qu'il a mis en favori : à pertinence égale, préfère-les. Ne choisis jamais pour cela une histoire qui ne correspond pas à ce qu'il demande.\n` : ''}Varie : pas deux histoires sur la même personne, la même organisation ou le même événement, sauf si ce sont deux nouvelles importantes et différentes.
 ${week ? `C'est le résumé de sa semaine : préfère les nouvelles qui ont compté, racontées par plusieurs médias ou qui ont fait avancer une affaire, à un fait mineur raconté par un seul. Ne choisis jamais pour cela une histoire qui ne correspond pas à ce qu'il demande.\n` : ''}Préfère les faits ${week ? 'de la semaine' : 'du jour'} (décisions, annonces, résultats, déclarations) aux pronostics, conseils et guides, sauf si le lecteur les demande. Ne choisis jamais une page qui n'apporte aucun fait nouveau : présentation générale d'un sujet, guide pratique, billetterie, classement, calendrier, direct, compilation.
 Pour chacune, "why" est une phrase courte qui dit au lecteur pourquoi elle est pour lui, dans la langue de son profil, tirée seulement de ce que disent son titre et sa description : si le lien avec le profil n'y est pas, ne la choisis pas.
 Réponds uniquement en JSON : {"selected": [{"id": "...", "why": "une phrase courte"}]}`;
 
-// the stories chosen, only among the ones given, each once, at most MAX_CHOSEN
-export const normalizeSelection = (answer, knownIds) => {
+// the stories chosen, only among the ones given, each once, at most chosenFor(size)
+export const normalizeSelection = (answer, knownIds, size = MAX_BRIEFING) => {
     const known = new Set(knownIds.map(String));
     const selected = new Map();
 
@@ -237,7 +243,7 @@ export const normalizeSelection = (answer, knownIds) => {
         if (known.has(id) && !selected.has(id)) selected.set(id, {id, why: cleanText(item?.why, 300)});
     }
 
-    return [...selected.values()].slice(0, MAX_CHOSEN);
+    return [...selected.values()].slice(0, chosenFor(size));
 };
 
 // The 'size' first of 'items', each interest first given its share of them by its weight (its first
@@ -259,27 +265,27 @@ export const shareOut = (items, size, interestOf, interests) => {
     return items.filter(item => kept.has(item));
 };
 
-// The MAX_BRIEFING stories of a briefing among the ones the AI chose, in its order: each interest first
+// The 'size' stories of a briefing among the ones the AI chose, in its order: each interest first
 // gets its share of the places, by its weight (3 of 10 for each of 3 interests), then the places left
 // go to the next stories of the AI whatever their interest. An interest with no story that fits leaves
 // its places to the others.
 // selected: [{id, why}], interestOf: id -> the id of the interest of the story, interests: [{id, weight}]
-export const balanceSelection = (selected, interestOf, interests) => {
+export const balanceSelection = (selected, interestOf, interests, size = MAX_BRIEFING) => {
     const total = interests.reduce((sum, interest) => sum + interest.weight, 0);
-    const shares = new Map(interests.map(interest => [interest.id, Math.max(1, Math.floor(MAX_BRIEFING * interest.weight / total))]));
+    const shares = new Map(interests.map(interest => [interest.id, Math.max(1, Math.floor(size * interest.weight / total))]));
     const taken = new Map();
     const kept = new Set();
 
     for (const item of selected) {
         const interest = interestOf(item.id);
         const count = taken.get(interest) ?? 0;
-        if (kept.size < MAX_BRIEFING && count < (shares.get(interest) ?? 0)) {
+        if (kept.size < size && count < (shares.get(interest) ?? 0)) {
             kept.add(item);
             taken.set(interest, count + 1);
         }
     }
     for (const item of selected) {
-        if (kept.size < MAX_BRIEFING) kept.add(item);
+        if (kept.size < size) kept.add(item);
     }
 
     return selected.filter(item => kept.has(item));
@@ -289,9 +295,9 @@ export const balanceSelection = (selected, interestOf, interests) => {
 // reader trusts tells it, media: how many media told it
 // examples: {liked: [titles], refused: [titles]}, the thumbs of the reader (see utils/feedback.js)
 // interests: the texts of the interests of the reader
-// week: the candidates are of the last 7 days (see selectionPrompt)
-export const selectStories = async (profileText, candidates, usage = null, examples = undefined, interests = [], week = false) =>
-    normalizeSelection(await ollamaJson(selectionPrompt(profileText, candidates, examples, interests, week), usage), candidates.map(c => c.id));
+// week: the candidates are of the last 7 days (see selectionPrompt), size: the cards of the briefing
+export const selectStories = async (profileText, candidates, usage = null, examples = undefined, interests = [], week = false, size = MAX_BRIEFING) =>
+    normalizeSelection(await ollamaJson(selectionPrompt(profileText, candidates, examples, interests, week, size), usage), candidates.map(c => c.id), size);
 
 // The choice reads a title and the start of a description, which may not name what a story is about:
 // "L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Winsley Boteli?" is the Swiss

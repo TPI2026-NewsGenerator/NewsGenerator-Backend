@@ -10,7 +10,7 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: {
-    interestsForDiscovery: jest.fn(), get: jest.fn(async () => ({languages: ['en']})), addProfileFeeds: jest.fn(async () => {}),
+    interestsForDiscovery: jest.fn(), get: jest.fn(async () => ({id_user: 1, languages: ['en']})), addProfileFeeds: jest.fn(async () => {}),
     setDiscovery: jest.fn(async () => {}), deleteProfileFeeds: jest.fn(async () => 0),
     profileFeedRelevance: jest.fn(async () => []), keptSources: jest.fn(async () => []), removedSources: jest.fn(async () => []), discovering: jest.fn(async () => []),
 }}));
@@ -47,7 +47,7 @@ const until = async (condition) => {
     expect(condition()).toBe(true);
 };
 const statuses = () => ProfileModel.setDiscovery.mock.calls.map(call => call[1]);
-const saved = (call) => ProfileModel.addProfileFeeds.mock.calls[call][1].map(feed => feed.url);
+const saved = (call) => ProfileModel.addProfileFeeds.mock.calls[call][2].map(feed => feed.url);
 
 let answerPress;
 beforeEach(() => {

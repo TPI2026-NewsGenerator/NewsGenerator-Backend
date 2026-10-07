@@ -18,17 +18,21 @@ import {DiscoveryService} from "./discovery-service.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {newUsage} from "./utils/ollama.js";
 import {canSummarize, extractArticle, passagesText, translateTexts} from "./utils/extract.js";
-import {balanceSelection, checkStories, mergeStories, reviewCards, selectStories, shareOut} from "./utils/profile-ai.js";
+import {BRIEFING_SIZES, MAX_BRIEFING, balanceSelection, checkStories, mergeStories, reviewCards, selectStories, shareOut} from "./utils/profile-ai.js";
 import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {contestedOf} from "./utils/contested.js";
 import {readerLanguage, writtenIn} from "./utils/language.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {hostOf, mediumOf} from "./utils/public-url.js";
-import {credibleStory, decodeLinks, isGoogleNewsUrl, isNotNews, isRepeatedPage, pickCandidates} from "./utils/google-news.js";
+import {credibleStory, decodeLinks, googleAvailable, isGoogleNewsUrl, isNotNews, isRepeatedPage, pickCandidates} from "./utils/google-news.js";
 import {searchesOfUser} from "./ingest-service.js";
 import {onceEach} from "./utils/reading-order.js";
 import {readableCards} from "./utils/readable-cards.js";
+import {Filter} from "./utils/filter.js";
+import {UserModel} from "../models/user-model.js";
+import {sendMail} from "./utils/mailer.js";
+import {briefingMail} from "./utils/briefing-mail.js";
 
 // Measured on four profiles and 249 stories judged by hand:
 //  - one vector per interest, dense + half the sparse: 88% of relevant cards (one vector for the
@@ -87,20 +91,29 @@ const FEED_MEDIA_MINUTES = 60;      // the media read through a feed, asked agai
 // 35 right (bench/cross-language-merge.mjs)
 const VERSION_LIKENESS = 0.75;
 const VERSIONS_PER_STORY = 2;
+// The versions of a card in the other languages, checked by the AI with its articles: of the 30 stories
+// Enzo's briefing ranked first (bench/versions-across.mjs), the closest from 0.85 on were nearly all
+// the same fact told in another language (a candidate against Infantino in Spanish, German, Dutch,
+// Serbian and Polish), between 0.75 and 0.85 often another fact of the same affair: the check sorts them
+const ACROSS_LIKENESS = 0.78;
+const ACROSS_PER_STORY = 4;
 
 const running = new Set();          // users whose briefing is being written by this server
 
 // "48 hours", "7 days": said in the messages
 const spanOf = (hours) => hours > DEFAULT_HOURS ? `${hours / 24} days` : `${hours} hours`;
 
-// the feeds this user reads: the shared ones of every language, their own, and the searches of Google
-// News of their interests. Every language is read and translated: replayed on a reader of 7 languages
-// with sources in 30 (bench/briefing-languages.mjs), the others took 13 of the 42 candidates and 2 of
-// the 10 cards, both on the profile (the UEFA president on Infantino in Albanian)
-const feedsOf = async (userId) => [...new Set([
+// The feeds a profile reads: the shared ones of every language, the sources of every reader (found for
+// their profiles or added by hand, of every profile: every source is for everyone since 8.10.2026, those
+// that may hold a key aside), and the searches of Google News of its interests. Every language is read
+// and translated: replayed on a reader of 7 languages with sources in 30 (bench/briefing-languages.mjs),
+// the others took 13 of the 42 candidates and 2 of the 10 cards, both on the profile (the UEFA president
+// on Infantino in Albanian)
+const feedsOf = async (profileId) => [...new Set([
     ...Object.values(rss).flatMap(categories => Object.values(categories).flat()),
-    ...await FeedModel.userFeedUrls(userId),
-    ...await searchesOfUser(userId),
+    ...await FeedModel.userFeedUrls(profileId),
+    ...await FeedModel.everyoneFeedUrls(),
+    ...await searchesOfUser(profileId),
 ])];
 
 // the media read through a feed of their own, for the stories known only through Google News
@@ -115,6 +128,11 @@ const established = async () => {
 // A news read through Google News links to a redirect of Google: its site is the publisher Google
 // names, and its address the real one once a briefing found it
 const fromGoogle = (article) => isGoogleNewsUrl(article.feed_url);
+// A story known only through Google News is read at the address Google gives for it. While Google
+// refuses them (a 429, see google-news.js), its pages can't be read: chosen, it is a card lost (5 of 10
+// in a briefing of 129 on 7.10.2026). It is not a candidate then, unless its address is known already
+const readableNow = (story) => googleAvailable('articles')
+    || story.members.some(article => !fromGoogle(article) || article.resolved_link);
 const siteOf = (article) => hostOf(article.source_url ?? article.link) ?? '';
 const mediumOfArticle = (article) => mediumOf(siteOf(article));
 const addressOf = (article) => article.resolved_link ?? article.link;
@@ -128,6 +146,7 @@ const toArticle = (article, trusted = new Set()) => ({
     source: siteOf(article),
     publishedAt: article.at?.toISOString?.() ?? null,
     trusted: isTrusted(article, trusted),           // of a medium the reader trusts
+    language: article.lang ?? null,                 // the language it is written in, shown by its source
 });
 
 // the articles of a story to read: one of a source the reader trusts first (the summary is written
@@ -179,15 +198,22 @@ const brief = (article, chars) => ({
 // Manchester City). The versions in the language of the reader (see versionsOf) are asked after the
 // cards, and join the one whose news they tell: the card is then read in that language. If the AI
 // fails, the stories are shown as the vectors grouped them: the check must never cost the briefing
-const keepSameNews = async (stories, usage, versions = []) => {
+// 'across': the versions of each story in other languages (see versionsAcross), Map storyId -> [story]:
+// their best news are checked with the articles of the story, and the ones telling its news join the
+// card with their articles
+const keepSameNews = async (stories, usage, versions = [], across = new Map()) => {
     const asked = stories
-        .map(story => ({story, others: toCheck(story)}))
-        .filter(({others}) => others.length > 0);
+        .map(story => {
+            const others = toCheck(story);
+            const links = new Set([story.best, ...others].map(article => article.link));
+            return {story, others, foreign: (across.get(story.storyId) ?? []).filter(version => !links.has(version.best.link))};
+        })
+        .filter(({others, foreign}) => others.length + foreign.length > 0);
     const [checked, merges] = await Promise.all([
-        checkStories(asked.map(({story, others}) => ({
+        checkStories(asked.map(({story, others, foreign}) => ({
             id: String(story.storyId),
             lead: brief(story.best, DESCRIPTION_CHARS),
-            others: others.map(article => brief(article, CHECKED_DESCRIPTION_CHARS)),
+            others: [...others, ...foreign.map(version => version.best)].map(article => brief(article, CHECKED_DESCRIPTION_CHARS)),
         })), usage.checking).catch(err => {
             console.error(`Briefing: the stories were not checked (${err.message})`);
             return new Map();
@@ -199,12 +225,28 @@ const keepSameNews = async (stories, usage, versions = []) => {
             }),
     ]);
 
-    const kept = new Map(asked.map(({story, others}) => [story.storyId,
-        checked.has(String(story.storyId)) ? others.filter((_, i) => checked.get(String(story.storyId)).has(i + 1)) : null]));
+    const kept = new Map(asked.map(({story, others, foreign}) => {
+        const same = checked.get(String(story.storyId));
+        return [story.storyId, same ? {
+            others: others.filter((_, i) => same.has(i + 1)),
+            foreign: foreign.filter((_, i) => same.has(others.length + i + 1)),
+        } : null];
+    }));
+    let joinedAcross = 0;
     const cards = stories.map(story => {
         const same = kept.get(story.storyId);
-        return same ? {...story, members: [story.best, ...same]} : {...story};
+        if (!same) return {...story};
+        const members = [story.best, ...same.others];
+        const links = new Set(members.map(article => article.link));
+        for (const article of same.foreign.flatMap(version => version.members)) {
+            if (links.has(article.link)) continue;
+            links.add(article.link);
+            members.push(article);
+        }
+        joinedAcross += same.foreign.length;
+        return {...story, members, mergedStoryIds: [...(story.mergedStoryIds ?? []), ...same.foreign.map(version => version.storyId)]};
     });
+    if (joinedAcross > 0) console.log(`Briefing: ${joinedAcross} versions in other languages joined their card`);
 
     const byId = new Map([...cards, ...versions].map(card => [String(card.storyId), card]));
     const isCard = new Set(cards.map(card => String(card.storyId)));
@@ -219,6 +261,28 @@ const keepSameNews = async (stories, usage, versions = []) => {
     const joined = [...merges].filter(([id, into]) => !isCard.has(id) && isCard.has(into)).length;
     if (joined > 0) console.log(`Briefing: ${joined} versions in the language of the reader joined their card`);
     return cards.filter(card => !merges.has(String(card.storyId)));
+};
+
+// the versions of the chosen stories in the other languages (see ACROSS_LIKENESS), with the news of
+// them the reader can read: Map storyId -> [{storyId, best, members}]
+const acrossOf = async (stories, {language, feedUrls, since}) => {
+    const rows = await StoryModel.versionsAcross({
+        storyIds: stories.map(story => story.storyId), language, feedUrls, since,
+        likeness: ACROSS_LIKENESS, perStory: ACROSS_PER_STORY,
+    });
+    const chosen = new Set(stories.map(story => story.storyId));
+    const ids = [...new Set(rows.map(row => row.id_version))].filter(id => !chosen.has(id));
+    if (ids.length === 0) return new Map();
+    const members = new Map(ids.map(id => [id, []]));
+    for (const article of await StoryModel.storyArticles({storyIds: ids, feedUrls, since})) {
+        members.get(article.id_story).push(article);
+    }
+    const byStory = new Map();
+    for (const row of rows.filter(row => members.get(row.id_version)?.length > 0)) {
+        const news = members.get(row.id_version);
+        byStory.set(row.id_story, [...(byStory.get(row.id_story) ?? []), {storyId: row.id_version, best: news[0], members: news}]);
+    }
+    return byStory;
 };
 
 // the stories in the language of the reader closest to the chosen ones written in another, with the
@@ -317,11 +381,13 @@ const oncePerThread = async (stories) => {
     });
 };
 
-// hours: of news it is written from, one of WINDOWS. Exported for the benches, which write a briefing
+// hours: of news it is written from, one of WINDOWS; size: its cards, one of BRIEFING_SIZES. Exported for the benches, which write a briefing
 // without saving it (bench/briefing-relevance.mjs)
-export const write = async (briefingId, userId, hours) => {
+export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) => {
+    // the stories ranked and given to the AI grow with the cards wanted
+    const scale = size / MAX_BRIEFING;
     const usage = {choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), contesting: newUsage(), reviewing: newUsage()};
-    const [profile, interests] = await Promise.all([ProfileModel.get(userId), ProfileModel.interests(userId)]);
+    const [profile, interests] = await Promise.all([ProfileModel.get(profileId), ProfileModel.interests(profileId)]);
     if (!profile || interests.length === 0) throw Object.assign(new Error('Write your profile first.'), {status: 400});
 
     // the seconds of each step, logged with the tokens: a slow briefing says where its time went
@@ -340,20 +406,20 @@ export const write = async (briefingId, userId, hours) => {
     const week = hours >= WEEK_FROM_HOURS;
     // the sources found for the profile that bring nothing on it any more are removed first; the
     // briefing never waits on it failing
-    await DiscoveryService.prune(userId).catch(err => console.error(`Briefing: the sources were not pruned (${err.message})`));
+    await DiscoveryService.prune(profileId).catch(err => console.error(`Briefing: the sources were not pruned (${err.message})`));
     // the thumbs of the reader: examples for the choice, and the sources found for the profile whose
     // cards were refused again and again are left out
-    const feedback = await FeedbackService.of(userId);
+    const feedback = await FeedbackService.of(profileId);
     const refused = new Set(feedback.refused);
-    const feedUrls = (await feedsOf(userId)).filter(url => !refused.has(url));
+    const feedUrls = (await feedsOf(profileId)).filter(url => !refused.has(url));
     // the media the reader trusts: their stories among the TRUST_POOL closest are candidates too
-    const trusted = new Set(await FeedModel.trustedMedia(userId));
+    const trusted = new Set(await FeedModel.trustedMedia(profileId));
     const ranked = shareOut(await StoryModel.rank({
-        userId, feedUrls, since,
+        profileId, feedUrls, since,
         languages: null,
         sparseWeight: SPARSE_WEIGHT,
-        limit: RANKED_POOL,
-    }), RANKED, row => row.id_interest, interests);
+        limit: RANKED_POOL * scale,
+    }), RANKED * scale, row => row.id_interest, interests);
     if (ranked.length === 0) {
         throw new Error(`No story to choose from: the news of the last ${spanOf(hours)} are not read and embedded yet. The background work runs every few minutes, try again soon.`);
     }
@@ -380,14 +446,14 @@ export const write = async (briefingId, userId, hours) => {
         }];
     }));
     const closestFirst = [...byId.values()]
-        .filter(story => story.best && credibleStory(story.members, media) && !isRepeatedPage(story.members))
+        .filter(story => story.best && credibleStory(story.members, media) && !isRepeatedPage(story.members) && readableNow(story))
         .sort((a, b) => b.score - a.score);
     const choosable = week ? await oncePerThread(closestFirst) : closestFirst;
     const closest = pickCandidates(choosable, {
-        fromFeeds: CANDIDATES, extra: GOOGLE_CANDIDATES, perMedium: GOOGLE_PER_MEDIUM,
+        fromFeeds: CANDIDATES * scale, extra: GOOGLE_CANDIDATES * scale, perMedium: GOOGLE_PER_MEDIUM,
         first: (stories, size) => shareOut(stories, size, story => story.interestId, interests),
     });
-    const kept = new Set([...closest, ...choosable.filter(story => story.told && story.pooled && !closest.includes(story)).slice(0, TRUSTED_CANDIDATES)]);
+    const kept = new Set([...closest, ...choosable.filter(story => story.told && story.pooled && !closest.includes(story)).slice(0, TRUSTED_CANDIDATES * scale)]);
     const candidates = choosable.filter(story => kept.has(story));
 
     // 2. the AI chooses, against the whole profile and what it refuses
@@ -399,8 +465,8 @@ export const write = async (briefingId, userId, hours) => {
         others: story.members.filter(article => article !== story.best).map(article => article.title).slice(0, 3),
         trusted: story.told,
         media: new Set(story.members.map(mediumOfArticle)).size,
-    })), usage.choosing, feedback.examples, interests.map(interest => interest.text), week);
-    const selected = balanceSelection(chosenByAi, id => byId.get(id)?.interestId, interests);
+    })), usage.choosing, feedback.examples, interests.map(interest => interest.text), week, size);
+    const selected = balanceSelection(chosenByAi, id => byId.get(id)?.interestId, interests, size);
     if (selected.length === 0) return [];
     // the next stories the AI chose, in its order: they replace a card no article of which can be read
     const reserved = chosenByAi.filter(item => !selected.includes(item));
@@ -412,12 +478,18 @@ export const write = async (briefingId, userId, hours) => {
     const language = readerLanguage(profile);
     const picked = selected.map(item => ({...byId.get(item.id), why: item.why}));
     const reserve = reserved.map(item => ({...byId.get(item.id), why: item.why, reserve: true}));
-    const versions = await versionsOf([...picked, ...reserve], {language, feedUrls, since})
-        .catch(err => {
+    const [versions, across] = await Promise.all([
+        versionsOf([...picked, ...reserve], {language, feedUrls, since}).catch(err => {
             console.error(`Briefing: no version in the language of the reader looked for (${err.message})`);
             return [];
-        });
-    const checked = await keepSameNews([...picked, ...reserve], usage, versions);
+        }),
+        // the cards only: 4 lines more to check for each story of the reserve would read few of them
+        acrossOf(picked, {language, feedUrls, since}).catch(err => {
+            console.error(`Briefing: no version in the other languages looked for (${err.message})`);
+            return new Map();
+        }),
+    ]);
+    const checked = await keepSameNews([...picked, ...reserve], usage, versions, across);
     // two cards of one news joined leave a place: the next of the reserve is read with the cards
     const main = checked.filter(story => !story.reserve);
     const spare = checked.filter(story => story.reserve);
@@ -460,6 +532,12 @@ export const write = async (briefingId, userId, hours) => {
     const stories = cards.map(card => card.story);
     const summaryOf = (i) => cards[i].summary;
     const leads = cards.map(leadOf);
+    // the news of the terms the profile follows, beside the cards. The briefing never waits on it failing
+    const watched = await watchedNews(profile.watch_terms ?? [], {feedUrls, since}).catch(err => {
+        console.error(`Briefing: the news of the terms followed were not looked for (${err.message})`);
+        return null;
+    });
+    if (briefingId && watched) await BriefingModel.watched(briefingId, watched);
     await step(null);
     console.log(`Briefing ${briefingId}: tokens ${JSON.stringify(usage)}, seconds ${JSON.stringify(seconds)}`);
 
@@ -515,12 +593,52 @@ export const write = async (briefingId, userId, hours) => {
     });
 };
 
+// The news of the terms the profile follows (names or words, see cleanWatchTerms): every news of the
+// window its feeds gave that names one in its title or description, as a whole word, its accents and
+// case aside (as the exact words of a search, see Filter). Not chosen by the AI nor read: the reader asked
+// for all of them. One line per story, its newest news, with how many media told it.
+// [{term, news: [{storyId, title, url, source, language, publishedAt, media}]}]
+const WATCHED_PER_TERM = 50;
+export const watchedNews = async (terms, {feedUrls, since}) => {
+    if (terms.length === 0) return [];
+    const articles = await FeedModel.searchArticles({
+        feedUrls, keywords: Filter.parse([terms.map(term => `"${term}"`).join(', ')]), timeframe: {start: since},
+    });
+    return terms.map(term => {
+        const names = Filter.matcher(Filter.parse([`"${term}"`]));
+        const stories = new Map();
+        for (const article of articles) {
+            if (!names(`${article.title} ${article.description ?? ''}`)) continue;
+            const key = article.id_story ?? `article ${article.id}`;
+            const story = stories.get(key) ?? {article, media: new Set()};
+            story.media.add(mediumOfArticle(article));
+            stories.set(key, story);
+        }
+        return {
+            term,
+            count: stories.size,
+            news: [...stories.values()].slice(0, WATCHED_PER_TERM).map(({article, media}) => ({
+                storyId: article.id_story ?? null,
+                title: article.title,
+                url: addressOf(article),
+                source: siteOf(article),
+                language: article.lang ?? null,
+                publishedAt: (article.published_at ?? article.created_at)?.toISOString?.() ?? null,
+                media: media.size,
+            })),
+        };
+    });
+};
+
 const toBriefing = (row) => row && ({
     id: row.id,
     status: row.status,             // running, ready, failed
     step: row.step,                 // ranking, choosing, reading, summarizing
     error: row.error,
     items: row.items ?? [],
+    // the news of the terms the profile follows (see watchedNews), null for a briefing written before
+    watched: row.watched ?? null,
+    size: row.size ?? MAX_BRIEFING,  // the cards asked for
     hours: row.hours,               // of news it was written from
     createdAt: row.created_at,
     finishedAt: row.finished_at,
@@ -528,7 +646,17 @@ const toBriefing = (row) => row && ({
 
 export const BriefingService = {
     // the last briefing of this user, running or not
-    latest: async (userId) => toBriefing(await BriefingModel.latest(userId)),
+    latest: async (profileId) => profileId === null ? null : toBriefing(await BriefingModel.latest(profileId)),
+
+    // a ready briefing of the user sent to the address of their account (see briefing-mail.js)
+    email: async (userId, briefingId) => {
+        const id = Number(briefingId);
+        const row = Number.isInteger(id) && id > 0 ? await BriefingModel.ofUser(userId, id) : null;
+        if (!row || row.status !== 'ready') throw Object.assign(new Error('Unknown briefing.'), {status: 404});
+        const [user, profile] = await Promise.all([UserModel.email(userId), ProfileModel.get(row.id_profile)]);
+        if (!user?.email) throw Object.assign(new Error('Your account has no e-mail address.'), {status: 400});
+        await sendMail({to: user.email, ...briefingMail(toBriefing(row), profile?.name ?? null)});
+    },
 
     // the thumb of the reader on a card: 'up' (good for me), 'down' (not for me) or null (taken back).
     // The next briefings read them (see FeedbackService)
@@ -545,21 +673,24 @@ export const BriefingService = {
     // a new briefing, written in background from the news of the last 'hours' (one of WINDOWS): the
     // answer is the briefing still running, the client asks for it again until it is ready. Only one
     // at a time per user
-    start: async (userId, hours = DEFAULT_HOURS) => {
+    // 'size': its cards, one of BRIEFING_SIZES
+    start: async (userId, profileId, hours = DEFAULT_HOURS, size = MAX_BRIEFING) => {
+        if (profileId === null) throw Object.assign(new Error('Write your profile first.'), {status: 400});
         if (!WINDOWS.includes(hours)) throw Object.assign(new Error(`hours: ${WINDOWS.join(', ')}.`), {status: 400});
+        if (!BRIEFING_SIZES.includes(size)) throw Object.assign(new Error(`size: ${BRIEFING_SIZES.join(', ')}.`), {status: 400});
         await BriefingModel.failAbandoned(new Date(Date.now() - ABANDONED_MINUTES * 60 * 1000));
-        if (running.has(userId)) return toBriefing(await BriefingModel.running(userId));
+        if (running.has(profileId)) return toBriefing(await BriefingModel.running(profileId));
 
-        const briefing = await BriefingModel.create(userId, hours);
-        running.add(userId);
+        const briefing = await BriefingModel.create(userId, profileId, hours, size);
+        running.add(profileId);
 
-        write(briefing.id, userId, hours)
+        write(briefing.id, profileId, hours, size)
             .then(items => BriefingModel.finish(briefing.id, items))
             .catch(err => {
                 console.error(`Briefing ${briefing.id} failed: ${err.stack ?? err}`);
                 return BriefingModel.fail(briefing.id, err.message ?? String(err));
             })
-            .finally(() => running.delete(userId));
+            .finally(() => running.delete(profileId));
 
         return toBriefing(briefing);
     },

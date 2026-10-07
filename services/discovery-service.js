@@ -84,21 +84,21 @@ const pressMediaOf = async (searches, readerLanguage) => {
 
 // the feeds found for this profile that bring nothing on it any more, removed: the ones of an interest
 // the reader took out, a section that changed, a feed that died. Answers how many
-const prune = async (userId) => {
+const prune = async (profileId) => {
     const [rows, kept, trusted] = await Promise.all([
-        ProfileModel.profileFeedRelevance(userId, {
+        ProfileModel.profileFeedRelevance(profileId, {
             since: new Date(Date.now() - RELEVANCE_DAYS * 24 * 3600e3),
             threshold: JUDGE_THRESHOLD,
         }),
-        ProfileModel.keptSources(userId),
-        FeedModel.trustedFeedUrls(userId),
+        ProfileModel.keptSources(profileId),
+        FeedModel.trustedFeedUrls(profileId),
     ]);
     // the reader keeps the ones they kept from the thumbs and the ones they trust
     const stale = staleFeeds(rows, {graceDays: RELEVANCE_DAYS, minNews: MIN_NEWS, kept: [...kept, ...trusted]});
     if (stale.length === 0) return 0;
 
-    console.log(`Discovery: ${stale.length} feeds of user ${userId} bring nothing on the profile, removed (${stale.map(row => row.site).join(', ')})`);
-    return ProfileModel.deleteProfileFeeds(userId, stale.map(row => row.id));
+    console.log(`Discovery: ${stale.length} feeds of profile ${profileId} bring nothing on the profile, removed (${stale.map(row => row.site).join(', ')})`);
+    return ProfileModel.deleteProfileFeeds(profileId, stale.map(row => row.id));
 };
 
 const rowOf = ({url, site, category, language}) => ({url, site, category, language});
@@ -107,23 +107,23 @@ const rowOf = ({url, site, category, language}) => ({url, site, category, langua
 // queue of Media Cloud (2 searches a minute) alone takes 4 minutes for a reader of 2 interests and 9
 // for 3, and the reader waited all of it for any source. onFound(feeds, from): 'google', then 'press'.
 // Exported for the benches, which find without saving (bench/discovery-phases.mjs)
-export const discover = async (userId, {onFound = async () => {}} = {}) => {
-    await prune(userId);
+export const discover = async (profileId, {onFound = async () => {}} = {}) => {
+    await prune(profileId);
     const [interests, feeds, profileCount] = await Promise.all([
-        ProfileModel.interestsForDiscovery(userId),
-        FeedModel.userFeedUrls(userId),
-        FeedModel.countUserFeeds(userId, 'profile'),
+        ProfileModel.interestsForDiscovery(profileId),
+        FeedModel.userFeedUrls(profileId),
+        FeedModel.countUserFeeds(profileId, 'profile'),
     ]);
     const room = Math.min(MAX_NEW_PROFILE_FEEDS, MAX_PROFILE_FEEDS - profileCount);
     if (room <= 0) {
-        console.log(`Discovery: user ${userId} has ${profileCount} feeds for the profile already, none looked for`);
+        console.log(`Discovery: profile ${profileId} has ${profileCount} feeds for the profile already, none looked for`);
         return [];
     }
 
     // the feeds found before stay: only new media are looked for. Nor the ones whose cards the
     // reader refused again and again (see FeedbackService), nor the ones they removed: not found twice
-    const [{refused}, removed] = await Promise.all([FeedbackService.of(userId), ProfileModel.removedSources(userId)]);
-    const known = await knownMedia(userId, {userFeeds: [...feeds, ...refused, ...removed.map(source => source.url)]});
+    const [{refused}, removed] = await Promise.all([FeedbackService.of(profileId), ProfileModel.removedSources(profileId)]);
+    const known = await knownMedia(profileId, {userFeeds: [...feeds, ...refused, ...removed.map(source => source.url)]});
     // A medium refused for one interest is tried again for the next: tribuna.com had 1 news in 30 on
     // the governance of the UEFA, was never judged on refereeing (7 in 30), and was lost. Only the
     // media already kept are not tried twice, their feed is already there
@@ -138,7 +138,8 @@ export const discover = async (userId, {onFound = async () => {}} = {}) => {
     // The press of every interest asked at once: its searches wait for their turn (2 a minute) while
     // the media of Google News are tried. Asked interest after interest, the queue stood still during
     // the tries of each: 14 minutes for a reader of 3 interests, the queue alone needs 4 per interest
-    const language = readerLanguage(await ProfileModel.get(userId) ?? {});
+    const profile = await ProfileModel.get(profileId) ?? {};
+    const language = readerLanguage(profile);
     const pressOf = interests.map(interest => mediaCloudEnabled() ? pressMediaOf(interest.searches, language) : Promise.resolve([]));
 
     // 'withKnown': the feeds the directory of Media Cloud knows for the medium are candidates too
@@ -167,7 +168,7 @@ export const discover = async (userId, {onFound = async () => {}} = {}) => {
     // the ones read through the bridge only while there is room for them, the next ones take their place
     const save = async (perInterest, urls, left) => {
         const added = withinBridgeRoom(allocate(perInterest, perInterest.flat().length), bridgeRoom(urls)).slice(0, left);
-        await ProfileModel.addProfileFeeds(userId, added.map(rowOf));
+        await ProfileModel.addProfileFeeds(profile.id_user, profileId, added.map(rowOf));
         return added;
     };
 
@@ -191,7 +192,7 @@ export const discover = async (userId, {onFound = async () => {}} = {}) => {
         const found = await tryPerLanguage(pressOnly, tryMedium(interest, true),
             {kept: PRESS_KEPT_PER_LANGUAGE, tried: PRESS_TRIED_PER_LANGUAGE, wave: FIND_CONCURRENCY});
         found.forEach(feed => kept.add(nameOf(feed.site)));
-        console.log(`Discovery: user ${userId}, interest ${interest.position}: Media Cloud named ${pressOnly.length} new media, `
+        console.log(`Discovery: profile ${profileId}, interest ${interest.position}: Media Cloud named ${pressOnly.length} new media, `
             + `kept ${found.map(feed => feed.site).join(', ') || 'none'}`);
         fromPress.push(found);
     }
@@ -200,59 +201,59 @@ export const discover = async (userId, {onFound = async () => {}} = {}) => {
     return [...first, ...second];
 };
 
-const running = new Map();      // user -> discovery in progress
-const phases = new Map();       // user -> 'google' or 'press', the sources looked for now
+const running = new Map();      // profile -> discovery in progress
+const phases = new Map();       // profile -> 'google' or 'press', the sources looked for now
 
 export const DiscoveryService = {
     // the sources of this profile found again, in background: only the status is awaited, not the
     // work. Asked again while it runs, it runs once more after, with the profile as it is then
-    start: async (userId) => {
-        await ProfileModel.setDiscovery(userId, 'running');
-        const previous = running.get(userId) ?? Promise.resolve();
+    start: async (profileId) => {
+        await ProfileModel.setDiscovery(profileId, 'running');
+        const previous = running.get(profileId) ?? Promise.resolve();
         const next = previous.then(async () => {
-            await ProfileModel.setDiscovery(userId, 'running');
-            phases.set(userId, 'google');
+            await ProfileModel.setDiscovery(profileId, 'running');
+            phases.set(profileId, 'google');
             // the feeds found read and embedded at once, so the next briefing already has them: the ones
             // of Google News while the press is looked for, with the searches of Google News of the
             // interests. An error is said once the discovery is over
             const reading = [];
             const read = (urls) => reading.push(urls.length === 0 ? null : IngestService.run({urls}).then(() => null, err => err));
             try {
-                const feeds = await discover(userId, {onFound: async (found, from) => {
-                    console.log(`Discovery: ${found.length} feeds of ${from === 'google' ? 'Google News' : 'the press'} for user ${userId}`);
+                const feeds = await discover(profileId, {onFound: async (found, from) => {
+                    console.log(`Discovery: ${found.length} feeds of ${from === 'google' ? 'Google News' : 'the press'} for profile ${profileId}`);
                     if (from === 'google') {
-                        phases.set(userId, 'press');
-                        read([...found.map(feed => feed.url), ...await searchesOfUser(userId)]);
+                        phases.set(profileId, 'press');
+                        read([...found.map(feed => feed.url), ...await searchesOfUser(profileId)]);
                     } else read(found.map(feed => feed.url));
                 }});
-                console.log(`Discovery: ${feeds.length} feeds for user ${userId}`);
+                console.log(`Discovery: ${feeds.length} feeds for profile ${profileId}`);
                 const failed = (await Promise.all(reading)).find(Boolean);
                 if (failed) throw failed;
-                await ProfileModel.setDiscovery(userId, 'done');
+                await ProfileModel.setDiscovery(profileId, 'done');
             } catch (err) {
-                console.error(`Discovery failed for user ${userId}: ${err.stack ?? err}`);
+                console.error(`Discovery failed for profile ${profileId}: ${err.stack ?? err}`);
                 // the feeds of Google News may still be in reading: they are not left unheard
                 await Promise.all(reading);
-                await ProfileModel.setDiscovery(userId, 'failed', err.message ?? String(err));
+                await ProfileModel.setDiscovery(profileId, 'failed', err.message ?? String(err));
             } finally {
-                phases.delete(userId);
+                phases.delete(profileId);
             }
         }).finally(() => {
-            if (running.get(userId) === next) running.delete(userId);
+            if (running.get(profileId) === next) running.delete(profileId);
         });
-        running.set(userId, next);
+        running.set(profileId, next);
     },
 
-    isRunning: (userId) => running.has(userId),
+    isRunning: (profileId) => running.has(profileId),
     // 'google', 'press' while it runs (see discover), else null
-    phaseOf: (userId) => phases.get(userId) ?? null,
+    phaseOf: (profileId) => phases.get(profileId) ?? null,
 
     // A discovery lives in the memory of the server: a restart (a deploy) left it 'running' for good,
     // and the profile page waiting on it. Started again at the start of the server
     resumeInterrupted: async () => {
         const users = await ProfileModel.discovering();
         if (users.length > 0) console.log(`Discovery: started again for users ${users.join(', ')}, stopped by a restart`);
-        for (const userId of users) await DiscoveryService.start(userId);
+        for (const profileId of users) await DiscoveryService.start(profileId);
     },
 
     // the feeds found for the profile that bring nothing on it any more, removed (before each briefing)

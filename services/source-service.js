@@ -41,10 +41,10 @@ const withTimeout = (promise, ms) => {
 // The address of a feed does not always name its medium ("feeds.content.dowjones.io" is the WSJ,
 // feedburner is everybody), so the links of the articles already cached are read too.
 // 'userFeeds' replaces the feeds of the user, when some of them are about to be replaced
-export const knownMedia = async (userId, {userFeeds = null} = {}) => {
+export const knownMedia = async (profileId, {userFeeds = null} = {}) => {
     const urls = [
         ...Object.values(rss).flatMap(language => Object.values(language).flat()),
-        ...(userFeeds ?? await FeedModel.userFeedUrls(userId)),
+        ...(userFeeds ?? await FeedModel.userFeedUrls(profileId)),
     ];
 
     const hosts = [
@@ -103,10 +103,10 @@ export const SourceService = {
     // pokemon", "rugby top 14") names none. Asking it each word brought mostly noise ("magic the
     // gathering" gave 45 feeds named "magical"), so the media publishing on the whole words are asked
     // to Google News instead, by searchWeb: the client asks both at once and shows this answer first
-    searchDirectory: async ({query, userId}) => {
+    searchDirectory: async ({query, profileId}) => {
         const [found, known] = await Promise.all([
             directoryFeeds(query, 2 * MAX_DIRECTORY_RESULTS),
-            knownMedia(userId),
+            knownMedia(profileId),
         ]);
 
         // the feed and the site it belongs to are both compared: the Guardian publishes on
@@ -131,10 +131,10 @@ export const SourceService = {
 
     // the media that published on these words in the last days, with the feed found for each and
     // how many news they published on them (20 to 45 s)
-    searchWeb: async ({query, userId, language = 'en'}) => {
+    searchWeb: async ({query, profileId, language = 'en'}) => {
         try {
             const found = await SourceService.suggest({
-                keywords: [query], userId, language,
+                keywords: [query], profileId, language,
                 timeframe: {start: new Date(Date.now() - WEB_DAYS * 24 * 60 * 60 * 1000)},
             });
             return found.sources.map(({site, name, key, feed, news, sample}) => ({site, name, key, feed, language, news, sample, via: 'web'}));
@@ -154,8 +154,8 @@ export const SourceService = {
     //  'added'     already among their sources
     //  'none'      no feed and no page to build one from
     // A list of 495 sites of a reader took about 4 minutes, 6 at a time
-    checkSites: async ({sites, userId, language = 'en'}) => {
-        const added = new Set(await FeedModel.userFeedUrls(userId));
+    checkSites: async ({sites, profileId, language = 'en'}) => {
+        const added = new Set(await FeedModel.userFeedUrls(profileId));
         const results = await mapWithConcurrency(sites, CHECK_CONCURRENCY, async (site) => {
             let feeds = [];
             try {
@@ -187,7 +187,7 @@ export const SourceService = {
     // what this search misses. Google News is asked the same keywords in one call: the news of the
     // media that are not in the sources (read only, their link goes through a Google redirect so the
     // server can neither scrape nor summarize them) and those media, with the feed to add for each
-    suggest: async ({keywords, timeframe = {}, userId, language = 'en'}) => {
+    suggest: async ({keywords, timeframe = {}, profileId, language = 'en'}) => {
         const days = timeframe.start
             ? Math.ceil((Date.now() - new Date(timeframe.start).getTime()) / (24 * 60 * 60 * 1000))
             : null;
@@ -197,7 +197,7 @@ export const SourceService = {
         const [{news, media}, alsoFound, known, judge] = await Promise.all([
             search(keywords, {days: days > 0 ? days : null, language}),
             gdeltMedia(keywords, {days: days > 0 ? days : 2, language}),
-            knownMedia(userId),
+            knownMedia(profileId),
             meaningJudge(keywords),
         ]);
         const isMissing = (site) => !known.has(nameOf(site));

@@ -52,7 +52,7 @@ const toFeed = (feed) => ({
 
 export const FeedController = {
     getUserFeeds: async (req, res) => {
-        const feeds = await FeedModel.listUserFeeds(req.user.id);
+        const feeds = await FeedModel.listUserFeeds(req.profileId);
         res.status(200).json({feeds: feeds.map(toFeed)});
     },
 
@@ -67,7 +67,7 @@ export const FeedController = {
         if (!FeedService.categories().includes(category)) {
             return res.status(400).json({error: `Category must be one of: ${FeedService.categories().join(', ')}.`});
         }
-        if (await FeedModel.countUserFeeds(req.user.id) >= MAX_USER_FEEDS) {
+        if (await FeedModel.countUserFeeds(req.profileId) >= MAX_USER_FEEDS) {
             return res.status(400).json({error: TOO_MANY});
         }
 
@@ -79,11 +79,11 @@ export const FeedController = {
 
             // the feed with the most recent news
             const found = feeds[0];
-            if (isBridgeUrl(found.url) && bridgeRoom(await FeedModel.userFeedUrls(req.user.id)) === 0) {
+            if (isBridgeUrl(found.url) && bridgeRoom(await FeedModel.userFeedUrls(req.profileId)) === 0) {
                 return res.status(400).json({error: NO_BRIDGE_ROOM});
             }
             const feed = await FeedModel.addUserFeed({
-                userId: req.user.id,
+                userId: req.user.id, profileId: req.profileId,
                 url: found.url,
                 // the address of a feed given as it is is named after its site: "rts.ch"
                 site: site.includes('://') ? hostOf(site.trim()) ?? site.trim() : site.trim(),
@@ -114,7 +114,7 @@ export const FeedController = {
             const suggestions = await SourceService.suggest({
                 keywords: keywords,
                 timeframe: timeframe ?? {},
-                userId: req.user.id,
+                profileId: req.profileId,
                 // the panel follows the language of the search it was opened from
                 language: FeedService.languages().includes(language) ? language : 'en',
             });
@@ -142,7 +142,7 @@ export const FeedController = {
             const search = from === 'web' ? SourceService.searchWeb : SourceService.searchDirectory;
             res.status(200).json({sources: await search({
                 query: query.trim().slice(0, 200),
-                userId: req.user.id,
+                profileId: req.profileId,
                 language: FeedService.languages().includes(language) ? language : 'en',
             })});
         } catch (error) {
@@ -166,7 +166,7 @@ export const FeedController = {
         try {
             res.status(200).json({sites: await SourceService.checkSites({
                 sites: [...new Set(sites.map(site => site.trim().slice(0, 500)))],
-                userId: req.user.id,
+                profileId: req.profileId,
                 language: FeedService.languages().includes(language) ? language : 'en',
             })});
         } catch (error) {
@@ -200,8 +200,8 @@ export const FeedController = {
 
         const added = [];
         const errors = [];
-        let count = await FeedModel.countUserFeeds(req.user.id);
-        let bridge = bridgeRoom(await FeedModel.userFeedUrls(req.user.id));
+        let count = await FeedModel.countUserFeeds(req.profileId);
+        let bridge = bridgeRoom(await FeedModel.userFeedUrls(req.profileId));
 
         for (let {site, feed, category} of sources) {
             const name = String(site ?? '').trim();
@@ -249,7 +249,7 @@ export const FeedController = {
                 const onBridge = isBridgeUrl(feed);
                 const url = onBridge ? feed : (await assertPublicUrl(feed)).href;
                 added.push(await FeedModel.addUserFeed({
-                    userId: req.user.id,
+                    userId: req.user.id, profileId: req.profileId,
                     url: url,
                     // an address of a list is named after its site, as one added by hand: "derstandard.at"
                     site: name.includes('://') ? hostOf(name) ?? name : name || url,
@@ -287,7 +287,7 @@ export const FeedController = {
             return res.status(400).json({error: "trusted and/or shared: true or false."});
         }
 
-        const feed = await FeedModel.getUserFeed(req.user.id, id);
+        const feed = await FeedModel.getUserFeed(req.profileId, id);
         if (!feed) {
             return res.status(404).json({error: "This source does not exist."});
         }
@@ -299,7 +299,7 @@ export const FeedController = {
         }
 
         const changes = {...(trusted !== undefined ? {trusted} : {}), ...(shared !== undefined ? {shared} : {})};
-        await FeedModel.updateUserFeed(req.user.id, id, changes);
+        await FeedModel.updateUserFeed(req.profileId, id, changes);
         res.status(200).json({id, trusted: feed.trusted, shared: feed.shared, ...changes});
     },
 
@@ -307,7 +307,7 @@ export const FeedController = {
     // and publishing on the interests of this one. [{id, site, url, category, language, news, relevant, samples}]
     getRecommended: async (req, res) => {
         try {
-            res.status(200).json({sources: await RecommendationService.list(req.user.id)});
+            res.status(200).json({sources: await RecommendationService.list(req.profileId)});
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});
         }
@@ -316,7 +316,7 @@ export const FeedController = {
     // {ids}: recommended sources to add, by the id GET /feeds/recommended gave them
     addRecommended: async (req, res) => {
         try {
-            const {feeds, errors} = await RecommendationService.add(req.user.id, req.body?.ids);
+            const {feeds, errors} = await RecommendationService.add(req.user.id, req.profileId, req.body?.ids);
             res.status(200).json({feeds: feeds.map(toFeed), errors});
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});
@@ -329,7 +329,7 @@ export const FeedController = {
             return res.status(400).json({error: "An id is required."});
         }
 
-        const deleted = await FeedModel.deleteUserFeed(req.user.id, id);
+        const deleted = await FeedModel.deleteUserFeed(req.profileId, id);
         if (deleted === 0) {
             return res.status(404).json({error: "This source does not exist."});
         }

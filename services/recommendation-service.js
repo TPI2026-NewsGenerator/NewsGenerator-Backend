@@ -34,16 +34,16 @@ const MAX_ADDED_PER_CALL = MAX_RECOMMENDED;
 // source a reader added by hand says what they follow, and its address may hold their key. Then the
 // media this reader already reads are left out, even through another feed: a second section of
 // goal.com is not a new source
-const recommended = async (userId) => {
-    const profile = await ProfileModel.get(userId);
+const recommended = async (profileId) => {
+    const profile = await ProfileModel.get(profileId);
     if (!profile) return [];
 
     const shared = Object.values(rss).flatMap(language => Object.values(language).flat());
     // the sources found for the profile the reader removed are not suggested back to them
-    const [{refused}, removed, own] = await Promise.all([FeedbackService.of(userId),
-        ProfileModel.removedSources(userId).then(sources => sources.map(source => source.url)), FeedModel.userFeedUrls(userId)]);
-    const known = await knownMedia(userId, {userFeeds: [...own, ...removed]});
-    const rows = await FeedModel.recommendedFeeds(userId, {
+    const [{refused}, removed, own] = await Promise.all([FeedbackService.of(profileId),
+        ProfileModel.removedSources(profileId).then(sources => sources.map(source => source.url)), FeedModel.userFeedUrls(profileId)]);
+    const known = await knownMedia(profileId, {userFeeds: [...own, ...removed]});
+    const rows = await FeedModel.recommendedFeeds(profileId, {
         excluded: [...shared, ...refused, ...removed],
         languages: null,                // the reader reads every language
         since: new Date(Date.now() - RECENT_DAYS * 24 * 3600e3),
@@ -73,18 +73,18 @@ const toRecommendation = (row) => ({
 
 export const RecommendationService = {
     // [{id, site, url, category, language, news, relevant, samples}], the most relevant first
-    list: async (userId) => (await recommended(userId)).map(toRecommendation),
+    list: async (profileId) => (await recommended(profileId)).map(toRecommendation),
 
     // the feeds chosen among the recommended ones, added as if by hand: never removed without the
     // reader. Only ids are sent: every address added is one this server already reads, the client
     // never names one (a feed of our RSS-Bridge included)
-    add: async (userId, ids) => {
+    add: async (userId, profileId, ids) => {
         if (!Array.isArray(ids) || ids.length === 0 || ids.length > MAX_ADDED_PER_CALL || !ids.every(Number.isInteger)) {
             throw Object.assign(new Error(`ids: 1 to ${MAX_ADDED_PER_CALL} ids of recommended sources.`), {status: 400});
         }
 
-        const offered = new Map((await recommended(userId)).map(row => [row.id, row]));
-        const [count, urls] = await Promise.all([FeedModel.countUserFeeds(userId), FeedModel.userFeedUrls(userId)]);
+        const offered = new Map((await recommended(profileId)).map(row => [row.id, row]));
+        const [count, urls] = await Promise.all([FeedModel.countUserFeeds(profileId), FeedModel.userFeedUrls(profileId)]);
         let room = MAX_USER_FEEDS - count;
         let bridge = bridgeRoom(urls);
         const added = [];
@@ -101,7 +101,7 @@ export const RecommendationService = {
             } else {
                 try {
                     added.push(await FeedModel.addUserFeed({
-                        userId, url: row.url, site: siteOf(row.url), category: row.category, language: row.language,
+                        userId, profileId, url: row.url, site: siteOf(row.url), category: row.category, language: row.language,
                     }));
                     room--;
                     if (isBridgeUrl(row.url)) bridge--;

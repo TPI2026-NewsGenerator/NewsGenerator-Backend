@@ -45,6 +45,8 @@ model roles {
 model user_feeds {
   id         Int      @id @default(autoincrement())
   id_user    Int
+  // the profile it belongs to (db/add_profiles.sql); null for a reader who never wrote one
+  id_profile Int?
   url        String
   site       String
   category   String
@@ -58,7 +60,7 @@ model user_feeds {
   shared     Boolean  @default(false)
   users      users    @relation(fields: [id_user], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_feeds_user")
 
-  @@unique([id_user, url], map: "u_user_feeds")
+  @@unique([id_profile, url], map: "u_user_feeds_profile")
   @@index([id_user], map: "i_user_feeds_user")
   @@index([url], map: "i_user_feeds_url")
 }
@@ -96,7 +98,7 @@ model users {
   password_changed_at DateTime?         @db.Timestamptz(6)
   custom_searches   custom_searches[]
   user_feeds        user_feeds[]
-  user_profiles     user_profiles?
+  user_profiles     user_profiles[]
   profile_interests profile_interests[]
   briefings         briefings[]
   roles             roles               @relation(fields: [role], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_id_role")
@@ -193,7 +195,13 @@ model threads {
 }
 
 model user_profiles {
-  id_user          Int       @id
+  // a reader has several profiles, each with its interests, sources and briefings (db/add_profiles.sql)
+  id               Int       @id @default(autoincrement())
+  id_user          Int
+  name             String    @default("Profil")
+  // names or words followed: a news naming one is shown in a section of the briefing of its own
+  watch_terms      String[]  @default([])
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
   text             String
   languages        String[]  @default([])
   discovery_status String    @default("idle")
@@ -212,6 +220,7 @@ model user_profiles {
 model profile_interests {
   id       Int                               @id @default(autoincrement())
   id_user  Int
+  id_profile Int
   position Int
   text     String
   weight   Float                             @default(1) @db.Real
@@ -237,6 +246,10 @@ model briefings {
   created_at  DateTime  @default(now()) @db.Timestamptz(6)
   finished_at DateTime? @db.Timestamptz(6)
   hours       Int       @default(48)
+  id_profile  Int
+  // the cards asked for, and the news of the terms the profile follows (db/add_profiles.sql)
+  size        Int       @default(10)
+  watched     Json?
   users       users     @relation(fields: [id_user], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_briefings_user")
 
   @@index([id_user, created_at(sort: Desc)], map: "i_briefings_user")

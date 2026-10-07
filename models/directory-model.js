@@ -39,7 +39,7 @@ export const DirectoryModel = {
             FROM articles a
             JOIN feeds f ON f.id = a.id_feed
             WHERE (f.url = ANY($1::text[])
-                   OR f.url IN (SELECT url FROM user_feeds WHERE origin = 'profile' OR shared)
+                   OR f.url IN (SELECT url FROM user_feeds)
                    OR f.url IN (SELECT url FROM directory_feeds))
               AND a.created_at > now() - make_interval(days => $2::int)
               AND a.medium IS NOT NULL

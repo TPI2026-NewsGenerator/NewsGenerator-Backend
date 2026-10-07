@@ -8,12 +8,24 @@
 "use strict"
 
 import {BriefingService} from '../services/briefing-service.js';
+import {mailEnabled} from '../services/utils/mailer.js';
 
 export const BriefingController = {
     // the last briefing, null when none was ever written
     latest: async (req, res) => {
         try {
-            res.status(200).json({briefing: await BriefingService.latest(req.user.id)});
+            // mail: the server can send a briefing by e-mail
+            res.status(200).json({briefing: await BriefingService.latest(req.profileId), mail: mailEnabled()});
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
+    // the briefing sent to the address of the account of the reader
+    email: async (req, res) => {
+        try {
+            await BriefingService.email(req.user.id, req.params.id);
+            res.status(204).end();
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});
         }
@@ -29,11 +41,11 @@ export const BriefingController = {
         }
     },
 
-    // {hours}: a new briefing of the news of the last hours, written in background: 202 with the
-    // briefing running, asked again until ready
+    // {hours, size}: a new briefing of the news of the last hours, of 'size' cards, written in
+    // background: 202 with the briefing running, asked again until ready
     start: async (req, res) => {
         try {
-            res.status(202).json({briefing: await BriefingService.start(req.user.id, req.body?.hours ?? undefined)});
+            res.status(202).json({briefing: await BriefingService.start(req.user.id, req.profileId, req.body?.hours ?? undefined, req.body?.size ?? undefined)});
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});
         }

@@ -16,6 +16,8 @@ const FEED = 'https://rts.ch/rss';
 
 const ProfileModel = {
     get: jest.fn(async () => null),
+    owned: jest.fn(async () => ({id: 1, id_user: 1, name: 'Profil', text: 'Le football suisse', languages: ['fr']})),
+    ofUser: jest.fn(async () => [{id: 1, name: 'Profil'}]),
     interests: jest.fn(async () => []),
     profileFeedRelevance: jest.fn(async () => []),
     removedSources: jest.fn(async () => []),
@@ -75,7 +77,7 @@ beforeEach(() => ProfileModel.keepSource.mockClear());
 
 describe('the address of the bridge sent to a client', () => {
     it('should send the sources of the profile and the ones left out with a key, and no address on the bridge', async () => {
-        const answer = await ProfileService.get(1);
+        const answer = await ProfileService.get(1, 1);
 
         expect(JSON.stringify(answer)).not.toContain('bridge.invalid');
         expect(answer.sources.map(({id, key, url}) => ({id, key, url}))).toEqual([
@@ -91,7 +93,7 @@ describe('the address of the bridge sent to a client', () => {
 
     it('should send the feeds of the reader with a key, and no address on the bridge', async () => {
         const res = {status: jest.fn(() => res), json: jest.fn()};
-        await FeedController.getUserFeeds({user: {id: 1}}, res);
+        await FeedController.getUserFeeds({user: {id: 1}, profileId: 1}, res);
 
         const {feeds} = res.json.mock.calls[0][0];
         expect(JSON.stringify(feeds)).not.toContain('bridge.invalid');
@@ -100,17 +102,17 @@ describe('the address of the bridge sent to a client', () => {
     });
 
     it('should keep a source left out by its key, read through the bridge or not', async () => {
-        await ProfileService.keepSource(1, sourceKey(PAGE));
+        await ProfileService.keepSource(1, 1, sourceKey(PAGE));
         expect(ProfileModel.keepSource).toHaveBeenCalledWith(1, PAGE);
 
-        await ProfileService.keepSource(1, sourceKey(FEED));
+        await ProfileService.keepSource(1, 1, sourceKey(FEED));
         expect(ProfileModel.keepSource).toHaveBeenLastCalledWith(1, FEED);
     });
 
     it('should add a site offered without its address from the feed this server finds again, and send it back without it', async () => {
         findFeeds.mockResolvedValue([{url: PAGE, language: 'fr'}]);
         const res = {status: jest.fn(() => res), json: jest.fn()};
-        await FeedController.importSources({user: {id: 1}, body: {
+        await FeedController.importSources({user: {id: 1}, profileId: 1, body: {
             language: 'fr', subject: ['suisse'],
             sources: [{site: 'lematin.ch', feed: null, category: 'world'}, {site: 'rts.ch', feed: FEED, category: 'world'}],
         }}, res);
@@ -127,9 +129,9 @@ describe('the address of the bridge sent to a client', () => {
     });
 
     it('should keep nothing for a key of no source left out, nor for an address', async () => {
-        await expect(ProfileService.keepSource(1, 'not-a-key')).rejects.toMatchObject({status: 404});
-        await expect(ProfileService.keepSource(1, FEED)).rejects.toMatchObject({status: 404});
-        await expect(ProfileService.keepSource(1, undefined)).rejects.toMatchObject({status: 400});
+        await expect(ProfileService.keepSource(1, 1, 'not-a-key')).rejects.toMatchObject({status: 404});
+        await expect(ProfileService.keepSource(1, 1, FEED)).rejects.toMatchObject({status: 404});
+        await expect(ProfileService.keepSource(1, 1, undefined)).rejects.toMatchObject({status: 400});
         expect(ProfileModel.keepSource).not.toHaveBeenCalled();
     });
 });

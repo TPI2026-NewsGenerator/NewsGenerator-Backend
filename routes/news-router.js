@@ -9,6 +9,7 @@ import express from 'express'
 import { body } from 'express-validator';
 import {NewsController} from '../controllers/news-controller.js';
 import {authenticateToken} from "../services/utils/jwt.js";
+import {activeProfile} from "../services/utils/active-profile.js";
 
 const router = express.Router();
 
@@ -19,14 +20,14 @@ const fetchNewsValidator = [
     body('timeframe').isObject().withMessage('timeframe must be an object with properties "start" and "end"'),
 ];
 
-router.post('', authenticateToken, fetchNewsValidator, NewsController.getNews);
+router.post('', authenticateToken, activeProfile, fetchNewsValidator, NewsController.getNews);
 // categories of feeds that can be searched
 router.get('/categories', NewsController.getCategories);
 // full content of the news selected by the user (10 max)
-router.post('/content', authenticateToken, NewsController.getNewsContent);
+router.post('/content', authenticateToken, activeProfile, NewsController.getNewsContent);
 // AI resume of the news selected by the user (10 max)
-router.post('/summary', authenticateToken, NewsController.getNewsSummary);
+router.post('/summary', authenticateToken, activeProfile, NewsController.getNewsSummary);
 // titles and descriptions of the news found, translated into the language of the search
-router.post('/translations', authenticateToken, NewsController.translateNews);
+router.post('/translations', authenticateToken, activeProfile, NewsController.translateNews);
 
 export default router;

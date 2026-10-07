@@ -153,6 +153,24 @@ describe('Parser.Xml', () => {
         expect(items[0].title).toBe('');
     });
 
+    // a site with no feed often gives Google News the list of its recent articles
+    it('should read a news sitemap as a feed, and leave out its pages that are no news', async () => {
+        const items = await Parser.Xml(`<?xml version="1.0" encoding="UTF-8"?>
+            <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+                    xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+              <url><loc>https://gonfialarete.com/addio-messi</loc>
+                <news:news><news:publication><news:name>Gonfialarete</news:name><news:language>it</news:language></news:publication>
+                  <news:publication_date>2026-10-07T18:20:00+02:00</news:publication_date>
+                  <news:title>Addio Messi, l&#8217;ultima lettera</news:title></news:news>
+                <image:image><image:loc>https://gonfialarete.com/messi.jpg</image:loc></image:image></url>
+              <url><loc>https://gonfialarete.com/chi-siamo</loc><lastmod>2026-01-01</lastmod></url>
+            </urlset>`);
+        expect(items).toEqual([{
+            title: 'Addio Messi, l’ultima lettera', thumbnail: 'https://gonfialarete.com/messi.jpg',
+            link: 'https://gonfialarete.com/addio-messi', pubDate: '2026-10-07T18:20:00+02:00', description: '', category: null,
+        }]);
+    });
+
     it('should return nothing for an unknown format', async () => {
         expect(await Parser.Xml('<html><body>Not a feed</body></html>')).toEqual([]);
     });

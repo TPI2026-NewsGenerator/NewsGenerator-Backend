@@ -3,7 +3,7 @@
 //  Date: 24.09.2026
 //  File: test.stories.js
 //  Description: Tests of the two computations made by pgvector: the grouping of the news into
-//               stories (assign_stories) and the stories closest to a profile (rank_stories)
+//               stories (assign_stories) and the stories closest to a profile (rank_profile_stories)
 //
 
 import process from 'node:process'
@@ -16,7 +16,7 @@ import {toSparsevec, toVector} from '../../services/utils/embedder.js'
 const pool = new pg.Pool({connectionString: process.env.DATABASE_URL});
 let dbAvailable = true;
 try {
-    await pool.query("SELECT 'public.assign_stories'::regproc, 'public.rank_stories'::regproc, '[1]'::vector");
+    await pool.query("SELECT 'public.assign_stories'::regproc, 'public.rank_profile_stories'::regproc, '[1]'::vector");
 } catch {
     dbAvailable = false;
     console.warn('Database, pgvector or db/add_briefing.sql not available, the story tests are skipped');
@@ -294,18 +294,19 @@ const assign = async (client, sparseWeight = 1) => (await client.query('SELECT *
     });
 });
 
-(dbAvailable ? describe : describe.skip)('rank_stories', () => {
-    // a user of the test, two interests (rugby on the first axis, fashion on the second), and three
+(dbAvailable ? describe : describe.skip)('rank_profile_stories', () => {
+    // a user of the test and their profile, two interests (rugby on the first axis, fashion on the second), and three
     // stories: rugby, fashion a little, and nothing asked
     const setUp = async (client, feed) => {
         const {rows: [user]} = await client.query(`
             INSERT INTO users (username, email, password, role)
             VALUES ('test-rank', 'test-rank@test.invalid', 'not-a-password', (SELECT MIN(id) FROM roles))
             RETURNING id`);
+        const {rows: [profile]} = await client.query("INSERT INTO user_profiles (id_user, text) VALUES ($1, 'Le rugby et la mode.') RETURNING id", [user.id]);
         const interest = async (position, vector, weight = 1) => (await client.query(`
-            INSERT INTO profile_interests (id_user, position, text, weight, dense, sparse)
-            VALUES ($1, $2, 'test', $3, $4::vector, $5::sparsevec) RETURNING id`,
-            [user.id, position, weight, vector, NO_WORDS])).rows[0].id;
+            INSERT INTO profile_interests (id_user, id_profile, position, text, weight, dense, sparse)
+            VALUES ($1, $2, $3, 'test', $4, $5::vector, $6::sparsevec) RETURNING id`,
+            [user.id, profile.id, position, weight, vector, NO_WORDS])).rows[0].id;
         const rugby = await interest(0, dense(1, 0, 0));
         const fashion = await interest(1, dense(0, 1, 0));
 
@@ -316,11 +317,11 @@ const assign = async (client, sparseWeight = 1) => (await client.query('SELECT *
         const a2 = await news(client, feed, {text: dense(0.2, 1, 0.5), story: s2});
         await news(client, feed, {text: dense(0, 0, 1), story: s3});
 
-        return {user: user.id, rugby, fashion, s1, s2, s3, best, a2};
+        return {user: profile.id, rugby, fashion, s1, s2, s3, best, a2};
     };
 
     const rank = async (client, user, {feeds = ['https://test.invalid/feed'], languages = ['en'], excluded = []} = {}) => (await client.query(
-        'SELECT * FROM public.rank_stories($1, $2, $3, $4, 0.5, $5, 10)', [user, feeds, languages, SINCE, excluded])).rows;
+        'SELECT * FROM public.rank_profile_stories($1, $2, $3, $4, 0.5, $5, 10)', [user, feeds, languages, SINCE, excluded])).rows;
 
     it('should rank the stories by their news closest to any interest', () => inTransaction(async (client, feed) => {
         const t = await setUp(client, feed);

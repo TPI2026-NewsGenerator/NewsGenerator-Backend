@@ -145,6 +145,9 @@ fp32 on the card too, so they stay the ones of the processor, already stored and
     profile; filled when a profile is saved again)
 23. Do the same with "add_password_changed.sql" (a password changed in the settings ends the sessions
     of the other devices)
+24. Do the same with "add_profiles.sql" (several profiles per reader, the terms each one follows, the
+    cards a briefing was asked for). Its three parts in order: A adds, B fills the profile of what each
+    reader had, C swaps the keys, right before deploying the server that uses them
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.

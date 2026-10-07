@@ -10,8 +10,11 @@
 import {prisma} from '../config/db.js';
 
 export const BriefingModel = {
-    // hours: of news it is written from
-    create: async (userId, hours) => prisma.briefings.create({data: {id_user: userId, status: 'running', step: 'starting', hours}}),
+    // hours: of news it is written from, size: the cards asked for
+    create: async (userId, profileId, hours, size) => prisma.briefings.create({data: {id_user: userId, id_profile: profileId, status: 'running', step: 'starting', hours, size}}),
+
+    // the news of the terms the profile follows (see watchedNews)
+    watched: async (id, watched) => prisma.briefings.update({where: {id}, data: {watched}}),
 
     step: async (id, step) => prisma.briefings.update({where: {id}, data: {step}}),
 
@@ -25,14 +28,17 @@ export const BriefingModel = {
         data: {status: 'failed', step: null, error, finished_at: new Date()},
     }),
 
-    latest: async (userId) => prisma.briefings.findFirst({
-        where: {id_user: userId},
+    // a briefing of this user, null when it is not theirs
+    ofUser: async (userId, id) => prisma.briefings.findFirst({where: {id, id_user: userId}}),
+
+    latest: async (profileId) => prisma.briefings.findFirst({
+        where: {id_profile: profileId},
         orderBy: {created_at: 'desc'},
     }),
 
-    // a briefing still being written for this user, if any
-    running: async (userId) => prisma.briefings.findFirst({
-        where: {id_user: userId, status: 'running'},
+    // a briefing still being written for this profile, if any
+    running: async (profileId) => prisma.briefings.findFirst({
+        where: {id_profile: profileId, status: 'running'},
         orderBy: {created_at: 'desc'},
     }),
 
@@ -49,20 +55,20 @@ export const BriefingModel = {
           AND EXISTS (SELECT 1 FROM jsonb_array_elements(items) AS card WHERE (card->>'storyId')::int = $3)`,
         briefingId, userId, storyId, vote),
 
-    // the stories this user gave a thumb since 'since', the newest vote first: [{title, vote, feedUrls}].
+    // the stories this profile gave a thumb since 'since', the newest vote first: [{title, vote, feedUrls}].
     // One per story, the last one: a card can come back in the next briefing, and two thumbs on it are
     // one opinion, not two refusals of its sources
-    votes: async (userId, since) => (await prisma.$queryRawUnsafe(`
+    votes: async (profileId, since) => (await prisma.$queryRawUnsafe(`
         SELECT title, vote, "feedUrls"
         FROM (SELECT DISTINCT ON (item->>'storyId')
                      item->>'title' AS title, item->>'vote' AS vote, item->'feedUrls' AS "feedUrls",
                      (item->>'votedAt')::timestamptz AS voted_at
               FROM briefings, jsonb_array_elements(items) AS item
-              WHERE id_user = $1 AND status = 'ready' AND item->>'vote' IS NOT NULL
+              WHERE id_profile = $1 AND status = 'ready' AND item->>'vote' IS NOT NULL
                 AND (item->>'votedAt')::timestamptz >= $2::timestamptz
               ORDER BY item->>'storyId', (item->>'votedAt')::timestamptz DESC) AS latest
         ORDER BY voted_at DESC`,
-        userId, since)).map(row => ({...row, feedUrls: Array.isArray(row.feedUrls) ? row.feedUrls : []})),
+        profileId, since)).map(row => ({...row, feedUrls: Array.isArray(row.feedUrls) ? row.feedUrls : []})),
 
     // a briefing left 'running' by a server that stopped will never finish
     failAbandoned: async (before) => prisma.briefings.updateMany({

@@ -94,6 +94,7 @@ const toNews = (article) => ({
     url: article.link,
     thumbnail: article.thumbnail,
     source: siteOf(article),
+    language: article.lang ?? null,
     publishedAt: article.published_at?.toISOString() ?? '',
     title: article.title,
     description: shorten(article.description),
@@ -317,7 +318,7 @@ const webSearch = async (query, timeframe, language) => {
 export const NewsService = {
     // news list for the selection, read from the RSS cache (no page scraped). A sentence is searched by
     // its meaning (one call to the AI, see searchByMeaning), keywords with operators as written, in SQL
-    getNews: async ({keywords, category, timeframe, userId, language = 'en'}) => {
+    getNews: async ({keywords, category, timeframe, profileId, language = 'en'}) => {
         try {
             // 1. get links from categories, with the feeds this user added (private to them) and those
             // of every reader that are not private: found for a profile, shared, and the searches of
@@ -330,7 +331,7 @@ export const NewsService = {
             // of a reader with sources in 34 languages found 4 news for "Schiedsrichter im Fußball" and 28
             // in the languages of their profile (bench/search-languages.mjs)
             const [own, others, searches, directory, sentences] = await Promise.all([
-                userId ? FeedModel.userFeedUrls(userId, category) : [],
+                profileId ? FeedModel.userFeedUrls(profileId, category) : [],
                 FeedModel.publicFeedUrls(category),
                 searchesOfCategories(category),
                 DirectoryModel.feedUrls(category),
@@ -555,9 +556,9 @@ export const NewsService = {
     // the others (no AI, see corroborationOf), and the AI picks the key sentences of the first one
     // readable, shown as published (see extract.js), with a translation when it is not in the
     // language searched. The passages of an article are kept, a news asked twice costs nothing.
-    summarizeStories: async (stories, {userId = null, language = 'en'} = {}) => {
+    summarizeStories: async (stories, {profileId = null, language = 'en'} = {}) => {
         const articles = await NewsService.cachedArticles([...new Set(stories.flatMap(story => story.urls))]);
-        const trusted = new Set(userId ? await FeedModel.trustedMedia(userId) : []);
+        const trusted = new Set(profileId ? await FeedModel.trustedMedia(profileId) : []);
 
         const members = stories.map(story => story.urls.map(url => articles.get(url)));
         const reads = members.map(list => readingOrder(list, trusted));
@@ -662,6 +663,7 @@ export const NewsService = {
                         title: article.title,
                         publishedAt: article.published_at?.toISOString() ?? '',
                         trusted: trusted.has(mediumOfArticle(article)),
+                        language: article.lang ?? null,
                     })),
             };
         });

@@ -86,7 +86,7 @@ describe('the cards of a search by words', () => {
         FeedModel.publicFeedUrls.mockResolvedValue(['https://found.test/rss', 'https://own.test/rss']);
         searchesOfCategories.mockResolvedValue(['https://news.google.com/rss/search?q=cartes']);
 
-        await NewsService.getNews({keywords: ['"legal"'], category: ['sport'], userId: 7, language: 'fr'});
+        await NewsService.getNews({keywords: ['"legal"'], category: ['sport'], profileId: 7, language: 'fr'});
 
         expect(FeedModel.userFeedUrls).toHaveBeenCalledWith(7, ['sport']);
         expect(FeedModel.publicFeedUrls).toHaveBeenCalledWith(['sport']);

@@ -84,12 +84,12 @@ export const StoryModel = {
             DELETE FROM threads t WHERE NOT EXISTS (SELECT 1 FROM stories s WHERE s.id_thread = t.id)`);
     },
 
-    // the stories closest to the interests of this user (rank_stories), the best first:
-    // [{id_story, id_article (its best news), id_interest, score}]
+    // the stories closest to the interests of this profile (rank_profile_stories, db/add_profiles.sql),
+    // the best first: [{id_story, id_article (its best news), id_interest, score}]
     // A story already shown can come back: the reader passes it, and it leaves room for more news
-    rank: async ({userId, feedUrls, languages, since, sparseWeight, limit}) => prisma.$queryRawUnsafe(
-        'SELECT * FROM public.rank_stories($1::int, $2::text[], $3::text[], $4::timestamptz, $5::real, $6::int[], $7::int)',
-        userId, feedUrls, languages, since, sparseWeight, [], limit),
+    rank: async ({profileId, feedUrls, languages, since, sparseWeight, limit}) => prisma.$queryRawUnsafe(
+        'SELECT * FROM public.rank_profile_stories($1::int, $2::text[], $3::text[], $4::timestamptz, $5::real, $6::int[], $7::int)',
+        profileId, feedUrls, languages, since, sparseWeight, [], limit),
 
     // The stories of one language closest to these stories of other languages, by the centroids of
     // their articles (db/add_threads.sql): [{id_story, id_version, likeness}], the perStory closest of
@@ -107,6 +107,28 @@ export const StoryModel = {
             OFFSET 0
         ) v
         WHERE s.id = ANY($1::int[]) AND s.lang <> $2 AND s.centroid IS NOT NULL
+          AND v.likeness >= $5::real
+          AND EXISTS (SELECT 1 FROM articles a JOIN feeds f ON f.id = a.id_feed
+                      WHERE a.id_story = v.id AND f.url = ANY($3::text[])
+                        AND COALESCE(a.published_at, a.created_at) >= $4::timestamptz)
+        ORDER BY s.id, v.likeness DESC`,
+        storyIds, language, feedUrls, since, likeness, perStory),
+
+    // The same, in every other language but the one of the story and the one of the reader (those are
+    // versionsIn): [{id_story, id_version, likeness}]. One fact told in Spanish, German and English is
+    // three stories, and the card of one of them counted the media of its language only
+    versionsAcross: async ({storyIds, language, feedUrls, since, likeness, perStory}) => prisma.$queryRawUnsafe(`
+        SELECT s.id AS id_story, v.id AS id_version, v.likeness
+        FROM stories s
+        CROSS JOIN LATERAL (
+            SELECT o.id, -(o.centroid <#> s.centroid)::real AS likeness
+            FROM stories o
+            WHERE o.lang <> s.lang AND o.lang <> $2 AND o.centroid IS NOT NULL AND o.updated_at >= $4::timestamptz
+            ORDER BY o.centroid <#> s.centroid
+            LIMIT $6::int
+            OFFSET 0
+        ) v
+        WHERE s.id = ANY($1::int[]) AND s.centroid IS NOT NULL
           AND v.likeness >= $5::real
           AND EXISTS (SELECT 1 FROM articles a JOIN feeds f ON f.id = a.id_feed
                       WHERE a.id_story = v.id AND f.url = ANY($3::text[])

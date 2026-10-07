@@ -2,7 +2,11 @@
 //  Author: Fabian Rostello
 //  Date: 24.09.2026
 //  File: profile-model.js
-//  Description: Model for the profile of a user, its interests and the feeds found for it
+//  Description: Model for the profiles of a user, their interests and the feeds found for them
+//
+//  A reader has several profiles (db/add_profiles.sql), each with its interests, its sources and its
+//  briefings. What belongs to a profile is read by the id of the profile; the id of the user is
+//  written with it, and checked where the user asks for a profile by its id
 //
 
 "use strict"
@@ -19,84 +23,110 @@ const setVectors = (where, params, {dense, sparse}) => prisma.$executeRawUnsafe(
 
 // The feeds found for the profile the reader removes, kept in user_profiles.removed_sources as they were.
 // Exported for the tests, which run them in a transaction rolled back (tests/sources/test.removed-sources.js)
-// $1 the user, $2 the id of the feed: removed and remembered in one statement
+// $1 the profile, $2 the id of the feed: removed and remembered in one statement
 export const REMOVE_PROFILE_FEED = `
     WITH gone AS (
-        DELETE FROM user_feeds WHERE id = $2::int AND id_user = $1::int AND origin = 'profile'
+        DELETE FROM user_feeds WHERE id = $2::int AND id_profile = $1::int AND origin = 'profile'
         RETURNING url, site, category, language
     )
     UPDATE user_profiles p
     SET removed_sources = p.removed_sources || (SELECT jsonb_agg(to_jsonb(gone)) FROM gone)
-    WHERE p.id_user = $1::int AND EXISTS (SELECT 1 FROM gone)`;
-// $1 the user, $2 the url of a feed removed: forgotten and found for the profile again
+    WHERE p.id = $1::int AND EXISTS (SELECT 1 FROM gone)`;
+// $1 the profile, $2 the url of a feed removed: forgotten and found for the profile again
 export const RESTORE_PROFILE_FEED = `
     WITH back AS (
-        SELECT s FROM user_profiles p, jsonb_array_elements(p.removed_sources) s
-        WHERE p.id_user = $1::int AND s->>'url' = $2
+        SELECT p.id_user, s FROM user_profiles p, jsonb_array_elements(p.removed_sources) s
+        WHERE p.id = $1::int AND s->>'url' = $2
     ), forgotten AS (
         UPDATE user_profiles p
         SET removed_sources = (SELECT COALESCE(jsonb_agg(s), '[]'::jsonb) FROM jsonb_array_elements(p.removed_sources) s WHERE s->>'url' <> $2)
-        WHERE p.id_user = $1::int AND EXISTS (SELECT 1 FROM back)
+        WHERE p.id = $1::int AND EXISTS (SELECT 1 FROM back)
     )
-    INSERT INTO user_feeds (id_user, url, site, category, language, origin)
-    SELECT $1::int, s->>'url', s->>'site', s->>'category', s->>'language', 'profile' FROM back
-    ON CONFLICT (id_user, url) DO NOTHING`;
+    INSERT INTO user_feeds (id_user, id_profile, url, site, category, language, origin)
+    SELECT id_user, $1::int, s->>'url', s->>'site', s->>'category', s->>'language', 'profile' FROM back
+    ON CONFLICT (id_profile, url) DO NOTHING`;
 
 export const ProfileModel = {
-    get: async (userId) => prisma.user_profiles.findUnique({where: {id_user: userId}}),
+    get: async (profileId) => prisma.user_profiles.findUnique({where: {id: profileId}}),
+
+    // the profiles of a user, the first written first: [{id, name, text, ...}]
+    ofUser: async (userId) => prisma.user_profiles.findMany({where: {id_user: userId}, orderBy: {id: 'asc'}}),
+
+    // the ids of the profiles of a user, the first written first
+    idsOf: async (userId) => (await prisma.user_profiles.findMany({
+        where: {id_user: userId}, orderBy: {id: 'asc'}, select: {id: true},
+    })).map(row => row.id),
+
+    // the profile of this id if it is one of this user, null otherwise
+    owned: async (userId, profileId) => prisma.user_profiles.findFirst({where: {id: profileId, id_user: userId}}),
+
+    count: async (userId) => prisma.user_profiles.count({where: {id_user: userId}}),
+
+    rename: async (profileId, name) => prisma.user_profiles.update({where: {id: profileId}, data: {name}}),
+
+    // its interests, sources and briefings go with it (db/add_profiles.sql, ON DELETE CASCADE)
+    delete: async (profileId) => prisma.user_profiles.delete({where: {id: profileId}}),
+
+    setWatchTerms: async (profileId, terms) => prisma.user_profiles.update({where: {id: profileId}, data: {watch_terms: terms}}),
 
     // the interests in their order
-    interests: async (userId) => prisma.profile_interests.findMany({
-        where: {id_user: userId},
+    interests: async (profileId) => prisma.profile_interests.findMany({
+        where: {id_profile: profileId},
         orderBy: {position: 'asc'},
         select: PUBLIC_INTEREST,
     }),
 
     // the interests with their searches and their dense vector as text ("[0.1,...]"), to find their sources
-    interestsForDiscovery: async (userId) => prisma.$queryRawUnsafe(`
+    interestsForDiscovery: async (profileId) => prisma.$queryRawUnsafe(`
         SELECT id, position, text, weight, keywords, searches, sections, category, dense::text AS dense
         FROM profile_interests
-        WHERE id_user = $1::int AND dense IS NOT NULL
+        WHERE id_profile = $1::int AND dense IS NOT NULL
         ORDER BY position`,
-        userId),
+        profileId),
 
-    // the profile and its interests, the old interests replaced at once
+    // A profile and its interests, the old interests replaced at once: profileId null writes a new
+    // profile of the user, named 'name'. Answers the id of the profile
     // interests: [{text, weight, keywords, searches, sections, category, dense, sparse}], vectors as text
-    save: async (userId, {text, languages, refused = []}, interests) => prisma.$transaction([
-        prisma.user_profiles.upsert({
-            where: {id_user: userId},
-            create: {id_user: userId, text, languages, refused},
-            update: {text, languages, refused, updated_at: new Date()},
-        }),
-        prisma.profile_interests.deleteMany({where: {id_user: userId}}),
-        prisma.profile_interests.createMany({
-            data: interests.map(({text, weight, keywords, searches, sections, category}, position) =>
-                ({text, weight, keywords, searches, sections, category, id_user: userId, position})),
-        }),
-        ...interests.map((interest, position) =>
-            setVectors('id_user = $3::int AND position = $4::int', [userId, position], interest)),
-    ]),
+    save: async (userId, profileId, {text, languages, refused = [], name}, interests) => {
+        const id = profileId ?? (await prisma.user_profiles.create({
+            data: {id_user: userId, text, languages, refused, ...(name ? {name} : {})},
+        })).id;
+        await prisma.$transaction([
+            prisma.user_profiles.update({
+                where: {id},
+                data: {text, languages, refused, updated_at: new Date(), ...(name ? {name} : {})},
+            }),
+            prisma.profile_interests.deleteMany({where: {id_profile: id}}),
+            prisma.profile_interests.createMany({
+                data: interests.map(({text, weight, keywords, searches, sections, category}, position) =>
+                    ({text, weight, keywords, searches, sections, category, id_user: userId, id_profile: id, position})),
+            }),
+            ...interests.map((interest, position) =>
+                setVectors('id_profile = $3::int AND position = $4::int', [id, position], interest)),
+        ]);
+        return id;
+    },
 
-    // one interest changed by the user, only theirs; its vectors when its text changed
-    updateInterest: async (userId, id, {dense, sparse, ...data}) => {
-        const {count} = await prisma.profile_interests.updateMany({where: {id, id_user: userId}, data});
-        if (count > 0 && dense) await setVectors('id = $3::int AND id_user = $4::int', [id, userId], {dense, sparse});
+    // one interest changed by the user, only one of this profile; its vectors when its text changed
+    updateInterest: async (profileId, id, {dense, sparse, ...data}) => {
+        const {count} = await prisma.profile_interests.updateMany({where: {id, id_profile: profileId}, data});
+        if (count > 0 && dense) await setVectors('id = $3::int AND id_profile = $4::int', [id, profileId], {dense, sparse});
         return count;
     },
 
-    deleteInterest: async (userId, id) => {
-        const {count} = await prisma.profile_interests.deleteMany({where: {id, id_user: userId}});
+    deleteInterest: async (profileId, id) => {
+        const {count} = await prisma.profile_interests.deleteMany({where: {id, id_profile: profileId}});
         return count;
     },
 
-    // the users whose discovery is said running
+    // the profiles whose discovery is said running
     discovering: async () => (await prisma.user_profiles.findMany({
         where: {discovery_status: 'running'},
-        select: {id_user: true},
-    })).map(row => row.id_user),
+        select: {id: true},
+    })).map(row => row.id),
 
-    setDiscovery: async (userId, status, error = null) => prisma.user_profiles.update({
-        where: {id_user: userId},
+    setDiscovery: async (profileId, status, error = null) => prisma.user_profiles.update({
+        where: {id: profileId},
         data: {
             discovery_status: status,
             discovery_error: error,
@@ -105,45 +135,45 @@ export const ProfileModel = {
     }),
 
     // the searches of Google News of the interests, each in the language the AI chose for it ("sr:..."):
-    // of one user, or of every user. [{searches, category}]
-    searchesOf: async (userId = null) => prisma.$queryRawUnsafe(`
+    // of one profile, or of every profile. [{searches, category}]
+    searchesOf: async (profileId = null) => prisma.$queryRawUnsafe(`
         SELECT pi.searches, pi.category
         FROM profile_interests pi
-        WHERE $1::int IS NULL OR pi.id_user = $1::int`,
-        userId),
+        WHERE $1::int IS NULL OR pi.id_profile = $1::int`,
+        profileId),
 
-    // the feeds the user added by hand: the ones found for the profile take the room left
-    ownFeedUrls: async (userId) => (await prisma.user_feeds.findMany({
-        where: {id_user: userId, origin: 'user'},
+    // the feeds the user added by hand to this profile: the ones found for it take the room left
+    ownFeedUrls: async (profileId) => (await prisma.user_feeds.findMany({
+        where: {id_profile: profileId, origin: 'user'},
         select: {url: true},
     })).map(feed => feed.url),
 
     // the feeds the reader kept after their thumbs left them out: never left out again
-    keptSources: async (userId) => (await prisma.user_profiles.findUnique({
-        where: {id_user: userId},
+    keptSources: async (profileId) => (await prisma.user_profiles.findUnique({
+        where: {id: profileId},
         select: {kept_sources: true},
     }))?.kept_sources ?? [],
 
-    keepSource: async (userId, url) => prisma.$executeRawUnsafe(`
+    keepSource: async (profileId, url) => prisma.$executeRawUnsafe(`
         UPDATE user_profiles SET kept_sources = array_append(kept_sources, $2)
-        WHERE id_user = $1 AND NOT ($2 = ANY(kept_sources))`,
-        userId, url),
+        WHERE id = $1 AND NOT ($2 = ANY(kept_sources))`,
+        profileId, url),
 
     // the feeds found for the profile the reader removed: [{url, site, category, language}]
-    removedSources: async (userId) => (await prisma.$queryRawUnsafe(
-        'SELECT removed_sources FROM user_profiles WHERE id_user = $1::int', userId))[0]?.removed_sources ?? [],
+    removedSources: async (profileId) => (await prisma.$queryRawUnsafe(
+        'SELECT removed_sources FROM user_profiles WHERE id = $1::int', profileId))[0]?.removed_sources ?? [],
 
     // a feed found for the profile removed by the reader, and remembered: it is not found again. Only one
-    // of theirs found for the profile; answers 0 when there is none
-    removeProfileFeed: async (userId, id) => prisma.$executeRawUnsafe(REMOVE_PROFILE_FEED, userId, id),
+    // of this profile found for it; answers 0 when there is none
+    removeProfileFeed: async (profileId, id) => prisma.$executeRawUnsafe(REMOVE_PROFILE_FEED, profileId, id),
 
     // a feed the reader removed brought back as it was; answers 0 when it was not removed
-    restoreProfileFeed: async (userId, url) => prisma.$executeRawUnsafe(RESTORE_PROFILE_FEED, userId, url),
+    restoreProfileFeed: async (profileId, url) => prisma.$executeRawUnsafe(RESTORE_PROFILE_FEED, profileId, url),
 
     // the feeds found for the profile join the ones found before
     // feeds: [{url, site, category, language}]
-    addProfileFeeds: async (userId, feeds) => prisma.user_feeds.createMany({
-        data: feeds.map(feed => ({...feed, id_user: userId, origin: 'profile'})),
+    addProfileFeeds: async (userId, profileId, feeds) => prisma.user_feeds.createMany({
+        data: feeds.map(feed => ({...feed, id_user: userId, id_profile: profileId, origin: 'profile'})),
         skipDuplicates: true,           // a feed the user already added by hand stays theirs
     }),
 
@@ -154,23 +184,23 @@ export const ProfileModel = {
     // low-level code and removed the same day, its titles at 0.44 at best (bench/prune-text.mjs: 3 of
     // 113 feeds found removed on the title, none on the text)
     // [{id, url, site, created_at, news, relevant}]
-    profileFeedRelevance: async (userId, {since, threshold}) => prisma.$queryRawUnsafe(`
+    profileFeedRelevance: async (profileId, {since, threshold}) => prisma.$queryRawUnsafe(`
         SELECT uf.id, uf.url, uf.site, uf.created_at,
                count(a.id)::int AS news,
                count(a.id) FILTER (WHERE EXISTS (
                    SELECT 1 FROM profile_interests i
-                   WHERE i.id_user = uf.id_user AND i.dense IS NOT NULL
+                   WHERE i.id_profile = uf.id_profile AND i.dense IS NOT NULL
                      AND -(a.text_dense <#> i.dense) >= $3::real))::int AS relevant
         FROM user_feeds uf
         LEFT JOIN feeds f ON f.url = uf.url
         LEFT JOIN articles a ON a.id_feed = f.id AND a.embedded_at IS NOT NULL AND a.created_at >= $2::timestamptz
-        WHERE uf.id_user = $1::int AND uf.origin = 'profile'
+        WHERE uf.id_profile = $1::int AND uf.origin = 'profile'
         GROUP BY uf.id`,
-        userId, since, threshold),
+        profileId, since, threshold),
 
-    // only feeds found for the profile of this user, never one added by hand
-    deleteProfileFeeds: async (userId, ids) => {
-        const {count} = await prisma.user_feeds.deleteMany({where: {id: {in: ids}, id_user: userId, origin: 'profile'}});
+    // only feeds found for this profile, never one added by hand
+    deleteProfileFeeds: async (profileId, ids) => {
+        const {count} = await prisma.user_feeds.deleteMany({where: {id: {in: ids}, id_profile: profileId, origin: 'profile'}});
         return count;
     },
 };

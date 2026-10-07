@@ -96,7 +96,7 @@ export const NewsController = {
                 keywords,
                 category,
                 timeframe: timeframeDates,
-                userId: req.user?.id,
+                profileId: req.profileId,
                 language: searched,
             });
             res.status(200).json(news);
@@ -165,7 +165,7 @@ export const NewsController = {
         }
 
         try {
-            const news = await NewsService.summarizeStories(unique, {userId: req.user?.id, language});
+            const news = await NewsService.summarizeStories(unique, {profileId: req.profileId, language});
             res.status(200).json({totalResults: news.length, news});
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? error});

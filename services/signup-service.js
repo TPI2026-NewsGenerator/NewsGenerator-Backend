@@ -56,7 +56,7 @@ export const SignupService = {
         }
 
         try {
-            await ProfileService.store(user.id, profile);
+            await ProfileService.store(user.id, null, profile);
         } catch (error) {
             // the reader tries again with the same name: it must not be taken by an account without profile
             await UserModel.delete(user.id).catch(err => console.error(`Signup: account ${user.id} left without profile (${err.message})`));

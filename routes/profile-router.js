@@ -8,20 +8,28 @@
 import express from 'express'
 import {ProfileController} from '../controllers/profile-controller.js';
 import {authenticateToken} from "../services/utils/jwt.js";
+import {activeProfile} from "../services/utils/active-profile.js";
 
 const router = express.Router();
 
-router.get('', authenticateToken, ProfileController.get);
-router.put('', authenticateToken, ProfileController.save);
+router.get('', authenticateToken, activeProfile, ProfileController.get);
+router.put('', authenticateToken, activeProfile, ProfileController.save);
 // the languages a profile can choose from
 router.get('/options', ProfileController.options);
-router.patch('/interests/:id', authenticateToken, ProfileController.updateInterest);
-router.delete('/interests/:id', authenticateToken, ProfileController.deleteInterest);
+router.patch('/interests/:id', authenticateToken, activeProfile, ProfileController.updateInterest);
+router.delete('/interests/:id', authenticateToken, activeProfile, ProfileController.deleteInterest);
 // the sources of the profile found again
-router.post('/discover', authenticateToken, ProfileController.rediscover);
-router.post('/kept-sources', authenticateToken, ProfileController.keepSource);
+router.post('/discover', authenticateToken, activeProfile, ProfileController.rediscover);
+router.post('/kept-sources', authenticateToken, activeProfile, ProfileController.keepSource);
 // a source found for the profile removed by the reader, and brought back
-router.delete('/sources/:id', authenticateToken, ProfileController.removeSource);
-router.post('/removed-sources/restore', authenticateToken, ProfileController.restoreSource);
+router.delete('/sources/:id', authenticateToken, activeProfile, ProfileController.removeSource);
+router.post('/removed-sources/restore', authenticateToken, activeProfile, ProfileController.restoreSource);
+// the names or words whose news are always shown
+router.put('/watch-terms', authenticateToken, activeProfile, ProfileController.setWatchTerms);
+// the other profiles of the reader: written, renamed, deleted
+router.get('/profiles', authenticateToken, ProfileController.list);
+router.post('/profiles', authenticateToken, ProfileController.create);
+router.patch('/profiles/:id', authenticateToken, ProfileController.rename);
+router.delete('/profiles/:id', authenticateToken, ProfileController.remove);
 
 export default router;

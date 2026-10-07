@@ -70,6 +70,41 @@ const readPage = async (siteUrl) => {
 // a section that can't be read gives no feed, it is only one candidate among others
 const tryPage = (url) => readPage(url).catch(() => ({feeds: [], html: '', url}));
 
+// The news sitemaps of a site: the ones its robots.txt declares with "news" in their address, else the
+// usual addresses, and in an index of sitemaps the ones named "news". Read as feeds (see Parser.Xml):
+// 9 of 40 media the directory found without a feed publish one (bench/news-sitemaps.mjs)
+const SITEMAP_PATHS = ['/news-sitemap.xml', '/sitemap_news.xml', '/sitemap-news.xml', '/news_sitemap.xml', '/sitemaps/news.xml', '/sitemap/news.xml'];
+const MAX_SITEMAPS = 4;
+const textOf = async (url) => {
+    try {
+        const {res} = await fetchPublicUrl(url, {headers: {'User-Agent': USER_AGENT}});
+        if (!res.ok) {
+            await discardBody(res);
+            return '';
+        }
+        return (await readText(res)).slice(0, MAX_PAGE_CHARS);
+    } catch {
+        return '';
+    }
+};
+export const newsSitemaps = async (siteUrl) => {
+    const origin = new URL(siteUrl).origin;
+    const robots = await textOf(`${origin}/robots.txt`);
+    const declared = [...robots.matchAll(/^\s*sitemap:\s*(\S+)/gim)].map(match => match[1]).filter(url => /news/i.test(url));
+    const candidates = declared.length > 0 ? declared : SITEMAP_PATHS.map(path => origin + path);
+    const found = [];
+    for (const url of candidates.slice(0, MAX_SITEMAPS + 2)) {
+        const xml = await textOf(url);
+        if (/<news:news/i.test(xml)) found.push(url);
+        // an index: the sitemaps of news it lists
+        else if (/<sitemapindex/i.test(xml)) {
+            found.push(...[...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map(match => match[1]).filter(loc => /news/i.test(loc)).slice(0, 2));
+        }
+        if (found.length >= MAX_SITEMAPS) break;
+    }
+    return [...new Set(found)].slice(0, MAX_SITEMAPS);
+};
+
 // the candidates that answer with news, read: [{url, items}]. A feed of a private address is ignored
 export const readFeeds = async (urls) => {
     const publicUrls = [];
@@ -217,6 +252,11 @@ export const findFeeds = async (site, {language = null, subject = null, judge = 
         const fromDirectory = (await checkFeeds(await directoryFeeds(host))).filter(readable).sort(best);
         if (fromDirectory.length > 0) return fromDirectory;
     }
+
+    // its news sitemap, published for Google News: one request a read, as a feed, where the bridge
+    // reads the pages of the site every time
+    const sitemaps = (await checkFeeds(await newsSitemaps(siteUrl), judgeSubject)).filter(readable).sort(best);
+    if (sitemaps.length > 0 && (!judgeSubject || isOnSubject(sitemaps[0]))) return [...sitemaps, ...feeds];
 
     if (!bridge) return feeds;
 

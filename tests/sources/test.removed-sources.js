@@ -18,7 +18,7 @@ const {REMOVE_PROFILE_FEED, RESTORE_PROFILE_FEED} = await import('../../models/p
 const pool = new pg.Pool({connectionString: process.env.DATABASE_URL});
 let dbAvailable = true;
 try {
-    await pool.query('SELECT removed_sources FROM user_profiles LIMIT 0');
+    await pool.query('SELECT removed_sources, id FROM user_profiles LIMIT 0');
 } catch {
     dbAvailable = false;
     console.warn('Database or db/add_trusted_sources.sql not available, the removed sources tests are skipped');
@@ -28,29 +28,31 @@ afterAll(() => pool.end());
 const FOUND = 'https://found.invalid/rss';
 const OWN = 'https://own.invalid/rss';
 
-// a reader with a profile, a feed found for it and one added by hand; rolled back whatever happens
+// a reader with a profile, a feed found for it and one added by hand; rolled back whatever happens.
+// The SQL is given the profile (db/add_profiles.sql)
 const inTransaction = async (test) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
         const {rows: [user]} = await client.query(
             "INSERT INTO users (username, email, password, role) VALUES ('removed-sources', 'removed-sources@test.invalid', '-', 1) RETURNING id");
-        await client.query("INSERT INTO user_profiles (id_user, text) VALUES ($1, 'La voile.')", [user.id]);
+        const {rows: [profile]} = await client.query(
+            "INSERT INTO user_profiles (id_user, text) VALUES ($1, 'La voile.') RETURNING id", [user.id]);
         const {rows: [found, own]} = await client.query(`
-            INSERT INTO user_feeds (id_user, url, site, category, language, origin)
-            VALUES ($1, $2, 'found.invalid', 'sport', 'fr', 'profile'), ($1, $3, 'own.invalid', 'world', NULL, 'user')
-            RETURNING id`, [user.id, FOUND, OWN]);
-        await test(client, user.id, found.id, own.id);
+            INSERT INTO user_feeds (id_user, id_profile, url, site, category, language, origin)
+            VALUES ($1, $2, $3, 'found.invalid', 'sport', 'fr', 'profile'), ($1, $2, $4, 'own.invalid', 'world', NULL, 'user')
+            RETURNING id`, [user.id, profile.id, FOUND, OWN]);
+        await test(client, profile.id, found.id, own.id);
     } finally {
         await client.query('ROLLBACK');
         client.release();
     }
 };
 
-const feedsOf = async (client, userId) => (await client.query(
-    'SELECT url, site, category, language, origin FROM user_feeds WHERE id_user = $1 ORDER BY url', [userId])).rows;
-const removedOf = async (client, userId) => (await client.query(
-    'SELECT removed_sources FROM user_profiles WHERE id_user = $1', [userId])).rows[0].removed_sources;
+const feedsOf = async (client, profileId) => (await client.query(
+    'SELECT url, site, category, language, origin FROM user_feeds WHERE id_profile = $1 ORDER BY url', [profileId])).rows;
+const removedOf = async (client, profileId) => (await client.query(
+    'SELECT removed_sources FROM user_profiles WHERE id = $1', [profileId])).rows[0].removed_sources;
 
 const maybe = dbAvailable ? it : it.skip;
 
@@ -63,9 +65,9 @@ describe('the sources found for a profile the reader removes', () => {
         expect(await removedOf(client, userId)).toEqual([{url: FOUND, site: 'found.invalid', category: 'sport', language: 'fr'}]);
     }));
 
-    maybe('should never remove a source added by hand, nor one of another reader', () => inTransaction(async (client, userId, found, own) => {
+    maybe('should never remove a source added by hand, nor one of another profile', () => inTransaction(async (client, userId, found, own) => {
         expect((await client.query(REMOVE_PROFILE_FEED, [userId, own])).rowCount).toBe(0);
-        expect((await client.query(REMOVE_PROFILE_FEED, [userId + 1, found])).rowCount).toBe(0);
+        expect((await client.query(REMOVE_PROFILE_FEED, [userId + 100000, found])).rowCount).toBe(0);
         expect(await feedsOf(client, userId)).toHaveLength(2);
         expect(await removedOf(client, userId)).toEqual([]);
     }));

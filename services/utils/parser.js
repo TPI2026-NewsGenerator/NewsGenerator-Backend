@@ -10,7 +10,8 @@
 import {XMLParser} from 'fast-xml-parser';
 
 // tags that must always be arrays, even when the feed contains only one of them
-const ARRAY_TAGS = ['item', 'entry', 'category', 'dc:subject', 'link', 'media:thumbnail', 'media:content'];
+// (not 'url': the attributes are read under their own name, the url of a thumbnail would be one)
+const ARRAY_TAGS = ['item', 'entry', 'category', 'dc:subject', 'link', 'media:thumbnail', 'media:content', 'image:image'];
 
 const parser = new XMLParser({
     ignoreAttributes: false,
@@ -106,8 +107,25 @@ const fromAtomEntry = (news) => {
     };
 };
 
+// A news sitemap (the list of its recent articles a site gives Google News, <url><news:news>) read as a
+// feed: its title, its address, its date. A site with no feed often has one: 9 of 40 media the
+// directory found without a feed (bench/news-sitemaps.mjs). The urls without <news:news> are pages,
+// not news: left out
+const fromSitemapUrl = (url) => {
+    const news = url['news:news'];
+    return {
+        title: text(news['news:title']),
+        thumbnail: url['image:image']?.[0]?.['image:loc'] ?? null,
+        link: text(url.loc) || null,
+        pubDate: news['news:publication_date'] ?? url.lastmod ?? null,
+        description: '',
+        category: news['news:keywords'] ? text(news['news:keywords']).split(/\s*,\s*/).filter(Boolean) : null,
+    };
+};
+
 export const Parser = {
-    // XML parsed made with 'fast-xml-parser', supports RSS 2.0, RDF (RSS 1.0) and Atom feeds
+    // XML parsed made with 'fast-xml-parser', supports RSS 2.0, RDF (RSS 1.0) and Atom feeds, and the
+    // news sitemaps
     Xml: async (xml) => {
         const data = parser.parse(xml);
 
@@ -121,6 +139,9 @@ export const Parser = {
         }
         if (data.feed) {
             return (data.feed.entry ?? []).map(entry => withTitle(fromAtomEntry(entry)));
+        }
+        if (data.urlset) {
+            return [data.urlset.url ?? []].flat().filter(url => url?.['news:news']).map(fromSitemapUrl);
         }
 
         return [];

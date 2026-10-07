@@ -62,7 +62,7 @@ describe('SignupService.register', () => {
 
         expect(UserModel.create).toHaveBeenCalledWith({username: 'lecteur', email: 'lecteur@example.org', password: 'hashed', role: 2});
         expect(ProfileService.prepare).toHaveBeenCalledWith({text: request.text, language: 'en'});
-        expect(ProfileService.store).toHaveBeenCalledWith(300, prepared);
+        expect(ProfileService.store).toHaveBeenCalledWith(300, null, prepared);
     });
 
     it.each([

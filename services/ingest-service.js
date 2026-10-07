@@ -243,8 +243,8 @@ export const sentenceFeeds = async (language = null) => {
 };
 
 // the searches of Google News of one reader, read with the sources just found for them
-export const searchesOfUser = async (userId) => GOOGLE_ENABLED()
-    ? [...new Set((await ProfileModel.searchesOf(userId)).flatMap(({searches}) => interestSearchUrls(searches)))]
+export const searchesOfUser = async (profileId) => GOOGLE_ENABLED()
+    ? [...new Set((await ProfileModel.searchesOf(profileId)).flatMap(({searches}) => interestSearchUrls(searches)))]
     : [];
 
 export const IngestService = {
