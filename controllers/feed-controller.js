@@ -12,7 +12,7 @@ import {FeedService} from '../services/feed-service.js';
 import {SourceService} from '../services/source-service.js';
 import {RecommendationService} from '../services/recommendation-service.js';
 import {findFeeds} from '../services/utils/feed-finder.js';
-import {assertPublicUrl, hostOf, isBridgeUrl} from '../services/utils/public-url.js';
+import {assertPublicUrl, forClient, hostOf, isBridgeUrl} from '../services/utils/public-url.js';
 import {IngestService} from '../services/ingest-service.js';
 import {bridgeRoom, isFlood, looksPrivate, MAX_USER_FEEDS} from '../services/utils/feed-limits.js';
 import {Crawlers} from '../services/utils/crawlers.js';
@@ -21,6 +21,10 @@ import {feedLanguage} from '../services/utils/language.js';
 const MAX_CHECKED_SITES = 25;       // per request: the client sends a long list a part at a time
 
 const TOO_MANY = `You can't have more than ${MAX_USER_FEEDS} sources.`;
+
+// a source to add read from its web page: offered with no address (see forClient), or one on our
+// bridge a client sent all the same, never trusted
+const fromPage = (feed) => feed === null || feed === undefined || isBridgeUrl(feed);
 const NO_BRIDGE_ROOM = "You have as many sites without a feed as the server can read for you: this one publishes none.";
 
 // the sources just added are read and embedded now, in background: else they waited the next run of
@@ -30,9 +34,10 @@ const readNow = (urls) => {
     IngestService.run({urls}).catch(err => console.error(`Ingest of the added sources failed: ${err.stack ?? err}`));
 };
 
+// a feed read through our RSS-Bridge has no url for the client, only its key (see forClient)
 const toFeed = (feed) => ({
     id: feed.id,
-    url: feed.url,
+    ...forClient(feed.url),
     site: feed.site,
     category: feed.category,
     origin: feed.origin,                        // 'user' added by hand, 'profile' found for the profile
@@ -187,10 +192,9 @@ export const FeedController = {
         }
 
         // one read of each feed, so a dead one is refused instead of being added and never working.
-        // The addresses on our own bridge are left out: they are read again below, from the one this
-        // server builds rather than the one the client sent.
+        // The sites read from their page are left out: their feed is found again below, by this server.
         const checked = new Map((await Crawlers.Xml(sources
-            .filter(source => !isBridgeUrl(source.feed))
+            .filter(source => !fromPage(source?.feed))
             .map(source => ({url: source.feed}))))
             .map(result => [result.url, result]));
 
@@ -213,12 +217,11 @@ export const FeedController = {
             }
 
             // A site that publishes no feed is read through the bridge, and the suggestions offer it
-            // like any other source. But a client must never name an address on that bridge: it runs
-            // on this machine and a crafted address could point it anywhere. So the address is not
-            // trusted, it is built again here from the name of the site. What is added is then always
-            // something this server decided, and the suggestion stays usable.
-            const fromBridge = isBridgeUrl(feed);
-            if (fromBridge) {
+            // like any other source, without its address: the bridge runs on this machine, its address
+            // never reaches a client, and a crafted one could point it anywhere. So the feed is built
+            // again here from the name of the site, as the suggestion found it. What is added is then
+            // always something this server decided, and the suggestion stays usable.
+            if (fromPage(feed)) {
                 if (bridge <= 0) {
                     errors.push({site, error: NO_BRIDGE_ROOM});
                     continue;
@@ -243,25 +246,27 @@ export const FeedController = {
             try {
                 // the bridge answers on a private address on purpose, so it is the one address that
                 // is not asked to be public: it is ours, not one a user gave
-                const url = fromBridge ? feed : (await assertPublicUrl(feed)).href;
-                added.push(toFeed(await FeedModel.addUserFeed({
+                const onBridge = isBridgeUrl(feed);
+                const url = onBridge ? feed : (await assertPublicUrl(feed)).href;
+                added.push(await FeedModel.addUserFeed({
                     userId: req.user.id,
                     url: url,
                     // an address of a list is named after its site, as one added by hand: "derstandard.at"
                     site: name.includes('://') ? hostOf(name) ?? name : name || url,
                     category: category,
                     language: language,
-                })));
+                }));
                 count++;
-                if (fromBridge) bridge--;
+                if (onBridge) bridge--;
             } catch (error) {
                 const message = error.code === 'P2002' ? "You already added this source." : error.message;
                 errors.push({site, error: message ?? String(error)});
             }
         }
 
+        // read from their own address, sent without it when it is on our bridge
         readNow(added.map(feed => feed.url));
-        res.status(200).json({feeds: added, errors});
+        res.status(200).json({feeds: added.map(toFeed), errors});
     },
 
     // One or both of:

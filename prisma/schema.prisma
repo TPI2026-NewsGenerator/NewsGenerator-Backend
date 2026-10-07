@@ -202,6 +202,8 @@ model user_profiles {
   updated_at       DateTime  @default(now()) @db.Timestamptz(6)
   // feeds kept by the reader after their thumbs left them out (db/add_trusted_sources.sql)
   kept_sources     String[]  @default([])
+  // feeds found for the profile the reader removed, [{url, site, category, language}] (db/add_trusted_sources.sql)
+  removed_sources  Json      @default("[]")
   // what the reader says they do not want, as the AI read it in the text (db/add_profile_refused.sql)
   refused          String[]  @default([])
   users            users     @relation(fields: [id_user], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_profiles_user")

@@ -18,6 +18,7 @@ import {interestsOf} from "./utils/profile-ai.js";
 import {isFlood, MAX_PROFILE_FEEDS} from "./utils/feed-limits.js";
 import {searchesOfUser} from "./ingest-service.js";
 import {readerLanguage} from "./utils/language.js";
+import {forClient, sourceKey} from "./utils/public-url.js";
 
 const MIN_TEXT = 20;            // "rugby" says too little to split into interests
 const MAX_TEXT = 2000;
@@ -41,6 +42,15 @@ const toProfile = (row) => row && ({
     updatedAt: row.updated_at,
 });
 
+// a source found for the profile the reader removed, as they see it: the address of our RSS-Bridge is
+// only ours, the key names it to bring it back (see forClient)
+const toRemoved = (source) => ({
+    ...forClient(source.url),
+    site: source.site,
+    category: source.category,
+    language: source.language,
+});
+
 const toInterest = (interest) => ({
     id: interest.id,
     text: interest.text,
@@ -61,7 +71,7 @@ const withVectors = async (interests) => {
 
 export const ProfileService = {
     get: async (userId) => {
-        const [profile, interests, feeds, refusedSources, relevance, searches] = await Promise.all([
+        const [profile, interests, feeds, refusedSources, relevance, searches, removed] = await Promise.all([
             ProfileModel.get(userId),
             ProfileModel.interests(userId),
             FeedModel.listUserFeeds(userId),
@@ -71,6 +81,7 @@ export const ProfileService = {
                 threshold: JUDGE_THRESHOLD,
             }),
             searchesOfUser(userId),
+            ProfileModel.removedSources(userId),
         ]);
         const relevant = new Map(relevance.map(row => [row.id, row.relevant]));
 
@@ -81,7 +92,7 @@ export const ProfileService = {
             sources: feeds.filter(feed => feed.origin === 'profile').map(feed => ({
                 id: feed.id,
                 site: feed.site,
-                url: feed.url,
+                ...forClient(feed.url),
                 category: feed.category,
                 language: feed.language,
                 trusted: feed.trusted ?? false,
@@ -96,15 +107,35 @@ export const ProfileService = {
             languages: FeedService.languages(),
             // the searches of Google News of the interests, read like feeds for this reader only
             googleSearches: searches.length,
-            // the sources found for the profile the thumbs of the reader left out: [{url, site, refused, liked}]
-            refusedSources,
+            // the sources found for the profile the thumbs of the reader left out: [{key, url, site, refused, liked}],
+            // the key matches them with the sources above and keeps one
+            refusedSources: refusedSources.map(source => ({...source, ...forClient(source.url)})),
+            // the sources found for the profile the reader removed: never found again, until brought back
+            removedSources: removed.map(toRemoved),
         };
     },
 
     // a source left out by the thumbs, kept by the reader: it comes back and is never left out again
-    keepSource: async (userId, url) => {
-        if (typeof url !== 'string' || !url) throw badRequest('url: the feed to keep.');
-        await FeedbackService.keep(userId, url);
+    keepSource: async (userId, key) => {
+        if (typeof key !== 'string' || !key) throw badRequest('key: the source to keep.');
+        await FeedbackService.keep(userId, key);
+        return ProfileService.get(userId);
+    },
+
+    // a source found for the profile removed by the reader: it is remembered, and not found again
+    removeSource: async (userId, id) => {
+        if (!Number.isInteger(id)) throw badRequest('id: the source to remove.');
+        if (await ProfileModel.removeProfileFeed(userId, id) === 0) {
+            throw Object.assign(new Error('This source was not found for your profile.'), {status: 404});
+        }
+        return ProfileService.get(userId);
+    },
+
+    // a source the reader removed brought back as it was, by its key (see toRemoved)
+    restoreSource: async (userId, key) => {
+        const source = (await ProfileModel.removedSources(userId)).find(removed => sourceKey(removed.url) === key);
+        if (!source) throw Object.assign(new Error('This source was not removed.'), {status: 404});
+        await ProfileModel.restoreProfileFeed(userId, source.url);
         return ProfileService.get(userId);
     },
 

@@ -10,6 +10,7 @@
 import dns from 'node:dns/promises';
 import process from 'node:process';
 import net from 'node:net';
+import {createHash} from 'node:crypto';
 
 // an ip the server must never fetch for a user: its own network, the cloud metadata service...
 export const isPrivateIp = (ip) => {
@@ -57,6 +58,12 @@ export const isBridgeUrl = (value) => {
         return false;
     }
 };
+
+// The address of a feed as a client gets it: the one of our RSS-Bridge never leaves the server (null),
+// it shows a site read from its web page. The key names any feed, so the client can match it with
+// itself and act on it (keep it, bring it back) without ever holding the address of the bridge
+export const sourceKey = (url) => createHash('sha256').update(url).digest('hex').slice(0, 16);
+export const forClient = (url) => ({key: sourceKey(url), url: isBridgeUrl(url) ? null : url});
 
 // throws when the url can't be fetched for a user, returns the url otherwise
 export const assertPublicUrl = async (value) => {

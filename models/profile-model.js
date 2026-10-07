@@ -17,6 +17,31 @@ const setVectors = (where, params, {dense, sparse}) => prisma.$executeRawUnsafe(
     `UPDATE profile_interests SET dense = $1::vector, sparse = $2::sparsevec WHERE ${where}`,
     dense, sparse, ...params);
 
+// The feeds found for the profile the reader removes, kept in user_profiles.removed_sources as they were.
+// Exported for the tests, which run them in a transaction rolled back (tests/sources/test.removed-sources.js)
+// $1 the user, $2 the id of the feed: removed and remembered in one statement
+export const REMOVE_PROFILE_FEED = `
+    WITH gone AS (
+        DELETE FROM user_feeds WHERE id = $2::int AND id_user = $1::int AND origin = 'profile'
+        RETURNING url, site, category, language
+    )
+    UPDATE user_profiles p
+    SET removed_sources = p.removed_sources || (SELECT jsonb_agg(to_jsonb(gone)) FROM gone)
+    WHERE p.id_user = $1::int AND EXISTS (SELECT 1 FROM gone)`;
+// $1 the user, $2 the url of a feed removed: forgotten and found for the profile again
+export const RESTORE_PROFILE_FEED = `
+    WITH back AS (
+        SELECT s FROM user_profiles p, jsonb_array_elements(p.removed_sources) s
+        WHERE p.id_user = $1::int AND s->>'url' = $2
+    ), forgotten AS (
+        UPDATE user_profiles p
+        SET removed_sources = (SELECT COALESCE(jsonb_agg(s), '[]'::jsonb) FROM jsonb_array_elements(p.removed_sources) s WHERE s->>'url' <> $2)
+        WHERE p.id_user = $1::int AND EXISTS (SELECT 1 FROM back)
+    )
+    INSERT INTO user_feeds (id_user, url, site, category, language, origin)
+    SELECT $1::int, s->>'url', s->>'site', s->>'category', s->>'language', 'profile' FROM back
+    ON CONFLICT (id_user, url) DO NOTHING`;
+
 export const ProfileModel = {
     get: async (userId) => prisma.user_profiles.findUnique({where: {id_user: userId}}),
 
@@ -103,6 +128,17 @@ export const ProfileModel = {
         UPDATE user_profiles SET kept_sources = array_append(kept_sources, $2)
         WHERE id_user = $1 AND NOT ($2 = ANY(kept_sources))`,
         userId, url),
+
+    // the feeds found for the profile the reader removed: [{url, site, category, language}]
+    removedSources: async (userId) => (await prisma.$queryRawUnsafe(
+        'SELECT removed_sources FROM user_profiles WHERE id_user = $1::int', userId))[0]?.removed_sources ?? [],
+
+    // a feed found for the profile removed by the reader, and remembered: it is not found again. Only one
+    // of theirs found for the profile; answers 0 when there is none
+    removeProfileFeed: async (userId, id) => prisma.$executeRawUnsafe(REMOVE_PROFILE_FEED, userId, id),
+
+    // a feed the reader removed brought back as it was; answers 0 when it was not removed
+    restoreProfileFeed: async (userId, url) => prisma.$executeRawUnsafe(RESTORE_PROFILE_FEED, userId, url),
 
     // the feeds found for the profile join the ones found before
     // feeds: [{url, site, category, language}]

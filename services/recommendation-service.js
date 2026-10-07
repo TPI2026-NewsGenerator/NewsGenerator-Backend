@@ -39,9 +39,12 @@ const recommended = async (userId) => {
     if (!profile) return [];
 
     const shared = Object.values(rss).flatMap(language => Object.values(language).flat());
-    const [{refused}, known] = await Promise.all([FeedbackService.of(userId), knownMedia(userId)]);
+    // the sources found for the profile the reader removed are not suggested back to them
+    const [{refused}, removed, own] = await Promise.all([FeedbackService.of(userId),
+        ProfileModel.removedSources(userId).then(sources => sources.map(source => source.url)), FeedModel.userFeedUrls(userId)]);
+    const known = await knownMedia(userId, {userFeeds: [...own, ...removed]});
     const rows = await FeedModel.recommendedFeeds(userId, {
-        excluded: [...shared, ...refused],
+        excluded: [...shared, ...refused, ...removed],
         languages: null,                // the reader reads every language
         since: new Date(Date.now() - RECENT_DAYS * 24 * 3600e3),
         threshold: JUDGE_THRESHOLD,

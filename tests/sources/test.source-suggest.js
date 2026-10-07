@@ -63,6 +63,24 @@ describe('SourceService.suggest', () => {
         expect(found.tried).toBe(2);
     });
 
+    it('should offer a site read through the bridge without its address, by its key', async () => {
+        process.env.RSS_BRIDGE_URL = 'http://rss-bridge';
+        try {
+            findFeeds.mockImplementation(async (site) => [site === 'midilibre.fr'
+                ? {...feed(site, 5), url: 'http://rss-bridge/?action=display&home_page=https%3A%2F%2Fmidilibre.fr'}
+                : feed(site, 5)]);
+            const found = await ask(['arbitrage football']);
+
+            expect(JSON.stringify(found)).not.toContain('rss-bridge');
+            expect(found.sources.map(({site, key, feed}) => ({site, key: typeof key, feed}))).toEqual([
+                {site: 'midilibre.fr', key: 'string', feed: null},
+                {site: 'footmercato.net', key: 'string', feed: 'https://footmercato.net/rss'},
+            ]);
+        } finally {
+            delete process.env.RSS_BRIDGE_URL;
+        }
+    });
+
     it('should judge the feeds by the words without the embedder', async () => {
         embed.mockRejectedValue(new Error('embedder down'));
         const found = await ask(['arbitrage football']);
@@ -99,5 +117,8 @@ describe('SourceService.checkSites', () => {
         expect(checked.map(site => site.status)).toEqual(['ready', 'bridge', 'flood', 'asleep', 'added', 'none', 'none']);
         expect(checked[0]).toMatchObject({site: 'https://www.kicker.de', feed: 'https://newsfeed.kicker.de/news/aktuell', language: 'de', recent: 40, sample: 'Bayern gewinnt'});
         expect(checked[6].reason).toBe('"www.nowhere.ad" does not exist.');
+        // read from its page: no address on the bridge, a key to choose it
+        expect(checked[1]).toMatchObject({site: 'https://www.vi.nl', status: 'bridge', feed: null, key: expect.stringMatching(/^[0-9a-f]{16}$/)});
+        expect(JSON.stringify(checked)).not.toContain('rss-bridge');
     });
 });

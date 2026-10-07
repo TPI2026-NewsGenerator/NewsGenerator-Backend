@@ -20,5 +20,8 @@ router.delete('/interests/:id', authenticateToken, ProfileController.deleteInter
 // the sources of the profile found again
 router.post('/discover', authenticateToken, ProfileController.rediscover);
 router.post('/kept-sources', authenticateToken, ProfileController.keepSource);
+// a source found for the profile removed by the reader, and brought back
+router.delete('/sources/:id', authenticateToken, ProfileController.removeSource);
+router.post('/removed-sources/restore', authenticateToken, ProfileController.restoreSource);
 
 export default router;

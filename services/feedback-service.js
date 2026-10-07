@@ -13,7 +13,7 @@ import {BriefingModel} from "../models/briefing-model.js";
 import {ProfileModel} from "../models/profile-model.js";
 import {FeedModel} from "../models/feed-model.js";
 import {examplesOf, refusedCounts} from "./utils/feedback.js";
-import {hostOf, isBridgeUrl} from "./utils/public-url.js";
+import {hostOf, isBridgeUrl, sourceKey} from "./utils/public-url.js";
 
 const FEEDBACK_DAYS = 30;       // an older thumb says less of what the reader wants now
 
@@ -53,12 +53,13 @@ export const FeedbackService = {
         return refusedCounts(votes, kept).map(source => ({...source, site: siteOf(source.url)}));
     },
 
-    // the reader keeps a source their thumbs left out: only one of them, it is never left out again
-    keep: async (userId, url) => {
-        const refused = await FeedbackService.refusedSources(userId);
-        if (!refused.some(source => source.url === url)) {
+    // the reader keeps a source their thumbs left out, by its key (see forClient): only one of them, it
+    // is never left out again
+    keep: async (userId, key) => {
+        const source = (await FeedbackService.refusedSources(userId)).find(refused => sourceKey(refused.url) === key);
+        if (!source) {
             throw Object.assign(new Error('This source is not left out.'), {status: 404});
         }
-        await ProfileModel.keepSource(userId, url);
+        await ProfileModel.keepSource(userId, source.url);
     },
 };

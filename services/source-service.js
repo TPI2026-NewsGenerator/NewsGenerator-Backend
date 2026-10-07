@@ -14,7 +14,7 @@ import {search} from "./utils/google-news.js";
 import {searchDirectory as directoryFeeds} from "./utils/feed-directory.js";
 import {mediaFor as gdeltMedia} from "./utils/gdelt.js";
 import {findFeeds, isOnSubject} from "./utils/feed-finder.js";
-import {hostOf, isBridgeUrl, nameOf} from "./utils/public-url.js";
+import {forClient, hostOf, isBridgeUrl, nameOf} from "./utils/public-url.js";
 import {MAX_FEED_ITEMS} from "./utils/feed-limits.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {embed} from "./utils/embedder.js";
@@ -53,6 +53,13 @@ export const knownMedia = async (userId, {userFeeds = null} = {}) => {
     ];
 
     return new Set(hosts.map(nameOf));
+};
+
+// the feed of a source offered to the reader: a site read through our RSS-Bridge has no address for
+// the client (feed null), the key names it to choose it; POST /feeds/import finds its feed again
+const offered = (url) => {
+    const {key, url: feed} = forClient(url);
+    return {key, feed};
 };
 
 // the media of the two directories in one list: a medium both of them name counts for both, and
@@ -115,7 +122,7 @@ export const SourceService = {
             .map(feed => ({
                 site: hostOf(feed.site) ?? hostOf(feed.url),
                 name: feed.title || hostOf(feed.url),
-                feed: feed.url,
+                ...offered(feed.url),
                 language: feed.language,
                 readers: feed.subscribers,
                 via: 'directory',
@@ -130,7 +137,7 @@ export const SourceService = {
                 keywords: [query], userId, language,
                 timeframe: {start: new Date(Date.now() - WEB_DAYS * 24 * 60 * 60 * 1000)},
             });
-            return found.sources.map(({site, name, feed, news, sample}) => ({site, name, feed, language, news, sample, via: 'web'}));
+            return found.sources.map(({site, name, key, feed, news, sample}) => ({site, name, key, feed, language, news, sample, via: 'web'}));
         } catch (err) {
             // Google News refusing is no error here, the reader is only shown the directory
             console.log(`Source search, Google News: ${err.message}`);
@@ -167,7 +174,7 @@ export const SourceService = {
             return {
                 site, status,
                 name: hostOf(site) ?? site,
-                feed: feed.url,
+                ...offered(feed.url),
                 language: feed.language ?? null,
                 recent: feed.recent ?? null,
                 items: feed.items ?? null,
@@ -223,7 +230,7 @@ export const SourceService = {
                 site: site,
                 name: name,
                 news: news,             // how many news this medium published on the subject
-                feed: feed.url,
+                ...offered(feed.url),
                 sample: feed.titles?.[0] ?? null,
             }));
 

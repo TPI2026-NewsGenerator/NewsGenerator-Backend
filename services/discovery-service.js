@@ -121,9 +121,9 @@ export const discover = async (userId, {onFound = async () => {}} = {}) => {
     }
 
     // the feeds found before stay: only new media are looked for. Nor the ones whose cards the
-    // reader refused again and again (see FeedbackService): not found twice
-    const {refused} = await FeedbackService.of(userId);
-    const known = await knownMedia(userId, {userFeeds: [...feeds, ...refused]});
+    // reader refused again and again (see FeedbackService), nor the ones they removed: not found twice
+    const [{refused}, removed] = await Promise.all([FeedbackService.of(userId), ProfileModel.removedSources(userId)]);
+    const known = await knownMedia(userId, {userFeeds: [...feeds, ...refused, ...removed.map(source => source.url)]});
     // A medium refused for one interest is tried again for the next: tribuna.com had 1 news in 30 on
     // the governance of the UEFA, was never judged on refereeing (7 in 30), and was lost. Only the
     // media already kept are not tried twice, their feed is already there

@@ -5,7 +5,8 @@
 //  Description: Tests for the check of the urls given by a user (SSRF protection)
 //
 
-import {isPrivateIp, assertPublicUrl, decodeBody, readText} from '../../services/utils/public-url.js'
+import process from 'node:process'
+import {isPrivateIp, assertPublicUrl, decodeBody, readText, forClient, sourceKey} from '../../services/utils/public-url.js'
 
 describe('isPrivateIp', () => {
     it('should refuse the addresses of the server and its network', () => {
@@ -81,5 +82,34 @@ describe('decodeBody', () => {
     it('should be what readText gives', async () => {
         const xml = '<?xml version="1.0" encoding="iso-8859-1"?><t>Dragão</t>';
         expect(await readText(new Response(latin1(xml), {headers: {'content-type': 'text/xml'}}))).toBe(xml);
+    });
+});
+
+describe('forClient', () => {
+    const bridge = 'http://bridge.invalid:3000';
+    const page = `${bridge}/?action=display&bridge=CssSelectorBridge&home_page=https%3A%2F%2Flematin.ch`;
+    let configured;
+    beforeAll(() => {
+        configured = process.env.RSS_BRIDGE_URL;
+        process.env.RSS_BRIDGE_URL = bridge;
+    });
+    afterAll(() => {
+        if (configured === undefined) delete process.env.RSS_BRIDGE_URL;
+        else process.env.RSS_BRIDGE_URL = configured;
+    });
+
+    it('should send no address on the bridge, only its key', () => {
+        expect(forClient(page)).toEqual({key: sourceKey(page), url: null});
+        expect(sourceKey(page)).toMatch(/^[0-9a-f]{16}$/);
+        expect(sourceKey(page)).not.toContain('bridge');
+    });
+
+    it('should send any other address as it is, with its key', () => {
+        expect(forClient('https://rts.ch/rss')).toEqual({key: sourceKey('https://rts.ch/rss'), url: 'https://rts.ch/rss'});
+    });
+
+    it('should give each address its own key, always the same', () => {
+        expect(sourceKey('https://rts.ch/rss')).toBe(sourceKey('https://rts.ch/rss'));
+        expect(sourceKey('https://rts.ch/rss')).not.toBe(sourceKey('https://rts.ch/rss2'));
     });
 });

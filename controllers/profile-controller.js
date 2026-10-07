@@ -44,6 +44,12 @@ export const ProfileController = {
 
     rediscover: (req, res) => respond(res, () => ProfileService.rediscover(req.user.id)),
 
-    // {url}: a source the thumbs left out, kept by the reader
-    keepSource: (req, res) => respond(res, () => ProfileService.keepSource(req.user.id, req.body?.url)),
+    // {key}: a source the thumbs left out, kept by the reader (the key of refusedSources)
+    keepSource: (req, res) => respond(res, () => ProfileService.keepSource(req.user.id, req.body?.key)),
+
+    // a source found for the profile, removed by the reader and not found again
+    removeSource: (req, res) => respond(res, () => ProfileService.removeSource(req.user.id, Number(req.params.id))),
+
+    // {key}: a source the reader removed, brought back
+    restoreSource: (req, res) => respond(res, () => ProfileService.restoreSource(req.user.id, req.body?.key)),
 };

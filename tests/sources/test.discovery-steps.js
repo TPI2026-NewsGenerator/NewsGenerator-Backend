@@ -12,7 +12,7 @@ jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: {
     interestsForDiscovery: jest.fn(), get: jest.fn(async () => ({languages: ['en']})), addProfileFeeds: jest.fn(async () => {}),
     setDiscovery: jest.fn(async () => {}), deleteProfileFeeds: jest.fn(async () => 0),
-    profileFeedRelevance: jest.fn(async () => []), keptSources: jest.fn(async () => []), discovering: jest.fn(async () => []),
+    profileFeedRelevance: jest.fn(async () => []), keptSources: jest.fn(async () => []), removedSources: jest.fn(async () => []), discovering: jest.fn(async () => []),
 }}));
 jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {
     userFeedUrls: jest.fn(async () => []), countUserFeeds: jest.fn(async () => 0), trustedFeedUrls: jest.fn(async () => []),

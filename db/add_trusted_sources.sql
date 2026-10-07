@@ -12,3 +12,7 @@ ALTER TABLE public.user_feeds ADD COLUMN IF NOT EXISTS trusted boolean NOT NULL 
 -- the feeds a reader chose to keep after their thumbs left them out (see services/utils/feedback.js):
 -- never left out again
 ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS kept_sources text[] NOT NULL DEFAULT '{}';
+
+-- the feeds found for the profile the reader removed, [{url, site, category, language}]: never found
+-- nor suggested again, and given back as they were when the reader brings one back
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS removed_sources jsonb NOT NULL DEFAULT '[]';
