@@ -444,7 +444,7 @@ export const write = async (briefingId, userId, hours) => {
                 id: String(result.story.storyId),
                 title: lead.title,
                 summary: result.summary?.summary ?? null,
-            })), usage.reviewing).catch(err => {
+            })), usage.reviewing, {interests: interests.map(interest => interest.text), refused: profile.refused ?? []}).catch(err => {
                 console.error(`Briefing: the cards were not read again (${err.message})`);
                 return new Map();
             }),

@@ -304,25 +304,40 @@ export const selectStories = async (profileText, candidates, usage = null, examp
 // of 163 (federal credits as "cantonal politics", Top Chef restaurants as "people"), "a brand of a
 // refused product" 2 cards on new AI models; "its main subject", with a team of a refused sport and a
 // party of a refused politics, 1 card in 2 runs of the 163 (a resignation as "politics news in brief"),
-// the Nati 6 times of 6
-export const reviewPrompt = (profileText, cards) => `Voici le profil d'un lecteur, écrit par lui-même :
+// the Nati 6 times of 6.
+// It still left out cards on no refusal (bench/review-replay.mjs, the 19 reviews of dry briefings of
+// 8 readers replayed 3 times): 20 of 264, a connected home, a conference on AI and software and a games
+// console for the reader of coding who refuses "general news of AI, only on coding" (the restriction
+// read as one on every subject), a federal vote on cantonal minimum wages for the reader who refuses
+// cantonal politics. Given the interests and the refusals the split of the profile listed, told that
+// only these leave a card out and that a restriction holds on its own subject, and asked for each card
+// its subject, the closest refusal and then only whether it is that one: 0 of 264, the 3 cards on a
+// refusal left out, and on 99 cards of the 8 readers with 20 recent news on what they refuse added,
+// 60 of 60 left out (57 before) and no good card. Asked for the cards to leave out only, with a
+// reason after, it still listed the connected home, then wrote that it had to be kept
+// interests: their texts, refused: what the reader refuses as the split of the profile wrote it
+export const reviewPrompt = (profileText, cards, {interests = [], refused = []} = {}) => `Voici le profil d'un lecteur, écrit par lui-même :
 """${profileText}"""
-
+${interests.length > 0 ? `Ses intérêts :\n${interests.map(interest => `- ${interest}`).join('\n')}\n` : ''}${refused.length > 0 ? `Ce qu'il dit ne pas vouloir, lu dans son profil :\n${refused.map(subject => `- ${subject}`).join('\n')}\nSeuls ces refus enlèvent une carte : aucune autre phrase du profil n'en enlève.\n` : ''}
 Voici les cartes de son résumé de l'actualité, chacune avec son identifiant entre crochets, son titre et le résumé de son article :
 ${cards.map(card => `[${card.id}] ${card.title}\n${card.summary || '(pas de résumé)'}`).join('\n\n')}
 
 Le résumé dit de quoi parle vraiment une carte, mieux que son titre. Dis seulement quelles cartes ont pour sujet principal ce que le lecteur dit explicitement ne pas vouloir, même quand leur titre ne le nommait pas (une équipe d'un sport refusé, un parti d'une politique refusée). Une carte qui ne fait que mentionner un sujet refusé, ou qui s'en approche sans en être, est gardée.
+Un refus ne vaut que pour le sujet qu'il nomme, au sens exact : ni pour un domaine plus large qui le contient, ni pour un sujet voisin. Quand le lecteur restreint un sujet (« le football, mais seulement l'équipe de France »), la restriction ne vaut que pour les cartes de ce sujet (un autre match de football est refusé) : une carte d'un autre sujet n'est jamais enlevée pour elle.
 Ne juge pas si une carte est assez proche de ses intérêts : elle a déjà été choisie pour eux, et une carte qui correspond à un seul d'entre eux est gardée. Un sujet que le profil ne mentionne pas n'est pas refusé pour autant : seul compte ce qu'il écrit ne pas vouloir. S'il n'écrit rien de tel, n'enlève aucune carte.
 Une carte sans résumé est gardée. Dans le doute, garde la carte.
-Réponds uniquement en JSON : {"refused": [{"id": "...", "why": "une phrase courte"}]}`;
+Pour chaque carte, dans l'ordre : "subject" dit son sujet principal en quelques mots, "refusal" cite ${refused.length > 0 ? 'tel quel le refus de la liste' : 'les mots du profil qui disent ce que le lecteur ne veut pas'} le plus proche de ce sujet (null s'il n'y en a aucun), et "refused" est true seulement si ce sujet est ce que ce refus nomme.
+Réponds uniquement en JSON, sans rien après : {"cards": [{"id": "...", "subject": "quelques mots", "refusal": "..." ou null, "refused": true ou false}]}`;
 
-// the ids of the cards to leave out, only among the ones given: Map id -> why
+// the ids of the cards to leave out, only among the ones given and judged refused (true, never a
+// "true" written): Map id -> "subject: « refusal »"
 export const normalizeReview = (answer, knownIds) => {
     const known = new Set(knownIds.map(String));
     const refused = new Map();
-    for (const item of Array.isArray(answer?.refused) ? answer.refused : []) {
+    for (const item of Array.isArray(answer?.cards) ? answer.cards : []) {
         const id = String(item?.id ?? '').replace(/^\[|\]$/g, '');
-        if (known.has(id) && !refused.has(id)) refused.set(id, cleanText(item?.why, 300));
+        if (item?.refused !== true || !known.has(id) || refused.has(id)) continue;
+        refused.set(id, `${cleanText(item?.subject, 100)}: « ${cleanText(item?.refusal, 200)} »`);
     }
     return refused;
 };
@@ -358,9 +373,9 @@ export const confirmOnSubject = async (interests, titles, usage = null) => {
     return Array.isArray(answer?.onSubject) ? normalizeConfirmed(answer, titles.length) : null;
 };
 
-// cards: [{id, title, summary}]
-export const reviewCards = async (profileText, cards, usage = null) =>
-    cards.length === 0 ? new Map() : normalizeReview(await ollamaJson(reviewPrompt(profileText, cards), usage), cards.map(card => card.id));
+// cards: [{id, title, summary}], reader: {interests: [texts], refused: [what the reader refuses]}
+export const reviewCards = async (profileText, cards, usage = null, reader = {}) =>
+    cards.length === 0 ? new Map() : normalizeReview(await ollamaJson(reviewPrompt(profileText, cards, reader), usage), cards.map(card => card.id));
 
 // The stories are grouped by vectors, and two media writing on one subject can land in one story
 // without telling the same fact (a product launch and a bug found in it). No threshold of the vectors

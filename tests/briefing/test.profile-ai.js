@@ -243,14 +243,16 @@ describe('normalizeMerges', () => {
 
 describe('the cards read again with their summary', () => {
     it('should leave out only cards of the briefing, each once', () => {
-        const refused = normalizeReview({refused: [
-            {id: '[8234]', why: "L'article traite de l'équipe nationale de football."},
-            {id: '8234', why: 'twice'},
-            {id: '999', why: 'not a card of this briefing'},
-            {why: 'no id'},
-        ]}, ['8234', '12307']);
-        expect(refused).toEqual(new Map([['8234', "L'article traite de l'équipe nationale de football."]]));
-        expect(normalizeReview({refused: 'nothing'}, ['1'])).toEqual(new Map());
+        const refused = normalizeReview({cards: [
+            {id: '[8234]', subject: "l'équipe nationale de football", refusal: 'le football', refused: true},
+            {id: '8234', subject: 'twice', refusal: 'le football', refused: true},
+            {id: '12307', subject: 'le tennis suisse', refusal: null, refused: false},
+            {id: '5', subject: 'a "true" written', refusal: 'le football', refused: 'true'},
+            {id: '999', subject: 'not a card of this briefing', refusal: 'le football', refused: true},
+            {refused: true},
+        ]}, ['8234', '12307', '5']);
+        expect(refused).toEqual(new Map([['8234', "l'équipe nationale de football: « le football »"]]));
+        expect(normalizeReview({cards: 'nothing'}, ['1'])).toEqual(new Map());
         expect(normalizeReview(null, ['1'])).toEqual(new Map());
     });
 
@@ -262,6 +264,15 @@ describe('the cards read again with their summary', () => {
         expect(prompt).toContain("[8234] Une nouvelle Nati\nL'équipe nationale de Suisse de football débute à Skopje.");
         expect(prompt).toContain('[1090] Anthropic Science Lab\n(pas de résumé)');
         expect(prompt).toContain("S'il n'écrit rien de tel, n'enlève aucune carte.");
+    });
+
+    it('should give the AI the interests and what the reader refuses', () => {
+        const prompt = reviewPrompt("J'aime le code bas niveau et les nouveautés en technologies, pas l'IA en général.", [
+            {id: '311672', title: 'SmartThings fait peau neuve', summary: 'La maison connectée de Samsung.'},
+        ], {interests: ['code bas niveau', 'nouveautés en technologies'], refused: ["informations générales de l'IA"]});
+        expect(prompt).toContain('Ses intérêts :\n- code bas niveau\n- nouveautés en technologies');
+        expect(prompt).toContain("Ce qu'il dit ne pas vouloir, lu dans son profil :\n- informations générales de l'IA\nSeuls ces refus enlèvent une carte");
+        expect(reviewPrompt('Le tennis.', [])).not.toContain('Ses intérêts');
     });
 });
 
