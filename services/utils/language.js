@@ -50,20 +50,24 @@ const MIN_TRIGRAM_CHARS = 200;  // shorter, the short words are surer
 const NEAR_LANGUAGES = new Set(['hr', 'bs', 'sr']);
 const COUNTRY_LANGUAGE = {hr: 'hr', ba: 'bs', rs: 'sr', me: 'sr'};
 
-// the language its short words tell, null under MIN_HITS
-const wordsLanguage = (text) => {
+// the language its short words tell, null under MIN_HITS. A tie goes to 'preferred' (the language of
+// the feed) when it is among the best: a Spanish title of a Spanish search with three "la" and no
+// other short word counts as much French as Spanish, and was told French
+const wordsLanguage = (text, preferred = null) => {
     const words = (text ?? '').toLowerCase().match(/[\p{L}]+/gu) ?? [];
     let best = null;
     let bestHits = MIN_HITS - 1;
+    let preferredHits = 0;
 
     for (const [language, set] of Object.entries(SETS)) {
         const hits = words.reduce((count, word) => count + (set.has(word) ? 1 : 0), 0);
+        if (language === preferred) preferredHits = hits;
         if (hits > bestHits) {
             best = language;
             bestHits = hits;
         }
     }
-    return best;
+    return best && preferredHits === bestHits ? preferred : best;
 };
 
 // the language of a long text by its groups of letters: franc when it says one outside the 9 the
@@ -83,7 +87,7 @@ const longTextLanguage = (text, words) => {
 // is read by its words, and by its groups of letters when it is long
 export const languageOf = (text, fallback = null) => {
     if (fallback && !SETS[fallback]) return fallback;
-    const words = wordsLanguage(text);
+    const words = wordsLanguage(text, fallback);
     if (fallback) return words ?? fallback;
     return longTextLanguage(text ?? '', words);
 };

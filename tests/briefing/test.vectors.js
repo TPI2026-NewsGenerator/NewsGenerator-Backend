@@ -227,6 +227,15 @@ describe('languageOf', () => {
         expect(languageOf('Top 14 : Toulon', 'fr')).toBe('fr');
         expect(languageOf('', null)).toBeNull();
     });
+
+    it('should give a tie of the short words to the language of the feed', () => {
+        // three "la": as much French, Spanish and Italian
+        const title = 'La FIFA sanciona a la federación noruega tras la queja';
+        expect(languageOf(title)).toBe('fr');
+        expect(languageOf(title, 'es')).toBe('es');
+        expect(languageOf(title, 'it')).toBe('it');
+        expect(languageOf('Le président de la FIFA répond à la Norvège', 'es')).toBe('fr');
+    });
 });
 
 describe('feedLanguage', () => {
