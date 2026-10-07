@@ -112,8 +112,11 @@ export const ProfileModel = {
     }),
 
     // Each feed found for the profile, with its news of the last days that got vectors, and how many
-    // of them are on one of its interests: their title reaches 'threshold' with it, as when the feed
-    // was found (see judgeOf in discovery-service.js), whatever their language: the reader reads them all.
+    // of them are on one of its interests: their title and the start of their description reach
+    // 'threshold' with it, the text the feed was found on (see subjectStats in site-sections.js),
+    // whatever their language: the reader reads them all. On the title alone, phoronix.com was found for
+    // low-level code and removed the same day, its titles at 0.44 at best (bench/prune-text.mjs: 3 of
+    // 113 feeds found removed on the title, none on the text)
     // [{id, url, site, created_at, news, relevant}]
     profileFeedRelevance: async (userId, {since, threshold}) => prisma.$queryRawUnsafe(`
         SELECT uf.id, uf.url, uf.site, uf.created_at,
@@ -121,7 +124,7 @@ export const ProfileModel = {
                count(a.id) FILTER (WHERE EXISTS (
                    SELECT 1 FROM profile_interests i
                    WHERE i.id_user = uf.id_user AND i.dense IS NOT NULL
-                     AND -(a.title_dense <#> i.dense) >= $3::real))::int AS relevant
+                     AND -(a.text_dense <#> i.dense) >= $3::real))::int AS relevant
         FROM user_feeds uf
         LEFT JOIN feeds f ON f.url = uf.url
         LEFT JOIN articles a ON a.id_feed = f.id AND a.embedded_at IS NOT NULL AND a.created_at >= $2::timestamptz
