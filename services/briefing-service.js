@@ -418,45 +418,52 @@ export const write = async (briefingId, userId, hours) => {
             return [];
         });
     const checked = await keepSameNews([...picked, ...reserve], usage, versions);
+    // two cards of one news joined leave a place: the next of the reserve is read with the cards
+    const main = checked.filter(story => !story.reserve);
+    const spare = checked.filter(story => story.reserve);
+    main.push(...spare.splice(0, Math.max(0, picked.length - main.length)));
+    console.log(`Briefing: the AI chose ${chosenByAi.length} of ${candidates.length} stories, ${main.length} for the cards and ${spare.length} in reserve once the same news joined`);
 
-    // 4. and 5. the chosen stories read, the ones of the reserve when one of them can't be
+    // 4. and 5. the chosen stories read, then 6. their cards read once more with their summary, which
+    // says what a title may not: the ones on what the reader refuses are left out (see reviewCards).
+    // The ones of the reserve take the places of the stories that can't be read or are left out. The
+    // briefing never waits on the review failing
     const content = new Map();
+    const titleTranslation = new Map();
     let rounds = 0;
+    const leadOf = (result) => result.story.members.find(article => article.link === result.summary?.from) ?? result.story.best;
     const read = async (chosen) => {
         const first = rounds++ === 0;
         if (first) await step('reading');
-        return readStories(chosen, {trusted, language, usage, content, first, step});
+        const results = await readStories(chosen, {trusted, language, usage, content, first, step});
+        const leads = new Map(results.filter(result => !result.unreadable).map(result => [result, leadOf(result)]));
+        // and the titles written in another language than the reader's translated, as their passages
+        const foreign = [...leads.values()].filter(lead => lead.lang && lead.lang !== language && writtenIn(lead.lang) && writtenIn(language));
+        const [leftOut, translations] = await Promise.all([
+            reviewCards(profile.text, [...leads].map(([result, lead]) => ({
+                id: String(result.story.storyId),
+                title: lead.title,
+                summary: result.summary?.summary ?? null,
+            })), usage.reviewing).catch(err => {
+                console.error(`Briefing: the cards were not read again (${err.message})`);
+                return new Map();
+            }),
+            foreign.length === 0 ? [] : translateTexts(foreign.map(lead => ({text: lead.title, from: writtenIn(lead.lang)})),
+                writtenIn(language), usage.summarizing),
+        ]);
+        foreign.forEach((lead, i) => titleTranslation.set(lead, translations[i]));
+        if (leftOut.size > 0) console.log(`Briefing: ${leftOut.size} cards on what the reader refuses left out (${[...leftOut.values()].join(' / ')})`);
+        return results.map(result => ({...result, leftOut: leftOut.get(String(result.story.storyId)) ?? null}));
     };
-    const {cards, unreadable} = await readableCards(checked.filter(story => !story.reserve), checked.filter(story => story.reserve), read);
-    if (unreadable > 0) console.log(`Briefing: ${unreadable} chosen stories could not be read, ${cards.filter(card => card.story.reserve).length} of the reserve took their place`);
+    const {cards, unreadable, leftOut} = await readableCards(main, spare, read);
+    if (unreadable + leftOut > 0) console.log(`Briefing: ${unreadable} chosen stories could not be read and ${leftOut} were left out, ${cards.filter(card => card.story.reserve).length} of the reserve took their place`);
     const stories = cards.map(card => card.story);
     const summaryOf = (i) => cards[i].summary;
-
-    // 6. the cards read once more with their summary, which says what a title may not: the ones on
-    // what the reader refuses are left out (see reviewCards). The briefing never waits on it failing
-    const leadOf = (story, i) => story.members.find(article => article.link === summaryOf(i)?.from) ?? story.best;
-    const leads = stories.map(leadOf);
-    // and the titles written in another language than the reader's translated, as their passages
-    const foreign = leads.filter(lead => lead.lang && lead.lang !== language && writtenIn(lead.lang) && writtenIn(language));
-    const [leftOut, titleTranslations] = await Promise.all([
-        reviewCards(profile.text, stories.map((story, i) => ({
-            id: String(story.storyId),
-            title: leads[i].title,
-            summary: summaryOf(i)?.summary ?? null,
-        })), usage.reviewing).catch(err => {
-            console.error(`Briefing: the cards were not read again (${err.message})`);
-            return new Map();
-        }),
-        foreign.length === 0 ? [] : translateTexts(foreign.map(lead => ({text: lead.title, from: writtenIn(lead.lang)})),
-            writtenIn(language), usage.summarizing),
-    ]);
-    const titleTranslation = new Map(foreign.map((lead, i) => [lead, titleTranslations[i]]));
-    if (leftOut.size > 0) console.log(`Briefing: ${leftOut.size} cards on what the reader refuses left out (${[...leftOut.values()].join(' / ')})`);
+    const leads = cards.map(leadOf);
     await step(null);
     console.log(`Briefing ${briefingId}: tokens ${JSON.stringify(usage)}, seconds ${JSON.stringify(seconds)}`);
 
-    return stories.flatMap((story, i) => {
-        if (leftOut.has(String(story.storyId))) return [];
+    return stories.map((story, i) => {
         const summary = summaryOf(i);
         const lead = leads[i];
         const members = [...story.members].sort((a, b) => b.at - a.at);

@@ -4,7 +4,8 @@
 //  File: readable-cards.js
 //  Description: The cards of a briefing are the stories of which an article could be read: a story
 //               no article of which could be read (a paywall, a protected site, its first lines only)
-//               gives way to the next story the AI chose
+//               gives way to the next story the AI chose, as does a card read on what the reader
+//               refuses
 //
 
 "use strict"
@@ -17,17 +18,21 @@
 export const MAX_REFILLS = 2;
 
 // main: the stories of the briefing, in their order; reserve: the next stories chosen, in theirs
-// read: async (stories) => [{story, unreadable, ...}] for the stories read, unreadable when no article
-// of the story could be read (a story may be left out, a page of Google News that is no news)
-// Answers the results of the stories read that could be, the ones of main first in their order, then
-// the ones of the reserve that took the places left, and how many stories could not be read
+// read: async (stories) => [{story, unreadable, leftOut, ...}] for the stories read, unreadable when no
+// article of the story could be read, leftOut (why) when its card is on what the reader refuses (see
+// reviewCards); a story may be missing, a page of Google News that is no news
+// Answers the results of the stories read that could be and were kept, the ones of main first in their
+// order, then the ones of the reserve that took the places left, how many stories could not be read
+// and how many were left out
 export const readableCards = async (main, reserve, read, {maxRefills = MAX_REFILLS} = {}) => {
     const wanted = main.length;
     const kept = [];
     let unreadable = 0;
+    let leftOut = 0;
     const take = (results) => {
         for (const result of results) {
             if (result.unreadable) unreadable++;
+            else if (result.leftOut) leftOut++;
             else if (kept.length < wanted) kept.push(result);
         }
     };
@@ -36,5 +41,5 @@ export const readableCards = async (main, reserve, read, {maxRefills = MAX_REFIL
     for (let refill = 0; refill < maxRefills && kept.length < wanted && next.length > 0; refill++) {
         take(await read(next.splice(0, wanted - kept.length)));
     }
-    return {cards: kept, unreadable};
+    return {cards: kept, unreadable, leftOut};
 };

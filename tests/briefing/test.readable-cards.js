@@ -68,6 +68,15 @@ describe('readableCards', () => {
         expect(ids(cards)).toEqual(['a', 'r1']);
     });
 
+    it('should give the place of a card left out on what the reader refuses to the next one chosen', async () => {
+        const read = jest.fn(async (list) => list.map(story => ({story, unreadable: false, summary: {summary: story.id},
+            leftOut: story.id === 'nati' ? 'football, which the reader refuses' : null})));
+        const {cards, unreadable, leftOut} = await readableCards(stories('a', 'nati', 'c'), stories('r1', 'r2'), read);
+        expect(ids(cards)).toEqual(['a', 'c', 'r1']);
+        expect([unreadable, leftOut]).toEqual([0, 1]);
+        expect(read).toHaveBeenNthCalledWith(2, stories('r1'));
+    });
+
     it('should stop after a few rounds of reading, the briefing waiting for each', async () => {
         const read = reader({paywalled: ['b', 'r1', 'r2', 'r3']});
         const {cards} = await readableCards(stories('a', 'b'), stories('r1', 'r2', 'r3', 'r4'), read, {maxRefills: 2});
