@@ -150,6 +150,17 @@ const addressOf = (article) => article.resolved_link ?? article.link;
 // trusted: the media the reader trusts
 const isTrusted = (article, trusted) => trusted.has(mediumOfArticle(article));
 
+// {thumbnail, thumbnailSource} of the first of these articles with a picture: the one its feed gave,
+// else the one its page gives to be shared (og:image, see crawlers.js) when it was read. Only 23 of
+// 82 cards of 3 days had one from the feeds (8.10.2026)
+export const pictureOf = (articles, content = new Map()) => {
+    for (const article of articles) {
+        const thumbnail = article.thumbnail ?? content.get(article.link)?.thumbnail ?? null;
+        if (thumbnail) return {thumbnail, thumbnailSource: siteOf(article)};
+    }
+    return {thumbnail: null, thumbnailSource: null};
+};
+
 const toArticle = (article, trusted = new Set()) => ({
     title: article.title,
     url: addressOf(article),        // a link of Google News not decoded: the browser follows it
@@ -651,7 +662,9 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             // news of the same affair telling something the card does not, the closest first (see
             // anglesOf): [{title, titleTranslation, url, source, language, publishedAt, media, ...}]
             angles: angles.get(story.storyId) ?? [],
-            thumbnail: members.find(article => article.thumbnail)?.thumbnail ?? null,
+            // the picture of its lead article when it has one, else of its newest article with one;
+            // and the site it is of, shown under it
+            ...pictureOf([lead, ...members], content),
             publishedAt: members[0].at?.toISOString?.() ?? null,
             corroboration: {
                 ...corroborationOf(story.members.map(article => ({

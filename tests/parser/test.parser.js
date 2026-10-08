@@ -18,6 +18,34 @@ describe('Parser.Xml', () => {
         expect(Array.isArray(items[0].category)).toBe(true);
     });
 
+    it('should read the picture of an <enclosure> or of the first <img> of the text, as an absolute address', async () => {
+        const items = await Parser.Xml(`<rss><channel>
+            <item><title>A</title><link>https://www.stern.de/a</link>
+                <enclosure url="https://image.stern.de/a.jpg" type="image/jpeg" length="0"/></item>
+            <item><title>B</title><link>https://sports.example/b</link>
+                <description><![CDATA[<img src="https://pixel.example/p.gif" width="1" height="1"><p><img src="/photos/b.jpg" alt=""> Text</p>]]></description></item>
+            <item><title>C</title><link>https://x/c</link>
+                <description>&lt;img src="//cdn.example/c.webp"&gt; Text</description></item>
+            <item><title>D</title><link>https://x/d</link>
+                <enclosure url="https://x/d.mp3" type="audio/mpeg"/>
+                <media:content url="https://x/d.mp4" medium="video"/></item>
+            <item><title>E</title><link>https://x/e</link><enclosure url="javascript:alert(1)" type="image/png"/></item>
+        </channel></rss>`);
+
+        expect(items.map(item => item.thumbnail)).toEqual([
+            'https://image.stern.de/a.jpg', 'https://sports.example/photos/b.jpg', 'https://cdn.example/c.webp', null, null,
+        ]);
+        expect(items[1].description).toBe('Text');
+    });
+
+    it('should read the picture of an Atom entry given as <link rel="enclosure">', async () => {
+        const items = await Parser.Xml(`<feed xmlns="http://www.w3.org/2005/Atom"><entry>
+            <title>Hello</title><link rel="alternate" href="https://x/a"/>
+            <link rel="enclosure" type="image/png" href="https://x/a.png"/>
+        </entry></feed>`);
+        expect(items[0].thumbnail).toBe('https://x/a.png');
+    });
+
     it('should read an RSS 2.0 feed with only one item', async () => {
         const items = await Parser.Xml(`<rss><channel><item><title> T </title><link>https://y</link></item></channel></rss>`);
         expect(items).toEqual([{title: 'T', thumbnail: null, link: 'https://y', pubDate: null, description: '', category: null, source: null}]);

@@ -71,6 +71,22 @@ const fetchFeed = async ({url, etag, lastModified}) => {
     };
 };
 
+// The picture a page gives to be shared (og:image, twitter:image), for a news whose feed gave none.
+// Read before Readability, which strips the head of the document
+const PAGE_IMAGE = 'meta[property="og:image:secure_url"], meta[property="og:image"], meta[name="og:image"], meta[name="twitter:image"], meta[property="twitter:image"], link[rel="image_src"]';
+export const pageImage = (document, url) => {
+    for (const element of document.querySelectorAll(PAGE_IMAGE)) {
+        const address = (element.getAttribute('content') ?? element.getAttribute('href') ?? '').trim();
+        try {
+            const image = new URL(address, url);
+            if (address && /^https?:$/.test(image.protocol)) return image.href;
+        } catch {
+            // not an address: the next one
+        }
+    }
+    return null;
+};
+
 // The article of one page read by a plain fetch, as Html reads it (Readability, then its blocks):
 // {url, thumbnail, source, publishedAt, title, author, lang, description, content, blocks}, null when
 // the page can't be read (refused, too slow, no article in it)
@@ -88,11 +104,12 @@ const readPage = async ({url, userData = {}}) => {
         return null;
     }
     const {document} = parseHTML(await readText(res, PAGE_TIMEOUT_MS));
+    const image = pageImage(document, url);
     const article = new Readability(document).parse();
     if (!article) return null;
     return {
         url,
-        thumbnail: userData.thumbnail ?? null,
+        thumbnail: userData.thumbnail ?? image,
         source: article.siteName ?? '',
         publishedAt: article.publishedTime ?? '',
         title: article.title ?? '',
@@ -152,6 +169,7 @@ export const Crawlers = {
 
             async requestHandler({ request, body }) {
                 const { document } = parseHTML(body.toString());   // structure html DOM
+                const image = pageImage(document, request.loadedUrl ?? request.url);
                 const reader = new Readability(document); // parse HTML from linkedom document
                 const newsContent = reader.parse(); // parse useful content
 
@@ -163,7 +181,7 @@ export const Crawlers = {
                 // format data
                 scrapedContentNews.push({
                     url: request.url ?? null,
-                    thumbnail: thumbnail ?? null,
+                    thumbnail: thumbnail ?? image,
                     source: newsContent.siteName ?? '',
                     publishedAt: newsContent.publishedTime ?? '',
                     title: newsContent.title ?? '',

@@ -77,10 +77,33 @@ const withTitle = (item) => {
     return {...item, title: `${(end > 0 ? start.slice(0, end) : start).trimEnd()}…`};
 };
 
-// get the biggest thumbnail url
-const thumbnail = (news) => {
-    const thumbnails = news['media:thumbnail'] || news['media:content'] || [];
-    return thumbnails[thumbnails.length - 1]?.url ?? null;
+// The picture of a news, as an absolute http(s) address, null when it has none. The biggest
+// <media:thumbnail> or <media:content> first, else an <enclosure> of an image, else the first <img> of
+// its text: on 40 feeds that gave no picture in a day (8.10.2026), 17 had an <enclosure> (stern.de,
+// actu.fr, bfmtv.com) and 11 an <img> in their text (sports.yahoo.com, index.hr), 58'000 news of 139'000
+// had one
+const IMAGE_FILE = /\.(jpe?g|png|webp|gif|avif)(\?|#|$)/i;
+const NOT_IMAGE = /^(video|audio)\b/i;
+const absolute = (address, link) => {
+    if (!address) return null;
+    try {
+        const url = new URL(String(address).trim(), link ?? undefined);
+        return /^https?:$/.test(url.protocol) ? url.href : null;
+    } catch {
+        return null;
+    }
+};
+// an <img> of one pixel is a counter of the reads, no picture
+const PIXEL = /\s(width|height)=["']?[01]["'\s/>]/i;
+const imageInText = (node) => {
+    const html = unwrapCdata(decodeEntities(typeof node === 'object' && node !== null ? String(node['#text'] ?? '') : String(node ?? '')));
+    return [...html.matchAll(/<img\b[^>]*>/gi)].map(([tag]) => !PIXEL.test(tag) && tag.match(/\ssrc=["']([^"']+)["']/i)?.[1]).find(Boolean) ?? null;
+};
+const thumbnail = (news, link, enclosures = []) => {
+    const media = news['media:thumbnail'] ?? (news['media:content'] ?? []).filter(content => !NOT_IMAGE.test(content.type ?? content.medium ?? ''));
+    const enclosure = enclosures.find(file => file?.url && (/^image\//i.test(file.type ?? '') || (!file.type && IMAGE_FILE.test(file.url))));
+    const inText = ['content:encoded', 'description', 'content', 'summary'].map(tag => imageInText(news[tag])).find(Boolean);
+    return absolute(media.at(-1)?.url, link) ?? absolute(enclosure?.url, link) ?? absolute(inText, link);
 };
 
 // RSS 2.0 <source url="https://www.bbc.com">bbc.com</source>: the site that first published the news,
@@ -99,7 +122,7 @@ const categories = (list, getText) => {
 // format RSS 2.0 and RDF (RSS 1.0) item, RDF gives the date and categories with Dublin Core (dc:date, dc:subject)
 const fromRssItem = (news) => ({
     title: text(news.title),
-    thumbnail: thumbnail(news),
+    thumbnail: thumbnail(news, text(news.link?.[0]) || null, [news.enclosure ?? []].flat()),
     link: text(news.link?.[0]) || null,
     pubDate: news.pubDate ?? news['dc:date'] ?? null,
     description: text(news.description),
@@ -114,7 +137,8 @@ const fromAtomEntry = (news) => {
 
     return {
         title: text(news.title),
-        thumbnail: thumbnail(news),
+        // <link rel="enclosure" type="image/jpeg" href>
+        thumbnail: thumbnail(news, link?.href ?? null, links.filter(l => l.rel === 'enclosure').map(l => ({url: l.href, type: l.type}))),
         link: link?.href ?? null,
         pubDate: news.published ?? news.updated ?? null,
         description: text(news.summary ?? news.content),
@@ -130,7 +154,7 @@ const fromSitemapUrl = (url) => {
     const news = url['news:news'];
     return {
         title: text(news['news:title']),
-        thumbnail: url['image:image']?.[0]?.['image:loc'] ?? null,
+        thumbnail: absolute(text(url['image:image']?.[0]?.['image:loc']), text(url.loc) || null),
         link: text(url.loc) || null,
         pubDate: news['news:publication_date'] ?? url.lastmod ?? null,
         description: '',
