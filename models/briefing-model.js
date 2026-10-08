@@ -28,9 +28,6 @@ export const BriefingModel = {
         data: {status: 'failed', step: null, error, finished_at: new Date()},
     }),
 
-    // a briefing of this user, null when it is not theirs
-    ofUser: async (userId, id) => prisma.briefings.findFirst({where: {id, id_user: userId}}),
-
     latest: async (profileId) => prisma.briefings.findFirst({
         where: {id_profile: profileId},
         orderBy: {created_at: 'desc'},

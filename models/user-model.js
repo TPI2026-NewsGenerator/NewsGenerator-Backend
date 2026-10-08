@@ -55,7 +55,4 @@ export const UserModel = {
 
     // an account whose profile could not be saved: its profile and interests go with it (cascade)
     delete: async (id) => prisma.users.delete({where: {id}}),
-
-    // the address the user gave, to send them what they ask for
-    email: async (id) => prisma.users.findUnique({where: {id}, select: {email: true}}),
 };

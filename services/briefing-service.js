@@ -31,9 +31,6 @@ import {searchesOfUser} from "./ingest-service.js";
 import {onceEach} from "./utils/reading-order.js";
 import {readableCards} from "./utils/readable-cards.js";
 import {Filter} from "./utils/filter.js";
-import {UserModel} from "../models/user-model.js";
-import {sendMail} from "./utils/mailer.js";
-import {briefingMail} from "./utils/briefing-mail.js";
 
 // Measured on four profiles and 249 stories judged by hand:
 //  - one vector per interest, dense + half the sparse: 88% of relevant cards (one vector for the
@@ -736,16 +733,6 @@ const toBriefing = (row) => row && ({
 export const BriefingService = {
     // the last briefing of this user, running or not
     latest: async (profileId) => profileId === null ? null : toBriefing(await BriefingModel.latest(profileId)),
-
-    // a ready briefing of the user sent to the address of their account (see briefing-mail.js)
-    email: async (userId, briefingId) => {
-        const id = Number(briefingId);
-        const row = Number.isInteger(id) && id > 0 ? await BriefingModel.ofUser(userId, id) : null;
-        if (!row || row.status !== 'ready') throw Object.assign(new Error('Unknown briefing.'), {status: 404});
-        const [user, profile] = await Promise.all([UserModel.email(userId), ProfileModel.get(row.id_profile)]);
-        if (!user?.email) throw Object.assign(new Error('Your account has no e-mail address.'), {status: 400});
-        await sendMail({to: user.email, ...briefingMail(toBriefing(row), profile?.name ?? null)});
-    },
 
     // the thumb of the reader on a card: 'up' (good for me), 'down' (not for me) or null (taken back).
     // The next briefings read them (see FeedbackService)

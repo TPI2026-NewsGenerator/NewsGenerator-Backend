@@ -29,7 +29,6 @@
     "franc": "^6.2.0",
     "jsonwebtoken": "^9.0.3",
     "linkedom": "^0.18.12",
-    "nodemailer": "^10.0.16",
     "ollama": "^0.6.3",
     "pg": "8.20.0",
     "swagger-jsdoc": "^6.2.8",
