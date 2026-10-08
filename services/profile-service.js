@@ -26,8 +26,8 @@ const MIN_TEXT = 20;            // "rugby" says too little to split into interes
 const MAX_TEXT = 2000;
 const MAX_INTEREST_TEXT = 300;
 // Each profile has its sources found, read for all the readers, and its briefings, written by the AI:
-// a few per reader
-export const MAX_PROFILES = 5;
+// 15 per reader at most (the user's choice, 8.10.2026)
+export const MAX_PROFILES = 15;
 const MAX_NAME = 40;
 
 const badRequest = (message) => Object.assign(new Error(message), {status: 400});
