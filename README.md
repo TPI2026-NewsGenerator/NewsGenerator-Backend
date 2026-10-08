@@ -273,7 +273,7 @@ Optional variables in `.env`:
 | `INGEST_MAX_EMBEDDED` | 100 | news embedded, saved and grouped at a time, the newest first. On a busy processor 1500 news at once took over an hour, all lost if the process stopped before saving them; 300 took 4 to 5 minutes on the processor alone, the busiest feeds read every 5 minutes instead of 2 |
 | `INGEST_GROUP_MINUTES` | 1 | a run starts no batch of the window after these minutes, the feeds read included: the rest waits for the next run, the busiest feeds read before |
 | `INGEST_OLDER_BATCHES` | 1 | batches of older news without vectors embedded per run, for the search by meaning |
-| `FEED_RETENTION_DAYS` | 30 | Articles older than this are deleted |
+| `FEED_RETENTION_DAYS` | 30 | Articles older than this are deleted, and a news published before it is not saved (the archive some feeds give at their first read) |
 | `RSS_BRIDGE_URL` | _(none)_ | Address of the RSS-Bridge, step 4 of the sources of a user below. Empty: the sites without a feed are simply out of reach |
 | `GOOGLE_NEWS` | on | `off` stops every request to Google News: the searches of the interests, and the sentence a search asks when our sources answer little |
 | `SEARCH_GOOGLE_NEWS` | on | `off`: the sentences searched are not asked to Google News (the searches of the interests go on) |

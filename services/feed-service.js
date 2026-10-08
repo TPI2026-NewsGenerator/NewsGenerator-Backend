@@ -39,10 +39,16 @@ const doRefresh = async (urls, {purge = false} = {}) => {
     const results = feeds.map(feed => byUrl.get(feed.url));
 
     const now = new Date();
+    // A news published before the retention is not saved: some feeds give their whole archive
+    // (americansoccernow.com since 2012, irishfa.com since 2006: 12 400 news stored at their first read
+    // on 8.10.2026, 5 of them in the window of the stories), kept 30 days for nothing. A news without a
+    // date is saved, the day it is read is its date
+    const oldest = new Date(now.getTime() - RETENTION_DAYS * 24 * 60 * 60 * 1000);
     const articles = [];
     let notModified = 0;
     let failed = 0;
     let skipped = 0;
+    let archived = 0;
 
     for (let i = 0; i < feeds.length; i++) {
         const feed = feeds[i];
@@ -72,6 +78,11 @@ const doRefresh = async (urls, {purge = false} = {}) => {
         for (let news of result.items) {
             if (!news.link) continue;   // podcasts episodes without article page
             if (!news.title) continue;  // neither title nor description (see withTitle in parser.js): nothing to show
+            const published = toDate(news.pubDate);
+            if (published && published < oldest) {
+                archived++;
+                continue;
+            }
             articles.push({
                 id_feed: feed.id,
                 link: news.link,
@@ -79,7 +90,7 @@ const doRefresh = async (urls, {purge = false} = {}) => {
                 description: news.description,
                 thumbnail: news.thumbnail,
                 category: news.category ?? [],
-                published_at: toDate(news.pubDate),
+                published_at: published,
                 // the publisher Google News gives: its links are its own redirects
                 source_url: isGoogleNewsUrl(feed.url) ? news.source?.url ?? null : null,
             });
@@ -94,7 +105,7 @@ const doRefresh = async (urls, {purge = false} = {}) => {
         ? await FeedModel.deleteArticlesOlderThan(new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000))
         : 0;
 
-    const stats = { feeds: feeds.length, notModified, failed, skipped, inserted, deleted, ms: Date.now() - start };
+    const stats = { feeds: feeds.length, notModified, failed, skipped, inserted, archived, deleted, ms: Date.now() - start };
     console.log(`Feeds refreshed: ${JSON.stringify(stats)}`);
     return stats;
 };
