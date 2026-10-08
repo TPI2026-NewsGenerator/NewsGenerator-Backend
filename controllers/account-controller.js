@@ -30,6 +30,11 @@ export const AccountController = {
         return respond(res, () => AccountService.rename(req.user.id, {username, password}));
     },
 
+    changeEmail: (req, res) => {
+        const {email, password} = req.body ?? {};
+        return respond(res, () => AccountService.changeEmail(req.user.id, {email, password}));
+    },
+
     changePassword: (req, res) => {
         const {password, newPassword} = req.body ?? {};
         return respond(res, () => AccountService.changePassword(req.user.id, {password, newPassword}));

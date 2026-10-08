@@ -26,6 +26,12 @@ export const UserModel = {
     })),
 
     // the account with its password hash, to check it before a change
+    // another account using this email, whatever its case: a reader may change the case of their own
+    emailTakenByOther: async (email, id) => Boolean(await prisma.users.findFirst({
+        where: {email: {equals: email, mode: 'insensitive'}, NOT: {id}},
+        select: {id: true},
+    })),
+
     withPassword: async (id) => prisma.users.findUnique({
         where: {id},
         select: {id: true, username: true, email: true, role: true, password: true},
@@ -56,6 +62,6 @@ export const UserModel = {
     // an account whose profile could not be saved: its profile and interests go with it (cascade)
     delete: async (id) => prisma.users.delete({where: {id}}),
 
-    // the address the user gave, to send them what they ask for
-    email: async (id) => prisma.users.findUnique({where: {id}, select: {email: true}}),
+    // the address the user gave, to send them what they ask for, and their name, to say who sends it
+    email: async (id) => prisma.users.findUnique({where: {id}, select: {email: true, username: true}}),
 };

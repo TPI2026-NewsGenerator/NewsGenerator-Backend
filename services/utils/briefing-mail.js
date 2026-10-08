@@ -111,31 +111,35 @@ const notesHtml = (card) => {
         ['Not confirmed', card.hedged ? `unconfirmed: “${card.hedged}”` : null, 'accent'],
     ].filter(([, text]) => text);
     if (notes.length === 0) return '';
+    // one under the other: side by side they left a phone a few words a line
     return `
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="ng-rule" style="margin-top:24px;border-top:1px solid ${LIGHT.rule}"><tr>
-  ${notes.map(([title, text, tone]) => `<td valign="top" style="padding:12px 12px 0 0">${kicker(title, tone)}<p class="ng-ink" style="${CAPTION};color:${LIGHT.ink};margin-top:4px">${escape(text)}</p></td>`).join('')}
-</tr></table>`;
+<div class="ng-rule" style="margin-top:24px;border-top:1px solid ${LIGHT.rule}">
+  ${notes.map(([title, text, tone]) => `<div style="padding-top:12px">${kicker(title, tone)}<p class="ng-ink" style="${CAPTION};color:${LIGHT.ink};margin-top:4px">${escape(text)}</p></div>`).join('')}
+</div>`;
 };
 
-const cardHtml = (card, i) => {
+// personal: the why of the card, written to the reader ("that you follow"), left out of an e-mail to another
+const cardHtml = (card, i, personal = true) => {
     const passages = paragraphsOf(card.translation || card.summary);
     const translated = Boolean(card.titleTranslation) || Boolean(card.translation);
     const lead = card.lead ?? card.articles?.[0];
     const picture = webUrl(card.thumbnail);
     return `
 <tr><td class="ng-rule" style="border-top:1px solid ${LIGHT.rule};padding:26px 0 44px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-<td valign="top" width="84" style="width:84px;padding-right:16px">
-  <p class="ng-mute" style="margin:0;font:400 46px/1 ${DISPLAY};color:${LIGHT.mute}">${String(i + 1).padStart(2, '0')}</p>
-  ${card.topic ? `<p class="ng-ink" style="${KICKER};color:${LIGHT.ink};margin-top:14px">${escape(card.topic)}</p>` : ''}
-  ${card.publishedAt ? `<p class="ng-mute" style="${CAPTION};font-weight:500;margin-top:4px">${escape(when(card.publishedAt))}</p>` : ''}
-  ${card.language ? `<p style="margin:4px 0 0">${languageMark(card.language).trim()}</p>` : ''}
-</td>
-<td valign="top">
+  <!-- the number, topic, date and language above the title, not in a column of their own as on the
+       page: on a phone the text keeps the whole width -->
+  <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:14px"><tr>
+    <td valign="bottom" style="padding-right:14px"><p class="ng-mute" style="margin:0;font:400 46px/1 ${DISPLAY};color:${LIGHT.mute}">${String(i + 1).padStart(2, '0')}</p></td>
+    <td valign="bottom" style="padding-bottom:4px"><p class="ng-mute" style="${CAPTION};font-weight:500">${[
+        card.topic ? `<span class="ng-ink" style="${KICKER};color:${LIGHT.ink}">${escape(card.topic)}</span>` : '',
+        card.publishedAt ? escape(when(card.publishedAt)) : '',
+        card.language ? languageMark(card.language).trim() : '',
+    ].filter(Boolean).join(' · ')}</p></td>
+  </tr></table>
   <h2 class="ng-ink" style="margin:0;font:460 27px/1.12 ${DISPLAY};letter-spacing:-.005em;color:${LIGHT.ink}">${escape(card.titleTranslation ?? card.title)}</h2>
   ${translated ? `<p style="margin:8px 0 0">${kicker(`Translated from ${languageName(card.language ?? '')}`)}</p>` : ''}
   ${card.titleTranslation ? `<p class="ng-mute" style="${CAPTION};margin-top:4px;font-style:italic">“${escape(card.title)}”</p>` : ''}
-  ${card.why ? `<p class="ng-mute" style="margin:12px 0 0;font:italic 19px/1.4 ${TEXT};color:${LIGHT.mute}">${escape(card.why)}</p>` : ''}
+  ${personal && card.why ? `<p class="ng-mute" style="margin:12px 0 0;font:italic 19px/1.4 ${TEXT};color:${LIGHT.mute}">${escape(card.why)}</p>` : ''}
   ${picture ? `<img src="${escape(picture)}" alt="" width="560" style="display:block;width:100%;max-width:560px;height:auto;margin-top:20px;border:0;background:${LIGHT.secondary}">
   ${card.thumbnailSource ? `<p class="ng-mute" style="${CAPTION};margin-top:6px">Picture — ${escape(card.thumbnailSource)}</p>` : ''}` : ''}
   ${passages.length > 0 ? `
@@ -148,19 +152,20 @@ const cardHtml = (card, i) => {
   ${anglesHtml(card.angles ?? [])}
   ${linksHtml(card)}
   ${notesHtml(card)}
-</td>
-</tr></table>
 </td></tr>`;
 };
 
 // briefing: as toBriefing gives it, its items the cards the reader ticked; profileName: the name of its
-// profile. {subject, html, text}
-export const briefingMail = (briefing, profileName) => {
+// profile; sender: the username of the reader when it is sent to another address than theirs, the
+// e-mail says who sends it then, and not the name of the profile. {subject, html, text}
+export const briefingMail = (briefing, profileName, {sender = null} = {}) => {
     const cards = briefing.items ?? [];
     const finished = briefing.finishedAt ?? briefing.createdAt;
     const span = briefing.hours > 48 ? `${briefing.hours / 24} days` : `${briefing.hours} hours`;
     const count = `${cards.length} ${cards.length === 1 ? 'story' : 'stories'}`;
-    const subject = `Your briefing${profileName ? ` · ${profileName}` : ''} · ${count} · ${when(finished)}`;
+    const subject = sender
+        ? `${sender} shares ${count} of their NewsGenerator briefing · ${when(finished)}`
+        : `Your briefing${profileName ? ` · ${profileName}` : ''} · ${count} · ${when(finished)}`;
 
     const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark">
@@ -169,13 +174,13 @@ export const briefingMail = (briefing, profileName) => {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="ng-paper" style="background:${LIGHT.paper}"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:680px;text-align:left">
 <tr><td style="padding-bottom:28px">
-  ${kicker(`The briefing${profileName ? ` · ${profileName}` : ''}`)}
-  <h1 class="ng-ink" style="margin:10px 0 0;font:460 40px/1.05 ${DISPLAY};color:${LIGHT.ink}">Your briefing</h1>
+  ${kicker(sender ? 'NewsGenerator' : `The briefing${profileName ? ` · ${profileName}` : ''}`)}
+  <h1 class="ng-ink" style="margin:10px 0 0;font:460 40px/1.05 ${DISPLAY};color:${LIGHT.ink}">${sender ? `From the briefing of ${escape(sender)}` : 'Your briefing'}</h1>
   <p class="ng-ink" style="${CAPTION};font-weight:500;color:${LIGHT.ink};margin-top:14px">Written ${escape(written(finished))}</p>
-  <p class="ng-mute" style="${CAPTION};font-weight:500;margin-top:2px">The news of the last ${span}, ${count} you chose</p>
+  <p class="ng-mute" style="${CAPTION};font-weight:500;margin-top:2px">The news of the last ${span}, ${count} ${sender ? `${escape(sender)} chose for you` : 'you chose'}</p>
 </td></tr>
-${cards.map(cardHtml).join('')}
-<tr><td class="ng-rule ng-mute" style="padding:24px 0;border-top:1px solid ${LIGHT.rule};${CAPTION}">The key passages are the words of each article, chosen by an AI, never written by it. Sent because you asked for it from your briefing on NewsGenerator.</td></tr>
+${cards.map((card, i) => cardHtml(card, i, !sender)).join('')}
+<tr><td class="ng-rule ng-mute" style="padding:24px 0;border-top:1px solid ${LIGHT.rule};${CAPTION}">The key passages are the words of each article, chosen by an AI, never written by it. ${sender ? `Sent by ${escape(sender)} from their briefing on NewsGenerator: answer this e-mail to write to them.` : 'Sent because you asked for it from your briefing on NewsGenerator.'}</td></tr>
 </table></td></tr></table></body></html>`;
 
     const text = [
@@ -184,7 +189,7 @@ ${cards.map(cardHtml).join('')}
             const lead = card.lead ?? card.articles?.[0];
             return [
                 `${String(i + 1).padStart(2, '0')}. ${card.titleTranslation ?? card.title}`,
-                card.why ?? '',
+                sender ? '' : card.why ?? '',
                 '',
                 paragraphsOf(card.translation || card.summary).join('\n[…]\n'),
                 ...(card.contested ?? []).map(denial => `Contested — ${denial.by} denies: "${denial.sentence}" (${denial.source})`),

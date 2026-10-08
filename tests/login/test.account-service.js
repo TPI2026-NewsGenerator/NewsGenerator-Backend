@@ -2,7 +2,7 @@
 //  Author: Fabian Rostello
 //  Date: 02.10.2026
 //  File: test.account-service.js
-//  Description: The username and the password of an account changed only with the password of now
+//  Description: The username, the email and the password of an account changed only with the password of now
 //
 
 import {jest} from '@jest/globals';
@@ -11,6 +11,7 @@ jest.unstable_mockModule('../../models/user-model.js', () => ({
     UserModel: {
         withPassword: jest.fn(),
         nameTakenByOther: jest.fn(),
+        emailTakenByOther: jest.fn(),
         update: jest.fn(),
     },
 }));
@@ -38,7 +39,8 @@ beforeEach(() => {
     jest.clearAllMocks();
     UserModel.withPassword.mockResolvedValue(account);
     UserModel.nameTakenByOther.mockResolvedValue(false);
-    UserModel.update.mockImplementation(async (id, data) => ({...publicAccount, ...('username' in data ? data : {})}));
+    UserModel.emailTakenByOther.mockResolvedValue(false);
+    UserModel.update.mockImplementation(async (id, data) => ({...publicAccount, ...('username' in data || 'email' in data ? data : {})}));
     verifyPassword.mockImplementation(async (password) => password === 'the current one');
     hashWithSalt.mockResolvedValue('new hash');
     generateAccessToken.mockReturnValue('token');
@@ -63,6 +65,29 @@ describe('AccountService.rename', () => {
     it('should say a name taken meanwhile is taken', async () => {
         UserModel.update.mockRejectedValue(Object.assign(new Error('Unique constraint failed'), {code: 'P2002'}));
         await expect(AccountService.rename(300, {username: 'autre', password: 'the current one'})).rejects.toMatchObject({status: 409});
+    });
+});
+
+describe('AccountService.changeEmail', () => {
+    it('should change the email with the current password, and give a session with it', async () => {
+        await expect(AccountService.changeEmail(300, {email: ' nouveau@example.org ', password: 'the current one'}))
+            .resolves.toEqual({user: {...publicAccount, email: 'nouveau@example.org'}, token: 'token'});
+        expect(UserModel.update).toHaveBeenCalledWith(300, {email: 'nouveau@example.org'});
+        expect(generateAccessToken).toHaveBeenCalledWith({...publicAccount, email: 'nouveau@example.org'});
+    });
+
+    it('should change nothing without the current password, or for an email not valid or of another account', async () => {
+        await expect(AccountService.changeEmail(300, {email: 'nouveau@example.org', password: 'a guess'})).rejects.toMatchObject({status: 401});
+        await expect(AccountService.changeEmail(300, {email: 'pas un email', password: 'the current one'})).rejects.toMatchObject({status: 400});
+        await expect(AccountService.changeEmail(300, {password: 'the current one'})).rejects.toMatchObject({status: 400});
+        UserModel.emailTakenByOther.mockResolvedValue(true);
+        await expect(AccountService.changeEmail(300, {email: 'Autre@example.org', password: 'the current one'})).rejects.toMatchObject({status: 409});
+        expect(UserModel.update).not.toHaveBeenCalled();
+    });
+
+    it('should say an email taken meanwhile is taken', async () => {
+        UserModel.update.mockRejectedValue(Object.assign(new Error('Unique constraint failed'), {code: 'P2002'}));
+        await expect(AccountService.changeEmail(300, {email: 'autre@example.org', password: 'the current one'})).rejects.toMatchObject({status: 409});
     });
 });
 

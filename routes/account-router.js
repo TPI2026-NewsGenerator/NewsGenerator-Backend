@@ -2,7 +2,7 @@
 //  Author: Fabian Rostello
 //  Date: 02.10.2026
 //  File: account-router.js
-//  Description: Router for the settings of an account: its username and its password
+//  Description: Router for the settings of an account: its username, its email and its password
 //
 
 import express from 'express';
@@ -20,6 +20,7 @@ const accountLimit = rateLimit({
 });
 
 router.put('/username', authenticateToken, accountLimit, AccountController.rename);
+router.put('/email', authenticateToken, accountLimit, AccountController.changeEmail);
 router.put('/password', authenticateToken, accountLimit, AccountController.changePassword);
 
 export default router;

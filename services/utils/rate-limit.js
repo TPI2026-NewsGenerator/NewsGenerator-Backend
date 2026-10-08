@@ -10,13 +10,15 @@
 
 const CLEAN_AT = 10000;     // addresses remembered before the old ones are forgotten
 
-// kept in memory: one server, and a restart only gives a few more tries
-export const rateLimit = ({windowMs, max, message}) => {
+// kept in memory: one server, and a restart only gives a few more tries. key: who is counted, the
+// address of the request by default (an account, after authenticateToken)
+export const rateLimit = ({windowMs, max, message, key = (req) => req.ip}) => {
     const hits = new Map();
 
     return (req, res, next) => {
         const now = Date.now();
-        const recent = (hits.get(req.ip) ?? []).filter(at => now - at < windowMs);
+        const who = key(req);
+        const recent = (hits.get(who) ?? []).filter(at => now - at < windowMs);
 
         if (recent.length >= max) {
             res.set('Retry-After', String(Math.ceil((recent[0] + windowMs - now) / 1000)));
@@ -24,7 +26,7 @@ export const rateLimit = ({windowMs, max, message}) => {
         }
 
         recent.push(now);
-        hits.set(req.ip, recent);
+        hits.set(who, recent);
 
         if (hits.size > CLEAN_AT) {
             for (const [ip, times] of hits) {

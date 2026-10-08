@@ -2,8 +2,8 @@
 //  Author: Fabian Rostello
 //  Date: 08.10.2026
 //  File: test.briefing-email.js
-//  Description: The cards of a briefing the reader ticked sent by e-mail, always to the address of the
-//               account, in the order of the briefing, laid out as the page shows them
+//  Description: The cards of a briefing the reader ticked sent by e-mail, to the address of the account
+//               or to the one they write, in the order of the briefing, laid out as the page shows them
 //
 
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
@@ -12,7 +12,7 @@ const ofUser = jest.fn();
 const sendMail = jest.fn(async () => {});
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel: {ofUser}}));
-jest.unstable_mockModule('../../models/user-model.js', () => ({UserModel: {email: jest.fn(async () => ({email: 'reader@example.test'}))}}));
+jest.unstable_mockModule('../../models/user-model.js', () => ({UserModel: {email: jest.fn(async () => ({email: 'reader@example.test', username: 'lecteur'}))}}));
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: {get: jest.fn(async () => ({name: 'Football'}))}}));
 jest.unstable_mockModule('../../services/utils/mailer.js', () => ({sendMail, mailEnabled: () => true}));
 const {BriefingService} = await import('../../services/briefing-service.js');
@@ -46,6 +46,33 @@ describe('BriefingService.email', () => {
         expect(mail.text).toContain('02. Third story');
         expect(mail.text).not.toContain('Second story');
         expect(mail.text).not.toContain('A VAR news');
+    });
+
+    it('should send to the address the reader wrote, saying who sends it, the answers to the reader', async () => {
+        await BriefingService.email(4, 7, [2], ' friend@example.org ');
+
+        const mail = sendMail.mock.calls[0][0];
+        expect(mail.to).toBe('friend@example.org');
+        expect(mail.replyTo).toBe('reader@example.test');
+        expect(mail.subject).toMatch(/^lecteur shares 1 story of their NewsGenerator briefing · /);
+        expect(mail.html).toContain('From the briefing of lecteur');
+        expect(mail.html).toContain('Sent by lecteur from their briefing on NewsGenerator');
+        expect(mail.html).not.toContain('Football');
+    });
+
+    it('should send as to the account when the address written is its own, whatever its case', async () => {
+        await BriefingService.email(4, 7, [2], 'Reader@Example.test');
+
+        const mail = sendMail.mock.calls[0][0];
+        expect(mail.replyTo).toBeUndefined();
+        expect(mail.subject).toMatch(/^Your briefing · Football · /);
+    });
+
+    it('should refuse an address that is not an email, before reading the briefing', async () => {
+        for (const to of ['not an email', 'a@b', 42, 'a@b.c, d@e.f', 'a,b@example.org', 'Friend <f@example.org>']) {
+            await expect(BriefingService.email(4, 7, [1], to)).rejects.toMatchObject({status: 400});
+        }
+        expect(ofUser).not.toHaveBeenCalled();
     });
 
     it('should refuse a list of cards that is missing, empty or not of cards, before reading the briefing', async () => {
@@ -86,6 +113,13 @@ describe('briefingMail', () => {
             'Told by 3 media, 2 texts written independently of 3 read', 'named sources', 'Not confirmed']) {
             expect(html).toContain(part);
         }
+    });
+
+    it('should leave out the why, written to the reader, of an e-mail sent by them to another', () => {
+        expect(briefingMail(briefing, 'Football').html).toContain('Du football, que vous suivez.');
+        const {html, text} = briefingMail(briefing, 'Football', {sender: 'lecteur'});
+        expect(html).not.toContain('que vous suivez');
+        expect(text).not.toContain('que vous suivez');
     });
 
     it('should escape the texts and never link nor show an address that is not of the web', () => {

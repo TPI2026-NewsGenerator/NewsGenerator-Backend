@@ -32,6 +32,7 @@ import {onceEach} from "./utils/reading-order.js";
 import {readableCards} from "./utils/readable-cards.js";
 import {Filter} from "./utils/filter.js";
 import {UserModel} from "../models/user-model.js";
+import {EMAIL_RULE, isEmail} from "./utils/account-rules.js";
 import {sendMail} from "./utils/mailer.js";
 import {briefingMail} from "./utils/briefing-mail.js";
 
@@ -737,13 +738,16 @@ export const BriefingService = {
     // the last briefing of this user, running or not
     latest: async (profileId) => profileId === null ? null : toBriefing(await BriefingModel.latest(profileId)),
 
-    // the cards of a ready briefing the reader ticked (storyIds), sent to the address of their account,
-    // never another one (see briefing-mail.js), in the order of the briefing
-    email: async (userId, briefingId, storyIds) => {
+    // the cards of a ready briefing the reader ticked (storyIds), in the order of the briefing (see
+    // briefing-mail.js), sent to one address: to, the address the reader asks it to be sent to, the one of their account when not given; sent to
+    // another, it says who sends it and the answers go to the reader
+    email: async (userId, briefingId, storyIds, to) => {
         const id = Number(briefingId);
         if (!Array.isArray(storyIds) || storyIds.length === 0 || !storyIds.every(storyId => Number.isInteger(storyId) && storyId > 0)) {
             throw Object.assign(new Error('storyIds: the cards ticked, one at least.'), {status: 400});
         }
+        const asked = typeof to === 'string' ? to.trim() : to ?? '';
+        if (asked !== '' && !isEmail(asked)) throw Object.assign(new Error(EMAIL_RULE), {status: 400});
         const row = Number.isInteger(id) && id > 0 ? await BriefingModel.ofUser(userId, id) : null;
         if (!row || row.status !== 'ready') throw Object.assign(new Error('Unknown briefing.'), {status: 404});
         const ticked = new Set(storyIds);
@@ -751,8 +755,14 @@ export const BriefingService = {
         const items = briefing.items.filter(item => ticked.has(item.storyId));
         if (items.length === 0) throw Object.assign(new Error('None of the cards ticked is in this briefing.'), {status: 404});
         const [user, profile] = await Promise.all([UserModel.email(userId), ProfileModel.get(row.id_profile)]);
-        if (!user?.email) throw Object.assign(new Error('Your account has no e-mail address.'), {status: 400});
-        await sendMail({to: user.email, ...briefingMail({...briefing, items}, profile?.name ?? null)});
+        if (!asked && !user?.email) throw Object.assign(new Error('Your account has no e-mail address.'), {status: 400});
+        const address = asked || user.email;
+        const toOther = address.toLowerCase() !== String(user?.email ?? '').toLowerCase();
+        await sendMail({
+            to: address,
+            replyTo: toOther && user?.email ? user.email : undefined,
+            ...briefingMail({...briefing, items}, profile?.name ?? null, {sender: toOther ? user?.username ?? null : null}),
+        });
     },
 
     // the thumb of the reader on a card: 'up' (good for me), 'down' (not for me) or null (taken back).

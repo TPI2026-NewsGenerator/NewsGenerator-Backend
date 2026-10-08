@@ -12,10 +12,7 @@ import {hashWithSalt} from './utils/pwd-hasher.js';
 import {generateAccessToken} from './utils/jwt.js';
 import {UserModel} from '../models/user-model.js';
 import {ProfileService} from './profile-service.js';
-import {isPassword, isTaken, isUsername, PASSWORD_RULE, USERNAME_RULE} from './utils/account-rules.js';
-
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MAX_EMAIL = 254;
+import {EMAIL_RULE, isEmail, isPassword, isTaken, isUsername, PASSWORD_RULE, USERNAME_RULE} from './utils/account-rules.js';
 const READER_ROLE = 'User';
 
 const fail = (status, message) => Object.assign(new Error(message), {status});
@@ -29,8 +26,8 @@ export const SignupService = {
         if (!isUsername(name)) {
             throw fail(400, USERNAME_RULE);
         }
-        if (mail.length > MAX_EMAIL || !EMAIL.test(mail)) {
-            throw fail(400, 'Enter a valid email.');
+        if (!isEmail(mail)) {
+            throw fail(400, EMAIL_RULE);
         }
         if (!isPassword(password)) {
             throw fail(400, PASSWORD_RULE);

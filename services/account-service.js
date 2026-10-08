@@ -2,8 +2,8 @@
 //  Author: Fabian Rostello
 //  Date: 02.10.2026
 //  File: account-service.js
-//  Description: The settings of an account: its username and its password, each changed only with
-//               the password of now
+//  Description: The settings of an account: its username, its email and its password, each changed
+//               only with the password of now
 //
 
 "use strict"
@@ -12,7 +12,7 @@ import {hashWithSalt, verifyPassword} from './utils/pwd-hasher.js';
 import {generateAccessToken} from './utils/jwt.js';
 import {notePasswordChange} from './utils/password-changes.js';
 import {UserModel} from '../models/user-model.js';
-import {isPassword, isTaken, isUsername, PASSWORD_RULE, USERNAME_RULE} from './utils/account-rules.js';
+import {EMAIL_RULE, isEmail, isPassword, isTaken, isUsername, PASSWORD_RULE, USERNAME_RULE} from './utils/account-rules.js';
 
 const fail = (status, message) => Object.assign(new Error(message), {status});
 
@@ -47,6 +47,23 @@ export const AccountService = {
             return signedIn(await UserModel.update(userId, {username: name}));
         } catch (error) {
             if (isTaken(error)) throw fail(409, 'This username is already used.');
+            throw error;
+        }
+    },
+
+    // -> {user, token}: the address the briefings are sent to by default, and of the account
+    changeEmail: async (userId, {email, password}) => {
+        const mail = typeof email === 'string' ? email.trim() : '';
+        if (!isEmail(mail)) throw fail(400, EMAIL_RULE);
+
+        const user = await checkedAccount(userId, password);
+        if (mail === user.email) return signedIn(user);
+        if (await UserModel.emailTakenByOther(mail, userId)) throw fail(409, 'This email is already used by another account.');
+
+        try {
+            return signedIn(await UserModel.update(userId, {email: mail}));
+        } catch (error) {
+            if (isTaken(error)) throw fail(409, 'This email is already used by another account.');
             throw error;
         }
     },

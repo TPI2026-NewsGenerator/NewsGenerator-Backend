@@ -156,6 +156,36 @@ const options = {
                     }
                 }
             },
+            "/account/email": {
+                "put": {
+                    "tags": ["Login"],
+                    "summary": "Change the email of the signed in user",
+                    "description": "Asks the current password. The briefings are sent to it when no other address is given. The session cookie starts again with the new email. At most 10 changes per address in 15 minutes, with the ones of the username and the password.",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "email": {"type": "string", "example": "lecteur@example.org"},
+                                        "password": {"type": "string", "description": "The current password"}
+                                    },
+                                    "required": ["email", "password"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {"description": "The user as the session tells it: {id, username, email, role}"},
+                        "400": {"description": "Not an email"},
+                        "401": {"description": "Not the current password"},
+                        "403": {"description": "No session, or an expired one"},
+                        "409": {"description": "Used by another account, whatever its case"},
+                        "429": {"description": "Too many changes tried"}
+                    }
+                }
+            },
             "/account/password": {
                 "put": {
                     "tags": ["Login"],
@@ -898,15 +928,15 @@ const options = {
             "/briefing/{id}/email": {
                 "post": {
                     "tags": ["Briefing"],
-                    "summary": "Send the cards of a briefing the reader ticked to the address of their account",
-                    "description": "Always to the address of the account of the user, never another one, through the SMTP account of the server (SMTP_USER, SMTP_PASS). The cards in the order of the briefing, laid out as the page shows them. At most 10 e-mails an hour.",
+                    "summary": "Send the cards of a briefing the reader ticked by e-mail",
+                    "description": "Through the SMTP account of the server (SMTP_USER, SMTP_PASS), to the address `to`, else to the one of the account. The cards in the order of the briefing, laid out as the page shows them. Sent to another address than the account one, it says who sends it and the answers go to the account address. At most 10 e-mails an hour per address and 30 a day per account.",
                     "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
-                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["storyIds"], "properties": {"storyIds": {"type": "array", "items": {"type": "integer"}, "minItems": 1}}}}}},
+                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["storyIds"], "properties": {"storyIds": {"type": "array", "items": {"type": "integer"}, "minItems": 1}, "to": {"type": "string", "description": "One address; the one of the account when not given"}}}}}},
                     "responses": {
                         "204": {"description": "Sent"},
-                        "400": {"description": "storyIds not a list of cards, or the account has no address"},
+                        "400": {"description": "storyIds not a list of cards, to not an email, or no address"},
                         "404": {"description": "No such ready briefing of this user, or none of the cards in it"},
-                        "429": {"description": "Too many e-mails in the hour"},
+                        "429": {"description": "Too many e-mails in the hour or the day"},
                         "502": {"description": "The mail server refused it"},
                         "503": {"description": "The server has no e-mail account"}
                     }

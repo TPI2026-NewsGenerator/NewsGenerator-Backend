@@ -21,10 +21,11 @@ export const BriefingController = {
         }
     },
 
-    // {storyIds}: the cards of the briefing the reader ticked, sent to the address of their account
+    // {storyIds, to?}: the cards of the briefing the reader ticked, sent to the address to, else to the
+    // one of their account
     email: async (req, res) => {
         try {
-            await BriefingService.email(req.user.id, req.params.id, req.body?.storyIds);
+            await BriefingService.email(req.user.id, req.params.id, req.body?.storyIds, req.body?.to);
             res.status(204).end();
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});
