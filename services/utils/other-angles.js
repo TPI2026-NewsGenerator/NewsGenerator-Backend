@@ -20,14 +20,20 @@ import {mapWithConcurrency} from './concurrency.js';
 export const MAX_ANGLES = 3;            // shown below a card, the closest first
 const AI_CONCURRENCY = 5;
 
-const prompt = (title, others) => `A news card: "${title}"
+// cardTitles: other titles of the card's own articles, other languages first: a title alone often
+// leaves out what another tells (the former club of a candidate), and the same fact told with it
+// passed for another angle
+export const anglesPrompt = (title, others, cardTitles = []) => `A news card: "${title}"${cardTitles.length > 0 ? `
+Its own articles also title it: ${cardTitles.map(other => `"${other}"`).join('; ')}` : ''}
 
 Other news published around it:
 ${others.map((other, i) => `[${i + 1}] ${other.title || '(no title)'}`).join('\n')}
 
 For each one, in any language, what it is to the reader of the card:
 "same": it tells the same fact as the card, in other words or another language (a court ruling and
-  "the court rules", the same announcement told by another paper).
+  "the court rules", the same announcement told by another paper), even with a detail the card's titles
+  do not give: the age or the former club of the same candidate, a figure or a quote of the same
+  announcement, the same deal seen from the other party.
 "angle": the same affair, person or event as the card, but it tells something the card does not: an
   earlier or later step, a reaction, a consequence, a background, another party's view. A storm's toll
   for a card on the storm's landfall; a minister's reply for a card on a strike. One person, company or
@@ -48,12 +54,13 @@ export const normalizeAngles = (answer, others) => {
     return others.filter((other, i) => angles.has(i)).slice(0, MAX_ANGLES);
 };
 
-// cards: [{id, title, others: [{title, ...}]}], the others the closest first. Answers a Map id ->
+// cards: [{id, title, titles, others: [{title, ...}]}], the others the closest first, titles the
+// other ones of the card (see anglesPrompt). Answers a Map id ->
 // the others that are angles of its affair; a card the AI failed on has none
 export const otherAnglesOf = async (cards, usage = null) => {
     const asked = cards.filter(card => card.others.length > 0);
     const results = await mapWithConcurrency(asked, AI_CONCURRENCY, async (card) =>
-        normalizeAngles(await ollamaJson(prompt(card.title, card.others), usage), card.others));
+        normalizeAngles(await ollamaJson(anglesPrompt(card.title, card.others, card.titles ?? []), usage), card.others));
     const failed = results.filter(result => result.status !== 'fulfilled').length;
     if (failed > 0) console.error(`Briefing: the other angles of ${failed} cards were not judged`);
     return new Map(asked.map((card, i) => [card.id, results[i].status === 'fulfilled' ? results[i].value : []]));

@@ -59,6 +59,17 @@ describe('otherAnglesOf', () => {
         expect(usage).toEqual({calls: 1, input: 10, output: 5});
     });
 
+    it("should give the AI the card's other titles, and none when it has no other", async () => {
+        chat.mockResolvedValue(json({news: []}));
+        await otherAnglesOf([
+            {id: 1, title: 'A former Swiss defender runs for president', titles: ['Ex-Tottenham defender declares bid'], others: others('Un ex-Tottenham candidat')},
+            {id: 2, title: 'A card told by one article', others: others('Anything')},
+        ]);
+
+        expect(chat.mock.calls[0][0].messages[0].content).toContain('Its own articles also title it: "Ex-Tottenham defender declares bid"');
+        expect(chat.mock.calls[1][0].messages[0].content).not.toContain('Its own articles');
+    });
+
     it('should give no angle to a card the AI failed on, the others kept', async () => {
         chat.mockImplementation(async ({messages}) => {
             // no JSON: a failure that asks no other AI

@@ -106,6 +106,7 @@ const ANGLES_DAYS = 3;
 const ANGLE_LIKENESS = 0.6;
 const ANGLE_CANDIDATES = 8;
 const ANGLE_QUERIES = 5;            // cards compared at the same time in the database
+const CARD_TITLES = 5;              // other titles of a card given with it, one per language first
 
 const running = new Set();          // users whose briefing is being written by this server
 
@@ -294,6 +295,13 @@ const acrossOf = async (stories, {language, feedUrls, since}) => {
     return byStory;
 };
 
+// the other titles of a card's articles, one per language first (see anglesPrompt)
+const cardTitles = (story, title) => {
+    const others = story.members.filter(article => article.title && article.title !== title);
+    const perLanguage = [...new Map(others.map(article => [article.lang, article])).values()];
+    return [...new Set([...perLanguage, ...others].map(article => article.title))].slice(0, CARD_TITLES);
+};
+
 // The other angles of each card, the closest first: [{title, url, source, publishedAt, trusted,
 // language, titleTranslation, storyId, media}] by story id. Of each story its newest news of a feed
 // (one of Google News must be asked for its address), none of a link on a card; a story an angle of
@@ -319,6 +327,7 @@ export const anglesOf = async (stories, titles, {language, feedUrls, hours, trus
     const cards = stories.map((story, i) => ({
         id: story.storyId,
         title: titles[i],
+        titles: cardTitles(story, titles[i]),
         others: rows.filter(row => row.id_story === story.storyId && newsOf(row.id_other))
             .slice(0, ANGLE_CANDIDATES)
             .map(row => ({storyId: row.id_other, article: newsOf(row.id_other), title: newsOf(row.id_other).title,

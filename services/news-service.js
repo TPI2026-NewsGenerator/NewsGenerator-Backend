@@ -94,7 +94,6 @@ const toNews = (article) => ({
     url: article.link,
     thumbnail: article.thumbnail,
     source: siteOf(article),
-    language: article.lang ?? null,
     publishedAt: article.published_at?.toISOString() ?? '',
     title: article.title,
     description: shorten(article.description),
