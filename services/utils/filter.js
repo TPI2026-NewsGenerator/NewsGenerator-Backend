@@ -127,15 +127,35 @@ const anyAccent = (text) => [...text].map(char => {
 const WORD_START_JS = '(?:^|[^\\p{L}\\p{N}])';
 const WORD_END_JS = '(?=[^\\p{L}\\p{N}]|$)';
 
+// An acronym in a run of words written all in capitals can't be told from a word: a title shouted whole
+// ("LA VALETTE-DU-VAR : Octobre Rose") named the commune, not the video assistant, in 3 of the first 5
+// of 39 news of "VAR" on 8.10.2026. It counts out of such runs only; two acronyms side by side still
+// count ("UEFA VAR"), and the description of a shouted title is read as well
+const SHOUTED_RUN = 3;
+const WORD_JS = /[\p{L}\p{N}]+/gu;
+// of two letters at least: the elided "L'" of "L'UEFA VAR" is no shouted word
+const isCapitals = (word) => word.length >= 2 && word === word.toUpperCase() && word !== word.toLowerCase();
+const shoutedAt = (text, index) => {
+    const words = [...text.matchAll(WORD_JS)];
+    const at = words.findIndex(word => index >= word.index && index < word.index + word[0].length);
+    if (at < 0) return false;
+    let first = at, last = at;
+    while (first > 0 && isCapitals(words[first - 1][0])) first--;
+    while (last < words.length - 1 && isCapitals(words[last + 1][0])) last++;
+    return last - first + 1 >= SHOUTED_RUN;
+};
+
 const toRegex = ({text, exact}) => {
     const acronym = isAcronym(text);
     const term = withoutAccents(acronym ? text : text.toLowerCase());
     const body = exact ? term.split(/\s+/).map(escapeRegex).join('\\s+') : escapeRegex(term);
     const end = exact || term.length <= SHORT_WORD_LENGTH ? WORD_END_JS : '';
-    const regex = new RegExp(WORD_START_JS + body + end, 'u');
+    const regex = new RegExp(WORD_START_JS + `(${body})` + end, 'gu');
 
-    // an acronym is searched in the text as written, anything else in lowercase
-    return (original, lowered) => regex.test(acronym ? original : lowered);
+    // an acronym is searched in the text as written, out of the shouted runs; anything else in lowercase
+    return (original, lowered) => acronym
+        ? [...original.matchAll(regex)].some(found => !shoutedAt(original, found.index + found[0].length - found[1].length))
+        : [...lowered.matchAll(regex)].length > 0;
 };
 
 // text -> true when it matches the keywords, like keywordsSql would; null when there is nothing to match

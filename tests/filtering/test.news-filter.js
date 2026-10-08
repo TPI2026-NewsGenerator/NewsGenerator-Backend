@@ -309,6 +309,14 @@ describe('Filter.matcher', () => {
         expect(matches(['AI'], 'A new AI model')).toBe(true);
     });
 
+    it('should not take an acronym in a title shouted in capitals, but one beside another acronym', () => {
+        expect(matches(['"VAR"'], 'LA VALETTE-DU-VAR : Octobre Rose, les associations se mobilisent')).toBe(false);
+        expect(matches(['"VAR"'], 'LA VALETTE-DU-VAR : Octobre Rose. Le VAR divise les arbitres')).toBe(true);
+        expect(matches(['"VAR"'], 'Neue VAR-Linie zeigt Wirkung')).toBe(true);
+        expect(matches(['"VAR"'], "L'UEFA VAR sous pression")).toBe(true);
+        expect(matches(['"VAR"'], 'Le Var sous la pluie')).toBe(false);
+    });
+
     it('should match nothing without keywords', () => {
         expect(Filter.matcher(Filter.parse(['']))).toBeNull();
     });
