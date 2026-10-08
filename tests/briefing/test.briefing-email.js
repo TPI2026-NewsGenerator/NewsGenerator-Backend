@@ -10,8 +10,13 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const ofUser = jest.fn();
 const sendMail = jest.fn(async () => {});
+const articlePictures = jest.fn(async () => [
+    {link: 'https://kicker.de/1', thumbnail: 'https://93.184.215.14/kicker.jpg'},
+    {link: 'https://media.fr/2', thumbnail: 'https://93.184.215.14/card.jpg'},
+    {link: 'https://other.example/3', thumbnail: 'javascript:alert(1)'},
+]);
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
-jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel: {ofUser}}));
+jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel: {ofUser, articlePictures}}));
 jest.unstable_mockModule('../../models/user-model.js', () => ({UserModel: {email: jest.fn(async () => ({email: 'reader@example.test', username: 'lecteur'}))}}));
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: {get: jest.fn(async () => ({name: 'Football'}))}}));
 jest.unstable_mockModule('../../services/utils/mailer.js', () => ({sendMail, mailEnabled: () => true}));
@@ -89,6 +94,79 @@ describe('BriefingService.email', () => {
         ofUser.mockResolvedValue({...row, status: 'running'});
         await expect(BriefingService.email(4, 7, [1])).rejects.toMatchObject({status: 404});
         expect(sendMail).not.toHaveBeenCalled();
+    });
+});
+
+// a PNG of 1 x 1 pixel
+const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+describe('BriefingService.email with the pictures the reader chose', () => {
+    beforeEach(() => ofUser.mockResolvedValue({...row, items: [
+        card(1, 'First story', {thumbnail: 'https://93.184.215.14/first.jpg', thumbnailSource: 'media.fr'}),
+        card(2, 'Second story', {thumbnail: 'https://93.184.215.14/card.jpg', thumbnailSource: 'media.fr', articles: [{source: 'kicker.de', url: 'https://kicker.de/1'}]}),
+        card(3, 'Third story', {thumbnail: 'https://93.184.215.14/third.jpg', thumbnailSource: 'media.fr'}),
+    ]}));
+
+    it('should take a picture out, put another of the story credited to its medium, a file of the reader joined, and keep the others', async () => {
+        await BriefingService.email(4, 7, [1, 2, 3], undefined, {
+            1: null,
+            2: {url: 'https://93.184.215.14/kicker.jpg'},
+            3: {data: PNG},
+            99: null,
+        });
+
+        const mail = sendMail.mock.calls[0][0];
+        expect(mail.html).not.toContain('first.jpg');
+        expect(mail.html).toContain('src="https://93.184.215.14/kicker.jpg"');
+        expect(mail.html).toContain('Picture — kicker.de');
+        expect(mail.html).toContain('src="cid:picture-3@newsgenerator"');
+        expect(mail.html).toContain('Picture — added by you');
+        expect(mail.attachments).toEqual([expect.objectContaining({cid: 'picture-3@newsgenerator', contentType: 'image/png', filename: 'picture-3.png'})]);
+        expect(mail.attachments[0].content.equals(Buffer.from(PNG, 'base64'))).toBe(true);
+    });
+
+    it('should credit a picture of the web to its address, and a file to the reader who sends it to another', async () => {
+        await BriefingService.email(4, 7, [1, 3], 'friend@example.org', {1: {url: 'https://93.184.215.14/web.jpg'}, 3: {data: PNG}});
+
+        const mail = sendMail.mock.calls[0][0];
+        expect(mail.html).toContain('Picture — 93.184.215.14');
+        expect(mail.html).toContain('Picture — added by lecteur');
+    });
+
+    it('should send nothing for a picture that is not an image of the web, nor an image file, or too heavy', async () => {
+        const heavy = Buffer.concat([Buffer.from(PNG, 'base64'), Buffer.alloc(2 * 1024 * 1024)]).toString('base64');
+        for (const pictures of [
+            {1: {url: 'javascript:alert(1)'}}, {1: {url: 'https://127.0.0.1/a.jpg'}}, {1: {url: 'ftp://93.184.215.14/a.jpg'}},
+            {1: {data: Buffer.from('<svg onload="alert(1)"/>').toString('base64')}}, {1: {data: heavy}},
+            {1: 'https://93.184.215.14/a.jpg'}, [null], 'none',
+        ]) {
+            await expect(BriefingService.email(4, 7, [1], undefined, pictures)).rejects.toMatchObject({status: 400});
+        }
+        expect(sendMail).not.toHaveBeenCalled();
+    });
+
+    it('should refuse files weighing more than 6 MB in all', async () => {
+        const big = Buffer.concat([Buffer.from(PNG, 'base64'), Buffer.alloc(1900 * 1024)]).toString('base64');
+        const files = Object.fromEntries([1, 2, 3].map(storyId => [storyId, {data: big}]));
+        ofUser.mockResolvedValue({...row, items: [1, 2, 3, 4].map(storyId => card(storyId, `Story ${storyId}`))});
+        await expect(BriefingService.email(4, 7, [1, 2, 3, 4], undefined, {...files, 4: {data: big}})).rejects.toMatchObject({status: 400});
+        await BriefingService.email(4, 7, [1, 2, 3], undefined, files);
+        expect(sendMail.mock.calls[0][0].attachments).toHaveLength(3);
+    });
+});
+
+describe('BriefingService.pictures', () => {
+    it('should offer the picture of the card first, then the ones of its articles, once each, credited to their medium', async () => {
+        ofUser.mockResolvedValue({...row, items: [card(2, 'Second story', {
+            thumbnail: 'https://93.184.215.14/card.jpg', thumbnailSource: 'media.fr', articles: [{source: 'kicker.de', url: 'https://kicker.de/1'}],
+        })]});
+
+        expect(await BriefingService.pictures(4, 7, '2')).toEqual([
+            {url: 'https://93.184.215.14/card.jpg', source: 'media.fr'},
+            {url: 'https://93.184.215.14/kicker.jpg', source: 'kicker.de'},
+        ]);
+        expect(articlePictures).toHaveBeenCalledWith(2, ['https://media.fr/2', 'https://kicker.de/1']);
+        await expect(BriefingService.pictures(4, 7, '9')).rejects.toMatchObject({status: 404});
     });
 });
 

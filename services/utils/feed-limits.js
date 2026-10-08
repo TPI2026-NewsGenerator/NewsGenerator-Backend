@@ -13,8 +13,9 @@ import {isBridgeUrl} from "./public-url.js";
 // A feed read costs one conditional request every 20 minutes, and only its new news are embedded:
 // a reader can add most of the media of their subjects. The limit only stops a user from filling the
 // refresh with thousands of feeds. 150 at first: a reader's list of the football media of Europe had
-// 180 feeds, about 500 news a day for the 108 the server did not read yet (a small share of what it reads)
-export const MAX_USER_FEEDS = 500;          // added by hand, from a file or from the suggestions
+// 180 feeds, about 500 news a day for the 108 the server did not read yet (a small share of what it reads).
+// 500 next, then 800: a list of 865 football sources gave 510 feeds, beyond the 364 a reader had already
+export const MAX_USER_FEEDS = 800;          // added by hand, from a file or from the suggestions
 // the ones found for the profile have their own room: a user who had added 20 sources by hand got
 // none for their profile, silently. They pile up discovery after discovery, and a source that brings
 // nothing on the profile any more is removed (see DiscoveryService.prune)

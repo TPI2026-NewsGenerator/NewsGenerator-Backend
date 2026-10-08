@@ -18,6 +18,9 @@ const app = express();
 // served behind Caddy and the tunnel of Cloudflare (deploy/Caddyfile): the address of the reader is
 // the one they forward, the limits of the login and the signup count per reader (see rate-limit.js)
 app.set('trust proxy', 'loopback, uniquelocal');
+// an e-mail of the briefing can carry the pictures of the reader (2 MB each, 6 MB in all, see
+// mail-pictures.js), in base64: a third more. Every other request stays under 100 KB
+app.use('/api/briefing/:id/email', express.json({limit: '9mb'}));
 app.use(express.json());
 app.use(cors());
 

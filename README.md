@@ -407,8 +407,8 @@ Optional variables in `.env`:
 7. A user can add their own sources (`POST /api/feeds` with a site address): the server finds the
    RSS feed of the site and checks it answers. These sources are **private**, they are only used in
    the searches of this user, unless they share them. Addresses of private networks are refused, see `services/utils/public-url.js`.
-   500 at most (`MAX_USER_FEEDS`): a reader's list of the football media of Europe had 180 feeds,
-   about 500 news a day for the 108 the server did not read yet.
+   800 at most (`MAX_USER_FEEDS`): a reader's list of the football media of Europe had 180 feeds,
+   about 500 news a day for the 108 the server did not read yet; a list of 865 sources gave 510 feeds.
    A **list** can be imported from a file of the reader (Excel `.xlsx`, CSV, OPML or text): the client
    reads every address in it, wherever it is (`client/src/features/briefing/importFile.js`, the file
    never leaves the browser), and sends them 25 at a time to `POST /api/feeds/check`, which finds the

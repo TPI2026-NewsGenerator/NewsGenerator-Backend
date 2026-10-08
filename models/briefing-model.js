@@ -31,6 +31,14 @@ export const BriefingModel = {
     // a briefing of this user, null when it is not theirs
     ofUser: async (userId, id) => prisma.briefings.findFirst({where: {id, id_user: userId}}),
 
+    // [{link, thumbnail}]: the pictures the feeds gave the articles of a story, or of these links when
+    // the story was emptied since, the newest first
+    articlePictures: async (storyId, links) => prisma.$queryRawUnsafe(`
+        SELECT link, thumbnail FROM articles
+        WHERE (id_story = $1::int OR link = ANY($2::text[])) AND thumbnail IS NOT NULL
+        ORDER BY published_at DESC NULLS LAST
+        LIMIT 30`, storyId, links),
+
     latest: async (profileId) => prisma.briefings.findFirst({
         where: {id_profile: profileId},
         orderBy: {created_at: 'desc'},

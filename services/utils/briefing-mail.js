@@ -123,7 +123,8 @@ const cardHtml = (card, i, personal = true) => {
     const passages = paragraphsOf(card.translation || card.summary);
     const translated = Boolean(card.titleTranslation) || Boolean(card.translation);
     const lead = card.lead ?? card.articles?.[0];
-    const picture = webUrl(card.thumbnail);
+    // or a file of the reader joined to the e-mail (see mail-pictures.js)
+    const picture = webUrl(card.thumbnail) ?? (/^cid:[\w.@-]+$/.test(card.thumbnail ?? '') ? card.thumbnail : null);
     return `
 <tr><td class="ng-rule" style="border-top:1px solid ${LIGHT.rule};padding:26px 0 44px">
   <!-- the number, topic, date and language above the title, not in a column of their own as on the

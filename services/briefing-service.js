@@ -35,6 +35,7 @@ import {UserModel} from "../models/user-model.js";
 import {EMAIL_RULE, isEmail} from "./utils/account-rules.js";
 import {sendMail} from "./utils/mailer.js";
 import {briefingMail} from "./utils/briefing-mail.js";
+import {storyPictures, withChosenPictures} from "./utils/mail-pictures.js";
 
 // Measured on four profiles and 249 stories judged by hand:
 //  - one vector per interest, dense + half the sparse: 88% of relevant cards (one vector for the
@@ -790,6 +791,17 @@ export const withMarks = (briefing, terms) => {
     };
 };
 
+// {row, briefing} of a ready briefing of this reader, else 404
+const readyBriefing = async (userId, briefingId) => {
+    const id = Number(briefingId);
+    const row = Number.isInteger(id) && id > 0 ? await BriefingModel.ofUser(userId, id) : null;
+    if (!row || row.status !== 'ready') throw Object.assign(new Error('Unknown briefing.'), {status: 404});
+    return {row, briefing: toBriefing(row)};
+};
+
+const picturesOfItem = async (item) => storyPictures(item,
+    await BriefingModel.articlePictures(item.storyId, [item.lead, ...(item.articles ?? [])].filter(Boolean).map(article => article.url)));
+
 export const BriefingService = {
     // the last briefing of this profile, running or not, the terms it follows marked in it
     latest: async (profileId) => {
@@ -800,30 +812,42 @@ export const BriefingService = {
 
     // the cards of a ready briefing the reader ticked (storyIds), in the order the reader gave them (see
     // briefing-mail.js), sent to one address: to, the one the reader writes, the one of their account
-    // when not given; sent to another, it says who sends it and the answers go to the reader
-    email: async (userId, briefingId, storyIds, to) => {
-        const id = Number(briefingId);
+    // when not given; sent to another, it says who sends it and the answers go to the reader.
+    // pictures: the picture of some cards changed or taken out (see withChosenPictures)
+    email: async (userId, briefingId, storyIds, to, pictures) => {
         if (!Array.isArray(storyIds) || storyIds.length === 0 || !storyIds.every(storyId => Number.isInteger(storyId) && storyId > 0)) {
             throw Object.assign(new Error('storyIds: the cards ticked, one at least.'), {status: 400});
         }
         const asked = typeof to === 'string' ? to.trim() : to ?? '';
         if (asked !== '' && !isEmail(asked)) throw Object.assign(new Error(EMAIL_RULE), {status: 400});
-        const row = Number.isInteger(id) && id > 0 ? await BriefingModel.ofUser(userId, id) : null;
-        if (!row || row.status !== 'ready') throw Object.assign(new Error('Unknown briefing.'), {status: 404});
-        const briefing = toBriefing(row);
+        const {row, briefing} = await readyBriefing(userId, briefingId);
         const byId = new Map(briefing.items.map(item => [item.storyId, item]));
         // in the order given, each card once, the ones not in this briefing left out
-        const items = [...new Set(storyIds)].map(storyId => byId.get(storyId)).filter(Boolean);
-        if (items.length === 0) throw Object.assign(new Error('None of the cards ticked is in this briefing.'), {status: 404});
+        const ticked = [...new Set(storyIds)].map(storyId => byId.get(storyId)).filter(Boolean);
+        if (ticked.length === 0) throw Object.assign(new Error('None of the cards ticked is in this briefing.'), {status: 404});
         const [user, profile] = await Promise.all([UserModel.email(userId), ProfileModel.get(row.id_profile)]);
         if (!asked && !user?.email) throw Object.assign(new Error('Your account has no e-mail address.'), {status: 400});
         const address = asked || user.email;
         const toOther = address.toLowerCase() !== String(user?.email ?? '').toLowerCase();
+        const sender = toOther ? user?.username ?? null : null;
+        // a picture of the story chosen is credited to its medium
+        const changed = ticked.filter(item => pictures && typeof pictures === 'object' && typeof pictures[String(item.storyId)]?.url === 'string');
+        const known = new Map((await Promise.all(changed.map(picturesOfItem))).flat().map(picture => [picture.url, picture.source]));
+        const {items, attachments} = await withChosenPictures(ticked, pictures, {sender, known});
         await sendMail({
             to: address,
             replyTo: toOther && user?.email ? user.email : undefined,
-            ...briefingMail({...briefing, items}, profile?.name ?? null, {sender: toOther ? user?.username ?? null : null}),
+            ...briefingMail({...briefing, items}, profile?.name ?? null, {sender}),
+            attachments,
         });
+    },
+
+    // [{url, source}]: the pictures of a card of a ready briefing the reader can put in an e-mail
+    pictures: async (userId, briefingId, storyId) => {
+        const {briefing} = await readyBriefing(userId, briefingId);
+        const item = briefing.items.find(card => card.storyId === Number(storyId));
+        if (!item) throw Object.assign(new Error('Unknown card.'), {status: 404});
+        return picturesOfItem(item);
     },
 
     // the thumb of the reader on a card: 'up' (good for me), 'down' (not for me) or null (taken back).

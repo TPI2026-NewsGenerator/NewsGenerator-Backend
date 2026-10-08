@@ -16,6 +16,7 @@ const router = express.Router();
 router.get('', authenticateToken, activeProfile, BriefingController.latest);
 router.post('', authenticateToken, activeProfile, BriefingController.start);
 router.post('/:id/vote', authenticateToken, activeProfile, BriefingController.vote);
+router.get('/:id/stories/:storyId/pictures', authenticateToken, BriefingController.pictures);
 // cards of a briefing sent by e-mail, a few times an hour and a day at most: each one goes through the
 // account of the server, which Gmail limits (500 a day), to any address the reader writes
 router.post('/:id/email', authenticateToken,

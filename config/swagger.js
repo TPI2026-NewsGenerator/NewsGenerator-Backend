@@ -592,7 +592,7 @@ const options = {
                 "post": {
                     "tags": ["Feeds"],
                     "summary": "Add recommended sources",
-                    "description": "Only ids are sent: each is checked to be recommended to this reader right now, so every address added is one the server already reads, never one the client names. They are added as if by hand: counted in the limit of 100, never removed without the reader, and not shared.",
+                    "description": "Only ids are sent: each is checked to be recommended to this reader right now, so every address added is one the server already reads, never one the client names. They are added as if by hand: counted in the limit of 800, never removed without the reader, and not shared.",
                     "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"ids": {"type": "array", "items": {"type": "integer"}, "maxItems": 20}}, "required": ["ids"]}}}},
                     "responses": {
                         "200": {"description": "{feeds, errors}: the sources added, and why the others were not ({id, site, error})"},
@@ -931,14 +931,32 @@ const options = {
                     "summary": "Send the cards of a briefing the reader ticked by e-mail",
                     "description": "Through the SMTP account of the server (SMTP_USER, SMTP_PASS), to the address `to`, else to the one of the account. The cards in the order of storyIds (the reader can change it), each once, laid out as the page shows them. Sent to another address than the account one, it says who sends it and the answers go to the account address. At most 10 e-mails an hour per address and 30 a day per account.",
                     "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
-                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["storyIds"], "properties": {"storyIds": {"type": "array", "items": {"type": "integer"}, "minItems": 1}, "to": {"type": "string", "description": "One address; the one of the account when not given"}}}}}},
+                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["storyIds"], "properties": {
+                        "storyIds": {"type": "array", "items": {"type": "integer"}, "minItems": 1},
+                        "to": {"type": "string", "description": "One address; the one of the account when not given"},
+                        "pictures": {"type": "object", "description": "The picture of some cards, by storyId: null takes it out, {url} puts an image of the web (http/https, a public host; the mail client of the receiver loads it, credited to the medium when it is one of the story, see /stories/{storyId}/pictures), {data} a JPEG, PNG, GIF or WebP file in base64 (2 MB each, 6 MB in all), joined to the e-mail. A card not named keeps its own.",
+                            "additionalProperties": {"nullable": true, "oneOf": [{"type": "object", "properties": {"url": {"type": "string"}}}, {"type": "object", "properties": {"data": {"type": "string", "format": "byte"}}}]},
+                            "example": {"12": null, "15": {"url": "https://cdn.example/photo.jpg"}}}
+                    }}}}},
                     "responses": {
                         "204": {"description": "Sent"},
-                        "400": {"description": "storyIds not a list of cards, to not an email, or no address"},
+                        "400": {"description": "storyIds not a list of cards, to not an email, no address, or a picture that is not an image of the web or an image file under its weight"},
                         "404": {"description": "No such ready briefing of this user, or none of the cards in it"},
                         "429": {"description": "Too many e-mails in the hour or the day"},
                         "502": {"description": "The mail server refused it"},
                         "503": {"description": "The server has no e-mail account"}
+                    }
+                }
+            },
+            "/briefing/{id}/stories/{storyId}/pictures": {
+                "get": {
+                    "tags": ["Briefing"],
+                    "summary": "The pictures of a card the reader can put in an e-mail",
+                    "description": "The picture of the card first, then the ones the feeds gave the articles of its story, once each, with the medium of each.",
+                    "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}, {"name": "storyId", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                    "responses": {
+                        "200": {"description": "{pictures: [{url, source}]}"},
+                        "404": {"description": "No such ready briefing of this user, or no such card in it"}
                     }
                 }
             }

@@ -32,13 +32,15 @@ const transportOf = () => {
     return transport;
 };
 
-// {to, replyTo?, subject, html, text}: sent, or an error the reader can read (the address of the
-// account and the answer of the server stay in the logs). replyTo: who the answers go to, else the
-// account of the server
-export const sendMail = async ({to, replyTo, subject, html, text}) => {
+// {to, replyTo?, subject, html, text, attachments?}: sent, or an error the reader can read (the address
+// of the account and the answer of the server stay in the logs). replyTo: who the answers go to, else
+// the account of the server. attachments: files joined, [{filename, content, contentType, cid}], shown
+// in the html by their cid
+export const sendMail = async ({to, replyTo, subject, html, text, attachments = []}) => {
     if (!mailEnabled()) throw Object.assign(new Error('The server has no e-mail account to send it from.'), {status: 503});
     try {
-        await transportOf().sendMail({from: settings().from, to, ...(replyTo ? {replyTo} : {}), subject, html, text});
+        await transportOf().sendMail({from: settings().from, to, ...(replyTo ? {replyTo} : {}), subject, html, text,
+            ...(attachments.length > 0 ? {attachments} : {})});
     } catch (err) {
         console.error(`Mail: not sent (${err.message})`);
         throw Object.assign(new Error('The e-mail could not be sent, try again later.'), {status: 502});
