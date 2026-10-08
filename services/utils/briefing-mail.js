@@ -81,13 +81,17 @@ const contestedHtml = (denials) => denials.length === 0 ? '' : `
   <p class="ng-mute" style="${CAPTION};margin-top:4px">— ${webUrl(denial.url) ? `<a href="${escape(denial.url)}" class="ng-mute" style="color:${LIGHT.mute}">${escape(denial.source)}</a>` : escape(denial.source)}${denial.publishedAt ? `, ${escape(when(denial.publishedAt))}` : ''}</p>`).join('')}
 </div>`;
 
-const anglesHtml = (angles) => angles.length === 0 ? '' : `
+// none left (the reader took them out, or none has a web address): no title either
+const anglesHtml = (given) => {
+    const angles = given.filter(angle => webUrl(angle.url));
+    return angles.length === 0 ? '' : `
 <div class="ng-rule" style="margin-top:28px;border-left:2px solid ${LIGHT.rule};padding-left:18px">
   ${kicker('Same affair, other angles')}
-  ${angles.filter(angle => webUrl(angle.url)).map(angle => `
+  ${angles.map(angle => `
   <p style="margin:12px 0 0"><a href="${escape(angle.url)}" class="ng-ink" style="font:600 17px/1.45 ${TEXT};color:${LIGHT.ink};text-decoration:none">${escape(angle.titleTranslation ?? angle.title)}</a></p>
   <p class="ng-mute" style="${CAPTION};margin-top:4px">${escape(angle.source)}${languageMark(angle.language)}${angle.publishedAt ? ` · ${escape(when(angle.publishedAt))}` : ''}${angle.media > 1 ? ` · told by ${angle.media} media` : ''}</p>`).join('')}
 </div>`;
+};
 
 // where to read it (client NewsLinks.jsx): the article of the passages, then each other medium once
 const SHOWN_OTHERS = 8;

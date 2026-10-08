@@ -21,7 +21,7 @@ jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel
 jest.unstable_mockModule('../../models/user-model.js', () => ({UserModel: {email: jest.fn(async () => ({email: 'reader@example.test', username: 'lecteur'}))}}));
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: {get: jest.fn(async () => ({name: 'Football'}))}}));
 jest.unstable_mockModule('../../services/utils/mailer.js', () => ({sendMail, mailEnabled: () => true}));
-const {BriefingService, withOwnTitles} = await import('../../services/briefing-service.js');
+const {BriefingService, withOwnTitles, withoutTakenOut} = await import('../../services/briefing-service.js');
 const {briefingMail} = await import('../../services/utils/briefing-mail.js');
 
 const card = (storyId, title, changes = {}) => ({
@@ -53,6 +53,17 @@ describe('BriefingService.email', () => {
         expect(mail.text).toContain('02. First story');
         expect(mail.text).not.toContain('Second story');
         expect(mail.text).not.toContain('A VAR news');
+    });
+
+    it('should send a card without the other angles taken out, and nothing when they are not named by their places', async () => {
+        ofUser.mockResolvedValue({...row, items: [card(1, 'First story', {angles: [
+            {title: 'Kept angle', url: 'https://rfi.fr/1', source: 'rfi.fr'}, {title: 'Taken angle', url: 'https://rfi.fr/2', source: 'rfi.fr'}]})]});
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, {1: {angles: [1]}});
+        expect(sendMail.mock.calls[0][0].html).toContain('Kept angle');
+        expect(sendMail.mock.calls[0][0].html).not.toContain('Taken angle');
+
+        await expect(BriefingService.email(4, 7, [1], undefined, undefined, undefined, {1: {angles: 'all'}})).rejects.toMatchObject({status: 400});
+        expect(sendMail).toHaveBeenCalledTimes(1);
     });
 
     it('should send to the address the reader wrote, saying who sends it, the answers to the reader', async () => {
@@ -218,6 +229,31 @@ describe('briefingMail', () => {
         expect(html).toContain('&lt;script&gt;');
         expect(() => withOwnTitles(briefing.items, {1: 'x'.repeat(301)})).toThrow(/300/);
         expect(() => withOwnTitles(briefing.items, [1])).toThrow();
+    });
+
+    it('should leave out the denials and the other angles the reader took out, and their title once none is left', () => {
+        const two = card(1, 'Two angles', {
+            contested: briefing.items[0].contested,
+            angles: [{title: 'First angle', url: 'https://rfi.fr/1', source: 'rfi.fr'}, {title: 'Second angle', url: 'https://rfi.fr/2', source: 'rfi.fr'}],
+        });
+        const one = withoutTakenOut([two], {1: {angles: [0]}});
+        let {html, text} = briefingMail({...briefing, items: one}, 'Football');
+        expect(html).not.toContain('First angle');
+        expect(text).not.toContain('First angle');
+        expect(html).toContain('Second angle');
+        expect(html).toContain('Same affair, other angles');
+        expect(html).toContain('Contested');
+
+        ({html, text} = briefingMail({...briefing, items: withoutTakenOut([two], {1: {angles: [0, 1], contested: [0]}})}, 'Football'));
+        for (const gone of ['Same affair, other angles', 'First angle', 'Second angle', 'Contested', 'denies']) {
+            expect(html).not.toContain(gone);
+            expect(text).not.toContain(gone);
+        }
+        // a card not named keeps all of it
+        expect(withoutTakenOut([two], {2: {angles: [0]}})[0].angles).toHaveLength(2);
+        for (const wrong of [[0], {1: [0]}, {1: {angles: [-1]}}, {1: {angles: ['0']}}, {1: {passages: [0]}}]) {
+            expect(() => withoutTakenOut([two], wrong)).toThrow(/removed/);
+        }
     });
 
     it('should leave out the why, written to the reader, of an e-mail sent by them to another', () => {

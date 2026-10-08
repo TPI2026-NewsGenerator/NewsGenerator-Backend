@@ -811,6 +811,25 @@ export const withOwnTitles = (items, titles) => {
     });
 };
 
+// the cards without the denials and the other angles the reader took out of the e-mail, {storyId:
+// {contested: [index], angles: [index]}}, their places in the card: a part left empty has no title
+const TAKEN_OUT = ['contested', 'angles'];
+export const withoutTakenOut = (items, removed) => {
+    if (removed === undefined || removed === null) return items;
+    const places = (list) => Array.isArray(list) && list.every(index => Number.isInteger(index) && index >= 0);
+    if (typeof removed !== 'object' || Array.isArray(removed) || !Object.values(removed).every(parts =>
+        parts && typeof parts === 'object' && !Array.isArray(parts)
+        && Object.entries(parts).every(([part, list]) => TAKEN_OUT.includes(part) && places(list)))) {
+        throw Object.assign(new Error('removed: {storyId: {contested: [index], angles: [index]}}.'), {status: 400});
+    }
+    return items.map(item => {
+        const parts = removed[String(item.storyId)];
+        if (!parts) return item;
+        return {...item, ...Object.fromEntries(Object.entries(parts).map(([part, list]) =>
+            [part, (item[part] ?? []).filter((entry, index) => !list.includes(index))]))};
+    });
+};
+
 // {row, briefing} of a ready briefing of this reader, else 404
 const readyBriefing = async (userId, briefingId) => {
     const id = Number(briefingId);
@@ -834,8 +853,9 @@ export const BriefingService = {
     // briefing-mail.js), sent to one address: to, the one the reader writes, the one of their account
     // when not given; sent to another, it says who sends it and the answers go to the reader.
     // pictures: the picture of some cards changed or taken out (see withChosenPictures); titles:
-    // {storyId: title}, the ones the reader wrote for the e-mail
-    email: async (userId, briefingId, storyIds, to, pictures, titles) => {
+    // {storyId: title}, the ones the reader wrote for the e-mail; removed: the denials and the other
+    // angles they took out (see withoutTakenOut)
+    email: async (userId, briefingId, storyIds, to, pictures, titles, removed) => {
         if (!Array.isArray(storyIds) || storyIds.length === 0 || !storyIds.every(storyId => Number.isInteger(storyId) && storyId > 0)) {
             throw Object.assign(new Error('storyIds: the cards ticked, one at least.'), {status: 400});
         }
@@ -854,7 +874,7 @@ export const BriefingService = {
         // a picture of the story chosen is credited to its medium
         const changed = ticked.filter(item => pictures && typeof pictures === 'object' && typeof pictures[String(item.storyId)]?.url === 'string');
         const known = new Map((await Promise.all(changed.map(picturesOfItem))).flat().map(picture => [picture.url, picture.source]));
-        const {items, attachments} = await withChosenPictures(withOwnTitles(ticked, titles), pictures, {sender, known});
+        const {items, attachments} = await withChosenPictures(withoutTakenOut(withOwnTitles(ticked, titles), removed), pictures, {sender, known});
         await sendMail({
             to: address,
             replyTo: toOther && user?.email ? user.email : undefined,

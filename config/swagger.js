@@ -938,7 +938,12 @@ const options = {
                         "pictures": {"type": "object", "description": "The picture of some cards, by storyId: null takes it out, {url} puts an image of the web (http/https, a public host; the mail client of the receiver loads it, credited to the medium when it is one of the story, see /stories/{storyId}/pictures), {data} a JPEG, PNG, GIF or WebP file in base64 (2 MB each, 6 MB in all), joined to the e-mail. A card not named keeps its own.",
                             "additionalProperties": {"nullable": true, "oneOf": [{"type": "object", "properties": {"url": {"type": "string"}}}, {"type": "object", "properties": {"data": {"type": "string", "format": "byte"}}}]},
                             "example": {"12": null, "15": {"url": "https://cdn.example/photo.jpg"}}},
-                        "titles": {"type": "object", "description": "The titles the reader wrote for some cards, by storyId (300 characters at most; an empty one keeps the card's own)", "additionalProperties": {"type": "string"}}
+                        "titles": {"type": "object", "description": "The titles the reader wrote for some cards, by storyId (300 characters at most; an empty one keeps the card's own)", "additionalProperties": {"type": "string"}},
+                        "removed": {"type": "object", "description": "The denials ('Contested') and other angles the reader took out of some cards, by storyId, as their places in the card (0 the first). A part left empty is not shown, its title neither.",
+                            "additionalProperties": {"type": "object", "properties": {
+                                "contested": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+                                "angles": {"type": "array", "items": {"type": "integer", "minimum": 0}}}, "additionalProperties": false},
+                            "example": {"12": {"angles": [0, 2]}, "15": {"contested": [0]}}}
                     }}}}},
                     "responses": {
                         "204": {"description": "Sent"},
