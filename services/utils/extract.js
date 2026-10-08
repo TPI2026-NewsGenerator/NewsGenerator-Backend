@@ -145,7 +145,7 @@ const twentyFourHours = (text) => text.replace(/\b(\d{1,2})(?:[:.](\d{2}))?[\s\u
     });
 // the figures of a sentence, whatever their separators: "1.1383" and "1,1383", "1,000" and "1 000" are
 // the same figure, "September 21, 2026" two of them, and "7 p.m." the same as "19h00"
-const figures = (text) => (twentyFourHours(text).match(/\d+(?:[.,   ]\d{3}(?!\d))*(?:[.,]\d+)?/g) ?? [])
+const figures = (text) => (twentyFourHours(text).match(/\d+(?:[.,\u202f\u00a0 ]\d{3}(?!\d))*(?:[.,]\d+)?/g) ?? [])
     .map(figure => figure.replace(/[^\d]/g, ''));
 // a translation keeps every figure of the sentence it translates, checked here rather than trusted
 export const keepsFigures = (original, translation) => {

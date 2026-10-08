@@ -121,7 +121,7 @@ const spanOf = (hours) => hours > DEFAULT_HOURS ? `${hours / 24} days` : `${hour
 // and translated: replayed on a reader of 7 languages with sources in 30 (bench/briefing-languages.mjs),
 // the others took 13 of the 42 candidates and 2 of the 10 cards, both on the profile (the UEFA president
 // on Infantino in Albanian)
-const feedsOf = async (profileId) => [...new Set([
+export const feedsOf = async (profileId) => [...new Set([
     ...Object.values(rss).flatMap(categories => Object.values(categories).flat()),
     ...await FeedModel.userFeedUrls(profileId),
     ...await FeedModel.everyoneFeedUrls(),
@@ -716,6 +716,12 @@ export const watchedNews = async (terms, {feedUrls, since}) => {
     const articles = await FeedModel.searchArticles({
         feedUrls, keywords: Filter.parse([terms.map(term => `"${term}"`).join(', ')]), timeframe: {start: since},
     });
+    return newsOfTerms(terms, articles);
+};
+
+// [{term, count, news}]: the articles naming each term as a whole word, one news per story, the newest
+// first (articles: the newest first)
+export const newsOfTerms = (terms, articles) => {
     return terms.map(term => {
         const names = Filter.matcher(Filter.parse([`"${term}"`]));
         const stories = new Map();
@@ -791,6 +797,20 @@ export const withMarks = (briefing, terms) => {
     };
 };
 
+// the cards with the titles the reader wrote for the e-mail, {storyId: title}: one left empty keeps its own
+const MAX_OWN_TITLE = 300;
+export const withOwnTitles = (items, titles) => {
+    if (titles === undefined || titles === null) return items;
+    if (typeof titles !== 'object' || Array.isArray(titles) || !Object.values(titles).every(title => typeof title === 'string')) {
+        throw Object.assign(new Error('titles: {storyId: title}.'), {status: 400});
+    }
+    return items.map(item => {
+        const own = (titles[String(item.storyId)] ?? '').replace(/\s+/g, ' ').trim();
+        if (own.length > MAX_OWN_TITLE) throw Object.assign(new Error(`A title has ${MAX_OWN_TITLE} characters at most.`), {status: 400});
+        return own ? {...item, ownTitle: own} : item;
+    });
+};
+
 // {row, briefing} of a ready briefing of this reader, else 404
 const readyBriefing = async (userId, briefingId) => {
     const id = Number(briefingId);
@@ -813,8 +833,9 @@ export const BriefingService = {
     // the cards of a ready briefing the reader ticked (storyIds), in the order the reader gave them (see
     // briefing-mail.js), sent to one address: to, the one the reader writes, the one of their account
     // when not given; sent to another, it says who sends it and the answers go to the reader.
-    // pictures: the picture of some cards changed or taken out (see withChosenPictures)
-    email: async (userId, briefingId, storyIds, to, pictures) => {
+    // pictures: the picture of some cards changed or taken out (see withChosenPictures); titles:
+    // {storyId: title}, the ones the reader wrote for the e-mail
+    email: async (userId, briefingId, storyIds, to, pictures, titles) => {
         if (!Array.isArray(storyIds) || storyIds.length === 0 || !storyIds.every(storyId => Number.isInteger(storyId) && storyId > 0)) {
             throw Object.assign(new Error('storyIds: the cards ticked, one at least.'), {status: 400});
         }
@@ -833,11 +854,11 @@ export const BriefingService = {
         // a picture of the story chosen is credited to its medium
         const changed = ticked.filter(item => pictures && typeof pictures === 'object' && typeof pictures[String(item.storyId)]?.url === 'string');
         const known = new Map((await Promise.all(changed.map(picturesOfItem))).flat().map(picture => [picture.url, picture.source]));
-        const {items, attachments} = await withChosenPictures(ticked, pictures, {sender, known});
+        const {items, attachments} = await withChosenPictures(withOwnTitles(ticked, titles), pictures, {sender, known});
         await sendMail({
             to: address,
             replyTo: toOther && user?.email ? user.email : undefined,
-            ...briefingMail({...briefing, items}, profile?.name ?? null, {sender}),
+            ...briefingMail({...briefing, items}, profile?.name ?? null, {sender, account: user?.username ?? null}),
             attachments,
         });
     },

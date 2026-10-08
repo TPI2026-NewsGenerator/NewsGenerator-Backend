@@ -53,6 +53,9 @@ export const UserModel = {
 
     roleId: async (role) => (await prisma.roles.findUnique({where: {role}}))?.id ?? null,
 
+    // the name of the role of the account ('Admin', 'User'), null when there is no such account
+    roleName: async (id) => (await prisma.users.findUnique({where: {id}, select: {roles: {select: {role: true}}}}))?.roles?.role ?? null,
+
     // password: already hashed
     create: async ({username, email, password, role}) => prisma.users.create({
         data: {username, email, password, role},

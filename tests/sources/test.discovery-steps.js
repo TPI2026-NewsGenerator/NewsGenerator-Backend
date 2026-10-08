@@ -6,6 +6,7 @@
 //               waiting on the press of Media Cloud, whose queue answers 2 searches a minute
 //
 
+import {setImmediate} from 'node:timers';
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));

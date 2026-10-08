@@ -977,6 +977,25 @@ told only through Google, 2 of one medium at most. A story known only through Go
 media, or one medium the server reads through its own feed: a search also names spam sites written by
 machines.
 
+### Clubs, people and organisations followed
+
+A profile follows items of **Wikidata** (`/api/entities`, `services/entity-service.js`,
+`db/add_entities.sql`): a club, a person, an organisation. Each is read once a week from Wikidata
+(`services/utils/wikidata.js`): its names in the languages read (an alias of one common word left out,
+"Paris" for Paris Saint-Germain; a club also without its "FC", which gives "PSG"), and its links still
+true, the current players and coach of a club, the team of a player, the chair of a body. Its page lists
+the news of the window naming it and the ones naming each link, from every feed, with no relevance, as
+the terms followed. The names are looked for as plain texts, with and without their accents, which the
+trigram index answers, then checked as whole words: 45 names of a club and its people took 387 s with
+the patterns of the terms followed, 11 s this way on 48 hours (`FeedModel.articlesHolding`). The reader
+takes out a name that finds other things and adds their own.
+
+### What the administrators can do
+
+Sending the briefing by e-mail and having several profiles are for the accounts of the role `Admin`
+(`services/utils/admin.js`). The role is read in the database at each request, never in the token: an
+account made an administrator has it at once. `GET /api/session` says it (`admin`).
+
 [//]: # (How to set up the database?)
 
 [//]: # (How do you set the sensitive data?)

@@ -6,6 +6,7 @@
 //               or to the one they write, in the order they gave, laid out as the page shows them
 //
 
+import {Buffer} from 'node:buffer';
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const ofUser = jest.fn();
@@ -20,7 +21,7 @@ jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel
 jest.unstable_mockModule('../../models/user-model.js', () => ({UserModel: {email: jest.fn(async () => ({email: 'reader@example.test', username: 'lecteur'}))}}));
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: {get: jest.fn(async () => ({name: 'Football'}))}}));
 jest.unstable_mockModule('../../services/utils/mailer.js', () => ({sendMail, mailEnabled: () => true}));
-const {BriefingService} = await import('../../services/briefing-service.js');
+const {BriefingService, withOwnTitles} = await import('../../services/briefing-service.js');
 const {briefingMail} = await import('../../services/utils/briefing-mail.js');
 
 const card = (storyId, title, changes = {}) => ({
@@ -61,9 +62,11 @@ describe('BriefingService.email', () => {
         expect(mail.to).toBe('friend@example.org');
         expect(mail.replyTo).toBe('reader@example.test');
         expect(mail.subject).toMatch(/^lecteur shares 1 story of their NewsGenerator briefing · /);
-        expect(mail.html).toContain('From the briefing of lecteur');
-        expect(mail.html).toContain('Sent by lecteur from their briefing on NewsGenerator');
-        expect(mail.html).not.toContain('Football');
+        expect(mail.html).toContain('Football’s briefing - 8 October 2026');
+        expect(mail.html).toContain('lecteur shares 1 story of their briefing • 8 October at 08:01');
+        // nothing at the end of it: answered, it goes to the reader all the same (replyTo)
+        expect(mail.html).not.toContain('Sent by');
+        expect(mail.html).not.toContain('The key points are');
     });
 
     it('should send as to the account when the address written is its own, whatever its case', async () => {
@@ -186,12 +189,35 @@ describe('briefingMail', () => {
         const {html} = briefingMail(briefing, 'Football');
 
         for (const part of ['>01<', 'Sommet contre Infantino', 'Translated from German', '“Gipfel gegen Infantino”', 'Du football, que vous suivez.',
-            'src="https://cdn.example/a.jpg"', 'Picture — sport1.de', 'In the article&#39;s words, translated', 'second.', '[…]',
+            'src="https://cdn.example/a.jpg"', 'Picture — sport1.de', 'Key points', 'second.', '[…]',
             'Contested', 'Infantino denies:', 'Machine translation: “Ce n’est pas vrai.”', 'Same affair, other angles', 'Le Nigeria porte plainte',
             'told by 3 media', 'Read the article at media.fr', 'Also covered by', 'kicker.de', 'Who tells it',
-            'Told by 3 media, 2 texts written independently of 3 read', 'named sources', 'Not confirmed']) {
+            'Told by 3 media, 2 texts written independently of 3 read', 'Not confirmed']) {
             expect(html).toContain(part);
         }
+    });
+
+    it('should leave out the notes that tell nothing: the AI choosing the passages, one medium, the sources named', () => {
+        const {html} = briefingMail({...briefing, items: [card(1, 'Alone', {corroboration: {media: 1, read: 1, independent: 1, agencies: []}, sourcing: 'named'})]},
+            'Enzo', {account: 'enzo'});
+        for (const gone of ['Sentences chosen by the AI', 'In the article', 'Only one medium', 'Who tells it', 'Its sources', 'named sources', 'Written Thursday']) {
+            expect(html).not.toContain(gone);
+        }
+        expect(html).toContain('Enzo’s briefing - 8 October 2026');
+        expect(html).toContain('enzo shares 1 story of their briefing • 8 October at 08:01');
+        expect(html).not.toMatch(/>NewsGenerator</);
+    });
+
+    it('should show the title the reader wrote instead of the one of the card, without its original', () => {
+        const items = withOwnTitles(briefing.items, {1: '  Infantino  contesté ', 2: ''});
+        const {html, text} = briefingMail({...briefing, items}, 'Football');
+        expect(html).toContain('Infantino contesté');
+        expect(html).not.toContain('Sommet contre Infantino');
+        expect(html).not.toContain('“Gipfel gegen Infantino”');
+        expect(text).toContain('01. Infantino contesté');
+        expect(html).toContain('&lt;script&gt;');
+        expect(() => withOwnTitles(briefing.items, {1: 'x'.repeat(301)})).toThrow(/300/);
+        expect(() => withOwnTitles(briefing.items, [1])).toThrow();
     });
 
     it('should leave out the why, written to the reader, of an e-mail sent by them to another', () => {

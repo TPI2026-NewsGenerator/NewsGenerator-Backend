@@ -205,7 +205,7 @@ export const FeedController = {
 
         for (let {site, feed, category} of sources) {
             const name = String(site ?? '').trim();
-            let language = null;
+            let language;
 
             if (count >= MAX_USER_FEEDS) {
                 errors.push({site, error: TOO_MANY});

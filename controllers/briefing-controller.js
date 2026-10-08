@@ -9,13 +9,15 @@
 
 import {BriefingService} from '../services/briefing-service.js';
 import {mailEnabled} from '../services/utils/mailer.js';
+import {isAdmin} from '../services/utils/admin.js';
 
 export const BriefingController = {
     // the last briefing, null when none was ever written
     latest: async (req, res) => {
         try {
-            // mail: the server can send a briefing by e-mail
-            res.status(200).json({briefing: await BriefingService.latest(req.profileId), mail: mailEnabled()});
+            // mail: the server can send a briefing by e-mail, and this reader may (see admin.js)
+            const [briefing, admin] = await Promise.all([BriefingService.latest(req.profileId), isAdmin(req.user.id)]);
+            res.status(200).json({briefing, mail: mailEnabled() && admin});
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});
         }
@@ -25,7 +27,7 @@ export const BriefingController = {
     // else to the one of their account, with the pictures they chose
     email: async (req, res) => {
         try {
-            await BriefingService.email(req.user.id, req.params.id, req.body?.storyIds, req.body?.to, req.body?.pictures);
+            await BriefingService.email(req.user.id, req.params.id, req.body?.storyIds, req.body?.to, req.body?.pictures, req.body?.titles);
             res.status(204).end();
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});

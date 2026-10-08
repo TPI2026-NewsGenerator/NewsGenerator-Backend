@@ -15,6 +15,7 @@ import feedRouter from './feed-router.js';
 import customSearchRouter from './customsearch-router.js';
 import profileRouter from './profile-router.js';
 import briefingRouter from './briefing-router.js';
+import entityRouter from './entity-router.js';
 import cors from "cors";
 
 const router = express.Router();
@@ -30,5 +31,6 @@ router.use('/feeds', feedRouter);
 router.use('/customsearch', customSearchRouter);
 router.use('/profile', profileRouter);
 router.use('/briefing', briefingRouter);
+router.use('/entities', entityRouter);
 
 export default router;

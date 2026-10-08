@@ -6,6 +6,7 @@
 //               by meaning. And the sites of a list a reader imports, with what keeps each out
 //
 
+import process from 'node:process';
 import {jest} from '@jest/globals';
 
 jest.unstable_mockModule('../../models/feed-model.js', () => ({

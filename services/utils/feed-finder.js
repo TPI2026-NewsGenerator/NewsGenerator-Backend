@@ -44,7 +44,7 @@ const readPage = async (siteUrl) => {
     const {res, url} = await fetchPublicUrl(siteUrl, {headers: {'User-Agent': USER_AGENT}});
     if (!res.ok) {
         await discardBody(res);
-        return {feeds: [], html: '', url};
+        return {feeds: [], html: '', url, dead: true};
     }
 
     const body = (await readText(res)).slice(0, MAX_PAGE_CHARS);
@@ -225,6 +225,15 @@ export const findFeeds = async (site, {language = null, subject = null, judge = 
         home = await readPage(siteUrl);
     } catch (err) {
         if (err.status === 400) throw err;      // private address, bad protocol: the user must know
+        home.dead = true;
+    }
+
+    // A list names the feed of a site, and the feed died since or moved: 91 of the 855 addresses of a
+    // list answered 404, 4 an error 500. The site itself often still has one (17 of them), or a page
+    // to read (28): its root is tried instead, nothing of the dead page was to be read anyway
+    const root = new URL(siteUrl).origin + '/';
+    if (home.dead && siteUrl.replace(/\/?$/, '/') !== root) {
+        return findFeeds(root, {language, subject, judge, languages, known, bridge});
     }
 
     const host = hostOf(siteUrl);

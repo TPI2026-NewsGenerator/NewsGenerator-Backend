@@ -5,6 +5,7 @@
 //  Description: Tests of the session kept in an HttpOnly cookie
 //
 
+import process from 'node:process';
 import {jest} from '@jest/globals';
 import jwt from 'jsonwebtoken';
 

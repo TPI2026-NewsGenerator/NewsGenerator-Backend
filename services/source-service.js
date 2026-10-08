@@ -157,7 +157,7 @@ export const SourceService = {
     checkSites: async ({sites, profileId, language = 'en'}) => {
         const added = new Set(await FeedModel.userFeedUrls(profileId));
         const results = await mapWithConcurrency(sites, CHECK_CONCURRENCY, async (site) => {
-            let feeds = [];
+            let feeds;
             try {
                 feeds = await withTimeout(findFeeds(site, {language}), CHECK_TIMEOUT_MS);
             } catch (err) {

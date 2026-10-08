@@ -8,6 +8,7 @@
 
 "use strict"
 
+import {Buffer} from "node:buffer";
 import {assertPublicUrl, hostOf} from "./public-url.js";
 
 export const MAX_PICTURE_BYTES = 2 * 1024 * 1024;       // a file of the reader, once decoded

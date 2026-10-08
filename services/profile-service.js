@@ -21,6 +21,7 @@ import {searchesOfUser} from "./ingest-service.js";
 import {readerLanguage} from "./utils/language.js";
 import {forClient, sourceKey} from "./utils/public-url.js";
 import {cleanWatchTerms, MAX_WATCH_TERMS} from "./utils/watch-terms.js";
+import {isAdmin} from "./utils/admin.js";
 
 const MIN_TEXT = 20;            // "rugby" says too little to split into interests
 const MAX_TEXT = 2000;
@@ -216,8 +217,10 @@ export const ProfileService = {
     },
 
     // another profile of the user: {name, text, language}, written as the first one
+    // Several profiles are for the administrators (see admin.js): the others write theirs again
     create: async (userId, {name, ...written}) => {
         const named = cleanName(name);
+        if (!await isAdmin(userId)) throw Object.assign(new Error('Several profiles are for the administrators: write yours again instead.'), {status: 403});
         if (await ProfileModel.count(userId) >= MAX_PROFILES) throw badRequest(`At most ${MAX_PROFILES} profiles.`);
         const prepared = await ProfileService.prepare(written);
         const id = await ProfileService.store(userId, null, {...prepared, profile: {...prepared.profile, name: named}});

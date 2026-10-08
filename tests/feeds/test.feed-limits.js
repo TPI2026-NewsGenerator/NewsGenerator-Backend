@@ -5,6 +5,7 @@
 //  Description: Tests for the limits of the sources of a reader, and the addresses that stay private
 //
 
+import process from 'node:process';
 import {afterAll, beforeAll, describe, expect, it} from '@jest/globals';
 import {bridgeRoom, FLOOD_NEWS_PER_DAY, isFlood, looksPrivate, MAX_BRIDGE_FEEDS, withinBridgeRoom} from '../../services/utils/feed-limits.js';
 

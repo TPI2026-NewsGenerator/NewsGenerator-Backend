@@ -110,7 +110,8 @@ const options = {
                                             "id": {"type": "integer"},
                                             "username": {"type": "string"},
                                             "email": {"type": "string"},
-                                            "role": {"type": "integer"}
+                                            "role": {"type": "integer"},
+                                            "admin": {"type": "boolean", "description": "Its role is Admin, read now in the database: it may send the briefing by e-mail and have several profiles"}
                                         }
                                     }
                                 }
@@ -929,14 +930,15 @@ const options = {
                 "post": {
                     "tags": ["Briefing"],
                     "summary": "Send the cards of a briefing the reader ticked by e-mail",
-                    "description": "Through the SMTP account of the server (SMTP_USER, SMTP_PASS), to the address `to`, else to the one of the account. The cards in the order of storyIds (the reader can change it), each once, laid out as the page shows them. Sent to another address than the account one, it says who sends it and the answers go to the account address. At most 10 e-mails an hour per address and 30 a day per account.",
+                    "description": "For the administrators only (role Admin, else 403). Through the SMTP account of the server (SMTP_USER, SMTP_PASS), to the address `to`, else to the one of the account. The cards in the order of storyIds (the reader can change it), each once, laid out as the page shows them. Sent to another address than the account one, it says who sends it and the answers go to the account address. At most 10 e-mails an hour per address and 30 a day per account.",
                     "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
                     "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["storyIds"], "properties": {
                         "storyIds": {"type": "array", "items": {"type": "integer"}, "minItems": 1},
                         "to": {"type": "string", "description": "One address; the one of the account when not given"},
                         "pictures": {"type": "object", "description": "The picture of some cards, by storyId: null takes it out, {url} puts an image of the web (http/https, a public host; the mail client of the receiver loads it, credited to the medium when it is one of the story, see /stories/{storyId}/pictures), {data} a JPEG, PNG, GIF or WebP file in base64 (2 MB each, 6 MB in all), joined to the e-mail. A card not named keeps its own.",
                             "additionalProperties": {"nullable": true, "oneOf": [{"type": "object", "properties": {"url": {"type": "string"}}}, {"type": "object", "properties": {"data": {"type": "string", "format": "byte"}}}]},
-                            "example": {"12": null, "15": {"url": "https://cdn.example/photo.jpg"}}}
+                            "example": {"12": null, "15": {"url": "https://cdn.example/photo.jpg"}}},
+                        "titles": {"type": "object", "description": "The titles the reader wrote for some cards, by storyId (300 characters at most; an empty one keeps the card's own)", "additionalProperties": {"type": "string"}}
                     }}}}},
                     "responses": {
                         "204": {"description": "Sent"},
@@ -948,11 +950,57 @@ const options = {
                     }
                 }
             },
+            "/entities": {
+                "get": {
+                    "tags": ["Entities"],
+                    "summary": "The clubs, people and organisations the active profile follows",
+                    "responses": {"200": {"description": "{entities: [{qid, label, description, kind, names, followed, links}]}, the last followed first"}}
+                },
+                "post": {
+                    "tags": ["Entities"],
+                    "summary": "Follow an item of Wikidata",
+                    "description": "Read from Wikidata (its names in the languages read, an alias of one common word left out, and its links still true: the players and coach of a club, the team of a player, the chair of a body...), kept a week. 30 at most per profile.",
+                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["qid"], "properties": {"qid": {"type": "string", "example": "Q483020"}}}}}},
+                    "responses": {"201": {"description": "{entities}"}, "400": {"description": "Not a Wikidata id, no profile, or 30 followed already"}, "404": {"description": "Wikidata has no such item"}, "502": {"description": "Wikidata could not be read"}}
+                }
+            },
+            "/entities/search": {
+                "get": {
+                    "tags": ["Entities"],
+                    "summary": "Items of Wikidata by their name",
+                    "parameters": [{"name": "q", "in": "query", "required": true, "schema": {"type": "string"}}],
+                    "responses": {"200": {"description": "{items: [{qid, label, description}]}"}, "429": {"description": "30 asks of Wikidata a minute at most"}}
+                }
+            },
+            "/entities/{qid}": {
+                "get": {
+                    "tags": ["Entities"],
+                    "summary": "The page of an item: the news naming it, and the ones naming what it is linked to",
+                    "description": "From every feed the profile reads, no relevance, as the terms followed: each name looked for as a plain text with and without its accents (the trigram index), then checked as a whole word. The news of the window kept 10 minutes. Of any item, followed or not.",
+                    "parameters": [{"name": "qid", "in": "path", "required": true, "schema": {"type": "string"}}, {"name": "hours", "in": "query", "schema": {"type": "integer", "enum": [24, 48, 168], "default": 48}}],
+                    "responses": {"200": {"description": "{entity: {qid, label, description, kind, names, followed, wikidataNames, addedNames, removedNames}, hours, count, news, links: [{qid, label, description, kind, relation, count, news}]}"}, "400": {"description": "Not a Wikidata id, or hours not 24, 48 or 168"}, "404": {"description": "Wikidata has no such item"}}
+                },
+                "delete": {
+                    "tags": ["Entities"],
+                    "summary": "Stop following an item",
+                    "parameters": [{"name": "qid", "in": "path", "required": true, "schema": {"type": "string"}}],
+                    "responses": {"200": {"description": "{entities}"}, "404": {"description": "Not followed by this profile"}}
+                }
+            },
+            "/entities/{qid}/names": {
+                "put": {
+                    "tags": ["Entities"],
+                    "summary": "The names an item followed is found by: the reader's own, and the ones of Wikidata taken out",
+                    "parameters": [{"name": "qid", "in": "path", "required": true, "schema": {"type": "string"}}],
+                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"added": {"type": "array", "items": {"type": "string"}, "maxItems": 10}, "removed": {"type": "array", "items": {"type": "string"}}}}}}},
+                    "responses": {"200": {"description": "{entity}"}, "400": {"description": "Not lists of names, or more than 10 of the reader"}, "404": {"description": "Not followed by this profile"}}
+                }
+            },
             "/briefing/{id}/stories/{storyId}/pictures": {
                 "get": {
                     "tags": ["Briefing"],
                     "summary": "The pictures of a card the reader can put in an e-mail",
-                    "description": "The picture of the card first, then the ones the feeds gave the articles of its story, once each, with the medium of each.",
+                    "description": "For the administrators only (role Admin, else 403). The picture of the card first, then the ones the feeds gave the articles of its story, once each, with the medium of each.",
                     "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}, {"name": "storyId", "in": "path", "required": true, "schema": {"type": "integer"}}],
                     "responses": {
                         "200": {"description": "{pictures: [{url, source}]}"},
