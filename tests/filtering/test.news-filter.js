@@ -337,3 +337,26 @@ describe('Filter.hasOperators', () => {
         expect(Filter.hasOperators(['-"red card"'])).toBe(true);
     });
 });
+
+describe('Filter.highlights', () => {
+    const marked = (text, terms) => Filter.highlights(text, terms).map(([start, end]) => text.slice(start, end));
+
+    it('should give the places of the terms as the matcher finds them: whole words, an acronym in capitals', () => {
+        expect(marked("L'UEFA VAR a revu le but, la VAR-Linie et Alvarez, le Var", ['VAR'])).toEqual(['VAR', 'VAR']);
+        expect(marked('LA VALETTE-DU-VAR : Octobre Rose', ['VAR'])).toEqual([]);
+        expect(marked('Infantino, infantino et INFANTINO', ['Infantino'])).toEqual(['Infantino', 'infantino', 'INFANTINO']);
+    });
+
+    it('should find a term with or without its accents, at its place in the text as written', () => {
+        expect(marked('Zürich gagne à Zurich, Ramón Vega et Ramon  Vega', ['Zurich', 'Ramon Vega']))
+            .toEqual(['Zürich', 'Zurich', 'Ramón Vega', 'Ramon  Vega']);
+        // a letter longer in lowercase moves nothing
+        expect(marked('İstanbul reçoit Infantino', ['Infantino'])).toEqual(['Infantino']);
+    });
+
+    it('should join the places of two terms that overlap, and give none without a term or a text', () => {
+        expect(Filter.highlights('Gianni Infantino', ['Gianni Infantino', 'Infantino'])).toEqual([[0, 16]]);
+        expect(Filter.highlights('Gianni Infantino', [])).toEqual([]);
+        expect(Filter.highlights(null, ['VAR'])).toEqual([]);
+    });
+});

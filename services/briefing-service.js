@@ -687,8 +687,25 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
 // window its feeds gave that names one in its title or description, as a whole word, its accents and
 // case aside (as the exact words of a search, see Filter). Not chosen by the AI nor read: the reader asked
 // for all of them. One line per story, its newest news, with how many media told it.
-// [{term, news: [{storyId, title, url, source, language, publishedAt, media}]}]
+// [{term, news: [{storyId, title, url, source, language, publishedAt, media, excerpt}]}]
 const WATCHED_PER_TERM = 50;
+
+// The words of the description around the term, when the title does not name it: the line would not
+// say why it is there. null when the title names it, or the description does not
+const EXCERPT_BEFORE = 90;
+const EXCERPT_AFTER = 110;
+export const excerptOf = (title, description, term) => {
+    if (!description || Filter.highlights(title, [term]).length > 0) return null;
+    const [first] = Filter.highlights(description, [term]);
+    if (!first) return null;
+    let start = Math.max(0, first[0] - EXCERPT_BEFORE);
+    let end = Math.min(description.length, first[1] + EXCERPT_AFTER);
+    // cut between two words
+    if (start > 0) start = description.indexOf(' ', start) + 1 || start;
+    if (start > first[0]) start = first[0];
+    if (end < description.length) end = Math.max(first[1], description.lastIndexOf(' ', end));
+    return `${start > 0 ? '…' : ''}${description.slice(start, end).trim()}${end < description.length ? '…' : ''}`;
+};
 export const watchedNews = async (terms, {feedUrls, since}) => {
     if (terms.length === 0) return [];
     const articles = await FeedModel.searchArticles({
@@ -715,6 +732,7 @@ export const watchedNews = async (terms, {feedUrls, since}) => {
                 language: article.lang ?? null,
                 publishedAt: (article.published_at ?? article.created_at)?.toISOString?.() ?? null,
                 media: media.size,
+                excerpt: excerptOf(article.title, article.description, term),
             })),
         };
     });
@@ -734,13 +752,51 @@ const toBriefing = (row) => row && ({
     finishedAt: row.finished_at,
 });
 
+// The places of the terms the profile follows in the texts the page shows (see Filter.highlights), the
+// ones it follows now: {field: [[start, end]]}, the fields without any left out
+const marksOf = (fields, terms) => Object.fromEntries(Object.entries(fields)
+    .map(([field, text]) => [field, Filter.highlights(text, terms)])
+    .filter(([, ranges]) => ranges.length > 0));
+
+// The terms a card names, in the order the profile follows them: [{term, angle}], angle when only one of
+// its other angles names it (see anglesOf), not the card itself (title, passages, denials)
+const foundIn = (item, terms) => {
+    const names = (texts, term) => texts.some(text => Filter.highlights(text, [term]).length > 0);
+    const own = [item.title, item.titleTranslation, item.summary, item.translation,
+        ...(item.contested ?? []).flatMap(denial => [denial.sentence, denial.translation])];
+    const angles = (item.angles ?? []).flatMap(angle => [angle.title, angle.titleTranslation]);
+    return terms.flatMap(term => names(own, term) ? [{term, angle: false}] : names(angles, term) ? [{term, angle: true}] : []);
+};
+
+export const withMarks = (briefing, terms) => {
+    if (!briefing || !terms?.length) return briefing;
+    return {
+        ...briefing,
+        items: briefing.items.map(item => ({
+            ...item,
+            marks: marksOf({title: item.title, titleTranslation: item.titleTranslation, summary: item.summary, translation: item.translation}, terms),
+            angles: (item.angles ?? []).map(angle => ({...angle, marks: marksOf({title: angle.title, titleTranslation: angle.titleTranslation}, terms)})),
+            contested: (item.contested ?? []).map(denial => ({...denial, marks: marksOf({sentence: denial.sentence, translation: denial.translation}, terms)})),
+            found: foundIn(item, terms),
+        })),
+        watched: briefing.watched?.map(group => ({
+            ...group,
+            news: group.news.map(news => ({...news, marks: marksOf({title: news.title, excerpt: news.excerpt}, terms)})),
+        })) ?? null,
+    };
+};
+
 export const BriefingService = {
-    // the last briefing of this user, running or not
-    latest: async (profileId) => profileId === null ? null : toBriefing(await BriefingModel.latest(profileId)),
+    // the last briefing of this profile, running or not, the terms it follows marked in it
+    latest: async (profileId) => {
+        if (profileId === null) return null;
+        const [row, profile] = await Promise.all([BriefingModel.latest(profileId), ProfileModel.get(profileId)]);
+        return withMarks(toBriefing(row), profile?.watch_terms ?? []);
+    },
 
     // the cards of a ready briefing the reader ticked (storyIds), in the order of the briefing (see
-    // briefing-mail.js), sent to one address: to, the address the reader asks it to be sent to, the one of their account when not given; sent to
-    // another, it says who sends it and the answers go to the reader
+    // briefing-mail.js), sent to one address: to, the one the reader writes, the one of their account
+    // when not given; sent to another, it says who sends it and the answers go to the reader
     email: async (userId, briefingId, storyIds, to) => {
         const id = Number(briefingId);
         if (!Array.isArray(storyIds) || storyIds.length === 0 || !storyIds.every(storyId => Number.isInteger(storyId) && storyId > 0)) {

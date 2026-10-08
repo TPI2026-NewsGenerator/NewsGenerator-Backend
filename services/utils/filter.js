@@ -145,17 +145,66 @@ const shoutedAt = (text, index) => {
     return last - first + 1 >= SHOUTED_RUN;
 };
 
-const toRegex = ({text, exact}) => {
+// the term, its regex (its body in the group 1), and whether it is an acronym
+const termRegex = ({text, exact}) => {
     const acronym = isAcronym(text);
     const term = withoutAccents(acronym ? text : text.toLowerCase());
     const body = exact ? term.split(/\s+/).map(escapeRegex).join('\\s+') : escapeRegex(term);
     const end = exact || term.length <= SHORT_WORD_LENGTH ? WORD_END_JS : '';
-    const regex = new RegExp(WORD_START_JS + `(${body})` + end, 'gu');
+    return {acronym, regex: new RegExp(WORD_START_JS + `(${body})` + end, 'gu')};
+};
 
-    // an acronym is searched in the text as written, out of the shouted runs; anything else in lowercase
-    return (original, lowered) => acronym
-        ? [...original.matchAll(regex)].some(found => !shoutedAt(original, found.index + found[0].length - found[1].length))
-        : [...lowered.matchAll(regex)].length > 0;
+// The places of a term in a text, [[start, end]] of its body: an acronym in the text as written, out of
+// the shouted runs; anything else in lowercase
+const foundIn = ({acronym, regex}, original, lowered) => (acronym
+    ? [...original.matchAll(regex)].map(found => [found.index + found[0].length - found[1].length, found.index + found[0].length])
+        .filter(([start]) => !shoutedAt(original, start))
+    : [...lowered.matchAll(regex)].map(found => [found.index + found[0].length - found[1].length, found.index + found[0].length]));
+
+const toRegex = (term) => {
+    const search = termRegex(term);
+    return (original, lowered) => foundIn(search, original, lowered).length > 0;
+};
+
+// The text without its accents and in lowercase, as the matcher reads it, and where each of their
+// characters comes from in the text as written: a letter with an accent may be two characters once
+// decomposed, and a few letters change their length in lowercase ("İ")
+const readable = (text) => {
+    let original = '', lowered = '';
+    const fromOriginal = [], fromLowered = [];          // [start, end] in the text as written
+    for (let i = 0; i < text.length;) {
+        const char = String.fromCodePoint(text.codePointAt(i));
+        const plain = withoutAccents(char);
+        const lower = plain.toLowerCase();
+        for (let k = 0; k < plain.length; k++) fromOriginal.push([i, i + char.length]);
+        for (let k = 0; k < lower.length; k++) fromLowered.push([i, i + char.length]);
+        original += plain;
+        lowered += lower;
+        i += char.length;
+    }
+    return {original, lowered, fromOriginal, fromLowered};
+};
+
+// The places of the terms followed in a text, as the briefing finds them (exact words, see
+// watchedNews): [[start, end]] in the text as written, in order and never overlapping. The page shows
+// them marked
+const highlights = (text, terms) => {
+    if (!text || !terms?.length) return [];
+    const read = readable(String(text));
+    const ranges = terms.flatMap(term => {
+        const search = termRegex({text: String(term).trim(), exact: true});
+        const from = search.acronym ? read.fromOriginal : read.fromLowered;
+        return foundIn(search, read.original, read.lowered)
+            .filter(([start, end]) => end > start)
+            .map(([start, end]) => [from[start][0], from[end - 1][1]]);
+    }).sort((a, b) => a[0] - b[0] || b[1] - a[1]);
+    const merged = [];
+    for (const [start, end] of ranges) {
+        const last = merged.at(-1);
+        if (last && start <= last[1]) last[1] = Math.max(last[1], end);
+        else merged.push([start, end]);
+    }
+    return merged;
 };
 
 // text -> true when it matches the keywords, like keywordsSql would; null when there is nothing to match
@@ -178,4 +227,4 @@ const matcher = ({groups, excluded}) => {
 // or with the operators above when the reader wants exact words: quotes, a comma or -word say it
 const hasOperators = (keywords) => (keywords ?? []).some(keyword => /["“”,]|(?:^|\s)-\S/.test(String(keyword)));
 
-export const Filter = { parse, toPattern, keywordsSql, canWiden, widen, matcher, withoutAccents, hasOperators };
+export const Filter = { parse, toPattern, keywordsSql, canWiden, widen, matcher, withoutAccents, hasOperators, highlights };
