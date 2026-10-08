@@ -929,7 +929,7 @@ const options = {
                 "post": {
                     "tags": ["Briefing"],
                     "summary": "Send the cards of a briefing the reader ticked by e-mail",
-                    "description": "Through the SMTP account of the server (SMTP_USER, SMTP_PASS), to the address `to`, else to the one of the account. The cards in the order of the briefing, laid out as the page shows them. Sent to another address than the account one, it says who sends it and the answers go to the account address. At most 10 e-mails an hour per address and 30 a day per account.",
+                    "description": "Through the SMTP account of the server (SMTP_USER, SMTP_PASS), to the address `to`, else to the one of the account. The cards in the order of storyIds (the reader can change it), each once, laid out as the page shows them. Sent to another address than the account one, it says who sends it and the answers go to the account address. At most 10 e-mails an hour per address and 30 a day per account.",
                     "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
                     "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["storyIds"], "properties": {"storyIds": {"type": "array", "items": {"type": "integer"}, "minItems": 1}, "to": {"type": "string", "description": "One address; the one of the account when not given"}}}}}},
                     "responses": {

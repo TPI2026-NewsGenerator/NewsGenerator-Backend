@@ -3,7 +3,7 @@
 //  Date: 08.10.2026
 //  File: test.briefing-email.js
 //  Description: The cards of a briefing the reader ticked sent by e-mail, to the address of the account
-//               or to the one they write, in the order of the briefing, laid out as the page shows them
+//               or to the one they write, in the order they gave, laid out as the page shows them
 //
 
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
@@ -35,15 +35,16 @@ beforeEach(() => {
 });
 
 describe('BriefingService.email', () => {
-    it('should send only the cards ticked, in the order of the briefing, to the address of the account', async () => {
-        await BriefingService.email(4, '7', [3, 1]);
+    it('should send only the cards ticked, in the order the reader gave them, to the address of the account', async () => {
+        // the third card of the briefing first, each once
+        await BriefingService.email(4, '7', [3, 1, 3]);
 
         expect(ofUser).toHaveBeenCalledWith(4, 7);
         const mail = sendMail.mock.calls[0][0];
         expect(mail.to).toBe('reader@example.test');
         expect(mail.subject).toMatch(/^Your briefing · Football · 2 stories · /);
-        expect(mail.text.indexOf('01. First story')).toBeGreaterThan(0);
-        expect(mail.text).toContain('02. Third story');
+        expect(mail.text.indexOf('01. Third story')).toBeGreaterThan(0);
+        expect(mail.text).toContain('02. First story');
         expect(mail.text).not.toContain('Second story');
         expect(mail.text).not.toContain('A VAR news');
     });

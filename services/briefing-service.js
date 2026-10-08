@@ -798,7 +798,7 @@ export const BriefingService = {
         return withMarks(toBriefing(row), profile?.watch_terms ?? []);
     },
 
-    // the cards of a ready briefing the reader ticked (storyIds), in the order of the briefing (see
+    // the cards of a ready briefing the reader ticked (storyIds), in the order the reader gave them (see
     // briefing-mail.js), sent to one address: to, the one the reader writes, the one of their account
     // when not given; sent to another, it says who sends it and the answers go to the reader
     email: async (userId, briefingId, storyIds, to) => {
@@ -810,9 +810,10 @@ export const BriefingService = {
         if (asked !== '' && !isEmail(asked)) throw Object.assign(new Error(EMAIL_RULE), {status: 400});
         const row = Number.isInteger(id) && id > 0 ? await BriefingModel.ofUser(userId, id) : null;
         if (!row || row.status !== 'ready') throw Object.assign(new Error('Unknown briefing.'), {status: 404});
-        const ticked = new Set(storyIds);
         const briefing = toBriefing(row);
-        const items = briefing.items.filter(item => ticked.has(item.storyId));
+        const byId = new Map(briefing.items.map(item => [item.storyId, item]));
+        // in the order given, each card once, the ones not in this briefing left out
+        const items = [...new Set(storyIds)].map(storyId => byId.get(storyId)).filter(Boolean);
         if (items.length === 0) throw Object.assign(new Error('None of the cards ticked is in this briefing.'), {status: 404});
         const [user, profile] = await Promise.all([UserModel.email(userId), ProfileModel.get(row.id_profile)]);
         if (!asked && !user?.email) throw Object.assign(new Error('Your account has no e-mail address.'), {status: 400});
