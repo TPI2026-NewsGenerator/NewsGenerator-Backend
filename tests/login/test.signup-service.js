@@ -126,7 +126,7 @@ describe('rateLimit', () => {
 
         expect(next).toHaveBeenCalledTimes(3);
         expect(res.status).toHaveBeenCalledWith(429);
-        expect(res.json).toHaveBeenCalledWith({error: 'Too many'});
+        expect(res.json).toHaveBeenCalledWith({error: 'Too many', retryAfter: expect.any(Number)});
         expect(Number(res.headers['Retry-After'])).toBeGreaterThan(0);
     });
 });

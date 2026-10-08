@@ -32,7 +32,7 @@ const SEARCH_DAYS = 7;              // a week of Google News says which media re
 const KEPT_PER_LANGUAGE = 2;
 const TRIED_PER_LANGUAGE = 5;
 const FIND_CONCURRENCY = 3;
-const CONFIRMED_TITLES = 12;        // news judged on the profile by the vectors the AI reads, the newest
+export const CONFIRMED_TITLES = 12; // news judged on the profile by the vectors the AI reads, the newest
 // then the press Media Cloud names and Google News did not, with a budget of its own: measured
 // (bench/mc-measure.mjs), 8 feeds on the subject of 11 media tried for the UEFA profile, but 2 of 20
 // for the trading cards, where it only knows newspapers. It must not take the tries of Google News

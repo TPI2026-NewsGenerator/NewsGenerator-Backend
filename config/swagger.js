@@ -486,7 +486,7 @@ const options = {
                             }
                         },
                         "400": {"description": "No site, or more than 25"},
-                        "429": {"description": "Too many sites checked in the last hour"}
+                        "429": {"description": "Past the sites checked per hour: 2000 per account, 4000 per address, counted in sites. {error, retryAfter}: the seconds until these can be checked (also in the Retry-After header)"}
                     }
                 }
             },
@@ -569,7 +569,7 @@ const options = {
                 "get": {
                     "tags": ["Feeds"],
                     "summary": "Sources this reader could add",
-                    "description": "Among the feeds the server already reads for the other readers, only the ones read for a **public reason**: found by the discovery of a profile, or shared by the reader who added them. A feed another reader only added by hand is never a candidate. Kept: the ones with at least 3 news of the last 7 days on the interests of this reader, in their languages, without the media they already read and the sources their thumbs left out. The most relevant first, 20 at most.",
+                    "description": "Among the feeds the server already reads for the other readers, only the ones read for a **public reason**: found by the discovery of a profile, or shared by the reader who added them. A feed another reader only added by hand is never a candidate. Kept: the ones with at least 3 news of the last 7 days on the interests of this reader, in their languages, without the media they already read and the sources their thumbs left out. Then the AI reads up to 12 titles of each the vectors put on the interests, and a feed is kept on the ones it confirms (its answer kept a day per feed, the interests unchanged). The most relevant first, 20 at most.",
                     "responses": {
                         "200": {
                             "description": "The recommended sources",
@@ -582,8 +582,8 @@ const options = {
                                     "category": {"type": "string"},
                                     "language": {"type": "string", "nullable": true},
                                     "news": {"type": "integer", "description": "Its news of the last 7 days in the languages of the reader"},
-                                    "relevant": {"type": "integer", "description": "How many of them are on the interests of the reader"},
-                                    "samples": {"type": "array", "items": {"type": "string"}, "description": "The titles closest to them"}
+                                    "relevant": {"type": "integer", "description": "How many of them are on the interests of the reader, in the share the AI confirmed"},
+                                    "samples": {"type": "array", "items": {"type": "string"}, "description": "The titles closest to them, among the ones the AI confirmed"}
                                 }
                             }}}}}}
                         }

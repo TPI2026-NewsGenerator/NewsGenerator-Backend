@@ -304,8 +304,9 @@ export const FeedModel = {
     // by hand (every source is for everyone, those that may hold a key aside, see looksPrivate). Those whose news of the last days are on the interests of this reader, with
     // how many: their title reaches 'threshold' with one of them, as for the discovery.
     // excluded: feeds never suggested (the shared ones, the ones the thumbs of this reader left out)
-    // [{id, url, site, category, language, news, relevant, samples}], the most relevant first
-    recommendedFeeds: async (profileId, {excluded, languages, since, threshold, minRelevant, minShare = 0, limit}) => prisma.$queryRawUnsafe(`
+    // [{id, url, site, category, language, news, relevant, samples, titles}], the most relevant first.
+    // titles: the 'maxTitles' ones on the interests, the closest first, for the AI to read
+    recommendedFeeds: async (profileId, {excluded, languages, since, threshold, minRelevant, minShare = 0, limit, maxTitles = 12}) => prisma.$queryRawUnsafe(`
         WITH candidates AS (
             SELECT DISTINCT ON (uf.url) f.id, uf.url, uf.category, uf.language
             FROM user_feeds uf
@@ -325,7 +326,8 @@ export const FeedModel = {
         SELECT c.id, c.url, c.category, c.language,
                count(*)::int AS news,
                count(*) FILTER (WHERE s.score >= $5::real)::int AS relevant,
-               (array_agg(s.title ORDER BY s.score DESC))[1:2] AS samples
+               (array_agg(s.title ORDER BY s.score DESC))[1:2] AS samples,
+               (array_agg(s.title ORDER BY s.score DESC) FILTER (WHERE s.score >= $5::real))[1:$9::int] AS titles
         FROM candidates c
         JOIN scored s ON s.id = c.id
         GROUP BY c.id, c.url, c.category, c.language
@@ -333,7 +335,7 @@ export const FeedModel = {
            AND count(*) FILTER (WHERE s.score >= $5::real) >= $8::real * count(*)
         ORDER BY relevant DESC, news
         LIMIT $7::int`,
-        profileId, excluded, languages, since, threshold, minRelevant, limit, minShare),
+        profileId, excluded, languages, since, threshold, minRelevant, limit, minShare, maxTitles),
     trustedFeedUrls: async (profileId) => (await prisma.user_feeds.findMany({
         where: { id_profile: profileId, trusted: true },
         select: { url: true },
