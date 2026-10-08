@@ -894,6 +894,23 @@ const options = {
                     "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"storyId": {"type": "integer"}, "vote": {"type": "string", "enum": ["up", "down"], "nullable": true}}}}}},
                     "responses": {"204": {"description": "Saved"}, "400": {"description": "storyId or vote wrong"}, "404": {"description": "No such card in a ready briefing of this user"}}
                 }
+            },
+            "/briefing/{id}/email": {
+                "post": {
+                    "tags": ["Briefing"],
+                    "summary": "Send the cards of a briefing the reader ticked to the address of their account",
+                    "description": "Always to the address of the account of the user, never another one, through the SMTP account of the server (SMTP_USER, SMTP_PASS). The cards in the order of the briefing, laid out as the page shows them. At most 10 e-mails an hour.",
+                    "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
+                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["storyIds"], "properties": {"storyIds": {"type": "array", "items": {"type": "integer"}, "minItems": 1}}}}}},
+                    "responses": {
+                        "204": {"description": "Sent"},
+                        "400": {"description": "storyIds not a list of cards, or the account has no address"},
+                        "404": {"description": "No such ready briefing of this user, or none of the cards in it"},
+                        "429": {"description": "Too many e-mails in the hour"},
+                        "502": {"description": "The mail server refused it"},
+                        "503": {"description": "The server has no e-mail account"}
+                    }
+                }
             }
         },
         "components": {
