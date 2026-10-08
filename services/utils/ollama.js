@@ -37,6 +37,12 @@ const GEMINI_TIMEOUT_MS = 180e3;
 // this long, then Ollama is asked again
 const OLLAMA_PAUSE_MS = 15 * 60e3;
 let ollamaPausedUntil = 0;
+// Its 429 "too many concurrent requests" is no quota: the calls over the plan's are queued, this one
+// found the queue full and a place frees itself in seconds. Taken for the quota, it sent every call
+// of the next 15 minutes to Gemini (a briefing of 30 cards on 8.10.2026: its passages in 374 s
+// instead of about 30). Ollama is asked again after a wait instead, Gemini only after the last one
+const BUSY_WAITS_MS = [2e3, 5e3, 10e3];
+const isBusy = (err) => err.status_code === 429 && /concurren/i.test(err.message ?? '');
 
 // The tokens of the calls, added to 'usage' when one is given: {calls, input, output}. 'output'
 // counts the reasoning of the model too, it is paid as any other token.
@@ -87,14 +93,21 @@ const askGemini = async (messages, usage, think) => {
 const ask = async (messages, usage, think) => {
     const gemini = Boolean(process.env.AISTUDIO_API_KEY);
     if (gemini && Date.now() < ollamaPausedUntil) return askGemini(messages, usage, think);
-    try {
-        return await askOllama(messages, usage, think);
-    } catch (err) {
-        if (!gemini) throw err;
-        // 401, 403: the key, 429: the quota. Else a call that failed alone (5xx, network)
-        if ([401, 403, 429].includes(err.status_code)) ollamaPausedUntil = Date.now() + OLLAMA_PAUSE_MS;
-        console.error(`AI: Ollama failed (${err.status_code ?? ''} ${err.message}), Gemini asked`);
-        return askGemini(messages, usage, think);
+    for (let attempt = 0; ; attempt++) {
+        try {
+            return await askOllama(messages, usage, think);
+        } catch (err) {
+            if (isBusy(err) && attempt < BUSY_WAITS_MS.length) {
+                await new Promise(resolve => setTimeout(resolve, BUSY_WAITS_MS[attempt]));
+                continue;
+            }
+            if (!gemini) throw err;
+            // 401, 403: the key, 429: the quota. Else a call that failed alone (5xx, network), or
+            // Ollama still busy
+            if ([401, 403, 429].includes(err.status_code) && !isBusy(err)) ollamaPausedUntil = Date.now() + OLLAMA_PAUSE_MS;
+            console.error(`AI: Ollama failed (${err.status_code ?? ''} ${err.message}), Gemini asked`);
+            return askGemini(messages, usage, think);
+        }
     }
 };
 

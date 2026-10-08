@@ -77,6 +77,22 @@ describe('the AI', () => {
         expect(globalThis.fetch).not.toHaveBeenCalled();
     });
 
+    it('should ask Ollama again when its queue is full, without leaving it aside', async () => {
+        jest.useFakeTimers();
+        const busy = Object.assign(new Error('too many concurrent requests'), {status_code: 429});
+        chat.mockRejectedValueOnce(busy).mockRejectedValueOnce(busy)
+            .mockResolvedValueOnce({message: {content: '{"a": 5}'}})
+            .mockResolvedValueOnce({message: {content: '{"a": 6}'}});
+
+        const answer = ollamaJson('first');
+        await jest.advanceTimersByTimeAsync(7e3);
+        expect(await answer).toEqual({a: 5});
+        expect(await ollamaJson('second')).toEqual({a: 6});
+        expect(chat).toHaveBeenCalledTimes(4);
+        expect(globalThis.fetch).not.toHaveBeenCalled();
+        jest.useRealTimers();
+    });
+
     // last: Ollama stays paused after it
     it('should leave Ollama aside for a while once its quota is used up', async () => {
         chat.mockRejectedValueOnce(refused(429));
