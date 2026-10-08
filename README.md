@@ -105,7 +105,7 @@ and the `.env` of the server gives its address and the same secret:
 
 | Variable | Default | Description |
 |---|---|---|
-| `EMBEDDER_URL` | `http://127.0.0.1:8020` | where the embedder answers. Several, separated by commas: the first that answers is used, the ones before it are asked again every minute (see below) |
+| `EMBEDDER_URL` | `http://127.0.0.1:8020` | where the embedder answers. Several, separated by commas: every one that answers works at the same time, one off is asked again every minute (see below) |
 | `EMBEDDER_TOKEN` | _(none)_ | the same secret as the embedder |
 | `EMBEDDER_BATCH` | 16 | texts per request. On a busy processor 64 texts took up to 310 s, and `fetch` gives up at 300 s. A graphics card answers 16 texts in a fraction of a second: 128 saves the round trips. An embedder saying it runs on a processor always gets 16 |
 
@@ -212,8 +212,13 @@ faster but changed 10 to 15% of the closest news of a search or an interest: not
 copies the 2.3 GB of the ONNX file out of the cache of Hugging Face (`hub/newsgenerator-bge-m3-onnx`),
 whose links ONNX Runtime refuses. The processor keeps up with the feeds
 (about 1600 news an hour, a third of what it can do), but a search Google News completes waits about
-a minute for its 70 news instead of 3 seconds: the graphics card goes first, the processor takes over
-while it is off, and gives the work back a minute after it answers again. On a machine without
+a minute for its 70 news instead of 3 seconds. Every embedder of `EMBEDDER_URL` that answers takes
+batches of the same call at the same time, one request at a time each, as long as it is worth it: it
+takes the next batch only if it would finish it before the others finish all that is left, what they
+are encoding included. Two processors share the work of the ingestion; a processor next to the graphics
+card, 20 times faster, is left out of its batches (it would only make them wait for its last one) but
+takes a search while the card encodes a batch. A machine switched on joins within a minute, one that
+fails a request hands its batch to the others. On a machine without
 Python packages, the embedder runs in Docker (`embedder/Dockerfile`, ONNX Runtime and PyTorch for the
 processor only):
 
@@ -1026,7 +1031,7 @@ proxy` on private addresses, `app.js`).
 Split over two machines, the database on a laptop and the embedder on another, everything stopped
 as soon as either one did: on the night of 1.10 the laptop restarted for an update at 3:36, then slept
 until noon, and no feed was read for 8 hours. Together on one machine, the graphics card of another
-one stays first in `EMBEDDER_URL` when it is on, the embedder of the machine takes over when it is off.
+one and of any other machine in `EMBEDDER_URL` work with the embedder of the machine while they are on.
 
 Next to the code, in `~/newsgenerator` on the machine, readable by its owner only and never sent with
 the code: `db.env` (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`), `api.env`, the `.env` of

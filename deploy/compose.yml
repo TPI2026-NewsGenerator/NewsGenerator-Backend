@@ -1,7 +1,7 @@
 # NewsGenerator on the machine that stays on: the database, the API with its background work (the
 # ingestion) and RSS-Bridge. Sent and started by deploy/deploy.sh, from ~/newsgenerator/server.
 # The embedder runs apart (embedder/Dockerfile), as the graphics card of another machine does: the
-# API asks the addresses of EMBEDDER_URL in their order.
+# API asks every address of EMBEDDER_URL that answers at the same time.
 #
 # Next to the code, never sent with it (one variable per line, readable by their owner only):
 #   ~/newsgenerator/db.env    POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB

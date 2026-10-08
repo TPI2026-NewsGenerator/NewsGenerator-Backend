@@ -167,7 +167,63 @@ describe('embed', () => {
         expect(sent()).toEqual([['gaming-e:8020', 1], ['gaming-e:8020', 1]]);
     });
 
-    it('should give the work back to the first embedder a minute after it answers again', async () => {
+    it('should share a long work between two processors, one request at a time each, the vectors in order', async () => {
+        process.env.EMBEDDER_URL = 'http://server-f:8020,http://laptop-f:8020';
+        const inFlight = new Map();
+        let most = 0;
+        globalThis.fetch = fakeFetch({
+            health: () => healthy('cpu'),
+            answer: async (host, texts) => {
+                inFlight.set(host, (inFlight.get(host) ?? 0) + 1);
+                most = Math.max(most, inFlight.get(host));
+                await new Promise(resolve => setTimeout(resolve, 20));
+                inFlight.set(host, inFlight.get(host) - 1);
+                return vectorsOf(texts);
+            },
+        });
+
+        const texts = Array.from({length: 64}, (_, i) => 'x'.repeat(i + 1));
+        const vectors = await embed(texts);
+        expect(vectors.map(vector => vector.dense[0])).toEqual(texts.map(text => text.length));
+        const by = (host) => sent().filter(([to]) => to === host).reduce((sum, [, count]) => sum + count, 0);
+        expect(by('server-f:8020')).toBeGreaterThan(0);
+        expect(by('laptop-f:8020')).toBeGreaterThan(0);
+        expect(by('server-f:8020') + by('laptop-f:8020')).toBe(64);
+        expect(most).toBe(1);
+    });
+
+    it('should leave a processor out of a short work a graphics card does sooner alone', async () => {
+        process.env.EMBEDDER_URL = 'http://server-g:8020,http://gaming-g:8020';
+        process.env.EMBEDDER_BATCH = '128';
+        globalThis.fetch = fakeFetch({health: (host) => healthy(host === 'server-g:8020' ? 'cpu' : 'cuda')});
+
+        await embed(Array.from({length: 200}, (_, i) => `text ${i}`));
+        expect(sent()).toEqual([['gaming-g:8020', 128], ['gaming-g:8020', 72]]);
+    });
+
+    it('should let a processor take a search while the graphics card encodes the batch of another call', async () => {
+        process.env.EMBEDDER_URL = 'http://server-h:8020,http://gaming-h:8020';
+        process.env.EMBEDDER_BATCH = '128';
+        let release;
+        const busy = new Promise(resolve => { release = resolve; });
+        globalThis.fetch = fakeFetch({
+            health: (host) => healthy(host === 'server-h:8020' ? 'cpu' : 'cuda'),
+            answer: async (host, texts) => {
+                if (host === 'gaming-h:8020' && texts.length === 128) await busy;
+                return vectorsOf(texts);
+            },
+        });
+
+        const ingestion = embed(Array.from({length: 128}, (_, i) => `news ${i}`));
+        await new Promise(resolve => setTimeout(resolve, 10));
+        const [search] = await embed(['the search']);
+        expect([...search.dense]).toEqual([10]);
+        expect(sent().at(-1)).toEqual(['server-h:8020', 1]);
+        release();
+        expect(await ingestion).toHaveLength(128);
+    });
+
+    it('should take an embedder switched on again into the work a minute later', async () => {
         process.env.EMBEDDER_URL = 'http://gaming-c:8020,http://server-c:8020';
         let gamingOn = false;
         globalThis.fetch = fakeFetch({health: (host) => host === 'gaming-c:8020' && !gamingOn ? down() : healthy()});
@@ -187,12 +243,12 @@ describe('embed', () => {
     });
 
     it('should name every embedder when none answers', async () => {
-        process.env.EMBEDDER_URL = 'http://gaming-d:8020,http://server-d:8020';
+        process.env.EMBEDDER_URL = 'http://gaming-z:8020,http://server-z:8020';
         globalThis.fetch = fakeFetch({health: () => down()});
 
         await expect(embed(['a'])).rejects.toMatchObject({
             status: 503,
-            message: expect.stringContaining('http://gaming-d:8020 nor at http://server-d:8020'),
+            message: expect.stringContaining('http://gaming-z:8020 nor at http://server-z:8020'),
         });
     });
 });
