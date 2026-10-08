@@ -8,6 +8,7 @@
 "use strict"
 
 import {XMLParser} from 'fast-xml-parser';
+import {parseHTML} from 'linkedom';
 
 // tags that must always be arrays, even when the feed contains only one of them
 // (not 'url': the attributes are read under their own name, the url of a thumbnail would be one)
@@ -20,10 +21,24 @@ const parser = new XMLParser({
     isArray: (name) => ARRAY_TAGS.includes(name)
 });
 
-// some feeds encode their entities twice ("&amp;#8217;"), the parser decodes the first level only
+// some feeds encode their entities twice ("&amp;#8217;"), the parser decodes the first level only.
+// The parser knows few names either ("&rsquo;" but not "&eacute;" nor "&egrave;": 16'000 descriptions
+// and titles in 7 days on 8.10.2026): the other names are read by linkedom, which knows those of HTML5,
+// once each
 const NAMED_ENTITIES = {amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' '};
-const decodeEntities = (value) => value.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (entity, code) => {
-    if (code[0] !== '#') return NAMED_ENTITIES[code.toLowerCase()] ?? entity;
+const {document} = parseHTML('<html><body></body></html>');
+const htmlEntities = new Map();
+const namedEntity = (entity, name) => {
+    if (NAMED_ENTITIES[name.toLowerCase()]) return NAMED_ENTITIES[name.toLowerCase()];
+    if (!htmlEntities.has(name)) {
+        const node = document.createElement('p');
+        node.innerHTML = entity;        // letters and digits only (see decodeEntities): never a tag
+        htmlEntities.set(name, node.textContent);
+    }
+    return htmlEntities.get(name);
+};
+const decodeEntities = (value) => value.replace(/&(#x?[0-9a-f]+|[a-z][a-z0-9]*);/gi, (entity, code) => {
+    if (code[0] !== '#') return namedEntity(entity, code);
     const number = code[1] === 'x' || code[1] === 'X' ? parseInt(code.slice(2), 16) : Number(code.slice(1));
     return Number.isFinite(number) ? String.fromCodePoint(number) : entity;
 });
@@ -145,6 +160,9 @@ export const Parser = {
         }
 
         return [];
-    }
+    },
+
+    // a text decoded and without its HTML as the feeds give them (a title stored before a fix)
+    Text: text,
 
 }

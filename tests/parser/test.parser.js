@@ -98,6 +98,16 @@ describe('Parser.Xml', () => {
         expect(items[0].title).toBe("Apple’s keyboard");
     });
 
+    it('should decode every named entity of HTML, encoded once or twice', async () => {
+        const items = await Parser.Xml(`<rss><channel><item>
+            <title>L&amp;rsquo;uomo &amp;egrave; giusto, pr&eacute;c&eacute;dent &umacr; &frac12;</title>
+            <description>&amp;laquo; Ni&amp;ntilde;o &amp;raquo; &amp;bogus; &amp;lt;b&amp;gt;</description>
+            <link>https://x</link>
+        </item></channel></rss>`);
+        expect(items[0].title).toBe('L’uomo è giusto, précédent ū ½');
+        expect(items[0].description).toBe('« Niño » &bogus;');
+    });
+
     it('should remove the HTML of the descriptions', async () => {
         const items = await Parser.Xml(`<rss><channel><item>
             <title>La Liga president speaks</title>
