@@ -114,6 +114,28 @@ export const StoryModel = {
         ORDER BY s.id, v.likeness DESC`,
         storyIds, language, feedUrls, since, likeness, perStory),
 
+    // The stories of any language closest to each of these, above a likeness, but none of 'excluded'
+    // (the ones already on the cards): the other facts of their affair are among them, the AI tells
+    // which (see other-angles.js). [{id_story, id_other, likeness}], the closest first
+    closeStories: async ({storyIds, excluded, feedUrls, since, likeness, perStory}) => prisma.$queryRawUnsafe(`
+        SELECT s.id AS id_story, v.id AS id_other, v.likeness
+        FROM stories s
+        CROSS JOIN LATERAL (
+            SELECT o.id, -(o.centroid <#> s.centroid)::real AS likeness
+            FROM stories o
+            WHERE o.centroid IS NOT NULL AND o.updated_at >= $4::timestamptz AND o.id <> ALL($2::int[])
+            ORDER BY o.centroid <#> s.centroid
+            LIMIT $6::int
+            OFFSET 0
+        ) v
+        WHERE s.id = ANY($1::int[]) AND s.centroid IS NOT NULL
+          AND v.likeness >= $5::real
+          AND EXISTS (SELECT 1 FROM articles a JOIN feeds f ON f.id = a.id_feed
+                      WHERE a.id_story = v.id AND f.url = ANY($3::text[])
+                        AND COALESCE(a.published_at, a.created_at) >= $4::timestamptz)
+        ORDER BY s.id, v.likeness DESC`,
+        storyIds, excluded, feedUrls, since, likeness, perStory),
+
     // The same, in every other language but the one of the story and the one of the reader (those are
     // versionsIn): [{id_story, id_version, likeness}]. One fact told in Spanish, German and English is
     // three stories, and the card of one of them counted the media of its language only

@@ -22,6 +22,7 @@ import {BRIEFING_SIZES, MAX_BRIEFING, balanceSelection, checkStories, mergeStori
 import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {contestedOf} from "./utils/contested.js";
+import {otherAnglesOf} from "./utils/other-angles.js";
 import {readerLanguage, writtenIn} from "./utils/language.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {hostOf, mediumOf} from "./utils/public-url.js";
@@ -97,6 +98,14 @@ const VERSIONS_PER_STORY = 2;
 // Serbian and Polish), between 0.75 and 0.85 often another fact of the same affair: the check sorts them
 const ACROSS_LIKENESS = 0.78;
 const ACROSS_PER_STORY = 4;
+// "Other angles" of a card (see other-angles.js): the stories of the last ANGLES_DAYS of any language
+// closest to it from ANGLE_LIKENESS, none already on a card, ANGLE_CANDIDATES of them judged by the AI
+// (bench/other-angles.mjs: the other facts of an affair were between 0.65 and 0.9, the same field
+// below). An affair goes on for days: a card of today gets the step of yesterday
+const ANGLES_DAYS = 3;
+const ANGLE_LIKENESS = 0.6;
+const ANGLE_CANDIDATES = 8;
+const ANGLE_QUERIES = 5;            // cards compared at the same time in the database
 
 const running = new Set();          // users whose briefing is being written by this server
 
@@ -285,6 +294,53 @@ const acrossOf = async (stories, {language, feedUrls, since}) => {
     return byStory;
 };
 
+// The other angles of each card, the closest first: [{title, url, source, publishedAt, trusted,
+// language, titleTranslation, storyId, media}] by story id. Of each story its newest news of a feed
+// (one of Google News must be asked for its address), none of a link on a card; a story an angle of
+// two cards is shown below the first one. The titles in another language than the reader's translated
+export const anglesOf = async (stories, titles, {language, feedUrls, hours, trusted, usage}) => {
+    const since = new Date(Date.now() - Math.max(hours, ANGLES_DAYS * 24) * 3600e3);
+    const shown = new Set(stories.flatMap(story => [story.storyId, ...(story.mergedStoryIds ?? []),
+        ...story.members.map(article => article.id_story)]).filter(Boolean));
+    const links = new Set(stories.flatMap(story => story.members.map(article => article.link)));
+    // each card compared with every story of the days apart (206 000 in 3 days on 8.10.2026, 1.4 s
+    // a card): several at a time, a card failing leaves the others
+    const rows = (await mapWithConcurrency(stories, ANGLE_QUERIES, story => StoryModel.closeStories({
+        storyIds: [story.storyId], excluded: [...shown], feedUrls, since,
+        likeness: ANGLE_LIKENESS, perStory: ANGLE_CANDIDATES * 2,
+    }))).flatMap(result => result.status === 'fulfilled' ? result.value : []);
+    const ids = [...new Set(rows.map(row => row.id_other))];
+    if (ids.length === 0) return new Map();
+    const members = new Map(ids.map(id => [id, []]));
+    for (const article of await StoryModel.storyArticles({storyIds: ids, feedUrls, since})) {
+        if (!links.has(article.link)) members.get(article.id_story).push(article);
+    }
+    const newsOf = (id) => members.get(id).find(article => !fromGoogle(article)) ?? members.get(id)[0] ?? null;
+    const cards = stories.map((story, i) => ({
+        id: story.storyId,
+        title: titles[i],
+        others: rows.filter(row => row.id_story === story.storyId && newsOf(row.id_other))
+            .slice(0, ANGLE_CANDIDATES)
+            .map(row => ({storyId: row.id_other, article: newsOf(row.id_other), title: newsOf(row.id_other).title,
+                media: new Set(members.get(row.id_other).map(mediumOfArticle)).size})),
+    }));
+    const judged = await otherAnglesOf(cards, usage);
+    const placed = new Set();
+    const angles = new Map(cards.map(card => [card.id, (judged.get(card.id) ?? [])
+        .filter(other => !placed.has(other.storyId) && placed.add(other.storyId))]));
+
+    const foreign = [...angles.values()].flat()
+        .filter(other => other.article.lang && other.article.lang !== language && writtenIn(other.article.lang) && writtenIn(language));
+    const translations = foreign.length === 0 ? [] : await translateTexts(foreign.map(other => ({text: other.title, from: writtenIn(other.article.lang)})),
+        writtenIn(language), usage).catch(() => foreign.map(() => null));
+    return new Map([...angles].map(([id, others]) => [id, others.map(other => ({
+        ...toArticle(other.article, trusted),
+        titleTranslation: translations[foreign.indexOf(other)] ?? null,
+        storyId: other.storyId,
+        media: other.media,
+    }))]));
+};
+
 // the stories in the language of the reader closest to the chosen ones written in another, with the
 // news of them the reader can read (see VERSION_LIKENESS): [{storyId, best, members}]
 const versionsOf = async (stories, {language, feedUrls, since}) => {
@@ -386,7 +442,7 @@ const oncePerThread = async (stories) => {
 export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) => {
     // the stories ranked and given to the AI grow with the cards wanted
     const scale = size / MAX_BRIEFING;
-    const usage = {choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), contesting: newUsage(), reviewing: newUsage()};
+    const usage = {choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage()};
     const [profile, interests] = await Promise.all([ProfileModel.get(profileId), ProfileModel.interests(profileId)]);
     if (!profile || interests.length === 0) throw Object.assign(new Error('Write your profile first.'), {status: 400});
 
@@ -532,11 +588,19 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     const stories = cards.map(card => card.story);
     const summaryOf = (i) => cards[i].summary;
     const leads = cards.map(leadOf);
-    // the news of the terms the profile follows, beside the cards. The briefing never waits on it failing
-    const watched = await watchedNews(profile.watch_terms ?? [], {feedUrls, since}).catch(err => {
-        console.error(`Briefing: the news of the terms followed were not looked for (${err.message})`);
-        return null;
-    });
+    // 7. the other angles of the cards, and the news of the terms the profile follows beside them. The
+    // briefing never waits on either failing
+    await step('angles');
+    const [angles, watched] = await Promise.all([
+        anglesOf(stories, leads.map(lead => lead.title), {language, feedUrls, hours, trusted, usage: usage.angles}).catch(err => {
+            console.error(`Briefing: no other angle looked for (${err.message})`);
+            return new Map();
+        }),
+        watchedNews(profile.watch_terms ?? [], {feedUrls, since}).catch(err => {
+            console.error(`Briefing: the news of the terms followed were not looked for (${err.message})`);
+            return null;
+        }),
+    ]);
     if (briefingId && watched) await BriefingModel.watched(briefingId, watched);
     await step(null);
     console.log(`Briefing ${briefingId}: tokens ${JSON.stringify(usage)}, seconds ${JSON.stringify(seconds)}`);
@@ -575,6 +639,9 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             // someone named who denies the news, in the words of one of its articles:
             // [{by, sentence, translation, language, source, url, publishedAt}]
             contested: summary?.contested ?? [],
+            // news of the same affair telling something the card does not, the closest first (see
+            // anglesOf): [{title, titleTranslation, url, source, language, publishedAt, media, ...}]
+            angles: angles.get(story.storyId) ?? [],
             thumbnail: members.find(article => article.thumbnail)?.thumbnail ?? null,
             publishedAt: members[0].at?.toISOString?.() ?? null,
             corroboration: {
