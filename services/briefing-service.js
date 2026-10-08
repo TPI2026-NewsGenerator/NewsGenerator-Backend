@@ -488,7 +488,8 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     // cards were refused again and again are left out
     const feedback = await FeedbackService.of(profileId);
     const refused = new Set(feedback.refused);
-    const feedUrls = (await feedsOf(profileId)).filter(url => !refused.has(url));
+    const allFeeds = await feedsOf(profileId);
+    const feedUrls = allFeeds.filter(url => !refused.has(url));
     // the media the reader trusts: their stories among the TRUST_POOL closest are candidates too
     const trusted = new Set(await FeedModel.trustedMedia(profileId));
     const ranked = shareOut(await StoryModel.rank({
@@ -617,7 +618,8 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             console.error(`Briefing: no other angle looked for (${err.message})`);
             return new Map();
         }),
-        watchedNews(profile.watch_terms ?? [], {feedUrls, since}).catch(err => {
+        // from every feed, the ones the thumbs left out too: the reader asked for all of them
+        watchedNews(profile.watch_terms ?? [], {feedUrls: allFeeds, since}).catch(err => {
             console.error(`Briefing: the news of the terms followed were not looked for (${err.message})`);
             return null;
         }),
@@ -685,10 +687,12 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
 
 // The news of the terms the profile follows (names or words, see cleanWatchTerms): every news of the
 // window its feeds gave that names one in its title or description, as a whole word, its accents and
-// case aside (as the exact words of a search, see Filter). Not chosen by the AI nor read: the reader asked
-// for all of them. One line per story, its newest news, with how many media told it.
-// [{term, news: [{storyId, title, url, source, language, publishedAt, media, excerpt}]}]
-const WATCHED_PER_TERM = 50;
+// case aside (as the exact words of a search, see Filter). Not chosen by the AI nor read, whatever their
+// relevance, from every feed (the ones the thumbs left out too): the reader asked for all of them. One
+// line per story, its newest news, with how many media told it, the WATCHED_PER_TERM newest kept (the
+// user's choice, 8.10.2026: 100), all counted.
+// [{term, count, news: [{storyId, title, url, source, language, publishedAt, media, excerpt}]}]
+const WATCHED_PER_TERM = 100;
 
 // The words of the description around the term, when the title does not name it: the line would not
 // say why it is there. null when the title names it, or the description does not
