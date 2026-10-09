@@ -8,6 +8,7 @@
 "use strict"
 
 import {Buffer} from 'node:buffer';
+import process from 'node:process';
 
 const USERNAME = /^[\p{L}\p{N}._-]{3,30}$/u;
 export const MIN_PASSWORD = 10;
@@ -28,6 +29,11 @@ export const isEmail = (email) => typeof email === 'string' && email.length <= M
 
 export const isPassword = (password) => typeof password === 'string'
     && password.length >= MIN_PASSWORD && Buffer.byteLength(password) <= MAX_PASSWORD_BYTES;
+
+// New accounts are made only when SIGNUP_OPEN=1: the site is open to the internet, its readers are the
+// ones who have an account. Closed, the questions of the AI that come before the account need one too
+export const SIGNUP_CLOSED = 'Account creation is closed.';
+export const signupOpen = () => process.env.SIGNUP_OPEN === '1';
 
 // a unique index refusing a name or an email: taken meanwhile by another account
 export const isTaken = (error) => error?.code === 'P2002' || /23505|unique constraint/i.test(error?.message ?? '');

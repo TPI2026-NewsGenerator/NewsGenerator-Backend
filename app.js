@@ -12,7 +12,6 @@ import cors from "cors";
 import router from './routes/router.js'
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger.js';
-import {renewGate} from './services/utils/site-gate.js';
 
 
 const app = express();
@@ -26,9 +25,6 @@ app.set('trust proxy', 'loopback, uniquelocal');
 app.use('/api/briefing/:id/email', express.json({limit: '9mb'}));
 app.use(express.json());
 app.use(cors());
-
-// the password of the site, given once (see site-gate.js): renewed while the reader uses the site
-app.use('/api', renewGate);
 
 // API routes
 app.use('/api', router);

@@ -9,6 +9,7 @@
 
 import {ProfileService} from '../services/profile-service.js';
 import {FeedService} from '../services/feed-service.js';
+import {signupOpen} from '../services/utils/account-rules.js';
 
 // the answer of 'serviceFn', or its error with its status
 const respond = async (res, serviceFn, status = 200) => {
@@ -26,12 +27,13 @@ export const ProfileController = {
     // is the one the request names (X-Profile), checked to be theirs (see activeProfile)
     get: (req, res) => respond(res, () => ProfileService.get(req.user.id, req.profileId)),
 
-    // what can be chosen when writing a profile
+    // what can be chosen when writing a profile, and whether an account can be made (the signup page)
     options: (req, res) => res.status(200).json({
         languages: FeedService.languages(),
+        signup: signupOpen(),
     }),
 
-    // a profile written with the AI asking questions, before the account is created too:
+    // a profile written with the AI asking questions, before the account is created too (while it can be):
     // {start, rounds, language} -> {enough, questions}, then -> {text}
     funnelQuestions: (req, res) => respond(res, () => ProfileService.funnelQuestions(req.body ?? {})),
     funnelText: (req, res) => respond(res, () => ProfileService.funnelText(req.body ?? {})),

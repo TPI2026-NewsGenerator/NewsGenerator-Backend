@@ -10,6 +10,7 @@ import {ProfileController} from '../controllers/profile-controller.js';
 import {authenticateToken} from "../services/utils/jwt.js";
 import {activeProfile} from "../services/utils/active-profile.js";
 import {rateLimit} from "../services/utils/rate-limit.js";
+import {signupOpen} from "../services/utils/account-rules.js";
 
 const router = express.Router();
 // a profile written with the AI costs a call of the AI each round, and comes before the account: counted
@@ -19,14 +20,16 @@ const funnelLimit = rateLimit({
     max: 40,
     message: 'Too many questions asked from here, try again in an hour.',
 });
+// before the account only while accounts can be made: the AI is never asked for someone who cannot make one
+const funnelAccess = (req, res, next) => signupOpen() ? next() : authenticateToken(req, res, next);
 
 router.get('', authenticateToken, activeProfile, ProfileController.get);
 router.put('', authenticateToken, activeProfile, ProfileController.save);
 // the languages a profile can choose from
 router.get('/options', ProfileController.options);
 // the questions of the AI, then the profile it writes from the answers: nothing saved
-router.post('/funnel/questions', funnelLimit, ProfileController.funnelQuestions);
-router.post('/funnel/text', funnelLimit, ProfileController.funnelText);
+router.post('/funnel/questions', funnelAccess, funnelLimit, ProfileController.funnelQuestions);
+router.post('/funnel/text', funnelAccess, funnelLimit, ProfileController.funnelText);
 router.patch('/interests/:id', authenticateToken, activeProfile, ProfileController.updateInterest);
 router.delete('/interests/:id', authenticateToken, activeProfile, ProfileController.deleteInterest);
 // the sources of the profile found again

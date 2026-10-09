@@ -95,46 +95,6 @@ const options = {
                     }
                 }
             },
-            "/gate": {
-                "post": {
-                    "tags": ["Login"],
-                    "summary": "The password of the site, sent by the form of its page: the `site_gate` cookie opens the site for 30 days (deploy/Caddyfile)",
-                    "security": [],
-                    "requestBody": {
-                        "required": true,
-                        "content": {
-                            "application/x-www-form-urlencoded": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "password": {"type": "string", "format": "password"},
-                                        "next": {"type": "string", "description": "The page to go back to, a path of the site"}
-                                    },
-                                    "required": ["password"]
-                                }
-                            }
-                        }
-                    },
-                    "responses": {
-                        "303": {"description": "The right password: the `site_gate` cookie is set and the browser goes to `next`"},
-                        "401": {"description": "Wrong password: the page again, with the error"},
-                        "429": {"description": "More than 10 tries from this address in 15 minutes: the page with the error"},
-                        "503": {"description": "SITE_PASSWORD_HASH or ACCESS_TOKEN_SECRET not set: the site stays shut"}
-                    }
-                }
-            },
-            "/gate/check": {
-                "get": {
-                    "tags": ["Login"],
-                    "summary": "Asked by Caddy before each request (forward_auth): is the `site_gate` cookie valid",
-                    "security": [],
-                    "responses": {
-                        "204": {"description": "Valid: Caddy serves what was asked"},
-                        "401": {"description": "No valid cookie: the page of the password (HTML) for a page, an error in JSON for /api (X-Forwarded-Uri), sent by Caddy instead"},
-                        "503": {"description": "SITE_PASSWORD_HASH or ACCESS_TOKEN_SECRET not set"}
-                    }
-                }
-            },
             "/session": {
                 "get": {
                     "tags": ["Login"],
@@ -260,7 +220,7 @@ const options = {
                 "post": {
                     "tags": ["Login"],
                     "summary": "Create an account with its profile, and sign in",
-                    "description": "The profile is required: nothing is read for a reader without it. It is split into interests by the AI **before** the account is created, so a text with no interest leaves no account behind (422). Then the account is created, the profile saved, and its sources are searched in background as after `PUT /profile`. At most 5 requests per address and hour.",
+                    "description": "The profile is required: nothing is read for a reader without it. It is split into interests by the AI **before** the account is created, so a text with no interest leaves no account behind (422). Then the account is created, the profile saved, and its sources are searched in background as after `PUT /profile`. At most 5 requests per address and hour. Closed (403) unless `SIGNUP_OPEN=1`: `GET /profile/options` says it in `signup`.",
                     "security": [],
                     "requestBody": {
                         "required": true,
@@ -295,6 +255,7 @@ const options = {
                             }
                         },
                         "400": {"description": "A field is missing or invalid"},
+                        "403": {"description": "Account creation is closed (SIGNUP_OPEN is not 1)"},
                         "409": {"description": "The username or the email is already used"},
                         "422": {"description": "No interest could be read in the profile"},
                         "429": {"description": "Too many accounts created from this address"}

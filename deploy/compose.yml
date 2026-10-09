@@ -6,12 +6,9 @@
 # Next to the code, never sent with it (one variable per line, readable by their owner only):
 #   ~/newsgenerator/db.env    POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
 #   ~/newsgenerator/api.env   the .env of the server, DATABASE_URL to db:5432 and RSS_BRIDGE_URL to
-#                             http://rss-bridge
+#                             http://rss-bridge; SIGNUP_OPEN=1 lets new accounts be made
 #   ~/newsgenerator/tunnel.env  TUNNEL_TOKEN of the tunnel of Cloudflare (optional: without it the
 #                             site is served on the local network only, see deploy.sh)
-#   ~/newsgenerator/web.env   SITE_PASSWORD_HASH, the password of the site asked before it (Caddyfile,
-#                             services/utils/site-gate.js), read by the API; the hash given by
-#                             `caddy hash-password`, between single quotes (its "$" are not variables)
 # Docker refuses a file it cannot read as the user running it: they belong to that user.
 #
 # Only the database, the API and the site listen on the network, on the address of the machine
@@ -39,10 +36,7 @@ services:
     build: ..
     container_name: newsgenerator-api
     restart: unless-stopped
-    # web.env: the API checks the password of the site and its cookie for Caddy (forward_auth)
-    env_file:
-      - ../../api.env
-      - ../../web.env
+    env_file: ../../api.env
     depends_on:
       - db
       - rss-bridge

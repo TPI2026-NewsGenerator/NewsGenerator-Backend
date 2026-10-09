@@ -13,25 +13,10 @@
 :80 {
 	encode zstd gzip
 
-	# The whole site behind the password of the site, before the accounts of the app (web.env, see
-	# compose.yml): nobody else reaches the signup. Caddy asks the API before each request
-	# (services/utils/site-gate.js): without the cookie the password gives, the API answers its page
-	# of the password, sent instead of what was asked; the form of that page is open. The browser
-	# asked the password before (basic_auth): an iPhone asked it again for each font and script of the
-	# page, 15 times, and forgot it when Safari closed
-	# What a shared link shows: the robots of the previews (WhatsApp, iMessage, Slack, Discord...) get
-	# the page and its pictures without the password, never the API. The page holds no data, a robot
-	# named falsely reaches nothing more
-	@locked {
-		not path /api/gate /og-image.png /favicon.ico /favicon-*.png /apple-touch-icon.png /icon-*.png /site.webmanifest
-		not {
-			header_regexp preview User-Agent (?i)(facebookexternalhit|facebot|twitterbot|slackbot|slack-imgproxy|discordbot|telegrambot|whatsapp|linkedinbot|skypeuripreview|redditbot|applebot|iframely|embedly|pinterestbot|mastodon)
-			not path /api/*
-		}
-	}
-	forward_auth @locked api:3001 {
-		uri /api/gate/check
-	}
+	# Open to the internet: the data is behind the accounts of the app, and no account is made unless
+	# SIGNUP_OPEN=1 (api.env, see services/utils/account-rules.js). A password of the whole site came
+	# before: basic_auth, that an iPhone asked again for each font and script of the page, then a page of
+	# its own with a cookie; a friend still had trouble getting in, and both were taken out (9.10.2026)
 
 	header {
 		X-Content-Type-Options nosniff

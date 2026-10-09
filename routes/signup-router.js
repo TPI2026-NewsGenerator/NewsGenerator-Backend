@@ -8,6 +8,7 @@
 import express from 'express'
 import {SignupController} from "../controllers/signup-controller.js";
 import {rateLimit} from "../services/utils/rate-limit.js";
+import {SIGNUP_CLOSED, signupOpen} from "../services/utils/account-rules.js";
 
 const router = express.Router();
 
@@ -18,6 +19,9 @@ const signupLimit = rateLimit({
     message: 'Too many accounts created from here, try again in an hour.',
 });
 
-router.post('', signupLimit, SignupController.register);
+// closed unless SIGNUP_OPEN=1 (see account-rules.js)
+const whileOpen = (req, res, next) => signupOpen() ? next() : res.status(403).json({error: SIGNUP_CLOSED});
+
+router.post('', whileOpen, signupLimit, SignupController.register);
 
 export default router;
