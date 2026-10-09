@@ -6,9 +6,9 @@
 //
 
 import express from 'express'
-import {GateController} from "../controllers/gate-controller.js";
+import {GateController, page} from "../controllers/gate-controller.js";
 import {rateLimit} from "../services/utils/rate-limit.js";
-import {gatePage, safeNext} from "../services/utils/site-gate.js";
+import {safeNext} from "../services/utils/site-gate.js";
 
 const router = express.Router();
 
@@ -19,8 +19,10 @@ const TOO_MANY = 'Too many tries from here, try again in 15 minutes.';
 const limit = rateLimit({windowMs: 15 * 60 * 1000, max: 10, message: TOO_MANY});
 const gateLimit = (req, res, next) => limit(req, {
     set: (name, value) => res.set(name, value),
-    status: (status) => ({json: () => res.status(status).set('Cache-Control', 'no-store').type('html')
-        .send(gatePage({next: safeNext(req.body?.next), error: TOO_MANY}))}),
+    status: (status) => ({json: () => {
+        console.warn(`Site gate: too many tries from ${req.ip}`);
+        return page(res, status, {next: safeNext(req.body?.next), error: TOO_MANY});
+    }}),
 }, next);
 
 router.get('/check', GateController.check);

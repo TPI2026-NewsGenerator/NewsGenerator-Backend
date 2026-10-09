@@ -108,6 +108,8 @@ describe('the check Caddy asks', () => {
         expect(answer.headers.get('content-type')).toMatch(/text\/html/);
         expect(answer.headers.get('cache-control')).toBe('no-store');
         expect(answer.headers.get('www-authenticate')).toBeNull();
+        // no script, nothing from elsewhere, never in a frame of another site
+        expect(answer.headers.get('content-security-policy')).toMatch(/default-src 'none'.*form-action 'self'; frame-ancestors 'none'/);
         const page = await answer.text();
         expect(page).toContain('name="next" value="/profile?new=1"');
         expect(page).toContain('action="/api/gate"');
@@ -182,6 +184,7 @@ describe('passwords tried one after another', () => {
         }
         expect(answer.status).toBe(429);
         expect(answer.headers.get('retry-after')).toMatch(/^\d+$/);
+        expect(answer.headers.get('content-security-policy')).toMatch(/frame-ancestors 'none'/);
         const page = await answer.text();
         expect(page).toContain('Too many tries from here, try again in 15 minutes.');
         expect(page).toContain('value="/search"');

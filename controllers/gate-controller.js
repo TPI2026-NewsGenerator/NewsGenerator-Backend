@@ -17,7 +17,15 @@ const WRONG = 'This is not the password of the site.';
 const CLOSED = 'The site is closed: its password is not set on the server.';
 const ASKED = 'The password of the site is asked again: reload the page.';
 
-const page = (res, status, options) => res.status(status).set('Cache-Control', 'no-store').type('html').send(gatePage(options));
+// The page has no script and takes nothing from elsewhere: anything else, an injection, is refused
+// by the browser, and no other site may show it in a frame to catch the password
+export const GATE_POLICY = "default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'";
+
+export const page = (res, status, options) => res.status(status)
+    .set({'Cache-Control': 'no-store', 'Content-Security-Policy': GATE_POLICY}).type('html').send(gatePage(options));
+
+// the passwords refused, in the log of the server: tries from many addresses are seen there
+const refused = (req, why) => console.warn(`Site gate: ${why} from ${req.ip}`);
 
 // The hash of `caddy hash-password` is a bcrypt hash; older versions of Caddy gave it in base64
 const siteHash = () => {
@@ -44,9 +52,15 @@ export const GateController = {
         const hash = siteHash();
         if (signGate() === null || hash === null) return page(res, 503, {error: CLOSED});
         const password = req.body?.password;
-        if (typeof password !== 'string' || password === '' || password.length > 200) return page(res, 401, {next, error: WRONG});
+        if (typeof password !== 'string' || password === '' || password.length > 200) {
+            refused(req, 'no password');
+            return page(res, 401, {next, error: WRONG});
+        }
         try {
-            if (!await verifyPassword(password, hash)) return page(res, 401, {next, error: WRONG});
+            if (!await verifyPassword(password, hash)) {
+                refused(req, 'wrong password');
+                return page(res, 401, {next, error: WRONG});
+            }
         } catch (error) {
             console.error(`Site gate: password not checked (${error.message})`);
             return page(res, 503, {next, error: CLOSED});
