@@ -29,9 +29,21 @@
 		reverse_proxy api:3001
 	}
 
-	# the files of a build are named by their content: kept a year; the page itself asked each time
+	# The files of a build are named by their content: kept a year, by the browser and by Cloudflare;
+	# the page itself asked each time. Only a file sent (2xx): the 401 of the password of the site was
+	# kept a year by Cloudflare for a font, whose name never changes, and asked the password of every
+	# reader whose briefing needed it long after it was taken out (10.10.2026). A file of the build that
+	# is not there is not found, never the page in its place, kept a year as a font
 	@assets path /assets/*
-	header @assets Cache-Control "public, max-age=31536000, immutable"
+	header @assets {
+		Cache-Control "public, max-age=31536000, immutable"
+		match status 2xx
+	}
+
+	handle /assets/* {
+		root * /srv
+		file_server
+	}
 
 	handle {
 		root * /srv
