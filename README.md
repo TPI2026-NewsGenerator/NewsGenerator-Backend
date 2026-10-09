@@ -1129,14 +1129,23 @@ one and of any other machine in `EMBEDDER_URL` work with the embedder of the mac
 Next to the code, in `~/newsgenerator` on the machine, readable by its owner only and never sent with
 the code: `db.env` (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`), `api.env`, the `.env` of
 the server with `DATABASE_URL` to `db:5432` and `RSS_BRIDGE_URL=http://rss-bridge`, and `tunnel.env`
-(`TUNNEL_TOKEN`, given by Cloudflare when the tunnel is created), and `web.env` (`SITE_USER` and
-`SITE_PASSWORD_HASH`, between single quotes): the whole site is behind a name and a password the
-browser asks (`basic_auth` of Caddy) before the accounts of the app, so nobody else reaches the
-signup. The hash is made on the machine, the password typed there only:
+(`TUNNEL_TOKEN`, given by Cloudflare when the tunnel is created), and `web.env`
+(`SITE_PASSWORD_HASH`, between single quotes), read by the API: the whole site is behind the password
+of the site, before the accounts of the app, so nobody else reaches the signup. The hash is made on
+the machine, the password typed there only:
 
 ```bash
 docker run --rm -it caddy:2.11-alpine caddy hash-password
 ```
+
+Caddy asks the API before each request (`forward_auth`, `services/utils/site-gate.js`). Without
+the cookie of the site the API answers a page of its own asking the password, sent instead of what
+was asked (an error in JSON for the API). The right password gives a cookie (`HttpOnly`, `Lax`,
+signed with a key made from `ACCESS_TOKEN_SECRET` and the hash: a new password sends everyone back to
+the page), valid 30 days and renewed once a day while the site is used: a reader who comes back
+within 30 days is not asked again. 10 tries per address every 15 minutes. The browser asked it before
+(`basic_auth` of Caddy): an iPhone asked it again for each font and script of the page, 15 times, and
+forgot it when Safari closed. Without the hash or the secret the site stays shut.
 
 These files belong to the user running Docker: it refuses one owned by root. The client built is sent
 to `~/newsgenerator/client-dist`.

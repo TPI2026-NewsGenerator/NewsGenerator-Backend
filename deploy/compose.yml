@@ -9,9 +9,9 @@
 #                             http://rss-bridge
 #   ~/newsgenerator/tunnel.env  TUNNEL_TOKEN of the tunnel of Cloudflare (optional: without it the
 #                             site is served on the local network only, see deploy.sh)
-#   ~/newsgenerator/web.env   SITE_USER and SITE_PASSWORD_HASH, the password asked by the browser
-#                             before the site (Caddyfile); the hash given by `caddy hash-password`,
-#                             between single quotes (its "$" are not variables)
+#   ~/newsgenerator/web.env   SITE_PASSWORD_HASH, the password of the site asked before it (Caddyfile,
+#                             services/utils/site-gate.js), read by the API; the hash given by
+#                             `caddy hash-password`, between single quotes (its "$" are not variables)
 # Docker refuses a file it cannot read as the user running it: they belong to that user.
 #
 # Only the database, the API and the site listen on the network, on the address of the machine
@@ -39,7 +39,10 @@ services:
     build: ..
     container_name: newsgenerator-api
     restart: unless-stopped
-    env_file: ../../api.env
+    # web.env: the API checks the password of the site and its cookie for Caddy (forward_auth)
+    env_file:
+      - ../../api.env
+      - ../../web.env
     depends_on:
       - db
       - rss-bridge
@@ -53,7 +56,6 @@ services:
     restart: unless-stopped
     depends_on:
       - api
-    env_file: ../../web.env
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ../../client-dist:/srv:ro

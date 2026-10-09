@@ -95,6 +95,46 @@ const options = {
                     }
                 }
             },
+            "/gate": {
+                "post": {
+                    "tags": ["Login"],
+                    "summary": "The password of the site, sent by the form of its page: the `site_gate` cookie opens the site for 30 days (deploy/Caddyfile)",
+                    "security": [],
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/x-www-form-urlencoded": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "password": {"type": "string", "format": "password"},
+                                        "next": {"type": "string", "description": "The page to go back to, a path of the site"}
+                                    },
+                                    "required": ["password"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "303": {"description": "The right password: the `site_gate` cookie is set and the browser goes to `next`"},
+                        "401": {"description": "Wrong password: the page again, with the error"},
+                        "429": {"description": "More than 10 tries from this address in 15 minutes: the page with the error"},
+                        "503": {"description": "SITE_PASSWORD_HASH or ACCESS_TOKEN_SECRET not set: the site stays shut"}
+                    }
+                }
+            },
+            "/gate/check": {
+                "get": {
+                    "tags": ["Login"],
+                    "summary": "Asked by Caddy before each request (forward_auth): is the `site_gate` cookie valid",
+                    "security": [],
+                    "responses": {
+                        "204": {"description": "Valid: Caddy serves what was asked"},
+                        "401": {"description": "No valid cookie: the page of the password (HTML) for a page, an error in JSON for /api (X-Forwarded-Uri), sent by Caddy instead"},
+                        "503": {"description": "SITE_PASSWORD_HASH or ACCESS_TOKEN_SECRET not set"}
+                    }
+                }
+            },
             "/session": {
                 "get": {
                     "tags": ["Login"],
