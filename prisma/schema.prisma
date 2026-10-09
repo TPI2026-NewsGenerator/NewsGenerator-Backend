@@ -88,6 +88,19 @@ model directory_tries {
   @@id([medium, origin])
 }
 
+// the feeds the directory took out because they serve no reader (db/add_directory_removed.sql)
+model directory_removed {
+  url        String   @id
+  medium     String
+  origin     String
+  language   String?
+  category   String?
+  news       Int      @default(0)
+  relevant   Int      @default(0)
+  reason     String
+  removed_at DateTime @default(now()) @db.Timestamptz(6)
+}
+
 model users {
   id                Int                 @id @default(autoincrement())
   username          String

@@ -47,6 +47,8 @@ let lastLate = 0;
 // not every minute
 const HOUSEKEEPING_MINUTES = 60;
 const GROW_EVERY_MINUTES = 20;
+// the feeds of the directory that serve no reader taken out this often (its query reads 3 days of news)
+const PRUNE_EVERY_HOURS = 24;
 export const WINDOW_HOURS = 48;         // news older than this get no vectors and join no story
 // News embedded, saved and grouped at a time. On a busy processor 1500 news took over an hour, all
 // lost if the process stopped before saving them; grouping costs the same per news in small batches.
@@ -391,10 +393,22 @@ export const IngestService = {
             const kept = tried.flatMap(medium => medium.kept);
             if (tried.length > 0) console.log(`Directory: ${tried.length} media looked at, ${kept.length} feeds added (${kept.map(feed => feed.url).join(', ') || 'none'})`);
         };
+        // after the first run of the server, then once a day
+        let lastPrune = 0;
+        const prune = async () => {
+            if (Date.now() - lastPrune < PRUNE_EVERY_HOURS * 3600e3) return;
+            lastPrune = Date.now();
+            const removed = await DirectoryService.prune().catch(err => {
+                console.error(`Directory: no feed taken out (${err.message})`);
+                return [];
+            });
+            if (removed.length > 0) console.log(`Directory: ${removed.length} feeds serving no reader taken out (${removed.map(feed => feed.url).join(', ')})`);
+        };
         const tick = () => {
             const started = Date.now();
             IngestService.run()
                 .then(grow)
+                .then(prune)
                 .catch(err => console.error(`Ingest failed: ${err.stack ?? err}`))
                 .finally(() => {
                     timer = setTimeout(tick, Math.max(0, started + INTERVAL_MINUTES * 60e3 - Date.now()));

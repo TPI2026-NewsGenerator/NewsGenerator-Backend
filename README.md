@@ -148,6 +148,8 @@ fp32 on the card too, so they stay the ones of the processor, already stored and
 24. Do the same with "add_profiles.sql" (several profiles per reader, the terms each one follows, the
     cards a briefing was asked for). Its three parts in order: A adds, B fills the profile of what each
     reader had, C swaps the keys, right before deploying the server that uses them
+25. Do the same with "add_directory_removed.sql" (the feeds the directory took out because they serve
+    no reader, see **The directory** below)
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.
@@ -281,6 +283,7 @@ Optional variables in `.env`:
 | `GOOGLE_NEWS_INTERVAL_MS` | 1000 | two requests to Google never closer than this |
 | `DIRECTORY` | on | `off` stops the directory from looking at more media every 20 minutes (the feeds it has are still read) |
 | `DIRECTORY_PER_RUN` | 10 | media the directory looks at every 20 minutes, of each kind (named by Google News, already read) |
+| `DIRECTORY_PRUNE` | on | `off` stops the directory from taking out, once a day, the feeds that serve no reader |
 | `MEDIACLOUD_API_TOKEN` | _(none)_ | key of [Media Cloud](https://search.mediacloud.org) (free account, 8000 requests a week), the second directory of media of the discovery (see **Media Cloud** below). Empty: the discovery asks Google News only |
 
 ### Documentation
@@ -763,6 +766,42 @@ A medium looked at is not looked at again before 30 days, found or not. The firs
 looked at by `node scripts/grow-directory.js` (30.09.2026: 601 media named, 316 main feeds kept; 480 media read, 112 sections kept; a few minutes); after that, the server looks at
 `DIRECTORY_PER_RUN` more of each kind every 20 minutes, after a run of the background work, and the
 feeds it adds are read by the next run.
+
+A section is only kept on everything or on a category an interest of a profile has: with no profile
+on the economy, a section "/economie/" brings nothing to anyone.
+
+**What serves no reader is taken out.** On 9.10.2026 the directory brought 106k of the 183k news of a
+day, more than the grouping could take (7,400 an hour), and the media no briefing had used brought
+97k of them (ad-hoc-news.de 5,400 a day, infobae.com 2,700, cedarnews.net 1,700). Once a day, after a
+run, a feed of the directory is taken out (`DirectoryService.prune`) when:
+
+- no ready briefing of the last 14 days showed a news of a feed of the directory of its medium (a card,
+  its articles, its other angles, its denials, the news of the terms followed). A medium shown through
+  Google News only does not count: its feed of the directory brought nothing to that card;
+- and under 11% of its news of the last 3 days reach 0.45 with an interest of any profile: 11% of the
+  news on no interest reach it anyway (see `meaning-judge.js`), so such a feed is no more on what the
+  readers follow than any feed. This keeps the feeds on a subject followed that no briefing used yet
+  (tuttomercatoweb.com 18%, frenchfootballweekly.com 25%): on "used" alone, 1234 media of 1300 went;
+- or it is a section on a category no profile follows.
+
+A feed is given 14 days to be used, unless it published 300 news in 3 days: a flood costs more every
+day it waits, so it is judged at once, on the same share (ssbcrack.com, 1,600 news and 15% on an
+interest, stays). A feed without news these days costs nothing and stays, and nothing is taken out when
+no briefing was made or no profile has interests in 14 days. Measured the same day, without writing:
+169 feeds taken out at once (52k news a day), 993 once all are 14 days old (76k a day), 580 kept
+without a briefing for their share. A feed taken out goes to `directory_removed` with why and what it
+gave, and its news stay until the retention drops them. It comes back two ways. A reader whose
+profile wants it gets it at once through the discovery of their sources, which does not look at
+`directory_removed` (and every reader's sources are read for everyone). The directory adds it again
+when Google News names its medium in the searches of the profiles, but not within 60 days of taking
+it out unless a profile was created or its text written since: what served nobody may serve a new
+reader. Added again, it is judged as a new feed, on the interests of then. To put one back by hand:
+
+```sql
+INSERT INTO directory_feeds (url, medium, origin, language, category)
+SELECT url, medium, origin, language, category FROM directory_removed WHERE url = '<feed>';
+DELETE FROM directory_removed WHERE url = '<feed>';
+```
 
 Two addresses were added to the ones `findFeeds` tries when a site declares no feed, the ones of two
 publishing systems many newspapers use without saying so: Arc (`/arc/outboundfeeds/rss/?outputType=xml`,

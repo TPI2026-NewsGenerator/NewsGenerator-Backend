@@ -19,6 +19,7 @@ import {fetchPublicUrl, isBridgeUrl, readText} from "./utils/public-url.js";
 import {looksPrivate, MAX_FEED_ITEMS} from "./utils/feed-limits.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {toDate} from "./utils/dates.js";
+import {JUDGE_THRESHOLD} from "./utils/meaning-judge.js";
 
 // Measured against Google News (bench/vs-google.mjs, 15 searches of 7 days): 76% of its first 30
 // news were in no feed of ours. A third came from media we read, through a section their feeds miss
@@ -43,6 +44,25 @@ const CONCURRENCY = 3;
 // scripts/grow-directory.js)
 const PER_RUN = Number(process.env.DIRECTORY_PER_RUN) || 10;
 const ENABLED = () => process.env.DIRECTORY !== 'off';
+
+// A feed of the directory is taken out when it serves no reader: no briefing of these days showed a
+// news of its medium read through the directory, and its news are no more on the interests of the
+// profiles than any news, 11% of the news on no interest reaching JUDGE_THRESHOLD with it (see
+// meaning-judge.js). Measured on 9.10.2026: the directory brought 106k of the 183k news of a day, the
+// media no briefing had used 97k of them (ad-hoc-news.de 5400, infobae.com 2700), more than the
+// grouping takes. The share keeps the feeds on a subject followed that no briefing used yet
+// (tuttomercatoweb.com 18%): 'used' alone would have taken 1234 media out of 1300
+const USED_DAYS = 14;
+const NEWS_DAYS = 3;                // news enough to tell a share, the query reads them all (80 s)
+const MIN_ON_INTERESTS = 0.11;
+// a feed is given the time to be used, unless it already published enough to tell its share: a flood
+// (cedarnews.net, 1500 news a day) costs more every day it waits
+const GRACE_DAYS = 14;
+const MIN_NEWS_TO_JUDGE = 300;      // of NEWS_DAYS
+// a feed taken out is not added again before these days, or before a profile is created or written: it
+// may then serve a reader. Added again, it is judged as a new feed, on the interests of then
+const REMOVED_DAYS = 60;
+const PRUNE_ENABLED = () => process.env.DIRECTORY_PRUNE !== 'off';
 
 // the category a section of a medium goes to, read in its address: "/health/" is science, "/sport/"
 // sport. Else none, read by a search of any category: "latest.xml" of foxnews.com, a medium read
@@ -124,6 +144,24 @@ export const chooseSections = (allFeeds, known, max = MAX_SECTIONS) => {
     return chosen;
 };
 
+// The feeds of the directory that serve no reader, each with why (see MIN_ON_INTERESTS): a section of
+// a category no profile follows, or a feed whose news are no more on the interests than any news. A
+// feed whose medium a briefing used stays, and so does one without news these days: it costs nothing.
+// rows: [{url, origin, category, created_at, news, relevant, used}] (see DirectoryModel.usage),
+// followed: the categories of the interests
+export const uselessFeeds = (rows, {followed, now = Date.now(), graceDays = GRACE_DAYS,
+    minNews = MIN_NEWS_TO_JUDGE, minShare = MIN_ON_INTERESTS}) => rows.flatMap(row => {
+    if (row.used) return [];
+    if (now - new Date(row.created_at).getTime() < graceDays * 24 * 3600e3 && row.news < minNews) return [];
+    if (row.origin === 'section' && row.category && !followed.includes(row.category)) {
+        return [{...row, reason: `a section on ${row.category}, which no profile follows`}];
+    }
+    if (row.news > 0 && row.relevant / row.news < minShare) {
+        return [{...row, reason: `${row.relevant} of its ${row.news} news of ${NEWS_DAYS} days on an interest, its medium in no briefing of ${USED_DAYS} days`}];
+    }
+    return [];
+});
+
 // the language of a feed from its news, null when they can't tell it
 const languageOfFeed = (feed) => feedLanguage(feed.items.map(item => `${item.title ?? ''} ${item.description ?? ''}`), feed.url);
 
@@ -162,8 +200,9 @@ const tryNamed = async (medium) => {
     return {kept: [], reason: flood ? `${flood.url} holds ${flood.items} news at once (over ${MAX_ITEMS})` : 'no feed of news of these days in one of our languages'};
 };
 
-// A medium already read: its sections that bring the news its feeds miss
-const trySections = async (medium, readByUrl) => {
+// A medium already read: its sections that bring the news its feeds miss, on everything or on a
+// category a profile follows
+const trySections = async (medium, readByUrl, followed) => {
     const read = new Set(medium.urls.map(normalized));
     const candidates = (await siteFeeds(medium.medium).catch(() => []))
         .filter(url => isOwnFeed(url) && !read.has(normalized(url)) && !readByUrl.has(normalized(url)))
@@ -177,20 +216,26 @@ const trySections = async (medium, readByUrl) => {
     for (const feed of chooseSections(feeds, links.map(normalized))) {
         const language = languageOfFeed(feed);
         if (language && !LANGUAGES.includes(language)) continue;
-        if (!await isPodcast(feed.url)) chosen.push({...feed, language});
+        const category = sectionCategory(feed.url);
+        if (category && !followed.includes(category)) continue;
+        if (!await isPodcast(feed.url)) chosen.push({...feed, language, category});
     }
-    if (chosen.length === 0) return {kept: [], reason: `${feeds.length} feeds, none brings what is missed`};
+    if (chosen.length === 0) return {kept: [], reason: `${feeds.length} feeds, none brings what is missed on what the profiles follow`};
 
     return {kept: chosen.map(feed => ({
         url: feed.url, medium: medium.medium, origin: 'section',
         language: feed.language ?? medium.language,
-        category: sectionCategory(feed.url),
+        category: feed.category,
     }))};
 };
 
-// every medium tried, each one noted with what it gave: [{medium, origin, kept, reason}]
+// every medium tried, each one noted with what it gave: [{medium, origin, kept, reason}]. A feed taken
+// out of the directory lately is not added again (see REMOVED_DAYS)
 const tryAll = async (media, origin, attempt, concurrency) => (await mapWithConcurrency(media, concurrency, async (medium) => {
-    const {kept, reason = null} = await attempt(medium).catch(err => ({kept: [], reason: err.message}));
+    const found = await attempt(medium).catch(err => ({kept: [], reason: err.message}));
+    const removed = found.kept.length > 0 ? await DirectoryModel.stillRemoved(found.kept.map(feed => feed.url), REMOVED_DAYS) : new Set();
+    const kept = found.kept.filter(feed => !removed.has(feed.url));
+    const reason = removed.size > 0 && kept.length === 0 ? 'taken out of the directory, no profile written since' : (found.reason ?? null);
     if (kept.length > 0) await DirectoryModel.addFeeds(kept);
     await DirectoryModel.tried(medium.medium, origin, kept.length, kept.length ? null : reason);
     return {medium: medium.medium, origin, kept, reason};
@@ -202,9 +247,10 @@ export const DirectoryService = {
     grow: async ({named = PER_RUN, sections = PER_RUN, concurrency = CONCURRENCY} = {}) => {
         if (!ENABLED()) return [];
 
-        const [media, directory] = await Promise.all([
+        const [media, directory, {categories: followed}] = await Promise.all([
             named > 0 ? DirectoryModel.namedMedia({sharedUrls: sharedUrls(), days: DAYS, minNews: MIN_NAMED, retryDays: RETRY_DAYS, limit: named}) : [],
             DirectoryModel.all(),
+            DirectoryModel.readers(USED_DAYS),
         ]);
 
         // the media of the directory read through their main feed have sections too
@@ -223,7 +269,24 @@ export const DirectoryService = {
 
         return [
             ...await tryAll(media, 'named', tryNamed, concurrency),
-            ...await tryAll(sectionMedia, 'section', medium => trySections(medium, readByUrl), concurrency),
+            ...await tryAll(sectionMedia, 'section', medium => trySections(medium, readByUrl, followed), concurrency),
         ];
+    },
+
+    // The feeds that serve no reader taken out (see uselessFeeds), noted in directory_removed with why.
+    // Without a briefing or an interest these days nothing tells what serves: nothing is taken out.
+    // Answers the feeds taken out
+    prune: async () => {
+        if (!PRUNE_ENABLED()) return [];
+        const readers = await DirectoryModel.readers(USED_DAYS);
+        if (readers.briefings === 0 || readers.interests === 0) return [];
+
+        const rows = await DirectoryModel.usage({usedDays: USED_DAYS, newsDays: NEWS_DAYS, threshold: JUDGE_THRESHOLD});
+        const useless = uselessFeeds(rows, {followed: readers.categories});
+        if (useless.length > 0) {
+            await DirectoryModel.remove(useless.map(({url, medium, origin, language, category, news, relevant, reason}) =>
+                ({url, medium, origin, language, category, news, relevant, reason})));
+        }
+        return useless;
     },
 };
