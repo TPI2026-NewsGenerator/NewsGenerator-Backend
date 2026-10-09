@@ -68,6 +68,37 @@ CREATE INDEX IF NOT EXISTS i_stories_lang ON public.stories (lang) WHERE centroi
 -- last ran, few among many
 CREATE INDEX IF NOT EXISTS i_stories_no_centroid ON public.stories (lang) WHERE centroid IS NULL;
 
+-- The threads closest to each story of a batch by their centroid, the shortlist of assign_threads (see
+-- there): its stories scored one after the other with one query each read every thread of their
+-- language once a story, on one core, since a query run in a loop of plpgsql never takes more (and
+-- neither a SELECT INTO). One query for the batch reads the threads once, and on 3 cores: RETURN QUERY
+-- runs its query whole, so in parallel. Each pair of a story and a thread of its language is still
+-- compared, but only those at least as close as 'bounds' are sorted: the closest of a sample of the
+-- threads (assign_threads). For 300 stories (126 English, 84 German, 58 Spanish), 70 s one query a
+-- story, 12 s in one query on one core, 4 to 8 s on 3 cores; the same threads in the same order for the
+-- 300 (9.10.2026). Postgres judged the pairs story by story through the index of the languages (27 s on
+-- one core): it is made to read the threads once (no nested loop) and to share them out (no cost given
+-- to the workers)
+CREATE OR REPLACE FUNCTION public.thread_shortlists(batch integer[], bounds double precision[],
+                                                    active timestamptz, shortlist integer)
+    RETURNS TABLE (story integer, thread integer, likeness double precision)
+    LANGUAGE plpgsql
+    SET enable_nestloop = off SET parallel_setup_cost = 0 SET parallel_tuple_cost = 0
+AS $$
+DECLARE
+    langs text[] := ARRAY(SELECT DISTINCT lang FROM stories WHERE id = ANY(batch));
+BEGIN
+    RETURN QUERY
+    SELECT w.id, w.thread, w.likeness
+    FROM (SELECT x.id, u.id AS thread, -(u.centroid <#> x.centroid) AS likeness,
+                 row_number() OVER (PARTITION BY x.id ORDER BY u.centroid <#> x.centroid) AS r
+          FROM unnest(batch, bounds) b(id, bound) JOIN stories x ON x.id = b.id
+               JOIN threads u ON u.lang = x.lang
+          WHERE x.id = ANY(batch) AND u.lang = ANY(langs) AND u.updated_at >= active AND u.centroid IS NOT NULL
+            AND -(u.centroid <#> x.centroid) >= b.bound) w
+    WHERE w.r <= shortlist;
+END $$;
+
 -- The stories that got news since their thread was judged take the centroid of their news now and
 -- are judged again: each leaves its thread and joins the thread of its language, active in the last
 -- active_days, whose stories it resembles on average, above threshold, or starts one. Like the
@@ -103,6 +134,22 @@ DECLARE
     -- through shared media, already in a thread), 322 of them joining a thread: the same thread for all
     -- at 10 and at 20, 50 ms a story instead of 250
     shortlist constant integer := 20;
+    -- The shortlists of the whole batch are computed before its loop, in parallel (thread_shortlists).
+    -- The 20th closest of 1 thread in 'sample' is no closer than the 20th closest of all: only the
+    -- threads at least as close are sorted, 640 a story instead of 136 000 in English. Its 20th was at
+    -- 0.48 to 0.58 of likeness, while 13 000 English threads were above 0.50 (9.10.2026)
+    sample constant integer := 32;
+    batch integer[];
+    bounds double precision[];
+    -- the shortlist of the i-th story of the batch in row i, its closest first, NULL after its last
+    near_threads integer[];
+    near_likeness double precision[];
+    i integer;
+    -- The shortlists were computed before the loop, and in the loop a thread only changes by taking a
+    -- story (its centroid is computed at the end): only a thread quiet for longer than active_days
+    -- taking its story back joins the threads a story is compared with, and it is added. The loop
+    -- shortlists the same threads as before
+    revived integer[] := '{}';
     s record;
     t record;
     -- typed copies of the story or thread judged: the plans of the queries below are kept from one to
@@ -146,25 +193,54 @@ BEGIN
     ) m
     WHERE st.id = m.id_story;
 
+    batch := ARRAY(SELECT id FROM stories
+                   WHERE grouped_at > COALESCE(threaded_at, '-infinity') AND centroid IS NOT NULL
+                   ORDER BY updated_at, id
+                   LIMIT max_stories);
+    IF cardinality(batch) > 0 THEN
+        SELECT array_agg(COALESCE(sampled.likeness, '-Infinity') ORDER BY b.n) INTO bounds
+        FROM unnest(batch) WITH ORDINALITY b(id, n)
+        LEFT JOIN (SELECT w.id, w.likeness
+                   FROM (SELECT x.id, -(u.centroid <#> x.centroid) AS likeness,
+                                row_number() OVER (PARTITION BY x.id ORDER BY u.centroid <#> x.centroid) AS r
+                         FROM stories x JOIN threads u ON u.lang = x.lang
+                         WHERE x.id = ANY(batch) AND u.id % sample = 0 AND u.updated_at >= active AND u.centroid IS NOT NULL) w
+                   WHERE w.r = shortlist) sampled ON sampled.id = b.id;
+
+        WITH near AS (
+            SELECT c.story, count(*)::integer AS n,
+                   array_agg(c.thread ORDER BY c.likeness DESC) AS threads, array_agg(c.likeness ORDER BY c.likeness DESC) AS likeness
+            FROM public.thread_shortlists(batch, bounds, active, shortlist) c
+            GROUP BY c.story)
+        SELECT array_agg(COALESCE(near.threads, '{}') || array_fill(NULL::integer, ARRAY[shortlist - COALESCE(near.n, 0)]) ORDER BY b.n),
+               array_agg(COALESCE(near.likeness, '{}') || array_fill(NULL::double precision, ARRAY[shortlist - COALESCE(near.n, 0)]) ORDER BY b.n)
+        INTO near_threads, near_likeness
+        FROM unnest(batch) WITH ORDINALITY b(id, n) LEFT JOIN near ON near.story = b.id;
+    END IF;
+
     FOR s IN
         SELECT id, lang, id_thread, centroid, media, updated_at
         FROM stories
-        WHERE grouped_at > COALESCE(threaded_at, '-infinity') AND centroid IS NOT NULL
+        WHERE id = ANY(batch)
         ORDER BY updated_at, id
-        LIMIT max_stories
     LOOP
         UPDATE stories SET id_thread = NULL WHERE id = s.id;
         best := NULL;
         v := s.centroid; m := s.media; l := s.lang;
+        i := array_position(batch, s.id);
 
         -- the threads closest by their centroid, plus the threads of this call (their centroid is
         -- computed at its end, a new one has none yet)
         -- its own thread holds it: the thread it ends in, or one changed by this call
         SELECT COALESCE(array_agg(closest.id), '{}'), max(closest.likeness) FILTER (WHERE closest.id IS DISTINCT FROM s.id_thread)
         INTO candidates, top_likeness
-        FROM (SELECT u.id, -(u.centroid <#> v) AS likeness FROM threads u
-              WHERE u.lang = l AND u.updated_at >= active AND u.centroid IS NOT NULL
-              ORDER BY u.centroid <#> v
+        FROM (SELECT near.id, near.likeness
+              FROM (SELECT z.id, z.likeness FROM unnest(near_threads[i:i][1:shortlist], near_likeness[i:i][1:shortlist]) z(id, likeness)
+                    WHERE z.id IS NOT NULL
+                    UNION ALL
+                    SELECT u.id, -(u.centroid <#> v) FROM threads u
+                    WHERE u.id = ANY(revived) AND u.lang = l AND u.updated_at >= active AND u.centroid IS NOT NULL) near
+              ORDER BY near.likeness DESC
               LIMIT shortlist) closest;
         candidates := candidates || changed;
         IF top_likeness IS NULL OR top_likeness < merge_threshold THEN judged := judged || s.id; END IF;
@@ -200,6 +276,9 @@ BEGIN
         END IF;
 
         UPDATE stories SET id_thread = best, threaded_at = now() WHERE id = s.id;
+        IF EXISTS (SELECT 1 FROM threads WHERE id = best AND updated_at < active AND centroid IS NOT NULL) THEN
+            revived := revived || best;
+        END IF;
         UPDATE threads SET updated_at = GREATEST(updated_at, s.updated_at) WHERE id = best;
         changed := changed || best;
         IF s.id_thread IS NOT NULL AND s.id_thread <> best THEN changed := changed || s.id_thread; END IF;
