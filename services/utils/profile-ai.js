@@ -14,6 +14,10 @@ import {languageName} from './language.js';
 import {isSearchLanguage} from './google-news.js';
 
 export const MAX_INTERESTS = 6;
+// 300 cut the governance interest of the UEFA profile in each split, before and after its words were
+// no longer the reader's sentences: "crises, conflits internes, affaires judiciaires, ingérences
+// politiques" were lost (bench/split-real.mjs, 9.10.2026)
+export const MAX_INTEREST_TEXT = 500;
 // the cards of a briefing, chosen by the reader
 export const BRIEFING_SIZES = [10, 20, 30];
 export const MAX_BRIEFING = BRIEFING_SIZES[0];
@@ -56,7 +60,7 @@ Il lit en ${frenchName(language)} : les nouvelles de toutes les langues lui sont
 
 Découpe ce profil en 1 à ${MAX_INTERESTS} intérêts distincts. Ce que le lecteur dit ne pas vouloir n'est pas un intérêt : ne le mets dans aucun intérêt, mets-le dans "refused".
 Pour chaque intérêt, donne :
-- "text" : le sujet de l'intérêt, puis TOUT ce que le lecteur en cite, avec ses propres mots et sans en résumer ni en enlever aucun, comme "Opéra : nouvelles productions de l'Opéra de Paris et de la Scala, nominations des directeurs et des chefs d'orchestre". Chaque précision du lecteur compte et reste telle quelle : "les expositions et les ventes aux enchères d'art contemporain" ne devient pas "art contemporain". Le texte se lit seul : il nomme toujours son sujet ("les nouvelles lignes de TGV", pas "les nouvelles lignes"). Une précision qui ne nomme aucun sujet ("des règles", "des prix") va dans l'intérêt du sujet qu'elle précise, dans chacun s'il y en a plusieurs : elle ne fait jamais un intérêt à elle seule. Il laisse de côté les mots qui disent combien le lecteur l'aime ("j'adore", "un peu"). N'ajoute ni date, ni année, ni nom qu'il n'a pas écrit.
+- "text" : le sujet de l'intérêt, puis TOUT ce que le lecteur en cite, avec ses propres mots et sans en résumer ni en enlever aucun, comme "Opéra : nouvelles productions de l'Opéra de Paris et de la Scala, nominations des directeurs et des chefs d'orchestre". Chaque précision du lecteur compte et reste telle quelle : "les expositions et les ventes aux enchères d'art contemporain" ne devient pas "art contemporain". Le texte se lit seul : il nomme toujours son sujet ("les nouvelles lignes de TGV", pas "les nouvelles lignes"). Une précision qui ne nomme aucun sujet ("des règles", "des prix") va dans l'intérêt du sujet qu'elle précise, dans chacun s'il y en a plusieurs : elle ne fait jamais un intérêt à elle seule. Ce sont ses noms et ses groupes de mots séparés par des virgules, jamais ses phrases : aucun verbe qui parle de lui ("je suis", "je m'intéresse à", "je surveille", "concernant", "mon travail m'amène à", "je reste ouvert à"), aucun mot qui dit combien il l'aime ("j'adore", "un peu", "attentivement", "ma priorité"). Ce qu'il refuse n'y est jamais, même dit dans la même phrase : "la voile, sans les régates locales" donne "Voile" et, dans "refused", "les régates locales". N'ajoute ni date, ni année, ni nom qu'il n'a pas écrit.
 - "weight" : 1 pour un intérêt principal, 0.85 pour un intérêt que le lecteur dit secondaire.
 - "keywords" : 8 à 12 alternatives séparées par des virgules, dans les langues de ses "searches". CHAQUE alternative, à elle seule, doit désigner le sujet de cet intérêt : un article qui la contient en parle presque sûrement. Une alternative est un mot, ou 2 ou 3 mots qui doivent tous être dans l'article, séparés par des espaces. Si un mot seul est trop général, ajoute-lui le mot du sujet ("taille rosier" et pas "taille"). Jamais d'article ni de préposition, pas de barre oblique, pas de mot général seul ("actualités", "news", "nouveauté", "interview"). Pour les noms propres (produits, événements, personnes), ne cite que ceux qui sont actuels et certains, jamais l'édition d'une année passée : sans année si tu ne connais pas l'édition en cours.
   Exemple pour "le jardinage bio" : "potager bio, compost jardin, permaculture, semis tomate, purin ortie, paillage potager, jardin sans pesticide, organic gardening, vegetable garden, composting"
@@ -98,7 +102,7 @@ export const normalizeInterests = (answer, {categories}) => {
             }
 
             return {
-                text: cleanText(interest?.text, 300),
+                text: withoutRefusals(cleanText(interest?.text, 2 * MAX_INTEREST_TEXT), answer?.refused).slice(0, MAX_INTEREST_TEXT),
                 weight: Number.isFinite(weight) ? Math.min(1, Math.max(0.5, weight)) : 1,
                 keywords: withoutPastYears(cleanText(interest?.keywords, MAX_KEYWORDS_CHARS).replace(/\s*\/\s*/g, ', ')),
                 searches: searches,
@@ -125,7 +129,9 @@ export const parseSearch = (search) => {
 };
 
 // Words of a profile that say how it is written, not what it is about: they are never looked for in
-// the interests
+// the interests. "concernant", "attentivement", "surveille", "refuse"… were: the AI asked to add them
+// put back the sentences of the reader around them ("Concernant l'intelligence artificielle, je suis…"),
+// whose words took the vector of an interest away from its news (bench/split-clean.mjs, 9.10.2026)
 const PROFILE_WORDS = new Set(`
     intéresse intéressent intéresser intéressé intéressée intérêt intérêts contre surtout aussi tout toute tous toutes touche touchent
     près enfin veux voudrais aime aimerais adore suivre suis rien mais plus moins très beaucoup peu
@@ -134,11 +140,41 @@ const PROFILE_WORDS = new Set(`
     également particulier particulièrement principalement ainsi autre autres chose choses quand même lire
     savoir juste seulement vraiment souvent toujours jamais aucun aucune quoi chaque dont vers chez depuis
     sinon accessoirement secondairement parfois éventuellement adore préfère préfèrent passionne passionné
+    concernant concerne attentivement attentif attentive surveille surveiller amène ouvert ouverte reste priorité
+    utile utiles purement refuse refuser vouloir souhaite souhaitent souhaiterais recevoir ignorant évitant excluant
     about also especially mostly really like love latest things stuff everything anything nothing
+    regarding closely avoid refuse receive priority wish wants read
     that this these those which from their they have more less very much want interested follow news
     with what when where into only just some other others`.trim().split(/\s+/));
 
 const folded = (text) => text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+// lower case and without accents, each character in its place: what is found in it is cut in the text
+const foldedInPlace = (text) => text.split('').map(c => c.normalize('NFD')[0].toLowerCase()[0]).join('');
+// where a refusal starts in a sentence: "sans", "mais pas", "je refuse", "tout en ignorant", "except"\u2026
+const REFUSING = /(^|[\s,;:(])(sans|mais (?:pas|je|plus|non)|je (?:ne|n'|refuse)|ne (?:veux|souhaite)|pas (?:de|d'|les|la|le|du|des)|ni|(?:tout en |en )?(?:ignorant|evitant|excluant)|sauf|hormis|excepte|a part|without|but not|except|apart from|excluding|not|no|ohne|aber nicht|ausser|keine?|nicht)(?=[\s'])/g;
+// the words of a refusal that name nothing: "je ne veux pas de", "sans vouloir lire de choses sur"
+const WANTING = new Set([...PROFILE_WORDS, 'refusent', 'mochte', 'will', 'lesen'].map(folded));
+const significant = (text) => (folded(String(text)).match(/\p{L}{4,}/gu) ?? []).filter(word => !WANTING.has(word));
+
+// An interest with what the reader refuses cut out of it: its vector would bring the news refused.
+// The AI was told not to, and still wrote "Tennis : \u2026 le circuit ATP et les Grands Chelems, sans vouloir
+// lire de choses sur \u2026 les cotes ou les paris sportifs" for a profile rewritten with its refusals in the
+// sentence of their subject (bench/profile-ceiling.mjs, 9.10.2026): the news of tennis it found fell from
+// 30% to 23%. A sentence is cut at the first refusal whose words, up to the next one, name a word of
+// "refused" ("la recherche sans supervision, mais je refuse les cryptomonnaies" keeps its "sans"), from
+// the refusals just before it that name nothing ("je ne veux pas de football")
+export const withoutRefusals = (text, refused) => {
+    const words = new Set((Array.isArray(refused) ? refused : []).flatMap(significant));
+    if (words.size === 0) return text;
+    return text.split(/(?<=[.;!?])\s+/).map(sentence => {
+        const starts = [...foldedInPlace(sentence).matchAll(REFUSING)].map(found => found.index + found[1].length);
+        let at = starts.findIndex((start, i) => significant(sentence.slice(start, starts[i + 1])).some(word => words.has(word)));
+        if (at < 0) return sentence;
+        while (at > 0 && significant(sentence.slice(starts[at - 1], starts[at])).length === 0) at--;
+        return sentence.slice(0, starts[at]).replace(/[\s,;:(]+$/, '') + (sentence.match(/[.!?]$/)?.[0] ?? '');
+    }).filter(sentence => /\p{L}/u.test(sentence)).join(' ').trim();
+};
 
 // The words of the profile no interest names and that are not among what the reader refuses: a
 // word is named when an interest has its start ("arbitres" in "arbitrage", "nominations" in

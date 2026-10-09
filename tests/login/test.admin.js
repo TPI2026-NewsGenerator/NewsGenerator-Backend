@@ -19,7 +19,7 @@ jest.unstable_mockModule('../../services/discovery-service.js', () => ({Discover
 jest.unstable_mockModule('../../services/feedback-service.js', () => ({FeedbackService: {}}));
 jest.unstable_mockModule('../../services/ingest-service.js', () => ({searchesOfUser: async () => []}));
 jest.unstable_mockModule('../../services/utils/embedder.js', () => ({embed: jest.fn(), toSparsevec: jest.fn(), toVector: jest.fn()}));
-jest.unstable_mockModule('../../services/utils/profile-ai.js', () => ({interestsOf: jest.fn()}));
+jest.unstable_mockModule('../../services/utils/profile-ai.js', () => ({interestsOf: jest.fn(), MAX_INTEREST_TEXT: 500}));
 
 const {adminOnly, isAdmin} = await import('../../services/utils/admin.js');
 const {ProfileService} = await import('../../services/profile-service.js');

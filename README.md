@@ -669,6 +669,13 @@ three times faster than a `vector(1024)` of 4 KB that Postgres stores apart. A r
 stories or so in a few seconds; a week of stories judged at once (`scripts/assign-threads.js`) takes
 about ten minutes.
 
+A story is scored on the 20 threads closest to it only. Looked for story by story, from a loop of
+PL/pgSQL, they took one core and most of the grouping: 70 s for 300 stories, each reading the 136 000
+English threads of the week. They are now looked for for the whole batch at once before the loop
+(`thread_shortlists`), in one query Postgres shares out over 3 cores: 4 to 8 s, the same threads in
+the same order for the 300 (9.10.2026). The 20th closest of 1 thread in 32 is no closer than the 20th
+of all, so only the threads at least as close are sorted.
+
 #### Missing sources
 
 A search only finds what the sources publish, so the sources are grown from what the searches
@@ -854,7 +861,7 @@ node scripts/move-bridge-feeds.js http://127.0.0.1:3002 http://rss-bridge
 
 ### The briefing
 
-A reader writes a profile in their own words ("I follow rugby and fashion, no football") and chooses
+A reader has a profile in their own words ("I follow rugby and fashion, no football") and chooses
 the one language they read in (English, French, Spanish, German, Italian). It is no filter: the
 briefing and the search read the news of every language and translate them into it. The language of a feed is told
 by its news (`services/utils/language.js`): the short words of 9 languages on each news, and franc
@@ -875,6 +882,53 @@ Japanese, the European refereeing of a French reader Spanish and Italian; subjec
 searches: written in the same rule, the European subjects got French and English only. One vector per
 interest and not one for the whole profile: the average of rugby and fashion is football, and the words
 a reader refuses pull it.
+
+The text of an interest is its subject and the reader's precisions, words and groups of words, never
+their sentences, and never what they refuse: the interests of a profile of tennis, AI and Swiss
+politics written in other words found 23% of the news of 48 h its own interests find as the AI
+split it ("Tennis : Je suis attentivement le tennis, …, sans vouloir lire de choses sur … les paris
+sportifs"), 50% without the refusals and 80% without the reader's words either (`bench/split-clean.mjs`).
+The AI is told so, and the code cuts a refusal still in an interest, from "sans", "mais je refuse",
+"tout en ignorant"… when what follows names what the reader refused. The words of how a profile is
+written ("concernant", "attentivement", "surveille") are not asked again to the AI as missing: it put
+the sentences around them back. An interest holds 500 characters: 300 cut the governance of the UEFA
+profile, its crises, conflicts and judicial affairs, each time. Measured on the 5 profiles rewritten by
+the AI with all their content (`bench/profile-ceiling.mjs`, 3 times each), the share of the news of 48 h
+the interests of their own text find went from 60 to 70% (UEFA), 27 to 75% (tennis), 59 to 63%
+(Pokémon), 61 to 74% (astronomy) and 22 to 29% (a computer scientist of 3 short lines).
+
+A profile is created by the AI asking (`services/utils/profile-funnel.js`, `POST
+/profile/funnel/questions` then `/profile/funnel/text`, before the account too, 40 calls an hour per
+address), at the signup and for each new profile: no empty field to fill. A few words ("Tennis"), then
+up to 3 rounds of 2 to 4 questions, each with 4 to 8 choices to tick and room for their own words,
+then gemma4:31b writes the profile in the first person from what was ticked and written only. With
+nothing ticked nor written it writes back the few words, and the reader is asked for more. A
+question passed is not asked again: the AI is told it was passed, and a question of the next round
+that shares three quarters of its words with it is left out, the AI having asked one again in the same
+words. Nothing is
+saved: the text goes into the field of the page, the reader reads it, changes it, and saves it as any
+profile; a profile saved is changed by hand later, or asked again. The first round always asks for other
+subjects, and asks again when some are named: a reader of tennis, AI and Swiss politics only spoke of
+tennis otherwise. Measured with the AI playing 5 real readers, who knows their text and only answers
+what is asked (`bench/profile-funnel.mjs`, 9.10.2026), the interests of the profile written find this
+share of the news of 48 hours the interests of the reader's own text find:
+
+| start | the profile written with the questions | the start alone | the reader's text rewritten by the AI |
+|---|---|---|---|
+| "Je travaille dans l'arbitrage à l'UEFA." (a text of 1 085 characters) | 57% (59, 52, 60), 80% of its words | 11% | 70% |
+| "Le tennis." (tennis, AI, Swiss politics) | 32% (42, 28, 27) | 0% | 75%, 36% in English |
+| "L'astronomie." | 34% | 1% | 74% |
+| "Les cartes Pokémon." | 33% | 34% | 63%, 29% in English |
+| "Je suis informaticien." | 29% | 10% | 29% |
+
+The last column is the most a profile saying the same in other words finds (`bench/profile-ceiling.mjs`):
+the reader's text split twice finds 82 to 100% of its own news, but only because the words are the
+same. The first two rows were measured after the interests stopped holding the reader's sentences and
+refusals (49% and 30% before), the others before. The tennis reader chose English and wrote in French:
+the profile written is in English. 6 to 8 questions, 1 to 4 s each call. What the profile written still misses is said in the reader's
+own words only ("désignations importantes", "sous l'angle des relations internationales"): the
+choices bring the subjects, the room left for their words the precision. The tennis reader found
+Swiss politics once in three: when they write it in that room.
 
 A briefing is written in background (`services/briefing-service.js`): the answer is the briefing still
 running, the client asks for it again until it is ready, one at a time per reader. The reader chooses

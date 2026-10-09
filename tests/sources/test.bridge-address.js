@@ -58,7 +58,7 @@ jest.unstable_mockModule('../../services/utils/feed-finder.js', () => ({findFeed
 const Crawlers = {Xml: jest.fn(async (feeds) => feeds.map(({url}) => ({url, items: [{title: 'Un titre'}]})))};
 jest.unstable_mockModule('../../services/utils/crawlers.js', () => ({Crawlers}));
 jest.unstable_mockModule('../../services/utils/embedder.js', () => ({embed: jest.fn(), toSparsevec: jest.fn(), toVector: jest.fn()}));
-jest.unstable_mockModule('../../services/utils/profile-ai.js', () => ({interestsOf: jest.fn()}));
+jest.unstable_mockModule('../../services/utils/profile-ai.js', () => ({interestsOf: jest.fn(), MAX_INTEREST_TEXT: 500}));
 
 const {ProfileService} = await import('../../services/profile-service.js');
 const {FeedController} = await import('../../controllers/feed-controller.js');

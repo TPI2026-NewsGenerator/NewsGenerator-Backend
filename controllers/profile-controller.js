@@ -31,6 +31,11 @@ export const ProfileController = {
         languages: FeedService.languages(),
     }),
 
+    // a profile written with the AI asking questions, before the account is created too:
+    // {start, rounds, language} -> {enough, questions}, then -> {text}
+    funnelQuestions: (req, res) => respond(res, () => ProfileService.funnelQuestions(req.body ?? {})),
+    funnelText: (req, res) => respond(res, () => ProfileService.funnelText(req.body ?? {})),
+
     // the profile written again, or the first one of a reader who has none
     save: (req, res) => {
         const {text, language} = req.body ?? {};

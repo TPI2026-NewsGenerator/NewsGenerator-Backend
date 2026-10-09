@@ -61,6 +61,25 @@ describe('normalizeInterests', () => {
         expect(interest.searches).toEqual(['fr:UEFA', 'en:UEFA', 'es:UEFA', 'it:UEFA']);
     });
 
+    it('should cut out of an interest what the reader refuses, and only that', () => {
+        const refused = ['vouloir lire de choses sur la vie privée des joueurs, les cotes ou les paris sportifs', 'les cryptomonnaies', 'la politique cantonale'];
+        const texts = normalizeInterests({refused, interests: [
+            {text: 'Tennis : le circuit ATP et les Grands Chelems, sans vouloir lire de choses sur la vie privée des joueurs, les cotes ou les paris sportifs'},
+            {text: 'IA : la recherche sans supervision, les nouveaux modèles, mais je refuse les cryptomonnaies. La régulation en Europe.'},
+            {text: 'Politique suisse : les votations fédérales, tout en ignorant la politique cantonale'},
+            {text: 'Voile : sans les régates locales'},
+        ]}, options).map(interest => interest.text);
+        expect(texts).toEqual([
+            'Tennis : le circuit ATP et les Grands Chelems',
+            'IA : la recherche sans supervision, les nouveaux modèles. La régulation en Europe.',
+            'Politique suisse : les votations fédérales',
+            'Voile : sans les régates locales',          // nothing refused names it
+        ]);
+        expect(normalizeInterests({interests: [{text: 'Tennis, sans les paris'}]}, options)[0].text).toBe('Tennis, sans les paris');
+        expect(normalizeInterests({refused: ['le football'], interests: [{text: 'Je ne veux pas de football.'}, {text: 'Rugby'}]}, options)
+            .map(interest => interest.text)).toEqual(['Rugby']);
+    });
+
     it('should drop the interests without a text and keep six at most', () => {
         const many = Array.from({length: 9}, (_, i) => ({text: `Sujet ${i}`}));
         expect(normalizeInterests({interests: [{text: ''}, ...many]}, options)).toHaveLength(6);

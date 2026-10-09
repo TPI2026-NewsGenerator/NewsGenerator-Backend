@@ -15,7 +15,8 @@ import {FeedService} from "./feed-service.js";
 import {DiscoveryService, JUDGE_THRESHOLD, RELEVANCE_DAYS} from "./discovery-service.js";
 import {FeedbackService} from "./feedback-service.js";
 import {embed, toSparsevec, toVector} from "./utils/embedder.js";
-import {interestsOf} from "./utils/profile-ai.js";
+import {interestsOf, MAX_INTEREST_TEXT} from "./utils/profile-ai.js";
+import {cleanRounds, MAX_ROUNDS, MAX_START, MIN_START, nextQuestions, writeProfile} from "./utils/profile-funnel.js";
 import {isFlood, MAX_PROFILE_FEEDS} from "./utils/feed-limits.js";
 import {searchesOfUser} from "./ingest-service.js";
 import {readerLanguage} from "./utils/language.js";
@@ -25,7 +26,6 @@ import {isAdmin} from "./utils/admin.js";
 
 const MIN_TEXT = 20;            // "rugby" says too little to split into interests
 const MAX_TEXT = 2000;
-const MAX_INTEREST_TEXT = 300;
 // Each profile has its sources found, read for all the readers, and its briefings, written by the AI:
 // 15 per reader at most (the user's choice, 8.10.2026)
 export const MAX_PROFILES = 15;
@@ -92,6 +92,18 @@ const cleanName = (name) => {
     const written = typeof name === 'string' ? name.replace(/\s+/g, ' ').trim() : '';
     if (!written || written.length > MAX_NAME) throw badRequest(`A profile is named in 1 to ${MAX_NAME} characters.`);
     return written;
+};
+
+// what the reader wrote first and answered, as the page sends it back: {start, rounds, language}
+const funnelOf = ({start, rounds, language}) => {
+    const written = typeof start === 'string' ? start.replace(/\s+/g, ' ').trim() : '';
+    if (written.length < MIN_START || written.length > MAX_START) {
+        throw badRequest(`Say what you want to read in ${MIN_START} to ${MAX_START} characters.`);
+    }
+    if (!FeedService.languages().includes(language)) {
+        throw badRequest(`Choose the language you read in among: ${FeedService.languages().join(', ')}.`);
+    }
+    return {start: written, rounds: cleanRounds(rounds), language};
 };
 
 export const ProfileService = {
@@ -198,6 +210,22 @@ export const ProfileService = {
         }
 
         return {profile, interests: await withVectors(interests)};
+    },
+
+    // A profile written with the AI (see profile-funnel.js): the questions of the next round
+    // ({enough, questions}), then the profile written from the answers ({text}). Nothing is saved: the
+    // reader reads the text, changes it if they want, and saves it or creates their account with it
+    funnelQuestions: async (asked) => ({...await nextQuestions(funnelOf(asked)), maxRounds: MAX_ROUNDS}),
+
+    // nothing ticked nor written: the AI would write back the few words, it makes up no interest. They
+    // are refused before it is asked when they are already too short
+    funnelText: async (asked) => {
+        const funnel = funnelOf(asked);
+        const tooLittle = Object.assign(new Error('Your answers say too little to write a profile: tick or write a little more.'), {status: 422});
+        if (funnel.rounds.length === 0 && funnel.start.length < MIN_TEXT) throw tooLittle;
+        const text = await writeProfile(funnel);
+        if (text.length < MIN_TEXT) throw tooLittle;
+        return {text};
     },
 
     // A prepared profile saved, and its sources found in background: profileId null writes a new one.
