@@ -162,7 +162,7 @@ const cardHtml = (card, i, personal = true) => {
 // in their mail app, nothing in the e-mail can stop it. original: {url} in the e-mail, a small link at its
 // end (the user: no line explaining it at its top); {sentAt} in the copy itself, a line above its title
 const originalLine = (original) => original?.sentAt
-    ? `<p class="ng-mute" style="${CAPTION};margin-bottom:18px">The e-mail as it was sent on ${escape(at(original.sentAt))}. Nobody can change it.</p>`
+    ? `<p class="ng-mute" style="${CAPTION};margin-bottom:18px">The e-mail as it was sent on ${escape(at(original.sentAt))}.</p>`
     : '';
 const originalLink = (original) => webUrl(original?.url)
     ? `<tr><td class="ng-rule" style="border-top:1px solid ${LIGHT.rule};padding-top:20px"><p class="ng-mute" style="${CAPTION}"><a href="${escape(original.url)}" class="ng-mute" style="color:${LIGHT.mute};text-decoration:underline">View the original e-mail</a></p></td></tr>`

@@ -192,7 +192,8 @@ describe('BriefingService.email copy kept as sent', () => {
 
         const copy = copies.save.mock.calls[0][0];
         expect(copy).toMatchObject({token, userId: 4, briefingId: 7, subject: mail.subject});
-        expect(copy.html).toMatch(/The e-mail as it was sent on [^<]+\. Nobody can change it\.<\/p>\s*<h1 class="ng-ink"/);
+        expect(copy.html).toMatch(/The e-mail as it was sent on [^<.]+\.<\/p>\s*<h1 class="ng-ink"/);
+        expect(copy.html).not.toContain('Nobody can change it');
         expect(copy.html).not.toContain('/api/mails/');
         expect(copy.html).not.toContain('cid:');
         expect(copy.html).toContain(`src="data:image/png;base64,${Buffer.from(PNG, 'base64').toString('base64')}"`);
