@@ -66,6 +66,11 @@ export const withChosenPictures = async (items, pictures, {sender = null, known 
     return {items: items.map(item => chosen.has(item.storyId) ? {...item, ...chosen.get(item.storyId)} : item), attachments};
 };
 
+// the html of an e-mail with its joined files written in it (data:), for the copy kept as it was sent:
+// a page has no joined files to show by their cid
+export const withPicturesWritten = (html, attachments) => attachments.reduce(
+    (written, file) => written.replaceAll(`cid:${file.cid}`, `data:${file.contentType};base64,${file.content.toString('base64')}`), html);
+
 // the pictures of a story the reader can choose among: the one of its card first, then the ones the
 // feeds gave its articles. rows: [{link, thumbnail}] of its articles
 export const storyPictures = (item, rows) => {

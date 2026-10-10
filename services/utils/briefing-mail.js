@@ -158,11 +158,21 @@ const cardHtml = (card, i, personal = true) => {
 </td></tr>`;
 };
 
+// The copy of the e-mail kept as it was sent (see SentMailModel): whoever forwards an e-mail can change it
+// in their mail app, nothing in the e-mail can stop it. original: {url} in the e-mail, a small link at its
+// end (the user: no line explaining it at its top); {sentAt} in the copy itself, a line above its title
+const originalLine = (original) => original?.sentAt
+    ? `<p class="ng-mute" style="${CAPTION};margin-bottom:18px">The e-mail as it was sent on ${escape(at(original.sentAt))}. Nobody can change it.</p>`
+    : '';
+const originalLink = (original) => webUrl(original?.url)
+    ? `<tr><td class="ng-rule" style="border-top:1px solid ${LIGHT.rule};padding-top:20px"><p class="ng-mute" style="${CAPTION}"><a href="${escape(original.url)}" class="ng-mute" style="color:${LIGHT.mute};text-decoration:underline">View the original e-mail</a></p></td></tr>`
+    : '';
+
 // briefing: as toBriefing gives it, its items the cards the reader ticked (ownTitle: a title they wrote
 // for the e-mail); profileName: the name of its profile; account: the username of the reader; sender:
-// it too when it is sent to another address than theirs, the e-mail says then who to answer.
-// {subject, html, text}
-export const briefingMail = (briefing, profileName, {sender = null, account = sender} = {}) => {
+// it too when it is sent to another address than theirs, the e-mail says then who to answer; original:
+// the copy of the e-mail kept as sent (see originalLink). {subject, html, text}
+export const briefingMail = (briefing, profileName, {sender = null, account = sender, original = null} = {}) => {
     const cards = briefing.items ?? [];
     const finished = briefing.finishedAt ?? briefing.createdAt;
     const count = `${cards.length} ${cards.length === 1 ? 'story' : 'stories'}`;
@@ -179,10 +189,12 @@ export const briefingMail = (briefing, profileName, {sender = null, account = se
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="ng-paper" style="background:${LIGHT.paper}"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:680px;text-align:left">
 <tr><td style="padding-bottom:28px">
+  ${originalLine(original)}
   <h1 class="ng-ink" style="margin:0;font:460 40px/1.05 ${DISPLAY};color:${LIGHT.ink}">${escape(title)}</h1>
   <p class="ng-mute" style="${CAPTION};font-weight:500;margin-top:14px">${account ? `${escape(account)} shares ${count} of their briefing` : `${count} of your briefing`} • ${escape(at(finished))}</p>
 </td></tr>
 ${cards.map((card, i) => cardHtml(card, i, !sender)).join('')}
+${originalLink(original)}
 </table></td></tr></table></body></html>`;
 
     const text = [
@@ -201,6 +213,7 @@ ${cards.map((card, i) => cardHtml(card, i, !sender)).join('')}
                 '',
             ].filter((line, j, lines) => line !== '' || lines[j - 1] !== '').join('\n');
         }),
+        ...(webUrl(original?.url) ? [`View the original e-mail: ${original.url}`] : []),
     ].join('\n');
 
     return {subject, html, text};

@@ -303,8 +303,8 @@ Optional variables in `.env`:
    filter, and the language the cards are **shown** in. There are 415 feeds: 335 in English, 25 in
    French, 20 in Spanish, 20 in German, 15 in Italian. A search reads the feeds of **every language**:
    read in the language searched only, a reader with sources in 34 languages found 4 news for
-   "Schiedsrichter im Fußball" and 28 in the languages of their profile, 11 and 28 for "les
-   désignations d'arbitres" (`bench/search-languages.mjs`).
+   "Schiedsrichter im FuÃŸball" and 28 in the languages of their profile, 11 and 28 for "les
+   dÃ©signations d'arbitres" (`bench/search-languages.mjs`).
 2. A search fetches no feed: it only reads the `articles` table, filled in background (see
    **Background work** above), so nobody waits for a feed. Besides the shared feeds of the categories
    chosen, a search reads the sources of the readers that are not private, of every language and
@@ -317,7 +317,7 @@ Optional variables in `.env`:
      none (see **The directory** below).
 
    A source added by hand and not shared stays its reader's: nobody else searches it. Measured for
-   one reader (`bench/pool-sources.mjs`, French, 30 days): "cartes Pokémon" found 1 news in the shared
+   one reader (`bench/pool-sources.mjs`, French, 30 days): "cartes PokÃ©mon" found 1 news in the shared
    feeds and their own, 2 with the feeds found for the other profiles, 10 with their searches of
    Google News. The briefing still reads only the sources of its reader.
 
@@ -328,12 +328,12 @@ Optional variables in `.env`:
 3. What was typed decides how it is searched (`Filter.hasOperators`):
    - **A sentence**, without any operator, is searched by its meaning (`NewsService.searchByMeaning`).
      The embedder gives the vector of the sentence, and `FeedModel.closestArticles` takes, among the
-     news of the chosen feeds and timeframe that have their vectors, the **80 closest** (dense + 0.5 ×
+     news of the chosen feeds and timeframe that have their vectors, the **80 closest** (dense + 0.5 Ã—
      sparse, as the briefing ranks the news of an interest) and the **30 with the most of its words**
      (the sparse vector alone), which keeps the news naming what the sentence names when their meaning
      is further. The news in the language searched and the news in the others each get their 80 and
      30: taken together, the news of every language buried the ones of the language searched (the two
-     French answers of "les décisions d'arbitrage et la VAR en Ligue des champions" were left out). The AI then reads their titles and the start of their descriptions, each title once,
+     French answers of "les dÃ©cisions d'arbitrage et la VAR en Ligue des champions" were left out). The AI then reads their titles and the start of their descriptions, each title once,
      and sorts them into two lists (`services/utils/search-ai.js`): the **answers** to the sentence, and
      the news that are only **related** to it (another place, another aspect). The cards come in its
      order, the answers first, and the news in no list are left out.
@@ -371,15 +371,15 @@ Optional variables in `.env`:
    - **Keywords with an operator** (a quote, a comma or a `-word`) are searched as written, in SQL, with
      the excluded keywords and the timeframe. They work like on Google: commas separate alternatives
      (OR), the words of an alternative must all be found (AND), `"quoted text"` is an exact word or
-     phrase and `-word` excludes. A Latin letter is searched with and without its accents (`Zürich`
-     finds `Zurich`, `-Barça` leaves out `Barca`: 8 to 100 ms a term with the trigram index,
+     phrase and `-word` excludes. A Latin letter is searched with and without its accents (`ZÃ¼rich`
+     finds `Zurich`, `-BarÃ§a` leaves out `Barca`: 8 to 100 ms a term with the trigram index,
      `bench/accent-patterns.mjs`), and the facts of an affair shown on a card are left out too when
      they hold an excluded word.
 
    In the keyword search, asking for every word at once is strict: `"referee" football soccer` wants
    the three of them in the same news, and almost none has all three. So when a search finds fewer
    than five news, the wider search asking for *any* of the words is counted and **offered**, not
-   done — widening `"red card"` on its own would answer everything about red or about card. See
+   done â€” widening `"red card"` on its own would answer everything about red or about card. See
    `canWiden` and `widen` in `services/utils/filter.js`.
 4. The cards written in another language than the one searched carry their language, and their title
    and description are translated by the AI when the reader reaches them (`POST /news/translations`,
@@ -396,14 +396,14 @@ Optional variables in `.env`:
 5. News telling the same story are grouped: one card, with the other sources listed under it. The
    list of a search is grouped here, with the trigrams of the titles; the briefing reads the stories
    built in background with the vectors instead (see **How the groups are built** below). An
-   article joins the group it resembles **on average** above **0.25** of trigram similarity — under
+   article joins the group it resembles **on average** above **0.25** of trigram similarity â€” under
    40 characters the stricter **0.45** is kept, because a short title is mostly the template its
    paper puts around it and trigrams cannot tell "Health Care Roundup: Market Talk" from "Auto &
    Transport Roundup: Market Talk". Both constants are at the top of `services/news-service.js`, and
    **How the groups are built** below says why the average and not a single link.
 
    The accents are removed before comparing. Two papers do not spell a name the same way: the
-   Guardian writes "Higuaín" where the Independent writes "Higuain", and that one accent moves the
+   Guardian writes "HiguaÃ­n" where the Independent writes "Higuain", and that one accent moves the
    pair from 0.325 to 0.294, which is the difference between grouped and not grouped. Measured on a
    day of articles it adds 0.75% of pairs, almost all of them French, Spanish or Italian, where
    accents are common. It needs `db/add_unaccent.sql`.
@@ -547,8 +547,8 @@ fetched. Measured both ways, that changes nothing, so the query stays as it is.
 Two other answers were measured and rejected. Weighing the words by how rare they are (TF-IDF) does
 worse, because a template is rare too: "Prediction and Betting Tips" is written by one site alone,
 so rarity hands it a high weight and joins eight unrelated matches. Dense embeddings alone, run by
-Ollama, judge **pairs** better than anything else here — they alone bring "Columbus Crew sack coach
-Higuaín" near "MLS coach sacked after sexist remark" — but they build worse **groups**, 32/40 against
+Ollama, judge **pairs** better than anything else here â€” they alone bring "Columbus Crew sack coach
+HiguaÃ­n" near "MLS coach sacked after sexist remark" â€” but they build worse **groups**, 32/40 against
 39/40, and cost ten seconds on a large search when computed at the search. A better judge of pairs
 does not make a better grouper.
 
@@ -685,7 +685,7 @@ two public directories, and the media they name that are not in the cache are sh
 - **Google News**, whose RSS gives the publisher of each result in clear (`services/utils/google-news.js`);
 - **GDELT**, the DOC 2.0 API, as a second opinion (`services/utils/gdelt.js`).
 
-Their news are shown **read-only** — the pages are not scraped and the AI never sees them, they are
+Their news are shown **read-only** â€” the pages are not scraped and the AI never sees them, they are
 only there to show what the search did not have. Next to them, the media whose feed was found can be
 added in one click, and they become private sources of that user.
 
@@ -700,8 +700,8 @@ midilibre.fr and ladepeche.fr). Without the embedder the feeds are judged by the
 
 Having the AI sort the news of Google first, and trying only the media of its answers, was measured and
 left out: 10 feeds instead of 21, with the same share on the search. A sentence gets few answers (1 of
-17 for the Ligue 1 one), so good media were never tried (dsih.fr for "l'intelligence artificielle à
-l'hôpital", the Top 14 feed of sudouest.fr), and the rugby news stayed as close to the Ligue 1 all
+17 for the Ligue 1 one), so good media were never tried (dsih.fr for "l'intelligence artificielle Ã 
+l'hÃ´pital", the Top 14 feed of sudouest.fr), and the rugby news stayed as close to the Ligue 1 all
 the same. The news shown read-only are Google's, newest first, unsorted.
 
 The judge makes the search wait on the embedder: about 20 seconds, but 13 minutes measured while the
@@ -886,16 +886,16 @@ a reader refuses pull it.
 The text of an interest is its subject and the reader's precisions, words and groups of words, never
 their sentences, and never what they refuse: the interests of a profile of tennis, AI and Swiss
 politics written in other words found 23% of the news of 48 h its own interests find as the AI
-split it ("Tennis : Je suis attentivement le tennis, …, sans vouloir lire de choses sur … les paris
+split it ("Tennis : Je suis attentivement le tennis, â€¦, sans vouloir lire de choses sur â€¦ les paris
 sportifs"), 50% without the refusals and 80% without the reader's words either (`bench/split-clean.mjs`).
 The AI is told so, and the code cuts a refusal still in an interest, from "sans", "mais je refuse",
-"tout en ignorant"… when what follows names what the reader refused. The words of how a profile is
+"tout en ignorant"â€¦ when what follows names what the reader refused. The words of how a profile is
 written ("concernant", "attentivement", "surveille") are not asked again to the AI as missing: it put
 the sentences around them back. An interest holds 500 characters: 300 cut the governance of the UEFA
 profile, its crises, conflicts and judicial affairs, each time. Measured on the 5 profiles rewritten by
 the AI with all their content (`bench/profile-ceiling.mjs`, 3 times each), the share of the news of 48 h
 the interests of their own text find went from 60 to 70% (UEFA), 27 to 75% (tennis), 59 to 63%
-(Pokémon), 61 to 74% (astronomy) and 22 to 29% (a computer scientist of 3 short lines).
+(PokÃ©mon), 61 to 74% (astronomy) and 22 to 29% (a computer scientist of 3 short lines).
 
 A profile is created by the AI asking (`services/utils/profile-funnel.js`, `POST
 /profile/funnel/questions` then `/profile/funnel/text`, before the account too, 40 calls an hour per
@@ -915,10 +915,10 @@ share of the news of 48 hours the interests of the reader's own text find:
 
 | start | the profile written with the questions | the start alone | the reader's text rewritten by the AI |
 |---|---|---|---|
-| "Je travaille dans l'arbitrage à l'UEFA." (a text of 1 085 characters) | 57% (59, 52, 60), 80% of its words | 11% | 70% |
+| "Je travaille dans l'arbitrage Ã  l'UEFA." (a text of 1 085 characters) | 57% (59, 52, 60), 80% of its words | 11% | 70% |
 | "Le tennis." (tennis, AI, Swiss politics) | 32% (42, 28, 27) | 0% | 75%, 36% in English |
 | "L'astronomie." | 34% | 1% | 74% |
-| "Les cartes Pokémon." | 33% | 34% | 63%, 29% in English |
+| "Les cartes PokÃ©mon." | 33% | 34% | 63%, 29% in English |
 | "Je suis informaticien." | 29% | 10% | 29% |
 
 The last column is the most a profile saying the same in other words finds (`bench/profile-ceiling.mjs`):
@@ -926,19 +926,19 @@ the reader's text split twice finds 82 to 100% of its own news, but only because
 same. The first two rows were measured after the interests stopped holding the reader's sentences and
 refusals (49% and 30% before), the others before. The tennis reader chose English and wrote in French:
 the profile written is in English. 6 to 8 questions, 1 to 4 s each call. What the profile written still misses is said in the reader's
-own words only ("désignations importantes", "sous l'angle des relations internationales"): the
+own words only ("dÃ©signations importantes", "sous l'angle des relations internationales"): the
 choices bring the subjects, the room left for their words the precision. The tennis reader found
 Swiss politics once in three: when they write it in that room.
 
 A reader with two subjects or more is asked, at the last round at the latest, which of them it is
 enough to follow from afar, only when something important happens; the profile written says it ("Je
-suis aussi, de plus loin, …"), and the split gives those interests the weight 0.85, the one of the
+suis aussi, de plus loin, â€¦"), and the split gives those interests the weight 0.85, the one of the
 button of the profile page, the others 1. A briefing gives fewer places to an interest of 0.85 and
 ranks its news lower. Without the question no reader said it, and every interest came out at 1.
 Measured with the AI playing readers whose text says what counts most (`bench/profile-importance.mjs`,
 3 times each): tennis with AI and Swiss politics from afar, sailing with astronomy now and then, 9 of 9
 subjects followed from afar at 0.85 (0 of 6 before); football and gastronomy that count as much, and the
-Pokémon cards alone, no interest under 1. Asked which to follow closely, the reader ticked them all and
+PokÃ©mon cards alone, no interest under 1. Asked which to follow closely, the reader ticked them all and
 details came as choices ("PSG", "OM"), an unticked one falling to 0.85: asked the other way, a question
 passed leaves every subject at 1. The writing of the profile once put "de plus loin" on a subject never
 asked about: it is told only the reader's answers say it. The news found did not move (UEFA 56%,
@@ -961,7 +961,7 @@ reads only the stories built by the background work, and goes through these step
    languages with sources in 30 (`bench/briefing-languages.mjs`): the other languages took 13 of the 42
    candidates and 2 of the 10 cards, both on the profile; the title of a card in another language is
    translated with its passages.
-   Each news scores its best interest, weight × (dense + 0.5 × sparse) of its title and the start of
+   Each news scores its best interest, weight Ã— (dense + 0.5 Ã— sparse) of its title and the start of
    its description, and a story scores its best news. A story already shown can come back: the reader
    passes it, and leaving out every card shown left fewer news to choose from. The AI chooses from the
    40 best stories told by a feed, and at most 10 known only through Google News (see **Google News**
@@ -1107,6 +1107,21 @@ takes out a name that finds other things and adds their own.
 Sending the briefing by e-mail and having several profiles are for the accounts of the role `Admin`
 (`services/utils/admin.js`). The role is read in the database at each request, never in the token: an
 account made an administrator has it at once. `GET /api/session` says it (`admin`).
+
+### The e-mail as it was sent
+
+Whoever forwards an e-mail can change it in their mail app (Gmail, Outlook, Apple Mail): nothing in the
+e-mail can stop it. So each e-mail sent is kept as it was sent (`sent_mails`, `db/add_sent_mails.sql`),
+its joined pictures written in it, and a small link at its end leads to that copy (no line about it at its top, the user's choice): `GET /api/mails/<token>`, a page
+for anyone who has the link, no account. The token is 18 random bytes (24 characters), never guessed; the
+page runs nothing (`Content-Security-Policy` without scripts), is not indexed nor framed. The copy is
+taken out again when the e-mail could not be sent. The address of the link is the one of the site as the
+reader reached it (`Host`, the https of the tunnel kept by `trust proxy`).
+
+The pictures offered for an e-mail are the ones at least 560 pixels wide, the width of the picture in the
+e-mail: 49 of the 289 pictures of 6 briefings were narrower, some 72 pixels (`bench/picture-sizes.mjs`).
+The browser measures them as it loads them (client `mailPictures.js`); a card whose own picture is too
+small gets the best other of its story (lying before standing, the widest), else none.
 
 [//]: # (How to set up the database?)
 

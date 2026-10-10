@@ -21,6 +21,8 @@ jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel
 jest.unstable_mockModule('../../models/user-model.js', () => ({UserModel: {email: jest.fn(async () => ({email: 'reader@example.test', username: 'lecteur'}))}}));
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: {get: jest.fn(async () => ({name: 'Football'}))}}));
 jest.unstable_mockModule('../../services/utils/mailer.js', () => ({sendMail, mailEnabled: () => true}));
+const copies = {save: jest.fn(async () => 11), byToken: jest.fn(async () => null), remove: jest.fn(async () => 1)};
+jest.unstable_mockModule('../../models/sent-mail-model.js', () => ({SentMailModel: copies}));
 const {BriefingService, withOwnTitles, withoutTakenOut} = await import('../../services/briefing-service.js');
 const {briefingMail} = await import('../../services/utils/briefing-mail.js');
 
@@ -166,6 +168,62 @@ describe('BriefingService.email with the pictures the reader chose', () => {
         await expect(BriefingService.email(4, 7, [1, 2, 3, 4], undefined, {...files, 4: {data: big}})).rejects.toMatchObject({status: 400});
         await BriefingService.email(4, 7, [1, 2, 3], undefined, files);
         expect(sendMail.mock.calls[0][0].attachments).toHaveLength(3);
+    });
+});
+
+describe('BriefingService.email copy kept as sent', () => {
+    beforeEach(() => {
+        Object.values(copies).forEach(fn => fn.mockClear());
+        ofUser.mockResolvedValue({...row, items: [card(1, 'First story'), card(3, 'Third story')]});
+    });
+
+    it('should link the e-mail to its copy, kept without the link and with the files of the reader written in it', async () => {
+        await BriefingService.email(4, 7, [1, 3], undefined, {3: {data: PNG}}, undefined, undefined, 'https://news.example');
+
+        const mail = sendMail.mock.calls[0][0];
+        const [, token] = mail.html.match(/href="https:\/\/news\.example\/api\/mails\/([\w-]+)"/);
+        expect(token).toHaveLength(24);
+        // a small link at its end, nothing above its title
+        expect(mail.html).toMatch(/>View the original e-mail<\/a><\/p><\/td><\/tr>\s*<\/table>/);
+        expect(mail.html).toMatch(/<td style="padding-bottom:28px">\s*<h1 class="ng-ink"/);
+        expect(mail.html).not.toContain('as it was sent');
+        expect(mail.text.trim().split('\n').at(-1)).toBe(`View the original e-mail: https://news.example/api/mails/${token}`);
+        expect(mail.html).toContain('src="cid:picture-3@newsgenerator"');
+
+        const copy = copies.save.mock.calls[0][0];
+        expect(copy).toMatchObject({token, userId: 4, briefingId: 7, subject: mail.subject});
+        expect(copy.html).toMatch(/The e-mail as it was sent on [^<]+\. Nobody can change it\.<\/p>\s*<h1 class="ng-ink"/);
+        expect(copy.html).not.toContain('/api/mails/');
+        expect(copy.html).not.toContain('cid:');
+        expect(copy.html).toContain(`src="data:image/png;base64,${Buffer.from(PNG, 'base64').toString('base64')}"`);
+        expect(copy.html).toContain('Third story');
+    });
+
+    it('should give each e-mail its own token, and take the copy out when the e-mail is not sent', async () => {
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'https://news.example');
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'https://news.example');
+        expect(copies.save.mock.calls[0][0].token).not.toBe(copies.save.mock.calls[1][0].token);
+
+        sendMail.mockRejectedValueOnce(Object.assign(new Error('The e-mail could not be sent, try again later.'), {status: 502}));
+        await expect(BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'https://news.example')).rejects.toMatchObject({status: 502});
+        expect(copies.remove).toHaveBeenCalledWith(11);
+    });
+
+    it('should keep no copy and give no link without the address of the site', async () => {
+        await BriefingService.email(4, 7, [1]);
+        expect(copies.save).not.toHaveBeenCalled();
+        expect(sendMail.mock.calls[0][0].html).not.toContain('as it was sent');
+        expect(sendMail.mock.calls[0][0].html).toMatch(/<td style="padding-bottom:28px">\s*<h1 class="ng-ink"/);
+    });
+
+    it('should read a copy by its token only, never asking the database for a token of another form', async () => {
+        copies.byToken.mockResolvedValueOnce({subject: 'S', html: '<p>sent</p>'});
+        expect(await BriefingService.original('abcdefghijklmnopqrstuvwx')).toEqual({subject: 'S', html: '<p>sent</p>'});
+        await expect(BriefingService.original('abcdefghijklmnopqrstuvwy')).rejects.toMatchObject({status: 404});
+        for (const token of ['short', "' OR 1=1 --aaaaaaaaaaaaa", undefined, 'abcdefghijklmnopqrstuvwx/']) {
+            await expect(BriefingService.original(token)).rejects.toMatchObject({status: 404});
+        }
+        expect(copies.byToken).toHaveBeenCalledTimes(2);
     });
 });
 

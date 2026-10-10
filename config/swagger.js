@@ -931,7 +931,7 @@ const options = {
                 "post": {
                     "tags": ["Briefing"],
                     "summary": "Send the cards of a briefing the reader ticked by e-mail",
-                    "description": "For the administrators only (role Admin, else 403). Through the SMTP account of the server (SMTP_USER, SMTP_PASS), to the address `to`, else to the one of the account. The cards in the order of storyIds (the reader can change it), each once, laid out as the page shows them. Sent to another address than the account one, it says who sends it and the answers go to the account address. At most 10 e-mails an hour per address and 30 a day per account.",
+                    "description": "For the administrators only (role Admin, else 403). Through the SMTP account of the server (SMTP_USER, SMTP_PASS), to the address `to`, else to the one of the account. The cards in the order of storyIds (the reader can change it), each once, laid out as the page shows them. Sent to another address than the account one, it says who sends it and the answers go to the account address. A copy is kept as it was sent and the e-mail links to it (see /mails/{token}): a forwarded e-mail can be changed, that copy cannot. At most 10 e-mails an hour per address and 30 a day per account.",
                     "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
                     "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["storyIds"], "properties": {
                         "storyIds": {"type": "array", "items": {"type": "integer"}, "minItems": 1},
@@ -1011,6 +1011,19 @@ const options = {
                     "responses": {
                         "200": {"description": "{pictures: [{url, source}]}"},
                         "404": {"description": "No such ready briefing of this user, or no such card in it"}
+                    }
+                }
+            },
+            "/mails/{token}": {
+                "get": {
+                    "tags": ["Briefing"],
+                    "summary": "An e-mail of a briefing as it was sent, by the link it carries",
+                    "description": "No account: anyone who got the e-mail, forwarded or not, reads it as it was sent; the token (24 characters) cannot be guessed. An HTML page, its joined pictures written in it; nothing in it runs (Content-Security-Policy), not indexed. At most 60 a quarter of an hour per address.",
+                    "parameters": [{"name": "token", "in": "path", "required": true, "schema": {"type": "string"}}],
+                    "responses": {
+                        "200": {"description": "The e-mail, text/html"},
+                        "404": {"description": "No e-mail has this token (a page saying it)"},
+                        "429": {"description": "Too many read"}
                     }
                 }
             }
