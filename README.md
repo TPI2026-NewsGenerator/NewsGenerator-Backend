@@ -1114,7 +1114,7 @@ Whoever forwards an e-mail can change it in their mail app (Gmail, Outlook, Appl
 e-mail can stop it. So each e-mail sent is kept as it was sent (`sent_mails`, `db/add_sent_mails.sql`),
 its joined pictures written in it, and a small link at its end leads to that copy (no line about it at its top, the user's choice): `GET /api/mails/<token>`, a page
 for anyone who has the link, no account. The token is 18 random bytes (24 characters), never guessed; the
-page runs nothing (`Content-Security-Policy` without scripts), is not indexed nor framed. The copy is
+page runs nothing (`Content-Security-Policy` without scripts), is not indexed nor framed, and is of no site (`sandbox`: an opaque origin, so even a script let through by mistake could neither read the session nor call the API). The copy is
 taken out again when the e-mail could not be sent. The address of the link is the one of the site as the
 reader reached it (`Host`, the https of the tunnel kept by `trust proxy`).
 

@@ -56,6 +56,9 @@ describe('GET /api/mails/:token', () => {
         expect(res.headers['content-security-policy']).toMatch(/default-src 'none'/);
         expect(res.headers['content-security-policy']).not.toMatch(/script-src/);
         expect(res.headers['content-security-policy']).toMatch(/frame-ancestors 'none'/);
+        // of no site: neither scripts nor the same origin as the app
+        const sandbox = res.headers['content-security-policy'].match(/sandbox([^;]*)/)[1];
+        expect(sandbox).not.toMatch(/allow-scripts|allow-same-origin/);
         expect(res.headers['x-robots-tag']).toMatch(/noindex/);
         expect(res.headers['referrer-policy']).toBe('no-referrer');
     });

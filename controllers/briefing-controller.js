@@ -41,10 +41,12 @@ export const BriefingController = {
     },
 
     // the copy of an e-mail kept as it was sent, a page for anyone who has its link. Its pictures are the
-    // ones of the web and the ones joined, written in it; nothing in it runs, and no other site frames it
+    // ones of the web and the ones joined, written in it; nothing in it runs, and no other site frames it.
+    // sandbox: the page is of no site (an opaque origin), so even a script let through by mistake could
+    // neither read the session nor call the API; its links still open, in a new tab as articles of their own
     original: async (req, res) => {
         res.set({
-            'Content-Security-Policy': "default-src 'none'; img-src https: http: data:; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+            'Content-Security-Policy': "default-src 'none'; img-src https: http: data:; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; sandbox allow-popups allow-popups-to-escape-sandbox",
             'Referrer-Policy': 'no-referrer',
             'X-Robots-Tag': 'noindex, nofollow',
             'Cache-Control': 'private, no-cache',
