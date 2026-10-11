@@ -869,7 +869,7 @@ export const BriefingService = {
         // in the order given, each card once, the ones not in this briefing left out
         const ticked = [...new Set(storyIds)].map(storyId => byId.get(storyId)).filter(Boolean);
         if (ticked.length === 0) throw Object.assign(new Error('None of the cards ticked is in this briefing.'), {status: 404});
-        const [user, profile] = await Promise.all([UserModel.email(userId), ProfileModel.get(row.id_profile)]);
+        const user = await UserModel.email(userId);
         if (!asked && !user?.email) throw Object.assign(new Error('Your account has no e-mail address.'), {status: 400});
         const address = asked || user.email;
         const toOther = address.toLowerCase() !== String(user?.email ?? '').toLowerCase();
@@ -878,13 +878,12 @@ export const BriefingService = {
         const changed = ticked.filter(item => pictures && typeof pictures === 'object' && typeof pictures[String(item.storyId)]?.url === 'string');
         const known = new Map((await Promise.all(changed.map(picturesOfItem))).flat().map(picture => [picture.url, picture.source]));
         const {items, attachments} = await withChosenPictures(withoutTakenOut(withOwnTitles(ticked, titles), removed), pictures, {sender, known});
-        const layout = {sender, account: user?.username ?? null};
         const sent = {...briefing, items};
         // the copy kept as it was sent, that its link leads to; taken out again when it is not sent
         const token = origin ? randomBytes(18).toString('base64url') : null;
-        const mail = briefingMail(sent, profile?.name ?? null, {...layout, original: token ? {url: `${origin}/api/mails/${token}`} : null});
+        const mail = briefingMail(sent, {sender, original: token ? {url: `${origin}/api/mails/${token}`} : null});
         const copy = token && await SentMailModel.save({token, userId, briefingId: row.id, subject: mail.subject,
-            html: withPicturesWritten(briefingMail(sent, profile?.name ?? null, {...layout, original: {sentAt: new Date().toISOString()}}).html, attachments)});
+            html: withPicturesWritten(briefingMail(sent, {sender, original: {sentAt: new Date().toISOString()}}).html, attachments)});
         try {
             await sendMail({to: address, replyTo: toOther && user?.email ? user.email : undefined, ...mail, attachments});
         } catch (error) {

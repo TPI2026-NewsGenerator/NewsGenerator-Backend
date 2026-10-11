@@ -169,18 +169,18 @@ const originalLink = (original) => webUrl(original?.url)
     : '';
 
 // briefing: as toBriefing gives it, its items the cards the reader ticked (ownTitle: a title they wrote
-// for the e-mail); profileName: the name of its profile; account: the username of the reader; sender:
-// it too when it is sent to another address than theirs, the e-mail says then who to answer; original:
-// the copy of the e-mail kept as sent (see originalLink). {subject, html, text}
-export const briefingMail = (briefing, profileName, {sender = null, account = sender, original = null} = {}) => {
+// for the e-mail); sender: the username of the reader when it is sent to another address than theirs,
+// the subject says then who sends it; original: the copy of the e-mail kept as sent (see originalLink).
+// No name of a profile or of the reader in its title or in the e-mail itself (the user). {subject, html, text}
+export const briefingMail = (briefing, {sender = null, original = null} = {}) => {
     const cards = briefing.items ?? [];
     const finished = briefing.finishedAt ?? briefing.createdAt;
     const count = `${cards.length} ${cards.length === 1 ? 'story' : 'stories'}`;
-    // "Enzo's briefing - 8 October 2026"
-    const title = `${profileName ? `${profileName}’s briefing` : 'Your briefing'} - ${day(finished)}`;
+    // "Briefing - 8 October 2026"
+    const title = `Briefing - ${day(finished)}`;
     const subject = sender
         ? `${sender} shares ${count} of their NewsGenerator briefing · ${when(finished)}`
-        : `Your briefing${profileName ? ` · ${profileName}` : ''} · ${count} · ${when(finished)}`;
+        : `Your briefing · ${count} · ${when(finished)}`;
 
     const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark">
@@ -191,7 +191,7 @@ export const briefingMail = (briefing, profileName, {sender = null, account = se
 <tr><td style="padding-bottom:28px">
   ${originalLine(original)}
   <h1 class="ng-ink" style="margin:0;font:460 40px/1.05 ${DISPLAY};color:${LIGHT.ink}">${escape(title)}</h1>
-  <p class="ng-mute" style="${CAPTION};font-weight:500;margin-top:14px">${account ? `${escape(account)} shares ${count} of their briefing` : `${count} of your briefing`} • ${escape(at(finished))}</p>
+  <p class="ng-mute" style="${CAPTION};font-weight:500;margin-top:14px">${count} shared • ${escape(at(finished))}</p>
 </td></tr>
 ${cards.map((card, i) => cardHtml(card, i, !sender)).join('')}
 ${originalLink(original)}

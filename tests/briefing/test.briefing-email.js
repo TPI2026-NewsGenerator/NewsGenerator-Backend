@@ -50,7 +50,8 @@ describe('BriefingService.email', () => {
         expect(ofUser).toHaveBeenCalledWith(4, 7);
         const mail = sendMail.mock.calls[0][0];
         expect(mail.to).toBe('reader@example.test');
-        expect(mail.subject).toMatch(/^Your briefing · Football · 2 stories · /);
+        expect(mail.subject).toMatch(/^Your briefing · 2 stories · /);
+        expect(mail.html).toContain('2 stories shared • ');
         expect(mail.text.indexOf('01. Third story')).toBeGreaterThan(0);
         expect(mail.text).toContain('02. First story');
         expect(mail.text).not.toContain('Second story');
@@ -75,8 +76,10 @@ describe('BriefingService.email', () => {
         expect(mail.to).toBe('friend@example.org');
         expect(mail.replyTo).toBe('reader@example.test');
         expect(mail.subject).toMatch(/^lecteur shares 1 story of their NewsGenerator briefing · /);
-        expect(mail.html).toContain('Football’s briefing - 8 October 2026');
-        expect(mail.html).toContain('lecteur shares 1 story of their briefing • 8 October at 08:01');
+        expect(mail.html).toContain('>Briefing - 8 October 2026<');
+        expect(mail.html).not.toContain('Football’s briefing');
+        expect(mail.html).toContain('1 story shared • 8 October at 08:01');
+        expect(mail.html).not.toContain('lecteur shares 1 story of their briefing');
         // nothing at the end of it: answered, it goes to the reader all the same (replyTo)
         expect(mail.html).not.toContain('Sent by');
         expect(mail.html).not.toContain('The key points are');
@@ -87,7 +90,7 @@ describe('BriefingService.email', () => {
 
         const mail = sendMail.mock.calls[0][0];
         expect(mail.replyTo).toBeUndefined();
-        expect(mail.subject).toMatch(/^Your briefing · Football · /);
+        expect(mail.subject).toMatch(/^Your briefing · 1 story · /);
     });
 
     it('should refuse an address that is not an email, before reading the briefing', async () => {
@@ -256,7 +259,7 @@ describe('briefingMail', () => {
     ]};
 
     it('should lay out a card as the page: number, translated title, why, picture, passages, denial, angles, links, notes', () => {
-        const {html} = briefingMail(briefing, 'Football');
+        const {html} = briefingMail(briefing);
 
         for (const part of ['>01<', 'Sommet contre Infantino', 'Translated from German', '“Gipfel gegen Infantino”', 'Du football, que vous suivez.',
             'src="https://cdn.example/a.jpg"', 'Picture — sport1.de', 'Key points', 'second.', '[…]',
@@ -268,19 +271,19 @@ describe('briefingMail', () => {
     });
 
     it('should leave out the notes that tell nothing: the AI choosing the passages, one medium, the sources named', () => {
-        const {html} = briefingMail({...briefing, items: [card(1, 'Alone', {corroboration: {media: 1, read: 1, independent: 1, agencies: []}, sourcing: 'named'})]},
-            'Enzo', {account: 'enzo'});
+        const {html} = briefingMail({...briefing, items: [card(1, 'Alone', {corroboration: {media: 1, read: 1, independent: 1, agencies: []}, sourcing: 'named'})]});
         for (const gone of ['Sentences chosen by the AI', 'In the article', 'Only one medium', 'Who tells it', 'Its sources', 'named sources', 'Written Thursday']) {
             expect(html).not.toContain(gone);
         }
-        expect(html).toContain('Enzo’s briefing - 8 October 2026');
-        expect(html).toContain('enzo shares 1 story of their briefing • 8 October at 08:01');
+        expect(html).toContain('>Briefing - 8 October 2026<');
+        expect(html).not.toMatch(/Enzo|enzo/);
+        expect(html).toContain('1 story shared • 8 October at 08:01');
         expect(html).not.toMatch(/>NewsGenerator</);
     });
 
     it('should show the title the reader wrote instead of the one of the card, without its original', () => {
         const items = withOwnTitles(briefing.items, {1: '  Infantino  contesté ', 2: ''});
-        const {html, text} = briefingMail({...briefing, items}, 'Football');
+        const {html, text} = briefingMail({...briefing, items});
         expect(html).toContain('Infantino contesté');
         expect(html).not.toContain('Sommet contre Infantino');
         expect(html).not.toContain('“Gipfel gegen Infantino”');
@@ -296,14 +299,14 @@ describe('briefingMail', () => {
             angles: [{title: 'First angle', url: 'https://rfi.fr/1', source: 'rfi.fr'}, {title: 'Second angle', url: 'https://rfi.fr/2', source: 'rfi.fr'}],
         });
         const one = withoutTakenOut([two], {1: {angles: [0]}});
-        let {html, text} = briefingMail({...briefing, items: one}, 'Football');
+        let {html, text} = briefingMail({...briefing, items: one});
         expect(html).not.toContain('First angle');
         expect(text).not.toContain('First angle');
         expect(html).toContain('Second angle');
         expect(html).toContain('Same affair, other angles');
         expect(html).toContain('Contested');
 
-        ({html, text} = briefingMail({...briefing, items: withoutTakenOut([two], {1: {angles: [0, 1], contested: [0]}})}, 'Football'));
+        ({html, text} = briefingMail({...briefing, items: withoutTakenOut([two], {1: {angles: [0, 1], contested: [0]}})}));
         for (const gone of ['Same affair, other angles', 'First angle', 'Second angle', 'Contested', 'denies']) {
             expect(html).not.toContain(gone);
             expect(text).not.toContain(gone);
@@ -316,14 +319,14 @@ describe('briefingMail', () => {
     });
 
     it('should leave out the why, written to the reader, of an e-mail sent by them to another', () => {
-        expect(briefingMail(briefing, 'Football').html).toContain('Du football, que vous suivez.');
-        const {html, text} = briefingMail(briefing, 'Football', {sender: 'lecteur'});
+        expect(briefingMail(briefing).html).toContain('Du football, que vous suivez.');
+        const {html, text} = briefingMail(briefing, {sender: 'lecteur'});
         expect(html).not.toContain('que vous suivez');
         expect(text).not.toContain('que vous suivez');
     });
 
     it('should escape the texts and never link nor show an address that is not of the web', () => {
-        const {html} = briefingMail(briefing, null);
+        const {html} = briefingMail(briefing);
         expect(html).not.toContain('<script>');
         expect(html).toContain('&lt;script&gt;');
         expect(html).not.toContain('javascript:');
