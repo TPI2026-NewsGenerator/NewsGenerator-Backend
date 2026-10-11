@@ -75,11 +75,12 @@ describe('BriefingService.email', () => {
         const mail = sendMail.mock.calls[0][0];
         expect(mail.to).toBe('friend@example.org');
         expect(mail.replyTo).toBe('reader@example.test');
-        expect(mail.subject).toMatch(/^lecteur shares 1 story of their NewsGenerator briefing · /);
+        expect(mail.subject).toMatch(/^Briefing · 1 story · /);
         expect(mail.html).toContain('>Briefing - 8 October 2026<');
         expect(mail.html).not.toContain('Football’s briefing');
         expect(mail.html).toContain('1 story shared • 8 October at 08:01');
-        expect(mail.html).not.toContain('lecteur shares 1 story of their briefing');
+        expect(mail.html).not.toContain('lecteur');
+        expect(mail.text).not.toContain('lecteur');
         // nothing at the end of it: answered, it goes to the reader all the same (replyTo)
         expect(mail.html).not.toContain('Sent by');
         expect(mail.html).not.toContain('The key points are');

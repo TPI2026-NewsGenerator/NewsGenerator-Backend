@@ -13,13 +13,14 @@ import nodemailer from 'nodemailer';
 
 // SMTP_USER and SMTP_PASS name the account (for Gmail: the address, and an app password made in the
 // security settings of the account, never its own password). SMTP_HOST and SMTP_PORT default to Gmail;
-// MAIL_FROM is the name and address the reader sees, the account by default. No account, no e-mail
+// MAIL_FROM is the name and address the reader sees, "Briefing" and the account by default (the user: a
+// neutral name, like the subject). No account, no e-mail
 const settings = () => ({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: Number(process.env.SMTP_PORT) || 465,
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
-    from: process.env.MAIL_FROM || (process.env.SMTP_USER ? `NewsGenerator <${process.env.SMTP_USER}>` : null),
+    from: process.env.MAIL_FROM || (process.env.SMTP_USER ? `Briefing <${process.env.SMTP_USER}>` : null),
 });
 
 export const mailEnabled = () => Boolean(settings().user && settings().pass);

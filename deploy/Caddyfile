@@ -18,10 +18,12 @@
 	# before: basic_auth, that an iPhone asked again for each font and script of the page, then a page of
 	# its own with a cookie; a friend still had trouble getting in, and both were taken out (9.10.2026)
 
+	# ?: only when the API gave none, so the original of an e-mail keeps its own no-referrer
+	# (controllers/briefing-controller.js): its address is its key, an article opened from it never sees it
 	header {
 		X-Content-Type-Options nosniff
 		X-Frame-Options DENY
-		Referrer-Policy strict-origin-when-cross-origin
+		?Referrer-Policy strict-origin-when-cross-origin
 		-Server
 	}
 

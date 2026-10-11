@@ -169,18 +169,18 @@ const originalLink = (original) => webUrl(original?.url)
     : '';
 
 // briefing: as toBriefing gives it, its items the cards the reader ticked (ownTitle: a title they wrote
-// for the e-mail); sender: the username of the reader when it is sent to another address than theirs,
-// the subject says then who sends it; original: the copy of the e-mail kept as sent (see originalLink).
-// No name of a profile or of the reader in its title or in the e-mail itself (the user). {subject, html, text}
+// for the e-mail); sender: the username of the reader when it is sent to another address than theirs
+// (the reasons the cards were chosen for them are left out then); original: the copy of the e-mail kept
+// as sent (see originalLink). No name of a profile or of the reader in it, its subject neither (the
+// user): who sends it is in its Reply-To only. {subject, html, text}
 export const briefingMail = (briefing, {sender = null, original = null} = {}) => {
     const cards = briefing.items ?? [];
     const finished = briefing.finishedAt ?? briefing.createdAt;
     const count = `${cards.length} ${cards.length === 1 ? 'story' : 'stories'}`;
     // "Briefing - 8 October 2026"
     const title = `Briefing - ${day(finished)}`;
-    const subject = sender
-        ? `${sender} shares ${count} of their NewsGenerator briefing · ${when(finished)}`
-        : `Your briefing · ${count} · ${when(finished)}`;
+    // sent to another address, as neutral: who sends it is in its Reply-To only
+    const subject = `${sender ? 'Briefing' : 'Your briefing'} · ${count} · ${when(finished)}`;
 
     const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark">
