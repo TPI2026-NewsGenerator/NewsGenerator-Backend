@@ -27,6 +27,8 @@ export const EntityController = {
     unfollow: (req, res) => respond(res, async () => ({entities: await EntityService.unfollow(req.profileId, req.params.qid)})),
     // {added, removed}: {entity}
     setNames: (req, res) => respond(res, async () => ({entity: await EntityService.setNames(req.profileId, req.params.qid, req.body ?? {})})),
+    // {names}: the ones chosen among its names added to the terms of the profile: {terms, added, already, left}
+    toTerms: (req, res) => respond(res, () => EntityService.toTerms(req.profileId, req.params.qid, req.body?.names)),
     // ?hours=24|48|168: the page of the item
     page: (req, res) => respond(res, () => EntityService.page(req.profileId, req.params.qid, Number(req.query.hours ?? 48))),
 };

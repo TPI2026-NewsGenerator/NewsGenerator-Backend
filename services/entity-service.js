@@ -17,6 +17,7 @@ import {feedsOf, newsOfTerms} from "./briefing-service.js";
 import {isQid, readItem, searchItems} from "./utils/wikidata.js";
 import {readerLanguage} from "./utils/language.js";
 import {Filter} from "./utils/filter.js";
+import {cleanWatchTerms, MAX_WATCH_TERMS} from "./utils/watch-terms.js";
 
 // Wikidata changes slowly: a squad between two windows of transfers, a coach now and then
 const REFRESH_DAYS = 7;
@@ -90,6 +91,12 @@ export const namesFor = (row, following) => {
     });
 };
 
+// the names of an item that are terms of the profile already, whatever their case
+const inTerms = (names, terms) => {
+    const known = new Set((terms ?? []).map(term => term.toLowerCase()));
+    return names.filter(name => known.has(name.toLowerCase()));
+};
+
 const summary = (row, following) => ({
     qid: row.qid, label: row.label, description: row.description, kind: row.kind,
     names: namesFor(row, following),
@@ -158,12 +165,38 @@ export const EntityService = {
         return summary(row, await EntityModel.following(profileId, row.id));
     },
 
+    // The names the reader chose among its names (the ones its news are found by for this profile) added
+    // to the terms the profile follows (see watch-terms.js): every news naming one is then in the
+    // briefing, in the section of the terms. Chosen: the UEFA has 18 names in Wikidata, its own in a
+    // dozen languages, and 20 terms at most. As many as the terms left allow, in the order given; its
+    // links are not added, a club would fill them with its players. {terms, added, already, left}: left,
+    // the ones there was no room for
+    toTerms: async (profileId, qid, chosen) => {
+        if (!Array.isArray(chosen) || chosen.length === 0 || !chosen.every(name => typeof name === 'string')) {
+            throw fail(400, 'names: the names to add, one at least.');
+        }
+        const row = isQid(qid) ? await EntityModel.byQid(qid) : null;
+        if (!row) throw fail(404, 'Wikidata has no such item.');
+        const own = new Map(namesFor(row, await EntityModel.following(profileId, row.id)).map(name => [name.toLowerCase(), name]));
+        const names = [...new Set(chosen.map(name => own.get(cleanName(name).toLowerCase())).filter(Boolean))]
+            .filter(name => name.length <= MAX_NAME);
+        if (names.length === 0) throw fail(400, 'None of these is a name it is found by.');
+        const terms = (await ProfileModel.get(profileId))?.watch_terms ?? [];
+        const already = inTerms(names, terms);
+        const missing = names.filter(name => !already.includes(name));
+        const room = Math.max(0, MAX_WATCH_TERMS - terms.length);
+        const added = missing.slice(0, room);
+        if (added.length > 0) await ProfileModel.setWatchTerms(profileId, cleanWatchTerms([...terms, ...added]));
+        return {terms: [...terms, ...added], added, already, left: missing.slice(room)};
+    },
+
     // The page of an item: {entity, hours, count, news, links: [{qid, label, description, kind, relation,
     // count, news}]}, the news of the last hours naming it, and of each item it links to, the most named
     // first. Of any item, followed or not: a player of a club is opened from the page of the club
     page: async (profileId, qid, hours = 48) => {
         if (!ENTITY_HOURS.includes(hours)) throw fail(400, `hours: ${ENTITY_HOURS.join(', ')}.`);
-        const row = await loaded(qid, await languageOf(profileId));
+        const profile = profileId === null ? null : await ProfileModel.get(profileId);
+        const row = await loaded(qid, profileId ? readerLanguage(profile ?? {}) : 'en');
         const following = profileId === null ? null : await EntityModel.following(profileId, row.id);
         const entity = summary(row, following);
         // an item linked twice (the FIFA, parent and member of the UEFA) is one link of both relations
@@ -181,7 +214,11 @@ export const EntityService = {
         const of = (names, limit) => mergeNews(names.map(name => found.get(name)), limit);
 
         return {
-            entity: {...entity, wikidataNames: row.names, addedNames: following?.added_names ?? [], removedNames: following?.removed_names ?? []},
+            // inTerms: its names that are terms of the profile already, termsLeft: the room for more,
+            // nameCounts: the stories of the window each name finds (see toTerms)
+            entity: {...entity, wikidataNames: row.names, addedNames: following?.added_names ?? [], removedNames: following?.removed_names ?? [],
+                inTerms: inTerms(entity.names, profile?.watch_terms), termsLeft: Math.max(0, MAX_WATCH_TERMS - (profile?.watch_terms?.length ?? 0)),
+                nameCounts: Object.fromEntries(entity.names.map(name => [name, found.get(name)?.count ?? 0]))},
             hours,
             ...of(entity.names),
             links: links

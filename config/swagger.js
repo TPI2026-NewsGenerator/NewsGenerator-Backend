@@ -984,7 +984,7 @@ const options = {
                     "summary": "The page of an item: the news naming it, and the ones naming what it is linked to",
                     "description": "From every feed the profile reads, no relevance, as the terms followed: each name looked for as a plain text with and without its accents (the trigram index), then checked as a whole word. The news of the window kept 10 minutes. Of any item, followed or not.",
                     "parameters": [{"name": "qid", "in": "path", "required": true, "schema": {"type": "string"}}, {"name": "hours", "in": "query", "schema": {"type": "integer", "enum": [24, 48, 168], "default": 48}}],
-                    "responses": {"200": {"description": "{entity: {qid, label, description, kind, names, followed, wikidataNames, addedNames, removedNames}, hours, count, news, links: [{qid, label, description, kind, relation, count, news}]}"}, "400": {"description": "Not a Wikidata id, or hours not 24, 48 or 168"}, "404": {"description": "Wikidata has no such item"}}
+                    "responses": {"200": {"description": "{entity: {qid, label, description, kind, names, followed, wikidataNames, addedNames, removedNames, inTerms, termsLeft, nameCounts}, hours, count, news, links: [{qid, label, description, kind, relation, count, news}]}"}, "400": {"description": "Not a Wikidata id, or hours not 24, 48 or 168"}, "404": {"description": "Wikidata has no such item"}}
                 },
                 "delete": {
                     "tags": ["Entities"],
@@ -1000,6 +1000,16 @@ const options = {
                     "parameters": [{"name": "qid", "in": "path", "required": true, "schema": {"type": "string"}}],
                     "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"added": {"type": "array", "items": {"type": "string"}, "maxItems": 10}, "removed": {"type": "array", "items": {"type": "string"}}}}}}},
                     "responses": {"200": {"description": "{entity}"}, "400": {"description": "Not lists of names, or more than 10 of the reader"}, "404": {"description": "Not followed by this profile"}}
+                }
+            },
+            "/entities/{qid}/terms": {
+                "post": {
+                    "tags": ["Entities"],
+                    "summary": "Names of an item, chosen by the reader, added to the terms the profile follows",
+                    "description": "Among the names its news are found by for this profile (not the ones of its links): every news naming one is then listed in the briefing, in the section of the terms. As many as the 20 terms allow, in the order given. Followed or not.",
+                    "parameters": [{"name": "qid", "in": "path", "required": true, "schema": {"type": "string"}}],
+                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"names": {"type": "array", "items": {"type": "string"}, "minItems": 1}}}}}},
+                    "responses": {"200": {"description": "{terms, added, already, left}: left, the names there was no room for"}, "400": {"description": "No profile, no name, or none of its names"}, "404": {"description": "Wikidata has no such item, or its page was never opened"}}
                 }
             },
             "/briefing/{id}/stories/{storyId}/pictures": {

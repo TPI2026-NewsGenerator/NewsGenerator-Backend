@@ -22,6 +22,7 @@ router.get('/search', authenticateToken, wikidataLimit, activeProfile, EntityCon
 router.post('', authenticateToken, wikidataLimit, activeProfile, needsProfile, EntityController.follow);
 router.get('/:qid', authenticateToken, wikidataLimit, activeProfile, needsProfile, EntityController.page);
 router.put('/:qid/names', authenticateToken, activeProfile, needsProfile, EntityController.setNames);
+router.post('/:qid/terms', authenticateToken, activeProfile, needsProfile, EntityController.toTerms);
 router.delete('/:qid', authenticateToken, activeProfile, needsProfile, EntityController.unfollow);
 
 export default router;

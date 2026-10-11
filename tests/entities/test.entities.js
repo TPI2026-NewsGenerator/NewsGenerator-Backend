@@ -16,7 +16,8 @@ const articlesHolding = jest.fn(async () => []);
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 jest.unstable_mockModule('../../models/entity-model.js', () => ({EntityModel}));
 jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {articlesHolding}}));
-jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: {get: async () => ({text: 'Le football', languages: ['fr']})}}));
+const ProfileModel = {get: jest.fn(), setWatchTerms: jest.fn()};
+jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel}));
 jest.unstable_mockModule('../../services/briefing-service.js', () => ({
     feedsOf: async () => ['https://feed.example/rss'],
     // as the real one, more simply: the news of each term
@@ -56,6 +57,8 @@ beforeEach(() => {
         article(2, 'Ousmane Dembélé blessé', 20),
     ]);
     readItem.mockReset();
+    ProfileModel.get.mockReset().mockResolvedValue({text: 'Le football', languages: ['fr'], watch_terms: []});
+    ProfileModel.setWatchTerms.mockClear();
 });
 
 describe('the names of an item of Wikidata', () => {
@@ -140,5 +143,47 @@ describe('EntityService.follow and setNames', () => {
 
         EntityModel.following.mockResolvedValue(null);
         await expect(EntityService.setNames(8, 'Q483020', {added: [], removed: []})).rejects.toMatchObject({status: 404});
+    });
+});
+
+describe('EntityService.toTerms', () => {
+    it('should add the names chosen to the terms of the profile, the ones there already once, and say which', async () => {
+        ProfileModel.get.mockResolvedValue({watch_terms: ['VAR', 'psg']});
+        const answer = await EntityService.toTerms(8, 'Q483020', ['Paris Saint-Germain', 'PSG', 'paris saint-germain']);
+
+        expect(answer).toEqual({terms: ['VAR', 'psg', 'Paris Saint-Germain'], added: ['Paris Saint-Germain'], already: ['PSG'], left: []});
+        expect(ProfileModel.setWatchTerms).toHaveBeenCalledWith(8, answer.terms);
+    });
+
+    it('should add only names it is found by, the ones the reader took out neither', async () => {
+        EntityModel.following.mockResolvedValue({added_names: ['Les Parisiens'], removed_names: ['Paris Saint-Germain FC']});
+        const answer = await EntityService.toTerms(8, 'Q483020', ['Paris Saint-Germain FC', 'Les Parisiens', 'Real Madrid']);
+        expect(answer.added).toEqual(['Les Parisiens']);
+
+        await expect(EntityService.toTerms(8, 'Q483020', ['Real Madrid'])).rejects.toMatchObject({status: 400});
+        await expect(EntityService.toTerms(8, 'Q483020', [])).rejects.toMatchObject({status: 400});
+        await expect(EntityService.toTerms(8, 'Q483020', 'PSG')).rejects.toMatchObject({status: 400});
+        EntityModel.following.mockResolvedValue(null);
+    });
+
+    it('should add as many as the 20 terms allow, and nothing when none is left', async () => {
+        ProfileModel.get.mockResolvedValueOnce({watch_terms: Array.from({length: 19}, (_, i) => `terme ${i}`)});
+        const answer = await EntityService.toTerms(8, 'Q483020', ['PSG', 'Paris Saint-Germain']);
+        expect(answer.added).toEqual(['PSG']);
+        expect(answer.left).toEqual(['Paris Saint-Germain']);
+        expect(answer.terms).toHaveLength(20);
+
+        ProfileModel.get.mockResolvedValueOnce({watch_terms: answer.terms});
+        ProfileModel.setWatchTerms.mockClear();
+        expect((await EntityService.toTerms(8, 'Q483020', ['Paris Saint-Germain'])).left).toEqual(['Paris Saint-Germain']);
+        expect(ProfileModel.setWatchTerms).not.toHaveBeenCalled();
+    });
+
+    it('should tell the page which of its names are terms, the room left, and the stories each name finds', async () => {
+        ProfileModel.get.mockResolvedValue({languages: ['fr'], watch_terms: ['PSG', 'VAR']});
+        const {entity} = await EntityService.page(9, 'Q483020', 48);
+        expect(entity.inTerms).toEqual(['PSG']);
+        expect(entity.termsLeft).toBe(18);
+        expect(entity.nameCounts).toEqual({'Paris Saint-Germain FC': 0, 'Paris Saint-Germain': 1, PSG: 2});
     });
 });
