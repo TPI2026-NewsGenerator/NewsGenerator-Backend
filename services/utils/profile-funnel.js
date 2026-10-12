@@ -27,7 +27,7 @@ export const MAX_START = 300;
 const MAX_QUESTION = 200;
 const MAX_OPTION = 80;
 export const MAX_FREE = 400;
-const MAX_TEXT = 2000;          // a profile, see profile-service.js
+const MAX_TEXT = 3000;          // a profile, see profile-service.js
 
 const today = () => new Date().toLocaleDateString('fr-CH', {day: 'numeric', month: 'long', year: 'numeric'});
 const clean = (value, max) => typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, max) : '';

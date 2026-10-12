@@ -25,7 +25,7 @@ import {cleanWatchTerms, MAX_WATCH_TERMS} from "./utils/watch-terms.js";
 import {isAdmin} from "./utils/admin.js";
 
 const MIN_TEXT = 20;            // "rugby" says too little to split into interests
-const MAX_TEXT = 2000;
+const MAX_TEXT = 3000;
 // Each profile has its sources found, read for all the readers, and its briefings, written by the AI:
 // 15 per reader at most (the user's choice, 8.10.2026)
 export const MAX_PROFILES = 15;

@@ -232,7 +232,7 @@ const options = {
                                         "username": {"type": "string", "example": "lecteur", "description": "3 to 30 letters, digits, dots, dashes or underscores, unique whatever its case"},
                                         "email": {"type": "string", "format": "email", "description": "Unique whatever its case"},
                                         "password": {"type": "string", "format": "password", "description": "10 to 72 characters"},
-                                        "text": {"type": "string", "description": "The profile in the reader's words, 20 to 2000 characters"},
+                                        "text": {"type": "string", "description": "The profile in the reader's words, 20 to 3000 characters"},
                                         "languages": {"type": "array", "items": {"type": "string"}, "example": ["fr", "en"]}
                                     },
                                     "required": ["username", "email", "password", "text", "languages"]
@@ -846,7 +846,7 @@ const options = {
                         "content": {"application/json": {"schema": {
                             "type": "object",
                             "properties": {
-                                "text": {"type": "string", "minLength": 20, "maxLength": 2000, "example": "Je suis passionné de rugby (Top 14, Six Nations). J'aime aussi la mode. Pas de football."},
+                                "text": {"type": "string", "minLength": 20, "maxLength": 3000, "example": "Je suis passionné de rugby (Top 14, Six Nations). J'aime aussi la mode. Pas de football."},
                                 "languages": {"type": "array", "items": {"type": "string"}, "example": ["fr", "en"]}
                             },
                             "required": ["text", "languages"]
