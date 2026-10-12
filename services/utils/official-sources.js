@@ -34,7 +34,9 @@ const MAX_PARTIES = 4;
 const MAX_CANDIDATES = 10;                  // posts judged per card
 const BEFORE_DAYS = 5;                      // a post this long before the card's first news still counts
 const READABLE = ['site', 'mastodon', 'bluesky'];
-const AI_CONCURRENCY = 5;
+// It runs beside the other angles (5 calls at a time): at 5 cards and their two checks at once, Ollama
+// answered "too many concurrent requests", calls went to Gemini and the angles of a card were lost
+const AI_CONCURRENCY = 3;
 const CHANNEL_CONCURRENCY = 4;
 const FEED_TIMEOUT_MS = 45e3;
 const PICKS_PER_CALL = 15;
@@ -324,10 +326,8 @@ export const officialSourcesOf = async (cards, usage = null) => {
             .reverse().map(([party, item]) => [item.qid, {qid: item.qid, label: item.label, name: party.name, site: item.channels?.site ?? []}])).values()];
         const candidates = candidatesOf(card, parties, posts);
         if (candidates.length === 0) return [];
-        const [first, second] = await Promise.all([
-            ollamaJson(checkPrompt(card, candidates), usage),
-            ollamaJson(checkPrompt(card, [...candidates].reverse()), usage),
-        ]);
+        const first = await ollamaJson(checkPrompt(card, candidates), usage);
+        const second = await ollamaJson(checkPrompt(card, [...candidates].reverse()), usage);
         return confirmedOf(first, second, candidates).map(post => ({
             party: post.name,
             title: post.title || post.text,
