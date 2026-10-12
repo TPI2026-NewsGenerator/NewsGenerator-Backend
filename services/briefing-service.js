@@ -34,7 +34,7 @@ import {Filter} from "./utils/filter.js";
 import {UserModel} from "../models/user-model.js";
 import {EMAIL_RULE, isEmail} from "./utils/account-rules.js";
 import {sendMail} from "./utils/mailer.js";
-import {briefingMail} from "./utils/briefing-mail.js";
+import {briefingMail, MAIL_FORMATS} from "./utils/briefing-mail.js";
 import {storyPictures, withChosenPictures, withPicturesWritten} from "./utils/mail-pictures.js";
 import {SentMailModel} from "../models/sent-mail-model.js";
 import {randomBytes} from "node:crypto";
@@ -868,11 +868,13 @@ export const BriefingService = {
     // pictures: the picture of some cards changed or taken out (see withChosenPictures); titles:
     // {storyId: title}, the ones the reader wrote for the e-mail; removed: the denials and the other
     // angles they took out (see withoutTakenOut); origin: the address of the site (https://...), a
-    // copy of the e-mail is kept there as it was sent, and the e-mail leads to it
-    email: async (userId, briefingId, storyIds, to, pictures, titles, removed, origin = null) => {
+    // copy of the e-mail is kept there as it was sent, and the e-mail leads to it; format: the way the
+    // sentences of the cards are shown, one of MAIL_FORMATS, the key passages when not given
+    email: async (userId, briefingId, storyIds, to, pictures, titles, removed, origin = null, format = 'passages') => {
         if (!Array.isArray(storyIds) || storyIds.length === 0 || !storyIds.every(storyId => Number.isInteger(storyId) && storyId > 0)) {
             throw Object.assign(new Error('storyIds: the cards ticked, one at least.'), {status: 400});
         }
+        if (!MAIL_FORMATS.includes(format)) throw Object.assign(new Error(`format: one of ${MAIL_FORMATS.join(', ')}.`), {status: 400});
         const asked = typeof to === 'string' ? to.trim() : to ?? '';
         if (asked !== '' && !isEmail(asked)) throw Object.assign(new Error(EMAIL_RULE), {status: 400});
         const {row, briefing} = await readyBriefing(userId, briefingId);
@@ -892,9 +894,9 @@ export const BriefingService = {
         const sent = {...briefing, items};
         // the copy kept as it was sent, that its link leads to; taken out again when it is not sent
         const token = origin ? randomBytes(18).toString('base64url') : null;
-        const mail = briefingMail(sent, {sender, original: token ? {url: `${origin}/api/mails/${token}`} : null});
+        const mail = briefingMail(sent, {sender, format, original: token ? {url: `${origin}/api/mails/${token}`} : null});
         const copy = token && await SentMailModel.save({token, userId, briefingId: row.id, subject: mail.subject,
-            html: withPicturesWritten(briefingMail(sent, {sender, original: {sentAt: new Date().toISOString()}}).html, attachments)});
+            html: withPicturesWritten(briefingMail(sent, {sender, format, original: {sentAt: new Date().toISOString()}}).html, attachments)});
         try {
             await sendMail({to: address, replyTo: toOther && user?.email ? user.email : undefined, ...mail, attachments});
         } catch (error) {

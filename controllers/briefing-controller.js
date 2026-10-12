@@ -23,17 +23,17 @@ export const BriefingController = {
         }
     },
 
-    // {storyIds, to?, pictures?, titles?, removed?}: the cards of the briefing the reader ticked, sent to
-    // the address to, else to the one of their account, with the pictures and titles they chose, without
-    // the denials and other angles they took out
+    // {storyIds, to?, pictures?, titles?, removed?, format?}: the cards of the briefing the reader ticked,
+    // sent to the address to, else to the one of their account, with the pictures and titles they chose,
+    // without the denials and other angles they took out, their sentences in the way chosen (format)
     email: async (req, res) => {
         try {
-            const {storyIds, to, pictures, titles, removed} = req.body ?? {};
+            const {storyIds, to, pictures, titles, removed, format} = req.body ?? {};
             // the address of the site as the reader reached it (https through the tunnel, see trust proxy
             // in app.js): the link to the copy of the e-mail kept as it was sent
             const host = req.get('host') ?? '';
             const origin = /^[\w.-]+(:\d+)?$/.test(host) ? `${req.protocol}://${host}` : null;
-            await BriefingService.email(req.user.id, req.params.id, storyIds, to, pictures, titles, removed, origin);
+            await BriefingService.email(req.user.id, req.params.id, storyIds, to, pictures, titles, removed, origin, format);
             res.status(204).end();
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});

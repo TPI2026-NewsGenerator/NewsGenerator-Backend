@@ -3,8 +3,9 @@
 //  Date: 08.10.2026
 //  File: briefing-mail.js
 //  Description: The cards of a briefing the reader ticked as an e-mail, laid out as the page shows them
-//               (client BriefingCard.jsx): number, topic, date and language, title, why, picture, key
-//               passages, who denies it, its other angles, where to read it, and the notes of its margin
+//               (client BriefingCard.jsx): number, topic, date and language, title, why, picture, its
+//               sentences in the way the reader chose (bullet points, summary or key passages), who
+//               denies it, its other angles, where to read it, and the notes of its margin
 //
 
 "use strict"
@@ -28,6 +29,23 @@ const when = (iso) => iso ? new Date(iso).toLocaleString('en-GB', {day: 'numeric
 const day = (iso) => iso ? new Date(iso).toLocaleDateString('en-GB', {day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Zurich'}) : '';
 const at = (iso) => iso ? new Date(iso).toLocaleString('en-GB', {day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich'}) : '';
 const paragraphsOf = (text) => String(text ?? '').split(/\n\s*\n/).map(paragraph => paragraph.trim()).filter(Boolean);
+
+// The ways the sentences of a card can be sent in, as the page shows them (client formats.js): the 3
+// most important ones as bullet points, the ones of 5 to 6 lines as one paragraph, the key passages. A
+// card of a briefing written before the first two (12.10.2026) has its key passages only
+export const MAIL_FORMATS = ['points', 'digest', 'passages'];
+const WAYS = {
+    points: {text: 'points', translation: 'pointsTranslation', title: 'Key points'},
+    digest: {text: 'digest', translation: 'digestTranslation', title: 'Summary'},
+    passages: {text: 'summary', translation: 'translation', title: 'Key passages'},
+};
+// {paragraphs, title, way, translated}: the sentences of the card in the way asked, their translation
+// when the article is written in another language than the reader's
+const wayOf = (card, format) => {
+    const way = format === 'points' && card.points ? 'points' : format === 'digest' && card.digest ? 'digest' : 'passages';
+    const {text, translation, title} = WAYS[way];
+    return {paragraphs: paragraphsOf(card[translation] || card[text]), title, way, translated: Boolean(card[translation])};
+};
 
 // the text styles of the page (kicker, caption, body-text, link); the classes ng-* take the dark colours
 const KICKER = `font:600 14px/1.2 ${TEXT};font-variant:all-small-caps;letter-spacing:.1em;color:${LIGHT.mute};margin:0`;
@@ -71,6 +89,19 @@ const passagesHtml = (paragraphs, lede) => paragraphs.map((paragraph, i) => {
         : escape(paragraph);
     return `${gap}<p class="ng-ink" style="${BODY}">${text}</p>`;
 }).join('');
+
+// the summary: the same in one paragraph, the gaps marked inside it
+const digestHtml = (paragraphs, lede) => passagesHtml([paragraphs.join(' […] ')], lede);
+
+// the bullet points, a sentence each, the most important first
+const pointsHtml = (paragraphs) => `<ul style="margin:0;padding-left:22px">${paragraphs
+    .map(paragraph => `<li class="ng-ink" style="${BODY};margin-top:8px">${escape(paragraph)}</li>`).join('')}</ul>`;
+const WAYS_HTML = {points: pointsHtml, digest: digestHtml, passages: passagesHtml};
+
+// the same in the text of the e-mail
+const wayText = ({paragraphs, way}) => way === 'points'
+    ? paragraphs.map(paragraph => `• ${paragraph}`).join('\n')
+    : paragraphs.join(way === 'digest' ? ' […] ' : '\n[…]\n');
 
 const contestedHtml = (denials) => denials.length === 0 ? '' : `
 <div class="ng-rule" style="margin-top:24px;border-left:2px solid ${LIGHT.accent};padding-left:18px">
@@ -124,10 +155,11 @@ const notesHtml = (card) => {
 // the title shown: the one the reader wrote for the e-mail (ownTitle), else the translated one
 const titleOf = (card) => card.ownTitle ?? card.titleTranslation ?? card.title;
 
-// personal: the why of the card, written to the reader ("that you follow"), left out of an e-mail to another
-const cardHtml = (card, i, personal = true) => {
-    const passages = paragraphsOf(card.translation || card.summary);
-    const translated = Boolean(card.titleTranslation) || Boolean(card.translation);
+// personal: the why of the card, written to the reader ("that you follow"), left out of an e-mail to
+// another; format: the way its sentences are shown (see wayOf)
+const cardHtml = (card, i, personal = true, format = 'passages') => {
+    const sentences = wayOf(card, format);
+    const translated = Boolean(card.titleTranslation) || sentences.translated;
     // or a file of the reader joined to the e-mail (see mail-pictures.js)
     const picture = webUrl(card.thumbnail) ?? (/^cid:[\w.@-]+$/.test(card.thumbnail ?? '') ? card.thumbnail : null);
     return `
@@ -148,9 +180,9 @@ const cardHtml = (card, i, personal = true) => {
   ${personal && card.why ? `<p class="ng-mute" style="margin:12px 0 0;font:italic 19px/1.4 ${TEXT};color:${LIGHT.mute}">${escape(card.why)}</p>` : ''}
   ${picture ? `<img src="${escape(picture)}" alt="" width="560" style="display:block;width:100%;max-width:560px;height:auto;margin-top:20px;border:0;background:${LIGHT.secondary}">
   ${card.thumbnailSource ? `<p class="ng-mute" style="${CAPTION};margin-top:6px">Picture — ${escape(card.thumbnailSource)}</p>` : ''}` : ''}
-  ${passages.length > 0 ? `
-  <div style="margin-top:24px">${kicker('Key points')}</div>
-  <div style="margin-top:12px;overflow:hidden">${passagesHtml(passages, i === 0)}</div>` : ''}
+  ${sentences.paragraphs.length > 0 ? `
+  <div style="margin-top:24px">${kicker(sentences.title)}</div>
+  <div style="margin-top:12px;overflow:hidden">${WAYS_HTML[sentences.way](sentences.paragraphs, i === 0)}</div>` : ''}
   ${contestedHtml(card.contested ?? [])}
   ${anglesHtml(card.angles ?? [])}
   ${linksHtml(card)}
@@ -171,9 +203,10 @@ const originalLink = (original) => webUrl(original?.url)
 // briefing: as toBriefing gives it, its items the cards the reader ticked (ownTitle: a title they wrote
 // for the e-mail); sender: the username of the reader when it is sent to another address than theirs
 // (the reasons the cards were chosen for them are left out then); original: the copy of the e-mail kept
-// as sent (see originalLink). No name of a profile or of the reader in it, its subject neither (the
-// user): who sends it is in its Reply-To only. {subject, html, text}
-export const briefingMail = (briefing, {sender = null, original = null} = {}) => {
+// as sent (see originalLink); format: the way the sentences of the cards are shown, one of MAIL_FORMATS.
+// No name of a profile or of the reader in it, its subject neither (the user): who sends it is in its
+// Reply-To only. {subject, html, text}
+export const briefingMail = (briefing, {sender = null, original = null, format = 'passages'} = {}) => {
     const cards = briefing.items ?? [];
     const finished = briefing.finishedAt ?? briefing.createdAt;
     const count = `${cards.length} ${cards.length === 1 ? 'story' : 'stories'}`;
@@ -193,7 +226,7 @@ export const briefingMail = (briefing, {sender = null, original = null} = {}) =>
   <h1 class="ng-ink" style="margin:0;font:460 40px/1.05 ${DISPLAY};color:${LIGHT.ink}">${escape(title)}</h1>
   <p class="ng-mute" style="${CAPTION};font-weight:500;margin-top:14px">${count} shared • ${escape(at(finished))}</p>
 </td></tr>
-${cards.map((card, i) => cardHtml(card, i, !sender)).join('')}
+${cards.map((card, i) => cardHtml(card, i, !sender, format)).join('')}
 ${originalLink(original)}
 </table></td></tr></table></body></html>`;
 
@@ -205,7 +238,7 @@ ${originalLink(original)}
                 `${String(i + 1).padStart(2, '0')}. ${titleOf(card)}`,
                 sender ? '' : card.why ?? '',
                 '',
-                paragraphsOf(card.translation || card.summary).join('\n[…]\n'),
+                wayText(wayOf(card, format)),
                 ...(card.contested ?? []).map(denial => `Contested — ${denial.by} denies: "${denial.sentence}" (${denial.source})`),
                 ...(card.angles ?? []).map(angle => `Other angle: ${angle.titleTranslation ?? angle.title} (${angle.source}) ${angle.url}`),
                 lead ? `Read the article at ${lead.source}: ${lead.url}` : '',

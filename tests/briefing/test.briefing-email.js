@@ -94,6 +94,16 @@ describe('BriefingService.email', () => {
         expect(mail.subject).toMatch(/^Your briefing · 1 story · /);
     });
 
+    it('should send the cards in the way the reader chose, and refuse a way that does not exist, before reading the briefing', async () => {
+        ofUser.mockResolvedValue({...row, items: [card(1, 'First story', {points: 'The point.', digest: 'The digest.'})]});
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, null, 'points');
+        expect(sendMail.mock.calls[0][0].text).toContain('• The point.');
+
+        ofUser.mockClear();
+        await expect(BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, null, 'tweets')).rejects.toMatchObject({status: 400});
+        expect(ofUser).not.toHaveBeenCalled();
+    });
+
     it('should refuse an address that is not an email, before reading the briefing', async () => {
         for (const to of ['not an email', 'a@b', 42, 'a@b.c, d@e.f', 'a,b@example.org', 'Friend <f@example.org>']) {
             await expect(BriefingService.email(4, 7, [1], to)).rejects.toMatchObject({status: 400});
@@ -263,7 +273,7 @@ describe('briefingMail', () => {
         const {html} = briefingMail(briefing);
 
         for (const part of ['>01<', 'Sommet contre Infantino', 'Translated from German', '“Gipfel gegen Infantino”', 'Du football, que vous suivez.',
-            'src="https://cdn.example/a.jpg"', 'Picture — sport1.de', 'Key points', 'second.', '[…]',
+            'src="https://cdn.example/a.jpg"', 'Picture — sport1.de', 'Key passages', 'second.', '[…]',
             'Contested', 'Infantino denies:', 'Machine translation: “Ce n’est pas vrai.”', 'Same affair, other angles', 'Le Nigeria porte plainte',
             'told by 3 media', 'Read the article at media.fr', 'Also covered by', 'kicker.de', 'Who tells it',
             'Told by 3 media, 2 texts written independently of 3 read', 'Not confirmed']) {
@@ -324,6 +334,35 @@ describe('briefingMail', () => {
         const {html, text} = briefingMail(briefing, {sender: 'lecteur'});
         expect(html).not.toContain('que vous suivez');
         expect(text).not.toContain('que vous suivez');
+    });
+
+    it('should show the sentences in the way the reader chose: bullet points, a summary or the key passages', () => {
+        const ways = card(1, 'Ways', {summary: 'Un.\n\nDeux.\n\nTrois.', points: 'Deux.\n\nUn.', digest: 'Un.\n\nTrois.'});
+
+        let {html, text} = briefingMail({...briefing, items: [ways]}, {format: 'points'});
+        expect(html).toContain('Key points');
+        expect(html).toMatch(/<ul[^>]*><li[^>]*>Deux\.<\/li><li[^>]*>Un\.<\/li><\/ul>/);
+        expect(text).toContain('• Deux.\n• Un.');
+
+        ({html, text} = briefingMail({...briefing, items: [ways]}, {format: 'digest'}));
+        expect(html).toContain('Summary');
+        expect(html).toContain('n. […] Trois.');
+        expect(text).toContain('Un. […] Trois.');
+        expect(html).not.toContain('Deux.');
+
+        ({html, text} = briefingMail({...briefing, items: [ways]}));
+        expect(html).toContain('Key passages');
+        expect(text).toContain('Un.\n[…]\nDeux.\n[…]\nTrois.');
+    });
+
+    it('should send the translated sentences of a way, and the key passages of a card made before the other ways', () => {
+        const translated = card(1, 'Gipfel', {language: 'de', points: 'Erster.', pointsTranslation: 'Premier.', translation: 'Passage.'});
+        const {html, text} = briefingMail({...briefing, items: [translated, card(2, 'Older')]}, {format: 'points'});
+        expect(html).toContain('Translated from German');
+        expect(text).toContain('• Premier.');
+        expect(text).not.toContain('Erster.');
+        // the older card: its key passages, as written
+        expect(text).toContain('Passage of Older.\n[…]\nAnother passage.');
     });
 
     it('should escape the texts and never link nor show an address that is not of the web', () => {
