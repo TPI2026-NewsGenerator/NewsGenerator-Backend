@@ -329,6 +329,24 @@ describe('briefingMail', () => {
         }
     });
 
+    it('should show the official sources of a card in its notes, and leave out the ones taken out', () => {
+        const official = card(1, 'Official', {official: [
+            {party: 'UEFA', title: 'Čeferin seeks final term', url: 'https://www.uefa.com/news/1', channel: 'site', publishedAt: '2026-10-08T09:00:00.000Z'},
+            {party: '<FIGC>', title: 'Malagò commissario', url: 'javascript:alert(1)', channel: 'site', publishedAt: null},
+        ]});
+        let {html, text} = briefingMail({...briefing, items: [official]});
+        expect(html).toContain('Official source');
+        expect(html).toContain('<b>UEFA</b> said it: <a href="https://www.uefa.com/news/1"');
+        // a post without a web address is no link
+        expect(html).not.toContain('javascript:');
+        expect(html).not.toContain('&lt;FIGC&gt;');
+        expect(text).toContain('Official source — UEFA said it: Čeferin seeks final term https://www.uefa.com/news/1');
+
+        ({html, text} = briefingMail({...briefing, items: withoutTakenOut([official], {1: {official: [0, 1]}})}));
+        expect(html).not.toContain('Official source');
+        expect(text).not.toContain('Official source');
+    });
+
     it('should leave out the why, written to the reader, of an e-mail sent by them to another', () => {
         expect(briefingMail(briefing).html).toContain('Du football, que vous suivez.');
         const {html, text} = briefingMail(briefing, {sender: 'lecteur'});

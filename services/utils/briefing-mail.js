@@ -5,7 +5,8 @@
 //  Description: The cards of a briefing the reader ticked as an e-mail, laid out as the page shows them
 //               (client BriefingCard.jsx): number, topic, date and language, title, why, picture, its
 //               sentences in the way the reader chose (bullet points, summary or key passages), who
-//               denies it, its other angles, where to read it, and the notes of its margin
+//               denies it, its other angles, where to read it, and the notes of its margin (its
+//               official source first)
 //
 
 "use strict"
@@ -138,9 +139,17 @@ ${others.length > 0 ? `<p class="ng-mute" style="${CAPTION};margin-top:8px">Also
         .join(', ')}${others.length > SHOWN_OTHERS ? ` and ${others.length - SHOWN_OTHERS} more` : ''}</p>` : ''}`;
 };
 
-// the notes of the outer column of the page, under the card in the e-mail
+// the posts where a party said the news itself (see official-sources.js), a line each: none left (the
+// reader took them out, or none has a web address), no note
+const officialHtml = (given) => given.filter(post => webUrl(post.url))
+    .map(post => `<b>${escape(post.party)}</b> said it: <a href="${escape(post.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(post.title)}</a>${post.publishedAt ? `, ${escape(when(post.publishedAt))}` : ''}`)
+    .join('<br>') || null;
+
+// the notes of the outer column of the page, under the card in the e-mail; html: the note is written
+// already, else its text is escaped
 const notesHtml = (card) => {
     const notes = [
+        ['Official source', officialHtml(card.official ?? []), 'mute', true],
         ['Who tells it', coverageOf(card.corroboration), 'mute'],
         ['Not confirmed', card.hedged ? `unconfirmed: “${card.hedged}”` : null, 'accent'],
     ].filter(([, text]) => text);
@@ -148,7 +157,7 @@ const notesHtml = (card) => {
     // one under the other: side by side they left a phone a few words a line
     return `
 <div class="ng-rule" style="margin-top:24px;border-top:1px solid ${LIGHT.rule}">
-  ${notes.map(([title, text, tone]) => `<div style="padding-top:12px">${kicker(title, tone)}<p class="ng-ink" style="${CAPTION};color:${LIGHT.ink};margin-top:4px">${escape(text)}</p></div>`).join('')}
+  ${notes.map(([title, text, tone, html]) => `<div style="padding-top:12px">${kicker(title, tone)}<p class="ng-ink" style="${CAPTION};color:${LIGHT.ink};margin-top:4px">${html ? text : escape(text)}</p></div>`).join('')}
 </div>`;
 };
 
@@ -241,6 +250,7 @@ ${originalLink(original)}
                 wayText(wayOf(card, format)),
                 ...(card.contested ?? []).map(denial => `Contested — ${denial.by} denies: "${denial.sentence}" (${denial.source})`),
                 ...(card.angles ?? []).map(angle => `Other angle: ${angle.titleTranslation ?? angle.title} (${angle.source}) ${angle.url}`),
+                ...(card.official ?? []).map(post => `Official source — ${post.party} said it: ${post.title} ${post.url}`),
                 lead ? `Read the article at ${lead.source}: ${lead.url}` : '',
                 coverageOf(card.corroboration) ?? '',
                 '',

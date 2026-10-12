@@ -23,6 +23,7 @@ import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {contestedOf} from "./utils/contested.js";
 import {otherAnglesOf} from "./utils/other-angles.js";
+import {officialSourcesOf} from "./utils/official-sources.js";
 import {readerLanguage, writtenIn} from "./utils/language.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {hostOf, mediumOf} from "./utils/public-url.js";
@@ -310,6 +311,10 @@ const acrossOf = async (stories, {language, feedUrls, since}) => {
     return byStory;
 };
 
+// what a card says, given with it to the AI that looks for its official source: its shorter passages
+const OFFICIAL_TEXT = 700;
+const textOf = (value) => Array.isArray(value) ? value.join(' ') : String(value ?? '');
+
 // the other titles of a card's articles, one per language first (see anglesPrompt)
 const cardTitles = (story, title) => {
     const others = story.members.filter(article => article.title && article.title !== title);
@@ -469,7 +474,7 @@ const oncePerThread = async (stories) => {
 export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) => {
     // the stories ranked and given to the AI grow with the cards wanted
     const scale = size / MAX_BRIEFING;
-    const usage = {choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage()};
+    const usage = {choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage()};
     const [profile, interests] = await Promise.all([ProfileModel.get(profileId), ProfileModel.interests(profileId)]);
     if (!profile || interests.length === 0) throw Object.assign(new Error('Write your profile first.'), {status: 400});
 
@@ -616,12 +621,24 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     const stories = cards.map(card => card.story);
     const summaryOf = (i) => cards[i].summary;
     const leads = cards.map(leadOf);
-    // 7. the other angles of the cards, and the news of the terms the profile follows beside them. The
-    // briefing never waits on either failing
+    // 7. the other angles of the cards, their official sources, and the news of the terms the profile
+    // follows beside them. The briefing never waits on any of them failing
     await step('angles');
-    const [angles, watched] = await Promise.all([
+    const [angles, official, watched] = await Promise.all([
         anglesOf(stories, leads.map(lead => lead.title), {language, feedUrls, hours, trusted, usage: usage.angles}).catch(err => {
             console.error(`Briefing: no other angle looked for (${err.message})`);
+            return new Map();
+        }),
+        officialSourcesOf(stories.map((story, i) => ({
+            id: story.storyId,
+            title: leads[i].title,
+            titleTranslation: titleTranslation.get(leads[i]) ?? null,
+            titles: cardTitles(story, leads[i].title),
+            text: textOf(summaryOf(i)?.digest ?? summaryOf(i)?.summary ?? leads[i].description).slice(0, OFFICIAL_TEXT),
+            lead: [addressOf(leads[i]), `https://${siteOf(leads[i])}`],
+            first: new Date(Math.min(...story.members.map(article => article.at?.getTime?.() ?? Date.now()))).toISOString(),
+        })), usage.official).catch(err => {
+            console.error(`Briefing: no official source looked for (${err.message})`);
             return new Map();
         }),
         // from every feed, the ones the thumbs left out too: the reader asked for all of them
@@ -678,6 +695,10 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             // news of the same affair telling something the card does not, the closest first (see
             // anglesOf): [{title, titleTranslation, url, source, language, publishedAt, media, ...}]
             angles: angles.get(story.storyId) ?? [],
+            // the posts where a party of the news said it itself, on its website or an open account of
+            // its own (see official-sources.js): [{party, title, url, channel, publishedAt}]. Absent from
+            // the briefings made before 12.10.2026
+            official: official.get(story.storyId) ?? [],
             // the picture of its lead article when it has one, else of its newest article with one;
             // and the site it is of, shown under it
             ...pictureOf([lead, ...members], content),
@@ -824,16 +845,17 @@ export const withOwnTitles = (items, titles) => {
     });
 };
 
-// the cards without the denials and the other angles the reader took out of the e-mail, {storyId:
-// {contested: [index], angles: [index]}}, their places in the card: a part left empty has no title
-const TAKEN_OUT = ['contested', 'angles'];
+// the cards without the denials, the other angles and the official sources the reader took out of the
+// e-mail, {storyId: {contested: [index], angles: [index], official: [index]}}, their places in the
+// card: a part left empty has no title
+const TAKEN_OUT = ['contested', 'angles', 'official'];
 export const withoutTakenOut = (items, removed) => {
     if (removed === undefined || removed === null) return items;
     const places = (list) => Array.isArray(list) && list.every(index => Number.isInteger(index) && index >= 0);
     if (typeof removed !== 'object' || Array.isArray(removed) || !Object.values(removed).every(parts =>
         parts && typeof parts === 'object' && !Array.isArray(parts)
         && Object.entries(parts).every(([part, list]) => TAKEN_OUT.includes(part) && places(list)))) {
-        throw Object.assign(new Error('removed: {storyId: {contested: [index], angles: [index]}}.'), {status: 400});
+        throw Object.assign(new Error('removed: {storyId: {contested: [index], angles: [index], official: [index]}}.'), {status: 400});
     }
     return items.map(item => {
         const parts = removed[String(item.storyId)];
@@ -866,8 +888,8 @@ export const BriefingService = {
     // briefing-mail.js), sent to one address: to, the one the reader writes, the one of their account
     // when not given; sent to another, it says who sends it and the answers go to the reader.
     // pictures: the picture of some cards changed or taken out (see withChosenPictures); titles:
-    // {storyId: title}, the ones the reader wrote for the e-mail; removed: the denials and the other
-    // angles they took out (see withoutTakenOut); origin: the address of the site (https://...), a
+    // {storyId: title}, the ones the reader wrote for the e-mail; removed: the denials, the other
+    // angles and the official sources they took out (see withoutTakenOut); origin: the address of the site (https://...), a
     // copy of the e-mail is kept there as it was sent, and the e-mail leads to it; format: the way the
     // sentences of the cards are shown, one of MAIL_FORMATS, the key passages when not given
     email: async (userId, briefingId, storyIds, to, pictures, titles, removed, origin = null, format = 'passages') => {
