@@ -1,0 +1,884 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Parcours NewsGenerator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; a wide overview drawing, a log-scale funnel, then the stations of the process in order, two lanes (server in slate, reader in the app's red) */
+:root {
+  --paper: #FBF9F4;
+  --sheet: #F3EFE6;
+  --ink: #1A1815;
+  --mute: #6B655C;
+  --rule: #DAD3C7;
+  --reader: #A6301F;
+  --server: #2F5872;
+  --reader-soft: #F2DDD7;
+  --server-soft: #DCE6EC;
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --text: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #17150F; --sheet: #221F18; --ink: #ECE7DC; --mute: #9A9384; --rule: #35312A;
+    --reader: #E0654F; --server: #7FB0CF; --reader-soft: #3A2420; --server-soft: #1D2B34;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #17150F; --sheet: #221F18; --ink: #ECE7DC; --mute: #9A9384; --rule: #35312A;
+  --reader: #E0654F; --server: #7FB0CF; --reader-soft: #3A2420; --server-soft: #1D2B34;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 400 17px/1.6 var(--text);
+  padding-inline: 20px; padding-block: 48px 80px;
+}
+.page { max-width: 1120px; margin: 0 auto; display: grid; gap: 64px; }
+.col { max-width: 760px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.12; }
+h1 { font-size: clamp(2.1rem, 5vw, 3.4rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: clamp(1.55rem, 3vw, 2.1rem); font-weight: 600; }
+h3 { font-size: 1.28rem; font-weight: 600; }
+p { margin: 0; }
+.kicker, .label {
+  font: 500 0.74rem/1.3 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--mute);
+}
+.lede { font-size: 1.16rem; color: var(--ink); max-width: 64ch; }
+header { display: grid; gap: 18px; border-bottom: 1px solid var(--rule); padding-bottom: 32px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 24px; font: 400 0.82rem/1.4 var(--mono); color: var(--mute); }
+.meta b { color: var(--ink); font-weight: 500; }
+section { display: grid; gap: 24px; }
+.section-head { display: grid; gap: 10px; max-width: 70ch; }
+.section-head p { color: var(--mute); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* overview drawing */
+.drawing { overflow-x: auto; border: 1px solid var(--rule); background: var(--sheet); border-radius: 4px; padding: 12px 8px; }
+.drawing svg { display: block; min-width: 900px; width: 100%; height: auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 0.88rem; color: var(--mute); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.swatch { width: 14px; height: 14px; border-radius: 2px; display: inline-block; }
+
+/* funnel */
+.funnel { display: grid; gap: 34px; }
+.group { display: grid; gap: 4px; }
+.group-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; border-bottom: 1px solid var(--ink); padding-bottom: 8px; margin-bottom: 6px; }
+.group-head h3 { font-size: 1.12rem; }
+.row { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) 6.5rem; gap: 4px 16px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--rule); }
+.row .what { font-size: 0.95rem; line-height: 1.3; min-width: 0; }
+.row .bar-track { height: 16px; position: relative; }
+.row .bar { height: 100%; border-radius: 1px; }
+.row .count { font: 500 0.98rem/1 var(--mono); font-variant-numeric: tabular-nums; text-align: right; }
+.row .why { grid-column: 2 / 4; font-size: 0.84rem; line-height: 1.35; color: var(--mute); }
+.row .why .cut { color: var(--reader); font-family: var(--mono); font-size: 0.8rem; }
+.server .bar { background: var(--server); }
+.reader .bar { background: var(--reader); }
+.axis { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) 6.5rem; gap: 16px; }
+.axis .ticks { position: relative; height: 18px; font: 400 0.7rem/1 var(--mono); color: var(--mute); }
+.axis .ticks span { position: absolute; transform: translateX(-50%); top: 4px; }
+.axis .ticks span:first-child { transform: none; }
+.note { font-size: 0.86rem; color: var(--mute); max-width: 75ch; }
+
+/* stations */
+.part { display: grid; gap: 8px; }
+.part-head { display: grid; gap: 8px; padding: 22px 0 6px; border-top: 3px solid var(--lane); }
+.part-head p { color: var(--mute); max-width: 70ch; }
+.part.server { --lane: var(--server); --lane-soft: var(--server-soft); }
+.part.reader { --lane: var(--reader); --lane-soft: var(--reader-soft); }
+.station { display: grid; grid-template-columns: 3.4rem minmax(0, 1fr) minmax(0, 17rem); gap: 14px 26px; padding: 24px 0; border-bottom: 1px solid var(--rule); }
+.station .no { font: 600 1.7rem/1 var(--display); color: var(--lane); }
+.station .body { display: grid; gap: 12px; min-width: 0; }
+.station .body > p { max-width: 62ch; }
+.station ul { margin: 0; padding-left: 1.1em; display: grid; gap: 5px; font-size: 0.95rem; }
+.station li::marker { color: var(--lane); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 400 0.74rem/1 var(--mono); border: 1px solid var(--rule); padding: 5px 8px; border-radius: 3px; background: var(--paper); }
+.figures { background: var(--lane-soft); border-radius: 4px; padding: 14px 16px; display: grid; gap: 10px; align-content: start; }
+.figures .label { color: var(--lane); }
+.figures dl { margin: 0; display: grid; gap: 8px; }
+.figures div { display: grid; gap: 1px; }
+.figures dt { font-size: 0.82rem; color: var(--mute); line-height: 1.3; }
+.figures dd { margin: 0; font: 500 1.02rem/1.25 var(--mono); font-variant-numeric: tabular-nums; }
+.figures dd small { font: 400 0.8rem/1.3 var(--text); color: var(--mute); display: block; }
+
+/* machines */
+.machines { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.machine { border: 1px solid var(--rule); border-radius: 4px; padding: 16px; display: grid; gap: 8px; align-content: start; }
+.machine h3 { font-size: 1.05rem; }
+.machine p { font-size: 0.92rem; color: var(--mute); }
+footer { font-size: 0.86rem; color: var(--mute); border-top: 1px solid var(--rule); padding-top: 20px; display: grid; gap: 8px; max-width: 80ch; }
+code { font-family: var(--mono); font-size: 0.86em; }
+
+@media (max-width: 760px) {
+  body { font-size: 16px; padding-inline: 16px; padding-block: 32px 60px; }
+  .page { gap: 48px; }
+  .row, .axis { grid-template-columns: minmax(0, 1fr) 5.5rem; }
+  .row .what { grid-column: 1 / 3; }
+  .row .bar-track { grid-column: 1 / 2; }
+  .row .why { grid-column: 1 / 3; }
+  .axis .spacer { display: none; }
+  .axis .ticks { grid-column: 1 / 2; }
+  .station { grid-template-columns: 2.4rem minmax(0, 1fr); }
+  .station .figures { grid-column: 1 / 3; }
+}
+</style>
+
+<div class="page">
+
+<header>
+  <p class="kicker">NewsGenerator · schéma du processus</p>
+  <h1>De la création du compte à la lecture d'une nouvelle</h1>
+  <p class="lede">Deux chaînes tournent en parallèle. Le serveur lit, comprend et regroupe toutes les nouvelles en continu, sans attendre personne. Le lecteur, lui, s'inscrit une fois, puis demande un briefing : l'application cherche alors dans ce qui est déjà prêt, et l'IA n'intervient que sur les quelques nouvelles qui seront montrées.</p>
+  <div class="meta">
+    <span>Mesuré le <b>7 octobre 2026</b> sur le serveur Ubuntu</span>
+    <span>Lecteur d'exemple : <b>Enzo</b> (arbitrage, UEFA, lit en français)</span>
+    <span>Script : <b>server/bench/funnel-now.mjs</b></span>
+    <span>Texte mis à jour le <b>12 octobre 2026</b></span>
+  </div>
+  <p class="note">Le fonctionnement décrit est celui du 12 octobre 2026. Les chiffres viennent de la mesure du 7 octobre vers 1 h 30, sauf quand une autre date est donnée. « Parcours d'une nouvelle » suit, lui, un briefing complet d'Enzo écrit le même jour à 15 h 29 : ses nombres diffèrent un peu de ceux-ci (68 259 nouvelles au lieu de 67 636, 15 histoires choisies au lieu de 12, 9 cartes au lieu de 10), c'est un autre moment et un autre briefing.</p>
+</header>
+
+<section>
+  <div class="section-head">
+    <p class="label">Vue d'ensemble</p>
+    <h2>Deux chaînes qui se rejoignent au briefing</h2>
+    <p>En haut, le travail de fond du serveur, toutes les minutes. En bas, ce que fait le lecteur. La découverte ajoute ses sources à la lecture du serveur ; le briefing et la recherche puisent dans les histoires déjà prêtes.</p>
+  </div>
+  <div class="drawing" role="img" aria-label="Schéma: chaîne du serveur (sources, lecture, vecteurs, histoires, fils) et chaîne du lecteur (inscription, intérêts, découverte, briefing, lecture), reliées par les nouvelles sources et les histoires des 48 heures">
+    <svg viewBox="0 0 1090 500" xmlns="http://www.w3.org/2000/svg" font-family="Source Serif 4, Georgia, serif">
+      <defs>
+        <marker id="arS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--server)"/></marker>
+        <marker id="arR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--reader)"/></marker>
+        <marker id="arM" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--mute)"/></marker>
+      </defs>
+
+      <!-- lanes -->
+      <rect x="6" y="20" width="1078" height="182" rx="4" fill="var(--server-soft)"/>
+      <rect x="6" y="268" width="1078" height="222" rx="4" fill="var(--reader-soft)"/>
+      <text x="22" y="48" font-family="IBM Plex Mono, monospace" font-size="11" letter-spacing="1" fill="var(--server)">EN CONTINU</text>
+      <text x="22" y="66" font-size="12" fill="var(--mute)">serveur Ubuntu,</text>
+      <text x="22" y="82" font-size="12" fill="var(--mute)">chaque minute</text>
+      <text x="22" y="296" font-family="IBM Plex Mono, monospace" font-size="11" letter-spacing="1" fill="var(--reader)">LE LECTEUR</text>
+      <text x="22" y="314" font-size="12" fill="var(--mute)">à son rythme,</text>
+      <text x="22" y="330" font-size="12" fill="var(--mute)">1 à 2 fois par jour</text>
+
+      <!-- server boxes -->
+      <g font-size="12">
+        <rect x="140" y="96" width="164" height="88" rx="3" fill="var(--paper)" stroke="var(--server)"/>
+        <text x="152" y="118" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="15" fill="var(--ink)">Sources</text>
+        <text x="152" y="137" fill="var(--mute)">RSS, Google News,</text>
+        <text x="152" y="152" fill="var(--mute)">RSS-Bridge</text>
+        <text x="152" y="173" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--server)">2 488 flux</text>
+
+        <rect x="330" y="96" width="164" height="88" rx="3" fill="var(--paper)" stroke="var(--server)"/>
+        <text x="342" y="118" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="15" fill="var(--ink)">Lecture</text>
+        <text x="342" y="137" fill="var(--mute)">chaque flux à son</text>
+        <text x="342" y="152" fill="var(--mute)">rythme (2 à 60 min)</text>
+        <text x="342" y="173" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--server)">136 023 / 24 h</text>
+
+        <rect x="520" y="96" width="164" height="88" rx="3" fill="var(--paper)" stroke="var(--server)"/>
+        <text x="532" y="118" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="15" fill="var(--ink)">Vecteurs</text>
+        <text x="532" y="137" fill="var(--mute)">bge-m3, dense</text>
+        <text x="532" y="152" fill="var(--mute)">+ creux (mots)</text>
+        <text x="532" y="173" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--server)">126 122</text>
+
+        <rect x="710" y="96" width="164" height="88" rx="3" fill="var(--paper)" stroke="var(--server)"/>
+        <text x="722" y="118" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="15" fill="var(--ink)">Histoires</text>
+        <text x="722" y="137" fill="var(--mute)">un même fait,</text>
+        <text x="722" y="152" fill="var(--mute)">plusieurs médias</text>
+        <text x="722" y="173" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--server)">71 214</text>
+
+        <rect x="900" y="96" width="164" height="88" rx="3" fill="var(--paper)" stroke="var(--server)"/>
+        <text x="912" y="118" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="15" fill="var(--ink)">Fils d'affaires</text>
+        <text x="912" y="137" fill="var(--mute)">une affaire suivie</text>
+        <text x="912" y="152" fill="var(--mute)">sur plusieurs jours</text>
+        <text x="912" y="173" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--server)">63 226</text>
+      </g>
+      <g stroke="var(--server)" stroke-width="1.6" fill="none">
+        <path d="M304 140 H328" marker-end="url(#arS)"/>
+        <path d="M494 140 H518" marker-end="url(#arS)"/>
+        <path d="M684 140 H708" marker-end="url(#arS)"/>
+        <path d="M874 140 H898" marker-end="url(#arS)"/>
+      </g>
+      <text x="566" y="44" font-size="11.5" fill="var(--mute)">Base PostgreSQL + pgvector, 30 jours gardés : 691 147 nouvelles</text>
+
+      <!-- reader boxes -->
+      <g font-size="12">
+        <rect x="140" y="346" width="164" height="88" rx="3" fill="var(--paper)" stroke="var(--reader)"/>
+        <text x="152" y="368" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="15" fill="var(--ink)">Inscription</text>
+        <text x="152" y="387" fill="var(--mute)">compte, une langue,</text>
+        <text x="152" y="402" fill="var(--mute)">questions de l'IA</text>
+        <text x="152" y="423" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--reader)">≈ 5 s</text>
+
+        <rect x="330" y="346" width="164" height="88" rx="3" fill="var(--paper)" stroke="var(--reader)"/>
+        <text x="342" y="368" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="15" fill="var(--ink)">Intérêts</text>
+        <text x="342" y="387" fill="var(--mute)">l'IA découpe le texte</text>
+        <text x="342" y="402" fill="var(--mute)">en intérêts + vecteurs</text>
+        <text x="342" y="423" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--reader)">3 intérêts</text>
+
+        <rect x="520" y="346" width="164" height="88" rx="3" fill="var(--paper)" stroke="var(--reader)"/>
+        <text x="532" y="368" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="15" fill="var(--ink)">Découverte</text>
+        <text x="532" y="387" fill="var(--mute)">Google News d'abord,</text>
+        <text x="532" y="402" fill="var(--mute)">puis la presse</text>
+        <text x="532" y="423" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--reader)">36 flux + 24 req.</text>
+
+        <rect x="710" y="346" width="164" height="88" rx="3" fill="var(--paper)" stroke="var(--reader)" stroke-width="2"/>
+        <text x="722" y="368" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="15" fill="var(--ink)">Briefing</text>
+        <text x="722" y="387" fill="var(--mute)">7 étapes, 10 à 30 cartes</text>
+        <text x="722" y="402" fill="var(--mute)">sur 24 h, 2 j ou 7 j</text>
+        <text x="722" y="423" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--reader)">43 931 → 10 cartes</text>
+
+        <rect x="900" y="346" width="164" height="88" rx="3" fill="var(--paper)" stroke="var(--reader)"/>
+        <text x="912" y="368" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="15" fill="var(--ink)">Lecture</text>
+        <text x="912" y="387" fill="var(--mute)">passages clés, médias,</text>
+        <text x="912" y="402" fill="var(--mute)">fil de l'affaire, vote</text>
+        <text x="912" y="423" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--reader)">≈ 6 médias / carte</text>
+
+        <rect x="710" y="452" width="164" height="30" rx="3" fill="var(--paper)" stroke="var(--reader)" stroke-dasharray="4 3"/>
+        <text x="722" y="472" fill="var(--ink)">Recherche par phrase</text>
+      </g>
+      <g stroke="var(--reader)" stroke-width="1.6" fill="none">
+        <path d="M304 390 H328" marker-end="url(#arR)"/>
+        <path d="M494 390 H518" marker-end="url(#arR)"/>
+        <path d="M684 390 H708" marker-end="url(#arR)"/>
+        <path d="M874 380 H898" marker-end="url(#arR)"/>
+        <path d="M874 467 H981 V436" marker-end="url(#arR)"/>
+      </g>
+      <!-- votes loop -->
+      <path d="M900 410 H876" stroke="var(--mute)" stroke-width="1.4" stroke-dasharray="4 3" fill="none" marker-end="url(#arM)"/>
+
+      <!-- crossings -->
+      <path d="M602 346 V236 H222 V186" stroke="var(--reader)" stroke-width="1.6" stroke-dasharray="5 4" fill="none" marker-end="url(#arR)"/>
+      <rect x="290" y="226" width="196" height="20" fill="var(--paper)"/>
+      <text x="298" y="240" font-size="12" fill="var(--reader)">ses flux rejoignent la lecture</text>
+      <path d="M792 184 V344" stroke="var(--server)" stroke-width="1.6" fill="none" marker-end="url(#arS)"/>
+      <rect x="800" y="226" width="200" height="20" fill="var(--paper)"/>
+      <text x="806" y="240" font-size="12" fill="var(--server)">histoires de 24 h à 7 jours</text>
+    </svg>
+  </div>
+  <div class="legend">
+    <span><i class="swatch" style="background: var(--server)"></i>travail du serveur, sans lecteur</span>
+    <span><i class="swatch" style="background: var(--reader)"></i>déclenché par le lecteur</span>
+    <span><i class="swatch" style="border: 1.5px dashed var(--mute)"></i>les votes reviennent au briefing suivant</span>
+  </div>
+</section>
+
+<section>
+  <div class="section-head">
+    <p class="label">L'entonnoir</p>
+    <h2>Combien de nouvelles restent à chaque étape</h2>
+    <p>Échelle logarithmique : chaque graduation multiplie par dix. Une barre deux fois plus courte veut dire beaucoup moins que la moitié. En rouge, ce qui a été retiré et pourquoi.</p>
+  </div>
+  <div class="funnel" id="funnel"></div>
+  <p class="note">Les trois groupes ne se suivent pas un à un : le serveur traite tout ce qui arrive, le briefing ne regarde que la période choisie (ici 48 heures) dans les sources du lecteur, toutes langues comprises, la recherche les 7 derniers jours de toutes les sources. Les étapes du briefing jusqu'à la vérification ont été rejouées avec le code du 7 octobre sans rien enregistrer ; la dernière ligne vient de 2 briefings de 48 heures d'Enzo écrits en entier le 6 octobre, sans être enregistrés (10 cartes sur 10 avec passages, une carte illisible remplacée par la réserve dans chacun). Depuis le 8 octobre, l'IA choisit jusqu'à 20 histoires pour 10 cartes (15 le 7 octobre) : la réserve est plus grande.</p>
+</section>
+
+<section>
+  <div class="section-head">
+    <p class="label">Étape par étape</p>
+    <h2>Les mécanismes et les technologies</h2>
+  </div>
+
+  <div class="part reader">
+    <div class="part-head">
+      <p class="kicker">A · Le lecteur arrive</p>
+      <h2>Inscription, profil et sources</h2>
+      <p>Rien n'est lu pour un lecteur sans profil : le compte et ses premières sources naissent ensemble.</p>
+    </div>
+
+    <article class="station">
+      <div class="no">A1</div>
+      <div class="body">
+        <h3>Créer le compte</h3>
+        <p>Le lecteur choisit un nom, un e-mail, un mot de passe et la langue dans laquelle il lit. L'IA lui pose ensuite quelques questions sur ce qu'il veut suivre, puis écrit son profil, qu'il relit et corrige avant de créer son compte. Les nouvelles de toutes les autres langues lui seront traduites.</p>
+        <ul>
+          <li>Le site est ouvert sur internet ; ses lecteurs sont ceux qui ont un compte. La création de compte est fermée par défaut et s'ouvre avec <code>SIGNUP_OPEN=1</code>. Le mot de passe du site (Caddy, puis une page à lui) a été retiré le 10 octobre.</li>
+          <li>Les questions : 3 tours au plus, de 2 à 4 questions avec 4 à 8 choix et un texte libre chacune, dans la langue choisie. Elles demandent aussi ce qu'il suffit de suivre « de plus loin ». Au plus 40 tours par heure et par adresse.</li>
+          <li>Contrôles d'abord : nom de 3 à 30 caractères, mot de passe de 10 caractères minimum, texte du profil de 20 à 2 000 caractères.</li>
+          <li>Nom ou e-mail déjà pris : refus immédiat (409), sans appeler l'IA. L'unicité ignore les majuscules.</li>
+          <li>Le compte n'est créé qu'une fois le profil compris (étape A2). Si l'IA ou les vecteurs échouent, aucun compte ne reste.</li>
+          <li>Au plus 5 inscriptions par heure et 10 connexions par quart d'heure par adresse IP.</li>
+          <li>Connexion : mot de passe vérifié par bcrypt, session dans un cookie que la page ne peut pas lire (HttpOnly), valable 7 jours et renouvelée chaque jour d'usage.</li>
+          <li>Compte : nom d'utilisateur, e-mail et mot de passe changés depuis la page Settings ou la section « Your account » du profil, chacun avec le mot de passe actuel ; un nouveau mot de passe ferme les sessions des autres appareils.</li>
+          <li>Plusieurs profils (« Travail », « Loisirs ») pour les administrateurs, 15 au plus : chacun a ses intérêts, ses sources, ses votes, ses termes suivis et ses briefings.</li>
+        </ul>
+        <div class="chips"><span class="chip">React 19 + Vite</span><span class="chip">Express 5</span><span class="chip">bcrypt</span><span class="chip">cookie HttpOnly</span><span class="chip">Prisma 7</span><span class="chip">gemma4:31b (les questions)</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Chiffres</p>
+        <dl>
+          <div><dt>Compte + intérêts prêts</dt><dd>≈ 5 s</dd></div>
+          <div><dt>Profil d'Enzo</dt><dd>1 084 caractères<small>lit en français</small></dd></div>
+        </dl>
+      </aside>
+    </article>
+
+    <article class="station">
+      <div class="no">A2</div>
+      <div class="body">
+        <h3>Comprendre le profil</h3>
+        <p>L'IA lit le texte libre et le découpe en intérêts distincts, et met à part ce que le lecteur refuse. Chaque intérêt reçoit son propre vecteur et ses recherches Google News.</p>
+        <ul>
+          <li>Un vecteur par intérêt plutôt qu'un seul pour tout le profil : 88 % de cartes pertinentes contre 38 % (mesuré sur 4 profils, 249 histoires jugées à la main).</li>
+          <li>L'IA choisit les langues des recherches de chaque intérêt : celle du lecteur, l'anglais, celles des pays dont parle le sujet, 4 au plus.</li>
+          <li>Les refus sont gardés et montrés sur le profil, dans les mots du lecteur ; ils ne deviennent jamais un intérêt (son vecteur ramènerait justement ces nouvelles).</li>
+          <li>Un intérêt est principal (poids 1) ou secondaire (0,85), selon les réponses ou le bouton du profil ; le lecteur corrige chaque intérêt, et changer la langue du profil le fait relire.</li>
+          <li>L'IA reçoit la date du jour, pour ne pas écrire « Euro 2024 » en 2026.</li>
+          <li>Le texte entier reste la référence : c'est lui que l'IA relit au moment de choisir (C2).</li>
+        </ul>
+        <div class="chips"><span class="chip">gemma4:31b (Ollama cloud)</span><span class="chip">Gemini en secours</span><span class="chip">bge-m3</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Chiffres</p>
+        <dl>
+          <div><dt>Enzo</dt><dd>3 intérêts<small>gouvernance et institutions du football ; arbitrage et réglementation ; économie de l'arbitrage</small></dd></div>
+          <div><dt>Refus</dt><dd>3</dd></div>
+          <div><dt>Recherches Google News</dt><dd>24<small>langues choisies par l'IA pour chaque intérêt</small></dd></div>
+        </dl>
+      </aside>
+    </article>
+
+    <article class="station">
+      <div class="no">A3</div>
+      <div class="body">
+        <h3>Découvrir ses sources</h3>
+        <p>En arrière-plan, juste après l'inscription. Pour chaque intérêt et chaque langue, le serveur demande à Google News quels médias ont écrit sur le sujet cette semaine, puis cherche dans chacun le flux de la bonne rubrique.</p>
+        <ul>
+          <li>Médias classés par nombre d'articles sur 7 jours, essayés dans l'ordre par vagues de 3.</li>
+          <li>Flux cherché sur la page d'accueil, sur <code>/rss</code>, dans l'annuaire Feedly, puis dans un plan du site d'actualités (sitemap) ; sans rien de tout cela, RSS-Bridge en construit un depuis la page.</li>
+          <li>Chaque flux est jugé sur le sens de ses nouvelles (titre et description) : assez d'entre elles doivent atteindre 0,45 de proximité avec un intérêt, puis l'IA doit confirmer 2 de ces nouvelles (la une d'un journal et un flux de cricket passaient sur 2 nouvelles fortuites).</li>
+          <li>Par langue : 2 flux gardés ou 5 médias essayés, puis la presse nommée par Media Cloud (2 gardés sur 3 essais).</li>
+          <li>Deux temps : les flux trouvés par Google News sont ajoutés et lus aussitôt, puis vient la presse de Media Cloud. La page du profil dit quel temps tourne, et qu'il est inutile d'attendre sur la page.</li>
+          <li>Media Cloud répond à 2 recherches par minute : toutes sont posées dès le départ et gardées un jour ; une seule par langue hors celle du lecteur et l'anglais (file de 27 à 13 min sur 5 profils).</li>
+          <li>Une découverte arrêtée par un redémarrage reprend d'elle-même.</li>
+          <li>Au plus 20 flux par découverte, 60 au total. Un flux qui n'apporte plus rien sur le profil en 14 jours est retiré ; le lecteur peut aussi en retirer un lui-même (il n'est alors plus jamais retrouvé) et le ramener.</li>
+          <li>Le lecteur ajoute aussi ses propres sources, 800 au plus : un site, une recherche dans l'annuaire et sur le web, un fichier (OPML, CSV, Excel), ou une source que d'autres lecteurs lisent sur ses intérêts, confirmée par l'IA.</li>
+          <li>Les sources de chaque lecteur sont lues pour tous les briefings et toutes les recherches (depuis le 8 octobre). Seules restent à part les adresses qui portent une clé et celles de notre RSS-Bridge.</li>
+        </ul>
+        <div class="chips"><span class="chip">Google News RSS</span><span class="chip">Feedly</span><span class="chip">RSS-Bridge</span><span class="chip">Media Cloud</span><span class="chip">bge-m3</span><span class="chip">gemma4:31b</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Chiffres</p>
+        <dl>
+          <div><dt>Premières sources (Google News)</dt><dd>7 à 18 min<small>sur processeur, profils pris comme à l'inscription (6 octobre) ; ≈ 2 min avec la carte graphique (25 septembre)</small></dd></div>
+          <div><dt>Fin, avec la presse</dt><dd>14 à 43 min<small>avant : aucune source avant la fin</small></dd></div>
+          <div><dt>Flux trouvés pour Enzo</dt><dd>36<small>+ 325 ajoutés à la main</small></dd></div>
+          <div><dt>Sources lues pour lui</dt><dd>765 flux<small>386 partagés (toutes langues) + les siens + 24 recherches</small></dd></div>
+        </dl>
+      </aside>
+    </article>
+  </div>
+
+  <div class="part server">
+    <div class="part-head">
+      <p class="kicker">B · Le travail de fond</p>
+      <h2>Lire, comprendre et regrouper, toutes les minutes</h2>
+      <p>Une passe démarre une minute après le début de la précédente, ou dès sa fin si elle a duré plus, protégée par un verrou PostgreSQL pour qu'elles ne se chevauchent jamais. Dans la nuit du 7 octobre, embedder sur processeur : 140 s en moyenne sur 76 passes (3 h), 224 nouvelles encodées et regroupées par passe, environ 5 700 par heure.</p>
+    </div>
+
+    <article class="station">
+      <div class="no">B1</div>
+      <div class="body">
+        <h3>Lire les flux à leur rythme</h3>
+        <p>Chaque flux est relu selon ce qu'il publie : un média très actif toutes les 2 minutes, un blog calme toutes les heures. Seuls les liens jamais vus sont enregistrés.</p>
+        <ul>
+          <li>Rythme selon les nouvelles des 24 h : 72 et plus → 2 min, 24 → 5 min, 6 → 15 min, 1 → 30 min, aucune → 60 min. Google News : 60 min.</li>
+          <li>Un flux en échec attend 2, 4, 8… fois plus longtemps, jusqu'à 60 min ; en échec depuis 3 jours (un site qui refuse le serveur), il n'est plus lu qu'une fois par jour.</li>
+          <li>ETag et Last-Modified : une lecture sur quatre répond « rien de neuf » sans renvoyer le flux.</li>
+          <li>50 flux lus en même temps, abandon après 8 s (40 s pour un flux construit par RSS-Bridge).</li>
+          <li>Langue détectée à la lecture quand le flux ne la donne pas ; texte lu dans son jeu de caractères (un flux en ISO-8859-1 perdait ses accents).</li>
+          <li>Titres manquants : un flux qui met son titre dans la description (uol.com.br) ou laisse la variable de son modèle (« Vidéo. $content.TitleNoTags ») reçoit la description comme titre.</li>
+          <li>Une même nouvelle redonnée sous un nouveau lien (même flux, même titre, même date) n'est pas enregistrée : agenzianova.com redonnait 1 088 nouvelles 7 fois par jour.</li>
+          <li>Un flux qui donne plus de 500 nouvelles par jour est un déluge : ses nouvelles reçoivent leurs vecteurs après celles des autres, et le lecteur qui l'a ajouté le voit dans sa liste.</li>
+          <li>Les archives ne sont plus enregistrées (9 octobre) : une nouvelle publiée avant les 30 jours gardés est sautée. La liste importée d'Enzo avait apporté des flux qui redonnaient leurs nouvelles depuis 2006 et 2012.</li>
+          <li>L'image de la nouvelle est gardée quand le flux en donne une : la sienne, une pièce jointe image, ou la première image de la description.</li>
+        </ul>
+        <div class="chips"><span class="chip">fetch Node 24</span><span class="chip">fast-xml-parser</span><span class="chip">RSS-Bridge</span><span class="chip">franc</span><span class="chip">Docker</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Chiffres</p>
+        <dl>
+          <div><dt>Flux suivis</dt><dd>2 488<small>1 981 ont publié dans les 24 h</small></dd></div>
+          <div><dt>Lectures sur 76 passes (3 h)</dt><dd>41 352<small>10 580 « rien de neuf » (26 %), 163 en échec (0,4 %)</small></dd></div>
+          <div><dt>Nouvelles enregistrées en 24 h</dt><dd>136 023<small>36 langues, 2 406 médias ; en 60 790, fr 18 192, es 13 932, de 12 371</small></dd></div>
+        </dl>
+      </aside>
+    </article>
+
+    <article class="station">
+      <div class="no">B2</div>
+      <div class="body">
+        <h3>Donner un sens à chaque nouvelle</h3>
+        <p>Le titre, puis le titre suivi du début de la description (400 caractères), deviennent des vecteurs. C'est ce qui permet de comparer deux nouvelles écrites dans deux langues.</p>
+        <ul>
+          <li>bge-m3 découpe le texte en jetons, puis ses 24 couches réécrivent chaque jeton d'après les autres mots de la phrase. Il en tire deux vecteurs : un dense de 1 024 dimensions (le sens de toute la phrase) et un creux (le poids de chaque mot, les noms propres pèsent le plus).</li>
+          <li>Exemple : « Spain beat Croatia 2-1… » et « Croatia lose 2-1 to Spain… » font 0,71 (dense) + 0,21 (creux) = 0,92, une même histoire. Mais deux pages de pronostics, « Egypt vs Angola – Betting Tips » et « Togo vs Burundi – Betting Tips », font 0,79 : d'où les règles de B3.</li>
+          <li>Stockés en demi-précision (halfvec) : table 1,48 → 0,99 Go, résultats identiques. Le creux en sparsevec : seuls les mots du texte, sur un vocabulaire de 250 002.</li>
+          <li>Tous les embedders qui répondent travaillent ensemble (9 octobre) : la carte graphique du PC de jeu, le processeur du serveur Ubuntu, une autre machine. Chacun prend le lot suivant seulement s'il le finit avant les autres ; un embedder éteint est revérifié chaque minute.</li>
+          <li>Sur le processeur : ONNX Runtime au lieu de PyTorch, mêmes vecteurs (cosinus 0,99997), 1,6 fois plus vite. La version int8, 3 à 6 fois plus rapide, changeait 10 à 15 % des nouvelles les plus proches : écartée.</li>
+          <li>Le lot suivant s'encode pendant que le précédent est regroupé et pendant la lecture des flux : 200 nouvelles par passe au lieu de 100. L'embedder a une priorité basse : le site et le reste de la machine passent d'abord.</li>
+          <li>Les nouvelles de plus de 48 h reçoivent des vecteurs pour la recherche, mais ne rejoignent aucune histoire.</li>
+        </ul>
+        <div class="chips"><span class="chip">bge-m3</span><span class="chip">ONNX Runtime (processeur)</span><span class="chip">FlagEmbedding + torch (carte graphique)</span><span class="chip">RTX 4070 Ti</span><span class="chip">pgvector halfvec + sparsevec</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Chiffres</p>
+        <dl>
+          <div><dt>Vecteurs donnés en 24 h</dt><dd>126 122<small>93 % des nouvelles enregistrées ; 8 555 en attente dans la fenêtre de 48 h</small></dd></div>
+          <div><dt>Délai médian lecture → vecteur</dt><dd>87 s<small>sur processeur ; 44 s le 3 octobre</small></dd></div>
+          <div><dt>Vitesse</dt><dd>55 textes/s<small>sur la RTX ; ≈ 4 sur le processeur du serveur (16 textes en 2 à 6 s)</small></dd></div>
+        </dl>
+      </aside>
+    </article>
+
+    <article class="station">
+      <div class="no">B3</div>
+      <div class="body">
+        <h3>Regrouper un même fait en histoire</h3>
+        <p>Une nouvelle rejoint l'histoire dont elle est la plus proche, si elle est assez proche de ses membres venus d'autres médias. Sinon, elle en commence une.</p>
+        <ul>
+          <li>Titres : proximité moyenne ≥ 0,70 (dense + creux) avec les membres des autres médias.</li>
+          <li>Textes : ≥ 0,60 en plus. Un même sujet n'est pas un même fait.</li>
+          <li>Un média seul avec lui-même doit faire +0,5 et citer les mêmes chiffres : ses titres-modèles se ressemblent (« Is X v Y on TV? »).</li>
+          <li>Une histoire calme depuis plus de 6 h demande un peu plus chaque heure (−0,003/h) : elle dérive moins.</li>
+          <li>Affiches : une nouvelle qui nomme un match (« Egypt vs Angola ») saute une histoire dont la plupart des membres nomment un autre match. Les annonces, cotes et « comment regarder » s'écrivent pareil pour chaque match.</li>
+          <li>Un titre vide n'est jamais « la même nouvelle revue » (459 nouvelles d'un média brésilien s'étaient retrouvées dans une seule histoire), et une nouvelle sans titre ni description n'est pas jugée.</li>
+          <li>Présélection : une nouvelle n'est comparée qu'aux membres des 100 histoires de sa fenêtre les plus proches d'elle (moyenne des textes de l'histoire), plus les histoires sans moyenne. Mêmes décisions sur 450 nouvelles rejouées, 145 → 60 ms par nouvelle.</li>
+          <li>Calcul exact en SQL dans la base, sans index approximatif (HNSW), par lots, avec un budget de temps par passe.</li>
+        </ul>
+        <div class="chips"><span class="chip">PostgreSQL 18</span><span class="chip">pgvector 0.8</span><span class="chip">assign_stories (plpgsql)</span><span class="chip">matchup_of</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Chiffres (24 h)</p>
+        <dl>
+          <div><dt>Nouvelles placées</dt><dd>125 542<small>2 198 publiées il y a plus de 48 h, sans histoire</small></dd></div>
+          <div><dt>Histoires</dt><dd>71 214<small>1,8 nouvelle par histoire en moyenne</small></dd></div>
+          <div><dt>Racontées par 2 médias ou plus</dt><dd>13 382<small>52 096 histoires d'une seule nouvelle</small></dd></div>
+          <div><dt>Durée par lot de 100</dt><dd>2,5 à 4 s<small>7 à 20 s avant la présélection (5 octobre)</small></dd></div>
+          <div><dt>Choix mesuré</dt><dd>96 % de bonnes cartes<small>contre 82 % avec les mots seuls</small></dd></div>
+          <div><dt>Règle des affiches</dt><dd>19 décisions sur 1 075<small>changées sur 36 h de nouvelles anglaises : 12 à raison, 2 neutres, 5 un match coupé en deux (alias)</small></dd></div>
+        </dl>
+      </aside>
+    </article>
+
+    <article class="station">
+      <div class="no">B4</div>
+      <div class="body">
+        <h3>Suivre une affaire dans le temps</h3>
+        <p>Les histoires d'une même affaire (l'annonce, le verdict, les réactions) sont reliées dans un fil. La carte peut ensuite montrer toute la chronologie.</p>
+        <ul>
+          <li>Une histoire rejoint un fil si sa proximité moyenne avec les histoires des autres médias atteint 0,75 (+0,10 à travers son propre média).</li>
+          <li>Deux fils nés à part fusionnent à 0,70.</li>
+          <li>Un fil calme depuis 7 jours ne prend plus d'histoire.</li>
+          <li>Présélection : une histoire n'est comparée qu'aux histoires des 20 fils les plus proches d'elle (la moyenne d'un fil vaut la proximité moyenne de ses histoires), plus les fils changés dans le même lot. Même fil pour 800 histoires rejouées sur 800, 250 → 50 ms par histoire.</li>
+          <li>Fusions : un fil d'une histoire qui ne pouvait rejoindre aucun fil n'est comparé qu'aux fils changés ; les autres ne regardent les médias que des fils assez proches. Mêmes fils sur 300 histoires rejouées, vérification 2 fois plus rapide.</li>
+        </ul>
+        <div class="chips"><span class="chip">assign_threads (plpgsql)</span><span class="chip">centroïdes halfvec</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Chiffres</p>
+        <dl>
+          <div><dt>Fils des histoires du jour</dt><dd>63 226</dd></div>
+          <div><dt>Durée par appel</dt><dd>7 à 12 s<small>30 à 88 s avant les présélections (3 et 5 octobre)</small></dd></div>
+          <div><dt>Mesuré à la main</dt><dd>93 %<small>des faits rangés dans un seul fil</small></dd></div>
+        </dl>
+      </aside>
+    </article>
+
+    <article class="station">
+      <div class="no">B5</div>
+      <div class="body">
+        <h3>Faire le ménage</h3>
+        <p>Toutes les heures, les nouvelles de plus de 30 jours et les histoires vides sont effacées. Toutes les 20 minutes, l'annuaire s'agrandit : médias souvent cités par Google News et rubriques des médias déjà lus. Une fois par jour, il est aussi trié (9 octobre).</p>
+        <ul>
+          <li>Un flux de l'annuaire est retiré quand son média n'a eu aucune nouvelle montrée dans un briefing depuis 14 jours, et que moins de 11 % de ses nouvelles des 3 derniers jours atteignent 0,45 avec un intérêt d'un profil.</li>
+          <li>Un flux nouveau a 14 jours de grâce, sauf un déluge (300 nouvelles en 3 jours). Un flux sans nouvelles est gardé.</li>
+          <li>Retiré, il n'est pas repris pendant 60 jours, sauf si un profil est créé ou modifié entre-temps. La découverte d'un profil ne le bloque jamais : un nouveau lecteur l'a aussitôt dans ses sources.</li>
+        </ul>
+        <div class="chips"><span class="chip">findFeeds</span><span class="chip">directory_feeds</span><span class="chip">DirectoryService.prune</span><span class="chip">directory_removed</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Chiffres</p>
+        <dl>
+          <div><dt>Gardé en base</dt><dd>691 147 nouvelles<small>331 832 histoires, 269 165 fils</small></dd></div>
+          <div><dt>Annuaire</dt><dd>1 382 flux<small>938 le 3 octobre : c'est lui qui fait grandir le volume ; 1 623 le 10 octobre, après le tri</small></dd></div>
+          <div><dt>Premier tri, 9 octobre</dt><dd>187 flux retirés<small>environ 40 % du volume ; 2 à 11 % de leurs nouvelles touchaient un intérêt, aucune n'était dans un briefing. Depuis, plus aucune nouvelle n'attend ses vecteurs</small></dd></div>
+        </dl>
+      </aside>
+    </article>
+  </div>
+
+  <div class="part reader">
+    <div class="part-head">
+      <p class="kicker">C · Le briefing</p>
+      <h2>Un clic, sept étapes, 30 secondes à une minute</h2>
+      <p>Le briefing ne lit rien de nouveau sur le web avant d'avoir choisi : il classe ce que le serveur a déjà préparé, et l'IA ne voit qu'une quarantaine d'histoires. Le lecteur choisit la période (24 heures, 2 jours ou 7 jours) et la taille : 10, 20 ou 30 cartes. Les nombres ci-dessous sont ceux de 10 cartes ; pour 20 ou 30, les histoires classées, les candidates et la réserve sont 2 ou 3 fois plus nombreuses.</p>
+    </div>
+
+    <article class="station">
+      <div class="no">C1</div>
+      <div class="body">
+        <h3>Classer les histoires de la période</h3>
+        <p>Sur la période choisie (2 jours par défaut), une seule requête SQL note chaque nouvelle des sources lues, dans toutes les langues, contre chacun des intérêts du profil, et garde la meilleure note de chaque histoire.</p>
+        <ul>
+          <li>Avant de classer, les sources trouvées pour le profil qui n'apportent plus rien depuis 14 jours sont retirées (A3).</li>
+          <li>Note : proximité dense + la moitié de la proximité creuse, multipliée par le poids de l'intérêt.</li>
+          <li>Chaque intérêt a sa part (7 octobre) : les 600 meilleures histoires sont gardées, puis chaque intérêt reçoit sa part des 150 classées et des 40 candidates, selon son poids, ses meilleures d'abord. Un intérêt large n'écrase plus un intérêt étroit avant que l'IA les voie.</li>
+          <li>Toutes les langues comptent : le lecteur lit dans la sienne, les titres et passages des autres lui sont traduits.</li>
+          <li>Sources refusées par ses votes retirées. Médias de confiance du lecteur : leurs histoires parmi les 60 plus proches entrent en plus des 40 (10 au plus), sans bonus de note.</li>
+          <li>Écartées ensuite : pages répétées et histoires connues seulement par Google News sans média établi.</li>
+          <li>Candidates : les 40 meilleures venues de flux, plus au plus 10 connues seulement par Google News (2 par média). Quand Google bloque la lecture de ses liens, ces dernières ne sont plus proposées, sauf si leur adresse réelle est déjà connue.</li>
+          <li>Sur 7 jours : une seule candidate par fil d'affaire, et l'IA reçoit le nombre de médias de chaque histoire pour préférer ce qui a compté. Même coût : 40 candidates.</li>
+        </ul>
+        <div class="chips"><span class="chip">rank_stories (SQL)</span><span class="chip">pgvector</span><span class="chip">fils (threads)</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Enzo</p>
+        <dl>
+          <div><dt>Nouvelles des 48 h dans ses sources</dt><dd>67 636<small>34 langues ; 5 919 en français</small></dd></div>
+          <div><dt>Histoires notées</dt><dd>43 931 → 150<small>en 17 à 20 s, serveur très chargé (3,1 s le 3 octobre, base deux fois plus petite) ; notes de 0,766 à 0,555</small></dd></div>
+          <div><dt>Candidates</dt><dd>47<small>261 articles, 11 langues ; 4 écartées sur 150</small></dd></div>
+          <div><dt>Sur 7 jours</dt><dd>182 783 nouvelles → 45<small>en 14 à 16 s ; 123 histoires après une par fil</small></dd></div>
+        </dl>
+      </aside>
+    </article>
+
+    <article class="station">
+      <div class="no">C2</div>
+      <div class="body">
+        <h3>L'IA choisit</h3>
+        <p>L'IA reçoit le texte du profil, les intérêts et les candidates. Elle en choisit au plus 20 (30 pour 20 cartes, 45 pour 30 ; 15 le 7 octobre), avec une raison tirée du titre et de la description seulement ; le briefing en garde 10, les suivantes restent en réserve (C4).</p>
+        <ul>
+          <li>Ce que lit l'IA : une ligne par candidate, « [id] titre — début de description (aussi : 3 autres titres) », avec « source de confiance du lecteur » ou, sur 7 jours, le nombre de médias. Jamais de vecteur.</li>
+          <li>Refuse les pages-dossiers, les guides pratiques (« comment regarder »), les compilations vidéo ; préfère les faits aux pronostics ; varie les sujets.</li>
+          <li>Les votes du lecteur entrent comme exemples : 15 titres aimés et 15 refusés des 30 derniers jours.</li>
+          <li>Le choix est ensuite équilibré entre les intérêts.</li>
+          <li>Mesuré : 95 % de cartes pertinentes (88 % avec les vecteurs seuls).</li>
+        </ul>
+        <div class="chips"><span class="chip">gemma4:31b</span><span class="chip">JSON</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Enzo</p>
+        <dl>
+          <div><dt>Choisies par l'IA</dt><dd>47 → 12</dd></div>
+          <div><dt>Après équilibre</dt><dd>10 + 2 en réserve<small>4 en français, 6 d'autres langues</small></dd></div>
+          <div><dt>Durée</dt><dd>3,1 s</dd></div>
+        </dl>
+      </aside>
+    </article>
+
+    <article class="station">
+      <div class="no">C3</div>
+      <div class="body">
+        <h3>Vérifier et fusionner</h3>
+        <p>Deux appels partent ensemble. Le premier garde, dans chaque histoire, les articles qui racontent bien le fait de l'article principal. Le second réunit deux cartes qui racontent le même fait, par exemple la version française et la version anglaise.</p>
+        <ul>
+          <li>Jusqu'à 12 autres articles vérifiés par histoire, un par média d'abord.</li>
+          <li>Une histoire est d'une seule langue : une carte choisie dans une autre langue apporte au second appel les 2 histoires de la langue du lecteur les plus proches d'elle (0,75 et plus). Celles qui racontent le même fait la rejoignent.</li>
+          <li>Chaque carte apporte aussi au premier appel ses versions dans les autres langues (4 au plus, 0,78 et plus, depuis le 8 octobre) : celles du même fait la rejoignent, et elle compte leurs médias.</li>
+          <li>Deux cartes réunies laissent une place : la suivante de la réserve est lue avec les cartes.</li>
+          <li>L'IA écrit d'abord le fait principal de chaque carte avant de comparer : 78-80 % de fusions justes, 5-7 % fausses.</li>
+          <li>Les histoires de réserve passent par la même vérification : une réserve qui raconte le fait d'une carte la rejoint.</li>
+          <li>Si l'IA échoue, les cartes restent telles que les vecteurs les ont groupées : le briefing n'attend jamais.</li>
+        </ul>
+        <div class="chips"><span class="chip">checkStories</span><span class="chip">mergeStories</span><span class="chip">centroïdes</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Enzo</p>
+        <dl>
+          <div><dt>Articles vérifiés</dt><dd>31 → 31<small>aucun retiré (8 sur 62 le 3 octobre)</small></dd></div>
+          <div><dt>Cartes</dt><dd>10 → 10<small>aucune fusion</small></dd></div>
+          <div><dt>Durée</dt><dd>2,7 s</dd></div>
+        </dl>
+      </aside>
+    </article>
+
+    <article class="station">
+      <div class="no">C4</div>
+      <div class="body">
+        <h3>Lire les articles</h3>
+        <p>Maintenant seulement, les pages sont téléchargées : 5 articles par histoire au plus, un par média. L'article dans la langue du lecteur est lu en premier, puis celui d'un média de confiance.</p>
+        <ul>
+          <li>Le texte est extrait de la page comme le fait le mode lecture de Firefox. Depuis le 8 octobre, une simple lecture de la page d'abord, Crawlee seulement pour les pages manquées : ses en-têtes de navigateur inventés faisaient refuser L'Équipe, Le Télégramme ou phys.org.</li>
+          <li>Chaque carte garde l'article d'où viennent ses passages, et l'image de sa page (og:image) quand le flux n'en donnait pas.</li>
+          <li>Un lien Google News n'est qu'une redirection : au plus 10 adresses réelles demandées par briefing (Google bloque vers 40 par heure).</li>
+          <li>Mesuré : 85 % des articles lisibles (60 mots ou plus), 96 % des histoires en ont au moins un.</li>
+          <li>Une histoire dont aucune page n'est lisible (un paywall, un site protégé), ou que la relecture retire (C6), ne devient jamais une carte : la suivante de la réserve prend sa place, lue à son tour, en 2 tours au plus. Sans réserve, le briefing montre moins de cartes plutôt qu'une carte vide.</li>
+        </ul>
+        <div class="chips"><span class="chip">fetch + @mozilla/readability</span><span class="chip">Crawlee (Cheerio) en secours</span><span class="chip">linkedom</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Briefings d'Enzo</p>
+        <dl>
+          <div><dt>Durée</dt><dd>2 à 7 s<small>2 octobre</small></dd></div>
+          <div><dt>Articles par carte</dt><dd>7 à 10 en moyenne<small>briefings de 48 h des 2 et 3 octobre</small></dd></div>
+          <div><dt>Cartes illisibles remplacées</dt><dd>1 par briefing<small>2 briefings de 48 h rejoués le 6 octobre sans rien enregistrer ; avant, environ une carte « aucun article lisible » par briefing</small></dd></div>
+        </dl>
+      </aside>
+    </article>
+
+    <article class="station">
+      <div class="no">C5</div>
+      <div class="body">
+        <h3>Choisir les passages clés</h3>
+        <p>L'IA ne réécrit rien. Elle reçoit l'article découpé en phrases numérotées et renvoie les numéros des passages qui portent la nouvelle. Le lecteur lit donc les phrases du journaliste.</p>
+        <ul>
+          <li>Au plus 5 passages, 170 mots ; traduction automatique marquée comme telle, chiffres contrôlés.</li>
+          <li>Pourquoi : les résumés réécrits changeaient le sens dans 4 cas sur 30.</li>
+          <li>Corroboration : chaque média compte, mais deux textes qui partagent la moitié de leurs suites de 8 mots sont une même dépêche d'agence.</li>
+          <li>Mots de prudence relevés dans le titre et la description (« selon », « aurait »…).</li>
+          <li>« Contesté » : les phrases des pages lues qui contiennent un verbe de démenti (nier, démentir, deny, niega…, cherchés dans le code, dans la langue de chaque article), puis un appel de l'IA par carte confirme qui dément quoi. Montré seulement quand le démenti porte sur le fait principal et vient de celui qu'il concerne : 21 cartes justes sur 22 à la main.</li>
+        </ul>
+        <div class="chips"><span class="chip">extractArticle</span><span class="chip">gemma4:31b</span><span class="chip">corroboration (shingles)</span><span class="chip">contested</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Briefings d'Enzo</p>
+        <dl>
+          <div><dt>Durée</dt><dd>≈ 25 s<small>lecture et passages, 5 appels en parallèle (6 octobre) ; 11 à 13 s le 2 octobre</small></dd></div>
+          <div><dt>Jetons</dt><dd>16 000 à 17 000<small>19 appels, démentis compris (6 octobre)</small></dd></div>
+          <div><dt>Cartes avec passages</dt><dd>10 sur 10 (48 h)<small>6 octobre, réserve comprise ; avant : 8 sur 9</small></dd></div>
+        </dl>
+      </aside>
+    </article>
+
+    <article class="station">
+      <div class="no">C6</div>
+      <div class="body">
+        <h3>Relire avant de montrer</h3>
+        <p>Une dernière lecture des cartes avec leurs passages : celles qui parlent de ce que le profil refuse, invisible dans un simple titre, sont retirées. En même temps, les titres écrits dans une autre langue que celle du lecteur sont traduits.</p>
+        <ul>
+          <li>Faite à chaque tour de lecture : une carte retirée est remplacée par la réserve, comme une carte illisible.</li>
+          <li>L'IA reçoit les intérêts et la liste des refus du profil ; seul un de ces refus retire une carte, et une restriction ne vaut que pour son sujet (« seulement le codage » ne retire pas toute la technologie). Depuis le 7 octobre au soir : 0 carte retirée à tort sur 264, contre 20 avant, et les cartes refusées toujours retirées.</li>
+        </ul>
+        <div class="chips"><span class="chip">reviewCards</span><span class="chip">translateTexts</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Briefings d'Enzo</p>
+        <dl>
+          <div><dt>Retirées</dt><dd>0<small>≈ 1 800 jetons, réponse de 12 (2 octobre)</small></dd></div>
+          <div><dt>Total du briefing</dt><dd>≈ 34 s (48 h, 6 octobre)<small>17 à 32 s sur 24 h (4 au 6 octobre), 28 à 50 s sur 7 jours (3 octobre) ; le classement plus lent du 7 octobre y ajoute environ 15 s</small></dd></div>
+        </dl>
+      </aside>
+    </article>
+
+    <article class="station">
+      <div class="no">C7</div>
+      <div class="body">
+        <h3>Autres angles et termes suivis</h3>
+        <p>Les cartes prêtes, deux recherches partent ensemble (8 octobre). Pour chaque carte, l'IA cherche d'autres angles de la même affaire : des articles qui ne disent pas la même chose. Et les nouvelles des noms et des termes que le profil suit sont listées (D3).</p>
+        <ul>
+          <li>Angles : les histoires de toutes les langues des 3 derniers jours proches de la carte (0,6 et plus), 8 au plus par carte, jugées par l'IA sur leurs titres, avec jusqu'à 5 autres titres de la carte : « le même fait », « un autre angle », « le même thème » ou « autre chose ». 3 angles au plus par carte.</li>
+          <li>Le même fait avec un détail de plus n'est pas un autre angle : sans cette règle, une candidature racontée dans 16 langues revenait en angles d'elle-même.</li>
+          <li>Termes suivis : toutes les nouvelles de la période qui nomment un terme du profil, de toutes ses sources, sans pertinence ni IA.</li>
+          <li>Le briefing n'attend jamais l'une ou l'autre : en cas d'échec, il paraît sans elles.</li>
+        </ul>
+        <div class="chips"><span class="chip">closeStories (SQL)</span><span class="chip">other-angles (gemma4:31b)</span><span class="chip">watchedNews</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Mesuré le 8 octobre</p>
+        <dl>
+          <div><dt>Angles d'Enzo</dt><dd>83 % justes<small>17 cartes sur 30 en reçoivent un</small></dd></div>
+          <div><dt>Recherche</dt><dd>1,4 s par carte<small>206 000 histoires sur 3 jours, 5 cartes à la fois</small></dd></div>
+        </dl>
+      </aside>
+    </article>
+  </div>
+
+  <div class="part reader">
+    <div class="part-head">
+      <p class="kicker">D · La lecture</p>
+      <h2>Ce que le lecteur a sous les yeux</h2>
+    </div>
+
+    <article class="station">
+      <div class="no">D1</div>
+      <div class="body">
+        <h3>Lire une carte</h3>
+        <p>Chaque carte donne le titre (traduit, avec l'original dessous), la raison du choix, son image, les passages clés, le nombre de médias, de rédactions indépendantes et d'agences citées, les mots de prudence, qui dément la nouvelle (« Contesté », avec sa phrase), les autres angles de l'affaire, sa chronologie et la liste des articles.</p>
+        <ul>
+          <li>Titre et passages sont montrés traduits, avec « Show original » pour lire le texte d'origine ; la langue de chaque article est marquée par son code (FR, ES…).</li>
+          <li>Chaque étiquette de la carte s'explique dans un petit « i », au survol, au focus ou au toucher.</li>
+          <li>Deux onglets : « Briefing » et « Names and terms », les nouvelles des termes suivis, un onglet par terme. Le bouton « Names and terms found » ne montre que les cartes qui en nomment un, le terme surligné.</li>
+          <li>Le fil d'affaire montre les autres faits de la même affaire, pris dans les sources du lecteur seulement.</li>
+          <li>Pouce levé ou baissé : les exemples du prochain choix (C2). Un flux refusé 3 fois et 2 fois plus refusé qu'aimé est mis de côté, sauf s'il le garde depuis son profil.</li>
+          <li>Étoile sur une source : son média devient de confiance, quel que soit le flux ou Google News qui apporte ses nouvelles (C1) ; son article est lu en premier.</li>
+          <li>Les sources du profil sont réunies dans une seule liste, avec un seul endroit pour en ajouter. Une source en déluge y est signalée (« N news a day: prepared last »).</li>
+        </ul>
+        <div class="chips"><span class="chip">React 19</span><span class="chip">Tailwind 4</span><span class="chip">shadcn / Radix</span><span class="chip">Fraunces + Source Serif 4</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Briefings d'Enzo</p>
+        <dl>
+          <div><dt>Cartes</dt><dd>9 à 10<small>5 à 10 sur 24 h</small></dd></div>
+          <div><dt>Médias par carte</dt><dd>5,7 à 8,1 en moyenne<small>briefings de 48 h des 2 et 3 octobre (3,1 le 2 octobre à 00 h 01)</small></dd></div>
+        </dl>
+      </aside>
+    </article>
+
+    <article class="station">
+      <div class="no">D2</div>
+      <div class="body">
+        <h3>Chercher par phrase</h3>
+        <p>Le lecteur écrit une phrase. Elle devient un vecteur, comparé aux nouvelles de toutes les langues ; l'IA trie ensuite les candidates en réponses et en nouvelles proches.</p>
+        <ul>
+          <li>Par langue : les 80 plus proches par le sens et 30 par les mots (les noms propres). La langue choisie est celle de l'affichage, pas un filtre.</li>
+          <li>Un mot exact en lettres latines est cherché avec et sans ses accents.</li>
+          <li>Google News reçoit la même phrase en parallèle ; ses nouvelles sont lues et ajoutées.</li>
+          <li>Une ligne par histoire envoyée à l'IA, qui donne un verdict par article : réponse, proche ou non.</li>
+          <li>Les cartes d'un même fait sont réunies quand leurs textes sont proches (0,65 et plus) et que l'IA confirme.</li>
+          <li>Titres et descriptions traduits quand ils arrivent à l'écran, 20 par appel, avec le titre original dessous. La dernière recherche est gardée un jour.</li>
+        </ul>
+        <div class="chips"><span class="chip">closestArticles (SQL)</span><span class="chip">sortByMeaning</span><span class="chip">joinFacts</span><span class="chip">IntersectionObserver</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Mesuré, compte d'Enzo</p>
+        <dl>
+          <div><dt>Phrase</dt><dd style="font-family: var(--text); font-size: 0.92rem">« les décisions d'arbitrage contestées en Ligue des champions », 7 jours</dd></div>
+          <div><dt>Candidates</dt><dd>216 articles<small>9 langues ; 116 lignes envoyées à l'IA</small></dd></div>
+          <div><dt>Résultat</dt><dd>4 cartes<small>2 réponses, 2 proches ; 12 articles joints</small></dd></div>
+          <div><dt>Durée</dt><dd>20,1 s<small>sans Google News, serveur très chargé (8,1 s le 3 octobre)</small></dd></div>
+        </dl>
+      </aside>
+    </article>
+
+    <article class="station">
+      <div class="no">D3</div>
+      <div class="body">
+        <h3>Suivre des noms, des clubs, des personnes</h3>
+        <p>Deux façons de suivre un nom, sans pertinence ni IA : toutes les nouvelles des sources qui le citent. Les termes du profil apparaissent dans le briefing ; la page Following ouvre un dossier sur un club, une personne ou une organisation, avec tout ce qui gravite autour.</p>
+        <ul>
+          <li>Termes (page Profile, « Names and terms you follow ») : 20 au plus par profil, tapés par le lecteur (« VAR », « Infantino »). Cherchés comme mots entiers dans le titre et la description, accents et majuscules ignorés ; un sigle garde ses majuscules et ne compte pas dans un titre crié (« LA VALETTE-DU-VAR »). Listés dans le briefing, 100 histoires au plus par terme.</li>
+          <li>Following : une fiche de Wikidata choisie dans une liste, 30 au plus. Ses noms sont ceux de la fiche (nom, variantes, « PSG » pour « Paris Saint-Germain F.C. », nom de famille d'une personne) ; le lecteur en ajoute 10 et en retire. Ses liens aussi : joueurs, entraîneur, ligue, président, stade… Relue tous les 7 jours.</li>
+          <li>Sa page montre les nouvelles qui la citent sur 24 h, 2 jours ou 7 jours, puis celles de chaque lien, les plus cités d'abord ; jamais dans le briefing.</li>
+          <li>Depuis le 12 octobre, une fiche envoie les noms choisis dans les termes du profil : ses noms sont cochés d'après leurs nouvelles de la période, les plus cités d'abord, autant que les termes libres le permettent. L'UEFA a 18 noms dans Wikidata, son nom dans une douzaine de langues : 2 seulement trouvent des nouvelles.</li>
+        </ul>
+        <div class="chips"><span class="chip">Wikidata (wbsearchentities, SPARQL)</span><span class="chip">pg_trgm</span><span class="chip">watchedNews</span><span class="chip">Radix Tabs</span></div>
+      </div>
+      <aside class="figures">
+        <p class="label">Mesuré</p>
+        <dl>
+          <div><dt>« VAR », 7 jours</dt><dd>264 histoires<small>8 octobre ; 7 s pour deux termes</small></dd></div>
+          <div><dt>PSG, 48 h</dt><dd>144 histoires<small>sources de fab ; Parc des Princes 53, Dembélé 27, Luis Enrique 25 (8 octobre)</small></dd></div>
+          <div><dt>Recherche d'une fiche</dt><dd>11 s sur 48 h<small>30 s sur 7 jours, gardée 10 minutes</small></dd></div>
+          <div><dt>UEFA, 48 h</dt><dd>« UEFA » : 152 histoires<small>sources d'Enzo, 12 octobre ; 16 de ses 18 noms n'en trouvent aucune</small></dd></div>
+        </dl>
+      </aside>
+    </article>
+
+    <article class="station">
+      <div class="no">D4</div>
+      <div class="body">
+        <h3>Envoyer des cartes par e-mail</h3>
+        <p>Pour les administrateurs : le lecteur coche des cartes, les met dans l'ordre voulu et les envoie à son adresse ou à une autre. L'e-mail reprend la mise en page du site.</p>
+        <ul>
+          <li>Pour chaque carte : un autre titre, une autre image (celles de l'histoire, une adresse ou un fichier), sans les démentis ou les angles qu'il retire. Seules les images d'au moins 560 pixels de large sont proposées ; une image trop petite est remplacée par la meilleure de l'histoire.</li>
+          <li>Neutre : titre « Briefing - 12 October 2026 », objet « Briefing · 3 stories · … », expéditeur « Briefing », ligne « 3 stories shared ». Personne n'y est nommé ; une réponse va au lecteur qui l'a envoyé.</li>
+          <li>Une copie est gardée telle qu'elle est partie, au bout d'un lien discret « View the original e-mail » : quiconque transfère un e-mail peut le changer. Sa page n'exécute rien et n'appartient à aucun site (Content-Security-Policy <code>sandbox</code>).</li>
+          <li>Envoyé par le compte Gmail du serveur (SMTP). Au plus 10 par heure et par adresse, 30 par jour et par compte.</li>
+        </ul>
+        <div class="chips"><span class="chip">nodemailer (SMTP Gmail)</span><span class="chip">briefing-mail.js</span><span class="chip">sent_mails</span></div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section>
+  <div class="section-head">
+    <p class="label">Où ça tourne</p>
+    <h2>Les machines</h2>
+  </div>
+  <div class="machines">
+    <div class="machine">
+      <p class="kicker">Serveur Ubuntu · 192.168.1.135</p>
+      <h3>Tout le travail de fond</h3>
+      <p>Docker Compose : API Node/Express avec l'ingestion, PostgreSQL 18 + pgvector, RSS-Bridge, Caddy (le site) et un tunnel Cloudflare vers internet. À part, un embedder bge-m3 sur processeur (ONNX Runtime), en priorité basse. Redémarrage automatique.</p>
+    </div>
+    <div class="machine">
+      <p class="kicker">PC de jeu · RTX 4070 Ti</p>
+      <h3>Les vecteurs, vite</h3>
+      <p>bge-m3 sur la carte graphique, 55 textes par seconde. Depuis le 9 octobre, il travaille avec le processeur de l'Ubuntu : chacun prend les lots qu'il finit le plus vite. Éteint, le serveur continue sur son processeur, et le reprend une minute après son retour. Éteint lors de la mesure du 7 octobre : tout tournait sur le processeur de l'Ubuntu.</p>
+    </div>
+    <div class="machine">
+      <p class="kicker">Ollama cloud · API Gemini</p>
+      <h3>L'IA</h3>
+      <p>gemma4:31b pour toutes les tâches. Si Ollama ne répond pas, le même modèle via l'API Gemini (plus lente, 30 à 90 s).</p>
+    </div>
+    <div class="machine">
+      <p class="kicker">Portable</p>
+      <h3>Le code</h3>
+      <p>Le développement et les tests : le serveur local lit la base de l'Ubuntu, sans ingestion. Le site lui-même (client React construit par Vite) est servi par l'Ubuntu.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Chiffres mesurés le 7 octobre 2026 vers 1 h 30 (heure suisse) sur la base du serveur, le PC de jeu éteint : l'embedder tournait sur le processeur de l'Ubuntu, très chargé (charge moyenne de 10 à 15 pour 6 cœurs). Ingestion : 24 dernières heures de la base ; lectures de flux et durée des passes tirées des 76 passes des 3 dernières heures du journal. Briefing : rejoué avec le code du 7 octobre sur le compte d'Enzo jusqu'à la vérification et la fusion, sans rien enregistrer (sans le retrait des sources inutiles ni les versions dans sa langue) ; lecture, passages, réserve et durée totale tirés de 2 briefings de 48 h écrits en entier le 6 octobre sans être enregistrés (server/bench/briefing-relevance.mjs) ; durées sur 24 h tirées de ses vrais briefings du 4 au 6 octobre. Découverte : server/bench/discovery-phases.mjs, à blanc, le 6 octobre. Les chiffres marqués d'une date plus ancienne n'ont pas été mesurés à nouveau. Les pourcentages de qualité (88 %, 95 %, 96 %, 85 %) viennent des mesures précédentes du projet, jugées à la main.</p>
+  <p>Le classement des histoires (C1) et la recherche (D2) étaient 3 à 6 fois plus lents que le 3 octobre : la base a doublé en 4 jours, surtout par l'annuaire qui s'agrandit seul (938 → 1 382 flux), et le processeur était occupé par l'embedder.</p>
+  <p>Le 3 octobre, environ 90 histoires mélangées avant la règle des affiches ont été découpées après coup (plus de 400 nouvelles déplacées, sauvegardes dans server/bench/data/matchups).</p>
+  <p>Texte mis à jour le 12 octobre 2026 avec ce qui a changé depuis la mesure : création de compte par les questions de l'IA et fermée par défaut, mot de passe du site retiré, plusieurs profils, compte modifiable depuis le profil, part de chaque intérêt, briefings de 10, 20 ou 30 cartes, réserve plus grande, versions dans les autres langues, lecture des pages sans Crawlee d'abord, relecture par les refus, autres angles, termes suivis et page Following, envoi par e-mail, sources de chaque lecteur lues pour tous, archives sautées, embedders ensemble et tri de l'annuaire. Ces changements n'ont pas été remesurés en entier : leurs chiffres portent leur date.</p>
+</footer>
+
+</div>
+
+<script>
+const GROUPS = [
+  {lane: 'server', title: 'Travail de fond', scope: 'toutes les sources · 24 h', rows: [
+    {what: 'Flux suivis', n: 2488, why: '1 981 ont publié dans les 24 h'},
+    {what: 'Nouvelles enregistrées', n: 136023, why: 'Les liens déjà connus et les nouvelles redonnées sous un autre lien ne sont pas comptés ; une lecture sur quatre ne renvoie rien de neuf'},
+    {what: 'Avec vecteurs', n: 126122, cut: 9901, why: 'encore en file d’attente au moment de la mesure (embedder sur processeur)'},
+    {what: 'Placées dans une histoire', n: 125542, cut: 580, why: 'publiées il y a plus de 48 h : vecteurs pour la recherche seulement'},
+    {what: 'Histoires', n: 71214, why: 'les nouvelles d’un même fait regroupées (1,8 par histoire)'},
+    {what: 'Histoires de 2 médias ou plus', n: 13382, why: '52 096 histoires restent d’une seule nouvelle'},
+  ]},
+  {lane: 'reader', title: 'Briefing d’Enzo', scope: 'ses 765 flux · 48 h · toutes langues', rows: [
+    {what: 'Nouvelles dans ses sources', n: 67636, why: '34 langues, dont 5 919 en français : aucune n’est écartée pour sa langue'},
+    {what: 'Histoires', n: 43931, why: 'une note par histoire, la meilleure de ses nouvelles'},
+    {what: 'Classées par le SQL', n: 150, cut: 43781, why: 'moins proches de ses intérêts (note sous 0,555)'},
+    {what: 'Crédibles', n: 146, cut: 4, why: 'pages répétées ou connues seulement par Google sans média établi'},
+    {what: 'Candidates pour l’IA', n: 47, cut: 99, why: 'au-delà des 40 premières venues de flux (+7 connues par Google News)'},
+    {what: 'Choisies par l’IA', n: 12, cut: 35, why: 'hors du profil, dossiers, guides, pronostics, doublons'},
+    {what: 'Après équilibre des intérêts', n: 10, cut: 2, why: 'gardées en réserve, pour remplacer une carte illisible'},
+    {what: 'Cartes après vérification', n: 10, why: 'aucune fusion ; 31 articles vérifiés, aucun retiré'},
+    {what: 'Cartes avec passages clés', n: 10, why: '2 briefings de 48 h du 6 octobre : 10 sur 10, une carte illisible remplacée par la réserve dans chacun'},
+  ]},
+  {lane: 'reader', title: 'Recherche par phrase', scope: 'toutes les langues · 7 jours', rows: [
+    {what: 'Articles candidats', n: 216, why: '9 langues, 80 + 30 par langue au plus'},
+    {what: 'Lignes envoyées à l’IA', n: 116, cut: 100, why: 'une ligne par histoire'},
+    {what: 'Cartes', n: 4, cut: 112, why: 'hors du sujet de la phrase ; 2 réponses et 2 nouvelles proches, 12 articles joints'},
+  ]},
+];
+
+const MAX = Math.log10(200000);
+const pct = (n) => Math.max(0.6, (Math.log10(n) / MAX) * 100);
+const fmt = (n) => n.toLocaleString('fr-CH').replace(/[’']/g, ' ');
+const TICKS = [1, 10, 100, 1000, 10000, 100000];
+
+const funnel = document.getElementById('funnel');
+for (const group of GROUPS) {
+  const el = document.createElement('div');
+  el.className = `group ${group.lane}`;
+  el.innerHTML = `<div class="group-head"><h3>${group.title}</h3><span class="kicker">${group.scope}</span></div>`;
+  for (const row of group.rows) {
+    const r = document.createElement('div');
+    r.className = 'row';
+    const cut = row.cut ? `<span class="cut">−${fmt(row.cut)}</span> ` : '';
+    r.innerHTML = `<div class="what">${row.what}</div>`
+      + `<div class="bar-track"><div class="bar" style="width:${pct(row.n)}%"></div></div>`
+      + `<div class="count">${fmt(row.n)}</div>`
+      + (row.why || row.cut ? `<div class="why">${cut}${row.why ?? ''}</div>` : '');
+    el.appendChild(r);
+  }
+  const axis = document.createElement('div');
+  axis.className = 'axis';
+  axis.innerHTML = `<div class="spacer"></div><div class="ticks">${TICKS.map(t => `<span style="left:${t === 1 ? 0 : pct(t)}%">${t >= 1000 ? fmt(t) : t}</span>`).join('')}</div><div></div>`;
+  el.appendChild(axis);
+  funnel.appendChild(el);
+}
+</script>
+
+</body></html>
