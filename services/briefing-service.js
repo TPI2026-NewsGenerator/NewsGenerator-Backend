@@ -432,7 +432,7 @@ export const readStories = async (chosen, {trusted = new Set(), language = null,
         if (!lead) return {unreadable: true};
         const texts = reads[i].filter(article => content.has(article.link))
             .map(article => ({...toArticle(article), page: content.get(article.link)}));
-        const [{passages, translation, topic, sourcing}, contested] = await Promise.all([
+        const [{passages, translation, points, pointsTranslation, digest, digestTranslation, topic, sourcing}, contested] = await Promise.all([
             extractArticle(lead.title, content.get(lead.link), {language, usage: usage.summarizing}),
             contestedOf(lead.title, texts, {language, usage: usage.contesting}).catch(err => {
                 console.error(`Briefing: the denials of story ${story.storyId} were not read (${err.message})`);
@@ -441,7 +441,10 @@ export const readStories = async (chosen, {trusted = new Set(), language = null,
         ]);
         // no passage of the news in its page: what was read is not the article
         if (passages.length === 0) return {unreadable: true};
-        return {summary: {summary: passagesText(passages), translation: passagesText(translation), topic, sourcing, contested, from: lead.link}};
+        return {summary: {summary: passagesText(passages), translation: passagesText(translation),
+            points: passagesText(points), pointsTranslation: passagesText(pointsTranslation),
+            digest: passagesText(digest), digestTranslation: passagesText(digestTranslation),
+            topic, sourcing, contested, from: lead.link}};
     });
     return stories.map((story, i) => summaries[i].status === 'fulfilled'
         ? {story, unreadable: Boolean(summaries[i].value.unreadable), summary: summaries[i].value.summary ?? null}
@@ -658,6 +661,13 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             summaryError: summary ? null : 'The passages of its article could not be chosen: the AI did not answer.',
             // their machine translation, when the article is not in the language of the reader
             translation: summary?.translation ?? null,
+            // the shorter ways the reader can choose, of the same sentences (see shorterWays): the most
+            // important ones a paragraph each, and the ones of 5 to 6 lines; with their translation.
+            // Absent from the briefings made before 12.10.2026
+            points: summary?.points ?? null,
+            pointsTranslation: summary?.pointsTranslation ?? null,
+            digest: summary?.digest ?? null,
+            digestTranslation: summary?.digestTranslation ?? null,
             topic: summary?.topic ?? null,
             sourcing: summary?.sourcing ?? null,
             // the words the article itself used to say it has no confirmation
@@ -787,7 +797,8 @@ export const withMarks = (briefing, terms) => {
         ...briefing,
         items: briefing.items.map(item => ({
             ...item,
-            marks: marksOf({title: item.title, titleTranslation: item.titleTranslation, summary: item.summary, translation: item.translation}, terms),
+            marks: marksOf({title: item.title, titleTranslation: item.titleTranslation, summary: item.summary, translation: item.translation,
+                points: item.points, pointsTranslation: item.pointsTranslation, digest: item.digest, digestTranslation: item.digestTranslation}, terms),
             angles: (item.angles ?? []).map(angle => ({...angle, marks: marksOf({title: angle.title, titleTranslation: angle.titleTranslation}, terms)})),
             contested: (item.contested ?? []).map(denial => ({...denial, marks: marksOf({sentence: denial.sentence, translation: denial.translation}, terms)})),
             found: foundIn(item, terms),

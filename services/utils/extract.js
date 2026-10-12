@@ -84,11 +84,9 @@ export const sentencesOf = ({content, blocks}) => {
     return sentences.slice(0, MAX_SENTENCES);
 };
 
-// The passages shown: the sentences picked, the most important first, kept while they fit in the
-// length of a card, then set back in the order of the article. Sentences that follow each other make
-// one passage; a gap between two passages is shown to the reader. sentences: [{text, quote}];
-// returns [[{text, quote}, ...], ...]
-export const buildExtract = (sentences, picked) => {
+// the numbers of the sentences picked, the most important first, kept while they fit in the length of
+// a card: the ones the article does not have and repeated ones left out
+const keptOf = (sentences, picked) => {
     const kept = [];
     let words = 0;
     for (const number of [...new Set((picked ?? []).filter(Number.isInteger))]) {
@@ -98,9 +96,14 @@ export const buildExtract = (sentences, picked) => {
         kept.push(number);
         words += wordCount(sentence.text);
     }
+    return kept;
+};
+
+// sentences set back in the order of the article, the ones that follow each other as one passage
+const passagesOf = (sentences, numbers) => {
     const passages = [];
     let last = null;
-    for (const number of kept.sort((a, b) => a - b)) {
+    for (const number of [...numbers].sort((a, b) => a - b)) {
         if (last !== null && number === last + 1) passages.at(-1).push(sentences[number - 1]);
         else passages.push([sentences[number - 1]]);
         last = number;
@@ -108,7 +111,34 @@ export const buildExtract = (sentences, picked) => {
     return passages;
 };
 
-const extractPrompt = (title, sentences) => `You pick the sentences of a news article that tell its news best. You never write
+// The passages shown: the sentences picked, the most important first, kept while they fit in the
+// length of a card, then set back in the order of the article. Sentences that follow each other make
+// one passage; a gap between two passages is shown to the reader. sentences: [{text, quote}];
+// returns [[{text, quote}, ...], ...]
+export const buildExtract = (sentences, picked) => passagesOf(sentences, keptOf(sentences, picked));
+
+// The two shorter ways the reader can read a card in, made of the same sentences as published, never
+// written by the AI. Measured on 30 articles (bench/formats-run.mjs, formats-pieces.mjs, 12.10.2026):
+// points and summaries written by the AI changed the meaning of 2 or 3 of them, pieces cut out of
+// sentences 1 to 3 (a cut drops "for takeoff and landing", "the message is"), whole sentences none.
+// points: the most important sentences, one passage each, the most important first. digest: the most
+// important ones while they fit 5 to 6 lines of a card, in the order of the article
+const MAX_POINTS = 3;
+const MAX_DIGEST_WORDS = 65;
+export const shorterWays = (sentences, picked) => {
+    const kept = keptOf(sentences, picked);
+    const digest = [];
+    let words = 0;
+    for (const number of kept) {
+        const count = wordCount(sentences[number - 1].text);
+        if (digest.length > 0 && words + count > MAX_DIGEST_WORDS) continue;
+        digest.push(number);
+        words += count;
+    }
+    return {points: kept.slice(0, MAX_POINTS).map(number => [sentences[number - 1]]), digest: passagesOf(sentences, digest)};
+};
+
+export const extractPrompt = (title, sentences) => `You pick the sentences of a news article that tell its news best. You never write
 the news yourself: the sentences you pick are shown to the reader word for word, as the article
 published them.
 Rules:
@@ -221,20 +251,32 @@ export const translationFor = async (passages, language, usage = null, fallback 
 };
 
 // The key passages of an article for a reader of 'language' (a code: 'fr', 'en'...). page: the page
-// read ({content, blocks}). Returns {passages, translation, from, topic, sourcing}: passages as
-// published, translation null when the article is in the language of the reader or could not be
-// translated safely; passages empty when the page has no text of its own
+// read ({content, blocks}). Returns {passages, translation, points, pointsTranslation, digest,
+// digestTranslation, from, topic, sourcing}: passages as published, translation null when the article
+// is in the language of the reader or could not be translated safely; points and digest the shorter
+// ways of the card (see shorterWays), passages too; passages empty when the page has no text of its own
 export const extractArticle = async (title, page, {language = 'en', usage = null} = {}) => {
     const sentences = sentencesOf(page);
-    if (sentences.length === 0) return {passages: [], translation: null, from: null, topic: null, sourcing: null};
+    if (sentences.length === 0) {
+        return {passages: [], translation: null, points: [], pointsTranslation: null, digest: [], digestTranslation: null,
+            from: null, topic: null, sourcing: null};
+    }
 
     const answer = await ollamaJson(extractPrompt(title, sentences), usage);
     const passages = buildExtract(sentences, answer?.sentences);
+    const {points, digest} = shorterWays(sentences, answer?.sentences);
     const {from, translation} = await translationFor(passages, language, usage, languageOf(page.content));
+    // the shorter ways are sentences of the passages: their translation is the one of the passages
+    const translated = translation && new Map(passages.flat().map((sentence, i) => [sentence, translation.flat()[i]]));
+    const inReader = (ways) => translated ? ways.map(passage => passage.map(sentence => translated.get(sentence))) : null;
 
     return {
         passages,
         translation,
+        points,
+        pointsTranslation: inReader(points),
+        digest,
+        digestTranslation: inReader(digest),
         from,
         topic: isTopic(answer?.topic?.toLowerCase?.()) ? answer.topic.toLowerCase() : null,
         sourcing: SOURCINGS.includes(answer?.sourcing?.toLowerCase?.()) ? answer.sourcing.toLowerCase() : null,

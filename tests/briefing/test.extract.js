@@ -10,7 +10,7 @@ import {describe, expect, it, jest} from '@jest/globals';
 
 const chat = jest.fn();
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
-const {buildExtract, canSummarize, extractArticle, keepsFigures, passagesText, sentencesOf, splitSentences, translatePassages, translateTexts} =
+const {buildExtract, canSummarize, extractArticle, keepsFigures, passagesText, sentencesOf, shorterWays, splitSentences, translatePassages, translateTexts} =
     await import('../../services/utils/extract.js');
 const {newUsage} = await import('../../services/utils/ollama.js');
 
@@ -74,6 +74,25 @@ describe('buildExtract and passagesText', () => {
     it('should set a paragraph per passage and a quote between quotation marks', () => {
         expect(passagesText([[s('Il a parlé.'), s('Rien ne compte.', true)], [s('Fin.')]])).toBe('Il a parlé. “Rien ne compte.”\n\nFin.');
         expect(passagesText([])).toBeNull();
+    });
+});
+
+describe('shorterWays', () => {
+    const sentences = [1, 2, 3, 4, 5, 6].map(n => s(`Phrase numéro ${n} de l'article.`));
+
+    it('should give the most important sentences as points, one each, the most important first', () => {
+        expect(shorterWays(sentences, [5, 1, 2, 4]).points).toEqual([[sentences[4]], [sentences[0]], [sentences[1]]]);
+        expect(shorterWays(sentences, null)).toEqual({points: [], digest: []});
+    });
+
+    it('should keep the digest within 5 to 6 lines of a card, in the order of the article', () => {
+        const long = [s('mot '.repeat(30).trim()), s('mot '.repeat(30).trim()), s('mot '.repeat(30).trim()), s('Une courte phrase de fin.')];
+        expect(shorterWays(long, [3, 1, 4, 2]).digest).toEqual([[long[0]], [long[2], long[3]]]);
+    });
+
+    it('should always keep the most important sentence in the digest, however long', () => {
+        const long = [s('mot '.repeat(80).trim()), s('Une courte phrase de fin.')];
+        expect(shorterWays(long, [1, 2]).digest).toEqual([[long[0]]]);
     });
 });
 
@@ -157,6 +176,21 @@ describe('extractArticle', () => {
         expect(result.translation).toBeNull();
         expect(result).toMatchObject({from: 'fr', topic: 'politics', sourcing: 'named'});
         expect(usage.calls).toBe(1);
+    });
+
+    it('should translate the shorter ways with the sentences of the passages, in no other call', async () => {
+        const english = 'The city council voted to close the bridge to cars on the river. The vote took place on Tuesday evening at the town hall. '.repeat(5);
+        const translations = ['Le conseil municipal a voté la fermeture du pont aux voitures sur la rivière.', 'Le vote a eu lieu mardi soir à la mairie.'];
+        chat.mockReset()
+            .mockResolvedValueOnce(json({topic: 'politics', sourcing: 'named', sentences: [2, 1]}))
+            .mockResolvedValueOnce(json({translations}));
+        const usage = newUsage();
+        const result = await extractArticle('The bridge', {content: english, blocks: []}, {language: 'fr', usage});
+        expect(result.points.map(([sentence]) => sentence.text)).toEqual([
+            'The vote took place on Tuesday evening at the town hall.', 'The city council voted to close the bridge to cars on the river.']);
+        expect(result.pointsTranslation).toEqual([[s(translations[1])], [s(translations[0])]]);
+        expect(result.digestTranslation).toEqual([[s(translations[0]), s(translations[1])]]);
+        expect(usage.calls).toBe(2);
     });
 
     it('should show nothing when the page has no text of its own', async () => {
