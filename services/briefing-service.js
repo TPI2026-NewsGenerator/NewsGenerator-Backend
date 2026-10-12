@@ -542,6 +542,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
 
     // 2. the AI chooses, against the whole profile and what it refuses
     await step('choosing');
+    const language = readerLanguage(profile);
     const chosenByAi = await selectStories(profile.text, candidates.map(story => ({
         id: String(story.storyId),
         title: story.best.title,
@@ -549,7 +550,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
         others: story.members.filter(article => article !== story.best).map(article => article.title).slice(0, 3),
         trusted: story.told,
         media: new Set(story.members.map(mediumOfArticle)).size,
-    })), usage.choosing, feedback.examples, interests.map(interest => interest.text), week, size);
+    })), usage.choosing, feedback.examples, interests.map(interest => interest.text), week, size, language);
     const selected = balanceSelection(chosenByAi, id => byId.get(id)?.interestId, interests, size);
     if (selected.length === 0) return [];
     // the next stories the AI chose, in its order: they replace a card no article of which can be read
@@ -559,7 +560,6 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     // in the language of the reader tell the news of a card in another. The reserve with them: one of
     // them telling the news of a card joins it, never comes as a second card
     await step('checking');
-    const language = readerLanguage(profile);
     const picked = selected.map(item => ({...byId.get(item.id), why: item.why}));
     const reserve = reserved.map(item => ({...byId.get(item.id), why: item.why, reserve: true}));
     const [versions, across] = await Promise.all([

@@ -254,7 +254,10 @@ const mediaMark = (media) => ` (${media} ${media === 1 ? 'média' : 'médias'})`
 
 // week: the stories are of the last 7 days, each with its number of media (media)
 // size: the cards of the briefing (see BRIEFING_SIZES)
-export const selectionPrompt = (profileText, candidates, examples = {liked: [], refused: []}, interests = [], week = false, size = MAX_BRIEFING) => `Voici le profil d'un lecteur, écrit par lui-même :
+// language: the one the reader reads in (see readerLanguage): "why" is written in it, not in the one of
+// the profile, which stays the one it was written in when the reader changes it. Without it, the one of
+// the profile, as on the benches
+export const selectionPrompt = (profileText, candidates, examples = {liked: [], refused: []}, interests = [], week = false, size = MAX_BRIEFING, language = null) => `Voici le profil d'un lecteur, écrit par lui-même :
 """${profileText}"""
 ${interests.length > 1 ? `Ses intérêts :\n${interests.map(interest => `- ${interest}`).join('\n')}\n` : ''}${feedbackBlock(examples)}
 Voici des histoires d'actualité ${week ? "des 7 derniers jours, chacune avec son identifiant entre crochets et le nombre de médias qui l'ont racontée" : "du jour, chacune avec son identifiant entre crochets"} :
@@ -266,7 +269,7 @@ Ce qu'il dit ne pas vouloir est exclu, même quand l'histoire touche un de ses i
 S'il y en a moins de ${chosenFor(size)} qui conviennent, n'en rends que celles-là : une liste courte vaut mieux qu'une histoire hors sujet.
 ${candidates.some(c => c.trusted) ? `Les histoires marquées « source de confiance du lecteur » sont racontées par un média qu'il a mis en favori : à pertinence égale, préfère-les. Ne choisis jamais pour cela une histoire qui ne correspond pas à ce qu'il demande.\n` : ''}Varie : pas deux histoires sur la même personne, la même organisation ou le même événement, sauf si ce sont deux nouvelles importantes et différentes.
 ${week ? `C'est le résumé de sa semaine : préfère les nouvelles qui ont compté, racontées par plusieurs médias ou qui ont fait avancer une affaire, à un fait mineur raconté par un seul. Ne choisis jamais pour cela une histoire qui ne correspond pas à ce qu'il demande.\n` : ''}Préfère les faits ${week ? 'de la semaine' : 'du jour'} (décisions, annonces, résultats, déclarations) aux pronostics, conseils et guides, sauf si le lecteur les demande. Ne choisis jamais une page qui n'apporte aucun fait nouveau : présentation générale d'un sujet, guide pratique, billetterie, classement, calendrier, direct, compilation.
-Pour chacune, "why" est une phrase courte qui dit au lecteur pourquoi elle est pour lui, dans la langue de son profil, tirée seulement de ce que disent son titre et sa description : si le lien avec le profil n'y est pas, ne la choisis pas.
+Pour chacune, "why" est une phrase courte qui dit au lecteur pourquoi elle est pour lui, ${language ? `en ${frenchName(language)}` : 'dans la langue de son profil'}, tirée seulement de ce que disent son titre et sa description : si le lien avec le profil n'y est pas, ne la choisis pas.
 Réponds uniquement en JSON : {"selected": [{"id": "...", "why": "une phrase courte"}]}`;
 
 // the stories chosen, only among the ones given, each once, at most chosenFor(size)
@@ -333,8 +336,9 @@ export const balanceSelection = (selected, interestOf, interests, size = MAX_BRI
 // examples: {liked: [titles], refused: [titles]}, the thumbs of the reader (see utils/feedback.js)
 // interests: the texts of the interests of the reader
 // week: the candidates are of the last 7 days (see selectionPrompt), size: the cards of the briefing
-export const selectStories = async (profileText, candidates, usage = null, examples = undefined, interests = [], week = false, size = MAX_BRIEFING) =>
-    normalizeSelection(await ollamaJson(selectionPrompt(profileText, candidates, examples, interests, week, size), usage), candidates.map(c => c.id), size);
+// language: the one the reader reads in, of the "why" of each story
+export const selectStories = async (profileText, candidates, usage = null, examples = undefined, interests = [], week = false, size = MAX_BRIEFING, language = null) =>
+    normalizeSelection(await ollamaJson(selectionPrompt(profileText, candidates, examples, interests, week, size, language), usage), candidates.map(c => c.id), size);
 
 // The choice reads a title and the start of a description, which may not name what a story is about:
 // "L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Winsley Boteli?" is the Swiss

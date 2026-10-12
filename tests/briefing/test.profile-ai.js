@@ -209,6 +209,12 @@ describe('the share of each interest in a briefing', () => {
         expect(day).toContain('[1] Sinner gagne\n[2] Fils perd\n');
         expect(day).not.toContain('qui ont compté');
     });
+
+    it('should ask the why in the language the reader reads in, not the one of the profile', () => {
+        const candidates = [{id: '1', title: 'Sinner gagne', others: []}];
+        expect(selectionPrompt('Le tennis.', candidates, undefined, [], false, undefined, 'en')).toContain('pourquoi elle est pour lui, en anglais,');
+        expect(selectionPrompt('Le tennis.', candidates)).toContain('pourquoi elle est pour lui, dans la langue de son profil,');
+    });
 });
 
 describe('normalizeCheck', () => {
