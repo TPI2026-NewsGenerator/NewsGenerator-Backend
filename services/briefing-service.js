@@ -478,13 +478,14 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     const [profile, interests] = await Promise.all([ProfileModel.get(profileId), ProfileModel.interests(profileId)]);
     if (!profile || interests.length === 0) throw Object.assign(new Error('Write your profile first.'), {status: 400});
 
-    // the seconds of each step, logged with the tokens: a slow briefing says where its time went
+    // the seconds of each step, logged with the tokens: a slow briefing says where its time went. A
+    // briefing of the benches (no id) is timed too but has no row to save its step in
     const seconds = {};
     let current = null, started = Date.now();
     const step = async (name) => {
         if (current) seconds[current] = Math.round((Date.now() - started) / 1000);
         [current, started] = [name, Date.now()];
-        if (name) await BriefingModel.step(briefingId, name);
+        if (name && briefingId) await BriefingModel.step(briefingId, name);
     };
 
     // 1. the stories of the last hours closest to the interests: scored in the
