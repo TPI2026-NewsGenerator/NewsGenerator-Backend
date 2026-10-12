@@ -3,8 +3,8 @@
 //  Date: 12.10.2026
 //  File: test.official-sources.js
 //  Description: Tests for the official source of a card: the parties the AI names, the posts worth
-//               judging (none of the party that published the card itself), and a post kept only when
-//               both answers of the AI confirm it, one per party
+//               judging (the party's own article of the card too), and a post kept only when both
+//               answers of the AI confirm it, one per party
 //
 
 import {describe, expect, it, jest} from '@jest/globals';
@@ -37,7 +37,6 @@ describe('candidatesOf', () => {
     const uefa = {qid: 'Q35572', label: 'Union of European Football Associations', site: ['https://www.uefa.com']};
     const card = {
         title: 'Aleksander Čeferin to seek a final term as UEFA president',
-        lead: ['https://www.insideworldfootball.com/2026/10/08/ceferin', 'https://insideworldfootball.com'],
         first: '2026-10-08T10:00:00.000Z',
     };
     const post = (title, at = '2026-10-08T09:00:00.000Z', url = `https://www.uefa.com/news/${title.length}`) => ({channel: 'site', title, text: '', at, url});
@@ -58,9 +57,9 @@ describe('candidatesOf', () => {
         expect(candidatesOf(card, [uefa], posts)).toEqual([]);
     });
 
-    it('should leave out a party whose site published the card itself', () => {
-        const own = {...card, lead: ['https://www.uefa.com/news/ceferin', 'https://uefa.com']};
-        expect(candidatesOf(own, [uefa], {Q35572: [post('Čeferin seeks final term as president')]})).toEqual([]);
+    it('should judge the article of the card itself when the party published it', () => {
+        const own = post('Aleksander Čeferin to seek a final term as UEFA president', card.first, 'https://www.uefa.com/news/ceferin');
+        expect(candidatesOf(card, [uefa], {Q35572: [own]}).map(p => p.url)).toEqual(['https://www.uefa.com/news/ceferin']);
     });
 });
 

@@ -26,7 +26,10 @@ import {OfficialModel} from '../../models/official-model.js';
 // clubs publish no feed even through the bridge. Left out on purpose:
 //  - YouTube: a video gives its title only, no statement; its 2 "confirms" were both wrong
 //  - a denial: 5 found over three runs, all wrong ("elections by 31 January" for "on 14 December")
-//  - a party whose own site published the card's lead: the card is its publication, nothing confirmed
+// A card whose lead the party published on its own site is judged like the others: its article is the
+// best confirmation there is, seen at a glance (user, 13.10.2026). Left out at first, it was 2 cards of
+// the 163 (bench/official-badge.mjs --self): the leads are nearly always a media's, a party's own news
+// read by our feeds already joins a card as one of its articles
 // One answer of the AI is not stable: the same three posts of UEFA were "confirms" in one run and
 // "denies" in the next. A post counts only when two answers, the posts in another order, confirm it.
 export const MAX_OFFICIAL = 2;              // posts shown on a card, of different parties
@@ -250,14 +253,12 @@ const STOP_WORDS = new Set(['with', 'that', 'this', 'from', 'after', 'avec', 'po
 
 // The posts of a card's parties worth judging: of the days around it, naming another of its parties or
 // sharing words with its titles, the most alike first, MAX_CANDIDATES at most. parties: [{qid, label,
-// name, site}], name the one the AI gave (shown: "UEFA" rather than Wikidata's full label), posts: {qid -> [post]}. A party whose site published the card's lead gives none
+// name, site}], name the one the AI gave (shown: "UEFA" rather than Wikidata's full label), posts: {qid -> [post]}
 export const candidatesOf = (card, parties, posts) => {
     const from = Date.parse(card.first) - BEFORE_DAYS * 864e5;
-    const lead = new Set(card.lead.map(mediumOfUrl).filter(Boolean));
     const cardWords = [...wordsOf([card.title, card.titleTranslation, ...(card.titles ?? [])].join(' '))].filter(word => !STOP_WORDS.has(word));
     const found = [];
     for (const party of parties) {
-        if (party.site.some(site => lead.has(mediumOfUrl(site)))) continue;
         for (const post of posts[party.qid] ?? []) {
             if (post.at && Date.parse(post.at) < from) continue;
             const words = wordsOf(`${post.title} ${post.text}`);
@@ -286,7 +287,7 @@ export const confirmedOf = (first, second, candidates) => {
         .slice(0, MAX_OFFICIAL);
 };
 
-// cards: [{id, title, titleTranslation, titles, text, lead: [url], first}], first the date of its
+// cards: [{id, title, titleTranslation, titles, text, first}], first the date of its
 // first news. Answers a Map id -> [{party, title, url, channel, publishedAt}], the posts where a party
 // said the card's fact itself; a card the AI failed on has none
 export const officialSourcesOf = async (cards, usage = null) => {

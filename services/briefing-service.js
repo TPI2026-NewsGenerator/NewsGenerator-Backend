@@ -636,7 +636,6 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             titleTranslation: titleTranslation.get(leads[i]) ?? null,
             titles: cardTitles(story, leads[i].title),
             text: textOf(summaryOf(i)?.digest ?? summaryOf(i)?.summary ?? leads[i].description).slice(0, OFFICIAL_TEXT),
-            lead: [addressOf(leads[i]), `https://${siteOf(leads[i])}`],
             first: new Date(Math.min(...story.members.map(article => article.at?.getTime?.() ?? Date.now()))).toISOString(),
         })), usage.official).catch(err => {
             console.error(`Briefing: no official source looked for (${err.message})`);
