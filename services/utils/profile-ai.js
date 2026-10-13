@@ -62,10 +62,10 @@ Découpe ce profil en 1 à ${MAX_INTERESTS} intérêts distincts. Ce que le lect
 Pour chaque intérêt, donne :
 - "text" : le sujet de l'intérêt, puis TOUT ce que le lecteur en cite, avec ses propres mots et sans en résumer ni en enlever aucun, comme "Opéra : nouvelles productions de l'Opéra de Paris et de la Scala, nominations des directeurs et des chefs d'orchestre". Chaque précision du lecteur compte et reste telle quelle : "les expositions et les ventes aux enchères d'art contemporain" ne devient pas "art contemporain". Le texte se lit seul : il nomme toujours son sujet ("les nouvelles lignes de TGV", pas "les nouvelles lignes"). Une précision qui ne nomme aucun sujet ("des règles", "des prix") va dans l'intérêt du sujet qu'elle précise, dans chacun s'il y en a plusieurs : elle ne fait jamais un intérêt à elle seule. Ce sont ses noms et ses groupes de mots séparés par des virgules, jamais ses phrases : aucun verbe qui parle de lui ("je suis", "je m'intéresse à", "je surveille", "concernant", "mon travail m'amène à", "je reste ouvert à"), aucun mot qui dit combien il l'aime ("j'adore", "un peu", "attentivement", "ma priorité"). Ce qu'il refuse n'y est jamais, même dit dans la même phrase : "la voile, sans les régates locales" donne "Voile" et, dans "refused", "les régates locales". N'ajoute ni date, ni année, ni nom qu'il n'a pas écrit. Le "text" fait au plus ${MAX_INTEREST_TEXT} caractères : quand tout ce que le lecteur cite d'un sujet n'y tient pas, sépare ce sujet en plusieurs intérêts, chacun sur une partie qu'on lit dans les mêmes articles et nommant le sujet, ${MAX_INTERESTS} intérêts au plus en tout.
 - "weight" : 1 pour un intérêt qu'il suit de près ou dont il ne dit pas combien il compte ; 0.85 pour un intérêt qu'il dit suivre de plus loin, en second, de temps en temps ou seulement pour l'important.
-- "keywords" : 8 à 12 alternatives séparées par des virgules, dans les langues de ses "searches". CHAQUE alternative, à elle seule, doit désigner le sujet de cet intérêt : un article qui la contient en parle presque sûrement. Une alternative est un mot, ou 2 ou 3 mots qui doivent tous être dans l'article, séparés par des espaces. Si un mot seul est trop général, ajoute-lui le mot du sujet ("taille rosier" et pas "taille"). Jamais d'article ni de préposition, pas de barre oblique, pas de mot général seul ("actualités", "news", "nouveauté", "interview"). Pour les noms propres (produits, événements, personnes), ne cite que ceux qui sont actuels et certains, jamais l'édition d'une année passée : sans année si tu ne connais pas l'édition en cours.
+- "keywords" : 8 à 12 alternatives séparées par des virgules, dans les langues de ses "searches". CHAQUE alternative, à elle seule, doit désigner le sujet de cet intérêt : un article qui la contient en parle presque sûrement. Une alternative est un mot, ou 2 ou 3 mots qui doivent tous être dans l'article, séparés par des espaces. Si un mot seul est trop général, ajoute-lui le mot du sujet ("taille rosier" et pas "taille"). Jamais d'article ni de préposition, pas de barre oblique, pas de mot général seul ("actualités", "news", "nouveauté", "interview"). Pour les noms propres (produits, événements, personnes), ne cite que ceux qui sont actuels et certains, jamais l'édition d'une année passée : sans année si tu ne connais pas l'édition en cours. Aucune alternative ne nomme un sujet de "refused", dans aucune langue.
   Exemple pour "le jardinage bio" : "potager bio, compost jardin, permaculture, semis tomate, purin ortie, paillage potager, jardin sans pesticide, organic gardening, vegetable garden, composting"
 - "languages" : les langues où chercher les médias de ce sujet, en codes ("fr", "en", "sr") : ${firstLanguages(language)}, puis la langue de chaque pays ou région dont ce sujet parle directement (un club, une compétition, une élection, une entreprise, un lieu de ce pays). Un sujet qui couvre plusieurs pays (un continent, une compétition entre clubs ou pays de plusieurs pays) prend aussi les langues de ses plus grands pays sur ce sujet. ${MAX_SEARCH_LANGUAGES} langues au plus, aucune autre.
-- "searches" : des recherches pour trouver dans Google News les médias qui publient sur ce sujet, dans chacune de ses "languages". Par langue, ${MAX_SEARCHES_PER_LANGUAGE} recherches courtes (1 à 3 mots), des mots qu'un titre d'article contiendrait, pas des phrases. "lang" est le code de la langue ("fr", "en", "sr").
+- "searches" : des recherches pour trouver dans Google News les médias qui publient sur ce sujet, dans chacune de ses "languages". Par langue, ${MAX_SEARCHES_PER_LANGUAGE} recherches courtes (1 à 3 mots), des mots qu'un titre d'article contiendrait, pas des phrases, jamais un sujet de "refused". "lang" est le code de la langue ("fr", "en", "sr").
 - "sections" : 1 mot par langue de ses "searches" qui nomme la rubrique d'un journal où ce sujet est publié, comme "jardin", "musique", "transports", "technologie".
 - "category" : la rubrique la plus proche parmi : ${categories.join(', ')}.
 Dans "refused", mets chaque sujet que le lecteur dit ne pas vouloir, nommé seul avec ses mots, sans les mots du refus (« la téléréalité », pas « je ne veux pas de téléréalité »), et [] s'il ne refuse rien.
@@ -80,13 +80,38 @@ const pastYear = (text, year = new Date().getFullYear()) =>
 const withoutPastYears = (keywords) => keywords.split(',').map(keyword => keyword.trim())
     .filter(keyword => keyword && !pastYear(keyword)).join(', ');
 
+// the start of a word, as missingWords reads it: "appointment" and "appointments" are one word
+const stem = (word) => word.slice(0, Math.max(4, word.length - 3));
+const sameWord = (a, b) => stem(a).startsWith(stem(b)) || stem(b).startsWith(stem(a));
+
+// The keywords and searches find the sources of an interest, and the AI wrote what the reader refuses in
+// them: "referee appointment" for a reader refusing "routine UEFA referee appointments" (13.10.2026).
+// A keyword or a search is left out when all its words are of one refusal, one of them a word no interest
+// names: that one says what is refused ("appointments", not "UEFA" or "referee", which are what the
+// reader reads). A word alone is not enough, nor words of several refusals: "football refereeing" stays,
+// though the reader refuses "unrelated football news" and "routine UEFA referee appointments", and no
+// interest says "football". A refusal in another language ("designazione arbitri") is left to the prompt
+const refusals = (refused, texts) => {
+    const named = texts.flatMap(significant);
+    return (Array.isArray(refused) ? refused : []).map(significant)
+        .map(words => ({words, only: words.filter(word => !named.some(other => sameWord(word, other)))}))
+        .filter(refusal => refusal.only.length > 0);
+};
+const namesRefused = (text, refused) => {
+    const words = significant(text);
+    return words.length > 0 && refused.some(({words: of, only}) => words.every(word => of.some(other => sameWord(word, other)))
+        && words.some(word => only.some(other => sameWord(word, other))));
+};
+
 // the answer of the AI made safe: at most MAX_INTERESTS interests with a text, weights between 0.5
 // and 1, searches in at most MAX_SEARCH_LANGUAGES languages Google News has, a category of the list
 export const normalizeInterests = (answer, {categories}) => {
     const interests = Array.isArray(answer?.interests) ? answer.interests : [];
+    const texts = interests.map(interest => withoutRefusals(cleanText(interest?.text, 2 * MAX_INTEREST_TEXT), answer?.refused));
+    const refused = refusals(answer?.refused, texts);
 
     return interests
-        .map(interest => {
+        .map((interest, index) => {
             const weight = Number(interest?.weight);
 
             const searches = [];
@@ -94,7 +119,7 @@ export const normalizeInterests = (answer, {categories}) => {
             for (const search of Array.isArray(interest?.searches) ? interest.searches : []) {
                 const q = cleanText(search?.q, 80);
                 const count = (perLanguage.get(search?.lang) ?? 0) + 1;
-                if (!q || pastYear(q) || !isSearchLanguage(search?.lang) || count > MAX_SEARCHES_PER_LANGUAGE) continue;
+                if (!q || pastYear(q) || namesRefused(q, refused) || !isSearchLanguage(search?.lang) || count > MAX_SEARCHES_PER_LANGUAGE) continue;
                 if (!perLanguage.has(search.lang) && perLanguage.size >= MAX_SEARCH_LANGUAGES) continue;
 
                 perLanguage.set(search.lang, count);
@@ -102,9 +127,10 @@ export const normalizeInterests = (answer, {categories}) => {
             }
 
             return {
-                text: withoutRefusals(cleanText(interest?.text, 2 * MAX_INTEREST_TEXT), answer?.refused).slice(0, MAX_INTEREST_TEXT),
+                text: texts[index].slice(0, MAX_INTEREST_TEXT),
                 weight: Number.isFinite(weight) ? Math.min(1, Math.max(0.5, weight)) : 1,
-                keywords: withoutPastYears(cleanText(interest?.keywords, MAX_KEYWORDS_CHARS).replace(/\s*\/\s*/g, ', ')),
+                keywords: withoutPastYears(cleanText(interest?.keywords, MAX_KEYWORDS_CHARS).replace(/\s*\/\s*/g, ', '))
+                    .split(', ').filter(keyword => keyword && !namesRefused(keyword, refused)).join(', '),
                 searches: searches,
                 sections: [...new Set((Array.isArray(interest?.sections) ? interest.sections : [])
                     .map(section => cleanText(section, 40)).filter(Boolean))].slice(0, 4),

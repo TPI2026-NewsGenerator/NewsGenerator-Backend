@@ -29,6 +29,18 @@ describe('normalizeInterests', () => {
         });
     });
 
+    it('should leave out the keywords and searches that name what the reader refuses', () => {
+        const [interest] = normalizeInterests({refused: ['routine UEFA referee appointments', 'unrelated football news'], interests: [{
+            text: "Refereeing : UEFA's 55 member associations, VAR controversies",
+            keywords: 'football refereeing, referee appointment, UEFA referee, referee scandal',
+            searches: [{q: 'referee appointments', lang: 'en'}, {q: 'football refereeing', lang: 'en'}],
+        }]}, options);
+
+        // "appointments" is refused and no interest names it; "football" and "referee" are words the reader reads
+        expect(interest.keywords).toBe('football refereeing, UEFA referee, referee scandal');
+        expect(interest.searches).toEqual(['en:football refereeing']);
+    });
+
     it('should correct what the AI gets wrong', () => {
         const [interest] = normalizeInterests({interests: [{
             text: '  Chefs   cuisiniers ', weight: 7, keywords: 'chef biographie / chef biography',
