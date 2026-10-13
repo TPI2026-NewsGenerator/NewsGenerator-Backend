@@ -11,7 +11,7 @@ import {jest} from '@jest/globals'
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson: jest.fn()}));
 const {ollamaJson} = await import('../../services/utils/ollama.js');
 const {selectionPrompt} = await import('../../services/utils/profile-ai.js');
-const {balanceSelection, confirmOnSubject, confirmPrompt, interestsOf, missingWords, normalizeCheck, normalizeInterests, normalizeMerges, normalizeReview, normalizeSelection, parseSearch, reviewPrompt, shareOut} = await import('../../services/utils/profile-ai.js');
+const {balanceSelection, confirmOnSubject, confirmPrompt, interestsOf, MAX_INTEREST_TEXT, missingWords, normalizeCheck, normalizeInterests, normalizeMerges, normalizeReview, normalizeSelection, parseSearch, reviewPrompt, shareOut} = await import('../../services/utils/profile-ai.js');
 
 const options = {language: 'fr', categories: ['world', 'sport', 'technology']};
 
@@ -127,6 +127,20 @@ describe('interestsOf', () => {
         ollamaJson.mockReset().mockResolvedValueOnce({interests: [{text: 'Arbitrage du football : VAR, nominations des arbitres'}]});
         await interestsOf(profile);
         expect(ollamaJson).toHaveBeenCalledTimes(1);
+    });
+
+    it('should ask once more to split an interest longer than MAX_INTEREST_TEXT, and keep the split', async () => {
+        const long = `Arbitrage du football : VAR, nominations des arbitres, ${'sanctions des arbitres, '.repeat(25)}`;
+        const split = [{text: 'Arbitrage du football : VAR, nominations des arbitres'}, {text: 'Sanctions des arbitres'}];
+        ollamaJson.mockResolvedValueOnce({interests: [{text: long}]}).mockResolvedValueOnce({interests: split});
+
+        expect((await interestsOf(profile)).interests.map(interest => interest.text)).toEqual(split.map(interest => interest.text));
+        const [conversation] = ollamaJson.mock.calls[1];
+        expect(conversation.at(-1).content).toContain(`dépassent ${MAX_INTEREST_TEXT} caractères`);
+
+        // a split that leaves words out is not better
+        ollamaJson.mockReset().mockResolvedValueOnce({interests: [{text: long}]}).mockResolvedValueOnce({interests: [{text: 'Sanctions des arbitres'}]});
+        expect((await interestsOf(profile)).interests[0].text).toBe(long.trim().slice(0, MAX_INTEREST_TEXT));
     });
 });
 

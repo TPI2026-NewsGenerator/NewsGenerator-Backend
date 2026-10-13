@@ -60,7 +60,7 @@ Il lit en ${frenchName(language)} : les nouvelles de toutes les langues lui sont
 
 Découpe ce profil en 1 à ${MAX_INTERESTS} intérêts distincts. Ce que le lecteur dit ne pas vouloir n'est pas un intérêt : ne le mets dans aucun intérêt, mets-le dans "refused".
 Pour chaque intérêt, donne :
-- "text" : le sujet de l'intérêt, puis TOUT ce que le lecteur en cite, avec ses propres mots et sans en résumer ni en enlever aucun, comme "Opéra : nouvelles productions de l'Opéra de Paris et de la Scala, nominations des directeurs et des chefs d'orchestre". Chaque précision du lecteur compte et reste telle quelle : "les expositions et les ventes aux enchères d'art contemporain" ne devient pas "art contemporain". Le texte se lit seul : il nomme toujours son sujet ("les nouvelles lignes de TGV", pas "les nouvelles lignes"). Une précision qui ne nomme aucun sujet ("des règles", "des prix") va dans l'intérêt du sujet qu'elle précise, dans chacun s'il y en a plusieurs : elle ne fait jamais un intérêt à elle seule. Ce sont ses noms et ses groupes de mots séparés par des virgules, jamais ses phrases : aucun verbe qui parle de lui ("je suis", "je m'intéresse à", "je surveille", "concernant", "mon travail m'amène à", "je reste ouvert à"), aucun mot qui dit combien il l'aime ("j'adore", "un peu", "attentivement", "ma priorité"). Ce qu'il refuse n'y est jamais, même dit dans la même phrase : "la voile, sans les régates locales" donne "Voile" et, dans "refused", "les régates locales". N'ajoute ni date, ni année, ni nom qu'il n'a pas écrit.
+- "text" : le sujet de l'intérêt, puis TOUT ce que le lecteur en cite, avec ses propres mots et sans en résumer ni en enlever aucun, comme "Opéra : nouvelles productions de l'Opéra de Paris et de la Scala, nominations des directeurs et des chefs d'orchestre". Chaque précision du lecteur compte et reste telle quelle : "les expositions et les ventes aux enchères d'art contemporain" ne devient pas "art contemporain". Le texte se lit seul : il nomme toujours son sujet ("les nouvelles lignes de TGV", pas "les nouvelles lignes"). Une précision qui ne nomme aucun sujet ("des règles", "des prix") va dans l'intérêt du sujet qu'elle précise, dans chacun s'il y en a plusieurs : elle ne fait jamais un intérêt à elle seule. Ce sont ses noms et ses groupes de mots séparés par des virgules, jamais ses phrases : aucun verbe qui parle de lui ("je suis", "je m'intéresse à", "je surveille", "concernant", "mon travail m'amène à", "je reste ouvert à"), aucun mot qui dit combien il l'aime ("j'adore", "un peu", "attentivement", "ma priorité"). Ce qu'il refuse n'y est jamais, même dit dans la même phrase : "la voile, sans les régates locales" donne "Voile" et, dans "refused", "les régates locales". N'ajoute ni date, ni année, ni nom qu'il n'a pas écrit. Le "text" fait au plus ${MAX_INTEREST_TEXT} caractères : quand tout ce que le lecteur cite d'un sujet n'y tient pas, sépare ce sujet en plusieurs intérêts, chacun sur une partie qu'on lit dans les mêmes articles et nommant le sujet, ${MAX_INTERESTS} intérêts au plus en tout.
 - "weight" : 1 pour un intérêt qu'il suit de près ou dont il ne dit pas combien il compte ; 0.85 pour un intérêt qu'il dit suivre de plus loin, en second, de temps en temps ou seulement pour l'important.
 - "keywords" : 8 à 12 alternatives séparées par des virgules, dans les langues de ses "searches". CHAQUE alternative, à elle seule, doit désigner le sujet de cet intérêt : un article qui la contient en parle presque sûrement. Une alternative est un mot, ou 2 ou 3 mots qui doivent tous être dans l'article, séparés par des espaces. Si un mot seul est trop général, ajoute-lui le mot du sujet ("taille rosier" et pas "taille"). Jamais d'article ni de préposition, pas de barre oblique, pas de mot général seul ("actualités", "news", "nouveauté", "interview"). Pour les noms propres (produits, événements, personnes), ne cite que ceux qui sont actuels et certains, jamais l'édition d'une année passée : sans année si tu ne connais pas l'édition en cours.
   Exemple pour "le jardinage bio" : "potager bio, compost jardin, permaculture, semis tomate, purin ortie, paillage potager, jardin sans pesticide, organic gardening, vegetable garden, composting"
@@ -202,23 +202,42 @@ export const missingWords = (profileText, interests, refused = []) => {
 // (the one before: "nominations" and "changements" of the UEFA profile). A profile is split once when
 // it is saved, so when a word still misses the AI is asked once more, and its second answer kept only
 // when it misses fewer. {interests, refused}: what the reader refuses is never an interest, its vector
-// would bring the news refused
+// would bring the news refused.
+// A long profile (Roberto, 2366 characters) was split in 4 interests of 6, one cut at MAX_INTEREST_TEXT
+// each time: its sanctions, scandals and heads of refereeing were out of the vector. The prompt gives the
+// limit, and an interest still too long is the other reason to ask once more, to split it. News of 48 h
+// of a split by hand found (bench/split-long.mjs, 3 runs, 13.10.2026): Roberto 47-52% -> 62-64%, 5
+// interests, none cut; Enzo 48-51% -> 64-66%, none cut, but the AI shortened more than it split
+// ("relations internationales" lost, as before); the short profiles the same or better. The limit
+// alone in the prompt still cut Roberto 2 times of 3 and Enzo 3 of 3
+const tooLong = (answer) => (Array.isArray(answer?.interests) ? answer.interests : [])
+    .map(interest => withoutRefusals(cleanText(interest?.text, 2 * MAX_INTEREST_TEXT), answer?.refused))
+    .filter(text => text.length > MAX_INTEREST_TEXT);
+
 export const interestsOf = async (profile) => {
     const prompt = interestsPrompt(profile);
     const answer = await ollamaJson(prompt);
     const interests = normalizeInterests(answer, profile);
     const missing = missingWords(profile.text, interests, answer?.refused);
+    const long = tooLong(answer);
     const first = {interests, refused: normalizeRefused(answer)};
-    if (missing.length === 0 || interests.length === 0) return first;
+    if ((missing.length === 0 && long.length === 0) || interests.length === 0) return first;
 
+    const asks = [];
+    if (long.length > 0) asks.push(`Ces intérêts dépassent ${MAX_INTEREST_TEXT} caractères : ${long.map(text => `"${text.slice(0, 60)}…"`).join(', ')}. Sépare chacun en plusieurs intérêts, chacun sur une partie qu'on lit dans les mêmes articles et nommant le sujet, sans enlever aucun mot du lecteur, ${MAX_INTERESTS} intérêts au plus en tout.`);
+    if (missing.length > 0) asks.push(`Ces mots du profil ne sont dans aucun "text" ni dans "refused" : ${missing.join(', ')}. Redonne toute ta réponse en ajoutant chacun, avec les mots qui l'entourent dans le profil, au "text" de l'intérêt qu'il précise, ou à "refused" si le lecteur le refuse. Ignore un mot qui ne dit aucun sujet.`);
+    else asks.push('Redonne toute ta réponse.');
     const again = await ollamaJson([
         {role: 'user', content: prompt},
         {role: 'assistant', content: JSON.stringify(answer)},
-        {role: 'user', content: `Ces mots du profil ne sont dans aucun "text" ni dans "refused" : ${missing.join(', ')}. Redonne toute ta réponse en ajoutant chacun, avec les mots qui l'entourent dans le profil, au "text" de l'intérêt qu'il précise, ou à "refused" si le lecteur le refuse. Ignore un mot qui ne dit aucun sujet.`},
+        {role: 'user', content: asks.join(' ')},
     ]).catch(() => null);
     const retried = normalizeInterests(again, profile);
-    return retried.length > 0 && missingWords(profile.text, retried, again?.refused).length < missing.length
-        ? {interests: retried, refused: normalizeRefused(again)} : first;
+    const missingAgain = missingWords(profile.text, retried, again?.refused).length;
+    const longAgain = tooLong(again).length;
+    // kept when it is better on one and not worse on the other
+    const better = (longAgain < long.length && missingAgain <= missing.length) || (longAgain <= long.length && missingAgain < missing.length);
+    return retried.length > 0 && better ? {interests: retried, refused: normalizeRefused(again)} : first;
 };
 
 // What the reader said of cards before, as examples: they say what the profile text does not ("no
