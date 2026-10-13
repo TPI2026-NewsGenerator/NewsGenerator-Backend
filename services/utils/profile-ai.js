@@ -382,8 +382,13 @@ export const balanceSelection = (selected, interestOf, interests, size = MAX_BRI
 // interests: the texts of the interests of the reader
 // week: the candidates are of the last 7 days (see selectionPrompt), size: the cards of the briefing
 // language: the one the reader reads in, of the "why" of each story
-export const selectStories = async (profileText, candidates, usage = null, examples = undefined, interests = [], week = false, size = MAX_BRIEFING, language = null) =>
-    normalizeSelection(await ollamaJson(selectionPrompt(profileText, candidates, examples, interests, week, size, language), usage), candidates.map(c => c.id), size);
+// Asked again once when it fails: the whole briefing fails with it (briefing 93 of 13.10.2026, an answer
+// of Ollama that was no JSON)
+export const selectStories = async (profileText, candidates, usage = null, examples = undefined, interests = [], week = false, size = MAX_BRIEFING, language = null) => {
+    const prompt = selectionPrompt(profileText, candidates, examples, interests, week, size, language);
+    const answer = await ollamaJson(prompt, usage).catch(() => ollamaJson(prompt, usage));
+    return normalizeSelection(answer, candidates.map(c => c.id), size);
+};
 
 // The choice reads a title and the start of a description, which may not name what a story is about:
 // "L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Winsley Boteli?" is the Swiss

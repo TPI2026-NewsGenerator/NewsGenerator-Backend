@@ -122,6 +122,8 @@ export const ollamaJson = async (prompt, usage = null, {think} = {}) => {
     try {
         return JSON.parse(raw);
     } catch {
+        // its start and its end say why: an answer cut, a text before the JSON, a JSON badly written
+        console.error(`AI: no JSON in an answer of ${raw.length} characters: ${JSON.stringify(raw.slice(0, 200))} ... ${JSON.stringify(raw.slice(-200))}`);
         throw Object.assign(new Error('The AI did not answer in JSON.'), {status: 502});
     }
 };
