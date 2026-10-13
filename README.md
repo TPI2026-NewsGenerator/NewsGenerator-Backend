@@ -131,7 +131,10 @@ docker build -t newsgenerator-ner:cpu ner
 docker run -d --name newsgenerator-ner --restart unless-stopped --cpus 2 --cpu-shares 64 --memory 3g -p <its address>:8021:8021 --env-file token.env -e NER_THREADS=2 -v ./cache:/cache newsgenerator-ner:cpu
 ```
 
-The `.env` of the server lists the taggers in `NER_URL`, separated by commas, and gives the same secret
+On the server it takes 2 cores at a low weight (`--cpu-shares 64`): the embedder (256), the site and
+the other work of the machine pass first; with 3 cores it took the embedder from about 7 900 news an
+hour to 5 300-5 900, the pace the news come at (13.10.2026). A graphics card tags about 130 news a
+second. The `.env` of the server lists the taggers in `NER_URL`, separated by commas, and gives the same secret
 (`NER_TOKEN`, or `EMBEDDER_TOKEN` when they share it). Each one that answers works on its own news.
 
 #### Database
@@ -1166,7 +1169,8 @@ per briefing; taken out again by `DELETE /api/briefing/<id>/news/<storyId>`.
 
 Every news read gets the people, organisations and places it names (`db/add_named_entities.sql`,
 `services/tagging-service.js`), found by a tagger of its own, `ner/server.py`: GLiNER multi v2.1
-(Apache-2.0), every language of the feeds, on the title and the start of the description. Measured on
+(Apache-2.0), every language of the feeds, on the title and 700 characters of the description (the rest
+of a long one is mostly links to other articles of the medium). Measured on
 294 news of 26 languages (`bench/ner`, 13.10.2026), on 3 cores of the server: 2.2 news a second, the
 same names run after run; the title alone was 3 times faster but found 44% of the names; in int8
 (ONNX or PyTorch) it found none, so fp32 only. The news of the day come at about 1.4 different texts a
