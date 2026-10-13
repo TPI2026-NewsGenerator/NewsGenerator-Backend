@@ -717,7 +717,10 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             titles: cardTitles(story, leads[i].title),
             text: textOf(summaryOf(i)?.digest ?? summaryOf(i)?.summary ?? leads[i].description).slice(0, OFFICIAL_TEXT),
             first: new Date(Math.min(...story.members.map(article => article.at?.getTime?.() ?? Date.now()))).toISOString(),
-        })), usage.official).catch(err => {
+            // its articles read, for the statements of its parties they report (see statements.js)
+            texts: [leads[i], ...story.members.filter(article => article !== leads[i])].filter(article => content.has(article.link))
+                .map(article => ({...toArticle(article), page: content.get(article.link)})),
+        })), usage.official, {language}).catch(err => {
             console.error(`Briefing: no official source looked for (${err.message})`);
             return new Map();
         }),
@@ -787,8 +790,9 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             // anglesOf): [{title, titleTranslation, url, source, language, publishedAt, media, ...}]
             angles: angles.get(story.storyId) ?? [],
             // the posts where a party of the news said it itself, on its website or an open account of
-            // its own (see official-sources.js): [{party, title, url, channel, publishedAt}]. Absent from
-            // the briefings made before 12.10.2026
+            // its own (see official-sources.js): [{party, title, url, channel, publishedAt}]; then its
+            // statements one of the card's articles reports (channel 'reported': title the sentence,
+            // translation, language, source the medium). Absent from the briefings made before 12.10.2026
             official: official.get(story.storyId) ?? [],
             // the people and organisations most of its articles name, each opening its page (see
             // card-names.js): [{name, qid, kind}], qid null for a name Wikidata does not have as one item.

@@ -318,6 +318,15 @@ describe('briefingMail', () => {
         expect(text).not.toContain('Official source');
     });
 
+    it('should quote a statement an article reports, translated, with the medium reporting it', () => {
+        const reported = card(1, 'Reported', {official: [{party: 'FPF', title: 'A FPF publicou um comunicado.', translation: 'The FPF published a statement.',
+            language: 'pt', url: 'https://www.abola.pt/1', source: 'abola.pt', channel: 'reported', publishedAt: null}]});
+        const {html, text} = briefingMail({...briefing, items: [reported]});
+        expect(html).toContain('<b>FPF</b> said it, reported by <a href="https://www.abola.pt/1"');
+        expect(html).toContain('“The FPF published a statement.” (machine translation)');
+        expect(text).toContain('Official source — FPF said it, reported by abola.pt: "The FPF published a statement." https://www.abola.pt/1');
+    });
+
     it('should leave out the why, written to the reader, of an e-mail sent by them to another', () => {
         expect(briefingMail(briefing).html).toContain('Du football, que vous suivez.');
         const {html, text} = briefingMail(briefing, {sender: 'lecteur'});

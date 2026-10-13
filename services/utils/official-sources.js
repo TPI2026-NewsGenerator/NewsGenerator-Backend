@@ -16,6 +16,9 @@ import {readChannels, searchItems} from './wikidata.js';
 import {findFeeds} from './feed-finder.js';
 import {Crawlers} from './crawlers.js';
 import {hostOf, mediumOf} from './public-url.js';
+import {statementsOf} from './statements.js';
+import {translateTexts} from './extract.js';
+import {writtenIn} from './language.js';
 import {OfficialModel} from '../../models/official-model.js';
 
 // Measured on 163 cards of four readers over 7 days (bench/official-badge.mjs, judged by hand): 19
@@ -287,10 +290,20 @@ export const confirmedOf = (first, second, candidates) => {
         .slice(0, MAX_OFFICIAL);
 };
 
-// cards: [{id, title, titleTranslation, titles, text, first}], first the date of its
-// first news. Answers a Map id -> [{party, title, url, channel, publishedAt}], the posts where a party
-// said the card's fact itself; a card the AI failed on has none
-export const officialSourcesOf = async (cards, usage = null) => {
+// The posts of a card's parties first, then the statements its articles report of the parties with no
+// post (see statements.js), MAX_OFFICIAL at most
+export const withStatements = (posts, statements) => {
+    const said = new Set(posts.map(post => post.party.toLowerCase()));
+    return [...posts, ...statements.filter(statement => !said.has(statement.party.toLowerCase()))].slice(0, MAX_OFFICIAL);
+};
+
+// cards: [{id, title, titleTranslation, titles, text, first, texts}], first the date of its first news,
+// texts its articles read [{source, url, publishedAt, page}]. language: the reader's, a statement quoted
+// in another one translated. Answers a Map id -> [{party, title, url, channel, publishedAt}], the posts
+// where a party said the card's fact itself, and the statements its articles report: channel
+// 'reported', title the sentence quoted, translation, source the medium reporting it, url its article;
+// a card the AI failed on has none
+export const officialSourcesOf = async (cards, usage = null, {language = 'en'} = {}) => {
     // the seconds of each part, logged: a slow briefing says where its time went
     const seconds = {};
     let started = Date.now();
@@ -302,6 +315,9 @@ export const officialSourcesOf = async (cards, usage = null) => {
         normalizeParties(await ollamaJson(partiesPrompt(card), usage)));
     const partiesOf = cards.map((card, i) => asked[i].status === 'fulfilled' ? asked[i].value.parties : []);
     done('parties');
+    // the statements need the parties only: read while Wikidata and the channels are asked
+    const reading = mapWithConcurrency(cards, AI_CONCURRENCY, (card, i) =>
+        statementsOf(card, card.texts ?? [], partiesOf[i].map(party => party.name), usage));
     const qidOf = await itemsOf(partiesOf.flat(), usage);
     done('names');
 
@@ -320,6 +336,8 @@ export const officialSourcesOf = async (cards, usage = null) => {
         .map(row => ({channel: 'site', at: row.at?.toISOString?.() ?? null, title: row.title, text: plainText(row.description), url: row.url}))));
     const posts = Object.fromEntries(readable.map((item, i) => [item.qid, read[i].status === 'fulfilled' ? read[i].value : []]));
     done('posts');
+    const statements = await reading;
+    done('statements');
 
     const judged = await mapWithConcurrency(cards, AI_CONCURRENCY, async (card, i) => {
         // the first name the AI gave an item, when it gave it two ("UEFA", "Union of European...")
@@ -338,8 +356,27 @@ export const officialSourcesOf = async (cards, usage = null) => {
         }));
     });
     done('check');
-    const failed = judged.filter(result => result.status !== 'fulfilled').length;
+    const failed = judged.filter(result => result.status !== 'fulfilled').length + statements.filter(result => result.status !== 'fulfilled').length;
     if (failed > 0) console.error(`Official sources: ${failed} cards were not judged`);
-    console.log(`Official sources: ${cards.length} cards, ${qids.length} items, ${readable.length} read, seconds ${JSON.stringify(seconds)}`);
-    return new Map(cards.map((card, i) => [card.id, judged[i].status === 'fulfilled' ? judged[i].value : []]));
+
+    const shown = cards.map((card, i) => withStatements(judged[i].status === 'fulfilled' ? judged[i].value : [],
+        (statements[i].status === 'fulfilled' ? statements[i].value : []).map(statement => ({
+            party: statement.by,
+            title: statement.sentence,
+            translation: null,
+            language: statement.language,
+            url: statement.url,
+            source: statement.source,
+            channel: 'reported',
+            publishedAt: statement.publishedAt,
+        }))));
+    // the statements quoted in another language than the reader's translated, as the denials are
+    const foreign = shown.flat().filter(item => item.channel === 'reported' && item.language && item.language !== language
+        && writtenIn(item.language) && writtenIn(language));
+    const translations = foreign.length === 0 ? [] : await translateTexts(foreign.map(item => ({text: item.title, from: writtenIn(item.language)})),
+        writtenIn(language), usage).catch(() => []);
+    foreign.forEach((item, i) => { item.translation = translations[i] ?? null; });
+    console.log(`Official sources: ${cards.length} cards, ${qids.length} items, ${readable.length} read, `
+        + `${shown.flat().filter(item => item.channel === 'reported').length} statements, seconds ${JSON.stringify(seconds)}`);
+    return new Map(cards.map((card, i) => [card.id, shown[i]]));
 };

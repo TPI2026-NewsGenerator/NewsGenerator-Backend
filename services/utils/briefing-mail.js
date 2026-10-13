@@ -127,11 +127,13 @@ ${others.length > 0 ? `<p class="ng-mute" style="${CAPTION};margin-top:8px">Also
         .join(', ')}${others.length > SHOWN_OTHERS ? ` and ${others.length - SHOWN_OTHERS} more` : ''}</p>` : ''}`;
 };
 
-// the posts where a party said the news itself (see official-sources.js), a line each: none left (the
-// reader took them out, or none has a web address), no note
-const officialHtml = (given) => given.filter(post => webUrl(post.url))
-    .map(post => `<b>${escape(post.party)}</b> said it: <a href="${escape(post.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(post.title)}</a>${post.publishedAt ? `, ${escape(when(post.publishedAt))}` : ''}`)
-    .join('<br>') || null;
+// the posts where a party said the news itself (see official-sources.js), a line each, and its
+// statements an article reports, quoted with the medium: none left (the reader took them out, or none
+// has a web address), no note
+const officialLine = (post) => post.channel === 'reported'
+    ? `<b>${escape(post.party)}</b> said it, reported by <a href="${escape(post.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(post.source)}</a>: “${escape(post.translation ?? post.title)}”${post.translation ? ' (machine translation)' : ''}`
+    : `<b>${escape(post.party)}</b> said it: <a href="${escape(post.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(post.title)}</a>${post.publishedAt ? `, ${escape(when(post.publishedAt))}` : ''}`;
+const officialHtml = (given) => given.filter(post => webUrl(post.url)).map(officialLine).join('<br>') || null;
 
 // the notes of the outer column of the page, under the card in the e-mail; html: the note is written
 // already, else its text is escaped
@@ -225,7 +227,9 @@ ${cards.map((card, i) => cardHtml(card, i, !sender, format)).join('')}
                 wayText(wayOf(card, format)),
                 ...(card.contested ?? []).map(denial => `Contested — ${denial.by} denies: "${denial.sentence}" (${denial.source})`),
                 ...(card.angles ?? []).map(angle => `Other angle: ${angle.titleTranslation ?? angle.title} (${angle.source}) ${angle.url}`),
-                ...(card.official ?? []).map(post => `Official source — ${post.party} said it: ${post.title} ${post.url}`),
+                ...(card.official ?? []).map(post => post.channel === 'reported'
+                    ? `Official source — ${post.party} said it, reported by ${post.source}: "${post.translation ?? post.title}" ${post.url}`
+                    : `Official source — ${post.party} said it: ${post.title} ${post.url}`),
                 lead ? `Read the article at ${lead.source}: ${lead.url}` : '',
                 '',
             ].filter((line, j, lines) => line !== '' || lines[j - 1] !== '').join('\n');

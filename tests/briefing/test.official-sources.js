@@ -11,7 +11,18 @@ import {describe, expect, it, jest} from '@jest/globals';
 
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat: jest.fn()}))}));
 jest.unstable_mockModule('../../models/official-model.js', () => ({OfficialModel: {}}));
-const {MAX_OFFICIAL, candidatesOf, confirmedOf, normalizeParties} = await import('../../services/utils/official-sources.js');
+const {MAX_OFFICIAL, candidatesOf, confirmedOf, normalizeParties, withStatements} = await import('../../services/utils/official-sources.js');
+
+describe('withStatements', () => {
+    const post = (party) => ({party, channel: 'site'});
+    const said = (party) => ({party, channel: 'reported'});
+
+    it('should put the posts first, then the statements of the parties with none, MAX_OFFICIAL at most', () => {
+        expect(withStatements([post('UEFA')], [said('uefa'), said('FIFA')])).toEqual([post('UEFA'), said('FIFA')]);
+        expect(withStatements([], [said('A'), said('B'), said('C')])).toHaveLength(MAX_OFFICIAL);
+        expect(withStatements([post('A')], [])).toEqual([post('A')]);
+    });
+});
 
 describe('normalizeParties', () => {
     it('should keep the kind, the names and their other names', () => {
