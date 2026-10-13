@@ -13,7 +13,9 @@
 import {EntityModel} from "../models/entity-model.js";
 import {ProfileModel} from "../models/profile-model.js";
 import {FeedModel} from "../models/feed-model.js";
-import {feedsOf, newsOfTerms} from "./briefing-service.js";
+import {MentionModel} from "../models/mention-model.js";
+import {feedsOf, namingTerm, newsOfTerms} from "./briefing-service.js";
+import {mentionKey} from "./utils/mentions.js";
 import {isQid, readItem, searchItems} from "./utils/wikidata.js";
 import {readerLanguage} from "./utils/language.js";
 import {Filter} from "./utils/filter.js";
@@ -32,22 +34,39 @@ const NEWS_PER_LINK = 30;
 const fail = (status, message) => Object.assign(new Error(message), {status});
 
 // The news naming these names, every feed of the profile, no relevance: [{term, count, news}] as the
-// terms followed (see newsOfTerms). The names are looked for as plain texts, with and without their
-// accents, then checked as whole words (see FeedModel.articlesHolding): 11 s for a club and its people
-// on 48 hours, 30 s on a week. Kept a few minutes: the page is opened, then a link, then back
+// terms followed (see newsOfTerms), every news counted. The names the tagger found in each news are
+// compared (see mentions.js): "LFF", "Gianni Infantino". The news it has not read yet (just read, a
+// backlog while it was off) are looked for in their texts, the names with and without their accents,
+// checked as whole words (see FeedModel.articlesHolding: 11 s for a club and its people on 48 hours,
+// 30 s on a week, when every news was read so). qids: items of Wikidata whose news are those naming any
+// name the tagger linked to them, in any language, under the term "@<qid>". Kept a few minutes: the
+// page is opened, then a link, then back
 const NEWS_KEPT_MS = 10 * 60e3;
-const kept = new Map();         // `${profileId} ${hours} ${names}` -> {at, groups}
-const namedNews = async (profileId, names, hours) => {
-    const key = `${profileId} ${hours} ${names.join('|')}`;
+const kept = new Map();         // `${profileId} ${hours} ${names} ${qids}` -> {at, groups}
+export const itemTerm = (qid) => `@${qid}`;
+const namedNews = async (profileId, names, hours, qids = []) => {
+    const key = `${profileId} ${hours} ${names.join('|')} ${qids.join('|')}`;
     const known = kept.get(key);
     if (known && Date.now() - known.at < NEWS_KEPT_MS) return known.groups;
     for (const [other, entry] of kept) if (Date.now() - entry.at >= NEWS_KEPT_MS) kept.delete(other);
 
+    const feedUrls = await feedsOf(profileId);
+    const since = new Date(Date.now() - hours * 3600e3);
+    const keyOf = new Map(names.map(name => [name, mentionKey(name)]));
     const texts = [...new Set(names.flatMap(name => [name, Filter.withoutAccents(name)]))];
-    const articles = await FeedModel.articlesHolding({
-        feedUrls: await feedsOf(profileId), texts, since: new Date(Date.now() - hours * 3600e3),
-    });
-    const groups = newsOfTerms(names, articles);
+    const [tagged, untagged] = await Promise.all([
+        MentionModel.articlesNamed({keys: [...new Set(keyOf.values())].filter(Boolean), qids, feedUrls, since}),
+        MentionModel.untaggedCount(since).then(count => count > 0 ? FeedModel.articlesHolding({feedUrls, texts, since, untagged: true}) : []),
+    ]);
+    const articles = [...tagged, ...untagged]
+        .sort((a, b) => (b.published_at ?? b.created_at) - (a.published_at ?? a.created_at));
+    // a news tagged names what the tagger found in it, one not yet what its text holds
+    const holds = (term) => {
+        if (term.startsWith('@')) return (article) => article.qids?.includes(term.slice(1)) ?? false;
+        const inText = namingTerm(term);
+        return (article) => article.keys ? article.keys.includes(keyOf.get(term)) : inText(article);
+    };
+    const groups = newsOfTerms([...names, ...qids.map(itemTerm)], articles, {limit: Infinity, holds});
     kept.set(key, {at: Date.now(), groups});
     return groups;
 };
@@ -210,8 +229,10 @@ export const EntityService = {
             .map(link => ({...link, names: namesFor(link.names.length > 0 ? link : {...link, names: [link.label]}, null)}));
 
         const terms = [...new Set([...entity.names, ...links.flatMap(link => link.names)])];
-        const found = new Map((await namedNews(profileId, terms, hours)).map(group => [group.term, group]));
-        const of = (names, limit) => mergeNews(names.map(name => found.get(name)), limit);
+        const qids = [...new Set([row.qid, ...links.map(link => link.qid)])];
+        const found = new Map((await namedNews(profileId, terms, hours, qids)).map(group => [group.term, group]));
+        // its names, and the names the tagger linked to it (its labels in the other languages of the news)
+        const of = (names, qid, limit) => mergeNews([...names, itemTerm(qid)].map(name => found.get(name)), limit);
 
         return {
             // inTerms: its names that are terms of the profile already, termsLeft: the room for more,
@@ -220,10 +241,10 @@ export const EntityService = {
                 inTerms: inTerms(entity.names, profile?.watch_terms), termsLeft: Math.max(0, MAX_WATCH_TERMS - (profile?.watch_terms?.length ?? 0)),
                 nameCounts: Object.fromEntries(entity.names.map(name => [name, found.get(name)?.count ?? 0]))},
             hours,
-            ...of(entity.names),
+            ...of(entity.names, row.qid),
             links: links
                 .map(link => ({qid: link.qid, label: link.label, description: link.description, kind: link.kind, relation: link.relation,
-                    ...of(link.names, NEWS_PER_LINK)}))
+                    ...of(link.names, link.qid, NEWS_PER_LINK)}))
                 .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)),
         };
     },

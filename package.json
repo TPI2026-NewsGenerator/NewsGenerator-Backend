@@ -9,6 +9,7 @@
     "ingest": "node scripts/ingest.js",
     "ingest:status": "node scripts/ingest-status.js",
     "embedder": "python embedder/server.py",
+    "ner": "python ner/server.py",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:fetch-links": "pnpm run test -- tests/links/test.links-getter.js",
     "test:login": "pnpm run test -- tests/login/test.login-service.js",

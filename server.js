@@ -12,6 +12,7 @@ import 'dotenv/config';
 import app from './app.js';
 import {FeedService} from './services/feed-service.js';
 import {IngestService} from './services/ingest-service.js';
+import {TaggingService} from './services/tagging-service.js';
 import {DiscoveryService} from './services/discovery-service.js';
 import {guardFetch} from './services/utils/public-url.js';
 
@@ -32,3 +33,6 @@ DiscoveryService.resumeInterrupted().catch(err => console.error(`Discovery not s
 // the feeds are read, embedded and grouped in background (see IngestService), nobody waits for them.
 // INGEST_IN_SERVER=false leaves it to "pnpm run ingest" run by a scheduler of the system
 if (process.env.INGEST_IN_SERVER !== 'false') IngestService.schedule();
+// the names of the news found as they are read (see TaggingService), by the server running the
+// ingestion: two would read the same news. Without NER_URL nothing is tagged
+if (process.env.INGEST_IN_SERVER !== 'false') TaggingService.schedule();

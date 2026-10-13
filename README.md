@@ -112,6 +112,28 @@ and the `.env` of the server gives its address and the same secret:
 The firewall of that machine should also let only the server reach the port. The vectors are computed in
 fp32 on the card too, so they stay the ones of the processor, already stored and measured on the benches.
 
+#### Tagger
+
+The names of the news (see **The names of the news**) come from `ner/server.py`, another small HTTP
+server in Python. Without it, or without `NER_URL`, nothing is tagged and the pages search the texts.
+
+```bash
+pip install -r ner/requirements.txt
+pnpm run ner             # listens on 127.0.0.1:8021, loads urchade/gliner_multi-v2.1 first
+```
+
+On another machine, `ner/.env` (or the environment) gives `NER_HOST`, `NER_PORT` (`8021`), `NER_TOKEN`
+(the embedder's `EMBEDDER_TOKEN` is taken when it is not given) and `NER_THREADS`, as for the embedder.
+On a machine without Python packages it runs in Docker (`ner/Dockerfile`, PyTorch for the processor):
+
+```bash
+docker build -t newsgenerator-ner:cpu ner
+docker run -d --name newsgenerator-ner --restart unless-stopped --cpus 3 --cpu-shares 256 --memory 3g -p <its address>:8021:8021 --env-file token.env -e NER_THREADS=3 -v ./cache:/cache newsgenerator-ner:cpu
+```
+
+The `.env` of the server lists the taggers in `NER_URL`, separated by commas, and gives the same secret
+(`NER_TOKEN`, or `EMBEDDER_TOKEN` when they share it). Each one that answers works on its own news.
+
 #### Database
 
 1. Download [PostgreSQL](https://www.postgresql.org/download/)
@@ -150,6 +172,19 @@ fp32 on the card too, so they stay the ones of the processor, already stored and
     reader had, C swaps the keys, right before deploying the server that uses them
 25. Do the same with "add_directory_removed.sql" (the feeds the directory took out because they serve
     no reader, see **The directory** below)
+26. Do the same with "add_briefing_window.sql" (the hours of news a briefing was written from)
+27. Do the same with "add_article_repeats.sql" (a news a feed gives again under another link is found
+    by its feed and its date before it is saved)
+28. Do the same with "add_entities.sql" (the clubs, people and organisations followed, see **Clubs,
+    people and organisations followed** below)
+29. Do the same with "add_sent_mails.sql" (the copies of the e-mails sent before 13.10.2026, see **The
+    e-mail** below)
+30. Do the same with "add_official_sources.sql" (the parties of a card and their own channels, for its
+    official source), then "add_articles_medium_index.sql" alone (built without locking the ingestion)
+31. Do the same with "add_projects.sql" (the projects of a profile, read by its briefing until their
+    last day)
+32. Do the same with "add_named_entities.sql" (the names each news names, see **The names of the
+    news** below), then "add_untagged_index.sql" alone (built without locking the ingestion)
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.
@@ -1102,21 +1137,76 @@ trigram index answers, then checked as whole words: 45 names of a club and its p
 the patterns of the terms followed, 11 s this way on 48 hours (`FeedModel.articlesHolding`). The reader
 takes out a name that finds other things and adds their own.
 
+### A story shown before
+
+A story on a card of the profile's briefings of the last 48 hours is left out of the next one
+(`services/utils/repeats.js`), and so is any other story of the same thread: an affair is not told two
+days in a row. It comes back only when news published since tell something new, which one call of the
+AI decides for all of them ("when in doubt, it is not new"); it is then shown as a follow-up of the card
+read, from the news since. A briefing written again within 3 hours keeps its stories: one rewritten to
+change its size would lose them all.
+
+### Projects
+
+A profile has up to 5 projects, something its reader prepares for a time (a trip, a purchase, a report),
+each with a last day or none (`db/add_projects.sql`, `/api/profile/projects`). It is written as a profile
+is, the AI asking questions on the project only (it reads the profile, never asks how long it lasts),
+then split into interests by the AI. The briefing ranks the stories with the interests of the profile
+and of the projects running, and gives the AI their descriptions; the news come from the profile's
+sources and the Google News searches of the projects. A project ended is no longer read.
+
+### A news added by its link
+
+An administrator can add a news to a briefing by its link (`POST /api/briefing/<id>/news`): the page is
+read (public addresses only, no headless browser), its key passages chosen and translated as for a card,
+and it comes last, ticked for the e-mail, said "Added by you", with no other media nor angle. 10 at most
+per briefing; taken out again by `DELETE /api/briefing/<id>/news/<storyId>`.
+
+### The names of the news
+
+Every news read gets the people, organisations and places it names (`db/add_named_entities.sql`,
+`services/tagging-service.js`), found by a tagger of its own, `ner/server.py`: GLiNER multi v2.1
+(Apache-2.0), every language of the feeds, on the title and the start of the description. Measured on
+294 news of 26 languages (`bench/ner`, 13.10.2026), on 3 cores of the server: 2.2 news a second, the
+same names run after run; the title alone was 3 times faster but found 44% of the names; in int8
+(ONNX or PyTorch) it found none, so fp32 only. The news of the day come at about 1.4 different texts a
+second.
+
+Each tagger of `NER_URL` works on its own, the newest news first, none read by two: the processor of the
+server keeps up with the day, a graphics card switched on now and then takes the backlog of the month
+with it. A name is stored once per kind (`mentions`), compared without case, accents nor leading article
+("La Fédération lettone de football"), and each news says which it names (`article_mentions`). The
+names most met are looked for in Wikidata in background, one every 7 s (it refused more than about 10
+searches a minute without an account): a name is the item when only one item is called exactly so
+("Latvian Football Federation"), none when several are ("LFF", of Latvia and of Lithuania; "Paris").
+
+They serve twice:
+
+- **The page of an item followed** finds its news by the names the tagger found in them and the ones
+  it linked to the item, instead of searching every text, and counts every story (the page said 101
+  for the UEFA where its name alone had 152: 100 news were kept per name, then counted). The news not
+  tagged yet are still looked for in their texts.
+- **The other angles of a card** add, to the closest stories, the stories of the last 30 days naming
+  its rare names: the people and bodies most of its news name, named by few news of the month (400 at
+  most), with their names in the other languages when Wikidata links them. The Latvian federation
+  backing Čeferin was no angle of its backing of Infantino a week before: the closest stories were
+  "Čeferin runs again" in 15 languages (0.80-0.89), that one 0.60-0.65 away. The AI judges both kinds
+  as before, each news given with its day.
+
 ### What the administrators can do
 
 Sending the briefing by e-mail and having several profiles are for the accounts of the role `Admin`
 (`services/utils/admin.js`). The role is read in the database at each request, never in the token: an
 account made an administrator has it at once. `GET /api/session` says it (`admin`).
 
-### The e-mail as it was sent
+### The e-mail
 
-Whoever forwards an e-mail can change it in their mail app (Gmail, Outlook, Apple Mail): nothing in the
-e-mail can stop it. So each e-mail sent is kept as it was sent (`sent_mails`, `db/add_sent_mails.sql`),
-its joined pictures written in it, and a small link at its end leads to that copy (no line about it at its top, the user's choice): `GET /api/mails/<token>`, a page
-for anyone who has the link, no account. The token is 18 random bytes (24 characters), never guessed; the
-page runs nothing (`Content-Security-Policy` without scripts), is not indexed nor framed, and is of no site (`sandbox`: an opaque origin, so even a script let through by mistake could neither read the session nor call the API). The copy is
-taken out again when the e-mail could not be sent. The address of the link is the one of the site as the
-reader reached it (`Host`, the https of the tunnel kept by `trust proxy`).
+The e-mail is titled with the name of the profile and the day, "Roberto’s Briefing · 13 October 2026",
+never the name of the account; its subject adds the number of stories, without an hour. It gives no
+"Who tells it" (the sources of each card say it) and, since 13.10.2026, no link to a copy of it: no copy
+is kept any more. The links of the e-mails sent before still lead to theirs (`GET /api/mails/<token>`,
+`sent_mails`): a page for anyone who has the link, no account, that runs nothing
+(`Content-Security-Policy` without scripts), is not indexed nor framed, and is of no site (`sandbox`).
 
 The pictures offered for an e-mail are the ones at least 560 pixels wide, the width of the picture in the
 e-mail: 49 of the 289 pictures of 6 briefings were narrower, some 72 pixels (`bench/picture-sizes.mjs`).

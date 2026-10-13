@@ -24,6 +24,7 @@ import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {contestedOf} from "./utils/contested.js";
 import {otherAnglesOf} from "./utils/other-angles.js";
+import {AFFAIR_DAYS, storiesOfSameNames} from "./utils/affair-names.js";
 import {officialSourcesOf} from "./utils/official-sources.js";
 import {evolvedStories, REPEAT_HOURS, REWRITE_HOURS, shownStories, withoutRepeats} from "./utils/repeats.js";
 import {readerLanguage, writtenIn} from "./utils/language.js";
@@ -112,6 +113,9 @@ const ANGLES_DAYS = 3;
 const ANGLE_LIKENESS = 0.6;
 const ANGLE_CANDIDATES = 8;
 const ANGLE_QUERIES = 5;            // cards compared at the same time in the database
+// and the stories of the last AFFAIR_DAYS naming the rare names of the card (see affair-names.js), the
+// other stances of its actors, these many more at most
+const NAMED_CANDIDATES = 5;
 const CARD_TITLES = 5;              // other titles of a card given with it, one per language first
 
 const running = new Set();          // users whose briefing is being written by this server
@@ -344,21 +348,39 @@ export const anglesOf = async (stories, titles, {language, feedUrls, hours, trus
         storyIds: [story.storyId], excluded: [...shown], feedUrls, since,
         likeness: ANGLE_LIKENESS, perStory: ANGLE_CANDIDATES * 2,
     }))).flatMap(result => result.status === 'fulfilled' ? result.value : []);
-    const ids = [...new Set(rows.map(row => row.id_other))];
+    const named = await storiesOfSameNames(stories, {feedUrls, since: new Date(Date.now() - AFFAIR_DAYS * 24 * 3600e3),
+        excluded: [...shown], perStory: ANGLE_CANDIDATES + NAMED_CANDIDATES}).catch(err => {
+        console.error(`Briefing: no story of the same names looked for (${err.message})`);
+        return new Map();
+    });
+    const namedRows = [...named].flatMap(([id, others]) => others.map(other => ({id_story: id, id_other: other.id_story, id_article: other.id_article})));
+    const ids = [...new Set([...rows, ...namedRows].map(row => row.id_other))];
     if (ids.length === 0) return new Map();
     const members = new Map(ids.map(id => [id, []]));
-    for (const article of await StoryModel.storyArticles({storyIds: ids, feedUrls, since})) {
+    const oldest = namedRows.length > 0 ? new Date(Date.now() - AFFAIR_DAYS * 24 * 3600e3) : since;
+    for (const article of await StoryModel.storyArticles({storyIds: ids, feedUrls, since: oldest})) {
         if (!links.has(article.link)) members.get(article.id_story).push(article);
     }
     const newsOf = (id) => members.get(id).find(article => !fromGoogle(article)) ?? members.get(id)[0] ?? null;
+    // the closest stories, then the ones naming its rare names that are not among them, by their news
+    // naming them: the newest of a story of every federation's stance on Infantino named another one
+    const othersOf = (story) => {
+        const closest = rows.filter(row => row.id_story === story.storyId && newsOf(row.id_other)).slice(0, ANGLE_CANDIDATES);
+        const close = new Set(closest.map(row => row.id_other));
+        const naming = namedRows.filter(row => row.id_story === story.storyId && !close.has(row.id_other) && newsOf(row.id_other))
+            .slice(0, NAMED_CANDIDATES);
+        return [...closest, ...naming].map(row => {
+            const article = members.get(row.id_other).find(news => row.id_article && news.id === row.id_article) ?? newsOf(row.id_other);
+            return {storyId: row.id_other, article, title: article.title, at: article.at,
+                media: new Set(members.get(row.id_other).map(mediumOfArticle)).size};
+        });
+    };
     const cards = stories.map((story, i) => ({
         id: story.storyId,
         title: titles[i],
         titles: cardTitles(story, titles[i]),
-        others: rows.filter(row => row.id_story === story.storyId && newsOf(row.id_other))
-            .slice(0, ANGLE_CANDIDATES)
-            .map(row => ({storyId: row.id_other, article: newsOf(row.id_other), title: newsOf(row.id_other).title,
-                media: new Set(members.get(row.id_other).map(mediumOfArticle)).size})),
+        at: story.best?.at ?? null,
+        others: othersOf(story),
     }));
     const judged = await otherAnglesOf(cards, usage);
     const placed = new Set();
@@ -801,14 +823,21 @@ export const watchedNews = async (terms, {feedUrls, since}) => {
     return newsOfTerms(terms, articles);
 };
 
-// [{term, count, news}]: the articles naming each term as a whole word, one news per story, the newest
-// first (articles: the newest first)
-export const newsOfTerms = (terms, articles) => {
+// the articles whose title or description names a term as a whole word
+export const namingTerm = (term) => {
+    const names = Filter.matcher(Filter.parse([`"${term}"`]));
+    return (article) => names(`${article.title} ${article.description ?? ''}`);
+};
+
+// [{term, count, news}]: the articles naming each term, one news per story, the newest first (articles:
+// the newest first), 'limit' news kept per term, all counted. holds(term): the test of an article
+// naming it, a whole word of its text when not given (the entities give the names the tagger found)
+export const newsOfTerms = (terms, articles, {limit = WATCHED_PER_TERM, holds = namingTerm} = {}) => {
     return terms.map(term => {
-        const names = Filter.matcher(Filter.parse([`"${term}"`]));
+        const names = holds(term);
         const stories = new Map();
         for (const article of articles) {
-            if (!names(`${article.title} ${article.description ?? ''}`)) continue;
+            if (!names(article)) continue;
             const key = article.id_story ?? `article ${article.id}`;
             const story = stories.get(key) ?? {article, media: new Set()};
             story.media.add(mediumOfArticle(article));
@@ -817,7 +846,7 @@ export const newsOfTerms = (terms, articles) => {
         return {
             term,
             count: stories.size,
-            news: [...stories.values()].slice(0, WATCHED_PER_TERM).map(({article, media}) => ({
+            news: [...stories.values()].slice(0, limit).map(({article, media}) => ({
                 storyId: article.id_story ?? null,
                 title: article.title,
                 url: addressOf(article),

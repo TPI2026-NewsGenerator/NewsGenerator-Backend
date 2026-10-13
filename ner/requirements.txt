@@ -1,0 +1,4 @@
+gliner>=0.2.16
+torch>=2.2
+# the tokenizer of GLiNER multi (mDeBERTa) is read from its sentencepiece file through protobuf
+protobuf>=4

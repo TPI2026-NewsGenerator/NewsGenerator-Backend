@@ -10,6 +10,7 @@
 "use strict"
 
 import {isQid, kindOf, namesOf} from './wikidata-names.js';
+import {mentionKey} from './mentions.js';
 
 export {isQid};
 
@@ -23,8 +24,19 @@ const MAX_LINKS = 80;
 // the names of an item are read in these languages, and in the one of the reader
 const LANGUAGES = ['en', 'fr', 'de', 'es', 'it', 'pt', 'nl'];
 
+// Refused (429), Wikidata says how long to wait: nothing is asked meanwhile, by anyone of this process
+// (the names linked in background, a page, the official sources). Without an account it lets about 10
+// searches a minute through (13.10.2026)
+const PAUSE_MS = 30e3;
+let pausedUntil = 0;
+
 const ask = async (url) => {
+    if (Date.now() < pausedUntil) throw Object.assign(new Error('Wikidata asked to wait.'), {status: 502, paused: true});
     const res = await fetch(url, {headers: HEADERS, signal: AbortSignal.timeout(TIMEOUT_MS)});
+    if (res.status === 429) {
+        pausedUntil = Date.now() + (Number(res.headers.get('retry-after')) * 1000 || PAUSE_MS);
+        throw Object.assign(new Error('Wikidata asked to wait.'), {status: 502, paused: true});
+    }
     if (!res.ok) throw Object.assign(new Error(`Wikidata answered ${res.status}.`), {status: 502});
     return res.json();
 };
@@ -42,6 +54,26 @@ export const searchItems = async (q, language = 'en') => {
     return (answer.search ?? []).filter(item => isQid(item.id)).map(item => ({
         qid: item.id, label: item.label ?? item.id, description: item.description ?? null,
     }));
+};
+
+// pages of Wikidata that are no person, body nor place a news names
+const NOT_NAMED = /^(Wikimedia |family name|surname|given name|male given name|female given name|unisex given name|scholarly article|scientific article)/i;
+const EXACT_FOUND = 10;
+
+// [qid]: the items called exactly this name (a label or an alias, whatever the case and accents) in
+// this language, in the order of Wikidata. A language Wikidata does not know is searched in English
+export const exactItems = async (name, language = 'en') => {
+    const key = mentionKey(name);
+    if (key.length < 2) return [];
+    const search = async (code) => ask(`${API}?${new URLSearchParams({action: 'wbsearchentities', search: String(name).slice(0, 100),
+        language: code, uselang: code, type: 'item', limit: String(EXACT_FOUND), format: 'json'})}`);
+    let answer = await search(language || 'en');
+    if (answer.error && language !== 'en') answer = await search('en');
+    if (answer.error) throw Object.assign(new Error(`Wikidata refused the search (${answer.error.code}).`), {status: 502});
+    return [...new Set((answer.search ?? [])
+        .filter(item => isQid(item.id) && !NOT_NAMED.test(item.description ?? '')
+            && mentionKey(item.match?.text ?? item.label) === key)
+        .map(item => item.id))];
 };
 
 // The channels an item publishes on, as Wikidata gives them: its website and its accounts

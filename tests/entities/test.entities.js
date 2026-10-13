@@ -18,13 +18,18 @@ jest.unstable_mockModule('../../models/entity-model.js', () => ({EntityModel}));
 jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {articlesHolding}}));
 const ProfileModel = {get: jest.fn(), setWatchTerms: jest.fn()};
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel}));
+// the news the tagger read, and how many it has not (some: their texts are searched)
+const MentionModel = {articlesNamed: jest.fn(async () => []), untaggedCount: jest.fn(async () => 1)};
+jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel}));
+const inTitle = (term) => (article) => article.title.includes(term);
 jest.unstable_mockModule('../../services/briefing-service.js', () => ({
     feedsOf: async () => ['https://feed.example/rss'],
-    // as the real one, more simply: the news of each term
-    newsOfTerms: (terms, articles) => terms.map(term => {
-        const news = articles.filter(article => article.title.includes(term))
+    namingTerm: inTitle,
+    // as the real one, more simply: the news of each term, 'limit' kept, all counted
+    newsOfTerms: (terms, articles, {limit = 100, holds = inTitle} = {}) => terms.map(term => {
+        const news = articles.filter(holds(term))
             .map(article => ({storyId: article.id_story, title: article.title, url: article.link, publishedAt: article.published_at}));
-        return {term, count: news.length, news};
+        return {term, count: news.length, news: news.slice(0, limit)};
     }),
 }));
 const readItem = jest.fn();
@@ -119,6 +124,30 @@ describe('EntityService.page', () => {
         await EntityService.page(8, 'Q483020', 24);
         expect(readItem).toHaveBeenCalledWith('Q483020', 'fr');
         expect(EntityModel.save).toHaveBeenCalled();
+    });
+
+    it('should find the news by the names the tagger found in them, and by the names it linked to the item, without searching texts once all are tagged', async () => {
+        MentionModel.untaggedCount.mockResolvedValueOnce(0);
+        MentionModel.articlesNamed.mockResolvedValueOnce([
+            {...article(7, 'Le club gagne', 70), keys: ['psg'], qids: []},
+            {...article(8, 'Les Parisiens en Ligue des champions', 80), keys: ['parisiens'], qids: ['Q483020']},
+            {...article(9, 'Doublé du Ballon d’or', 90), keys: ['ousmane dembele'], qids: []},
+        ]);
+        const page = await EntityService.page(11, 'Q483020', 48);
+
+        expect(articlesHolding).not.toHaveBeenCalled();
+        expect(page.news.map(news => news.storyId)).toEqual([80, 70]);     // the newest first
+        expect(page.links.find(link => link.label === 'Ousmane Dembélé').count).toBe(1);
+        const asked = MentionModel.articlesNamed.mock.calls.at(-1)[0];
+        expect(asked.keys).toEqual(expect.arrayContaining(['psg', 'paris saint-germain', 'ousmane dembele', 'parc des princes']));
+        expect(asked.qids).toEqual(expect.arrayContaining(['Q483020', 'Q1', 'Q2', 'Q3']));
+    });
+
+    it('should count every story naming it, not only the news kept per name', async () => {
+        MentionModel.articlesNamed.mockResolvedValueOnce(Array.from({length: 130}, (_, i) => ({...article(i + 10, `Match ${i}`, i + 100), keys: ['psg'], qids: []})));
+        articlesHolding.mockResolvedValueOnce([]);
+        const page = await EntityService.page(12, 'Q483020', 48);
+        expect(page.count).toBe(130);
     });
 
     it('should refuse an id that is not one of Wikidata, and a window it does not offer', async () => {
