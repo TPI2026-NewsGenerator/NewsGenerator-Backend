@@ -30,14 +30,21 @@ export const MentionModel = {
     untaggedCount: async (since) => (await prisma.$queryRawUnsafe(`
         SELECT count(*)::int AS n FROM articles WHERE entities_at IS NULL AND created_at >= $1::timestamptz`, since))[0].n,
 
-    // The names of news tagged: tagged [{id, lang, names: [{key, kind, name}]}]. The names new are
-    // added, the ones known counted once more per news, then the news say which they name and that
-    // they were read, in one transaction. A news deleted meanwhile (the retention) is skipped. The
-    // names in the order of their key: two taggers adding the same ones wait for each other instead
-    // of locking each other
-    save: async (tagged) => {
+    // The names of news tagged: tagged [{id, lang, names: [{key, kind, name}]}], in one transaction.
+    // The news are marked read first, the ones the ingestion holds skipped (it groups them, see
+    // assign_stories): waiting for them, the tagger and the ingestion locked each other and Postgres
+    // cancelled one (13.10.2026, the graphics card tagging 130 news a second); they are tagged again
+    // later. Then the names of the news marked are added, the ones known counted once more per news,
+    // in the order of their key: two taggers adding the same ones wait for each other instead of
+    // locking each other. A news deleted meanwhile (the retention) is skipped. Answers the news saved
+    save: async (tagged) => prisma.$transaction(async (tx) => {
+        const marked = new Set((await tx.$queryRawUnsafe(`
+            UPDATE articles SET entities_at = now()
+            WHERE id IN (SELECT id FROM articles WHERE id = ANY($1::int[]) ORDER BY id FOR UPDATE SKIP LOCKED)
+            RETURNING id`, tagged.map(news => news.id))).map(row => row.id));
+        const saved = tagged.filter(news => marked.has(news.id));
         const counts = new Map();
-        for (const news of tagged) {
+        for (const news of saved) {
             for (const {key, kind, name} of news.names) {
                 const known = counts.get(`${kind} ${key}`);
                 if (known) known.seen++;
@@ -45,24 +52,20 @@ export const MentionModel = {
             }
         }
         const names = [...counts.values()].sort((a, b) => a.key.localeCompare(b.key) || a.kind.localeCompare(b.kind));
-        return prisma.$transaction(async (tx) => {
-            const ids = names.length === 0 ? [] : await tx.$queryRawUnsafe(`
-                INSERT INTO mentions (key, kind, name, lang, seen)
-                SELECT n.key, n.kind, n.name, n.lang, n.seen
-                FROM jsonb_to_recordset($1::jsonb) AS n(key text, kind text, name text, lang text, seen int)
-                ON CONFLICT (key, kind) DO UPDATE SET seen = mentions.seen + EXCLUDED.seen
-                RETURNING id, key, kind`, JSON.stringify(names));
-            const idOf = new Map(ids.map(row => [`${row.kind} ${row.key}`, row.id]));
-            const links = tagged.flatMap(news => news.names.map(({key, kind}) => ({article: news.id, mention: idOf.get(`${kind} ${key}`)})));
-            if (links.length > 0) await tx.$executeRawUnsafe(`
-                INSERT INTO article_mentions (id_mention, id_article)
-                SELECT l.mention, a.id FROM jsonb_to_recordset($1::jsonb) AS l(article int, mention int)
-                JOIN articles a ON a.id = l.article
-                ON CONFLICT DO NOTHING`, JSON.stringify(links));
-            await tx.$executeRawUnsafe(`UPDATE articles SET entities_at = now() WHERE id = ANY($1::int[])`, tagged.map(news => news.id));
-            return names.length;
-        }, {timeout: 120000});
-    },
+        const ids = names.length === 0 ? [] : await tx.$queryRawUnsafe(`
+            INSERT INTO mentions (key, kind, name, lang, seen)
+            SELECT n.key, n.kind, n.name, n.lang, n.seen
+            FROM jsonb_to_recordset($1::jsonb) AS n(key text, kind text, name text, lang text, seen int)
+            ON CONFLICT (key, kind) DO UPDATE SET seen = mentions.seen + EXCLUDED.seen
+            RETURNING id, key, kind`, JSON.stringify(names));
+        const idOf = new Map(ids.map(row => [`${row.kind} ${row.key}`, row.id]));
+        const links = saved.flatMap(news => news.names.map(({key, kind}) => ({article: news.id, mention: idOf.get(`${kind} ${key}`)})));
+        if (links.length > 0) await tx.$executeRawUnsafe(`
+            INSERT INTO article_mentions (id_mention, id_article)
+            SELECT l.mention, l.article FROM jsonb_to_recordset($1::jsonb) AS l(article int, mention int)
+            ON CONFLICT DO NOTHING`, JSON.stringify(links));
+        return saved.length;
+    }, {timeout: 120000}),
 
     // [{id, name, lang, seen}]: the names never looked for in Wikidata named by 'least' news at least,
     // the most named first

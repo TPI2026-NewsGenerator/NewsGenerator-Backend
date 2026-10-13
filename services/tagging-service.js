@@ -11,7 +11,6 @@
 
 import {MentionModel} from "../models/mention-model.js";
 import {RETENTION_DAYS} from "./feed-service.js";
-import {richText} from "./ingest-service.js";
 import {taggerDevice, taggerUrls, tagTexts} from "./utils/tagger.js";
 import {cleanMentions} from "./utils/mentions.js";
 import {languageOf} from "./utils/language.js";
@@ -47,8 +46,15 @@ const taken = new Set();
 const taggers = new Map();
 let started = false;
 
-// what is tagged of a news: what is embedded of it, the title and the start of the description
-const textOf = (row) => richText(row.title ?? '', row.description);
+// What is tagged of a news: the title and the start of its description, longer than what is embedded
+// (400 characters): a name further in it was missed (13.10.2026, the user's choice). The rest of a long
+// description is mostly the links to other articles of the medium (Čeferin in 30 news of L'Équipe and
+// SID, 29 only there)
+export const TAGGED_CHARS = 700;
+export const textOf = (row) => {
+    const description = String(row.description ?? '').replace(/\s+/g, ' ').trim().slice(0, TAGGED_CHARS);
+    return description ? `${row.title ?? ''}. ${description}` : row.title ?? '';
+};
 
 // These news ({id, title, description, lang}) tagged by this tagger and their names saved. A text met
 // twice (a news in two feeds) is sent once

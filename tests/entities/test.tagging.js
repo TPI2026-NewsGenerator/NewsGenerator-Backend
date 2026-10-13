@@ -17,13 +17,10 @@ const MentionModel = {
 jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel}));
 const tagTexts = jest.fn();
 jest.unstable_mockModule('../../services/utils/tagger.js', () => ({tagTexts, taggerDevice: jest.fn(), taggerUrls: () => []}));
-jest.unstable_mockModule('../../services/ingest-service.js', () => ({
-    richText: (title, description) => description ? `${title}. ${description}` : title,
-}));
 jest.unstable_mockModule('../../services/feed-service.js', () => ({RETENTION_DAYS: 30}));
 
 const {cleanMentions, mentionKey, rareNames} = await import('../../services/utils/mentions.js');
-const {tagBatch} = await import('../../services/tagging-service.js');
+const {tagBatch, textOf, TAGGED_CHARS} = await import('../../services/tagging-service.js');
 const {exactItems, readItem} = await import('../../services/utils/wikidata.js');
 const {storiesOfSameNames} = await import('../../services/utils/affair-names.js');
 const {anglesPrompt} = await import('../../services/utils/other-angles.js');
@@ -86,6 +83,15 @@ describe('rareNames', () => {
             {id: 6, kind: 'person', inCard: 1, news: 5},
         ];
         expect(rareNames(rows, {rare: 400, max: 2}).map(row => row.id)).toEqual([3, 2]);
+    });
+});
+
+describe('textOf', () => {
+    it('should give the tagger the title and the start of the description, longer than what is embedded', () => {
+        const text = textOf({title: 'LFF backs Infantino', description: `The  Latvian ${'x'.repeat(900)}`});
+        expect(text.startsWith('LFF backs Infantino. The Latvian x')).toBe(true);
+        expect(text).toHaveLength('LFF backs Infantino. '.length + TAGGED_CHARS);
+        expect(textOf({title: 'Alone', description: null})).toBe('Alone');
     });
 });
 

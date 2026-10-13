@@ -68,7 +68,12 @@ export const exactItems = async (name, language = 'en') => {
     const search = async (code) => ask(`${API}?${new URLSearchParams({action: 'wbsearchentities', search: String(name).slice(0, 100),
         language: code, uselang: code, type: 'item', limit: String(EXACT_FOUND), format: 'json'})}`);
     let answer = await search(language || 'en');
-    if (answer.error && language !== 'en') answer = await search('en');
+    if (answer.error && !/busy|maxlag/.test(answer.error.code ?? '') && language !== 'en') answer = await search('en');
+    // too busy ("cirrussearch-too-busy-error", 13.10.2026): as a refusal, nothing asked for a while
+    if (/busy|maxlag/.test(answer.error?.code ?? '')) {
+        pausedUntil = Date.now() + PAUSE_MS;
+        throw Object.assign(new Error('Wikidata asked to wait.'), {status: 502, paused: true});
+    }
     if (answer.error) throw Object.assign(new Error(`Wikidata refused the search (${answer.error.code}).`), {status: 502});
     return [...new Set((answer.search ?? [])
         .filter(item => isQid(item.id) && !NOT_NAMED.test(item.description ?? '')

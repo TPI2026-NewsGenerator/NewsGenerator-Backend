@@ -128,7 +128,7 @@ On a machine without Python packages it runs in Docker (`ner/Dockerfile`, PyTorc
 
 ```bash
 docker build -t newsgenerator-ner:cpu ner
-docker run -d --name newsgenerator-ner --restart unless-stopped --cpus 3 --cpu-shares 256 --memory 3g -p <its address>:8021:8021 --env-file token.env -e NER_THREADS=3 -v ./cache:/cache newsgenerator-ner:cpu
+docker run -d --name newsgenerator-ner --restart unless-stopped --cpus 2 --cpu-shares 64 --memory 3g -p <its address>:8021:8021 --env-file token.env -e NER_THREADS=2 -v ./cache:/cache newsgenerator-ner:cpu
 ```
 
 The `.env` of the server lists the taggers in `NER_URL`, separated by commas, and gives the same secret

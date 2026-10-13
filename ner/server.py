@@ -8,7 +8,7 @@
 # GLiNER multi v2.1 (urchade/gliner_multi-v2.1, Apache-2.0) reads every language of the feeds and is
 # asked for the kinds wanted ("person", "organization", "location") instead of the fixed ones of a
 # model trained for them. Measured on 294 news of 26 languages (bench/ner, 13.10.2026), on 3 cores of
-# the server: 2.2 news a second on the title and the start of the description, the same entities run
+# the server: 2.2 news a second on the title and 400 characters of the description, the same entities run
 # after run; the title alone was 3 times faster but found 44% of them ("LFF", "Latvian Football
 # Federation" are in the description). In int8 (ONNX of onnx-community, or PyTorch quantized) it found
 # none: fp32 only.
@@ -60,7 +60,7 @@ PORT = int(os.environ.get('NER_PORT', '8021'))
 TOKEN = os.environ.get('NER_TOKEN') or os.environ.get('EMBEDDER_TOKEN', '')
 MIN_TOKEN = 32
 MAX_TEXTS = 256                 # texts per request, the client sends batches
-MAX_CHARS = 700                 # a title and the start of its description (the server sends 400 of it)
+MAX_CHARS = 1000                # a title and the start of its description (the server sends 700 of it)
 MAX_BODY = 4 * 1024 * 1024
 # The kinds asked: each is read with every text, a fourth one costs time. An event ("UEFA Nations
 # League") comes as an organisation
