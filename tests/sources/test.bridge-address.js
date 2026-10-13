@@ -24,6 +24,8 @@ const ProfileModel = {
     ownFeedUrls: jest.fn(async () => []),
     keptSources: jest.fn(async () => []),
     keepSource: jest.fn(async () => {}),
+    projects: jest.fn(async () => []),
+    projectInterests: jest.fn(async () => []),
 };
 const FeedModel = {
     listUserFeeds: jest.fn(async () => [

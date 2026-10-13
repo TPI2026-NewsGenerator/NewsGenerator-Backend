@@ -29,18 +29,15 @@ export const BriefingController = {
     email: async (req, res) => {
         try {
             const {storyIds, to, pictures, titles, removed, format} = req.body ?? {};
-            // the address of the site as the reader reached it (https through the tunnel, see trust proxy
-            // in app.js): the link to the copy of the e-mail kept as it was sent
-            const host = req.get('host') ?? '';
-            const origin = /^[\w.-]+(:\d+)?$/.test(host) ? `${req.protocol}://${host}` : null;
-            await BriefingService.email(req.user.id, req.params.id, storyIds, to, pictures, titles, removed, origin, format);
+            await BriefingService.email(req.user.id, req.params.id, storyIds, to, pictures, titles, removed, format);
             res.status(204).end();
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});
         }
     },
 
-    // the copy of an e-mail kept as it was sent, a page for anyone who has its link. Its pictures are the
+    // the copy of an e-mail kept as it was sent, a page for anyone who has its link (the e-mails sent
+    // before 13.10.2026: the newer ones have none). Its pictures are the
     // ones of the web and the ones joined, written in it; nothing in it runs, and no other site frames it.
     // sandbox: the page is of no site (an opaque origin), so even a script let through by mistake could
     // neither read the session nor call the API; its links still open, in a new tab as articles of their own
@@ -57,6 +54,25 @@ export const BriefingController = {
         } catch (error) {
             const message = error.status === 404 ? 'No e-mail has this address.' : 'The e-mail could not be read, try again later.';
             res.status(error.status || 500).type('html').send(`<!doctype html><html><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>NewsGenerator</title></head><body style="font:17px/1.6 Georgia,serif;margin:48px 16px;color:#1A1815;background:#FBF9F4"><p>${message}</p></body></html>`);
+        }
+    },
+
+    // {url}: a news added to the briefing by its link, answered as its card (201)
+    importNews: async (req, res) => {
+        try {
+            res.status(201).json({item: await BriefingService.importNews(req.user.id, req.params.id, req.body?.url)});
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
+    // a news added by its link taken out again
+    removeNews: async (req, res) => {
+        try {
+            await BriefingService.removeNews(req.user.id, req.params.id, req.params.storyId);
+            res.status(204).end();
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
         }
     },
 

@@ -15,6 +15,9 @@ import {prisma} from '../config/db.js';
 
 const PUBLIC_INTEREST = {id: true, position: true, text: true, weight: true, keywords: true, sections: true, category: true};
 
+// a project still read: no end, or its last day not passed (db/add_projects.sql)
+const RUNNING_PROJECT = `(p.ends_on IS NULL OR p.ends_on >= current_date)`;
+
 // the vectors of an interest are pgvector columns, Prisma has no type for them: written as text
 // (see toVector and toSparsevec in embedder.js) and cast in SQL
 const setVectors = (where, params, {dense, sparse}) => prisma.$executeRawUnsafe(
@@ -69,9 +72,9 @@ export const ProfileModel = {
 
     setWatchTerms: async (profileId, terms) => prisma.user_profiles.update({where: {id: profileId}, data: {watch_terms: terms}}),
 
-    // the interests in their order
+    // the interests of the profile itself in their order, none of its projects
     interests: async (profileId) => prisma.profile_interests.findMany({
-        where: {id_profile: profileId},
+        where: {id_profile: profileId, id_project: null},
         orderBy: {position: 'asc'},
         select: PUBLIC_INTEREST,
     }),
@@ -80,7 +83,7 @@ export const ProfileModel = {
     interestsForDiscovery: async (profileId) => prisma.$queryRawUnsafe(`
         SELECT id, position, text, weight, keywords, searches, sections, category, dense::text AS dense
         FROM profile_interests
-        WHERE id_profile = $1::int AND dense IS NOT NULL
+        WHERE id_profile = $1::int AND id_project IS NULL AND dense IS NOT NULL
         ORDER BY position`,
         profileId),
 
@@ -96,16 +99,68 @@ export const ProfileModel = {
                 where: {id},
                 data: {text, languages, refused, updated_at: new Date(), ...(name ? {name} : {})},
             }),
-            prisma.profile_interests.deleteMany({where: {id_profile: id}}),
+            // the interests of its projects stay
+            prisma.profile_interests.deleteMany({where: {id_profile: id, id_project: null}}),
             prisma.profile_interests.createMany({
                 data: interests.map(({text, weight, keywords, searches, sections, category}, position) =>
                     ({text, weight, keywords, searches, sections, category, id_user: userId, id_profile: id, position})),
             }),
             ...interests.map((interest, position) =>
-                setVectors('id_profile = $3::int AND position = $4::int', [id, position], interest)),
+                setVectors('id_profile = $3::int AND id_project IS NULL AND position = $4::int', [id, position], interest)),
         ]);
         return id;
     },
+
+    // The interests the briefing reads: the profile's own and the ones of its projects still running,
+    // each with the name of its project (null for the profile's own)
+    // [{id, position, text, weight, keywords, sections, category, project}]
+    briefingInterests: async (profileId) => prisma.$queryRawUnsafe(`
+        SELECT i.id, i.position, i.text, i.weight, i.keywords, i.sections, i.category, p.name AS project
+        FROM profile_interests i
+        LEFT JOIN profile_projects p ON p.id = i.id_project
+        WHERE i.id_profile = $1::int AND (i.id_project IS NULL OR ${RUNNING_PROJECT})
+        ORDER BY i.id_project NULLS FIRST, i.position`,
+        profileId),
+
+    // the projects of a profile, the first written first: [{id, name, text, ends_on, created_at, running}]
+    projects: async (profileId) => prisma.$queryRawUnsafe(`
+        SELECT p.id, p.name, p.text, to_char(p.ends_on, 'YYYY-MM-DD') AS ends_on, p.created_at, ${RUNNING_PROJECT} AS running
+        FROM profile_projects p
+        WHERE p.id_profile = $1::int
+        ORDER BY p.id`,
+        profileId),
+
+    // the interests of the projects of a profile: [{id, id_project, text, weight}]
+    projectInterests: async (profileId) => prisma.$queryRawUnsafe(`
+        SELECT id, id_project, text, weight FROM profile_interests
+        WHERE id_profile = $1::int AND id_project IS NOT NULL
+        ORDER BY id_project, position`,
+        profileId),
+
+    // A project of the profile and its interests ([{text, weight, keywords, searches, sections, category,
+    // dense, sparse}], vectors as text) in one transaction: answers its id
+    addProject: async (userId, profileId, {name, text, endsOn}, interests) => prisma.$transaction(async (tx) => {
+        const [{id}] = await tx.$queryRawUnsafe(`
+            INSERT INTO profile_projects (id_profile, name, text, ends_on) VALUES ($1::int, $2, $3, $4::date) RETURNING id`,
+            profileId, name, text, endsOn);
+        await tx.profile_interests.createMany({
+            data: interests.map(({text, weight, keywords, searches, sections, category}, position) =>
+                ({text, weight, keywords, searches, sections, category, id_user: userId, id_profile: profileId, id_project: id, position})),
+        });
+        for (const [position, {dense, sparse}] of interests.entries()) {
+            await tx.$executeRawUnsafe('UPDATE profile_interests SET dense = $1::vector, sparse = $2::sparsevec WHERE id_project = $3::int AND position = $4::int',
+                dense, sparse, id, position);
+        }
+        return id;
+    }),
+
+    // a project of this profile deleted, its interests with it: 0 when there is none
+    deleteProject: async (profileId, id) => prisma.$executeRawUnsafe(
+        'DELETE FROM profile_projects WHERE id = $1::int AND id_profile = $2::int', id, profileId),
+
+    // its last day changed, null: until it is deleted. 0 when there is none
+    setProjectEnd: async (profileId, id, endsOn) => prisma.$executeRawUnsafe(
+        'UPDATE profile_projects SET ends_on = $3::date WHERE id = $1::int AND id_profile = $2::int', id, profileId, endsOn),
 
     // one interest changed by the user, only one of this profile; its vectors when its text changed
     updateInterest: async (profileId, id, {dense, sparse, ...data}) => {
@@ -136,10 +191,12 @@ export const ProfileModel = {
 
     // the searches of Google News of the interests, each in the language the AI chose for it ("sr:..."):
     // of one profile, or of every profile. [{searches, category}]
+    // The ones of a project are read while it runs
     searchesOf: async (profileId = null) => prisma.$queryRawUnsafe(`
         SELECT pi.searches, pi.category
         FROM profile_interests pi
-        WHERE $1::int IS NULL OR pi.id_profile = $1::int`,
+        LEFT JOIN profile_projects p ON p.id = pi.id_project
+        WHERE ($1::int IS NULL OR pi.id_profile = $1::int) AND (pi.id_project IS NULL OR ${RUNNING_PROJECT})`,
         profileId),
 
     // the feeds the user added by hand to this profile: the ones found for it take the room left
@@ -189,7 +246,7 @@ export const ProfileModel = {
                count(a.id)::int AS news,
                count(a.id) FILTER (WHERE EXISTS (
                    SELECT 1 FROM profile_interests i
-                   WHERE i.id_profile = uf.id_profile AND i.dense IS NOT NULL
+                   WHERE i.id_profile = uf.id_profile AND i.id_project IS NULL AND i.dense IS NOT NULL
                      AND -(a.text_dense <#> i.dense) >= $3::real))::int AS relevant
         FROM user_feeds uf
         LEFT JOIN feeds f ON f.url = uf.url

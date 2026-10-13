@@ -28,6 +28,27 @@ export const BriefingModel = {
         data: {status: 'failed', step: null, error, finished_at: new Date()},
     }),
 
+    // A card added at the end of a ready briefing of this user, its id the next negative one (a news
+    // added by the reader is of no story, see importNews): one statement, so two added at the same time
+    // get two ids. Answers that id, null when the briefing is not a ready one of this user
+    addItem: async (userId, briefingId, item) => (await prisma.$queryRawUnsafe(`
+        UPDATE briefings
+        SET items = items || jsonb_build_array($3::jsonb || jsonb_build_object('storyId',
+                (SELECT LEAST(0, COALESCE(min((card->>'storyId')::int), 0)) - 1 FROM jsonb_array_elements(items) AS card)))
+        WHERE id = $1 AND id_user = $2 AND status = 'ready' AND jsonb_typeof(items) = 'array'
+        RETURNING (items->-1->>'storyId')::int AS "storyId"`,
+        briefingId, userId, JSON.stringify(item)))[0]?.storyId ?? null,
+
+    // a card added by the reader taken out again (a negative id): 0 when there is none
+    removeItem: async (userId, briefingId, storyId) => prisma.$executeRawUnsafe(`
+        UPDATE briefings
+        SET items = (SELECT COALESCE(jsonb_agg(card ORDER BY position), '[]'::jsonb)
+                     FROM jsonb_array_elements(items) WITH ORDINALITY AS cards(card, position)
+                     WHERE (card->>'storyId')::int <> $3)
+        WHERE id = $1 AND id_user = $2 AND status = 'ready' AND $3 < 0
+          AND EXISTS (SELECT 1 FROM jsonb_array_elements(items) AS card WHERE (card->>'storyId')::int = $3)`,
+        briefingId, userId, storyId),
+
     // a briefing of this user, null when it is not theirs
     ofUser: async (userId, id) => prisma.briefings.findFirst({where: {id, id_user: userId}}),
 
@@ -38,6 +59,18 @@ export const BriefingModel = {
         WHERE (id_story = $1::int OR link = ANY($2::text[])) AND thumbnail IS NOT NULL
         ORDER BY published_at DESC NULLS LAST
         LIMIT 30`, storyId, links),
+
+    // the cards of the ready briefings of this profile finished between 'since' and 'before', the oldest
+    // first: [{storyId, mergedStoryIds, title, shownAt}], the title as the reader read it (see repeats.js)
+    shownBetween: async (profileId, since, before) => prisma.$queryRawUnsafe(`
+        SELECT (item->>'storyId')::int AS "storyId", item->'mergedStoryIds' AS "mergedStoryIds",
+               COALESCE(item->>'titleTranslation', item->>'title') AS title, b.finished_at AS "shownAt"
+        FROM briefings b, jsonb_array_elements(b.items) AS item
+        WHERE b.id_profile = $1::int AND b.status = 'ready'
+          AND b.finished_at >= $2::timestamptz AND b.finished_at < $3::timestamptz
+          AND jsonb_typeof(b.items) = 'array'
+        ORDER BY b.finished_at`,
+        profileId, since, before),
 
     latest: async (profileId) => prisma.briefings.findFirst({
         where: {id_profile: profileId},

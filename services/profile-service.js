@@ -30,6 +30,9 @@ const MAX_TEXT = 3000;
 // 15 per reader at most (the user's choice, 8.10.2026)
 export const MAX_PROFILES = 15;
 const MAX_NAME = 40;
+// The projects of a profile (db/add_projects.sql): read with it until their last day, a year at most
+export const MAX_PROJECTS = 5;
+const MAX_PROJECT_DAYS = 366;
 
 const badRequest = (message) => Object.assign(new Error(message), {status: 400});
 const notFound = (message) => Object.assign(new Error(message), {status: 404});
@@ -81,6 +84,28 @@ const withVectors = async (interests) => {
     }));
 };
 
+// a project as the page shows it, its interests with it
+const toProject = (row, interests) => ({
+    id: row.id,
+    name: row.name,
+    text: row.text,
+    endsOn: row.ends_on,            // 'YYYY-MM-DD', null: until deleted
+    running: row.running,           // its last day not passed: the briefing reads it
+    interests: interests.filter(interest => interest.id_project === row.id).map(({id, text, weight}) => ({id, text, weight})),
+});
+
+// the last day of a project, 'YYYY-MM-DD' from today to a year, or null (until deleted)
+const cleanEnd = (endsOn) => {
+    if (endsOn === null || endsOn === undefined || endsOn === '') return null;
+    const day = typeof endsOn === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(endsOn) ? new Date(`${endsOn}T00:00:00Z`) : null;
+    const today = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00Z`);
+    if (!day || Number.isNaN(day.getTime()) || day.toISOString().slice(0, 10) !== endsOn
+        || day < today || day - today > MAX_PROJECT_DAYS * 24 * 3600e3) {
+        throw badRequest('The last day of a project is a date from today to a year from now, or none.');
+    }
+    return endsOn;
+};
+
 // the profile of this id, which must be one of this user
 const ownProfile = async (userId, profileId) => {
     const profile = Number.isInteger(profileId) ? await ProfileModel.owned(userId, profileId) : null;
@@ -114,10 +139,10 @@ export const ProfileService = {
     get: async (userId, profileId) => {
         if (profileId === null || profileId === undefined) {
             return {profile: null, profiles: await ProfileService.list(userId), interests: [], sources: [],
-                limits: {profileFeeds: MAX_PROFILE_FEEDS, relevanceDays: RELEVANCE_DAYS, profiles: MAX_PROFILES, watchTerms: MAX_WATCH_TERMS},
-                languages: FeedService.languages(), googleSearches: 0, refusedSources: [], removedSources: []};
+                limits: {profileFeeds: MAX_PROFILE_FEEDS, relevanceDays: RELEVANCE_DAYS, profiles: MAX_PROFILES, watchTerms: MAX_WATCH_TERMS, projects: MAX_PROJECTS},
+                languages: FeedService.languages(), googleSearches: 0, refusedSources: [], removedSources: [], projects: []};
         }
-        const [profile, profiles, interests, feeds, refusedSources, relevance, searches, removed] = await Promise.all([
+        const [profile, profiles, interests, feeds, refusedSources, relevance, searches, removed, projects, projectInterests] = await Promise.all([
             ownProfile(userId, profileId),
             ProfileService.list(userId),
             ProfileModel.interests(profileId),
@@ -129,6 +154,8 @@ export const ProfileService = {
             }),
             searchesOfUser(profileId),
             ProfileModel.removedSources(profileId),
+            ProfileModel.projects(profileId),
+            ProfileModel.projectInterests(profileId),
         ]);
         const relevant = new Map(relevance.map(row => [row.id, row.relevant]));
 
@@ -151,7 +178,9 @@ export const ProfileService = {
                 // its news of the last RELEVANCE_DAYS on the interests: at 0 it is removed, once it had the time
                 relevant: relevant.get(feed.id) ?? 0,
             })),
-            limits: {profileFeeds: MAX_PROFILE_FEEDS, relevanceDays: RELEVANCE_DAYS, profiles: MAX_PROFILES, watchTerms: MAX_WATCH_TERMS},
+            limits: {profileFeeds: MAX_PROFILE_FEEDS, relevanceDays: RELEVANCE_DAYS, profiles: MAX_PROFILES, watchTerms: MAX_WATCH_TERMS, projects: MAX_PROJECTS},
+            // what the reader prepares for a time, read with the profile until it ends (see toProject)
+            projects: projects.map(row => toProject(row, projectInterests)),
             // the languages the news can be shown in
             languages: FeedService.languages(),
             // the searches of Google News of the interests, read like feeds for this reader only
@@ -268,6 +297,61 @@ export const ProfileService = {
         if (await ProfileModel.count(userId) <= 1) throw badRequest('Your last profile can be written again, not deleted.');
         await ProfileModel.delete(profileId);
         return {profiles: await ProfileService.list(userId)};
+    },
+
+    // A project written with the AI, as a profile is (see profile-funnel.js): the questions of the next
+    // round, on the project only, the profile given to the AI so it asks nothing it says already
+    projectQuestions: async (userId, profileId, asked) => {
+        const profile = await ownProfile(userId, profileId);
+        const funnel = funnelOf({...asked, language: readerLanguage(profile)});
+        return {...await nextQuestions({...funnel, profileText: profile.text}), maxRounds: MAX_ROUNDS};
+    },
+
+    // the description of the project written from the answers: nothing saved, the reader reads it first
+    projectText: async (userId, profileId, asked) => {
+        const profile = await ownProfile(userId, profileId);
+        const funnel = funnelOf({...asked, language: readerLanguage(profile)});
+        const tooLittle = Object.assign(new Error('Your answers say too little to describe a project: tick or write a little more.'), {status: 422});
+        if (funnel.rounds.length === 0 && funnel.start.length < MIN_TEXT) throw tooLittle;
+        const text = await writeProfile({...funnel, project: true});
+        if (text.length < MIN_TEXT) throw tooLittle;
+        return {text};
+    },
+
+    // {name, text, endsOn}: a project of the profile, split into interests by the AI as a profile is, each
+    // with its vector. No source is found for it: the briefing looks for its news in the profile's
+    // sources, and the searches of Google News of its interests while it runs
+    createProject: async (userId, profileId, {name, text, endsOn}) => {
+        const profile = await ownProfile(userId, profileId);
+        const named = typeof name === 'string' ? name.replace(/\s+/g, ' ').trim() : '';
+        if (!named || named.length > MAX_NAME) throw badRequest(`A project is named in 1 to ${MAX_NAME} characters.`);
+        const written = typeof text === 'string' ? text.trim() : '';
+        if (written.length < MIN_TEXT || written.length > MAX_TEXT) {
+            throw badRequest(`Describe your project in ${MIN_TEXT} to ${MAX_TEXT} characters.`);
+        }
+        const end = cleanEnd(endsOn);
+        if ((await ProfileModel.projects(profileId)).length >= MAX_PROJECTS) throw badRequest(`At most ${MAX_PROJECTS} projects per profile.`);
+        const {interests} = await interestsOf({text: written, language: readerLanguage(profile), categories: FeedService.categories()});
+        if (interests.length === 0) {
+            throw Object.assign(new Error('No subject could be read in this description: say what news you want for the project.'), {status: 422});
+        }
+        await ProfileModel.addProject(userId, profileId, {name: named, text: written, endsOn: end}, await withVectors(interests));
+        return ProfileService.get(userId, profileId);
+    },
+
+    // a project deleted, its interests with it
+    removeProject: async (userId, profileId, id) => {
+        await ownProfile(userId, profileId);
+        if (!Number.isInteger(id) || await ProfileModel.deleteProject(profileId, id) === 0) throw notFound('Unknown project.');
+        return ProfileService.get(userId, profileId);
+    },
+
+    // {endsOn}: its last day changed (an ended project read again), null: until it is deleted
+    setProjectEnd: async (userId, profileId, id, endsOn) => {
+        await ownProfile(userId, profileId);
+        const end = cleanEnd(endsOn);
+        if (!Number.isInteger(id) || await ProfileModel.setProjectEnd(profileId, id, end) === 0) throw notFound('Unknown project.');
+        return ProfileService.get(userId, profileId);
     },
 
     // the names or words whose news are always shown (see watchedNews in briefing-service.js)

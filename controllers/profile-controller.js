@@ -58,6 +58,17 @@ export const ProfileController = {
 
     remove: (req, res) => respond(res, () => ProfileService.remove(req.user.id, idOf(req))),
 
+    // the projects of the profile: written with the AI ({start, rounds} -> {enough, questions}, then
+    // -> {text}), saved ({name, text, endsOn}), their last day changed, deleted
+    projectQuestions: (req, res) => respond(res, () => ProfileService.projectQuestions(req.user.id, req.profileId, req.body ?? {})),
+    projectText: (req, res) => respond(res, () => ProfileService.projectText(req.user.id, req.profileId, req.body ?? {})),
+    createProject: (req, res) => {
+        const {name, text, endsOn} = req.body ?? {};
+        return respond(res, () => ProfileService.createProject(req.user.id, req.profileId, {name, text, endsOn}), 201);
+    },
+    setProjectEnd: (req, res) => respond(res, () => ProfileService.setProjectEnd(req.user.id, req.profileId, idOf(req), req.body?.endsOn ?? null)),
+    removeProject: (req, res) => respond(res, () => ProfileService.removeProject(req.user.id, req.profileId, idOf(req))),
+
     // {terms}: the names or words whose news are always shown
     setWatchTerms: (req, res) => respond(res, () => ProfileService.setWatchTerms(req.user.id, req.profileId, req.body?.terms)),
 

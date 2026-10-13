@@ -117,11 +117,39 @@ Dis chaque chose une seule fois : ce qu'il a coché et écrit sur le même point
 Commence par ce qui compte le plus pour lui et pourquoi, puis le reste, et finis par ce qu'il ne veut pas, en une phrase. Combien un sujet compte, seul ce qu'il a répondu le dit : un sujet qu'il a coché ou écrit vouloir suivre de loin le dit dans sa phrase, « de plus loin » ; aucun autre, jamais, même cité en dernier. Des paragraphes courts, pas de liste.
 Réponds uniquement en JSON : {"text": "..."}`;
 
+// A project of a profile (db/add_projects.sql): something the reader prepares for a time (a trip, a
+// purchase, a move, a report), whose news they want in their briefing while it lasts. The same rounds as
+// a profile, on the project only: the profile is given so that nothing it says is asked again, and its
+// subjects are not mixed in. Not measured on a bench yet (13.10.2026): the rules are the profile's ones
+export const projectQuestionsPrompt = ({start, rounds, language, profileText}) => `Nous sommes le ${today()}. Un lecteur reçoit chaque jour un résumé de l'actualité choisi pour son profil, parmi les nouvelles de médias de toutes les langues, traduites en ${languageName(language, 'fr')}. Son profil :
+"""${profileText}"""
+Il ajoute un projet, pour un temps : ce qu'il prépare (un voyage, un achat, un déménagement, un dossier, un événement) et dont il veut aussi les nouvelles dans son résumé tant qu'il dure. Il a commencé par quelques mots sur ce projet, et tu l'aides à les préciser par des questions.
+${transcript(start, rounds)}
+
+Ce tour est le ${rounds.length + 1}e sur ${MAX_ROUNDS}. La description du projet doit dire, pour choisir ses nouvelles parmi des milliers :
+- ce qu'est le projet, concrètement : les lieux, dates, organisations, produits, personnes ou règles qu'il touche ;
+- quelles nouvelles lui serviraient pour le mener (décisions, prix, règles, grèves, ouvertures, sorties, risques…) ;
+- ce qu'il ne veut pas : les nouvelles voisines qu'un résumé lui donnerait à tort.
+Pose 2 à ${MAX_QUESTIONS} questions sur ce qui n'est pas encore clair, jamais sur ce qu'il a déjà dit, ni sur ce que son profil dit déjà : ce sont les nouvelles du projet seulement. Ne demande pas jusqu'à quand il dure : il le dira à part. Une question qu'il a passée ne revient pas, ni sous d'autres mots. Une question porte sur un seul point, courte, en ${languageName(language, 'fr')}, ses choix aussi, avec des mots de tous les jours, jamais par oui ou non.
+Pour chacune, propose 4 à ${MAX_OPTIONS} choix courts et concrets, tirés du monde réel de son projet, actuels. Les choix ne s'excluent pas : il en coche plusieurs, jamais de « uniquement » ni de « tout ». Il pourra aussi écrire avec ses mots. Ne demande jamais ses sources, ses formats ou la fréquence.
+Au plus tard au dernier tour, demande ce qu'il ne veut pas, avec comme choix les nouvelles voisines de son projet qui viennent souvent avec elles.
+"enough" est true, sans question, quand ces points sont clairs.
+Réponds uniquement en JSON : {"enough": false, "questions": [{"question": "...", "options": ["..."]}]}`;
+
+export const projectWritePrompt = ({start, rounds, language}) => `Un lecteur de nouvelles ajoute un projet à son profil, pour un temps : il a écrit quelques mots, puis répondu à des questions.
+${transcript(start, rounds)}
+
+Écris la description de son projet et des nouvelles qu'il veut pour lui, à la première personne, comme s'il l'avait écrite lui-même, en ${languageName(language, 'fr')} (traduis-y ce qu'il a coché ou écrit dans une autre langue). Mets-y tout ce qu'il a coché et écrit, avec ses mots, sans en résumer ni en enlever aucun. N'ajoute rien qu'il n'a ni coché ni écrit : un choix qu'il n'a pas coché n'est ni voulu ni refusé, ne le cite pas. Quand un choix coché et ce qu'il a écrit se contredisent, ce qu'il a écrit compte.
+Dis chaque chose une seule fois. Pas de phrase sur la manière dont il répond : seulement son projet et ce qu'il veut suivre pour lui. Commence par ce qu'est le projet, puis les nouvelles qu'il veut, et finis par ce qu'il ne veut pas, en une phrase. Des paragraphes courts, pas de liste.
+Réponds uniquement en JSON : {"text": "..."}`;
+
 // {enough, questions}: the questions of the next round, none after the last one or when the AI has
-// enough. start and rounds as cleaned above
-export const nextQuestions = async ({start, rounds, language}, usage = null) => {
+// enough. start and rounds as cleaned above; profileText: the profile a project is added to, null for
+// a profile
+export const nextQuestions = async ({start, rounds, language, profileText = null}, usage = null) => {
     if (rounds.length >= MAX_ROUNDS) return {enough: true, questions: []};
-    const answer = await ollamaJson(questionsPrompt({start, rounds, language}), usage);
+    const prompt = profileText !== null ? projectQuestionsPrompt({start, rounds, language, profileText}) : questionsPrompt({start, rounds, language});
+    const answer = await ollamaJson(prompt, usage);
     // a first round is always asked: a few words never say enough
     const passed = rounds.flat().filter(skipped).map(q => topicWords(q.question));
     const questions = answer?.enough === true && rounds.length > 0 ? [] : normalizeQuestions(answer)
@@ -129,8 +157,9 @@ export const nextQuestions = async ({start, rounds, language}, usage = null) => 
     return {enough: questions.length === 0, questions};
 };
 
-// the profile written from the start and the answers, its paragraphs kept; '' when the AI wrote none
-export const writeProfile = async ({start, rounds, language}, usage = null) => {
-    const text = (await ollamaJson(writePrompt({start, rounds, language}), usage))?.text;
+// the profile written from the start and the answers, its paragraphs kept; '' when the AI wrote none.
+// project: the description of a project instead
+export const writeProfile = async ({start, rounds, language, project = false}, usage = null) => {
+    const text = (await ollamaJson((project ? projectWritePrompt : writePrompt)({start, rounds, language}), usage))?.text;
     return typeof text === 'string' ? text.replace(/[ \t]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, MAX_TEXT) : '';
 };

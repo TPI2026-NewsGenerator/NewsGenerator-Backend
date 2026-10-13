@@ -2,8 +2,8 @@
 //  Author: Fabian Rostello
 //  Date: 10.10.2026
 //  File: test.mail-original.js
-//  Description: The copy of an e-mail kept as it was sent, read by anyone with its link, as a page
-//               where nothing runs; the link sent with the address of the site the reader reached
+//  Description: The copy of an e-mail kept as it was sent (the ones sent before 13.10.2026), read by
+//               anyone with its link, as a page where nothing runs
 //
 
 import http from 'node:http';
@@ -73,13 +73,8 @@ describe('GET /api/mails/:token', () => {
 });
 
 describe('POST /api/briefing/:id/email', () => {
-    it('should give the address of the site the reader reached, the https of the tunnel kept', async () => {
-        await request('POST', '/api/briefing/7/email', {headers: {Host: 'news.example', 'X-Forwarded-Proto': 'https'}, body: {storyIds: [1]}});
-        expect(email.mock.calls[0][7]).toBe('https://news.example');
-    });
-
-    it('should give none for a host that is not one', async () => {
-        await request('POST', '/api/briefing/7/email', {headers: {Host: 'evil.example"><a'}, body: {storyIds: [1]}});
-        expect(email.mock.calls[0][7]).toBeNull();
+    it('should give the service what the reader sent, and no address of the site: the e-mail has no link to a copy any more', async () => {
+        await request('POST', '/api/briefing/7/email', {headers: {Host: 'news.example'}, body: {storyIds: [1], format: 'points'}});
+        expect(email).toHaveBeenCalledWith(4, '7', [1], undefined, undefined, undefined, undefined, 'points');
     });
 });

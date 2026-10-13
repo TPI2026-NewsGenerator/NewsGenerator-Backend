@@ -333,7 +333,7 @@ export const FeedModel = {
         ), scored AS (
             SELECT c.id, a.title,
                    (SELECT max(-(a.title_dense <#> i.dense)) FROM profile_interests i
-                    WHERE i.id_profile = $1::int AND i.dense IS NOT NULL) AS score
+                    WHERE i.id_profile = $1::int AND i.id_project IS NULL AND i.dense IS NOT NULL) AS score
             FROM candidates c
             JOIN articles a ON a.id_feed = c.id
             WHERE a.embedded_at IS NOT NULL AND a.created_at >= $4::timestamptz AND ($3::text[] IS NULL OR a.lang = ANY($3::text[]))

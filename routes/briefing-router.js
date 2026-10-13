@@ -20,6 +20,11 @@ router.post('/:id/vote', authenticateToken, activeProfile, BriefingController.vo
 // the e-mail of the briefing is for the administrators only (see admin.js)
 const MAIL_REFUSED = 'Sending the briefing by e-mail is for the administrators.';
 router.get('/:id/stories/:storyId/pictures', authenticateToken, adminOnly(MAIL_REFUSED), BriefingController.pictures);
+// a news added to the briefing by its link, for the e-mail: a page read and a call of the AI each
+router.post('/:id/news', authenticateToken, adminOnly(MAIL_REFUSED),
+    rateLimit({windowMs: 3600e3, max: 30, key: req => `news ${req.user.id}`, message: 'Too many news added, try again in an hour.'}),
+    BriefingController.importNews);
+router.delete('/:id/news/:storyId', authenticateToken, adminOnly(MAIL_REFUSED), BriefingController.removeNews);
 // cards of a briefing sent by e-mail, a few times an hour and a day at most: each one goes through the
 // account of the server, which Gmail limits (500 a day), to any address the reader writes
 router.post('/:id/email', authenticateToken, adminOnly(MAIL_REFUSED),

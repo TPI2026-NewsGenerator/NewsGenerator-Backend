@@ -40,6 +40,13 @@ router.delete('/sources/:id', authenticateToken, activeProfile, ProfileControlle
 router.post('/removed-sources/restore', authenticateToken, activeProfile, ProfileController.restoreSource);
 // the names or words whose news are always shown
 router.put('/watch-terms', authenticateToken, activeProfile, ProfileController.setWatchTerms);
+// the projects of the profile: the questions of the AI and the description it writes (nothing saved,
+// counted with the ones of a profile), then saved, their last day changed, deleted
+router.post('/projects/funnel/questions', authenticateToken, activeProfile, funnelLimit, ProfileController.projectQuestions);
+router.post('/projects/funnel/text', authenticateToken, activeProfile, funnelLimit, ProfileController.projectText);
+router.post('/projects', authenticateToken, activeProfile, ProfileController.createProject);
+router.patch('/projects/:id', authenticateToken, activeProfile, ProfileController.setProjectEnd);
+router.delete('/projects/:id', authenticateToken, activeProfile, ProfileController.removeProject);
 // the other profiles of the reader: written, renamed, deleted
 router.get('/profiles', authenticateToken, ProfileController.list);
 router.post('/profiles', authenticateToken, ProfileController.create);

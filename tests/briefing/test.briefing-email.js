@@ -50,8 +50,10 @@ describe('BriefingService.email', () => {
         expect(ofUser).toHaveBeenCalledWith(4, 7);
         const mail = sendMail.mock.calls[0][0];
         expect(mail.to).toBe('reader@example.test');
-        expect(mail.subject).toMatch(/^Your briefing · 2 stories · /);
-        expect(mail.html).toContain('2 stories shared • ');
+        // the name of the profile, the day without its hour
+        expect(mail.subject).toBe('Football’s Briefing · 2 stories · 8 October 2026');
+        expect(mail.html).toContain('>Football’s Briefing · 8 October 2026<');
+        expect(mail.html).toMatch(/>2 stories shared<\/p>/);
         expect(mail.text.indexOf('01. Third story')).toBeGreaterThan(0);
         expect(mail.text).toContain('02. First story');
         expect(mail.text).not.toContain('Second story');
@@ -75,10 +77,9 @@ describe('BriefingService.email', () => {
         const mail = sendMail.mock.calls[0][0];
         expect(mail.to).toBe('friend@example.org');
         expect(mail.replyTo).toBe('reader@example.test');
-        expect(mail.subject).toMatch(/^Briefing · 1 story · /);
-        expect(mail.html).toContain('>Briefing - 8 October 2026<');
-        expect(mail.html).not.toContain('Football’s briefing');
-        expect(mail.html).toContain('1 story shared • 8 October at 08:01');
+        expect(mail.subject).toBe('Football’s Briefing · 1 story · 8 October 2026');
+        expect(mail.html).toContain('>Football’s Briefing · 8 October 2026<');
+        expect(mail.html).not.toContain('08:01');
         expect(mail.html).not.toContain('lecteur');
         expect(mail.text).not.toContain('lecteur');
         // nothing at the end of it: answered, it goes to the reader all the same (replyTo)
@@ -91,16 +92,16 @@ describe('BriefingService.email', () => {
 
         const mail = sendMail.mock.calls[0][0];
         expect(mail.replyTo).toBeUndefined();
-        expect(mail.subject).toMatch(/^Your briefing · 1 story · /);
+        expect(mail.subject).toBe('Football’s Briefing · 1 story · 8 October 2026');
     });
 
     it('should send the cards in the way the reader chose, and refuse a way that does not exist, before reading the briefing', async () => {
         ofUser.mockResolvedValue({...row, items: [card(1, 'First story', {points: 'The point.', digest: 'The digest.'})]});
-        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, null, 'points');
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'points');
         expect(sendMail.mock.calls[0][0].text).toContain('• The point.');
 
         ofUser.mockClear();
-        await expect(BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, null, 'tweets')).rejects.toMatchObject({status: 400});
+        await expect(BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'tweets')).rejects.toMatchObject({status: 400});
         expect(ofUser).not.toHaveBeenCalled();
     });
 
@@ -185,53 +186,20 @@ describe('BriefingService.email with the pictures the reader chose', () => {
     });
 });
 
-describe('BriefingService.email copy kept as sent', () => {
-    beforeEach(() => {
-        Object.values(copies).forEach(fn => fn.mockClear());
-        ofUser.mockResolvedValue({...row, items: [card(1, 'First story'), card(3, 'Third story')]});
-    });
+describe('BriefingService.email without a copy kept', () => {
+    beforeEach(() => Object.values(copies).forEach(fn => fn.mockClear()));
 
-    it('should link the e-mail to its copy, kept without the link and with the files of the reader written in it', async () => {
-        await BriefingService.email(4, 7, [1, 3], undefined, {3: {data: PNG}}, undefined, undefined, 'https://news.example');
-
-        const mail = sendMail.mock.calls[0][0];
-        const [, token] = mail.html.match(/href="https:\/\/news\.example\/api\/mails\/([\w-]+)"/);
-        expect(token).toHaveLength(24);
-        // a small link at its end, nothing above its title
-        expect(mail.html).toMatch(/>View the original e-mail<\/a><\/p><\/td><\/tr>\s*<\/table>/);
-        expect(mail.html).toMatch(/<td style="padding-bottom:28px">\s*<h1 class="ng-ink"/);
-        expect(mail.html).not.toContain('as it was sent');
-        expect(mail.text.trim().split('\n').at(-1)).toBe(`View the original e-mail: https://news.example/api/mails/${token}`);
-        expect(mail.html).toContain('src="cid:picture-3@newsgenerator"');
-
-        const copy = copies.save.mock.calls[0][0];
-        expect(copy).toMatchObject({token, userId: 4, briefingId: 7, subject: mail.subject});
-        expect(copy.html).toMatch(/The e-mail as it was sent on [^<.]+\.<\/p>\s*<h1 class="ng-ink"/);
-        expect(copy.html).not.toContain('Nobody can change it');
-        expect(copy.html).not.toContain('/api/mails/');
-        expect(copy.html).not.toContain('cid:');
-        expect(copy.html).toContain(`src="data:image/png;base64,${Buffer.from(PNG, 'base64').toString('base64')}"`);
-        expect(copy.html).toContain('Third story');
-    });
-
-    it('should give each e-mail its own token, and take the copy out when the e-mail is not sent', async () => {
-        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'https://news.example');
-        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'https://news.example');
-        expect(copies.save.mock.calls[0][0].token).not.toBe(copies.save.mock.calls[1][0].token);
-
-        sendMail.mockRejectedValueOnce(Object.assign(new Error('The e-mail could not be sent, try again later.'), {status: 502}));
-        await expect(BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'https://news.example')).rejects.toMatchObject({status: 502});
-        expect(copies.remove).toHaveBeenCalledWith(11);
-    });
-
-    it('should keep no copy and give no link without the address of the site', async () => {
+    it('should keep no copy and give no link to one (the user, 13.10.2026)', async () => {
         await BriefingService.email(4, 7, [1]);
+        const mail = sendMail.mock.calls[0][0];
         expect(copies.save).not.toHaveBeenCalled();
-        expect(sendMail.mock.calls[0][0].html).not.toContain('as it was sent');
-        expect(sendMail.mock.calls[0][0].html).toMatch(/<td style="padding-bottom:28px">\s*<h1 class="ng-ink"/);
+        for (const gone of ['View the original', '/api/mails/', 'as it was sent']) {
+            expect(mail.html).not.toContain(gone);
+            expect(mail.text).not.toContain(gone);
+        }
     });
 
-    it('should read a copy by its token only, never asking the database for a token of another form', async () => {
+    it('should read a copy of an e-mail sent before by its token only, never asking the database for a token of another form', async () => {
         copies.byToken.mockResolvedValueOnce({subject: 'S', html: '<p>sent</p>'});
         expect(await BriefingService.original('abcdefghijklmnopqrstuvwx')).toEqual({subject: 'S', html: '<p>sent</p>'});
         await expect(BriefingService.original('abcdefghijklmnopqrstuvwy')).rejects.toMatchObject({status: 404});
@@ -275,10 +243,12 @@ describe('briefingMail', () => {
         for (const part of ['>01<', 'Sommet contre Infantino', 'Translated from German', '“Gipfel gegen Infantino”', 'Du football, que vous suivez.',
             'src="https://cdn.example/a.jpg"', 'Picture — sport1.de', 'Key passages', 'second.', '[…]',
             'Contested', 'Infantino denies:', 'Machine translation: “Ce n’est pas vrai.”', 'Same affair, other angles', 'Le Nigeria porte plainte',
-            'told by 3 media', 'Read the article at media.fr', 'Also covered by', 'kicker.de', 'Who tells it',
-            'Told by 3 media, 2 texts written independently of 3 read', 'Not confirmed']) {
+            'told by 3 media', 'Read the article at media.fr', 'Also covered by', 'kicker.de', 'Not confirmed']) {
             expect(html).toContain(part);
         }
+        // who tells it: its sources say it already (the user, 13.10.2026)
+        expect(html).not.toContain('Who tells it');
+        expect(html).not.toContain('written independently');
     });
 
     it('should leave out the notes that tell nothing: the AI choosing the passages, one medium, the sources named', () => {
@@ -286,9 +256,10 @@ describe('briefingMail', () => {
         for (const gone of ['Sentences chosen by the AI', 'In the article', 'Only one medium', 'Who tells it', 'Its sources', 'named sources', 'Written Thursday']) {
             expect(html).not.toContain(gone);
         }
-        expect(html).toContain('>Briefing - 8 October 2026<');
+        // no profile named: the title alone
+        expect(html).toContain('>Briefing · 8 October 2026<');
         expect(html).not.toMatch(/Enzo|enzo/);
-        expect(html).toContain('1 story shared • 8 October at 08:01');
+        expect(html).toMatch(/>1 story shared<\/p>/);
         expect(html).not.toMatch(/>NewsGenerator</);
     });
 

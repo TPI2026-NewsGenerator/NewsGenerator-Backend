@@ -13,7 +13,8 @@ const profileModel = await import('../../models/profile-model.js');
 jest.unstable_mockModule('../../models/profile-model.js', () => ({...profileModel, ProfileModel: {
     ...profileModel.ProfileModel,
     get: jest.fn(async () => ({id: 1})),
-    interests: jest.fn(async () => [{id: 1, text: 'Swiss politics'}]),
+    briefingInterests: jest.fn(async () => [{id: 1, text: 'Swiss politics', project: null}]),
+    projects: jest.fn(async () => []),
 }}));
 const briefingModel = await import('../../models/briefing-model.js');
 jest.unstable_mockModule('../../models/briefing-model.js', () => ({...briefingModel, BriefingModel: {...briefingModel.BriefingModel, step: jest.fn(async () => {})}}));

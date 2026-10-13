@@ -18,15 +18,17 @@ import {DiscoveryService} from "./discovery-service.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {newUsage} from "./utils/ollama.js";
 import {canSummarize, extractArticle, passagesText, translateTexts} from "./utils/extract.js";
+import {languageOf} from "./utils/language.js";
 import {BRIEFING_SIZES, MAX_BRIEFING, balanceSelection, checkStories, mergeStories, reviewCards, selectStories, shareOut} from "./utils/profile-ai.js";
 import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {contestedOf} from "./utils/contested.js";
 import {otherAnglesOf} from "./utils/other-angles.js";
 import {officialSourcesOf} from "./utils/official-sources.js";
+import {evolvedStories, REPEAT_HOURS, REWRITE_HOURS, shownStories, withoutRepeats} from "./utils/repeats.js";
 import {readerLanguage, writtenIn} from "./utils/language.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
-import {hostOf, mediumOf} from "./utils/public-url.js";
+import {assertPublicUrl, hostOf, mediumOf} from "./utils/public-url.js";
 import {credibleStory, decodeLinks, googleAvailable, isGoogleNewsUrl, isNotNews, isRepeatedPage, pickCandidates} from "./utils/google-news.js";
 import {searchesOfUser} from "./ingest-service.js";
 import {onceEach} from "./utils/reading-order.js";
@@ -36,9 +38,8 @@ import {UserModel} from "../models/user-model.js";
 import {EMAIL_RULE, isEmail} from "./utils/account-rules.js";
 import {sendMail} from "./utils/mailer.js";
 import {briefingMail, MAIL_FORMATS} from "./utils/briefing-mail.js";
-import {storyPictures, withChosenPictures, withPicturesWritten} from "./utils/mail-pictures.js";
+import {storyPictures, withChosenPictures} from "./utils/mail-pictures.js";
 import {SentMailModel} from "../models/sent-mail-model.js";
-import {randomBytes} from "node:crypto";
 
 // Measured on four profiles and 249 stories judged by hand:
 //  - one vector per interest, dense + half the sparse: 88% of relevant cards (one vector for the
@@ -182,17 +183,23 @@ const toArticle = (article, trusted = new Set()) => ({
 // language of the reader come from its versions (see VERSION_LIKENESS): a story is of one language.
 // A medium met through its feed and through Google News is read from its feed: no address to ask
 // Google for
+// A story shown before that evolved since (see repeats.js) is read from its news since: the card tells
+// what is new, not what the reader read
 const toRead = (story, trusted = new Set(), language = null) => {
     const inLanguage = (article) => Boolean(language) && article.lang === language;
-    const newest = [...story.members].sort((a, b) => b.at - a.at);
-    const first = story.members.find(article => isTrusted(article, trusted) && !fromGoogle(article))
-        ?? story.members.find(article => isTrusted(article, trusted))
-        ?? (inLanguage(story.best) ? story.best : null)
+    const since = story.followUp?.evolved ? new Date(story.followUp.shownAt) : null;
+    const fresh = since ? story.members.filter(article => article.at > since) : [];
+    const members = fresh.length > 0 ? fresh : story.members;
+    const best = members.includes(story.best) ? story.best : members[0];
+    const newest = [...members].sort((a, b) => b.at - a.at);
+    const first = members.find(article => isTrusted(article, trusted) && !fromGoogle(article))
+        ?? members.find(article => isTrusted(article, trusted))
+        ?? (inLanguage(best) ? best : null)
         ?? newest.find(article => inLanguage(article) && !fromGoogle(article))
         ?? newest.find(inLanguage)
-        ?? story.best;
+        ?? best;
     const byMedium = new Map();
-    for (const article of [first, story.best, ...newest]) {
+    for (const article of [first, best, ...newest, ...story.members]) {
         const medium = mediumOfArticle(article);
         const kept = byMedium.get(medium);
         if (!kept || (fromGoogle(kept) && !fromGoogle(article))) byMedium.set(medium, article);
@@ -469,14 +476,46 @@ const oncePerThread = async (stories) => {
     });
 };
 
+// the stories without the ones shown to the profile in the last REPEAT_HOURS (but the last
+// REWRITE_HOURS), the ones that evolved since kept as follow-ups (see repeats.js). The briefing never
+// fails on it: all are kept then
+const notShownBefore = async (stories, profileId, usage) => {
+    try {
+        const hoursAgo = (hours) => new Date(Date.now() - hours * 3600e3);
+        const shown = shownStories(await BriefingModel.shownBetween(profileId, hoursAgo(REPEAT_HOURS), hoursAgo(REWRITE_HOURS)));
+        if (shown.size === 0) return stories;
+        const threads = await StoryModel.threadsOf([...new Set([...stories.map(story => story.storyId), ...shown.keys()])]);
+        const threadOf = new Map(threads.map(row => [row.id, row.id_thread]));
+        const result = await withoutRepeats(stories, shown, threadOf, (asked) => evolvedStories(asked, usage));
+        console.log(`Briefing: ${result.left} stories of the affairs shown in the last ${REPEAT_HOURS} h left out, ${result.back.length} kept as they tell something new${
+            result.back.map(({storyId, fact}) => `
+  [${storyId}] ${fact ?? ''}`).join('')}`);
+        return result.stories;
+    } catch (err) {
+        console.error(`Briefing: the stories shown before were not looked for (${err.message})`);
+        return stories;
+    }
+};
+
+// The profile as the AI reads it to choose and review the cards: its text, then the projects it runs
+// (db/add_projects.sql), each in the reader's words, so a story on a project is not off the profile.
+// The text of the profile alone when it runs none, as on the benches
+export const readerText = (text, projects = []) => projects.length === 0 ? text : `${text}
+
+En ce moment, il prépare aussi ${projects.length === 1 ? 'un projet, dont il veut les nouvelles' : 'des projets, dont il veut les nouvelles'} tant qu'${projects.length === 1 ? 'il dure' : 'ils durent'} :
+${projects.map(project => `- « ${project.name} » : ${project.text.replace(/\s+/g, ' ').trim()}`).join('\n')}`;
+
 // hours: of news it is written from, one of WINDOWS; size: its cards, one of BRIEFING_SIZES. Exported for the benches, which write a briefing
 // without saving it (bench/briefing-relevance.mjs)
 export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) => {
     // the stories ranked and given to the AI grow with the cards wanted
     const scale = size / MAX_BRIEFING;
-    const usage = {choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage()};
-    const [profile, interests] = await Promise.all([ProfileModel.get(profileId), ProfileModel.interests(profileId)]);
+    const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage()};
+    // the interests of the profile and of the projects it runs: each gets its share of the cards
+    const [profile, interests, projects] = await Promise.all([ProfileModel.get(profileId), ProfileModel.briefingInterests(profileId),
+        ProfileModel.projects(profileId)]);
     if (!profile || interests.length === 0) throw Object.assign(new Error('Write your profile first.'), {status: 400});
+    const wanted = readerText(profile.text, projects.filter(project => project.running));
 
     // the seconds of each step, logged with the tokens: a slow briefing says where its time went. A
     // briefing of the benches (no id) is timed too but has no row to save its step in
@@ -527,6 +566,8 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             best: news.find(article => article.id === row.id_article) ?? news[0],
             interestId: row.id_interest,
             interest: interests.find(interest => interest.id === row.id_interest)?.text ?? null,
+            // the project of the interest, null for one of the profile itself
+            project: interests.find(interest => interest.id === row.id_interest)?.project ?? null,
             members: news,
             score: Number(row.score),
             // told by a medium the reader trusts: the AI is told so; a candidate besides the closest
@@ -538,7 +579,10 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     const closestFirst = [...byId.values()]
         .filter(story => story.best && credibleStory(story.members, media) && !isRepeatedPage(story.members) && readableNow(story))
         .sort((a, b) => b.score - a.score);
-    const choosable = week ? await oncePerThread(closestFirst) : closestFirst;
+    // the stories shown in the briefings of the last days are left out, unless they evolved since
+    const fresh = await notShownBefore(closestFirst, profileId, usage.repeats);
+    for (const story of fresh) byId.set(String(story.storyId), story);
+    const choosable = week ? await oncePerThread(fresh) : fresh;
     const closest = pickCandidates(choosable, {
         fromFeeds: CANDIDATES * scale, extra: GOOGLE_CANDIDATES * scale, perMedium: GOOGLE_PER_MEDIUM,
         first: (stories, size) => shareOut(stories, size, story => story.interestId, interests),
@@ -549,7 +593,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     // 2. the AI chooses, against the whole profile and what it refuses
     await step('choosing');
     const language = readerLanguage(profile);
-    const chosenByAi = await selectStories(profile.text, candidates.map(story => ({
+    const chosenByAi = await selectStories(wanted, candidates.map(story => ({
         id: String(story.storyId),
         title: story.best.title,
         description: (story.best.description ?? '').slice(0, DESCRIPTION_CHARS),
@@ -602,7 +646,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
         // and the titles written in another language than the reader's translated, as their passages
         const foreign = [...leads.values()].filter(lead => lead.lang && lead.lang !== language && writtenIn(lead.lang) && writtenIn(language));
         const [leftOut, translations] = await Promise.all([
-            reviewCards(profile.text, [...leads].map(([result, lead]) => ({
+            reviewCards(wanted, [...leads].map(([result, lead]) => ({
                 id: String(result.story.storyId),
                 title: lead.title,
                 summary: result.summary?.summary ?? null,
@@ -659,6 +703,9 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
         return {
             storyId: story.storyId,
             mergedStoryIds: story.mergedStoryIds ?? [],   // cards of the same news joined to this one
+            // a card of a briefing of the last days it follows (see repeats.js): {storyId, title, shownAt,
+            // evolved}, evolved when it is that story with news since, else a new step of its affair
+            followUp: story.followUp ?? null,
             vote: null,                                    // the thumb of the reader, 'up' or 'down'
             // the feeds its articles came from: a refused card is blamed on them (utils/feedback.js),
             // never on a search of Google News, which is the interest itself
@@ -672,6 +719,8 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             language: lead.lang ?? null,
             why: story.why,
             interest: story.interest,
+            // the project of the profile it was chosen for (see readerText), null for the profile itself
+            project: story.project ?? null,
             // the key sentences of the article as published, a paragraph per passage (see extract.js)
             summary: summary?.summary ?? null,
             // a card is read (see readableCards): without passages, the AI failed on its article
@@ -873,6 +922,60 @@ const readyBriefing = async (userId, briefingId) => {
     return {row, briefing: toBriefing(row)};
 };
 
+// The news a reader adds to a briefing by its link (see importNews), MAX_IMPORTED at most per briefing
+const MAX_IMPORTED = 10;
+const MAX_URL = 2000;
+const dateOf = (value) => {
+    const date = value ? new Date(value) : null;
+    return date && !Number.isNaN(date.getTime()) ? date.toISOString() : null;
+};
+
+// the card of a news added by its link: its page read as the cards' are, its key passages chosen and
+// translated as theirs; no story, no why, no other media, no angle nor official source
+export const importedCard = async (address, page, {language, usage}) => {
+    const title = (page.title || page.description || address).replace(/\s+/g, ' ').trim();
+    const extract = await extractArticle(title, page, {language, usage});
+    if (extract.passages.length === 0) {
+        throw Object.assign(new Error('No passage of a news could be read in this page.'), {status: 422});
+    }
+    const lang = extract.from ?? languageOf(`${title} ${page.content.slice(0, 2000)}`);
+    const [titleTranslation] = lang && lang !== language && writtenIn(lang) && writtenIn(language)
+        ? await translateTexts([{text: title, from: writtenIn(lang)}], writtenIn(language), usage).catch(() => [null])
+        : [null];
+    const source = hostOf(address) ?? '';
+    const lead = {title, url: address, source, publishedAt: dateOf(page.publishedAt), trusted: false, language: lang ?? null};
+    const thumbnail = /^https?:\/\//i.test(page.thumbnail ?? '') ? page.thumbnail : null;
+    return {
+        imported: true,
+        mergedStoryIds: [],
+        vote: null,
+        feedUrls: [],
+        title,
+        lead,
+        titleTranslation: titleTranslation ?? null,
+        language: lang ?? null,
+        why: null,
+        interest: null,
+        summary: passagesText(extract.passages),
+        summaryError: null,
+        translation: passagesText(extract.translation),
+        points: passagesText(extract.points),
+        pointsTranslation: passagesText(extract.pointsTranslation),
+        digest: passagesText(extract.digest),
+        digestTranslation: passagesText(extract.digestTranslation),
+        topic: extract.topic,
+        sourcing: extract.sourcing,
+        hedged: hedgedBy(title, page.description),
+        contested: [],
+        angles: [],
+        official: [],
+        thumbnail,
+        thumbnailSource: thumbnail ? source : null,
+        publishedAt: lead.publishedAt,
+        articles: [lead],
+    };
+};
+
 const picturesOfItem = async (item) => storyPictures(item,
     await BriefingModel.articlePictures(item.storyId, [item.lead, ...(item.articles ?? [])].filter(Boolean).map(article => article.url)));
 
@@ -886,14 +989,14 @@ export const BriefingService = {
 
     // the cards of a ready briefing the reader ticked (storyIds), in the order the reader gave them (see
     // briefing-mail.js), sent to one address: to, the one the reader writes, the one of their account
-    // when not given; sent to another, it says who sends it and the answers go to the reader.
+    // when not given; sent to another, the answers go to the reader. Its title names the profile.
     // pictures: the picture of some cards changed or taken out (see withChosenPictures); titles:
     // {storyId: title}, the ones the reader wrote for the e-mail; removed: the denials, the other
-    // angles and the official sources they took out (see withoutTakenOut); origin: the address of the site (https://...), a
-    // copy of the e-mail is kept there as it was sent, and the e-mail leads to it; format: the way the
-    // sentences of the cards are shown, one of MAIL_FORMATS, the key passages when not given
-    email: async (userId, briefingId, storyIds, to, pictures, titles, removed, origin = null, format = 'passages') => {
-        if (!Array.isArray(storyIds) || storyIds.length === 0 || !storyIds.every(storyId => Number.isInteger(storyId) && storyId > 0)) {
+    // angles and the official sources they took out (see withoutTakenOut); format: the way the
+    // sentences of the cards are shown, one of MAIL_FORMATS, the key passages when not given. No copy
+    // is kept any more: the e-mail has no link to one (the user, 13.10.2026)
+    email: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages') => {
+        if (!Array.isArray(storyIds) || storyIds.length === 0 || !storyIds.every(storyId => Number.isInteger(storyId) && storyId !== 0)) {
             throw Object.assign(new Error('storyIds: the cards ticked, one at least.'), {status: 400});
         }
         if (!MAIL_FORMATS.includes(format)) throw Object.assign(new Error(`format: one of ${MAIL_FORMATS.join(', ')}.`), {status: 400});
@@ -904,7 +1007,7 @@ export const BriefingService = {
         // in the order given, each card once, the ones not in this briefing left out
         const ticked = [...new Set(storyIds)].map(storyId => byId.get(storyId)).filter(Boolean);
         if (ticked.length === 0) throw Object.assign(new Error('None of the cards ticked is in this briefing.'), {status: 404});
-        const user = await UserModel.email(userId);
+        const [user, profile] = await Promise.all([UserModel.email(userId), row.id_profile ? ProfileModel.get(row.id_profile) : null]);
         if (!asked && !user?.email) throw Object.assign(new Error('Your account has no e-mail address.'), {status: 400});
         const address = asked || user.email;
         const toOther = address.toLowerCase() !== String(user?.email ?? '').toLowerCase();
@@ -913,21 +1016,51 @@ export const BriefingService = {
         const changed = ticked.filter(item => pictures && typeof pictures === 'object' && typeof pictures[String(item.storyId)]?.url === 'string');
         const known = new Map((await Promise.all(changed.map(picturesOfItem))).flat().map(picture => [picture.url, picture.source]));
         const {items, attachments} = await withChosenPictures(withoutTakenOut(withOwnTitles(ticked, titles), removed), pictures, {sender, known});
-        const sent = {...briefing, items};
-        // the copy kept as it was sent, that its link leads to; taken out again when it is not sent
-        const token = origin ? randomBytes(18).toString('base64url') : null;
-        const mail = briefingMail(sent, {sender, format, original: token ? {url: `${origin}/api/mails/${token}`} : null});
-        const copy = token && await SentMailModel.save({token, userId, briefingId: row.id, subject: mail.subject,
-            html: withPicturesWritten(briefingMail(sent, {sender, format, original: {sentAt: new Date().toISOString()}}).html, attachments)});
-        try {
-            await sendMail({to: address, replyTo: toOther && user?.email ? user.email : undefined, ...mail, attachments});
-        } catch (error) {
-            if (copy) await SentMailModel.remove(copy).catch(() => {});
-            throw error;
+        const mail = briefingMail({...briefing, items}, {profile: profile?.name ?? null, sender, format});
+        await sendMail({to: address, replyTo: toOther && user?.email ? user.email : undefined, ...mail, attachments});
+    },
+
+    // A news the reader adds by its link to a ready briefing, to send it by e-mail with its cards: its page
+    // read (a plain fetch, only of a public address), its key passages chosen by the AI and translated,
+    // as a card at the end of the briefing marked as added (see importedCard). Its id is negative: it
+    // is of no story. Answers the card, the terms the profile follows marked in it
+    importNews: async (userId, briefingId, url) => {
+        const asked = typeof url === 'string' ? url.trim() : '';
+        if (!asked || asked.length > MAX_URL) throw Object.assign(new Error('url: the address of the news.'), {status: 400});
+        const address = (await assertPublicUrl(asked)).href;
+        const {row, briefing} = await readyBriefing(userId, briefingId);
+        const known = (article) => article?.url === address || article?.url === asked;
+        if (briefing.items.some(item => [item.lead, ...(item.articles ?? [])].some(known))) {
+            throw Object.assign(new Error('This news is already in the briefing.'), {status: 409});
+        }
+        if (briefing.items.filter(item => item.imported).length >= MAX_IMPORTED) {
+            throw Object.assign(new Error(`At most ${MAX_IMPORTED} news added to a briefing.`), {status: 400});
+        }
+        const [page] = await Crawlers.Pages([address]);
+        if (!page?.content || !canSummarize(page.content)) {
+            throw Object.assign(new Error('This page could not be read: no article in it, a paywall or a protected site.'), {status: 422});
+        }
+        const profile = row.id_profile ? await ProfileModel.get(row.id_profile) : null;
+        const usage = newUsage();
+        const card = await importedCard(address, page, {language: readerLanguage(profile ?? {}), usage});
+        const storyId = await BriefingModel.addItem(userId, row.id, card);
+        if (storyId === null) throw Object.assign(new Error('Unknown briefing.'), {status: 404});
+        console.log(`Briefing ${row.id}: news added by its link, tokens ${JSON.stringify(usage)}`);
+        return withMarks({items: [{...card, storyId}]}, profile?.watch_terms ?? []).items[0];
+    },
+
+    // a news the reader added taken out of the briefing
+    removeNews: async (userId, briefingId, storyId) => {
+        const id = Number(briefingId);
+        const story = Number(storyId);
+        if (!Number.isInteger(id) || id <= 0 || !Number.isInteger(story) || story >= 0
+            || await BriefingModel.removeItem(userId, id, story) === 0) {
+            throw Object.assign(new Error('Unknown news added.'), {status: 404});
         }
     },
 
-    // {subject, html}: the copy of an e-mail kept as it was sent, by the token of its link
+    // {subject, html}: the copy of an e-mail kept as it was sent, by the token of its link: the e-mails
+    // sent before 13.10.2026 carry one
     original: async (token) => {
         const copy = /^[\w-]{24}$/.test(String(token ?? '')) ? await SentMailModel.byToken(token) : null;
         if (!copy) throw Object.assign(new Error('No e-mail has this address.'), {status: 404});
