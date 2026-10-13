@@ -297,15 +297,24 @@ const TRUSTED_MARK = ' (source de confiance du lecteur)';
 // that mattered. The prompt of a briefing of one or two days stays the one measured
 const mediaMark = (media) => ` (${media} ${media === 1 ? 'média' : 'médias'})`;
 
-// week: the stories are of the last 7 days, each with its number of media (media)
+// The words of a briefing of several days: the ones measured on 7, said the same for the 3 the reader
+// can choose since 14.10.2026
+const daysWords = (days) => days === 7
+    ? {last: 'des 7 derniers jours', summary: 'le résumé de sa semaine', facts: 'de la semaine'}
+    : {last: `des ${days} derniers jours`, summary: `le résumé de ses ${days} derniers jours`, facts: `de ces ${days} jours`};
+
+// week: the days of a briefing of several days (true: 7, as on the benches), its stories each with its
+// number of media (media); false for one of a day
 // size: the cards of the briefing (see BRIEFING_SIZES)
 // language: the one the reader reads in (see readerLanguage): "why" is written in it, not in the one of
 // the profile, which stays the one it was written in when the reader changes it. Without it, the one of
 // the profile, as on the benches
-export const selectionPrompt = (profileText, candidates, examples = {liked: [], refused: []}, interests = [], week = false, size = MAX_BRIEFING, language = null) => `Voici le profil d'un lecteur, écrit par lui-même :
+export const selectionPrompt = (profileText, candidates, examples = {liked: [], refused: []}, interests = [], week = false, size = MAX_BRIEFING, language = null) => {
+    const words = week ? daysWords(week === true ? 7 : week) : null;
+    return `Voici le profil d'un lecteur, écrit par lui-même :
 """${profileText}"""
 ${interests.length > 1 ? `Ses intérêts :\n${interests.map(interest => `- ${interest}`).join('\n')}\n` : ''}${feedbackBlock(examples)}
-Voici des histoires d'actualité ${week ? "des 7 derniers jours, chacune avec son identifiant entre crochets et le nombre de médias qui l'ont racontée" : "du jour, chacune avec son identifiant entre crochets"} :
+Voici des histoires d'actualité ${week ? `${words.last}, chacune avec son identifiant entre crochets et le nombre de médias qui l'ont racontée` : "du jour, chacune avec son identifiant entre crochets"} :
 ${candidates.map(c => `[${c.id}] ${c.title}${week ? mediaMark(c.media) : ''}${c.trusted ? TRUSTED_MARK : ''}${c.description ? ` — ${c.description}` : ''}${c.others.length > 0 ? ` (aussi : ${c.others.join(' / ')})` : ''}`).join('\n')}
 
 Choisis au plus ${chosenFor(size)} histoires qui correspondent vraiment à ce que ce lecteur demande, de la plus à la moins pertinente.${interests.length > 1 ? `
@@ -313,9 +322,10 @@ Couvre tous ses intérêts : pour chacun, donne les histoires qui lui conviennen
 Ce qu'il dit ne pas vouloir est exclu, même quand l'histoire touche un de ses intérêts et même quand son titre ne le nomme pas (une équipe d'un sport refusé, un parti d'une politique refusée).
 S'il y en a moins de ${chosenFor(size)} qui conviennent, n'en rends que celles-là : une liste courte vaut mieux qu'une histoire hors sujet.
 ${candidates.some(c => c.trusted) ? `Les histoires marquées « source de confiance du lecteur » sont racontées par un média qu'il a mis en favori : à pertinence égale, préfère-les. Ne choisis jamais pour cela une histoire qui ne correspond pas à ce qu'il demande.\n` : ''}Varie : pas deux histoires sur la même personne, la même organisation ou le même événement, sauf si ce sont deux nouvelles importantes et différentes.
-${week ? `C'est le résumé de sa semaine : préfère les nouvelles qui ont compté, racontées par plusieurs médias ou qui ont fait avancer une affaire, à un fait mineur raconté par un seul. Ne choisis jamais pour cela une histoire qui ne correspond pas à ce qu'il demande.\n` : ''}Préfère les faits ${week ? 'de la semaine' : 'du jour'} (décisions, annonces, résultats, déclarations) aux pronostics, conseils et guides, sauf si le lecteur les demande. Ne choisis jamais une page qui n'apporte aucun fait nouveau : présentation générale d'un sujet, guide pratique, billetterie, classement, calendrier, direct, compilation.
+${week ? `C'est ${words.summary} : préfère les nouvelles qui ont compté, racontées par plusieurs médias ou qui ont fait avancer une affaire, à un fait mineur raconté par un seul. Ne choisis jamais pour cela une histoire qui ne correspond pas à ce qu'il demande.\n` : ''}Préfère les faits ${week ? words.facts : 'du jour'} (décisions, annonces, résultats, déclarations) aux pronostics, conseils et guides, sauf si le lecteur les demande. Ne choisis jamais une page qui n'apporte aucun fait nouveau : présentation générale d'un sujet, guide pratique, billetterie, classement, calendrier, direct, compilation.
 Pour chacune, "why" est une phrase courte qui dit au lecteur pourquoi elle est pour lui, ${language ? `en ${frenchName(language)}` : 'dans la langue de son profil'}, tirée seulement de ce que disent son titre et sa description : si le lien avec le profil n'y est pas, ne la choisis pas.
 Réponds uniquement en JSON : {"selected": [{"id": "...", "why": "une phrase courte"}]}`;
+};
 
 // the stories chosen, only among the ones given, each once, at most chosenFor(size)
 export const normalizeSelection = (answer, knownIds, size = MAX_BRIEFING) => {

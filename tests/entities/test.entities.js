@@ -108,7 +108,7 @@ describe('mergeNews', () => {
 
 describe('EntityService.page', () => {
     it('should give the news naming it, then each link with its own, the most named first, a link of two relations once', async () => {
-        const page = await EntityService.page(8, 'Q483020', 48);
+        const page = await EntityService.page(8, 'Q483020', 72);
 
         expect(readItem).not.toHaveBeenCalled();
         expect(page.count).toBe(2);         // two stories: 50, and 40 told twice
@@ -121,8 +121,8 @@ describe('EntityService.page', () => {
     });
 
     it('should keep the news a few minutes, and read again from Wikidata an item only met as a link', async () => {
-        await EntityService.page(8, 'Q483020', 48);
-        await EntityService.page(8, 'Q483020', 48);
+        await EntityService.page(8, 'Q483020', 72);
+        await EntityService.page(8, 'Q483020', 72);
         expect(articlesHolding).toHaveBeenCalledTimes(0);
 
         EntityModel.byQid.mockResolvedValueOnce({...PSG, fetched_at: null}).mockResolvedValueOnce(PSG);
@@ -139,7 +139,7 @@ describe('EntityService.page', () => {
             {...article(8, 'Les Parisiens en Ligue des champions', 80), keys: ['parisiens'], qids: ['Q483020']},
             {...article(9, 'Doublé du Ballon d’or', 90), keys: ['ousmane dembele'], qids: []},
         ]);
-        const page = await EntityService.page(11, 'Q483020', 48);
+        const page = await EntityService.page(11, 'Q483020', 72);
 
         expect(articlesHolding).not.toHaveBeenCalled();
         expect(page.news.map(news => news.storyId)).toEqual([80, 70]);     // the newest first
@@ -151,19 +151,19 @@ describe('EntityService.page', () => {
 
     it('should search the texts of the news the tagger has not read only', async () => {
         articlesHolding.mockResolvedValueOnce([{...article(5, 'PSG gagne', 50), entities_at: new Date()}, article(6, 'PSG perd', 60)]);
-        const page = await EntityService.page(13, 'Q483020', 48);
+        const page = await EntityService.page(13, 'Q483020', 72);
         expect(page.news.map(news => news.storyId)).toEqual([60]);
     });
 
     it('should count every story naming it, not only the news kept per name', async () => {
         MentionModel.articlesNamed.mockResolvedValueOnce(Array.from({length: 130}, (_, i) => ({...article(i + 10, `Match ${i}`, i + 100), keys: ['psg'], qids: []})));
         articlesHolding.mockResolvedValueOnce([]);
-        const page = await EntityService.page(12, 'Q483020', 48);
+        const page = await EntityService.page(12, 'Q483020', 72);
         expect(page.count).toBe(130);
     });
 
     it('should refuse an id that is not one of Wikidata, and a window it does not offer', async () => {
-        await expect(EntityService.page(8, 'DROP TABLE', 48)).rejects.toMatchObject({status: 400});
+        await expect(EntityService.page(8, 'DROP TABLE', 72)).rejects.toMatchObject({status: 400});
         await expect(EntityService.page(8, 'Q483020', 12)).rejects.toMatchObject({status: 400});
     });
 });
@@ -253,14 +253,14 @@ describe('EntityService.namePage', () => {
         MentionModel.qidsOfKey.mockResolvedValueOnce(['Q99']);
         ProfileModel.get.mockResolvedValue({watch_terms: ['lff']});
         articlesHolding.mockResolvedValueOnce([article(8, 'La LFF soutient Infantino', 80)]);
-        const page = await EntityService.namePage(10, 'LFF', 48);
+        const page = await EntityService.namePage(10, 'LFF', 72);
         expect(page).toMatchObject({name: 'LFF', qid: 'Q99', followed: true, wordsLeft: 19, count: 1});
         expect(MentionModel.qidsOfKey).toHaveBeenCalledWith('lff');
         expect(MentionModel.want).toHaveBeenCalledWith({key: 'lff'});
 
         MentionModel.qidsOfKey.mockResolvedValueOnce(['Q1', 'Q2']);
         expect((await EntityService.namePage(10, 'Paris', 24)).qid).toBeNull();
-        await expect(EntityService.namePage(10, 'P', 48)).rejects.toMatchObject({status: 400});
+        await expect(EntityService.namePage(10, 'P', 72)).rejects.toMatchObject({status: 400});
         await expect(EntityService.namePage(10, 'LFF', 12)).rejects.toMatchObject({status: 400});
     });
 });

@@ -229,6 +229,13 @@ describe('the share of each interest in a briefing', () => {
         expect(week).toContain('[1] Sinner gagne (6 médias)\n[2] Fils perd (1 média)');
         expect(week).toContain('préfère les nouvelles qui ont compté');
         expect(week).toContain('Préfère les faits de la semaine');
+        expect(selectionPrompt('Le tennis.', candidates, undefined, [], 7)).toBe(week);
+
+        const three = selectionPrompt('Le tennis.', candidates, undefined, [], 3);
+        expect(three).toContain('des 3 derniers jours');
+        expect(three).toContain("C'est le résumé de ses 3 derniers jours");
+        expect(three).toContain('Préfère les faits de ces 3 jours');
+        expect(three).not.toContain('semaine');
 
         const day = selectionPrompt('Le tennis.', candidates);
         expect(day).toContain("d'actualité du jour");

@@ -26,7 +26,7 @@ export const EntityController = {
     // {names}: names of its cards the profile could follow
     suggestions: (req, res) => respond(res, async () => ({names: await EntityService.suggestions(req.profileId)})),
     // ?name=&hours=: the page of a name as written
-    namePage: (req, res) => respond(res, () => EntityService.namePage(req.profileId, req.query.name, Number(req.query.hours ?? 48))),
+    namePage: (req, res) => respond(res, () => EntityService.namePage(req.profileId, req.query.name, Number(req.query.hours ?? 72))),
     // {word}: followed as written, {words}
     addWord: (req, res) => respond(res, () => EntityService.addWord(req.profileId, req.body?.word), 201),
     removeWord: (req, res) => respond(res, () => EntityService.removeWord(req.profileId, req.params.word)),
@@ -37,6 +37,6 @@ export const EntityController = {
     unfollow: (req, res) => respond(res, async () => ({entities: await EntityService.unfollow(req.profileId, req.params.qid)})),
     // {added, removed}: {entity}
     setNames: (req, res) => respond(res, async () => ({entity: await EntityService.setNames(req.profileId, req.params.qid, req.body ?? {})})),
-    // ?hours=24|48|168: the page of the item
-    page: (req, res) => respond(res, () => EntityService.page(req.profileId, req.params.qid, Number(req.query.hours ?? 48))),
+    // ?hours=24|72|168: the page of the item
+    page: (req, res) => respond(res, () => EntityService.page(req.profileId, req.params.qid, Number(req.query.hours ?? 72))),
 };

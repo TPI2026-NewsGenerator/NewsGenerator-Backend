@@ -51,15 +51,17 @@ import {namesOfCards} from "./utils/card-names.js";
 // The refusals of the user are left to the AI: as vectors they removed good stories with the bad.
 // Then the AI checks what the chosen stories group (see checkStories): the vectors join two media
 // writing on one subject without telling the same fact.
-// The hours of news a briefing is written from, chosen by the reader: 48 by default, the window of
-// every bench. Over 7 days the ranking took the same 2 to 3 s and the same 40 candidates go to the AI,
-// so a briefing of the week costs no more (bench/briefing-window.mjs). A month is not offered: the
-// articles are kept 30 days, the oldest would be leaving as it is written
-const WINDOWS = [24, 48, 168];
-const DEFAULT_HOURS = 48;
-// From this many hours a briefing is one of the week. Its 40 closest stories were 34 affairs of
-// several days (threads, db/add_threads.sql), and guides of no day rose among them: one candidate per
-// thread, and the AI is told how many media told each to prefer what mattered (see selectionPrompt)
+// The hours of news a briefing is written from, chosen by the reader: 24 hours, 3 days or 7 days (2
+// days, the window of every bench, until 14.10.2026: the user asked for 3), 3 days by default. Over 7
+// days the ranking took the same 2 to 3 s and the same 40 candidates go to the AI, so a briefing of
+// the week costs no more (bench/briefing-window.mjs). A month is not offered: the articles are kept 30
+// days, the oldest would be leaving as it is written
+const WINDOWS = [24, 72, 168];
+const DEFAULT_HOURS = 72;
+// From this many hours a briefing is one of several days. The 40 closest stories of a week were 34
+// affairs of several days (threads, db/add_threads.sql), and guides of no day rose among them: one
+// candidate per thread, and the AI is told how many media told each to prefer what mattered (see
+// selectionPrompt)
 const WEEK_FROM_HOURS = 72;
 const SPARSE_WEIGHT = 0.5;
 const CANDIDATES = 40;              // stories the AI chooses from, told by at least one feed
@@ -122,8 +124,8 @@ const CARD_TITLES = 5;              // other titles of a card given with it, one
 
 const running = new Set();          // users whose briefing is being written by this server
 
-// "48 hours", "7 days": said in the messages
-const spanOf = (hours) => hours > DEFAULT_HOURS ? `${hours / 24} days` : `${hours} hours`;
+// "24 hours", "3 days": said in the messages
+const spanOf = (hours) => hours > 24 && hours % 24 === 0 ? `${hours / 24} days` : `${hours} hours`;
 
 // The feeds a profile reads: the shared ones of every language, the sources of every reader (found for
 // their profiles or added by hand, of every profile: every source is for everyone since 8.10.2026, those
@@ -636,7 +638,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
         others: story.members.filter(article => article !== story.best).map(article => article.title).slice(0, 3),
         trusted: story.told,
         media: new Set(story.members.map(mediumOfArticle)).size,
-    })), usage.choosing, feedback.examples, interests.map(interest => interest.text), week, size, language);
+    })), usage.choosing, feedback.examples, interests.map(interest => interest.text), week && hours / 24, size, language);
     const selected = balanceSelection(chosenByAi, id => byId.get(id)?.interestId, interests, size);
     if (selected.length === 0) return [];
     // the next stories the AI chose, in its order: they replace a card no article of which can be read
