@@ -2,7 +2,7 @@
 //  Author: Fabian Rostello
 //  Date: 01.10.2026
 //  File: test.ai-fallback.js
-//  Description: The Gemini API answers in the place of Ollama when Ollama fails, and only then
+//  Description: The Gemini API answers in the place of Ollama when Ollama fails (or never answers), and only then
 //
 
 import process from 'node:process';
@@ -13,6 +13,7 @@ jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
 
 process.env.AISTUDIO_API_KEY = 'test-key';
 const {ollamaJson, newUsage} = await import('../../services/utils/ollama.js');
+const {Ollama} = await import('ollama');
 
 const realFetch = globalThis.fetch;
 const geminiAnswer = (text, status = 200) => ({
@@ -90,6 +91,35 @@ describe('the AI', () => {
         expect(await ollamaJson('second')).toEqual({a: 6});
         expect(chat).toHaveBeenCalledTimes(4);
         expect(globalThis.fetch).not.toHaveBeenCalled();
+        jest.useRealTimers();
+    });
+
+    it('should give up an Ollama call that never answers, its request closed, and ask Gemini', async () => {
+        jest.useFakeTimers();
+        chat.mockReturnValueOnce(new Promise(() => {}));
+        globalThis.fetch.mockResolvedValueOnce(geminiAnswer('{"a": 7}'));
+
+        const answer = ollamaJson('prompt');
+        await jest.advanceTimersByTimeAsync(120e3);
+        expect(await answer).toEqual({a: 7});
+        jest.useRealTimers();
+
+        // the fetch given to the client of that call carries the signal, aborted
+        await Ollama.mock.calls.at(-1)[0].fetch('https://ollama.com/api/chat', {method: 'POST'});
+        expect(globalThis.fetch.mock.calls.at(-1)[1].signal.aborted).toBe(true);
+    });
+
+    it('should fail with an error 502 when Ollama never answers and there is no Gemini key', async () => {
+        jest.useFakeTimers();
+        delete process.env.AISTUDIO_API_KEY;
+        chat.mockReturnValueOnce(new Promise(() => {}));
+
+        const answer = ollamaJson('prompt');
+        const failed = expect(answer).rejects.toMatchObject({status: 502, message: 'Ollama: no answer in 120 s'});
+        await jest.advanceTimersByTimeAsync(120e3);
+        await failed;
+        expect(globalThis.fetch).not.toHaveBeenCalled();
+        process.env.AISTUDIO_API_KEY = 'test-key';
         jest.useRealTimers();
     });
 

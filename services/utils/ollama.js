@@ -21,10 +21,16 @@ import {Ollama} from 'ollama'
 const MODEL = process.env.OLLAMA_MODEL || "gemma4:31b";
 // inspired by "https://github.com/ollama/ollama-js". Ollama cloud by default; OLLAMA_HOST names an
 // Ollama server of our own instead (it needs no key)
-const ollama = new Ollama({
+const OLLAMA_CONFIG = {
     host: process.env.OLLAMA_HOST || 'https://ollama.com',
     headers: process.env.OLLAMA_API_KEY ? {Authorization: 'Bearer ' + process.env.OLLAMA_API_KEY} : {},
-})
+};
+// A call of Ollama cloud can stay unanswered for good: on 13.10.2026 one waited 25 minutes while a
+// new one answered in 3.5 s, and a briefing awaiting it stays 'running' forever. It is given up after
+// this long, far over the 1 to 7 s it takes, and goes to Gemini as any other failure. ollama-js
+// (0.6.3) takes no signal for a call that is not streamed, and its abort() only stops the streamed
+// ones: each call gets a client of its own, whose fetch carries the signal, to close the request too
+const OLLAMA_TIMEOUT_MS = 120e3;
 
 // The same model on the Gemini API (Google AI Studio), free, when Ollama fails: its quota used up, a
 // key refused, the service down. Only then: measured on 8 calls, 30 to 86 s each where Ollama
@@ -55,15 +61,25 @@ const count = (usage, input, output) => {
 };
 
 const askOllama = async (messages, usage, think) => {
-    const response = await ollama.chat({
-        model: MODEL,
-        format: 'json',
-        messages,
-        ...(think ? {think} : {}),
-        options: {temperature: 0.1},
-    });
-    count(usage, response.prompt_eval_count, response.eval_count);
-    return response.message.content;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(Object.assign(
+        new Error(`Ollama: no answer in ${OLLAMA_TIMEOUT_MS / 1e3} s`), {status: 502})), OLLAMA_TIMEOUT_MS);
+    const ollama = new Ollama({...OLLAMA_CONFIG, fetch: (url, init) => fetch(url, {...init, signal: controller.signal})});
+    // the race ends the wait even if the abort is not heard (the response read, a client mocked)
+    const aborted = new Promise((_, reject) => controller.signal.addEventListener('abort', () => reject(controller.signal.reason)));
+    try {
+        const response = await Promise.race([aborted, ollama.chat({
+            model: MODEL,
+            format: 'json',
+            messages,
+            ...(think ? {think} : {}),
+            options: {temperature: 0.1},
+        })]);
+        count(usage, response.prompt_eval_count, response.eval_count);
+        return response.message.content;
+    } finally {
+        clearTimeout(timer);
+    }
 };
 
 // format: 'json' of the API answers an error 500 for this model: the prompts ask for JSON already.
