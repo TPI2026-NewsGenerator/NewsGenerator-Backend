@@ -47,6 +47,11 @@ describe('hasDenial', () => {
         expect(hasDenial('The club will dispute the charges.', 'en')).toBe(true);
         expect(hasDenial('Le club nie les faits.', 'fr')).toBe(true);
     });
+
+    it('should read a language without words of its own with the English ones only', () => {
+        expect(hasDenial('To nie żart. Tyle zarabia sędzia w PKO Ekstraklasie', 'pl')).toBe(false);
+        expect(hasDenial('The club denied the report.', 'pl')).toBe(true);
+    });
 });
 
 describe('contestedOf', () => {

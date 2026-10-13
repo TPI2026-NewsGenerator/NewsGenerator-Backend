@@ -41,8 +41,11 @@ const WORDS = {
 const DENIALS = Object.fromEntries(Object.entries(WORDS).map(([language, words]) => [language, new RegExp(words.join('|'), 'iu')]));
 const ANY_DENIAL = new RegExp(Object.values(WORDS).flat().join('|'), 'iu');
 
-// whether a sentence has a verb of denial; language: of its article, a code ('en', 'fr'...)
-export const hasDenial = (sentence, language = null) => (DENIALS[language] ?? ANY_DENIAL).test(sentence);
+// whether a sentence has a verb of denial; language: of its article, a code ('en', 'fr'...). A language
+// without words of its own is read with the English ones (an English article told another language):
+// with all of them, the Polish "nie" (not) passed for the French one and filled the sentences read
+export const hasDenial = (sentence, language = null) =>
+    (language ? DENIALS[language] ?? DENIALS.en : ANY_DENIAL).test(sentence);
 
 const prompt = (title, candidates) => `A news card: "${title}"
 
