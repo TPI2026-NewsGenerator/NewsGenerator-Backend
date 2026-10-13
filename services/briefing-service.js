@@ -23,7 +23,7 @@ import {BRIEFING_SIZES, MAX_BRIEFING, balanceSelection, checkStories, mergeStori
 import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {contestedOf} from "./utils/contested.js";
-import {otherAnglesOf} from "./utils/other-angles.js";
+import {otherAnglesOf, placeAngles} from "./utils/other-angles.js";
 import {AFFAIR_DAYS, storiesOfSameNames} from "./utils/affair-names.js";
 import {officialSourcesOf} from "./utils/official-sources.js";
 import {evolvedStories, REPEAT_HOURS, REWRITE_HOURS, shownStories, withoutRepeats} from "./utils/repeats.js";
@@ -335,11 +335,11 @@ const cardTitles = (story, title) => {
     return [...new Set([...perLanguage, ...others].map(article => article.title))].slice(0, CARD_TITLES);
 };
 
-// The other angles of each card, the closest first: [{title, url, source, publishedAt, trusted,
-// language, titleTranslation, storyId, media}] by story id. Of each story its newest news of a feed
-// (one of Google News must be asked for its address), none of a link on a card; a story an angle of
-// two cards is shown below the first one. The titles in another language than the reader's translated
-export const anglesOf = async (stories, titles, {language, feedUrls, hours, trusted, usage}) => {
+// The cards as the AI judges their other angles (see otherAnglesOf): [{id, title, titles, at, others:
+// [{storyId, article, title, at, media, named}]}], the closest stories first, then the ones found by
+// the card's rare names only (named). Of each story its newest news of a feed (one of Google News must
+// be asked for its address), none of a link on a card
+export const angleCardsOf = async (stories, titles, {feedUrls, hours}) => {
     const since = new Date(Date.now() - Math.max(hours, ANGLES_DAYS * 24) * 3600e3);
     const shown = new Set(stories.flatMap(story => [story.storyId, ...(story.mergedStoryIds ?? []),
         ...story.members.map(article => article.id_story)]).filter(Boolean));
@@ -357,7 +357,7 @@ export const anglesOf = async (stories, titles, {language, feedUrls, hours, trus
     });
     const namedRows = [...named].flatMap(([id, others]) => others.map(other => ({id_story: id, id_other: other.id_story, id_article: other.id_article})));
     const ids = [...new Set([...rows, ...namedRows].map(row => row.id_other))];
-    if (ids.length === 0) return new Map();
+    if (ids.length === 0) return [];
     const members = new Map(ids.map(id => [id, []]));
     const oldest = namedRows.length > 0 ? new Date(Date.now() - AFFAIR_DAYS * 24 * 3600e3) : since;
     for (const article of await StoryModel.storyArticles({storyIds: ids, feedUrls, since: oldest})) {
@@ -374,20 +374,32 @@ export const anglesOf = async (stories, titles, {language, feedUrls, hours, trus
         return [...closest, ...naming].map(row => {
             const article = members.get(row.id_other).find(news => row.id_article && news.id === row.id_article) ?? newsOf(row.id_other);
             return {storyId: row.id_other, article, title: article.title, at: article.at,
-                media: new Set(members.get(row.id_other).map(mediumOfArticle)).size};
+                media: new Set(members.get(row.id_other).map(mediumOfArticle)).size, named: !close.has(row.id_other)};
         });
     };
-    const cards = stories.map((story, i) => ({
+    return stories.map((story, i) => ({
         id: story.storyId,
         title: titles[i],
         titles: cardTitles(story, titles[i]),
         at: story.best?.at ?? null,
         others: othersOf(story),
     }));
+};
+
+// The other angles of each card, the closest first: [{title, url, source, publishedAt, trusted,
+// language, titleTranslation, storyId, media}] by story id (see angleCardsOf, placeAngles); a story an
+// angle of two cards is shown below the first one. The titles in another language than the reader's
+// translated
+export const anglesOf = async (stories, titles, {language, feedUrls, hours, trusted, usage}) => {
+    const cards = await angleCardsOf(stories, titles, {feedUrls, hours});
+    if (cards.length === 0) return new Map();
     const judged = await otherAnglesOf(cards, usage);
     const placed = new Set();
-    const angles = new Map(cards.map(card => [card.id, (judged.get(card.id) ?? [])
-        .filter(other => !placed.has(other.storyId) && placed.add(other.storyId))]));
+    const angles = new Map(cards.map(card => {
+        const shown = placeAngles((judged.get(card.id) ?? []).filter(other => !placed.has(other.storyId)));
+        shown.forEach(other => placed.add(other.storyId));
+        return [card.id, shown];
+    }));
 
     const foreign = [...angles.values()].flat()
         .filter(other => other.article.lang && other.article.lang !== language && writtenIn(other.article.lang) && writtenIn(language));

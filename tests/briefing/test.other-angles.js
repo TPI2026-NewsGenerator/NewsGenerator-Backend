@@ -3,14 +3,15 @@
 //  Date: 08.10.2026
 //  File: test.other-angles.js
 //  Description: Tests for "Other angles": only the news the AI calls another angle of the card's affair
-//               are kept, the closest first, MAX_ANGLES at most, a card the AI failed on gets none
+//               are kept, the closest first, MAX_ANGLES at most with a place for one found by names,
+//               a card the AI failed on gets none
 //
 
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const chat = jest.fn();
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
-const {MAX_ANGLES, normalizeAngles, otherAnglesOf} = await import('../../services/utils/other-angles.js');
+const {MAX_ANGLES, normalizeAngles, otherAnglesOf, placeAngles} = await import('../../services/utils/other-angles.js');
 const {newUsage} = await import('../../services/utils/ollama.js');
 
 const json = (value) => ({message: {content: JSON.stringify(value)}, prompt_eval_count: 10, eval_count: 5});
@@ -26,9 +27,9 @@ describe('normalizeAngles', () => {
         expect(normalizeAngles(answer, list).map(other => other.title)).toEqual(['A reaction', 'A later step']);
     });
 
-    it('should keep MAX_ANGLES at most', () => {
+    it('should keep every angle, placeAngles chooses the ones shown', () => {
         const answer = {news: list.map((other, i) => ({n: i + 1, kind: 'angle'}))};
-        expect(normalizeAngles(answer, list)).toHaveLength(MAX_ANGLES);
+        expect(normalizeAngles(answer, list)).toHaveLength(list.length);
     });
 
     it('should leave out numbers out of the list and answers of another shape', () => {
@@ -36,6 +37,30 @@ describe('normalizeAngles', () => {
             .map(other => other.title)).toEqual(['A reaction']);
         expect(normalizeAngles({cards: []}, list)).toEqual([]);
         expect(normalizeAngles(null, list)).toEqual([]);
+    });
+});
+
+describe('placeAngles', () => {
+    const angle = (title, named = false) => ({title, named});
+    const titles = (list) => list.map(other => other.title);
+
+    const closest = Array.from({length: MAX_ANGLES + 1}, (_, i) => angle(`Close ${i + 1}`));
+
+    it('should show MAX_ANGLES at most, the closest first', () => {
+        expect(titles(placeAngles(closest))).toEqual(titles(closest.slice(0, MAX_ANGLES)));
+    });
+
+    it('should give the last place to the first angle found by names when the closest fill them', () => {
+        const angles = [...closest, angle('Earlier stance', true), angle('Other name', true)];
+        const shown = placeAngles(angles);
+        expect(shown).toHaveLength(MAX_ANGLES);
+        expect(titles(shown)).toEqual([...titles(angles.slice(0, MAX_ANGLES - 1)), 'Earlier stance']);
+    });
+
+    it('should change nothing when an angle found by names is shown already or there is none', () => {
+        expect(titles(placeAngles([angle('A'), angle('Earlier stance', true)]))).toEqual(['A', 'Earlier stance']);
+        expect(titles(placeAngles([angle('A'), angle('B')], 1))).toEqual(['A']);
+        expect(titles(placeAngles([angle('A'), angle('B'), angle('Named', true)], 1))).toEqual(['Named']);
     });
 });
 

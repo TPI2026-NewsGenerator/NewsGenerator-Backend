@@ -20,7 +20,11 @@ import {mapWithConcurrency} from './concurrency.js';
 // actor added 13.10.2026: the Latvian federation backing Infantino a week before backing Čeferin was
 // "theme" 5 times of 6, "angle" 3 of 3 with it; on the 50 cards, twice each, right angles 42 and 42 ->
 // 44 and 43, wrong ones of the trend pieces 10 and 13 -> 8 and 7, of the affairs 10 and 9 both
-export const MAX_ANGLES = 3;            // shown below a card, the closest first
+// Shown below a card, the closest first. 5 rather than 3 (bench/angles-places.mjs, the 47 cards of 3
+// readers' last briefings judged twice, labels by hand): right angles 74 -> 102-103, the same share
+// right (75% -> 72%), the cards with one unchanged (31). The place of an angle found by names (see
+// placeAngles) costs nothing at 5; at 3 it took the place of 1 to 3 right ones
+export const MAX_ANGLES = 5;
 const AI_CONCURRENCY = 5;
 
 // the day of a news as the AI reads it, "30 Sep", '' without one
@@ -51,19 +55,33 @@ For each one, in any language, what it is to the reader of the card:
   backing one side, then the other). A storm's toll for a card on the storm's landfall; a minister's reply for a card on a strike. One person, company or
   body named in both is not enough: an actor's new film is no angle of a card on his hobby, a
   regulator's other case no angle of a card on one of its cases. Two opinion pieces or guides on one
-  trend are "theme", whatever they add.
+  trend are "theme", whatever they add. For a card on a dispute, a decision or a sanction around a
+  game, the ordinary news of the game are "theme": its preview, report, score, line-ups, ratings or
+  injuries, and the other games of its teams. What tells that dispute is an angle: the incident it is
+  about, a reaction to the decision, the sanction.
 "theme": only the same field or kind of subject (two different product launches, two opinion pieces on
   remote work, two matches of one league).
 "other": anything else, or a title too vague to tell.
 Answer in JSON only: {"news": [{"n": 1, "kind": "angle"}]}`;
 
-// the others the AI calls an angle, in their order, MAX_ANGLES at most
+// the others the AI calls an angle, in their order (see placeAngles for the ones shown)
 export const normalizeAngles = (answer, others) => {
     const angles = new Set((Array.isArray(answer?.news) ? answer.news : [])
         .filter(item => item?.kind === 'angle')
         .map(item => Number(item.n) - 1)
         .filter(i => Number.isInteger(i) && i >= 0 && i < others.length));
-    return others.filter((other, i) => angles.has(i)).slice(0, MAX_ANGLES);
+    return others.filter((other, i) => angles.has(i));
+};
+
+// The angles shown below a card, 'max' at most, in their order. The ones found by the card's names only
+// (named, see affair-names.js) come after the closest: the Latvian federation backing Infantino was the
+// third angle of three of its card on 13.10.2026, three angles closer would have left it out. The first
+// of them takes the last place when the closest fill all of them
+export const placeAngles = (angles, max = MAX_ANGLES) => {
+    const shown = angles.slice(0, max);
+    const named = angles.find(other => other.named);
+    if (!named || shown.some(other => other.named)) return shown;
+    return [...shown.slice(0, max - 1), named];
 };
 
 // cards: [{id, title, titles, at, others: [{title, at, ...}]}], the others the closest first, titles
