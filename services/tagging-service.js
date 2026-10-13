@@ -108,7 +108,8 @@ const work = async (url) => {
     }
 };
 
-// The names most met looked for in Wikidata, one at a time: linked when one item only is called so
+// The names looked for in Wikidata, one at a time, the ones a reader saw first (on a card, the page of
+// a name: see MentionModel.want), then the most met: linked when one item only is called so
 const link = async () => {
     for (;;) {
         let rows = [];

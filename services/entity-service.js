@@ -227,7 +227,9 @@ export const EntityService = {
         if (!ENTITY_HOURS.includes(hours)) throw fail(400, `hours: ${ENTITY_HOURS.join(', ')}.`);
         const written = cleanName(name);
         if (written.length < 2 || written.length > MAX_NAME) throw fail(400, `A name of 2 to ${MAX_NAME} characters.`);
-        const [qids, words] = await Promise.all([MentionModel.qidsOfKey(mentionKey(written)), profileId === null ? [] : wordsOf(profileId)]);
+        const [qids, words] = await Promise.all([MentionModel.qidsOfKey(mentionKey(written)), profileId === null ? [] : wordsOf(profileId),
+            // opened, it is looked for in Wikidata before the others: next time it may be an item
+            MentionModel.want({key: mentionKey(written)}).catch(() => 0)]);
         const [group] = await namedNews(profileId, [written], hours);
         return {
             name: written, qid: qids.length === 1 ? qids[0] : null,

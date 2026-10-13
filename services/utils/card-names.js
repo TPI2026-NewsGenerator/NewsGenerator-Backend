@@ -98,7 +98,11 @@ const asOne = (items, weight) => {
 // counted up to LEAST_NEWS); articles, how many it has; media, the sites it is of ("lequipe.fr"). The
 // ones the most of its articles name first, a name once (its item of Wikidata, its other writings: the
 // count of the one most named), places left out: they are where it happened, not who
-export const cardNames = (rows, articles, {media = [], max = NAMES_PER_CARD} = {}) => {
+export const cardNames = (rows, articles, options = {}) => chosenNames(rows, articles, options)
+    .map(group => ({name: group.name, qid: group.qid ?? null, kind: group.kind}));
+
+// the rows chosen for a card, with their id (see cardNames)
+const chosenNames = (rows, articles, {media = [], max = NAMES_PER_CARD} = {}) => {
     const least = Math.max(1, Math.ceil(articles * SHARE_OF_CARD));
     // "Le Temps" of letemps.ch
     const own = new Set(media.map(site => mentionKey(String(site).split('.')[0]).replace(/[\s-]+/g, '')));
@@ -114,13 +118,19 @@ export const cardNames = (rows, articles, {media = [], max = NAMES_PER_CARD} = {
         .map(group => ({...group, inCard: Math.max(...group.ids)}))
         .filter(group => group.inCard >= least)
         .sort((a, b) => b.inCard - a.inCard || b.key.length - a.key.length)
-        .slice(0, max)
-        .map(group => ({name: group.name, qid: group.qid ?? null, kind: group.kind}));
+        .slice(0, max);
 };
 
-// {storyId -> [{name, qid, kind}]} of these cards: [{storyId, ids (of its articles), media}]
-export const namesOfCards = async (cards) => new Map(await Promise.all(cards.map(async (card) =>
-    [card.storyId, cardNames(await MentionModel.namesOfArticles(card.ids, LEAST_NEWS), card.ids.length, {media: card.media})])));
+// {storyId -> [{name, qid, kind}]} of these cards: [{storyId, ids (of its articles), media}]. The names
+// shown that Wikidata was never asked for are asked for first (see MentionModel.want): one that is an
+// item opens its page, with its links, instead of the page of the name
+export const namesOfCards = async (cards) => {
+    const chosen = await Promise.all(cards.map(async (card) =>
+        [card.storyId, chosenNames(await MentionModel.namesOfArticles(card.ids, LEAST_NEWS), card.ids.length, {media: card.media})]));
+    const ids = chosen.flatMap(([, names]) => names.filter(name => !name.qid && name.id).map(name => name.id));
+    if (ids.length > 0) await MentionModel.want({ids}).catch(err => console.error(`Names: not asked first in Wikidata (${err.message})`));
+    return new Map(chosen.map(([storyId, names]) => [storyId, names.map(group => ({name: group.name, qid: group.qid ?? null, kind: group.kind}))]));
+};
 
 // The names met on several cards a reader was shown that they follow neither as an item of Wikidata nor
 // as a word: [{name, qid, kind, cards}], the most met first. cards: [[{name, qid, kind}]], the names of

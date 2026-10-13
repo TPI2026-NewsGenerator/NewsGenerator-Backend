@@ -25,7 +25,7 @@ jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel}));
 // the news the tagger read, and how many it has not (some: their texts are searched)
 const MentionModel = {articlesNamed: jest.fn(async () => []), anyUntagged: jest.fn(async () => true), qidsOfKey: jest.fn(async () => []),
-    articlesOfStories: jest.fn(async () => []), namesOfArticles: jest.fn(async () => [])};
+    articlesOfStories: jest.fn(async () => []), namesOfArticles: jest.fn(async () => []), want: jest.fn(async () => 0)};
 jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel}));
 const inTitle = (term) => (article) => article.title.includes(term);
 jest.unstable_mockModule('../../services/briefing-service.js', () => ({
@@ -256,6 +256,7 @@ describe('EntityService.namePage', () => {
         const page = await EntityService.namePage(10, 'LFF', 48);
         expect(page).toMatchObject({name: 'LFF', qid: 'Q99', followed: true, wordsLeft: 19, count: 1});
         expect(MentionModel.qidsOfKey).toHaveBeenCalledWith('lff');
+        expect(MentionModel.want).toHaveBeenCalledWith({key: 'lff'});
 
         MentionModel.qidsOfKey.mockResolvedValueOnce(['Q1', 'Q2']);
         expect((await EntityService.namePage(10, 'Paris', 24)).qid).toBeNull();
@@ -274,14 +275,16 @@ describe('EntityService.suggestions', () => {
         ]);
         MentionModel.articlesOfStories.mockResolvedValueOnce([{id_story: 3, ids: [30, 31]}]);
         MentionModel.namesOfArticles.mockResolvedValueOnce([
-            {name: 'LFF', qid: null, kind: 'organization', inCard: 2, news: 3},
-            {name: 'Infantino', qid: null, kind: 'person', inCard: 2, news: 3},
-            {name: 'Gianni Infantino', qid: 'Q124138', kind: 'person', inCard: 1, news: 3},
+            {id: 11, name: 'LFF', qid: null, kind: 'organization', inCard: 2, news: 3},
+            {id: 12, name: 'Infantino', qid: null, kind: 'person', inCard: 2, news: 3},
+            {id: 13, name: 'Gianni Infantino', qid: 'Q124138', kind: 'person', inCard: 1, news: 3},
         ]);
         EntityModel.followed.mockResolvedValueOnce([{qid: 'Q35572'}]);
         ProfileModel.get.mockResolvedValue({watch_terms: []});
         const names = await EntityService.suggestions(8);
         expect(MentionModel.articlesOfStories).toHaveBeenCalledWith([3]);
+        // the name shown without an item is looked for in Wikidata first, the one of an item is not
+        expect(MentionModel.want).toHaveBeenCalledWith({ids: [11]});
         // UEFA is followed, a card is counted once, "Infantino" is Gianni Infantino
         expect(names).toEqual([
             {name: 'Gianni Infantino', qid: 'Q124138', kind: 'person', cards: 2},

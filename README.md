@@ -191,6 +191,7 @@ second. The `.env` of the server lists the taggers in `NER_URL`, separated by co
     news** below), then "add_untagged_index.sql" alone (built without locking the ingestion)
 33. Do the same with "add_follow_in_briefing.sql" (what a profile follows in one list, see **What a
     profile follows** below)
+34. Do the same with "add_mentions_wanted.sql" (the names a reader sees looked for in Wikidata first)
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.
@@ -1212,6 +1213,9 @@ with it. A name is stored once per kind (`mentions`), compared without case, acc
 names most met are looked for in Wikidata in background, one every 7 s (it refused more than about 10
 searches a minute without an account): a name is the item when only one item is called exactly so
 ("Latvian Football Federation"), none when several are ("LFF", of Latvia and of Lithuania; "Paris").
+About 150 000 names wait for it (13.10.2026, 12 000 a day): the ones a reader sees, on a card or as the
+page of a name, are looked for first, whatever their news (`mentions.wanted_at`), so a name of a card
+opens the page of its item within minutes.
 
 They serve twice:
 

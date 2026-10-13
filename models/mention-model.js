@@ -67,11 +67,24 @@ export const MentionModel = {
         return saved.length;
     }, {timeout: 120000}),
 
-    // [{id, name, lang, seen}]: the names never looked for in Wikidata named by 'least' news at least,
-    // the most named first
+    // [{id, name, lang, seen}]: the names never looked for in Wikidata a reader saw first (wanted, see
+    // want), the first seen first, whatever their news; then the ones named by 'least' news at least, the
+    // most named first
     toLink: async ({least, limit}) => prisma.$queryRawUnsafe(`
-        SELECT id, name, lang, seen FROM mentions WHERE linked_at IS NULL AND seen >= $1
-        ORDER BY seen DESC LIMIT $2`, least, limit),
+        WITH wanted AS (
+            SELECT id FROM mentions WHERE linked_at IS NULL AND wanted_at IS NOT NULL ORDER BY wanted_at LIMIT $2
+        ), often AS (
+            SELECT id FROM mentions WHERE linked_at IS NULL AND seen >= $1 ORDER BY seen DESC LIMIT $2
+        )
+        SELECT m.id, m.name, m.lang, m.seen FROM mentions m
+        WHERE m.id IN (SELECT id FROM wanted UNION SELECT id FROM often)
+        ORDER BY m.wanted_at NULLS LAST, m.seen DESC LIMIT $2`, least, limit),
+
+    // these names (ids) or the names written so (key) looked for in Wikidata before the others: shown to
+    // a reader. The ones looked for already are not looked for again
+    want: async ({ids = [], key = null}) => ids.length === 0 && !key ? 0 : prisma.$executeRawUnsafe(`
+        UPDATE mentions SET wanted_at = now()
+        WHERE (id = ANY($1::int[]) OR key = $2) AND linked_at IS NULL AND wanted_at IS NULL`, ids, key),
 
     // the item of Wikidata a name is, null when none or several are called so: looked for now
     setLink: async (id, qid) => prisma.$executeRawUnsafe(`
