@@ -24,7 +24,7 @@ const BATCH = {cpu: 16, cuda: 128};
 // nothing left to tag, or the tagger off: asked again after this
 const WAIT_MS = 60e3;
 // the news of the retention are tagged, the newest first: older ones are deleted soon
-const TAG_DAYS = RETENTION_DAYS;
+export const TAG_DAYS = RETENTION_DAYS;
 const REPORT_MINUTES = 60;
 const HOUSEKEEPING_HOURS = 24;
 
@@ -33,7 +33,7 @@ const HOUSEKEEPING_HOURS = 24;
 // 429 for 12 to 25 s, at one a second as at one every 3 s; one every 6.5 s went through 30 times in a
 // row (13.10.2026, without an account): one every LINK_PAUSE_MS, about 12 000 names a day, and the
 // pause it asks for after a refusal (see wikidata.js)
-const LINK_LEAST = 3;
+export const LINK_LEAST = 3;
 const LINK_BATCH = 20;
 const LINK_PAUSE_MS = 7000;
 const LINK_IDLE_MS = 10 * 60e3;

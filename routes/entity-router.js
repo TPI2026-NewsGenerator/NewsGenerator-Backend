@@ -2,7 +2,8 @@
 //  Author: Fabian Rostello
 //  Date: 08.10.2026
 //  File: entity-router.js
-//  Description: Router for the clubs, people and organisations a profile follows
+//  Description: Router for what a profile follows: the clubs, people and organisations of Wikidata,
+//               and the names or words as written
 //
 
 import express from 'express'
@@ -19,10 +20,14 @@ const wikidataLimit = rateLimit({windowMs: 60e3, max: 30, key: req => `user ${re
 
 router.get('', authenticateToken, activeProfile, EntityController.list);
 router.get('/search', authenticateToken, wikidataLimit, activeProfile, EntityController.search);
+router.get('/suggestions', authenticateToken, activeProfile, needsProfile, EntityController.suggestions);
+router.get('/name', authenticateToken, activeProfile, needsProfile, EntityController.namePage);
+router.post('/words', authenticateToken, activeProfile, needsProfile, EntityController.addWord);
+router.delete('/words/:word', authenticateToken, activeProfile, needsProfile, EntityController.removeWord);
 router.post('', authenticateToken, wikidataLimit, activeProfile, needsProfile, EntityController.follow);
 router.get('/:qid', authenticateToken, wikidataLimit, activeProfile, needsProfile, EntityController.page);
 router.put('/:qid/names', authenticateToken, activeProfile, needsProfile, EntityController.setNames);
-router.post('/:qid/terms', authenticateToken, activeProfile, needsProfile, EntityController.toTerms);
+router.put('/:qid/briefing', authenticateToken, activeProfile, needsProfile, EntityController.setInBriefing);
 router.delete('/:qid', authenticateToken, activeProfile, needsProfile, EntityController.unfollow);
 
 export default router;

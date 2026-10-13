@@ -2,15 +2,18 @@
 //  Author: Fabian Rostello
 //  Date: 08.10.2026
 //  File: entity-service.js
-//  Description: The clubs, people and organisations a profile follows, and the page of each: the news
-//               naming it, and the ones naming what it is linked to (the players and the coach of a
-//               club, the team of a player), read from every feed with no relevance, as the terms
-//               followed (see watchedNews)
+//  Description: What a profile follows, in one list (the user, 13.10.2026): the clubs, people and
+//               organisations of Wikidata, and the names or words as written (its watch terms). The page
+//               of each item: the news naming it, and the ones naming what it is linked to (the players
+//               and the coach of a club, the team of a player); the page of a name Wikidata does not
+//               have; the names of the reader's cards to follow; and the news of all of them in the
+//               briefing, read from every feed with no relevance
 //
 
 "use strict"
 
 import {EntityModel} from "../models/entity-model.js";
+import {BriefingModel} from "../models/briefing-model.js";
 import {ProfileModel} from "../models/profile-model.js";
 import {FeedModel} from "../models/feed-model.js";
 import {MentionModel} from "../models/mention-model.js";
@@ -20,6 +23,8 @@ import {isQid, readItem, searchItems} from "./utils/wikidata.js";
 import {readerLanguage} from "./utils/language.js";
 import {Filter} from "./utils/filter.js";
 import {cleanWatchTerms, MAX_WATCH_TERMS} from "./utils/watch-terms.js";
+import {namesOfCards, shortName, suggestedNames} from "./utils/card-names.js";
+import {mapWithConcurrency} from "./utils/concurrency.js";
 
 // Wikidata changes slowly: a squad between two windows of transfers, a coach now and then
 const REFRESH_DAYS = 7;
@@ -30,6 +35,12 @@ export const ENTITY_HOURS = [24, 48, 168];
 // the linked items whose news are looked for, and the news kept for each on the page
 const MAX_LINKS_SEARCHED = 60;
 const NEWS_PER_LINK = 30;
+// in the briefing, as for a word (see watchedNews): the newest of each kept, all counted
+const BRIEFING_NEWS = 100;
+const BRIEFING_CONCURRENCY = 3;
+// the cards of these last days the names to follow are taken from, those without names read again
+const SUGGESTED_DAYS = 14;
+const SUGGESTED_READ = 40;
 
 const fail = (status, message) => Object.assign(new Error(message), {status});
 
@@ -113,17 +124,18 @@ export const namesFor = (row, following) => {
     });
 };
 
-// the names of an item that are terms of the profile already, whatever their case
-const inTerms = (names, terms) => {
-    const known = new Set((terms ?? []).map(term => term.toLowerCase()));
-    return names.filter(name => known.has(name.toLowerCase()));
-};
-
 const summary = (row, following) => ({
     qid: row.qid, label: row.label, description: row.description, kind: row.kind,
+    // the name it is shown by in lists and tabs: "UEFA" (see shortName)
+    short: shortName(row.label, row.names),
     names: namesFor(row, following),
     followed: Boolean(following),
+    // its news in the briefing of the profile (see briefingGroups)
+    inBriefing: Boolean(following?.in_briefing),
 });
+
+const wordsOf = async (profileId) => (await ProfileModel.get(profileId))?.watch_terms ?? [];
+const sameWord = (a, b) => a.toLowerCase() === b.toLowerCase();
 
 // the news of several names as one list: once each, the newest first. groups: of watchedNews
 export const mergeNews = (groups, limit = Infinity) => {
@@ -154,9 +166,95 @@ export const EntityService = {
         }
     },
 
-    // [{qid, label, description, kind, names, followed, links}], the last followed first
+    // [{qid, label, description, kind, names, followed, inBriefing, links}], the last followed first
     list: async (profileId) => profileId === null ? [] : (await EntityModel.followed(profileId))
         .map(row => ({...summary(row, row), links: row.links})),
+
+    // {entities, words, limits}: everything the profile follows, the items and the words
+    all: async (profileId) => ({
+        entities: await EntityService.list(profileId),
+        words: profileId === null ? [] : await wordsOf(profileId),
+        limits: {entities: MAX_FOLLOWED, words: MAX_WATCH_TERMS},
+    }),
+
+    // a name or a word followed as written: every news writing it is in the briefing. {words}
+    addWord: async (profileId, word) => {
+        const words = await wordsOf(profileId);
+        const written = cleanName(word);
+        if (words.some(other => sameWord(other, written))) return {words};
+        if (words.length >= MAX_WATCH_TERMS) throw fail(400, `You follow ${MAX_WATCH_TERMS} names or words at most.`);
+        const kept = cleanWatchTerms([...words, written]);
+        await ProfileModel.setWatchTerms(profileId, kept);
+        return {words: kept};
+    },
+
+    removeWord: async (profileId, word) => {
+        const words = await wordsOf(profileId);
+        const kept = words.filter(other => !sameWord(other, String(word ?? '')));
+        if (kept.length === words.length) throw fail(404, 'You do not follow it.');
+        await ProfileModel.setWatchTerms(profileId, kept);
+        return {words: kept};
+    },
+
+    // its news in the briefing of the profile or not, of an item followed
+    setInBriefing: async (profileId, qid, on) => {
+        if (typeof on !== 'boolean') throw fail(400, 'on: true or false.');
+        const row = isQid(qid) ? await EntityModel.byQid(qid) : null;
+        if (!row || await EntityModel.setInBriefing(profileId, row.id, on) === 0) throw fail(404, 'You do not follow it.');
+        return summary(row, await EntityModel.following(profileId, row.id));
+    },
+
+    // The names met on several cards of the reader's briefings of the last days that they follow neither
+    // as an item nor as a word: [{name, qid, kind, cards}]. The cards written before they had names get
+    // them from the news of their story now
+    suggestions: async (profileId) => {
+        if (profileId === null) return [];
+        const [cards, followed, words] = await Promise.all([BriefingModel.recentCards(profileId, SUGGESTED_DAYS),
+            EntityModel.followed(profileId), wordsOf(profileId)]);
+        const unread = [...new Set(cards.filter(card => !Array.isArray(card.names)).map(card => card.storyId))].slice(0, SUGGESTED_READ);
+        const read = await namesOfCards((await MentionModel.articlesOfStories(unread)).map(row => ({storyId: row.id_story, ids: row.ids})));
+        // a story shown in two briefings is one card
+        const byStory = new Map();
+        for (const card of cards) if (!byStory.has(card.storyId)) byStory.set(card.storyId, Array.isArray(card.names) ? card.names : read.get(card.storyId));
+        const names = [...byStory.values()];
+        return suggestedNames(names.filter(Boolean), {qids: followed.map(row => row.qid), words});
+    },
+
+    // The page of a name Wikidata does not have, or not as one item ("LFF", "Vadims Ļašenko"): {name, qid,
+    // followed, wordsLeft, hours, count, news}, its news of the last hours. qid: the item the tagger linked
+    // it to, the page to open instead
+    namePage: async (profileId, name, hours = 48) => {
+        if (!ENTITY_HOURS.includes(hours)) throw fail(400, `hours: ${ENTITY_HOURS.join(', ')}.`);
+        const written = cleanName(name);
+        if (written.length < 2 || written.length > MAX_NAME) throw fail(400, `A name of 2 to ${MAX_NAME} characters.`);
+        const [qids, words] = await Promise.all([MentionModel.qidsOfKey(mentionKey(written)), profileId === null ? [] : wordsOf(profileId)]);
+        const [group] = await namedNews(profileId, [written], hours);
+        return {
+            name: written, qid: qids.length === 1 ? qids[0] : null,
+            followed: words.some(word => sameWord(word, written)), wordsLeft: Math.max(0, MAX_WATCH_TERMS - words.length),
+            hours, count: group?.count ?? 0, news: group?.news ?? [],
+        };
+    },
+
+    // The news of the items whose news the profile wants in its briefing, one group each: [{term (the
+    // name it is shown by), qid, count, news}], as the words' (see watchedNews), BRIEFING_NEWS kept, all counted
+    briefingGroups: async (profileId, hours) => {
+        const rows = await EntityModel.followed(profileId, {inBriefing: true});
+        const done = await mapWithConcurrency(rows, BRIEFING_CONCURRENCY, async (row) => {
+            const names = namesFor(row, row);
+            const found = new Map((await namedNews(profileId, names, hours, [row.qid])).map(group => [group.term, group]));
+            return {term: shortName(row.label, row.names), qid: row.qid, ...mergeNews([...names, itemTerm(row.qid)].map(term => found.get(term)), BRIEFING_NEWS)};
+        });
+        return done.filter(result => result.status === 'fulfilled').map(result => result.value);
+    },
+
+    // What the profile follows as the briefing marks it: [{label, qid, names}], the items in its
+    // briefing by their names, then the words, each its own name
+    followTerms: async (profileId, words) => [
+        ...(profileId === null ? [] : await EntityModel.followed(profileId, {inBriefing: true}))
+            .map(row => ({label: shortName(row.label, row.names), qid: row.qid, names: namesFor(row, row)})),
+        ...(words ?? []).map(word => ({label: word, qid: null, names: [word]})),
+    ],
 
     follow: async (profileId, qid) => {
         if (profileId === null) throw fail(400, 'Write your profile first.');
@@ -187,30 +285,6 @@ export const EntityService = {
         return summary(row, await EntityModel.following(profileId, row.id));
     },
 
-    // The names the reader chose among its names (the ones its news are found by for this profile) added
-    // to the terms the profile follows (see watch-terms.js): every news naming one is then in the
-    // briefing, in the section of the terms. Chosen: the UEFA has 18 names in Wikidata, its own in a
-    // dozen languages, and 20 terms at most. As many as the terms left allow, in the order given; its
-    // links are not added, a club would fill them with its players. {terms, added, already, left}: left,
-    // the ones there was no room for
-    toTerms: async (profileId, qid, chosen) => {
-        if (!Array.isArray(chosen) || chosen.length === 0 || !chosen.every(name => typeof name === 'string')) {
-            throw fail(400, 'names: the names to add, one at least.');
-        }
-        const row = isQid(qid) ? await EntityModel.byQid(qid) : null;
-        if (!row) throw fail(404, 'Wikidata has no such item.');
-        const own = new Map(namesFor(row, await EntityModel.following(profileId, row.id)).map(name => [name.toLowerCase(), name]));
-        const names = [...new Set(chosen.map(name => own.get(cleanName(name).toLowerCase())).filter(Boolean))]
-            .filter(name => name.length <= MAX_NAME);
-        if (names.length === 0) throw fail(400, 'None of these is a name it is found by.');
-        const terms = (await ProfileModel.get(profileId))?.watch_terms ?? [];
-        const already = inTerms(names, terms);
-        const missing = names.filter(name => !already.includes(name));
-        const room = Math.max(0, MAX_WATCH_TERMS - terms.length);
-        const added = missing.slice(0, room);
-        if (added.length > 0) await ProfileModel.setWatchTerms(profileId, cleanWatchTerms([...terms, ...added]));
-        return {terms: [...terms, ...added], added, already, left: missing.slice(room)};
-    },
 
     // The page of an item: {entity, hours, count, news, links: [{qid, label, description, kind, relation,
     // count, news}]}, the news of the last hours naming it, and of each item it links to, the most named
@@ -238,11 +312,7 @@ export const EntityService = {
         const of = (names, qid, limit) => mergeNews([...names, itemTerm(qid)].map(name => found.get(name)), limit);
 
         return {
-            // inTerms: its names that are terms of the profile already, termsLeft: the room for more,
-            // nameCounts: the stories of the window each name finds (see toTerms)
-            entity: {...entity, wikidataNames: row.names, addedNames: following?.added_names ?? [], removedNames: following?.removed_names ?? [],
-                inTerms: inTerms(entity.names, profile?.watch_terms), termsLeft: Math.max(0, MAX_WATCH_TERMS - (profile?.watch_terms?.length ?? 0)),
-                nameCounts: Object.fromEntries(entity.names.map(name => [name, found.get(name)?.count ?? 0]))},
+            entity: {...entity, wikidataNames: row.names, addedNames: following?.added_names ?? [], removedNames: following?.removed_names ?? []},
             hours,
             ...of(entity.names, row.qid),
             links: links

@@ -8,6 +8,7 @@
     "ndm_server": "nodemon server.js --env-file=.env",
     "ingest": "node scripts/ingest.js",
     "ingest:status": "node scripts/ingest-status.js",
+    "ner:status": "node scripts/ner-status.js",
     "embedder": "python embedder/server.py",
     "ner": "python ner/server.py",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",

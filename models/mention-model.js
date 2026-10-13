@@ -128,6 +128,14 @@ export const MentionModel = {
         GROUP BY a.id
         ORDER BY COALESCE(a.published_at, a.created_at) DESC`, keys, qids, feedUrls, since),
 
+    // [qid]: the items of Wikidata the names written so (their key, see mentionKey) were linked to
+    qidsOfKey: async (key) => (await prisma.$queryRawUnsafe(`
+        SELECT DISTINCT qid FROM mentions WHERE key = $1 AND qid IS NOT NULL`, key)).map(row => row.qid),
+
+    // [{id_story, ids}]: the news of these stories, as they are now
+    articlesOfStories: async (storyIds) => storyIds.length === 0 ? [] : prisma.$queryRawUnsafe(`
+        SELECT id_story, array_agg(id) AS ids FROM articles WHERE id_story = ANY($1::int[]) GROUP BY id_story`, storyIds),
+
     // the names no news names any more, never looked for in Wikidata: the item of the others is kept
     deleteUnused: async () => prisma.$executeRawUnsafe(`
         DELETE FROM mentions m WHERE m.linked_at IS NULL

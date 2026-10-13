@@ -51,15 +51,16 @@ export const EntityModel = {
         WHERE l.id_from = $1 ORDER BY l.relation, e.label`, id),
 
     // the items a profile follows, the last followed first, with the names its reader added or took out
-    followed: async (profileId) => prisma.$queryRawUnsafe(`
-        SELECT ${ENTITY}, p.added_names, p.removed_names,
+    // and whether their news are in its briefing; inBriefing: only those
+    followed: async (profileId, {inBriefing = false} = {}) => prisma.$queryRawUnsafe(`
+        SELECT ${ENTITY}, p.added_names, p.removed_names, p.in_briefing,
                (SELECT count(*)::int FROM entity_links l WHERE l.id_from = e.id) AS links
         FROM profile_entities p JOIN entities e ON e.id = p.id_entity
-        WHERE p.id_profile = $1 ORDER BY p.created_at DESC`, profileId),
+        WHERE p.id_profile = $1 AND (p.in_briefing OR NOT $2) ORDER BY p.created_at DESC`, profileId, inBriefing),
 
-    // {added_names, removed_names} of an item a profile follows, null when it does not follow it
+    // {added_names, removed_names, in_briefing} of an item a profile follows, null when it does not follow it
     following: async (profileId, id) => (await prisma.$queryRawUnsafe(`
-        SELECT added_names, removed_names FROM profile_entities WHERE id_profile = $1 AND id_entity = $2`, profileId, id))[0] ?? null,
+        SELECT added_names, removed_names, in_briefing FROM profile_entities WHERE id_profile = $1 AND id_entity = $2`, profileId, id))[0] ?? null,
 
     count: async (profileId) => (await prisma.$queryRawUnsafe(`
         SELECT count(*)::int AS n FROM profile_entities WHERE id_profile = $1`, profileId))[0].n,
@@ -70,6 +71,10 @@ export const EntityModel = {
     // how many were followed: 0 when the profile did not follow it
     unfollow: async (profileId, id) => prisma.$executeRawUnsafe(`
         DELETE FROM profile_entities WHERE id_profile = $1 AND id_entity = $2`, profileId, id),
+
+    // its news in the briefing of the profile or not: how many were changed, 0 when it does not follow it
+    setInBriefing: async (profileId, id, on) => prisma.$executeRawUnsafe(`
+        UPDATE profile_entities SET in_briefing = $3 WHERE id_profile = $1 AND id_entity = $2`, profileId, id, on),
 
     setNames: async (profileId, id, added, removed) => prisma.$executeRawUnsafe(`
         UPDATE profile_entities SET added_names = $3::text[], removed_names = $4::text[]

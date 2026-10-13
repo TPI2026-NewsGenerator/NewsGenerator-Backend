@@ -55,9 +55,16 @@ describe('withMarks', () => {
     it('should say which terms a card names, in the order followed, and the ones only an other angle names', () => {
         const nigeria = {...briefing, items: [{...briefing.items[0], angles: [{title: 'Le Nigeria et Klaveness'}]}]};
         expect(withMarks(nigeria, ['Klaveness', 'VAR', 'Malagò', 'Infantino']).items[0].found).toEqual([
-            {term: 'Klaveness', angle: true}, {term: 'VAR', angle: false}, {term: 'Infantino', angle: false},
+            {term: 'Klaveness', qid: null, angle: true}, {term: 'VAR', qid: null, angle: false}, {term: 'Infantino', qid: null, angle: false},
         ]);
         expect(withMarks(briefing, ['Malagò']).items[0].found).toEqual([]);
+    });
+
+    it('should mark an item followed by every name of it, and say it is found under its label', () => {
+        const fifa = {label: 'FIFA', qid: 'Q253414', names: ['FIFA', 'Infantino']};
+        const marked = withMarks(briefing, [fifa, 'VAR']);
+        expect(marked.items[0].found).toEqual([{term: 'FIFA', qid: 'Q253414', angle: false}, {term: 'VAR', qid: null, angle: false}]);
+        expect(marked.items[0].marks).toEqual(withMarks(briefing, ['FIFA', 'Infantino', 'VAR']).items[0].marks);
     });
 
     it('should mark the excerpts of the news of the terms followed', () => {

@@ -19,6 +19,10 @@ const translateTexts = jest.fn(async () => ['Grève des trains']);
 const lookup = jest.fn(async () => [{address: '93.184.215.14', family: 4}]);
 jest.unstable_mockModule('node:dns/promises', () => ({default: {lookup}, lookup}));
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
+// what the profile follows: its words only
+jest.unstable_mockModule('../../services/entity-service.js', () => ({EntityService: {
+    followTerms: async (profileId, words) => (words ?? []).map(word => ({label: word, qid: null, names: [word]})),
+}}));
 jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel: {ofUser, addItem, removeItem, articlePictures: jest.fn(async () => [])}}));
 jest.unstable_mockModule('../../models/user-model.js', () => ({UserModel: {email: jest.fn(async () => ({email: 'reader@example.test', username: 'lecteur'}))}}));
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: {get: jest.fn(async () => ({name: 'Roberto', text: 'Je lis en français.', languages: ['fr'], watch_terms: ['SBB']}))}}));

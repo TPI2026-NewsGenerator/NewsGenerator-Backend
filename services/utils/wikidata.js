@@ -65,8 +65,10 @@ const EXACT_FOUND = 10;
 export const exactItems = async (name, language = 'en') => {
     const key = mentionKey(name);
     if (key.length < 2) return [];
+    // searched in its language, described in English: NOT_NAMED reads English ("Čeferin", a news in
+    // Slovenian, was linked to the family name, described "priimek", 13.10.2026)
     const search = async (code) => ask(`${API}?${new URLSearchParams({action: 'wbsearchentities', search: String(name).slice(0, 100),
-        language: code, uselang: code, type: 'item', limit: String(EXACT_FOUND), format: 'json'})}`);
+        language: code, uselang: 'en', type: 'item', limit: String(EXACT_FOUND), format: 'json'})}`);
     let answer = await search(language || 'en');
     if (answer.error && !/busy|maxlag/.test(answer.error.code ?? '') && language !== 'en') answer = await search('en');
     // too busy ("cirrussearch-too-busy-error", 13.10.2026): as a refusal, nothing asked for a while

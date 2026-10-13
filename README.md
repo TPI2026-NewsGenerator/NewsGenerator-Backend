@@ -120,6 +120,7 @@ server in Python. Without it, or without `NER_URL`, nothing is tagged and the pa
 ```bash
 pip install -r ner/requirements.txt
 pnpm run ner             # listens on 127.0.0.1:8021, loads urchade/gliner_multi-v2.1 first
+pnpm run ner:status      # where it stands: the taggers of NER_URL, news with their names, waiting ones, pace, time left, names in Wikidata
 ```
 
 On another machine, `ner/.env` (or the environment) gives `NER_HOST`, `NER_PORT` (`8021`), `NER_TOKEN`
@@ -178,8 +179,8 @@ second. The `.env` of the server lists the taggers in `NER_URL`, separated by co
 26. Do the same with "add_briefing_window.sql" (the hours of news a briefing was written from)
 27. Do the same with "add_article_repeats.sql" (a news a feed gives again under another link is found
     by its feed and its date before it is saved)
-28. Do the same with "add_entities.sql" (the clubs, people and organisations followed, see **Clubs,
-    people and organisations followed** below)
+28. Do the same with "add_entities.sql" (the clubs, people and organisations followed, see **What a
+    profile follows** below)
 29. Do the same with "add_sent_mails.sql" (the copies of the e-mails sent before 13.10.2026, see **The
     e-mail** below)
 30. Do the same with "add_official_sources.sql" (the parties of a card and their own channels, for its
@@ -188,6 +189,8 @@ second. The `.env` of the server lists the taggers in `NER_URL`, separated by co
     last day)
 32. Do the same with "add_named_entities.sql" (the names each news names, see **The names of the
     news** below), then "add_untagged_index.sql" alone (built without locking the ingestion)
+33. Do the same with "add_follow_in_briefing.sql" (what a profile follows in one list, see **What a
+    profile follows** below)
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.
@@ -1127,10 +1130,36 @@ told only through Google, 2 of one medium at most. A story known only through Go
 media, or one medium the server reads through its own feed: a search also names spam sites written by
 machines.
 
-### Clubs, people and organisations followed
+### What a profile follows
 
-A profile follows items of **Wikidata** (`/api/entities`, `services/entity-service.js`,
-`db/add_entities.sql`): a club, a person, an organisation. Each is read once a week from Wikidata
+One list, one page (`/following`, `/api/entities`, `services/entity-service.js`; the user, 13.10.2026:
+the names and terms of the profile and the items followed did nearly the same, with a bridge between
+them): items of **Wikidata**, and names or words as written (`user_profiles.watch_terms`, 20 at most).
+Every news of the window naming one, from every feed, with no relevance, is in the briefing, in a tab
+of its own: the ones of an item by the names the tagger found in them and the ones it linked to the
+item, in any language; the ones of a word by their text. An item's news can be kept out of the briefing
+(`profile_entities.in_briefing`, `db/add_follow_in_briefing.sql`): the UEFA alone is named by a hundred
+news a day. A name Wikidata does not have as one item ("LFF", "Vadims Ļašenko") has a page of its own
+(`GET /api/entities/name?name=`), followed as written; one the tagger linked to an item opens the item's.
+
+Each card shows the people and organisations a quarter of its articles at least name, 4 at most
+(`services/utils/card-names.js`), each opening its page: written as a name (a capital first and last,
+"Un entraîneur légendaire" and "promising officials" are the tagger's slips), named by 3 news or by two
+of the card, a name once ("Infantino" is "Gianni Infantino", "PSG" "Paris Saint-Germain"), never an
+agency nor the medium itself. The names met on two cards at least of the briefings of the last two weeks,
+not followed, are suggested (`GET /api/entities/suggestions`): FIFA, UEFA, CAF, Gianni Infantino for the
+profile of the referees on 13.10.2026; Microsoft, Claude Code, GitHub for the one of the code.
+
+Measured and left out (13.10.2026): the official sources finding their parties' items by the tagger's
+links instead of searching Wikidata (`bench/official-tagged.mjs`): 173 parties searched in 14 days, the
+others known already, of which the tagger would have spared 26, one of them wrong (Feyenoord, the
+district); and the interests naming someone taking every news naming them (`bench/named-interests.mjs`):
+the news of Cristiano Ronaldo left out of the 40 candidates were his news of the others in other
+languages, the ones of the UEFA and FIFA mostly line-ups and where to watch a match.
+
+#### An item of Wikidata
+
+A profile follows items of **Wikidata** (`db/add_entities.sql`): a club, a person, an organisation. Each is read once a week from Wikidata
 (`services/utils/wikidata.js`): its names in the languages read (an alias of one common word left out,
 "Paris" for Paris Saint-Germain; a club also without its "FC", which gives "PSG"), and its links still
 true, the current players and coach of a club, the team of a player, the chair of a body. Its page lists

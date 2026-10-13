@@ -41,6 +41,8 @@ import {sendMail} from "./utils/mailer.js";
 import {briefingMail, MAIL_FORMATS} from "./utils/briefing-mail.js";
 import {storyPictures, withChosenPictures} from "./utils/mail-pictures.js";
 import {SentMailModel} from "../models/sent-mail-model.js";
+import {EntityService} from "./entity-service.js";
+import {namesOfCards} from "./utils/card-names.js";
 
 // Measured on four profiles and 249 stories judged by hand:
 //  - one vector per interest, dense + half the sparse: 88% of relevant cards (one vector for the
@@ -688,10 +690,10 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     const stories = cards.map(card => card.story);
     const summaryOf = (i) => cards[i].summary;
     const leads = cards.map(leadOf);
-    // 7. the other angles of the cards, their official sources, and the news of the terms the profile
-    // follows beside them. The briefing never waits on any of them failing
+    // 7. the other angles of the cards, their official sources, the people and organisations they name,
+    // and the news of what the profile follows beside them. The briefing never waits on any of them failing
     await step('angles');
-    const [angles, official, watched] = await Promise.all([
+    const [angles, official, watched, names] = await Promise.all([
         anglesOf(stories, leads.map(lead => lead.title), {language, feedUrls, hours, trusted, usage: usage.angles}).catch(err => {
             console.error(`Briefing: no other angle looked for (${err.message})`);
             return new Map();
@@ -707,10 +709,16 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             console.error(`Briefing: no official source looked for (${err.message})`);
             return new Map();
         }),
-        // from every feed, the ones the thumbs left out too: the reader asked for all of them
-        watchedNews(profile.watch_terms ?? [], {feedUrls: allFeeds, since}).catch(err => {
-            console.error(`Briefing: the news of the terms followed were not looked for (${err.message})`);
+        // from every feed, the ones the thumbs left out too: the reader asked for all of them. The items
+        // followed first, then the names and words as written
+        followedNews(profileId, profile.watch_terms ?? [], {feedUrls: allFeeds, since, hours}).catch(err => {
+            console.error(`Briefing: the news of what the profile follows were not looked for (${err.message})`);
             return null;
+        }),
+        namesOfCards(stories.map(story => ({storyId: story.storyId, ids: story.members.map(article => article.id),
+            media: [...new Set(story.members.map(mediumOfArticle))]}))).catch(err => {
+            console.error(`Briefing: the names of the cards were not read (${err.message})`);
+            return new Map();
         }),
     ]);
     if (briefingId && watched) await BriefingModel.watched(briefingId, watched);
@@ -770,6 +778,10 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             // its own (see official-sources.js): [{party, title, url, channel, publishedAt}]. Absent from
             // the briefings made before 12.10.2026
             official: official.get(story.storyId) ?? [],
+            // the people and organisations most of its articles name, each opening its page (see
+            // card-names.js): [{name, qid, kind}], qid null for a name Wikidata does not have as one item.
+            // Absent from the briefings made before 13.10.2026
+            names: names.get(story.storyId) ?? [],
             // the picture of its lead article when it has one, else of its newest article with one;
             // and the site it is of, shown under it
             ...pictureOf([lead, ...members], content),
@@ -823,6 +835,14 @@ export const watchedNews = async (terms, {feedUrls, since}) => {
     return newsOfTerms(terms, articles);
 };
 
+// The news of what the profile follows (see EntityService): the items of Wikidata it wants in its
+// briefing, by the names the tagger found in each news, in any language, then its words, by their text.
+// [{term, qid, count, news}], qid null for a word
+const followedNews = async (profileId, words, {feedUrls, since, hours}) => [
+    ...await EntityService.briefingGroups(profileId, hours),
+    ...(await watchedNews(words, {feedUrls, since})).map(group => ({...group, qid: null})),
+];
+
 // the articles whose title or description names a term as a whole word
 export const namingTerm = (term) => {
     const names = Filter.matcher(Filter.parse([`"${term}"`]));
@@ -874,24 +894,29 @@ const toBriefing = (row) => row && ({
     finishedAt: row.finished_at,
 });
 
-// The places of the terms the profile follows in the texts the page shows (see Filter.highlights), the
+// The places of the names the profile follows in the texts the page shows (see Filter.highlights), the
 // ones it follows now: {field: [[start, end]]}, the fields without any left out
 const marksOf = (fields, terms) => Object.fromEntries(Object.entries(fields)
     .map(([field, text]) => [field, Filter.highlights(text, terms)])
     .filter(([, ranges]) => ranges.length > 0));
 
-// The terms a card names, in the order the profile follows them: [{term, angle}], angle when only one of
-// its other angles names it (see anglesOf), not the card itself (title, passages, denials)
-const foundIn = (item, terms) => {
-    const names = (texts, term) => texts.some(text => Filter.highlights(text, [term]).length > 0);
+// What the profile follows a card names, in the order it follows them: [{term, qid, angle}], term the
+// label of the item or the word, angle when only one of its other angles names it (see anglesOf), not
+// the card itself (title, passages, denials)
+const foundIn = (item, follows) => {
+    const names = (texts, follow) => texts.some(text => Filter.highlights(text, follow.names).length > 0);
     const own = [item.title, item.titleTranslation, item.summary, item.translation,
         ...(item.contested ?? []).flatMap(denial => [denial.sentence, denial.translation])];
     const angles = (item.angles ?? []).flatMap(angle => [angle.title, angle.titleTranslation]);
-    return terms.flatMap(term => names(own, term) ? [{term, angle: false}] : names(angles, term) ? [{term, angle: true}] : []);
+    return follows.flatMap(follow => names(own, follow) ? [{term: follow.label, qid: follow.qid ?? null, angle: false}]
+        : names(angles, follow) ? [{term: follow.label, qid: follow.qid ?? null, angle: true}] : []);
 };
 
-export const withMarks = (briefing, terms) => {
-    if (!briefing || !terms?.length) return briefing;
+// follows: [{label, qid, names}] (see EntityService.followTerms), or the words alone
+export const withMarks = (briefing, followed) => {
+    if (!briefing || !followed?.length) return briefing;
+    const follows = followed.map(follow => typeof follow === 'string' ? {label: follow, qid: null, names: [follow]} : follow);
+    const terms = [...new Set(follows.flatMap(follow => follow.names))];
     return {
         ...briefing,
         items: briefing.items.map(item => ({
@@ -900,7 +925,7 @@ export const withMarks = (briefing, terms) => {
                 points: item.points, pointsTranslation: item.pointsTranslation, digest: item.digest, digestTranslation: item.digestTranslation}, terms),
             angles: (item.angles ?? []).map(angle => ({...angle, marks: marksOf({title: angle.title, titleTranslation: angle.titleTranslation}, terms)})),
             contested: (item.contested ?? []).map(denial => ({...denial, marks: marksOf({sentence: denial.sentence, translation: denial.translation}, terms)})),
-            found: foundIn(item, terms),
+            found: foundIn(item, follows),
         })),
         watched: briefing.watched?.map(group => ({
             ...group,
@@ -1013,7 +1038,7 @@ export const BriefingService = {
     latest: async (profileId) => {
         if (profileId === null) return null;
         const [row, profile] = await Promise.all([BriefingModel.latest(profileId), ProfileModel.get(profileId)]);
-        return withMarks(toBriefing(row), profile?.watch_terms ?? []);
+        return withMarks(toBriefing(row), await EntityService.followTerms(profileId, profile?.watch_terms));
     },
 
     // the cards of a ready briefing the reader ticked (storyIds), in the order the reader gave them (see
@@ -1075,7 +1100,7 @@ export const BriefingService = {
         const storyId = await BriefingModel.addItem(userId, row.id, card);
         if (storyId === null) throw Object.assign(new Error('Unknown briefing.'), {status: 404});
         console.log(`Briefing ${row.id}: news added by its link, tokens ${JSON.stringify(usage)}`);
-        return withMarks({items: [{...card, storyId}]}, profile?.watch_terms ?? []).items[0];
+        return withMarks({items: [{...card, storyId}]}, await EntityService.followTerms(row.id_profile ?? null, profile?.watch_terms)).items[0];
     },
 
     // a news the reader added taken out of the briefing

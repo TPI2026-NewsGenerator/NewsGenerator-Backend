@@ -16,6 +16,14 @@ export const BriefingModel = {
     // the news of the terms the profile follows (see watchedNews)
     watched: async (id, watched) => prisma.briefings.update({where: {id}, data: {watched}}),
 
+    // [{storyId, names}]: the cards of the ready briefings of a profile of the last days, the ones of a
+    // story (not added by the reader), names null on the ones written before they had some
+    recentCards: async (profileId, days) => prisma.$queryRawUnsafe(`
+        SELECT (card->>'storyId')::int AS "storyId", card->'names' AS names
+        FROM briefings b, jsonb_array_elements(CASE WHEN jsonb_typeof(b.items) = 'array' THEN b.items ELSE '[]'::jsonb END) AS card
+        WHERE b.id_profile = $1 AND b.status = 'ready' AND b.created_at > now() - make_interval(days => $2::int)
+          AND (card->>'storyId')::int > 0`, profileId, days),
+
     step: async (id, step) => prisma.briefings.update({where: {id}, data: {step}}),
 
     finish: async (id, items) => prisma.briefings.update({
