@@ -18,7 +18,8 @@ export const EntityModel = {
 
     // An item read in full from Wikidata, with its links: its row written again, the items it links to
     // added with their label when new (the ones read in full keep theirs), and its links replaced, in
-    // one transaction. item: {qid, label, description, kind, names, links: [{qid, label, description, kind, relation}]}
+    // one transaction. item: {qid, label, description, kind, names, links: [{qid, label, description, kind, relation}]},
+    // links null when Wikidata did not give them: the ones known are kept
     save: async (item) => prisma.$transaction(async (tx) => {
         const [{id}] = await tx.$queryRawUnsafe(`
             INSERT INTO entities (qid, label, description, kind, names, fetched_at)
@@ -26,6 +27,7 @@ export const EntityModel = {
             ON CONFLICT (qid) DO UPDATE SET label = EXCLUDED.label, description = EXCLUDED.description,
                 kind = EXCLUDED.kind, names = EXCLUDED.names, fetched_at = now()
             RETURNING id`, item.qid, item.label, item.description, item.kind, item.names);
+        if (item.links === null) return id;
         await tx.$executeRawUnsafe(`DELETE FROM entity_links WHERE id_from = $1`, id);
         if (item.links.length > 0) {
             await tx.$executeRawUnsafe(`

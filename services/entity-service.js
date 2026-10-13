@@ -35,13 +35,14 @@ const fail = (status, message) => Object.assign(new Error(message), {status});
 
 // The news naming these names, every feed of the profile, no relevance: [{term, count, news}] as the
 // terms followed (see newsOfTerms), every news counted. The names the tagger found in each news are
-// compared (see mentions.js): "LFF", "Gianni Infantino". The news it has not read yet (just read, a
-// backlog while it was off) are looked for in their texts, the names with and without their accents,
-// checked as whole words (see FeedModel.articlesHolding: 11 s for a club and its people on 48 hours,
-// 30 s on a week, when every news was read so). qids: items of Wikidata whose news are those naming any
-// name the tagger linked to them, in any language, under the term "@<qid>". Kept a few minutes: the
-// page is opened, then a link, then back
+// compared (see mentions.js): "LFF", "Gianni Infantino". While news of the window wait for it (a
+// backlog, the tagger off), the ones it has not read are looked for in their texts, the names with and
+// without their accents, checked as whole words (see FeedModel.articlesHolding: 11 s for a club and its
+// people on 48 hours, 30 s on a week); the news of its last minutes are left to it. qids: items of
+// Wikidata whose news are those naming any name the tagger linked to them, in any language, under the
+// term "@<qid>". Kept a few minutes: the page is opened, then a link, then back
 const NEWS_KEPT_MS = 10 * 60e3;
+const TAGGER_LATE_MS = 10 * 60e3;
 const kept = new Map();         // `${profileId} ${hours} ${names} ${qids}` -> {at, groups}
 export const itemTerm = (qid) => `@${qid}`;
 const namedNews = async (profileId, names, hours, qids = []) => {
@@ -56,7 +57,9 @@ const namedNews = async (profileId, names, hours, qids = []) => {
     const texts = [...new Set(names.flatMap(name => [name, Filter.withoutAccents(name)]))];
     const [tagged, untagged] = await Promise.all([
         MentionModel.articlesNamed({keys: [...new Set(keyOf.values())].filter(Boolean), qids, feedUrls, since}),
-        MentionModel.untaggedCount(since).then(count => count > 0 ? FeedModel.articlesHolding({feedUrls, texts, since, untagged: true}) : []),
+        MentionModel.anyUntagged(since, new Date(Date.now() - TAGGER_LATE_MS))
+            .then(waiting => waiting ? FeedModel.articlesHolding({feedUrls, texts, since}) : [])
+            .then(articles => articles.filter(article => !article.entities_at)),
     ]);
     const articles = [...tagged, ...untagged]
         .sort((a, b) => (b.published_at ?? b.created_at) - (a.published_at ?? a.created_at));

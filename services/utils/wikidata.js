@@ -138,8 +138,8 @@ const LINKED_KIND = {player: 'person', coach: 'person', chair: 'person', directo
     team: 'club', league: 'competition', parent: 'organisation', 'member of': 'organisation', party: 'organisation',
     employer: 'organisation', organiser: 'organisation', owner: 'other', venue: 'other', position: 'other'};
 
-// {qid, label, description, kind, names, links: [{qid, label, description, kind, relation}]}, null
-// when Wikidata has no such item
+// {qid, label, description, kind, names, links: [{qid, label, description, kind, relation}]}, links null
+// when they could not be read; null when Wikidata has no such item
 export const readItem = async (qid, language = 'en') => {
     if (!isQid(qid)) return null;
     const params = new URLSearchParams({action: 'wbgetentities', ids: qid, props: 'labels|aliases|descriptions|claims',
@@ -165,14 +165,15 @@ export const readItem = async (qid, language = 'en') => {
             .filter(name => name.length >= 4)];
     }
 
+    // not read (the links of the UEFA timed out, 13.10.2026): null, the ones known are kept
     const sparql = await ask(`${SPARQL}?${new URLSearchParams({format: 'json', query: linksQuery(qid, kind, language)})}`)
         .catch(err => {
             console.error(`Wikidata: the links of ${qid} were not read (${err.message})`);
-            return {results: {bindings: []}};
+            return null;
         });
-    const links = [];
+    const links = sparql ? [] : null;
     const seen = new Set();
-    for (const row of sparql.results?.bindings ?? []) {
+    for (const row of sparql?.results?.bindings ?? []) {
         const linked = String(row.item?.value ?? '').split('/').pop();
         const relation = row.rel?.value;
         const label = row.itemLabel?.value;

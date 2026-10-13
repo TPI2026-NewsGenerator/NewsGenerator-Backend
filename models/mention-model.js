@@ -21,6 +21,11 @@ export const MentionModel = {
         WHERE a.entities_at IS NULL AND a.created_at >= $1::timestamptz AND NOT (a.id = ANY($2::int[]))
         ORDER BY a.created_at DESC LIMIT $3`, since, taken, limit),
 
+    // whether a news created between 'since' and 'before' waits for the tagger: one is enough
+    anyUntagged: async (since, before) => (await prisma.$queryRawUnsafe(`
+        SELECT EXISTS (SELECT 1 FROM articles WHERE entities_at IS NULL
+            AND created_at >= $1::timestamptz AND created_at < $2::timestamptz) AS waiting`, since, before))[0].waiting,
+
     // how many news created since 'since' the tagger has not read
     untaggedCount: async (since) => (await prisma.$queryRawUnsafe(`
         SELECT count(*)::int AS n FROM articles WHERE entities_at IS NULL AND created_at >= $1::timestamptz`, since))[0].n,

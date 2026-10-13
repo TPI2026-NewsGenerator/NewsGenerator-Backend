@@ -108,16 +108,15 @@ export const FeedModel = {
     // first: candidates only, the caller checks the whole words. A plain text is answered by the trigram
     // index, where the patterns of searchArticles, their accents in classes, are read on every news of
     // the window: 45 names of a club and its people took 387 s on 48 hours, 11 s this way
-    // (bench/entity-explain.mjs). texts: each name with and without its accents. untagged: only the
-    // news the tagger has not read yet (the others are found by their names, see MentionModel)
-    articlesHolding: async ({feedUrls, texts, since, untagged = false}) => texts.length === 0 ? [] : prisma.$queryRawUnsafe(`
+    // (bench/entity-explain.mjs). texts: each name with and without its accents. entities_at: when the
+    // tagger read it (see MentionModel), null before
+    articlesHolding: async ({feedUrls, texts, since}) => texts.length === 0 ? [] : prisma.$queryRawUnsafe(`
         SELECT a.id, a.id_feed, a.link, a.title, a.description, a.published_at, a.created_at, a.id_story,
-               a.source_url, a.resolved_link, a.medium, a.lang
+               a.source_url, a.resolved_link, a.medium, a.lang, a.entities_at
         FROM articles a
         JOIN feeds f ON f.id = a.id_feed
         WHERE f.url = ANY($1::text[])
-          AND COALESCE(a.published_at, a.created_at) >= $2::timestamptz${untagged ? `
-          AND a.entities_at IS NULL AND a.created_at >= $2::timestamptz` : ''}
+          AND COALESCE(a.published_at, a.created_at) >= $2::timestamptz
           AND (${texts.map((_, i) => `a.search_text ILIKE $${i + 3}`).join(' OR ')})
         ORDER BY COALESCE(a.published_at, a.created_at) DESC`,
         feedUrls, since, ...texts.map(text => `%${text.replace(/[\\%_]/g, char => `\\${char}`)}%`)),

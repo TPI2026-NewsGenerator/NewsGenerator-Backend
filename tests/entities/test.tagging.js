@@ -24,7 +24,7 @@ jest.unstable_mockModule('../../services/feed-service.js', () => ({RETENTION_DAY
 
 const {cleanMentions, mentionKey, rareNames} = await import('../../services/utils/mentions.js');
 const {tagBatch} = await import('../../services/tagging-service.js');
-const {exactItems} = await import('../../services/utils/wikidata.js');
+const {exactItems, readItem} = await import('../../services/utils/wikidata.js');
 const {storiesOfSameNames} = await import('../../services/utils/affair-names.js');
 const {anglesPrompt} = await import('../../services/utils/other-angles.js');
 
@@ -122,6 +122,19 @@ describe('tagBatch', () => {
         MentionModel.untagged.mockResolvedValueOnce([]);
         expect(await tagBatch('http://server:8021', 'cpu')).toBe(0);
         expect(MentionModel.untagged.mock.calls[2][0].taken).toEqual([]);
+    });
+});
+
+describe('readItem', () => {
+    it('should say the links were not read when Wikidata did not give them, not that there are none', async () => {
+        const fetch = jest.spyOn(globalThis, 'fetch')
+            .mockResolvedValueOnce(answer({entities: {Q35572: {labels: {en: {value: 'UEFA'}}, claims: {}}}}))
+            .mockRejectedValueOnce(new Error('The operation was aborted due to timeout'));
+        const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+        const item = await readItem('Q35572', 'en');
+        expect(item).toMatchObject({qid: 'Q35572', label: 'UEFA', links: null});
+        fetch.mockRestore();
+        error.mockRestore();
     });
 });
 

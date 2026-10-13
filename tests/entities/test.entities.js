@@ -19,7 +19,7 @@ jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {artic
 const ProfileModel = {get: jest.fn(), setWatchTerms: jest.fn()};
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel}));
 // the news the tagger read, and how many it has not (some: their texts are searched)
-const MentionModel = {articlesNamed: jest.fn(async () => []), untaggedCount: jest.fn(async () => 1)};
+const MentionModel = {articlesNamed: jest.fn(async () => []), anyUntagged: jest.fn(async () => true)};
 jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel}));
 const inTitle = (term) => (article) => article.title.includes(term);
 jest.unstable_mockModule('../../services/briefing-service.js', () => ({
@@ -127,7 +127,7 @@ describe('EntityService.page', () => {
     });
 
     it('should find the news by the names the tagger found in them, and by the names it linked to the item, without searching texts once all are tagged', async () => {
-        MentionModel.untaggedCount.mockResolvedValueOnce(0);
+        MentionModel.anyUntagged.mockResolvedValueOnce(false);
         MentionModel.articlesNamed.mockResolvedValueOnce([
             {...article(7, 'Le club gagne', 70), keys: ['psg'], qids: []},
             {...article(8, 'Les Parisiens en Ligue des champions', 80), keys: ['parisiens'], qids: ['Q483020']},
@@ -141,6 +141,12 @@ describe('EntityService.page', () => {
         const asked = MentionModel.articlesNamed.mock.calls.at(-1)[0];
         expect(asked.keys).toEqual(expect.arrayContaining(['psg', 'paris saint-germain', 'ousmane dembele', 'parc des princes']));
         expect(asked.qids).toEqual(expect.arrayContaining(['Q483020', 'Q1', 'Q2', 'Q3']));
+    });
+
+    it('should search the texts of the news the tagger has not read only', async () => {
+        articlesHolding.mockResolvedValueOnce([{...article(5, 'PSG gagne', 50), entities_at: new Date()}, article(6, 'PSG perd', 60)]);
+        const page = await EntityService.page(13, 'Q483020', 48);
+        expect(page.news.map(news => news.storyId)).toEqual([60]);
     });
 
     it('should count every story naming it, not only the news kept per name', async () => {
