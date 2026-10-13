@@ -2,10 +2,10 @@
 //  Author: Fabian Rostello
 //  Date: 13.10.2026
 //  File: repeats.js
-//  Description: A story the profile was shown in a briefing of the last days is not shown again, unless
-//               news published since tell something new of it: then it comes back as a follow-up. Another
-//               story of the same affair (its thread, db/add_threads.sql) is shown only when it tells
-//               something new too, and says which card of before it follows
+//  Description: A story the profile read in the last days (a card it sent itself by e-mail) is not shown
+//               again, unless news published since tell something new of it: then it comes back as a
+//               follow-up. Another story of the same affair (its thread, db/add_threads.sql) is shown only
+//               when it tells something new too, and says which card of before it follows
 //
 
 "use strict"
@@ -14,18 +14,17 @@ import {ollamaJson} from './ollama.js';
 
 // The user (13.10.2026): "not the same story 2 days in a row, unless it evolved". This reverses the
 // choice of 30.09.2026 (a repeated card is passed by the reader, excluding left fewer news to choose
-// from): the stories of the briefings of the last REPEAT_HOURS are left out before the AI chooses, the
-// ones with news since are asked whether they evolved
+// from): the stories read in the last REPEAT_HOURS are left out before the AI chooses, the ones with
+// news since are asked whether they evolved. Read: sent by e-mail (the user, 14.10.2026: "not sent by
+// e-mail = not read"); every card of the briefings of 48 h counted until then, a briefing written
+// again within 3 h excepted
 export const REPEAT_HOURS = 48;
-// A briefing written again within this many hours is the same reading (another size, another window):
-// the cards of the briefings this young are not left out
-export const REWRITE_HOURS = 3;
 const MAX_ASKED = 30;               // stories shown before whose news since are judged, the closest first
 const NEW_TITLES = 6;               // news since given for each, the newest first
 const DESCRIPTION_CHARS = 200;
 
 // The cards of the briefings of before: Map storyId -> {title, shownAt}, the last time each was shown.
-// rows: [{storyId, mergedStoryIds, title, shownAt}] the oldest first (see BriefingModel.shownBetween); a
+// rows: [{storyId, mergedStoryIds, title, shownAt}] the oldest first (see BriefingModel.sentSince); a
 // card joined other stories of its news, they were shown with it. A card added by the reader (a negative
 // id, see importNews) is of no story
 export const shownStories = (rows) => {

@@ -31,7 +31,8 @@ const REFRESH_DAYS = 7;
 const MAX_FOLLOWED = 30;
 const MAX_ADDED_NAMES = 10;
 const MAX_NAME = 60;
-export const ENTITY_HOURS = [24, 72, 168];
+// the windows of a briefing, 1 to 7 days
+export const ENTITY_HOURS = [1, 2, 3, 4, 5, 6, 7].map(days => days * 24);
 // the linked items whose news are looked for, and the news kept for each on the page
 const MAX_LINKS_SEARCHED = 60;
 const NEWS_PER_LINK = 30;
@@ -223,7 +224,7 @@ export const EntityService = {
     // The page of a name Wikidata does not have, or not as one item ("LFF", "Vadims Ļašenko"): {name, qid,
     // followed, wordsLeft, hours, count, news}, its news of the last hours. qid: the item the tagger linked
     // it to, the page to open instead
-    namePage: async (profileId, name, hours = 72) => {
+    namePage: async (profileId, name, hours = 48) => {
         if (!ENTITY_HOURS.includes(hours)) throw fail(400, `hours: ${ENTITY_HOURS.join(', ')}.`);
         const written = cleanName(name);
         if (written.length < 2 || written.length > MAX_NAME) throw fail(400, `A name of 2 to ${MAX_NAME} characters.`);
@@ -291,7 +292,7 @@ export const EntityService = {
     // The page of an item: {entity, hours, count, news, links: [{qid, label, description, kind, relation,
     // count, news}]}, the news of the last hours naming it, and of each item it links to, the most named
     // first. Of any item, followed or not: a player of a club is opened from the page of the club
-    page: async (profileId, qid, hours = 72) => {
+    page: async (profileId, qid, hours = 48) => {
         if (!ENTITY_HOURS.includes(hours)) throw fail(400, `hours: ${ENTITY_HOURS.join(', ')}.`);
         const profile = profileId === null ? null : await ProfileModel.get(profileId);
         const row = await loaded(qid, profileId ? readerLanguage(profile ?? {}) : 'en');

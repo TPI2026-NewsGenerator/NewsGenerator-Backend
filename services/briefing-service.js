@@ -26,7 +26,7 @@ import {contestedOf} from "./utils/contested.js";
 import {otherAnglesOf, placeAngles} from "./utils/other-angles.js";
 import {AFFAIR_DAYS, storiesOfSameNames} from "./utils/affair-names.js";
 import {officialSourcesOf} from "./utils/official-sources.js";
-import {evolvedStories, REPEAT_HOURS, REWRITE_HOURS, shownStories, withoutRepeats} from "./utils/repeats.js";
+import {evolvedStories, REPEAT_HOURS, shownStories, withoutRepeats} from "./utils/repeats.js";
 import {readerLanguage, writtenIn} from "./utils/language.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {assertPublicUrl, hostOf, mediumOf} from "./utils/public-url.js";
@@ -51,13 +51,13 @@ import {namesOfCards} from "./utils/card-names.js";
 // The refusals of the user are left to the AI: as vectors they removed good stories with the bad.
 // Then the AI checks what the chosen stories group (see checkStories): the vectors join two media
 // writing on one subject without telling the same fact.
-// The hours of news a briefing is written from, chosen by the reader: 24 hours, 3 days or 7 days (2
-// days, the window of every bench, until 14.10.2026: the user asked for 3), 3 days by default. Over 7
-// days the ranking took the same 2 to 3 s and the same 40 candidates go to the AI, so a briefing of
-// the week costs no more (bench/briefing-window.mjs). A month is not offered: the articles are kept 30
-// days, the oldest would be leaving as it is written
-const WINDOWS = [24, 72, 168];
-const DEFAULT_HOURS = 72;
+// The hours of news a briefing is written from, chosen by the reader on a bar of 1 to 7 days (the user,
+// 14.10.2026; 24 hours, 2 or 7 days before), 2 days by default, the window of every bench. Over 7 days
+// the ranking took the same 2 to 3 s and the same 40 candidates go to the AI, so a briefing of the week
+// costs no more (bench/briefing-window.mjs). A month is not offered: the articles are kept 30 days, the
+// oldest would be leaving as it is written
+const WINDOWS = [1, 2, 3, 4, 5, 6, 7].map(days => days * 24);
+const DEFAULT_HOURS = 48;
 // From this many hours a briefing is one of several days. The 40 closest stories of a week were 34
 // affairs of several days (threads, db/add_threads.sql), and guides of no day rose among them: one
 // candidate per thread, and the AI is told how many media told each to prefer what mattered (see
@@ -514,18 +514,17 @@ const oncePerThread = async (stories) => {
     });
 };
 
-// the stories without the ones shown to the profile in the last REPEAT_HOURS (but the last
-// REWRITE_HOURS), the ones that evolved since kept as follow-ups (see repeats.js). The briefing never
-// fails on it: all are kept then
+// the stories without the ones the profile sent itself by e-mail in the last REPEAT_HOURS (a card not
+// sent was not read), the ones that evolved since kept as follow-ups (see repeats.js). The briefing
+// never fails on it: all are kept then
 const notShownBefore = async (stories, profileId, usage) => {
     try {
-        const hoursAgo = (hours) => new Date(Date.now() - hours * 3600e3);
-        const shown = shownStories(await BriefingModel.shownBetween(profileId, hoursAgo(REPEAT_HOURS), hoursAgo(REWRITE_HOURS)));
+        const shown = shownStories(await BriefingModel.sentSince(profileId, new Date(Date.now() - REPEAT_HOURS * 3600e3)));
         if (shown.size === 0) return stories;
         const threads = await StoryModel.threadsOf([...new Set([...stories.map(story => story.storyId), ...shown.keys()])]);
         const threadOf = new Map(threads.map(row => [row.id, row.id_thread]));
         const result = await withoutRepeats(stories, shown, threadOf, (asked) => evolvedStories(asked, usage));
-        console.log(`Briefing: ${result.left} stories of the affairs shown in the last ${REPEAT_HOURS} h left out, ${result.back.length} kept as they tell something new${
+        console.log(`Briefing: ${result.left} stories of the affairs sent in the last ${REPEAT_HOURS} h left out, ${result.back.length} kept as they tell something new${
             result.back.map(({storyId, fact}) => `
   [${storyId}] ${fact ?? ''}`).join('')}`);
         return result.stories;
@@ -1090,6 +1089,10 @@ export const BriefingService = {
         const {items, attachments} = await withChosenPictures(withoutTakenOut(withOwnTitles(ticked, titles), removed), pictures, {sender, known});
         const mail = briefingMail({...briefing, items}, {profile: profile?.name ?? null, sender, format});
         await sendMail({to: address, replyTo: toOther && user?.email ? user.email : undefined, ...mail, attachments});
+        // sent, they are read: their stories are left out of the next briefings (see notShownBefore). The
+        // e-mail is gone already, a failure here only lets them come back
+        await BriefingModel.markSent(userId, row.id, ticked.map(item => item.storyId)).catch(err =>
+            console.error(`Briefing ${briefingId}: the cards sent were not marked (${err.message})`));
     },
 
     // A news the reader adds by its link to a ready briefing, to send it by e-mail with its cards: its page
@@ -1165,7 +1168,7 @@ export const BriefingService = {
     // 'size': its cards, one of BRIEFING_SIZES
     start: async (userId, profileId, hours = DEFAULT_HOURS, size = MAX_BRIEFING) => {
         if (profileId === null) throw Object.assign(new Error('Write your profile first.'), {status: 400});
-        if (!WINDOWS.includes(hours)) throw Object.assign(new Error(`hours: ${WINDOWS.join(', ')}.`), {status: 400});
+        if (!WINDOWS.includes(hours)) throw Object.assign(new Error(`hours: 1 to 7 days (${WINDOWS.join(', ')}).`), {status: 400});
         if (!BRIEFING_SIZES.includes(size)) throw Object.assign(new Error(`size: ${BRIEFING_SIZES.join(', ')}.`), {status: 400});
         await BriefingModel.failAbandoned(new Date(Date.now() - ABANDONED_MINUTES * 60 * 1000));
         if (running.has(profileId)) return toBriefing(await BriefingModel.running(profileId));

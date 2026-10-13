@@ -17,7 +17,8 @@ const articlePictures = jest.fn(async () => [
     {link: 'https://other.example/3', thumbnail: 'javascript:alert(1)'},
 ]);
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
-jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel: {ofUser, articlePictures}}));
+const markSent = jest.fn(async () => 1);
+jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel: {ofUser, articlePictures, markSent}}));
 jest.unstable_mockModule('../../models/user-model.js', () => ({UserModel: {email: jest.fn(async () => ({email: 'reader@example.test', username: 'lecteur'}))}}));
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: {get: jest.fn(async () => ({name: 'Football'}))}}));
 jest.unstable_mockModule('../../services/utils/mailer.js', () => ({sendMail, mailEnabled: () => true}));
@@ -40,6 +41,25 @@ const row = {
 beforeEach(() => {
     ofUser.mockReset().mockResolvedValue(row);
     sendMail.mockClear();
+    markSent.mockReset().mockResolvedValue(1);
+});
+
+describe('BriefingService.email and the cards read', () => {
+    it('should mark the cards sent as read, only once the e-mail is gone', async () => {
+        await BriefingService.email(4, '7', [3, 1, 3]);
+        expect(markSent).toHaveBeenCalledWith(4, 7, [3, 1]);
+
+        markSent.mockClear();
+        sendMail.mockRejectedValueOnce(Object.assign(new Error('The e-mail could not be sent, try again later.'), {status: 502}));
+        await expect(BriefingService.email(4, 7, [2])).rejects.toMatchObject({status: 502});
+        expect(markSent).not.toHaveBeenCalled();
+    });
+
+    it('should not fail an e-mail sent when the cards could not be marked', async () => {
+        markSent.mockRejectedValueOnce(new Error('database down'));
+        await expect(BriefingService.email(4, 7, [1])).resolves.toBeUndefined();
+        expect(sendMail).toHaveBeenCalledTimes(1);
+    });
 });
 
 describe('BriefingService.email', () => {

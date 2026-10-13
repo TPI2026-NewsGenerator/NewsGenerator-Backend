@@ -68,17 +68,28 @@ export const BriefingModel = {
         ORDER BY published_at DESC NULLS LAST
         LIMIT 30`, storyId, links),
 
-    // the cards of the ready briefings of this profile finished between 'since' and 'before', the oldest
-    // first: [{storyId, mergedStoryIds, title, shownAt}], the title as the reader read it (see repeats.js)
-    shownBetween: async (profileId, since, before) => prisma.$queryRawUnsafe(`
+    // the cards of the briefings of this profile sent by e-mail since 'since', the oldest sent first:
+    // [{storyId, mergedStoryIds, title, shownAt}], shownAt their last sending, the title as the reader
+    // read it (see repeats.js). Only these were read (the user, 14.10.2026: a card not sent is not read)
+    sentSince: async (profileId, since) => prisma.$queryRawUnsafe(`
         SELECT (item->>'storyId')::int AS "storyId", item->'mergedStoryIds' AS "mergedStoryIds",
-               COALESCE(item->>'titleTranslation', item->>'title') AS title, b.finished_at AS "shownAt"
+               COALESCE(item->>'titleTranslation', item->>'title') AS title, (item->>'sentAt')::timestamptz AS "shownAt"
         FROM briefings b, jsonb_array_elements(b.items) AS item
-        WHERE b.id_profile = $1::int AND b.status = 'ready'
-          AND b.finished_at >= $2::timestamptz AND b.finished_at < $3::timestamptz
-          AND jsonb_typeof(b.items) = 'array'
-        ORDER BY b.finished_at`,
-        profileId, since, before),
+        WHERE b.id_profile = $1::int AND b.status = 'ready' AND jsonb_typeof(b.items) = 'array'
+          AND item->>'sentAt' IS NOT NULL AND (item->>'sentAt')::timestamptz >= $2::timestamptz
+        ORDER BY "shownAt"`,
+        profileId, since),
+
+    // the cards of a ready briefing of this user just sent by e-mail, marked with the time: their stories
+    // are not shown again for a while (see sentSince). One statement, as vote
+    markSent: async (userId, briefingId, storyIds) => prisma.$executeRawUnsafe(`
+        UPDATE briefings
+        SET items = (SELECT jsonb_agg(CASE WHEN (item->>'storyId')::int = ANY($3::int[])
+                                          THEN item || jsonb_build_object('sentAt', now())
+                                          ELSE item END ORDER BY position)
+                     FROM jsonb_array_elements(items) WITH ORDINALITY AS cards(item, position))
+        WHERE id = $1 AND id_user = $2 AND status = 'ready' AND jsonb_typeof(items) = 'array'`,
+        briefingId, userId, storyIds),
 
     latest: async (profileId) => prisma.briefings.findFirst({
         where: {id_profile: profileId},
