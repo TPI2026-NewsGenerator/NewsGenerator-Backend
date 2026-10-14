@@ -34,9 +34,9 @@ export const OfficialModel = {
         SELECT name, what, qid, now() FROM jsonb_to_recordset($1::jsonb) AS r(name text, what text, qid text)
         ON CONFLICT (name, what) DO UPDATE SET qid = EXCLUDED.qid, checked_at = now()`, JSON.stringify(rows)),
 
-    // [{qid, label, channels, fresh, site_feed, site_feed_fresh}] of the items known
+    // [{qid, label, names, channels, fresh, site_feed, site_feed_fresh}] of the items known
     items: async (qids) => qids.length === 0 ? [] : prisma.$queryRawUnsafe(`
-        SELECT qid, label, channels, channels_at > now() - make_interval(days => ${CHANNELS_DAYS}) AS fresh,
+        SELECT qid, label, names, channels, channels_at > now() - make_interval(days => ${CHANNELS_DAYS}) AS fresh,
                site_feed, site_feed_at > now() - make_interval(days => ${SITE_FEED_DAYS}) AS site_feed_fresh
         FROM entities WHERE qid = ANY($1::text[])`, qids),
 

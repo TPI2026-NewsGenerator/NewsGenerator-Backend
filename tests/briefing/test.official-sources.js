@@ -12,7 +12,8 @@ import {describe, expect, it, jest} from '@jest/globals';
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat: jest.fn()}))}));
 jest.unstable_mockModule('../../models/official-model.js', () => ({OfficialModel: {}}));
 jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {saveResolvedLinks: jest.fn()}}));
-const {MAX_OFFICIAL, candidatesOf, confirmedOf, normalizeParties, withSiteLinks, withStatements} = await import('../../services/utils/official-sources.js');
+jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel: {}}));
+const {MAX_OFFICIAL, candidatesOf, confirmedOf, normalizeParties, partyName, withSiteLinks, withStatements} = await import('../../services/utils/official-sources.js');
 
 describe('withStatements', () => {
     const post = (party) => ({party, channel: 'site'});
@@ -128,5 +129,20 @@ describe('withSiteLinks', () => {
         const decode = jest.fn();
         await withSiteLinks([{party: 'UEFA', channel: 'site', url: UEFA}], decode);
         expect(decode).not.toHaveBeenCalled();
+    });
+});
+
+describe('partyName', () => {
+    it("should show an item's acronym, or its English label when the AI named it in another language", () => {
+        expect(partyName('Eiropas Futbola federāciju asociācija', 'Union of European Football Associations', ['UEFA'])).toBe('UEFA');
+        expect(partyName('Federação Portuguesa de Futebol', 'Portuguese Football Federation')).toBe('Portuguese Football Federation');
+        expect(partyName('Arsene Wenger', 'Arsène Wenger')).toBe('Arsène Wenger');
+    });
+
+    it("should keep the AI's name when the label only says it longer, or there is no English label", () => {
+        expect(partyName('Real Madrid', 'Real Madrid Club de Fútbol')).toBe('Real Madrid');
+        expect(partyName('Chelsea', 'Chelsea F.C.')).toBe('Chelsea');
+        expect(partyName('Luciano Gonçalves', 'Q118655504')).toBe('Luciano Gonçalves');
+        expect(partyName('UEFA', undefined)).toBe('UEFA');
     });
 });

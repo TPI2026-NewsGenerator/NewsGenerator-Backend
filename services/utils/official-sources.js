@@ -22,6 +22,8 @@ import {writtenIn} from './language.js';
 import {OfficialModel} from '../../models/official-model.js';
 import {FeedModel} from '../../models/feed-model.js';
 import {decodeLinks, isGoogleNewsUrl} from './google-news.js';
+import {shortName} from './card-names.js';
+import {mentionKey} from './mentions.js';
 
 // Measured on 163 cards of four readers over 7 days (bench/official-badge.mjs, judged by hand): 19
 // cards got a right official post, none a wrong one, 5 of them debatable (UEFA's "the 55 associations
@@ -258,7 +260,7 @@ const STOP_WORDS = new Set(['with', 'that', 'this', 'from', 'after', 'avec', 'po
 
 // The posts of a card's parties worth judging: of the days around it, naming another of its parties or
 // sharing words with its titles, the most alike first, MAX_CANDIDATES at most. parties: [{qid, label,
-// name, site}], name the one the AI gave (shown: "UEFA" rather than Wikidata's full label), posts: {qid -> [post]}
+// name, site}], name the one shown (see partyName), posts: {qid -> [post]}
 export const candidatesOf = (card, parties, posts) => {
     const from = Date.parse(card.first) - BEFORE_DAYS * 864e5;
     const cardWords = [...wordsOf([card.title, card.titleTranslation, ...(card.titles ?? [])].join(' '))].filter(word => !STOP_WORDS.has(word));
@@ -276,6 +278,21 @@ export const candidatesOf = (card, parties, posts) => {
     return [...new Map(found.map(post => [post.url, post])).values()]
         .sort((a, b) => b.score - a.score)
         .slice(0, MAX_CANDIDATES);
+};
+
+// The name a party's post is shown by. The AI names a party as the card's article does: "Eiropas Futbola
+// federāciju asociācija" for UEFA below a Latvian card (12.10.2026). Its item gives the same name to
+// every card: its acronym when its label is long (see shortName: UEFA, FIFA), else the AI's name when
+// the label only says it longer ("Real Madrid" for "Real Madrid Club de Fútbol", "Chelsea"), else its
+// English label ("Portuguese Football Federation" for "Federação Portuguesa de Futebol", "Arsène Wenger"
+// for "Arsene Wenger"). Of the 174 names searched by 14.10.2026 (bench/official-party-names.mjs), the
+// AI's kept 111 times, the 63 others all right. An item without an English label keeps the AI's name
+export const partyName = (name, label, names = []) => {
+    if (!label || /^Q\d+$/.test(label)) return name;
+    const short = shortName(label, [name, ...names]);
+    if (short !== label) return short;
+    const [key, labelKey] = [mentionKey(name), mentionKey(label)];
+    return key !== labelKey && ` ${labelKey} `.includes(` ${key} `) ? name : label;
 };
 
 // the posts both answers call "confirms", one per party, MAX_OFFICIAL at most. The second answer is
@@ -355,9 +372,11 @@ export const officialSourcesOf = async (cards, usage = null, {language = 'en'} =
     done('statements');
 
     const judged = await mapWithConcurrency(cards, AI_CONCURRENCY, async (card, i) => {
-        // the first name the AI gave an item, when it gave it two ("UEFA", "Union of European...")
+        // the first name the AI gave an item, when it gave it two ("UEFA", "Union of European..."), shown
+        // as partyName says
         const parties = [...new Map(partiesOf[i].map(party => [party, items.get(qidOf.get(keyOf(party)))]).filter(([, item]) => item)
-            .reverse().map(([party, item]) => [item.qid, {qid: item.qid, label: item.label, name: party.name, site: item.channels?.site ?? []}])).values()];
+            .reverse().map(([party, item]) => [item.qid, {qid: item.qid, label: item.label, site: item.channels?.site ?? [],
+                name: partyName(party.name, item.label, [...(party.other ?? []), ...(item.names ?? [])])}])).values()];
         const candidates = candidatesOf(card, parties, posts);
         if (candidates.length === 0) return [];
         const first = await ollamaJson(checkPrompt(card, candidates), usage);
