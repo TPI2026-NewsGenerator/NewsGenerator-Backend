@@ -290,7 +290,15 @@ describe('languageOf', () => {
         expect(languageOf(title)).toBe('fr');
         expect(languageOf(title, 'es')).toBe('es');
         expect(languageOf(title, 'it')).toBe('it');
-        expect(languageOf('Le président de la FIFA répond à la Norvège', 'es')).toBe('fr');
+    });
+
+    it('should keep the language of the feed unless another one has clearly more short words', () => {
+        // "que", "para" are Spanish too: a sapo.pt news was told Spanish
+        const portuguese = 'Sabemos que pode dar muito trabalho para a equipa, disse o treinador que';
+        expect(languageOf(portuguese)).toBe('es');
+        expect(languageOf(portuguese, 'pt')).toBe('pt');
+        expect(languageOf('Também está em causa a presença das equipas portuguesas após o sorteio')).toBe('pt');
+        expect(languageOf('Le président de la FIFA répond à la Norvège dans une lettre aux fédérations', 'es')).toBe('fr');
     });
 });
 

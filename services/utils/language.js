@@ -22,12 +22,21 @@ const WORDS = {
     // No reader reads them: they are here so that a feed in them is not taken for one of the others.
     // Last, so a tie goes to the languages above ("Van Dijk", "para")
     nl: 'het een van op met voor niet zijn dat aan bij ook naar om wordt werd hun deze nog maar uit',
-    pt: 'os um uma dos das em ao não com mais seu sua pelo pela foi são',
+    // not "da" (Italian too), "no" (Spanish), "o", "do", "na" (Polish and Czech: a pzpn.pl feed was told Portuguese)
+    pt: 'os um uma dos das em ao não com mais seu sua pelo pela foi são à às é nas já após também está muito ela num numa',
     cs: 'že jsou pro jak už jako ale od byl bylo jeho které který také nebo při',
     pl: 'się nie że jest jak po od już dla oraz przez był jego które który także tym',
 };
 const SETS = Object.fromEntries(Object.entries(WORDS).map(([language, words]) => [language, new Set(words.split(' '))]));
 const MIN_HITS = 2;             // under this the text says nothing, the default is kept
+// The language of the feed is kept unless another one has FEED_MARGIN more short words. Measured on
+// up to 4000 news each of national media (bench/language-pt.mjs, their domain gives the language):
+// the Portuguese ones were 73.5% right, as "que", "para", "e", "a" are Spanish, Italian, English words
+// too (a sapo.pt card on Ceferin left untranslated and alone in its story, 14.10.2026); with the
+// Portuguese words above and this margin 92.5%, Czech 59.9 -> 87.4%, Polish 96.7 -> 99.6%, Italian
+// 98.0 -> 98.6%, French 99.0 -> 99.8%, Spanish, German, English, Slovak the same. A margin of 2 kept
+// Czech at 75.5%
+const FEED_MARGIN = 3;
 const FEED_TEXTS = 30;          // the news of a feed read to tell its language
 const FEED_TOLD = 1 / 3;        // the share of them that must tell one
 const FEED_AGREE = 0.6;         // the share of those that must tell the same
@@ -46,13 +55,14 @@ const FRANC_CODES = {
 };
 const MIN_TRIGRAM_CHARS = 200;  // shorter, the short words are surer
 // Croatian, Bosnian and Serbian are written alike: franc gave index.hr Bosnian and oslobodjenje.ba
-// Serbian. The country of the site decides between them
-const NEAR_LANGUAGES = new Set(['hr', 'bs', 'sr']);
-const COUNTRY_LANGUAGE = {hr: 'hr', ba: 'bs', rs: 'sr', me: 'sr'};
+// Serbian. The country of the site decides between them. Galician and Portuguese too: the feed of
+// uol.com.br was told Galician (693 news in 3 days, 14.10.2026)
+const NEAR_LANGUAGES = new Set(['hr', 'bs', 'sr', 'gl']);
+const COUNTRY_LANGUAGE = {hr: 'hr', ba: 'bs', rs: 'sr', me: 'sr', br: 'pt', pt: 'pt'};
 
-// the language its short words tell, null under MIN_HITS. A tie goes to 'preferred' (the language of
-// the feed) when it is among the best: a Spanish title of a Spanish search with three "la" and no
-// other short word counts as much French as Spanish, and was told French
+// the language its short words tell, null under MIN_HITS. 'preferred' (the language of the feed) is
+// kept unless another one has FEED_MARGIN more: a Spanish title of a Spanish search with three "la"
+// and no other short word counts as much French as Spanish, and was told French
 const wordsLanguage = (text, preferred = null) => {
     const words = (text ?? '').toLowerCase().match(/[\p{L}]+/gu) ?? [];
     let best = null;
@@ -67,7 +77,7 @@ const wordsLanguage = (text, preferred = null) => {
             bestHits = hits;
         }
     }
-    return best && preferredHits === bestHits ? preferred : best;
+    return best && preferred && SETS[preferred] && bestHits - preferredHits < FEED_MARGIN ? preferred : best;
 };
 
 // the language of a long text by its groups of letters: franc when it says one outside the 9 the
