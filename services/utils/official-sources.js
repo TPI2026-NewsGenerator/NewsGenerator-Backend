@@ -20,6 +20,8 @@ import {statementsOf} from './statements.js';
 import {translateTexts} from './extract.js';
 import {writtenIn} from './language.js';
 import {OfficialModel} from '../../models/official-model.js';
+import {FeedModel} from '../../models/feed-model.js';
+import {decodeLinks, isGoogleNewsUrl} from './google-news.js';
 
 // Measured on 163 cards of four readers over 7 days (bench/official-badge.mjs, judged by hand): 19
 // cards got a right official post, none a wrong one, 5 of them debatable (UEFA's "the 55 associations
@@ -297,6 +299,19 @@ export const withStatements = (posts, statements) => {
     return [...posts, ...statements.filter(statement => !said.has(statement.party.toLowerCase()))].slice(0, MAX_OFFICIAL);
 };
 
+// The posts of a party's site read through Google News get the address of the site, saved for the next
+// briefings: "said it" on a link of news.google.com did not show it came from uefa.com. Of the 18
+// briefings of 12-14.10.2026, 8 of the 9 posts shown were such links (2 distinct ones), both decoded in
+// 2 s. A link not decoded stays (it still leads to the post). Changes the items, never throws
+export const withSiteLinks = async (items, decode = decodeLinks, save = FeedModel.saveResolvedLinks) => {
+    const links = [...new Set(items.filter(item => item.channel !== 'reported' && isGoogleNewsUrl(item.url)).map(item => item.url))];
+    if (links.length === 0) return;
+    const decoded = await decode(links).catch(() => new Map());
+    items.filter(item => decoded.has(item.url)).forEach(item => { item.url = decoded.get(item.url); });
+    await save([...decoded].map(([link, resolved]) => ({link, resolved}))).catch(err =>
+        console.error(`Official sources: the addresses of Google News were not saved (${err.message})`));
+};
+
 // cards: [{id, title, titleTranslation, titles, text, first, texts}], first the date of its first news,
 // texts its articles read [{source, url, publishedAt, page}]. language: the reader's, a statement quoted
 // in another one translated. Answers a Map id -> [{party, title, url, channel, publishedAt}], the posts
@@ -373,9 +388,13 @@ export const officialSourcesOf = async (cards, usage = null, {language = 'en'} =
     // the statements quoted in another language than the reader's translated, as the denials are
     const foreign = shown.flat().filter(item => item.channel === 'reported' && item.language && item.language !== language
         && writtenIn(item.language) && writtenIn(language));
-    const translations = foreign.length === 0 ? [] : await translateTexts(foreign.map(item => ({text: item.title, from: writtenIn(item.language)})),
-        writtenIn(language), usage).catch(() => []);
+    const [translations] = await Promise.all([
+        foreign.length === 0 ? [] : translateTexts(foreign.map(item => ({text: item.title, from: writtenIn(item.language)})),
+            writtenIn(language), usage).catch(() => []),
+        withSiteLinks(shown.flat()),
+    ]);
     foreign.forEach((item, i) => { item.translation = translations[i] ?? null; });
+    done('links');
     console.log(`Official sources: ${cards.length} cards, ${qids.length} items, ${readable.length} read, `
         + `${shown.flat().filter(item => item.channel === 'reported').length} statements, seconds ${JSON.stringify(seconds)}`);
     return new Map(cards.map((card, i) => [card.id, shown[i]]));

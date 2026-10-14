@@ -24,27 +24,42 @@ import {ollamaJson} from './ollama.js';
 // mostly: the transfers are still told by journalists, none confirmed this way
 const MAX_CANDIDATES = 25;
 
-// the words of a reported statement, in the languages of the cards: a sentence without one is never read
-const STATEMENT = new RegExp([
+// the words of a reported statement, in the languages of the cards: a sentence without one is never
+// read. Its channel: a statement, a release, a website or an account
+const CHANNEL = [
     // en
     String.raw`\bstatements?\b`, String.raw`\bpress release`, String.raw`\bofficially\b`,
     String.raw`\b(?:confirm|announc)\w*\b.{0,60}\b(?:website|on x\b|twitter|instagram|facebook|social media|tiktok|its channels)`,
     String.raw`\b(?:posted|wrote|said) on (?:x|twitter|instagram|facebook)\b`,
     // fr
-    String.raw`communiqu[ée]`, String.raw`officialis`, String.raw`\b(?:a|ont) (?:confirmé|annoncé)`,
-    String.raw`sur (?:son|ses|leur|leurs) (?:site|compte|réseaux)`,
-    // es, pt
-    String.raw`comunicado`, String.raw`oficializ`, String.raw`\b(?:confirmó|anunció|confirmou|anunciou)\b`, String.raw`nota oficial`,
-    String.raw`(?:sus|suas) redes`,
+    String.raw`communiqu[ée]`, String.raw`officialis`, String.raw`sur (?:son|ses|leur|leurs) (?:site|compte|réseaux)`,
+    // es, pt ("os erros sejam comunicados" is no release)
+    String.raw`\bcomunicado\b`, String.raw`oficializ`, String.raw`nota oficial`, String.raw`(?:sus|suas) redes`,
     // it
-    String.raw`comunicato`, String.raw`ufficializ`, String.raw`\bha (?:confermato|annunciato)\b`, String.raw`nota ufficiale`,
+    String.raw`\bcomunicato\b`, String.raw`ufficializ`, String.raw`nota ufficiale`,
     // de, nl
-    String.raw`Mitteilung`, String.raw`Stellungnahme`, String.raw`\b(?:bestätigte|gab .{0,40}bekannt|offiziell)\b`,
-    String.raw`verklaring`, String.raw`\bbevestigde\b`, String.raw`persbericht`, String.raw`maakte .{0,40}bekend`,
-].join('|'), 'iu');
+    String.raw`Mitteilung`, String.raw`Stellungnahme`, String.raw`\boffiziell\b`, String.raw`verklaring`, String.raw`persbericht`,
+];
+// or only the verb of a journalist telling it: "X a annoncé sa candidature"
+const SAYING = [
+    String.raw`\b(?:a|ont) (?:confirmé|annoncé)`, String.raw`\b(?:confirmó|anunció|confirmou|anunciou)\b`,
+    String.raw`\bha (?:confermato|annunciato)\b`, String.raw`\b(?:bestätigte|gab .{0,40}bekannt)\b`, String.raw`\bbevestigde\b`,
+    String.raw`maakte .{0,40}bekend`,
+];
+const STATEMENT = new RegExp([...CHANNEL, ...SAYING].join('|'), 'iu');
+const BY_CHANNEL = new RegExp(CHANNEL.join('|'), 'iu');
+const QUOTED = /["«»“”„]/u;
 
 // whether a sentence reports a statement, an announcement or a post
 export const hasStatement = (sentence) => STATEMENT.test(sentence);
+
+// Whether a sentence of the card's own article only retells its news: "Le Slovène Aleksander Ceferin a
+// annoncé jeudi sa candidature", shown as an official source below the card that article opens
+// (14.10.2026). No channel, no quote: the reader learns nothing the card does not say. A statement, a
+// release or a quote of the lead stays. On the 163 cards of bench/official-statements.mjs: 19 cards
+// with a statement -> 17, Collina announcing the rules gone, Ceferin's candidacy told by another medium
+// instead, UNUM's proposals "comunicados" (communicated) no release any more; AI calls 82 -> 70
+export const retellsLead = (sentence) => !BY_CHANNEL.test(sentence) && !QUOTED.test(sentence);
 
 // names: the parties of the card (see official-sources.js)
 export const statementPrompt = (card, candidates, names) => `A news card: "${card.title}"${card.titleTranslation ? ` (${card.titleTranslation})` : ''}
@@ -85,15 +100,17 @@ export const confirmingOf = (first, second, candidates) => {
     });
 };
 
-// card: {title, titleTranslation}; texts: its articles read [{source, url, publishedAt, page}], the
-// lead first; names: its parties. [{by, sentence, language, source, url, publishedAt}], empty when no
-// sentence reports a statement or the card has no party; the AI asked twice only then
+// card: {title, titleTranslation}; texts: its articles read [{source, url, publishedAt, page, lead}],
+// lead true for the article the card opens (see retellsLead); names: its parties. [{by, sentence,
+// language, source, url, publishedAt}], empty when no sentence reports a statement or the card has no
+// party; the AI asked twice only then
 export const statementsOf = async (card, texts, names, usage = null) => {
     if (names.length === 0) return [];
     const seen = new Set();
     const candidates = texts.flatMap(text => {
         const language = languageOf(text.page?.content ?? '');
-        return sentencesOf(text.page ?? {}).filter(sentence => hasStatement(sentence.text) && !seen.has(sentence.text) && seen.add(sentence.text))
+        return sentencesOf(text.page ?? {}).filter(sentence => hasStatement(sentence.text) && !(text.lead && retellsLead(sentence.text))
+            && !seen.has(sentence.text) && seen.add(sentence.text))
             .map(sentence => ({sentence: sentence.text, language, source: text.source, url: text.url, publishedAt: text.publishedAt ?? null}));
     }).slice(0, MAX_CANDIDATES);
     if (candidates.length === 0) return [];

@@ -114,6 +114,13 @@ export const StoryModel = {
         ORDER BY s.id, v.likeness DESC`,
         storyIds, language, feedUrls, since, likeness, perStory),
 
+    // The likeness of these stories two by two, by their centroids: [{a, b, likeness}], a < b
+    likenessAmong: async (storyIds) => prisma.$queryRawUnsafe(`
+        SELECT a.id AS a, b.id AS b, -(a.centroid <#> b.centroid)::real AS likeness
+        FROM stories a JOIN stories b ON a.id < b.id
+        WHERE a.id = ANY($1::int[]) AND b.id = ANY($1::int[]) AND a.centroid IS NOT NULL AND b.centroid IS NOT NULL`,
+        storyIds),
+
     // The stories of any language closest to each of these, above a likeness, but none of 'excluded'
     // (the ones already on the cards): the other facts of their affair are among them, the AI tells
     // which (see other-angles.js). [{id_story, id_other, likeness}], the closest first

@@ -23,7 +23,7 @@ import {BRIEFING_SIZES, MAX_BRIEFING, balanceSelection, checkStories, mergeStori
 import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {contestedOf} from "./utils/contested.js";
-import {otherAnglesOf, placeAngles} from "./utils/other-angles.js";
+import {otherAnglesOf, placeAngles, sameFactsOut} from "./utils/other-angles.js";
 import {AFFAIR_DAYS, storiesOfSameNames} from "./utils/affair-names.js";
 import {officialSourcesOf} from "./utils/official-sources.js";
 import {evolvedStories, REPEAT_HOURS, shownStories, withoutRepeats} from "./utils/repeats.js";
@@ -396,9 +396,17 @@ export const anglesOf = async (stories, titles, {language, feedUrls, hours, trus
     const cards = await angleCardsOf(stories, titles, {feedUrls, hours});
     if (cards.length === 0) return new Map();
     const judged = await otherAnglesOf(cards, usage);
+    // the likeness of the angles the AI says tell the same fact as an earlier one (see sameFactsOut)
+    const repeats = [...judged.values()].flat().filter(other => other.sameAs);
+    const likeness = new Map(repeats.length === 0 ? [] : (await StoryModel.likenessAmong([...new Set(repeats.flatMap(other => [other.storyId, other.sameAs]))])
+        .catch(err => {
+            console.error(`Briefing: the angles telling one fact were not compared (${err.message})`);
+            return [];
+        })).map(row => [`${row.a}:${row.b}`, row.likeness]));
+    const likenessOf = (a, b) => likeness.get(`${Math.min(a, b)}:${Math.max(a, b)}`) ?? 0;
     const placed = new Set();
     const angles = new Map(cards.map(card => {
-        const shown = placeAngles((judged.get(card.id) ?? []).filter(other => !placed.has(other.storyId)));
+        const shown = placeAngles(sameFactsOut((judged.get(card.id) ?? []).filter(other => !placed.has(other.storyId)), likenessOf));
         shown.forEach(other => placed.add(other.storyId));
         return [card.id, shown];
     }));
@@ -720,7 +728,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             first: new Date(Math.min(...story.members.map(article => article.at?.getTime?.() ?? Date.now()))).toISOString(),
             // its articles read, for the statements of its parties they report (see statements.js)
             texts: [leads[i], ...story.members.filter(article => article !== leads[i])].filter(article => content.has(article.link))
-                .map(article => ({...toArticle(article), page: content.get(article.link)})),
+                .map(article => ({...toArticle(article), page: content.get(article.link), lead: article === leads[i]})),
         })), usage.official, {language}).catch(err => {
             console.error(`Briefing: no official source looked for (${err.message})`);
             return new Map();

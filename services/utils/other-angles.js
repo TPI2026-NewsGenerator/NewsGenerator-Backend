@@ -62,16 +62,35 @@ For each one, in any language, what it is to the reader of the card:
 "theme": only the same field or kind of subject (two different product launches, two opinion pieces on
   remote work, two matches of one league).
 "other": anything else, or a title too vague to tell.
-Answer in JSON only: {"news": [{"n": 1, "kind": "angle"}]}`;
+An "angle" telling the same fact as an earlier "angle" of this list (the same step, reaction or
+statement told by another paper or in another language) gets that one's number as "as".
+Answer in JSON only: {"news": [{"n": 1, "kind": "angle"}, {"n": 2, "kind": "angle", "as": 1}]}`;
 
-// the others the AI calls an angle, in their order (see placeAngles for the ones shown)
+// the others the AI calls an angle, in their order (see placeAngles for the ones shown). One it says
+// tells the same fact as an earlier angle ("as") carries that one's story id as sameAs (see sameFactsOut)
 export const normalizeAngles = (answer, others) => {
-    const angles = new Set((Array.isArray(answer?.news) ? answer.news : [])
-        .filter(item => item?.kind === 'angle')
-        .map(item => Number(item.n) - 1)
-        .filter(i => Number.isInteger(i) && i >= 0 && i < others.length));
-    return others.filter((other, i) => angles.has(i));
+    const items = (Array.isArray(answer?.news) ? answer.news : []).filter(item => item?.kind === 'angle');
+    const index = (n) => Number(n) - 1;
+    const valid = (i) => Number.isInteger(i) && i >= 0 && i < others.length;
+    const angles = new Set(items.map(item => index(item.n)).filter(valid));
+    const sameAs = new Map(items.filter(item => angles.has(index(item.as)) && index(item.as) < index(item.n))
+        .map(item => [index(item.n), others[index(item.as)].storyId]));
+    return others.flatMap((other, i) => !angles.has(i) ? [] : sameAs.has(i) ? [{...other, sameAs: sameAs.get(i)}] : [other]);
 };
+
+// Below one card, the FIFA's denial of a second salary for Infantino told in 4 languages took 4 of its 5
+// angles (14.10.2026). Measured on the 47 cards of Enzo's three profiles (bench/angles-dups.mjs, the
+// same 3 answers of the AI counted each way, labels by hand): right angles of 88-91 facts + 14 repeated
+// without; the AI's "as" alone 80-86 + 5, as it also joins two steps of one affair (a suspension and
+// its softening); the likeness alone 72 + 11 at 0.90, 42 + 0 at 0.70 (every angle of one affair is
+// close); both: 84-89 + 7 from 0.80, 86-90 + 9-10 from 0.85 (the true repeats are 0.82-0.97)
+export const SAME_FACT_LIKENESS = 0.85;
+
+// The angles without the ones the AI says tell the same fact as an earlier one still shown, when their
+// stories' likeness says so too (likeness(a, b): of two story ids)
+export const sameFactsOut = (angles, likeness, min = SAME_FACT_LIKENESS) => angles.reduce((kept, other) =>
+    other.sameAs && kept.some(one => one.storyId === other.sameAs) && likeness(other.storyId, other.sameAs) >= min
+        ? kept : [...kept, other], []);
 
 // The angles shown below a card, 'max' at most, in their order. The ones found by the card's names only
 // (named, see affair-names.js) come after the closest: the Latvian federation backing Infantino was the

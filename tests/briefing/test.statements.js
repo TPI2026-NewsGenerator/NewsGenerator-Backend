@@ -11,7 +11,7 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const chat = jest.fn();
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
-const {confirmingOf, hasStatement, statementsOf} = await import('../../services/utils/statements.js');
+const {confirmingOf, hasStatement, retellsLead, statementsOf} = await import('../../services/utils/statements.js');
 
 const json = (value) => ({message: {content: JSON.stringify(value)}, prompt_eval_count: 10, eval_count: 5});
 const page = (...sentences) => ({content: sentences.join(' '), blocks: sentences.map(text => ({kind: 'text', text}))});
@@ -32,6 +32,17 @@ describe('hasStatement', () => {
 
     it('should not read a sentence without them', () => {
         expect(hasStatement('Real Madrid beat Villarreal 1-0 on Saturday night.')).toBe(false);
+        expect(hasStatement('Quer que os erros reconhecidos sejam comunicados no prazo de 24 horas.')).toBe(false);
+    });
+});
+
+describe('retellsLead', () => {
+    it('should tell a journalist retelling the news from a statement, a release or a quote', () => {
+        expect(retellsLead('Aleksander Ceferin anunciou a intenção de se recandidatar à presidência da UEFA.')).toBe(true);
+        expect(retellsLead('Le Slovène Aleksander Ceferin a annoncé jeudi sa candidature à sa propre succession.')).toBe(true);
+        expect(retellsLead('La FPF a publié un communiqué indiquant que Ronaldo est suspendu.')).toBe(false);
+        expect(retellsLead('Le président de la CAF a confirmé le soutien « unanime et inconditionnel » à Infantino.')).toBe(false);
+        expect(retellsLead('Uefa has confirmed in a statement that an inspector was appointed.')).toBe(false);
     });
 });
 
@@ -67,6 +78,17 @@ describe('statementsOf', () => {
         expect(prompt).not.toContain('left the camp');
         expect(found).toEqual([expect.objectContaining({by: 'FPF', source: 'bbc.co.uk', url: 'https://bbc.co.uk/1',
             sentence: 'In a statement, the FPF said a provisional suspension was issued.'})]);
+    });
+
+    it('should not read the lead retelling the news, but another article saying the same', async () => {
+        chat.mockResolvedValue(json({sentences: [{n: 1, said_by: 'Ceferin', own: true, confirms: true}]}));
+        const told = 'Ceferin a annoncé jeudi sa candidature.';
+        const ceferin = {title: 'Ceferin candidat à sa succession'};
+        expect(await statementsOf(ceferin, [{...texts[0], page: page(told), lead: true}], ['Ceferin'])).toEqual([]);
+        expect(chat).not.toHaveBeenCalled();
+        const found = await statementsOf(ceferin, [{...texts[0], page: page(told), lead: true},
+            {...texts[0], url: 'https://lesoir.be/2', source: 'lesoir.be', page: page(told)}], ['Ceferin']);
+        expect(found).toEqual([expect.objectContaining({by: 'Ceferin', source: 'lesoir.be'})]);
     });
 
     it('should not ask the AI for a card without party or without such a sentence', async () => {

@@ -11,7 +11,8 @@ import {describe, expect, it, jest} from '@jest/globals';
 
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat: jest.fn()}))}));
 jest.unstable_mockModule('../../models/official-model.js', () => ({OfficialModel: {}}));
-const {MAX_OFFICIAL, candidatesOf, confirmedOf, normalizeParties, withStatements} = await import('../../services/utils/official-sources.js');
+jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {saveResolvedLinks: jest.fn()}}));
+const {MAX_OFFICIAL, candidatesOf, confirmedOf, normalizeParties, withSiteLinks, withStatements} = await import('../../services/utils/official-sources.js');
 
 describe('withStatements', () => {
     const post = (party) => ({party, channel: 'site'});
@@ -100,5 +101,32 @@ describe('confirmedOf', () => {
         const denies = {posts: candidates.map((post, i) => ({n: i + 1, kind: 'denies'}))};
         expect(confirmedOf(denies, denies, candidates)).toEqual([]);
         expect(confirmedOf(null, {posts: []}, candidates)).toEqual([]);
+    });
+});
+
+describe('withSiteLinks', () => {
+    const GOOGLE = 'https://news.google.com/rss/articles/CBMi0AFB?oc=5';
+    const UEFA = 'https://www.uefa.com/news-media/news/ceferin-final-term/';
+
+    it("should give a site's post read through Google News the address of the site, and save it", async () => {
+        const items = [{party: 'UEFA', channel: 'site', url: GOOGLE}, {party: 'UEFA', channel: 'site', url: GOOGLE},
+            {party: 'FIGC', channel: 'reported', url: 'https://news.google.com/rss/articles/other'}];
+        const decode = jest.fn(async () => new Map([[GOOGLE, UEFA]]));
+        const save = jest.fn(async () => 1);
+        await withSiteLinks(items, decode, save);
+
+        expect(decode).toHaveBeenCalledWith([GOOGLE]);
+        expect(items.map(item => item.url)).toEqual([UEFA, UEFA, 'https://news.google.com/rss/articles/other']);
+        expect(save).toHaveBeenCalledWith([{link: GOOGLE, resolved: UEFA}]);
+    });
+
+    it('should keep the link of Google News when it is not decoded, and ask nothing without one', async () => {
+        const items = [{party: 'UEFA', channel: 'site', url: GOOGLE}];
+        await withSiteLinks(items, async () => { throw new Error('429'); }, async () => 0);
+        expect(items[0].url).toBe(GOOGLE);
+
+        const decode = jest.fn();
+        await withSiteLinks([{party: 'UEFA', channel: 'site', url: UEFA}], decode);
+        expect(decode).not.toHaveBeenCalled();
     });
 });

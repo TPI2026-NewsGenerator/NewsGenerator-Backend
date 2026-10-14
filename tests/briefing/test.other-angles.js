@@ -11,7 +11,7 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const chat = jest.fn();
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
-const {MAX_ANGLES, normalizeAngles, otherAnglesOf, placeAngles} = await import('../../services/utils/other-angles.js');
+const {MAX_ANGLES, SAME_FACT_LIKENESS, normalizeAngles, otherAnglesOf, placeAngles, sameFactsOut} = await import('../../services/utils/other-angles.js');
 const {newUsage} = await import('../../services/utils/ollama.js');
 
 const json = (value) => ({message: {content: JSON.stringify(value)}, prompt_eval_count: 10, eval_count: 5});
@@ -37,6 +37,38 @@ describe('normalizeAngles', () => {
             .map(other => other.title)).toEqual(['A reaction']);
         expect(normalizeAngles({cards: []}, list)).toEqual([]);
         expect(normalizeAngles(null, list)).toEqual([]);
+    });
+
+    it('should note the earlier angle one tells the same fact as, never a later one or one not an angle', () => {
+        const answer = {news: [{n: 2, kind: 'angle'}, {n: 4, kind: 'angle', as: 2}, {n: 5, kind: 'angle', as: 6},
+            {n: 6, kind: 'angle', as: 1}, {n: 3, kind: 'theme'}]};
+        expect(normalizeAngles(answer, list).map(other => [other.title, other.sameAs])).toEqual([
+            ['A reaction', undefined], ['A later step', 101], ['A background', undefined], ['Its consequence', undefined]]);
+    });
+});
+
+describe('sameFactsOut', () => {
+    const angle = (storyId, sameAs) => ({storyId, title: `Story ${storyId}`, ...(sameAs ? {sameAs} : {})});
+    const likeness = (pairs) => (a, b) => pairs[`${Math.min(a, b)}:${Math.max(a, b)}`] ?? 0;
+
+    it('should leave out an angle the AI and the likeness both call the same fact as an earlier one', () => {
+        const angles = [angle(1), angle(2, 1), angle(3, 1), angle(4)];
+        expect(sameFactsOut(angles, likeness({'1:2': 0.93, '1:3': 0.8})).map(other => other.storyId)).toEqual([1, 3, 4]);
+    });
+
+    it('should keep it when the one it repeats is not shown below this card', () => {
+        expect(sameFactsOut([angle(2, 1), angle(4)], likeness({'1:2': 0.95})).map(other => other.storyId)).toEqual([2, 4]);
+    });
+
+    it('should keep every angle without a likeness', () => {
+        expect(sameFactsOut([angle(1), angle(2, 1)], () => 0)).toHaveLength(2);
+    });
+
+    it('should leave the place it frees to the next angle', () => {
+        const angles = [angle(1), ...Array.from({length: MAX_ANGLES + 1}, (_, i) => angle(10 + i, i < 2 ? 1 : undefined))];
+        const shown = placeAngles(sameFactsOut(angles, () => 0.9));
+        expect(shown.map(other => other.storyId)).toEqual([1, 12, 13, 14, 15]);
+        expect(SAME_FACT_LIKENESS).toBeGreaterThan(0.8);
     });
 });
 
