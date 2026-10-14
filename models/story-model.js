@@ -9,6 +9,7 @@
 "use strict"
 
 import {prisma} from '../config/db.js';
+import {cleanTitle} from '../services/utils/titles.js';
 
 const UPDATE_CHUNK = 200;       // news written in one statement
 
@@ -121,6 +122,14 @@ export const StoryModel = {
         WHERE a.id = ANY($1::int[]) AND b.id = ANY($1::int[]) AND a.centroid IS NOT NULL AND b.centroid IS NOT NULL`,
         storyIds),
 
+    // the likeness of each of these stories to each of 'to' (the cards of a briefing): [{a, b, likeness}],
+    // a of storyIds, b of to
+    likenessTo: async (storyIds, to) => prisma.$queryRawUnsafe(`
+        SELECT a.id AS a, b.id AS b, -(a.centroid <#> b.centroid)::real AS likeness
+        FROM stories a JOIN stories b ON b.id = ANY($2::int[])
+        WHERE a.id = ANY($1::int[]) AND a.centroid IS NOT NULL AND b.centroid IS NOT NULL`,
+        storyIds, to),
+
     // The stories of any language closest to each of these, above a likeness, but none of 'excluded'
     // (the ones already on the cards): the other facts of their affair are among them, the AI tells
     // which (see other-angles.js). [{id_story, id_other, likeness}], the closest first
@@ -169,8 +178,9 @@ export const StoryModel = {
     threadsOf: async (storyIds) => prisma.$queryRawUnsafe(
         'SELECT id, id_thread FROM stories WHERE id = ANY($1::int[])', storyIds),
 
-    // the news of these stories the user can read, once per link, the newest first
-    storyArticles: async ({storyIds, feedUrls, since}) => prisma.$queryRawUnsafe(`
+    // the news of these stories the user can read, once per link, the newest first, their titles
+    // without the name of their medium or a date at the end (see titles.js)
+    storyArticles: async ({storyIds, feedUrls, since}) => (await prisma.$queryRawUnsafe(`
         SELECT * FROM (
             SELECT DISTINCT ON (a.link)
                    a.id, a.id_story, a.link, a.title, a.description, a.thumbnail, a.lang, f.url AS feed_url,
@@ -184,5 +194,5 @@ export const StoryModel = {
             ORDER BY a.link, COALESCE(a.published_at, a.created_at) DESC
         ) news
         ORDER BY at DESC`,
-        storyIds, feedUrls, since),
+        storyIds, feedUrls, since)).map(article => ({...article, title: cleanTitle(article.title, article.medium)})),
 };

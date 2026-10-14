@@ -11,7 +11,7 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const chat = jest.fn();
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
-const {MAX_ANGLES, SAME_FACT_LIKENESS, normalizeAngles, otherAnglesOf, placeAngles, sameFactsOut} = await import('../../services/utils/other-angles.js');
+const {CLOSER_CARD_LIKENESS, MAX_ANGLES, SAME_FACT_LIKENESS, nearCardsOf, normalizeAngles, otherAnglesOf, placeAngles, sameFactsOut} = await import('../../services/utils/other-angles.js');
 const {newUsage} = await import('../../services/utils/ollama.js');
 
 const json = (value) => ({message: {content: JSON.stringify(value)}, prompt_eval_count: 10, eval_count: 5});
@@ -127,6 +127,22 @@ describe('otherAnglesOf', () => {
         expect(chat.mock.calls[1][0].messages[0].content).not.toContain('Its own articles');
     });
 
+    it('should name the other cards of the briefing only when some news are closer to them, and leave out a news of one', async () => {
+        chat.mockResolvedValue(json({news: [{n: 1, kind: 'card'}, {n: 2, kind: 'angle'}]}));
+        const angles = await otherAnglesOf([
+            {id: 1, title: 'Infantino has a Trump Tower office', otherCards: ['FIFA denies rules breach over Infantino’s extra income'],
+                others: others('Инфантино тайно прибирал заплата', 'A council meeting on the office')},
+            {id: 2, title: 'A card alone', others: others('Anything')},
+        ]);
+
+        const [first, second] = chat.mock.calls.map(call => call[0].messages[0].content);
+        expect(first).toContain('The same briefing has other cards, each its own news: "FIFA denies rules breach over Infantino’s extra income"');
+        expect(first).toContain('"card": it tells the news of one of the other cards');
+        expect(second).not.toContain('other cards');
+        expect(second).not.toContain('"card"');
+        expect(angles.get(1).map(other => other.title)).toEqual(['A council meeting on the office']);
+    });
+
     it('should give no angle to a card the AI failed on, the others kept', async () => {
         chat.mockImplementation(async ({messages}) => {
             // no JSON: a failure that asks no other AI
@@ -140,5 +156,25 @@ describe('otherAnglesOf', () => {
 
         expect(angles.get(1)).toEqual([]);
         expect(angles.get(2).map(other => other.title)).toEqual(['A reaction']);
+    });
+});
+
+describe('nearCardsOf', () => {
+    it('should give each card the other cards some of its candidates are closer to, from the likeness, the closest first', () => {
+        const like = {'100:1': 0.80, '100:2': 0.94, '100:3': 0.85, '101:1': 0.90, '101:2': 0.70, '101:3': 0.60, '200:2': 0.9, '200:1': 0.95};
+        const likeness = (story, card) => like[`${story}:${card}`] ?? 0;
+        const near = nearCardsOf([
+            {id: 1, others: [{storyId: 100}, {storyId: 101}]},
+            {id: 2, others: [{storyId: 200}]},
+            {id: 3, others: []},
+        ], likeness);
+
+        // 100 is closer to cards 2 and 3 than to its own card; 101 to none
+        expect(near.get(1)).toEqual([2, 3]);
+        expect(near.get(2)).toEqual([1]);
+        expect(near.get(3)).toEqual([]);
+        // under the likeness, nothing: the same affair is often that close
+        expect(nearCardsOf([{id: 1, others: [{storyId: 9}]}, {id: 2, others: []}], () => 0, 0.5).get(1)).toEqual([]);
+        expect(CLOSER_CARD_LIKENESS).toBeGreaterThan(0.7);
     });
 });

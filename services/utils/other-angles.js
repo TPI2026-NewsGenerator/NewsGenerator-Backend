@@ -37,9 +37,12 @@ const dated = (at) => dayOf(at) ? `(${dayOf(at)}) ` : '';
 // cardTitles: other titles of the card's own articles, other languages first: a title alone often
 // leaves out what another tells (the former club of a candidate), and the same fact told with it
 // passed for another angle. Each news with its day: the ones naming the card's actors go weeks back
-// (see affair-names.js), an earlier step is told by its date. at: the card's day
-export const anglesPrompt = (title, others, cardTitles = [], at = null) => `A news card${dayOf(at) ? ` of ${dayOf(at)}` : ''}: "${title}"${cardTitles.length > 0 ? `
-Its own articles also title it: ${cardTitles.map(other => `"${other}"`).join('; ')}` : ''}
+// (see affair-names.js), an earlier step is told by its date. at: the card's day. otherCards: the
+// titles of the other cards of the briefing some of these news are closer to (see nearCardsOf): a
+// news telling one of them is "card", left out like "same"
+export const anglesPrompt = (title, others, cardTitles = [], at = null, otherCards = []) => `A news card${dayOf(at) ? ` of ${dayOf(at)}` : ''}: "${title}"${cardTitles.length > 0 ? `
+Its own articles also title it: ${cardTitles.map(other => `"${other}"`).join('; ')}` : ''}${otherCards.length > 0 ? `
+The same briefing has other cards, each its own news: ${otherCards.map(other => `"${other}"`).join('; ')}` : ''}
 
 Other news published around it:
 ${others.map((other, i) => `[${i + 1}] ${dated(other.at)}${other.title || '(no title)'}`).join('\n')}
@@ -61,7 +64,8 @@ For each one, in any language, what it is to the reader of the card:
   about, a reaction to the decision, the sanction.
 "theme": only the same field or kind of subject (two different product launches, two opinion pieces on
   remote work, two matches of one league).
-"other": anything else, or a title too vague to tell.
+"other": anything else, or a title too vague to tell.${otherCards.length > 0 ? `
+"card": it tells the news of one of the other cards of the briefing, in any language.` : ''}
 An "angle" telling the same fact as an earlier "angle" of this list (the same step, reaction or
 statement told by another paper or in another language) gets that one's number as "as".
 Answer in JSON only: {"news": [{"n": 1, "kind": "angle"}, {"n": 2, "kind": "angle", "as": 1}]}`;
@@ -92,6 +96,34 @@ export const sameFactsOut = (angles, likeness, min = SAME_FACT_LIKENESS) => angl
     other.sameAs && kept.some(one => one.storyId === other.sameAs) && likeness(other.storyId, other.sameAs) >= min
         ? kept : [...kept, other], []);
 
+// A candidate closer to another card of the briefing than to its own, from this likeness, may tell
+// that card's news: on briefing 98 of Enzo (25 cards, 14.10.2026) the FIFA's denial about Infantino's
+// extra income was told in 12 languages, its card took 4 of them, and the others came back as
+// "angles" of the Trump Tower and the FIFA election cards (0.83-0.94 to it): 5 of 72 angles told the
+// fact of another card. The likeness alone does not tell them from right angles (bench/angles-cross-
+// rule.mjs): leaving out the candidates closer to another card took 4 of the 5 away and 4-8 right
+// angles a briefing; judging them below the closer card instead lost 7-11 right angles of 47 cards
+// (that card had no place left, or called them its same fact). So the AI is told those other cards
+// (bench/angles-move-data.mjs, then REJUDGE of bench/angles-places.mjs, same candidates, 2 runs):
+// briefing 98, other cards' facts 5 -> 1, right angles 32 -> 31-32 (44-46% -> 48-49%); the 47 cards of
+// briefings 90-92, right angles 102-103 -> 105-106 (78-79% -> 80-81%)
+export const CLOSER_CARD_LIKENESS = 0.78;
+const MAX_OTHER_CARDS = 3;
+
+// The other cards some candidates of each card are closer to, from 'min': Map card id -> [card ids],
+// the closest first. cards [{id, others}], likeness(storyId, cardId)
+export const nearCardsOf = (cards, likeness, min = CLOSER_CARD_LIKENESS) => new Map(cards.map(card => {
+    const near = new Map();
+    for (const other of card.others) {
+        const own = likeness(other.storyId, card.id);
+        for (const another of cards) {
+            const value = another.id === card.id ? -Infinity : likeness(other.storyId, another.id);
+            if (value >= min && value > own) near.set(another.id, Math.max(near.get(another.id) ?? 0, value));
+        }
+    }
+    return [card.id, [...near].sort((a, b) => b[1] - a[1]).slice(0, MAX_OTHER_CARDS).map(([id]) => id)];
+}));
+
 // The angles shown below a card, 'max' at most, in their order. The ones found by the card's names only
 // (named, see affair-names.js) come after the closest: the Latvian federation backing Infantino was the
 // third angle of three of its card on 13.10.2026, three angles closer would have left it out. The first
@@ -109,7 +141,7 @@ export const placeAngles = (angles, max = MAX_ANGLES) => {
 export const otherAnglesOf = async (cards, usage = null) => {
     const asked = cards.filter(card => card.others.length > 0);
     const results = await mapWithConcurrency(asked, AI_CONCURRENCY, async (card) =>
-        normalizeAngles(await ollamaJson(anglesPrompt(card.title, card.others, card.titles ?? [], card.at), usage), card.others));
+        normalizeAngles(await ollamaJson(anglesPrompt(card.title, card.others, card.titles ?? [], card.at, card.otherCards ?? []), usage), card.others));
     const failed = results.filter(result => result.status !== 'fulfilled').length;
     if (failed > 0) console.error(`Briefing: the other angles of ${failed} cards were not judged`);
     return new Map(asked.map((card, i) => [card.id, results[i].status === 'fulfilled' ? results[i].value : []]));

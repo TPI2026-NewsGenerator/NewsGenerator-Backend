@@ -23,7 +23,7 @@ import {BRIEFING_SIZES, MAX_BRIEFING, balanceSelection, checkStories, mergeStori
 import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
 import {contestedOf} from "./utils/contested.js";
-import {otherAnglesOf, placeAngles, sameFactsOut} from "./utils/other-angles.js";
+import {nearCardsOf, otherAnglesOf, placeAngles, sameFactsOut} from "./utils/other-angles.js";
 import {AFFAIR_DAYS, storiesOfSameNames} from "./utils/affair-names.js";
 import {officialSourcesOf} from "./utils/official-sources.js";
 import {evolvedStories, REPEAT_HOURS, shownStories, withoutRepeats} from "./utils/repeats.js";
@@ -43,6 +43,7 @@ import {storyPictures, withChosenPictures} from "./utils/mail-pictures.js";
 import {SentMailModel} from "../models/sent-mail-model.js";
 import {EntityService} from "./entity-service.js";
 import {namesOfCards} from "./utils/card-names.js";
+import {wholeTitle} from "./utils/titles.js";
 
 // Measured on four profiles and 249 stories judged by hand:
 //  - one vector per interest, dense + half the sparse: 88% of relevant cards (one vector for the
@@ -379,13 +380,23 @@ export const angleCardsOf = async (stories, titles, {feedUrls, hours}) => {
                 media: new Set(members.get(row.id_other).map(mediumOfArticle)).size, named: !close.has(row.id_other)};
         });
     };
-    return stories.map((story, i) => ({
+    const cards = stories.map((story, i) => ({
         id: story.storyId,
         title: titles[i],
         titles: cardTitles(story, titles[i]),
         at: story.best?.at ?? null,
         others: othersOf(story),
     }));
+    // the other cards some candidates are closer to, named to the AI (see nearCardsOf)
+    const candidates = [...new Set(cards.flatMap(card => card.others.map(other => other.storyId)))];
+    if (cards.length < 2 || candidates.length === 0) return cards;
+    const likeness = new Map((await StoryModel.likenessTo(candidates, cards.map(card => card.id)).catch(err => {
+        console.error(`Briefing: the angles were not compared with the other cards (${err.message})`);
+        return [];
+    })).map(row => [`${row.a}:${row.b}`, row.likeness]));
+    const near = nearCardsOf(cards, (story, card) => likeness.get(`${story}:${card}`) ?? 0);
+    const titleOf = new Map(cards.map(card => [card.id, card.title]));
+    return cards.map(card => ({...card, otherCards: near.get(card.id).map(id => titleOf.get(id))}));
 };
 
 // The other angles of each card, the closest first: [{title, url, source, publishedAt, trusted,
@@ -688,6 +699,8 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
         if (first) await step('reading');
         const results = await readStories(chosen, {trusted, language, usage, content, first, step});
         const leads = new Map(results.filter(result => !result.unreadable).map(result => [result, leadOf(result)]));
+        // a title its feed cut ("…raises…") whole from its page read, before it is translated or judged
+        for (const lead of leads.values()) lead.title = wholeTitle(lead.title, content.get(lead.link)?.title, mediumOfArticle(lead));
         // and the titles written in another language than the reader's translated, as their passages
         const foreign = [...leads.values()].filter(lead => lead.lang && lead.lang !== language && writtenIn(lead.lang) && writtenIn(language));
         const [leftOut, translations] = await Promise.all([
