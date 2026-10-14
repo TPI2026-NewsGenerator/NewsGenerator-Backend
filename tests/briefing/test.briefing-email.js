@@ -73,7 +73,8 @@ describe('BriefingService.email', () => {
         // the name of the profile, the day without its hour
         expect(mail.subject).toBe('Football’s Briefing · 2 stories · 8 October 2026');
         expect(mail.html).toContain('>Football’s Briefing · 8 October 2026<');
-        expect(mail.html).toMatch(/>2 stories shared<\/p>/);
+        // the title alone, no count of the stories under it
+        expect(mail.html).not.toContain('shared');
         expect(mail.text.indexOf('01. Third story')).toBeGreaterThan(0);
         expect(mail.text).toContain('02. First story');
         expect(mail.text).not.toContain('Second story');
@@ -271,6 +272,17 @@ describe('briefingMail', () => {
         expect(html).not.toContain('written independently');
     });
 
+    it('should keep each medium and its language on one line, the media following each other with a comma', () => {
+        const {html} = briefingMail({...briefing, items: [card(1, 'Story', {articles: [
+            {source: 'media.fr', url: 'https://media.fr/1', language: 'fr'},
+            {source: 'kicker.de', url: 'https://kicker.de/1', language: 'de'},
+            {source: 'marca.com', url: 'https://marca.com/1', language: 'es'},
+        ]})]});
+        // a mail app put each inline-block mark on a line of its own (14.10.2026)
+        expect(html).not.toContain('inline-block');
+        expect(html).toMatch(/<span style="white-space:nowrap"><a href="https:\/\/kicker\.de\/1"[^>]*>kicker\.de<\/a> <span class="ng-box"[^>]*>de<\/span><\/span>, <span style="white-space:nowrap"><a href="https:\/\/marca\.com\/1"/);
+    });
+
     it('should leave out the notes that tell nothing: the AI choosing the passages, one medium, the sources named', () => {
         const {html} = briefingMail({...briefing, items: [card(1, 'Alone', {corroboration: {media: 1, read: 1, independent: 1, agencies: []}, sourcing: 'named'})]});
         for (const gone of ['Sentences chosen by the AI', 'In the article', 'Only one medium', 'Who tells it', 'Its sources', 'named sources', 'Written Thursday']) {
@@ -279,7 +291,7 @@ describe('briefingMail', () => {
         // no profile named: the title alone
         expect(html).toContain('>Briefing · 8 October 2026<');
         expect(html).not.toMatch(/Enzo|enzo/);
-        expect(html).toMatch(/>1 story shared<\/p>/);
+        expect(html).not.toContain('story shared');
         expect(html).not.toMatch(/>NewsGenerator</);
     });
 

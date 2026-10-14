@@ -63,10 +63,14 @@ const DARK_STYLE = `
   .ng-box{border-color:${DARK.rule}!important;color:${DARK.mute}!important}
 }`;
 
-// the language a source writes in, next to its name (client LanguageMark.jsx)
+// the language a source writes in, next to its name (client LanguageMark.jsx). Inline, not
+// inline-block: a mail app of the user put each mark on a line of its own, and the medium after it on
+// the next one (14.10.2026)
 const languageMark = (code) => code
-    ? ` <span class="ng-box" title="Written in ${escape(languageName(code))}" style="display:inline-block;border:1px solid ${LIGHT.rule};padding:0 4px;font:500 11px/1.35 ${MONO};letter-spacing:.04em;color:${LIGHT.mute};text-transform:uppercase;vertical-align:1px">${escape(code)}</span>`
+    ? ` <span class="ng-box" title="Written in ${escape(languageName(code))}" style="border:1px solid ${LIGHT.rule};padding:0 4px;font:500 11px/1.35 ${MONO};letter-spacing:.04em;color:${LIGHT.mute};text-transform:uppercase;white-space:nowrap">${escape(code)}</span>`
     : '';
+// a medium and its marks kept together on one line
+const together = (html) => `<span style="white-space:nowrap">${html}</span>`;
 const kicker = (text, tone = 'mute') => `<p class="ng-${tone}" style="${KICKER}${tone === 'accent' ? `;color:${LIGHT.accent}` : ''}">${escape(text)}</p>`;
 
 // the passages, "[…]" between two of them; the first letter of the first card large, as on the page
@@ -109,7 +113,7 @@ const anglesHtml = (given) => {
   ${kicker('Same affair, other angles')}
   ${angles.map(angle => `
   <p style="margin:12px 0 0"><a href="${escape(angle.url)}" class="ng-ink" style="font:600 17px/1.45 ${TEXT};color:${LIGHT.ink};text-decoration:none">${escape(angle.titleTranslation ?? angle.title)}</a></p>
-  <p class="ng-mute" style="${CAPTION};margin-top:4px">${escape(angle.source)}${languageMark(angle.language)}${angle.publishedAt ? ` · ${escape(when(angle.publishedAt))}` : ''}${angle.media > 1 ? ` · told by ${angle.media} media` : ''}</p>`).join('')}
+  <p class="ng-mute" style="${CAPTION};margin-top:4px">${together(`${escape(angle.source)}${languageMark(angle.language)}`)}${angle.publishedAt ? ` · ${escape(when(angle.publishedAt))}` : ''}${angle.media > 1 ? ` · told by ${angle.media} media` : ''}</p>`).join('')}
 </div>`;
 };
 
@@ -123,7 +127,7 @@ const linksHtml = (card) => {
     return `
 <p style="margin:28px 0 0;font:16px/1.4 ${TEXT}"><a href="${escape(lead.url)}" class="ng-accent" style="${LINK}">Read the article at ${escape(lead.source)}</a>${lead.trusted ? ` <span class="ng-accent" style="color:${LIGHT.accent}">★</span>` : ''}${languageMark(lead.language)}</p>
 ${others.length > 0 ? `<p class="ng-mute" style="${CAPTION};margin-top:8px">Also covered by ${others.slice(0, SHOWN_OTHERS)
-        .map(other => `<a href="${escape(other.url)}" class="ng-mute" style="color:${LIGHT.mute};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(other.source)}</a>${other.trusted ? ' ★' : ''}${languageMark(other.language)}`)
+        .map(other => together(`<a href="${escape(other.url)}" class="ng-mute" style="color:${LIGHT.mute};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(other.source)}</a>${other.trusted ? ' ★' : ''}${languageMark(other.language)}`))
         .join(', ')}${others.length > SHOWN_OTHERS ? ` and ${others.length - SHOWN_OTHERS} more` : ''}</p>` : ''}`;
 };
 
@@ -193,7 +197,8 @@ const cardHtml = (card, i, personal = true, format = 'passages') => {
 // user, 13.10.2026: the name of the profile, never the one of the account); sender: the username of the
 // reader when it is sent to another address than theirs (the reasons the cards were chosen for them are
 // left out then, who sends it is in its Reply-To); format: the way the sentences of the cards are shown,
-// one of MAIL_FORMATS. The day only, no hour, in its subject and under its title. {subject, html, text}
+// one of MAIL_FORMATS. The day only, no hour, in its subject and its title; nothing under the title
+// (the user, 14.10.2026: no "N stories shared" line, the title alone). {subject, html, text}
 export const briefingMail = (briefing, {profile = null, sender = null, format = 'passages'} = {}) => {
     const cards = briefing.items ?? [];
     const finished = briefing.finishedAt ?? briefing.createdAt;
@@ -211,7 +216,6 @@ export const briefingMail = (briefing, {profile = null, sender = null, format = 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:680px;text-align:left">
 <tr><td style="padding-bottom:28px">
   <h1 class="ng-ink" style="margin:0;font:460 40px/1.05 ${DISPLAY};color:${LIGHT.ink}">${escape(title)}</h1>
-  <p class="ng-mute" style="${CAPTION};font-weight:500;margin-top:14px">${count} shared</p>
 </td></tr>
 ${cards.map((card, i) => cardHtml(card, i, !sender, format)).join('')}
 </table></td></tr></table></body></html>`;

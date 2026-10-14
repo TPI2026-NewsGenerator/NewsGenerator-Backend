@@ -355,7 +355,7 @@ Deux façons de suivre un nom, sans pertinence ni IA : toutes les nouvelles des 
 Pour les administrateurs : le lecteur coche des cartes, les met dans l'ordre voulu et les envoie à son adresse ou à une autre. L'e-mail reprend la mise en page du site.
 
 - Pour chaque carte : un autre titre, une autre image (celles de l'histoire, une adresse ou un fichier), sans les démentis ou les angles qu'il retire. Seules les images d'au moins 560 pixels de large sont proposées ; une image trop petite est remplacée par la meilleure de l'histoire.
-- Neutre : titre « Briefing - 12 October 2026 », objet « Briefing · 3 stories · … », expéditeur « Briefing », ligne « 3 stories shared ». Personne n'y est nommé ; une réponse va au lecteur qui l'a envoyé.
+- Neutre : titre « Briefing - 12 October 2026 », objet « Briefing · 3 stories · … », expéditeur « Briefing », rien sous le titre. Personne n'y est nommé ; une réponse va au lecteur qui l'a envoyé.
 - Une copie est gardée telle qu'elle est partie, au bout d'un lien discret « View the original e-mail » : quiconque transfère un e-mail peut le changer. Sa page n'exécute rien et n'appartient à aucun site (Content-Security-Policy `sandbox`).
 - Envoyé par le compte Gmail du serveur (SMTP). Au plus 10 par heure et par adresse, 30 par jour et par compte.
 
