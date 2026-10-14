@@ -50,6 +50,31 @@ let ollamaPausedUntil = 0;
 const BUSY_WAITS_MS = [2e3, 5e3, 10e3];
 const isBusy = (err) => err.status_code === 429 && /concurren/i.test(err.message ?? '');
 
+// Ollama cloud takes 6 calls at once and refuses the next ones at once (bench/ollama-concurrency.mjs,
+// 14.10.2026: 8 sent together, 2 refused; 12, 6 refused). The step 'angles' of a briefing sends the
+// angles (5 at a time), the official sources (3), the statements (3) and translations together, and
+// lost the angles of a card to it that day. The calls of the whole server wait for one of these places
+// instead. The 47 prompts of angles of bench/ollama-limit.mjs sent together, 3 times each: without it
+// 26 to 30 lost (refused 3 times, then Gemini failing too); at most 5 at once none lost, 81-150 s; 6,
+// none, 75-102 s. Another process with the same key (a bench of the laptop) is still asked again
+const OLLAMA_CONCURRENCY = Number(process.env.OLLAMA_CONCURRENCY) || 6;
+let running = 0;
+const waiting = [];
+const inTurn = async (task) => {
+    if (running >= OLLAMA_CONCURRENCY) await new Promise(resolve => waiting.push(resolve));
+    else running++;
+    try {
+        return await task();
+    } finally {
+        // the place goes straight to the next one waiting, or is freed
+        const next = waiting.shift();
+        if (next) next(); else running--;
+    }
+};
+
+// what Ollama answered busy and sent to Gemini since the server started, for the benches and the logs
+export const aiStats = {busy: 0, gemini: 0};
+
 // The tokens of the calls, added to 'usage' when one is given: {calls, input, output}. 'output'
 // counts the reasoning of the model too, it is paid as any other token.
 export const newUsage = () => ({calls: 0, input: 0, output: 0});
@@ -111,8 +136,9 @@ const ask = async (messages, usage, think) => {
     if (gemini && Date.now() < ollamaPausedUntil) return askGemini(messages, usage, think);
     for (let attempt = 0; ; attempt++) {
         try {
-            return await askOllama(messages, usage, think);
+            return await inTurn(() => askOllama(messages, usage, think));
         } catch (err) {
+            if (isBusy(err)) aiStats.busy++;
             if (isBusy(err) && attempt < BUSY_WAITS_MS.length) {
                 await new Promise(resolve => setTimeout(resolve, BUSY_WAITS_MS[attempt]));
                 continue;
@@ -121,6 +147,7 @@ const ask = async (messages, usage, think) => {
             // 401, 403: the key, 429: the quota. Else a call that failed alone (5xx, network), or
             // Ollama still busy
             if ([401, 403, 429].includes(err.status_code) && !isBusy(err)) ollamaPausedUntil = Date.now() + OLLAMA_PAUSE_MS;
+            aiStats.gemini++;
             console.error(`AI: Ollama failed (${err.status_code ?? ''} ${err.message}), Gemini asked`);
             return askGemini(messages, usage, think);
         }
