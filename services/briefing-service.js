@@ -19,6 +19,7 @@ import {Crawlers} from "./utils/crawlers.js";
 import {newUsage} from "./utils/ollama.js";
 import {canSummarize, extractArticle, passagesText, translateTexts} from "./utils/extract.js";
 import {aiWaysOf} from "./utils/ai-ways.js";
+import {ANALYSIS_MODEL, analysisOf} from "./utils/briefing-analysis.js";
 import {languageOf} from "./utils/language.js";
 import {BRIEFING_SIZES, MAX_BRIEFING, balanceSelection, checkStories, mergeStories, reviewCards, selectStories, shareOut} from "./utils/profile-ai.js";
 import {corroborationOf} from "./utils/corroboration.js";
@@ -727,6 +728,11 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     const stories = cards.map(card => card.story);
     const summaryOf = (i) => cards[i].summary;
     const leads = cards.map(leadOf);
+    // the analysis on top of the briefing, from these cards: written while the next steps run and after
+    // the briefing is shown (it reasons for minutes, see briefing-analysis.js), never awaited
+    if (briefingId) analyze(briefingId, stories.map((story, i) => ({storyId: story.storyId, title: leads[i].title,
+        titleTranslation: titleTranslation.get(leads[i]) ?? null, summary: summaryOf(i)?.summary ?? null,
+        translation: summaryOf(i)?.translation ?? null, lead: toArticle(leads[i], trusted)})), language);
     // 7. the other angles of the cards, their official sources, the people and organisations they name,
     // and the news of what the profile follows beside them. The briefing never waits on any of them failing
     await step('angles');
@@ -925,6 +931,26 @@ export const newsOfTerms = (terms, articles, {limit = WATCHED_PER_TERM, holds = 
     });
 };
 
+// The analysis of a briefing's cards, saved 'running' at once, then written or 'failed'. Its tokens are
+// logged, the briefing's are logged already
+const analyze = async (briefingId, cards, language) => {
+    const usage = newUsage();
+    const started = Date.now();
+    try {
+        await BriefingModel.analysis(briefingId, {status: 'running', model: ANALYSIS_MODEL, startedAt: new Date(started).toISOString()});
+        const analysis = await analysisOf(cards, language, usage);
+        await BriefingModel.analysis(briefingId, analysis ?? {status: 'failed'});
+        console.log(`Briefing ${briefingId}: analysis by ${analysis?.model} in ${Math.round((Date.now() - started) / 1000)} s, ${analysis?.changed.length} changes, ${analysis?.risks.length} risks, ${analysis?.dropped} lines dropped by the checks, tokens ${JSON.stringify(usage)}`);
+    } catch (err) {
+        console.error(`Briefing ${briefingId}: no analysis (${err.message})`);
+        await BriefingModel.analysis(briefingId, {status: 'failed'}).catch(() => {});
+    }
+};
+// an analysis still 'running' after this long was left by a server that stopped
+const ANALYSIS_ABANDONED_MS = 12 * 60e3;
+const analysisOfRow = (analysis) => analysis?.status === 'running' && Date.now() - new Date(analysis.startedAt).getTime() > ANALYSIS_ABANDONED_MS
+    ? {status: 'failed'} : analysis ?? null;
+
 const toBriefing = (row) => row && ({
     id: row.id,
     status: row.status,             // running, ready, failed
@@ -933,6 +959,9 @@ const toBriefing = (row) => row && ({
     items: row.items ?? [],
     // the news of the terms the profile follows (see watchedNews), null for a briefing written before
     watched: row.watched ?? null,
+    // the analysis on top of it (see analyze): {status, model, changed: [{text, storyIds}], risks: [{if,
+    // then, storyIds}]}, null for a briefing written before 15.10.2026
+    analysis: analysisOfRow(row.analysis),
     size: row.size ?? MAX_BRIEFING,  // the cards asked for
     hours: row.hours,               // of news it was written from
     createdAt: row.created_at,

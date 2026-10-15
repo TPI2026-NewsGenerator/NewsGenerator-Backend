@@ -88,10 +88,10 @@ const count = (usage, input, output) => {
     usage.output += output ?? 0;
 };
 
-const askOllama = async (messages, usage, think, model = MODEL) => {
+const askOllama = async (messages, usage, think, model = MODEL, timeoutMs = OLLAMA_TIMEOUT_MS) => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(Object.assign(
-        new Error(`Ollama: no answer in ${OLLAMA_TIMEOUT_MS / 1e3} s`), {status: 502})), OLLAMA_TIMEOUT_MS);
+        new Error(`Ollama: no answer in ${timeoutMs / 1e3} s`), {status: 502})), timeoutMs);
     const ollama = new Ollama({...OLLAMA_CONFIG, fetch: (url, init) => fetch(url, {...init, signal: controller.signal})});
     // the race ends the wait even if the abort is not heard (the response read, a client mocked)
     const aborted = new Promise((_, reject) => controller.signal.addEventListener('abort', () => reject(controller.signal.reason)));
@@ -136,12 +136,12 @@ const askGemini = async (messages, usage, think) => {
 // Ollama first, Gemini when it fails and a key is given. An answer of Ollama that is no JSON is no
 // failure of Ollama: the caller asks again. A call naming its own model never goes to Gemini, which
 // would answer with gemma: it fails instead, and its caller keeps what it has without it
-const ask = async (messages, usage, think, model) => {
+const ask = async (messages, usage, think, model, timeoutMs) => {
     const gemini = Boolean(process.env.AISTUDIO_API_KEY) && !model;
     if (gemini && Date.now() < ollamaPausedUntil) return askGemini(messages, usage, think);
     for (let attempt = 0; ; attempt++) {
         try {
-            return await inTurn(() => askOllama(messages, usage, think, model));
+            return await inTurn(() => askOllama(messages, usage, think, model, timeoutMs));
         } catch (err) {
             if (isBusy(err)) aiStats.busy++;
             const waits = model ? OWN_MODEL_WAITS_MS : BUSY_WAITS_MS;
@@ -164,9 +164,10 @@ const ask = async (messages, usage, think, model) => {
 // profile, the stories of a briefing). format: 'json' is asked, but the model sometimes still wraps
 // its answer in a markdown json block, so that is removed before reading it. A conversation can be
 // given for the prompt, to ask again after an answer. model: another model of Ollama for this call
-// (see ai-ways.js), never answered by Gemini
-export const ollamaJson = async (prompt, usage = null, {think, model} = {}) => {
-    const content = await ask(Array.isArray(prompt) ? prompt : [{role: 'user', content: prompt}], usage, think, model);
+// (see ai-ways.js), never answered by Gemini; timeoutMs: a call that reasons for minutes (see
+// briefing-analysis.js), OLLAMA_TIMEOUT_MS else
+export const ollamaJson = async (prompt, usage = null, {think, model, timeoutMs} = {}) => {
+    const content = await ask(Array.isArray(prompt) ? prompt : [{role: 'user', content: prompt}], usage, think, model, timeoutMs);
 
     const raw = content.replace(/^\s*```(?:json)?\s*|\s*```\s*$/g, '');
     try {

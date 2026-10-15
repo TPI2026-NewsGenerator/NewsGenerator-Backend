@@ -31,6 +31,9 @@ export const BriefingModel = {
         data: {status: 'ready', step: null, items, finished_at: new Date()},
     }),
 
+    // the analysis of its cards, saved when it starts and again when written (see briefing-analysis.js)
+    analysis: async (id, analysis) => prisma.briefings.update({where: {id}, data: {analysis}}),
+
     fail: async (id, error) => prisma.briefings.update({
         where: {id},
         data: {status: 'failed', step: null, error, finished_at: new Date()},
