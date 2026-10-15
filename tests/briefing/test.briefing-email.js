@@ -402,3 +402,54 @@ describe('briefingMail', () => {
         expect(html).not.toContain('javascript:');
     });
 });
+
+describe('BriefingService.email with the AI analysis of the cards', () => {
+    const analysis = {status: 'ready', model: 'deepseek-v4-pro:0813', picked: [{storyId: 1, reason: 'a vote to come'}], cards: {1: {
+        why: ['UEFA says the plan <lacks> support.', 'The vote is on 18 March.'],
+        next: [{if: 'the Council refuses', then: 'the plan is dropped'}],
+        timeline: [{date: '2026-10-12', title: 'Wenger may run', medium: 'eurosport.fr', url: 'https://eurosport.fr/1', titleTranslation: null}],
+    }}};
+    const sent = () => sendMail.mock.calls.at(-1)[0];
+
+    it('should send the analysis of a card under its sentences, without saying the AI wrote it (the user, 15.10.2026)', async () => {
+        ofUser.mockResolvedValue({...row, analysis});
+        await BriefingService.email(4, 7, [1, 2]);
+        const {html, text} = sent();
+        expect(html).toContain('Why it matters');
+        expect(html).toContain('UEFA says the plan &lt;lacks&gt; support.');
+        expect(html).toContain('<b>If</b> the Council refuses, <b>then</b> the plan is dropped');
+        expect(html).toContain('The story so far');
+        expect(html).toContain('href="https://eurosport.fr/1"');
+        expect(text).toContain('• If the Council refuses, then the plan is dropped');
+        for (const mention of ['AI analysis', 'Written by the AI', 'deepseek']) {
+            expect(html).not.toContain(mention);
+            expect(text).not.toContain(mention);
+        }
+        // the second card has none
+        expect(html.split('Why it matters').length).toBe(2);
+    });
+
+    it('should leave out the lines the reader unticked, and the whole analysis once none is left', async () => {
+        ofUser.mockResolvedValue({...row, analysis});
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, {1: {why: [0], timeline: [0]}});
+        let {html} = sent();
+        expect(html).not.toContain('lacks');
+        expect(html).toContain('The vote is on 18 March.');
+        expect(html).not.toContain('The story so far');
+
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, {1: {why: [0, 1], next: [0], timeline: [0]}});
+        ({html} = sent());
+        expect(html).not.toContain('What could come next');
+        expect(html).not.toContain('Why it matters');
+    });
+
+    it('should send no analysis while it is written, nor one of another shape', async () => {
+        ofUser.mockResolvedValue({...row, analysis: {...analysis, status: 'running'}});
+        await BriefingService.email(4, 7, [1]);
+        expect(sent().html).not.toContain('Why it matters');
+
+        ofUser.mockResolvedValue({...row, analysis: {status: 'ready', changed: [{text: 'x', storyIds: [1]}], risks: []}});
+        await BriefingService.email(4, 7, [1]);
+        expect(sent().html).not.toContain('Why it matters');
+    });
+});

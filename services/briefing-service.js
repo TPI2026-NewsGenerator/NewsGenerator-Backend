@@ -944,7 +944,13 @@ export const cardAnalyses = async (items, articles, language, {usage = null, onP
     const timelines = new Map(shown.map(item => {
         const own = new Set([item.storyId, ...(item.mergedStoryIds ?? [])]);
         const links = new Set((item.articles ?? []).map(article => article.url));
-        const rows = earlier.filter(row => row.card === item.storyId && !own.has(row.id) && row.title && !links.has(row.link));
+        // a title once: two stories of one medium can open with the same one
+        const titles = new Set();
+        const rows = earlier.filter(row => row.card === item.storyId && !own.has(row.id) && row.title && !links.has(row.link))
+            .filter(row => {
+                const title = row.title.toLowerCase().replace(/\s+/g, ' ').trim();
+                return !titles.has(title) && titles.add(title);
+            });
         return [item.storyId, {days: new Set(rows.map(row => day(row.created_at)).filter(date => date < day(now))).size,
             items: rows.slice(0, TIMELINE_MAX).reverse().map(row => ({date: day(row.created_at), title: row.title, medium: row.medium,
                 url: row.link, titleTranslation: null}))}];
@@ -1080,23 +1086,27 @@ export const withOwnTitles = (items, titles) => {
     });
 };
 
-// the cards without the denials, the other angles and the official sources the reader took out of the
-// e-mail, {storyId: {contested: [index], angles: [index], official: [index]}}, their places in the
-// card: a part left empty has no title
+// the cards without the denials, the other angles, the official sources and the lines of their AI
+// analysis the reader took out of the e-mail, {storyId: {contested: [index], angles: [index], official:
+// [index], why: [index], next: [index], timeline: [index]}}, their places in the card (the last three in
+// item.analysis): a part left empty has no title, an analysis left empty is not sent
 const TAKEN_OUT = ['contested', 'angles', 'official'];
+const ANALYSIS_PARTS = ['why', 'next', 'timeline'];
 export const withoutTakenOut = (items, removed) => {
     if (removed === undefined || removed === null) return items;
     const places = (list) => Array.isArray(list) && list.every(index => Number.isInteger(index) && index >= 0);
     if (typeof removed !== 'object' || Array.isArray(removed) || !Object.values(removed).every(parts =>
         parts && typeof parts === 'object' && !Array.isArray(parts)
-        && Object.entries(parts).every(([part, list]) => TAKEN_OUT.includes(part) && places(list)))) {
-        throw Object.assign(new Error('removed: {storyId: {contested: [index], angles: [index], official: [index]}}.'), {status: 400});
+        && Object.entries(parts).every(([part, list]) => (TAKEN_OUT.includes(part) || ANALYSIS_PARTS.includes(part)) && places(list)))) {
+        throw Object.assign(new Error('removed: {storyId: {contested: [index], angles: [index], official: [index], why: [index], next: [index], timeline: [index]}}.'), {status: 400});
     }
+    const kept = (list, out) => (list ?? []).filter((entry, index) => !(out ?? []).includes(index));
     return items.map(item => {
         const parts = removed[String(item.storyId)];
         if (!parts) return item;
-        return {...item, ...Object.fromEntries(Object.entries(parts).map(([part, list]) =>
-            [part, (item[part] ?? []).filter((entry, index) => !list.includes(index))]))};
+        const analysis = item.analysis && Object.fromEntries(ANALYSIS_PARTS.map(part => [part, kept(item.analysis[part], parts[part])]));
+        return {...item, ...Object.fromEntries(TAKEN_OUT.filter(part => parts[part]).map(part => [part, kept(item[part], parts[part])])),
+            ...(item.analysis ? {analysis: ANALYSIS_PARTS.some(part => analysis[part].length > 0) ? {...item.analysis, ...analysis} : null} : {})};
     });
 };
 
@@ -1180,7 +1190,7 @@ export const BriefingService = {
     // when not given; sent to another, the answers go to the reader. Its title names the profile.
     // pictures: the picture of some cards changed or taken out (see withChosenPictures); titles:
     // {storyId: title}, the ones the reader wrote for the e-mail; removed: the denials, the other
-    // angles and the official sources they took out (see withoutTakenOut); format: the way the
+    // angles, the official sources and the lines of the AI analysis they took out (see withoutTakenOut); format: the way the
     // sentences of the cards are shown, one of MAIL_FORMATS, the key passages when not given. No copy
     // is kept any more: the e-mail has no link to one (the user, 13.10.2026)
     email: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages') => {
@@ -1191,7 +1201,10 @@ export const BriefingService = {
         const asked = typeof to === 'string' ? to.trim() : to ?? '';
         if (asked !== '' && !isEmail(asked)) throw Object.assign(new Error(EMAIL_RULE), {status: 400});
         const {row, briefing} = await readyBriefing(userId, briefingId);
-        const byId = new Map(briefing.items.map(item => [item.storyId, item]));
+        // each card with its AI analysis when it has one (see analyze), the model that wrote it with it
+        const analyses = briefing.analysis?.status === 'ready' ? briefing.analysis.cards ?? {} : {};
+        const byId = new Map(briefing.items.map(item => [item.storyId, analyses[item.storyId]
+            ? {...item, analysis: {...analyses[item.storyId], model: briefing.analysis.model}} : item]));
         // in the order given, each card once, the ones not in this briefing left out
         const ticked = [...new Set(storyIds)].map(storyId => byId.get(storyId)).filter(Boolean);
         if (ticked.length === 0) throw Object.assign(new Error('None of the cards ticked is in this briefing.'), {status: 404});

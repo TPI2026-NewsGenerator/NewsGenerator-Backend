@@ -5,8 +5,9 @@
 //  Description: The cards of a briefing the reader ticked as an e-mail, laid out as the page shows them
 //               (client BriefingCard.jsx): number, topic, date and language, title, why, picture, its
 //               sentences in the way the reader chose (bullet points, summary or key passages), who
-//               denies it, its other angles, where to read it, and the notes of its margin (its
-//               official source first). Who tells it is left out: its sources say it already
+//               denies it, its analysis when it has one, its other angles, where to read it, and the
+//               notes of its margin (its official source first). Who tells it is left out: its sources
+//               say it already
 //
 
 "use strict"
@@ -105,6 +106,38 @@ const contestedHtml = (denials) => denials.length === 0 ? '' : `
   <p class="ng-mute" style="${CAPTION};margin-top:4px">— ${webUrl(denial.url) ? `<a href="${escape(denial.url)}" class="ng-mute" style="color:${LIGHT.mute}">${escape(denial.source)}</a>` : escape(denial.source)}${denial.publishedAt ? `, ${escape(when(denial.publishedAt))}` : ''}</p>`).join('')}
 </div>`;
 
+// The AI analysis of the card (see card-analysis.js), the lines the reader kept: why it matters, what
+// could come next, the earlier news of its affair. Without the "AI analysis" title nor the note saying
+// the AI wrote it, which the page shows (the user, 15.10.2026: not in the e-mail). None kept, none sent
+const dayOf = (date) => date ? new Date(`${date}T12:00:00Z`).toLocaleDateString('en-GB', {day: 'numeric', month: 'short', timeZone: 'UTC'}) : '';
+const analysisHtml = (analysis) => {
+    if (!analysis) return '';
+    const why = analysis.why ?? [], next = analysis.next ?? [], timeline = (analysis.timeline ?? []).filter(item => item.title);
+    if (why.length + next.length + timeline.length === 0) return '';
+    const list = (lines) => `<ul style="margin:0;padding-left:22px">${lines.map(line => `<li class="ng-ink" style="${BODY};margin-top:8px">${line}</li>`).join('')}</ul>`;
+    const part = (title, html, first) => `<div style="margin-top:${first ? 0 : 14}px">${kicker(title)}${html}</div>`;
+    const parts = [
+        why.length > 0 && ['Why it matters', list(why.map(escape))],
+        next.length > 0 && ['What could come next', list(next.map(line => `<b>If</b> ${escape(line.if)}, <b>then</b> ${escape(line.then)}`))],
+        timeline.length > 0 && ['The story so far', timeline.map(item => `<p class="ng-ink" style="${CAPTION};color:${LIGHT.ink};margin-top:6px"><span class="ng-mute" style="color:${LIGHT.mute}">${escape(dayOf(item.date))}</span> ${webUrl(item.url)
+            ? `<a href="${escape(item.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(item.titleTranslation ?? item.title)}</a>`
+            : escape(item.titleTranslation ?? item.title)}${item.medium ? ` <span class="ng-mute" style="color:${LIGHT.mute}">· ${escape(item.medium)}</span>` : ''}</p>`).join('')],
+    ].filter(Boolean);
+    return `
+<div class="ng-rule" style="margin-top:24px;border-left:2px solid ${LIGHT.accent};padding-left:18px">
+  ${parts.map(([title, html], i) => part(title, html, i === 0)).join('')}
+</div>`;
+};
+const analysisText = (analysis) => {
+    if (!analysis) return [];
+    const why = analysis.why ?? [], next = analysis.next ?? [], timeline = (analysis.timeline ?? []).filter(item => item.title);
+    return [
+        ...(why.length > 0 ? ['Why it matters:', ...why.map(line => `• ${line}`)] : []),
+        ...(next.length > 0 ? ['What could come next:', ...next.map(line => `• If ${line.if}, then ${line.then}`)] : []),
+        ...(timeline.length > 0 ? ['The story so far:', ...timeline.map(item => `  ${dayOf(item.date)} ${item.titleTranslation ?? item.title}${item.medium ? ` (${item.medium})` : ''}`)] : []),
+    ];
+};
+
 // none left (the reader took them out, or none has a web address): no title either
 const anglesHtml = (given) => {
     const angles = given.filter(angle => webUrl(angle.url));
@@ -185,6 +218,7 @@ const cardHtml = (card, i, personal = true, format = 'passages') => {
   ${sentences.paragraphs.length > 0 ? `
   <div style="margin-top:24px">${kicker(sentences.title)}</div>
   <div style="margin-top:12px;overflow:hidden">${WAYS_HTML[sentences.way](sentences.paragraphs, i === 0)}</div>` : ''}
+  ${analysisHtml(card.analysis)}
   ${contestedHtml(card.contested ?? [])}
   ${anglesHtml(card.angles ?? [])}
   ${linksHtml(card)}
@@ -229,6 +263,7 @@ ${cards.map((card, i) => cardHtml(card, i, !sender, format)).join('')}
                 sender ? '' : card.why ?? '',
                 '',
                 wayText(wayOf(card, format)),
+                ...analysisText(card.analysis),
                 ...(card.contested ?? []).map(denial => `Contested — ${denial.by} denies: "${denial.sentence}" (${denial.source})`),
                 ...(card.angles ?? []).map(angle => `Other angle: ${angle.titleTranslation ?? angle.title} (${angle.source}) ${angle.url}`),
                 ...(card.official ?? []).map(post => post.channel === 'reported'

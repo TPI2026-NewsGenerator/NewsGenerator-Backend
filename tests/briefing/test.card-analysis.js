@@ -16,7 +16,7 @@ jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
 // no tagger: the names are the words in capitals; no Gemini
 process.env.NER_URL = '';
 delete process.env.AISTUDIO_API_KEY;
-const {ANALYSIS_MODEL, MAX_ANALYSED, analysesOf, checkedLines, fittedArticles, pickedCards} = await import('../../services/utils/card-analysis.js');
+const {ANALYSIS_MODEL, analysesOf, checkedLines, fittedArticles, pickedCards} = await import('../../services/utils/card-analysis.js');
 
 const card = (n, storyId, extra = {}) => ({
     n, storyId, title: `Card ${n}`, titleTranslation: null, medium: 'rts.ch', summary: 'The FIFA Council will vote on 18 March in Rabat.',
@@ -107,15 +107,13 @@ describe('the analyses of a briefing', () => {
         expect(analysis.messages[0].content).toContain('T1 2026-10-12 eurosport.fr: Wenger may run for FIFA president');
     });
 
-    it('should keep the cards that merit an analysis most, in the order the AI ranks them', async () => {
-        chat.mockResolvedValueOnce(answer({cards: [9, 3, 1, 8, 2, 7, 5, 4].map(n => ({n, reason: `card ${n}`}))}));
+    it('should keep every card the AI picks, in its order, each once', async () => {
+        chat.mockResolvedValueOnce(answer({cards: [9, 3, 1, 8, 2, 7, 5, 4, 3, 12].map(n => ({n, reason: `card ${n}`}))}));
         const cards = Array.from({length: 9}, (_, i) => card(i + 1, 100 + i));
 
         const picked = await pickedCards(cards, 'en');
 
-        expect(MAX_ANALYSED).toBe(6);
-        expect(picked.map(entry => entry.n)).toEqual([9, 3, 1, 8, 2, 7]);
-        expect(chat.mock.calls[0][0].messages[0].content).toContain('from the one that merits an analysis most');
+        expect(picked.map(entry => entry.n)).toEqual([9, 3, 1, 8, 2, 7, 5, 4]);
     });
 
     it('should give a card no analysis when deepseek fails on it, no other model asked', async () => {
