@@ -40,6 +40,9 @@ const MAX_ARTICLES = 5;
 export const TIMELINE_MAX = 12;
 const MAX_WHY = 2;
 const MAX_NEXT = 2;
+// the cards analysed at most in a briefing, the ones that merit it most: a card costs about $0.015 of the
+// prepaid credits of Ollama, and a 25-card briefing of affairs had 12 picked (about $0.18)
+export const MAX_ANALYSED = 6;
 
 // sentences kept while they fit in 'chars'
 const fitted = (sentences, chars) => {
@@ -104,6 +107,7 @@ Give none to plain factual news that the title and passages tell in full: a matc
 appointment, a referee designated, a product launch or update, a review, a schedule, a ranking.
 Earlier stories alone are no reason: a series of match results is still plain news.
 Picking no card is a good answer when none merits it; a forced pick is a wrong one.
+List the cards picked from the one that merits an analysis most to the one that merits it least.
 
 CARDS
 
@@ -355,7 +359,8 @@ export const checkedLines = async (answer, card) => {
     };
 };
 
-// The cards of a briefing that merit an analysis, by their number: [{n, reason}], [] when none does
+// The cards of a briefing that merit an analysis most, by their number, MAX_ANALYSED at most: [{n,
+// reason}], [] when none does
 export const pickedCards = async (cards, language, usage = null) => {
     const answer = await ollamaJson(triagePrompt(cards, writtenIn(language) ?? 'English'), usage, {model: ANALYSIS_MODEL, think: false});
     const picked = new Map();
@@ -363,7 +368,7 @@ export const pickedCards = async (cards, language, usage = null) => {
         const n = Number(entry?.n ?? entry);
         if (Number.isInteger(n) && cards[n - 1] && !picked.has(n)) picked.set(n, {n, reason: String(entry?.reason ?? '').trim() || null});
     }
-    return [...picked.values()];
+    return [...picked.values()].slice(0, MAX_ANALYSED);
 };
 
 // The analysis of one card in the reader's language (a name): {why, next, dropped}, null when the AI
