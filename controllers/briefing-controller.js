@@ -28,8 +28,8 @@ export const BriefingController = {
     // without the denials and other angles they took out, their sentences in the way chosen (format)
     email: async (req, res) => {
         try {
-            const {storyIds, to, pictures, titles, removed, format} = req.body ?? {};
-            await BriefingService.email(req.user.id, req.params.id, storyIds, to, pictures, titles, removed, format);
+            const {storyIds, to, pictures, titles, removed, format, ai} = req.body ?? {};
+            await BriefingService.email(req.user.id, req.params.id, storyIds, to, pictures, titles, removed, format, ai);
             res.status(204).end();
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});

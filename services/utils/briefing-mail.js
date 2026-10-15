@@ -41,8 +41,16 @@ const WAYS = {
     passages: {text: 'summary', translation: 'translation', title: 'Key passages'},
 };
 // {paragraphs, title, way, translated}: the sentences of the card in the way asked, their translation
-// when the article is written in another language than the reader's
+// when the article is written in another language than the reader's. A card the reader sends in its AI
+// version (aiVersion, see ai-ways.js) has the points or the summary the AI wrote in the reader's
+// language, without saying so (the user, 15.10.2026), when it has one in that way
 const wayOf = (card, format) => {
+    if (card.aiVersion && format === 'points' && card.ai?.points?.length) {
+        return {paragraphs: card.ai.points, title: WAYS.points.title, way: 'points', translated: false};
+    }
+    if (card.aiVersion && format === 'digest' && card.ai?.summary) {
+        return {paragraphs: [card.ai.summary], title: WAYS.digest.title, way: 'digest', translated: false};
+    }
     const way = format === 'points' && card.points ? 'points' : format === 'digest' && card.digest ? 'digest' : 'passages';
     const {text, translation, title} = WAYS[way];
     return {paragraphs: paragraphsOf(card[translation] || card[text]), title, way, translated: Boolean(card[translation])};

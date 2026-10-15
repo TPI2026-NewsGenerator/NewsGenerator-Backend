@@ -453,3 +453,38 @@ describe('BriefingService.email with the AI analysis of the cards', () => {
         expect(sent().html).not.toContain('Why it matters');
     });
 });
+
+describe('BriefingService.email with the AI version of some cards', () => {
+    const ai = {points: ['The SBB strike on Monday.', '1,200 trains will not run.'], summary: 'The SBB strike on Monday: 1,200 trains will not run.', model: 'deepseek-v4-pro:0813'};
+    const sent = () => sendMail.mock.calls.at(-1)[0];
+    beforeEach(() => ofUser.mockResolvedValue({...row, items: [card(1, 'First story', {points: 'Published point.', digest: 'Published digest.', ai}),
+        card(2, 'Second story', {points: 'Other published point.', digest: 'Other digest.'})]}));
+
+    it('should send the cards asked in their AI version, the others as published, without saying the AI wrote it', async () => {
+        await BriefingService.email(4, 7, [1, 2], undefined, undefined, undefined, undefined, 'points', [1, 2]);
+        const {html, text} = sent();
+        expect(html).toContain('The SBB strike on Monday.');
+        expect(html).not.toContain('Published point.');
+        // the second card has no AI version: as published
+        expect(html).toContain('Other published point.');
+        expect(text).toContain('• 1,200 trains will not run.');
+        for (const mention of ['AI', 'deepseek']) expect(text).not.toMatch(new RegExp(`\b${mention}\b`));
+    });
+
+    it('should send the AI summary in the summary way, and the key passages as published whatever is asked', async () => {
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'digest', [1]);
+        // its first letter is the drop cap of the e-mail
+        expect(sent().html).toContain('he SBB strike on Monday: 1,200 trains will not run.');
+        expect(sent().html).not.toContain('Published digest.');
+
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'passages', [1]);
+        expect(sent().html).toContain('assage of First story.');
+        expect(sent().html).not.toContain('The SBB strike');
+    });
+
+    it('should send the cards as published without a list, and refuse one that is not of storyIds', async () => {
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'points');
+        expect(sent().html).toContain('Published point.');
+        await expect(BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'points', ['1'])).rejects.toMatchObject({status: 400});
+    });
+});

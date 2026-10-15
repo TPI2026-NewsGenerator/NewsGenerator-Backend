@@ -1191,11 +1191,16 @@ export const BriefingService = {
     // pictures: the picture of some cards changed or taken out (see withChosenPictures); titles:
     // {storyId: title}, the ones the reader wrote for the e-mail; removed: the denials, the other
     // angles, the official sources and the lines of the AI analysis they took out (see withoutTakenOut); format: the way the
-    // sentences of the cards are shown, one of MAIL_FORMATS, the key passages when not given. No copy
-    // is kept any more: the e-mail has no link to one (the user, 13.10.2026)
-    email: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages') => {
+    // sentences of the cards are shown, one of MAIL_FORMATS, the key passages when not given; ai: the
+    // storyIds of the cards sent in their AI version of that way (item.ai, see ai-ways.js), the others as
+    // published. No copy is kept any more: the e-mail has no link to one (the user, 13.10.2026)
+    email: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = []) => {
         if (!Array.isArray(storyIds) || storyIds.length === 0 || !storyIds.every(storyId => Number.isInteger(storyId) && storyId !== 0)) {
             throw Object.assign(new Error('storyIds: the cards ticked, one at least.'), {status: 400});
+        }
+        if (ai === null || ai === undefined) ai = [];
+        if (!Array.isArray(ai) || !ai.every(storyId => Number.isInteger(storyId))) {
+            throw Object.assign(new Error('ai: the storyIds of the cards sent in their AI version.'), {status: 400});
         }
         if (!MAIL_FORMATS.includes(format)) throw Object.assign(new Error(`format: one of ${MAIL_FORMATS.join(', ')}.`), {status: 400});
         const asked = typeof to === 'string' ? to.trim() : to ?? '';
@@ -1217,7 +1222,10 @@ export const BriefingService = {
         const changed = ticked.filter(item => pictures && typeof pictures === 'object' && typeof pictures[String(item.storyId)]?.url === 'string');
         const known = new Map((await Promise.all(changed.map(picturesOfItem))).flat().map(picture => [picture.url, picture.source]));
         const {items, attachments} = await withChosenPictures(withoutTakenOut(withOwnTitles(ticked, titles), removed), pictures, {sender, known});
-        const mail = briefingMail({...briefing, items}, {profile: profile?.name ?? null, sender, format});
+        // the AI version asked for a card: sent when the card has one in that way, else the card as published
+        const inAi = new Set(ai);
+        const mail = briefingMail({...briefing, items: items.map(item => inAi.has(item.storyId) ? {...item, aiVersion: true} : item)},
+            {profile: profile?.name ?? null, sender, format});
         await sendMail({to: address, replyTo: toOther && user?.email ? user.email : undefined, ...mail, attachments});
         // sent, they are read: their stories are left out of the next briefings (see notShownBefore). The
         // e-mail is gone already, a failure here only lets them come back
