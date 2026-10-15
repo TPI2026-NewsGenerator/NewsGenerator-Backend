@@ -18,6 +18,7 @@ import {DiscoveryService} from "./discovery-service.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {newUsage} from "./utils/ollama.js";
 import {canSummarize, extractArticle, passagesText, translateTexts} from "./utils/extract.js";
+import {aiWaysOf} from "./utils/ai-ways.js";
 import {languageOf} from "./utils/language.js";
 import {BRIEFING_SIZES, MAX_BRIEFING, balanceSelection, checkStories, mergeStories, reviewCards, selectStories, shareOut} from "./utils/profile-ai.js";
 import {corroborationOf} from "./utils/corroboration.js";
@@ -501,19 +502,21 @@ export const readStories = async (chosen, {trusted = new Set(), language = null,
         if (!lead) return {unreadable: true};
         const texts = reads[i].filter(article => content.has(article.link))
             .map(article => ({...toArticle(article), page: content.get(article.link)}));
-        const [{passages, translation, points, pointsTranslation, digest, digestTranslation, topic, sourcing}, contested] = await Promise.all([
+        const [{passages, translation, points, pointsTranslation, digest, digestTranslation, topic, sourcing}, contested, ai] = await Promise.all([
             extractArticle(lead.title, content.get(lead.link), {language, usage: usage.summarizing}),
             contestedOf(lead.title, texts, {language, usage: usage.contesting}).catch(err => {
                 console.error(`Briefing: the denials of story ${story.storyId} were not read (${err.message})`);
                 return [];
             }),
+            // the AI version of its points and summary, asked for by the reader only (see ai-ways.js)
+            aiWaysOf(lead.title, content.get(lead.link), {language, usage: usage.writing}).catch(() => null),
         ]);
         // no passage of the news in its page: what was read is not the article
         if (passages.length === 0) return {unreadable: true};
         return {summary: {summary: passagesText(passages), translation: passagesText(translation),
             points: passagesText(points), pointsTranslation: passagesText(pointsTranslation),
             digest: passagesText(digest), digestTranslation: passagesText(digestTranslation),
-            topic, sourcing, contested, from: lead.link}};
+            topic, sourcing, contested, ai, from: lead.link}};
     });
     return stories.map((story, i) => summaries[i].status === 'fulfilled'
         ? {story, unreadable: Boolean(summaries[i].value.unreadable), summary: summaries[i].value.summary ?? null}
@@ -566,7 +569,7 @@ ${projects.map(project => `- « ${project.name} » : ${project.text.replace(/\s+
 export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) => {
     // the stories ranked and given to the AI grow with the cards wanted
     const scale = size / MAX_BRIEFING;
-    const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage()};
+    const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage()};
     // the interests of the profile and of the projects it runs: each gets its share of the cards
     const [profile, interests, projects] = await Promise.all([ProfileModel.get(profileId), ProfileModel.briefingInterests(profileId),
         ProfileModel.projects(profileId)]);
@@ -801,6 +804,10 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             pointsTranslation: summary?.pointsTranslation ?? null,
             digest: summary?.digest ?? null,
             digestTranslation: summary?.digestTranslation ?? null,
+            // the points and the summary written by the AI, in the reader's language, shown when the reader
+            // asks for them: {points: ['...'] | null, summary: '...' | null, model}, null when the AI could
+            // not write them (see ai-ways.js). Absent from the briefings made before 15.10.2026
+            ai: summary?.ai ?? null,
             topic: summary?.topic ?? null,
             sourcing: summary?.sourcing ?? null,
             // the words the article itself used to say it has no confirmation
@@ -1026,7 +1033,8 @@ const dateOf = (value) => {
 // translated as theirs; no story, no why, no other media, no angle nor official source
 export const importedCard = async (address, page, {language, usage}) => {
     const title = (page.title || page.description || address).replace(/\s+/g, ' ').trim();
-    const extract = await extractArticle(title, page, {language, usage});
+    const [extract, ai] = await Promise.all([extractArticle(title, page, {language, usage}),
+        aiWaysOf(title, page, {language, usage}).catch(() => null)]);
     if (extract.passages.length === 0) {
         throw Object.assign(new Error('No passage of a news could be read in this page.'), {status: 422});
     }
@@ -1055,6 +1063,7 @@ export const importedCard = async (address, page, {language, usage}) => {
         pointsTranslation: passagesText(extract.pointsTranslation),
         digest: passagesText(extract.digest),
         digestTranslation: passagesText(extract.digestTranslation),
+        ai,
         topic: extract.topic,
         sourcing: extract.sourcing,
         hedged: hedgedBy(title, page.description),

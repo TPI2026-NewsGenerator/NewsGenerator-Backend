@@ -48,6 +48,9 @@ let ollamaPausedUntil = 0;
 // of the next 15 minutes to Gemini (a briefing of 30 cards on 8.10.2026: its passages in 374 s
 // instead of about 30). Ollama is asked again after a wait instead, Gemini only after the last one
 const BUSY_WAITS_MS = [2e3, 5e3, 10e3];
+// a call of its own model has no Gemini after them: it waits longer for a place (another process of the
+// key, a bench, can hold them for a minute), failing only gives up what it was for
+const OWN_MODEL_WAITS_MS = [...BUSY_WAITS_MS, 20e3, 30e3];
 const isBusy = (err) => err.status_code === 429 && /concurren/i.test(err.message ?? '');
 
 // Ollama cloud takes 6 calls at once and refuses the next ones at once (bench/ollama-concurrency.mjs,
@@ -85,7 +88,7 @@ const count = (usage, input, output) => {
     usage.output += output ?? 0;
 };
 
-const askOllama = async (messages, usage, think) => {
+const askOllama = async (messages, usage, think, model = MODEL) => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(Object.assign(
         new Error(`Ollama: no answer in ${OLLAMA_TIMEOUT_MS / 1e3} s`), {status: 502})), OLLAMA_TIMEOUT_MS);
@@ -94,10 +97,11 @@ const askOllama = async (messages, usage, think) => {
     const aborted = new Promise((_, reject) => controller.signal.addEventListener('abort', () => reject(controller.signal.reason)));
     try {
         const response = await Promise.race([aborted, ollama.chat({
-            model: MODEL,
+            model,
             format: 'json',
             messages,
-            ...(think ? {think} : {}),
+            // false is sent too: a model that reasons by default (deepseek-v4-pro) does it otherwise
+            ...(think !== undefined ? {think} : {}),
             options: {temperature: 0.1},
         })]);
         count(usage, response.prompt_eval_count, response.eval_count);
@@ -130,17 +134,19 @@ const askGemini = async (messages, usage, think) => {
 };
 
 // Ollama first, Gemini when it fails and a key is given. An answer of Ollama that is no JSON is no
-// failure of Ollama: the caller asks again
-const ask = async (messages, usage, think) => {
-    const gemini = Boolean(process.env.AISTUDIO_API_KEY);
+// failure of Ollama: the caller asks again. A call naming its own model never goes to Gemini, which
+// would answer with gemma: it fails instead, and its caller keeps what it has without it
+const ask = async (messages, usage, think, model) => {
+    const gemini = Boolean(process.env.AISTUDIO_API_KEY) && !model;
     if (gemini && Date.now() < ollamaPausedUntil) return askGemini(messages, usage, think);
     for (let attempt = 0; ; attempt++) {
         try {
-            return await inTurn(() => askOllama(messages, usage, think));
+            return await inTurn(() => askOllama(messages, usage, think, model));
         } catch (err) {
             if (isBusy(err)) aiStats.busy++;
-            if (isBusy(err) && attempt < BUSY_WAITS_MS.length) {
-                await new Promise(resolve => setTimeout(resolve, BUSY_WAITS_MS[attempt]));
+            const waits = model ? OWN_MODEL_WAITS_MS : BUSY_WAITS_MS;
+            if (isBusy(err) && attempt < waits.length) {
+                await new Promise(resolve => setTimeout(resolve, waits[attempt]));
                 continue;
             }
             if (!gemini) throw err;
@@ -157,9 +163,10 @@ const ask = async (messages, usage, think) => {
 // an answer of the AI as JSON, for the calls that return data rather than text (the interests of a
 // profile, the stories of a briefing). format: 'json' is asked, but the model sometimes still wraps
 // its answer in a markdown json block, so that is removed before reading it. A conversation can be
-// given for the prompt, to ask again after an answer
-export const ollamaJson = async (prompt, usage = null, {think} = {}) => {
-    const content = await ask(Array.isArray(prompt) ? prompt : [{role: 'user', content: prompt}], usage, think);
+// given for the prompt, to ask again after an answer. model: another model of Ollama for this call
+// (see ai-ways.js), never answered by Gemini
+export const ollamaJson = async (prompt, usage = null, {think, model} = {}) => {
+    const content = await ask(Array.isArray(prompt) ? prompt : [{role: 'user', content: prompt}], usage, think, model);
 
     const raw = content.replace(/^\s*```(?:json)?\s*|\s*```\s*$/g, '');
     try {

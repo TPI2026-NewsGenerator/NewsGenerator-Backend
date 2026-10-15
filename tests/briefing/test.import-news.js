@@ -28,6 +28,7 @@ jest.unstable_mockModule('../../models/user-model.js', () => ({UserModel: {email
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: {get: jest.fn(async () => ({name: 'Roberto', text: 'Je lis en français.', languages: ['fr'], watch_terms: ['SBB']}))}}));
 jest.unstable_mockModule('../../services/utils/mailer.js', () => ({sendMail, mailEnabled: () => true}));
 jest.unstable_mockModule('../../services/utils/crawlers.js', () => ({Crawlers: {Pages: pages, Html: pages}}));
+jest.unstable_mockModule('../../services/utils/ai-ways.js', () => ({aiWaysOf: jest.fn(async () => null)}));
 const extract = await import('../../services/utils/extract.js');
 jest.unstable_mockModule('../../services/utils/extract.js', () => ({...extract, extractArticle, translateTexts}));
 const {BriefingService} = await import('../../services/briefing-service.js');

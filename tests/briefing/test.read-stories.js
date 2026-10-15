@@ -12,6 +12,7 @@ jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 jest.unstable_mockModule('../../services/utils/crawlers.js', () => ({Crawlers: {Html: jest.fn()}}));
 jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {saveResolvedLinks: jest.fn(async () => {})}}));
 jest.unstable_mockModule('../../services/utils/contested.js', () => ({contestedOf: jest.fn(async () => [])}));
+jest.unstable_mockModule('../../services/utils/ai-ways.js', () => ({aiWaysOf: jest.fn(async () => null)}));
 const extract = await import('../../services/utils/extract.js');
 jest.unstable_mockModule('../../services/utils/extract.js', () => ({...extract, extractArticle: jest.fn()}));
 
