@@ -17,9 +17,9 @@ import {FeedbackService} from "./feedback-service.js";
 import {DiscoveryService} from "./discovery-service.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {newUsage} from "./utils/ollama.js";
-import {canSummarize, extractArticle, passagesText, translateTexts} from "./utils/extract.js";
+import {canSummarize, extractArticle, passagesText, sentencesOf, splitSentences, translateTexts} from "./utils/extract.js";
 import {aiWaysOf} from "./utils/ai-ways.js";
-import {ANALYSIS_MODEL, analysisOf} from "./utils/briefing-analysis.js";
+import {ANALYSIS_MODEL, TIMELINE_MAX, analysesOf, fittedArticles} from "./utils/card-analysis.js";
 import {languageOf} from "./utils/language.js";
 import {BRIEFING_SIZES, MAX_BRIEFING, balanceSelection, checkStories, mergeStories, reviewCards, selectStories, shareOut} from "./utils/profile-ai.js";
 import {corroborationOf} from "./utils/corroboration.js";
@@ -728,11 +728,6 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     const stories = cards.map(card => card.story);
     const summaryOf = (i) => cards[i].summary;
     const leads = cards.map(leadOf);
-    // the analysis on top of the briefing, from these cards: written while the next steps run and after
-    // the briefing is shown (it reasons for minutes, see briefing-analysis.js), never awaited
-    if (briefingId) analyze(briefingId, stories.map((story, i) => ({storyId: story.storyId, title: leads[i].title,
-        titleTranslation: titleTranslation.get(leads[i]) ?? null, summary: summaryOf(i)?.summary ?? null,
-        translation: summaryOf(i)?.translation ?? null, lead: toArticle(leads[i], trusted)})), language);
     // 7. the other angles of the cards, their official sources, the people and organisations they name,
     // and the news of what the profile follows beside them. The briefing never waits on any of them failing
     await step('angles');
@@ -771,7 +766,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     await step(null);
     console.log(`Briefing ${briefingId}: tokens ${JSON.stringify(usage)}, seconds ${JSON.stringify(seconds)}`);
 
-    return stories.map((story, i) => {
+    const items = stories.map((story, i) => {
         const summary = summaryOf(i);
         const lead = leads[i];
         const members = [...story.members].sort((a, b) => b.at - a.at);
@@ -851,6 +846,11 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
                 .map(article => toArticle(article, trusted)),
         };
     });
+    // the analysis of the cards that merit one, from their articles read whole: written after the
+    // briefing is shown (it reasons for a minute or more a card, see card-analysis.js), never awaited
+    if (briefingId) analyze(briefingId, items, analysisArticles(stories, {lead: (i) => leads[i], summary: (i) => summaryOf(i)?.summary,
+        readOf: (article) => content.get(article.link)}), language);
+    return items;
 };
 
 // The news of the terms the profile follows (names or words, see cleanWatchTerms): every news of the
@@ -931,21 +931,80 @@ export const newsOfTerms = (terms, articles, {limit = WATCHED_PER_TERM, holds = 
     });
 };
 
-// The analysis of a briefing's cards, saved 'running' at once, then written or 'failed'. Its tokens are
-// logged, the briefing's are logged already
-const analyze = async (briefingId, cards, language) => {
+// The analysis of the cards of a briefing that merit one (see card-analysis.js): {status: 'ready', model,
+// picked: [{storyId, reason}], cards: {storyId: {why: ['...'], next: [{if, then}], timeline: [{date,
+// title, titleTranslation, medium, url}]}}}. items: the cards of the briefing; articles: {storyId: its
+// articles read, as fittedArticles gives them}; onPicked(picked) once the cards are chosen. Exported for
+// the benches, which write it without saving it (bench/card-analysis-mock-api.mjs)
+export const cardAnalyses = async (items, articles, language, {usage = null, onPicked, now = new Date()} = {}) => {
+    const shown = items.filter(item => item.summary && articles.get(item.storyId)?.length > 0);
+    // the earlier stories of each card's affair, its own stories and articles left out, the oldest first
+    const earlier = shown.length === 0 ? [] : await StoryModel.earlierInThreads(shown.map(item => item.storyId), now);
+    const day = (date) => date.toISOString().slice(0, 10);
+    const timelines = new Map(shown.map(item => {
+        const own = new Set([item.storyId, ...(item.mergedStoryIds ?? [])]);
+        const links = new Set((item.articles ?? []).map(article => article.url));
+        const rows = earlier.filter(row => row.card === item.storyId && !own.has(row.id) && row.title && !links.has(row.link));
+        return [item.storyId, {days: new Set(rows.map(row => day(row.created_at)).filter(date => date < day(now))).size,
+            items: rows.slice(0, TIMELINE_MAX).reverse().map(row => ({date: day(row.created_at), title: row.title, medium: row.medium,
+                url: row.link, titleTranslation: null}))}];
+    }));
+    // their titles in the reader's language, as the cards' titles
+    const foreign = [...timelines.values()].flatMap(timeline => timeline.items)
+        .map(item => ({item, from: languageOf(item.title)})).filter(({from}) => from && from !== language && writtenIn(from) && writtenIn(language));
+    for (let i = 0; i < foreign.length; i += 25) {
+        const part = foreign.slice(i, i + 25);
+        const translations = await translateTexts(part.map(({item, from}) => ({text: item.title, from: writtenIn(from)})), writtenIn(language), usage)
+            .catch(() => part.map(() => null));
+        part.forEach(({item}, j) => { item.titleTranslation = translations[j]; });
+    }
+    const cards = shown.map((item, i) => ({
+        n: i + 1, storyId: item.storyId, title: item.title, titleTranslation: item.titleTranslation ?? null,
+        medium: item.lead?.source ?? null, summary: item.summary, translation: item.translation ?? null,
+        articles: articles.get(item.storyId), timeline: timelines.get(item.storyId),
+        angles: item.angles ?? [], contested: item.contested ?? [], official: item.official ?? [],
+    }));
+    const {picked, cards: written} = cards.length === 0 ? {picked: [], cards: {}} : await analysesOf(cards, language, {usage, onPicked});
+    return {status: 'ready', model: ANALYSIS_MODEL, picked, dropped: Object.values(written).reduce((n, lines) => n + lines.dropped, 0),
+        cards: Object.fromEntries(Object.entries(written).map(([storyId, lines]) =>
+            [storyId, {why: lines.why, next: lines.next, timeline: timelines.get(Number(storyId))?.items ?? []}]))};
+};
+
+// The analysis of the cards of a briefing (see cardAnalyses), saved 'running' at once, with the cards
+// picked once chosen, then written or 'failed'
+const analyze = async (briefingId, items, articles, language) => {
     const usage = newUsage();
-    const started = Date.now();
+    const started = new Date();
+    const running = {status: 'running', model: ANALYSIS_MODEL, startedAt: started.toISOString()};
     try {
-        await BriefingModel.analysis(briefingId, {status: 'running', model: ANALYSIS_MODEL, startedAt: new Date(started).toISOString()});
-        const analysis = await analysisOf(cards, language, usage);
-        await BriefingModel.analysis(briefingId, analysis ?? {status: 'failed'});
-        console.log(`Briefing ${briefingId}: analysis by ${analysis?.model} in ${Math.round((Date.now() - started) / 1000)} s, ${analysis?.changed.length} changes, ${analysis?.risks.length} risks, ${analysis?.dropped} lines dropped by the checks, tokens ${JSON.stringify(usage)}`);
+        await BriefingModel.analysis(briefingId, running);
+        const analysis = await cardAnalyses(items, articles, language, {usage, now: started,
+            onPicked: (picked) => BriefingModel.analysis(briefingId, {...running, picked})});
+        await BriefingModel.analysis(briefingId, {...analysis, startedAt: running.startedAt});
+        console.log(`Briefing ${briefingId}: ${analysis.picked.length} cards picked for an analysis, ${Object.keys(analysis.cards).length} written in ${Math.round((Date.now() - started) / 1000)} s, ${analysis.dropped} lines dropped by the checks, tokens ${JSON.stringify(usage)}`);
     } catch (err) {
         console.error(`Briefing ${briefingId}: no analysis (${err.message})`);
         await BriefingModel.analysis(briefingId, {status: 'failed'}).catch(() => {});
     }
 };
+
+// The articles of each card the analysis reads (see cardAnalyses): the lead and one article of each other
+// medium, whole, as fittedArticles cuts them; the lead not read whole stands as its key passages.
+// readOf(article): its page read; lead(i), summary(i): the lead article and the passages of story i
+export const analysisArticles = (stories, {lead, summary, readOf}) => {
+    const readArticle = (article) => {
+        const sentences = sentencesOf(readOf(article) ?? {}).map(({text, quote}) => quote ? `\u201c${text}\u201d` : text);
+        return sentences.length >= 3 ? {source: siteOf(article), title: article.title, publishedAt: article.at?.toISOString?.() ?? null, sentences} : null;
+    };
+    return new Map(stories.map((story, i) => {
+        const first = readArticle(lead(i)) ?? {source: siteOf(lead(i)), title: lead(i).title, publishedAt: lead(i).at?.toISOString?.() ?? null,
+            sentences: splitSentences(summary(i) ?? '')};
+        const others = onceEach(story.members.filter(article => article !== lead(i) && mediumOfArticle(article) !== mediumOfArticle(lead(i))),
+            {medium: mediumOfArticle, fromGoogle}).map(readArticle).filter(Boolean);
+        return [story.storyId, fittedArticles([first, ...others])];
+    }));
+};
+
 // an analysis still 'running' after this long was left by a server that stopped
 const ANALYSIS_ABANDONED_MS = 12 * 60e3;
 const analysisOfRow = (analysis) => analysis?.status === 'running' && Date.now() - new Date(analysis.startedAt).getTime() > ANALYSIS_ABANDONED_MS
@@ -959,8 +1018,7 @@ const toBriefing = (row) => row && ({
     items: row.items ?? [],
     // the news of the terms the profile follows (see watchedNews), null for a briefing written before
     watched: row.watched ?? null,
-    // the analysis on top of it (see analyze): {status, model, changed: [{text, storyIds}], risks: [{if,
-    // then, storyIds}]}, null for a briefing written before 15.10.2026
+    // the analysis of its cards that merit one (see analyze), null for a briefing written before 15.10.2026
     analysis: analysisOfRow(row.analysis),
     size: row.size ?? MAX_BRIEFING,  // the cards asked for
     hours: row.hours,               // of news it was written from

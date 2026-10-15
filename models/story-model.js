@@ -178,6 +178,18 @@ export const StoryModel = {
     threadsOf: async (storyIds) => prisma.$queryRawUnsafe(
         'SELECT id, id_thread FROM stories WHERE id = ANY($1::int[])', storyIds),
 
+    // the earlier stories of the threads of these stories, created before 'before', the newest first,
+    // with the first article of each (its title, medium and address): {card, id, created_at, lang, title,
+    // medium, link}, card the story whose thread it is of (see card-analysis.js)
+    earlierInThreads: async (storyIds, before) => prisma.$queryRawUnsafe(`
+        SELECT s.id AS card, o.id, o.created_at, o.lang, first.title, first.medium, first.link
+        FROM stories s
+        JOIN stories o ON o.id_thread = s.id_thread AND o.id <> s.id AND o.created_at < $2
+        CROSS JOIN LATERAL (SELECT a.title, a.medium, COALESCE(a.resolved_link, a.link) AS link FROM articles a
+                            WHERE a.id_story = o.id ORDER BY COALESCE(a.published_at, a.created_at) LIMIT 1) AS first
+        WHERE s.id = ANY($1::int[]) AND s.id_thread IS NOT NULL
+        ORDER BY o.created_at DESC`, storyIds, before),
+
     // the news of these stories the user can read, once per link, the newest first, their titles
     // without the name of their medium or a date at the end (see titles.js)
     storyArticles: async ({storyIds, feedUrls, since}) => (await prisma.$queryRawUnsafe(`
