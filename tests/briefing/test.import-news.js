@@ -23,7 +23,7 @@ jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 jest.unstable_mockModule('../../services/entity-service.js', () => ({EntityService: {
     followTerms: async (profileId, words) => (words ?? []).map(word => ({label: word, qid: null, names: [word]})),
 }}));
-jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel: {ofUser, addItem, removeItem, articlePictures: jest.fn(async () => [])}}));
+jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel: {ofUser, addItem, removeItem, articlePictures: jest.fn(async () => []), markSent: jest.fn(async () => 1)}}));
 jest.unstable_mockModule('../../models/user-model.js', () => ({UserModel: {email: jest.fn(async () => ({email: 'reader@example.test', username: 'lecteur'}))}}));
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: {get: jest.fn(async () => ({name: 'Roberto', text: 'Je lis en français.', languages: ['fr'], watch_terms: ['SBB']}))}}));
 jest.unstable_mockModule('../../services/utils/mailer.js', () => ({sendMail, mailEnabled: () => true}));
@@ -105,6 +105,6 @@ describe('BriefingService.email with a news added', () => {
         await BriefingService.email(4, 7, [-1, 1]);
         const mail = sendMail.mock.calls[0][0];
         expect(mail.text.indexOf('01. Added news')).toBeGreaterThan(0);
-        expect(mail.subject).toBe('Roberto’s Briefing · 2 stories · 13 October 2026');
+        expect(mail.subject).toBe('Roberto’s Briefing · 13 October 2026 · 2 stories');
     });
 });

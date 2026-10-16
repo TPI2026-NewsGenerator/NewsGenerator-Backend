@@ -5,9 +5,9 @@
 //  Description: The cards of a briefing the reader ticked as an e-mail, laid out as the page shows them
 //               (client BriefingCard.jsx): number, topic, date and language, title, why, picture, its
 //               sentences in the way the reader chose (bullet points, summary or key passages), who
-//               denies it, its analysis when it has one, its other angles, where to read it, and the
-//               notes of its margin (its official source first). Who tells it is left out: its sources
-//               say it already
+//               its official source, who denies it, its analysis when it has one, its other angles, where
+//               to read it, and the note of its margin. Who tells it is left out: its sources say it
+//               already. Nothing says what is translated, by a machine or the AI (the user, 16.10.2026)
 //
 
 "use strict"
@@ -40,20 +40,20 @@ const WAYS = {
     digest: {text: 'digest', translation: 'digestTranslation', title: 'Summary'},
     passages: {text: 'summary', translation: 'translation', title: 'Key passages'},
 };
-// {paragraphs, title, way, translated}: the sentences of the card in the way asked, their translation
+// {paragraphs, title, way}: the sentences of the card in the way asked, their translation
 // when the article is written in another language than the reader's. A card the reader sends in its AI
 // version (aiVersion, see ai-ways.js) has the points or the summary the AI wrote in the reader's
 // language, without saying so (the user, 15.10.2026), when it has one in that way
 const wayOf = (card, format) => {
     if (card.aiVersion && format === 'points' && card.ai?.points?.length) {
-        return {paragraphs: card.ai.points, title: WAYS.points.title, way: 'points', translated: false};
+        return {paragraphs: card.ai.points, title: WAYS.points.title, way: 'points'};
     }
     if (card.aiVersion && format === 'digest' && card.ai?.summary) {
-        return {paragraphs: [card.ai.summary], title: WAYS.digest.title, way: 'digest', translated: false};
+        return {paragraphs: [card.ai.summary], title: WAYS.digest.title, way: 'digest'};
     }
     const way = format === 'points' && card.points ? 'points' : format === 'digest' && card.digest ? 'digest' : 'passages';
     const {text, translation, title} = WAYS[way];
-    return {paragraphs: paragraphsOf(card[translation] || card[text]), title, way, translated: Boolean(card[translation])};
+    return {paragraphs: paragraphsOf(card[translation] || card[text]), title, way};
 };
 
 // the text styles of the page (kicker, caption, body-text, link); the classes ng-* take the dark colours
@@ -70,6 +70,7 @@ const DARK_STYLE = `
   .ng-accent{color:${DARK.accent}!important}
   .ng-rule{border-color:${DARK.rule}!important}
   .ng-box{border-color:${DARK.rule}!important;color:${DARK.mute}!important}
+  .ng-secondary{background:${DARK.secondary}!important}
 }`;
 
 // the language a source writes in, next to its name (client LanguageMark.jsx). Inline, not
@@ -80,7 +81,7 @@ const languageMark = (code) => code
     : '';
 // a medium and its marks kept together on one line
 const together = (html) => `<span style="white-space:nowrap">${html}</span>`;
-const kicker = (text, tone = 'mute') => `<p class="ng-${tone}" style="${KICKER}${tone === 'accent' ? `;color:${LIGHT.accent}` : ''}">${escape(text)}</p>`;
+const kicker = (text, tone = 'mute') => `<p class="ng-${tone}" style="${KICKER}${tone === 'mute' ? '' : `;color:${LIGHT[tone]}`}">${escape(text)}</p>`;
 
 // the passages, "[…]" between two of them; the first letter of the first card large, as on the page
 const passagesHtml = (paragraphs, lede) => paragraphs.map((paragraph, i) => {
@@ -109,8 +110,7 @@ const contestedHtml = (denials) => denials.length === 0 ? '' : `
 <div class="ng-rule" style="margin-top:24px;border-left:2px solid ${LIGHT.accent};padding-left:18px">
   ${kicker('Contested', 'accent')}
   ${denials.map(denial => `
-  <p class="ng-ink" style="${BODY};margin-top:12px"><b>${escape(denial.by)} denies:</b> “${escape(denial.sentence)}”</p>
-  ${denial.translation ? `<p class="ng-mute" style="${CAPTION};margin-top:4px;font-style:italic">Machine translation: “${escape(denial.translation)}”</p>` : ''}
+  <p class="ng-ink" style="${BODY};margin-top:12px"><b>${escape(denial.by)} denies:</b> “${escape(denial.translation || denial.sentence)}”</p>
   <p class="ng-mute" style="${CAPTION};margin-top:4px">— ${webUrl(denial.url) ? `<a href="${escape(denial.url)}" class="ng-mute" style="color:${LIGHT.mute}">${escape(denial.source)}</a>` : escape(denial.source)}${denial.publishedAt ? `, ${escape(when(denial.publishedAt))}` : ''}</p>`).join('')}
 </div>`;
 
@@ -173,27 +173,26 @@ ${others.length > 0 ? `<p class="ng-mute" style="${CAPTION};margin-top:8px">Also
 };
 
 // the posts where a party said the news itself (see official-sources.js), a line each, and its
-// statements an article reports, quoted with the medium: none left (the reader took them out, or none
-// has a web address), no note
+// statements an article reports, quoted with the medium. Right under the sentences of the card, in a box
+// of its own, not a note at its foot (the user, 16.10.2026: to be seen). None left (the reader took them
+// out, or none has a web address), no box
 const officialLine = (post) => post.channel === 'reported'
-    ? `<b>${escape(post.party)}</b> said it, reported by <a href="${escape(post.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(post.source)}</a>: “${escape(post.translation ?? post.title)}”${post.translation ? ' (machine translation)' : ''}`
-    : `<b>${escape(post.party)}</b> said it: <a href="${escape(post.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(post.title)}</a>${post.publishedAt ? `, ${escape(when(post.publishedAt))}` : ''}`;
-const officialHtml = (given) => given.filter(post => webUrl(post.url)).map(officialLine).join('<br>') || null;
-
-// the notes of the outer column of the page, under the card in the e-mail; html: the note is written
-// already, else its text is escaped
-const notesHtml = (card) => {
-    const notes = [
-        ['Official source', officialHtml(card.official ?? []), 'mute', true],
-        ['Not confirmed', card.hedged ? `unconfirmed: “${card.hedged}”` : null, 'accent'],
-    ].filter(([, text]) => text);
-    if (notes.length === 0) return '';
-    // one under the other: side by side they left a phone a few words a line
-    return `
-<div class="ng-rule" style="margin-top:24px;border-top:1px solid ${LIGHT.rule}">
-  ${notes.map(([title, text, tone, html]) => `<div style="padding-top:12px">${kicker(title, tone)}<p class="ng-ink" style="${CAPTION};color:${LIGHT.ink};margin-top:4px">${html ? text : escape(text)}</p></div>`).join('')}
+    ? `<b>${escape(post.party)}</b> said it, reported by <a href="${escape(post.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(post.source)}</a>: “${escape(post.translation ?? post.title)}”`
+    : `<b>${escape(post.party)}</b> said it: <a href="${escape(post.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(post.title)}</a>${post.publishedAt ? `<span class="ng-mute" style="color:${LIGHT.mute}">, ${escape(when(post.publishedAt))}</span>` : ''}`;
+const officialHtml = (given) => {
+    const posts = given.filter(post => webUrl(post.url));
+    return posts.length === 0 ? '' : `
+<div class="ng-secondary ng-rule" style="margin-top:24px;background:${LIGHT.secondary};border-left:3px solid ${LIGHT.ink};padding:14px 18px">
+  ${kicker('Official source', 'ink')}
+  ${posts.map(post => `<p class="ng-ink" style="${BODY};margin-top:8px">${officialLine(post)}</p>`).join('')}
 </div>`;
 };
+
+// the note of the outer column of the page, under the card in the e-mail
+const notesHtml = (card) => !card.hedged ? '' : `
+<div class="ng-rule" style="margin-top:24px;border-top:1px solid ${LIGHT.rule}">
+  <div style="padding-top:12px">${kicker('Not confirmed', 'accent')}<p class="ng-ink" style="${CAPTION};color:${LIGHT.ink};margin-top:4px">${escape(`unconfirmed: “${card.hedged}”`)}</p></div>
+</div>`;
 
 // the title shown: the one the reader wrote for the e-mail (ownTitle), else the translated one
 const titleOf = (card) => card.ownTitle ?? card.titleTranslation ?? card.title;
@@ -202,7 +201,6 @@ const titleOf = (card) => card.ownTitle ?? card.titleTranslation ?? card.title;
 // another; format: the way its sentences are shown (see wayOf)
 const cardHtml = (card, i, personal = true, format = 'passages') => {
     const sentences = wayOf(card, format);
-    const translated = Boolean(card.titleTranslation) || sentences.translated;
     // or a file of the reader joined to the e-mail (see mail-pictures.js)
     const picture = webUrl(card.thumbnail) ?? (/^cid:[\w.@-]+$/.test(card.thumbnail ?? '') ? card.thumbnail : null);
     return `
@@ -218,14 +216,13 @@ const cardHtml = (card, i, personal = true, format = 'passages') => {
     ].filter(Boolean).join(' · ')}</p></td>
   </tr></table>
   <h2 class="ng-ink" style="margin:0;font:460 27px/1.12 ${DISPLAY};letter-spacing:-.005em;color:${LIGHT.ink}">${escape(titleOf(card))}</h2>
-  ${translated ? `<p style="margin:8px 0 0">${kicker(`Translated from ${languageName(card.language ?? '')}`)}</p>` : ''}
-  ${card.titleTranslation && !card.ownTitle ? `<p class="ng-mute" style="${CAPTION};margin-top:4px;font-style:italic">“${escape(card.title)}”</p>` : ''}
   ${personal && card.why ? `<p class="ng-mute" style="margin:12px 0 0;font:italic 19px/1.4 ${TEXT};color:${LIGHT.mute}">${escape(card.why)}</p>` : ''}
   ${picture ? `<img src="${escape(picture)}" alt="" width="560" style="display:block;width:100%;max-width:560px;height:auto;margin-top:20px;border:0;background:${LIGHT.secondary}">
   ${card.thumbnailSource ? `<p class="ng-mute" style="${CAPTION};margin-top:6px">Picture — ${escape(card.thumbnailSource)}</p>` : ''}` : ''}
   ${sentences.paragraphs.length > 0 ? `
   <div style="margin-top:24px">${kicker(sentences.title)}</div>
   <div style="margin-top:12px;overflow:hidden">${WAYS_HTML[sentences.way](sentences.paragraphs, i === 0)}</div>` : ''}
+  ${officialHtml(card.official ?? [])}
   ${analysisHtml(card.analysis)}
   ${contestedHtml(card.contested ?? [])}
   ${anglesHtml(card.angles ?? [])}
@@ -239,8 +236,9 @@ const cardHtml = (card, i, personal = true, format = 'passages') => {
 // user, 13.10.2026: the name of the profile, never the one of the account); sender: the username of the
 // reader when it is sent to another address than theirs (the reasons the cards were chosen for them are
 // left out then, who sends it is in its Reply-To); format: the way the sentences of the cards are shown,
-// one of MAIL_FORMATS. The day only, no hour, in its subject and its title; nothing under the title
-// (the user, 14.10.2026: no "N stories shared" line, the title alone). {subject, html, text}
+// one of MAIL_FORMATS. The day only, no hour, in its subject and its title, the day before the count in
+// the subject (the user, 16.10.2026); nothing under the title (the user, 14.10.2026: no "N stories
+// shared" line, the title alone). {subject, html, text}
 export const briefingMail = (briefing, {profile = null, sender = null, format = 'passages'} = {}) => {
     const cards = briefing.items ?? [];
     const finished = briefing.finishedAt ?? briefing.createdAt;
@@ -248,7 +246,7 @@ export const briefingMail = (briefing, {profile = null, sender = null, format = 
     // "Roberto’s Briefing · 13 October 2026"
     const name = profile ? `${profile}’s Briefing` : 'Briefing';
     const title = `${name} · ${day(finished)}`;
-    const subject = `${name} · ${count} · ${day(finished)}`;
+    const subject = `${name} · ${day(finished)} · ${count}`;
 
     const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark">
@@ -271,12 +269,12 @@ ${cards.map((card, i) => cardHtml(card, i, !sender, format)).join('')}
                 sender ? '' : card.why ?? '',
                 '',
                 wayText(wayOf(card, format)),
-                ...analysisText(card.analysis),
-                ...(card.contested ?? []).map(denial => `Contested — ${denial.by} denies: "${denial.sentence}" (${denial.source})`),
-                ...(card.angles ?? []).map(angle => `Other angle: ${angle.titleTranslation ?? angle.title} (${angle.source}) ${angle.url}`),
                 ...(card.official ?? []).map(post => post.channel === 'reported'
                     ? `Official source — ${post.party} said it, reported by ${post.source}: "${post.translation ?? post.title}" ${post.url}`
                     : `Official source — ${post.party} said it: ${post.title} ${post.url}`),
+                ...analysisText(card.analysis),
+                ...(card.contested ?? []).map(denial => `Contested — ${denial.by} denies: "${denial.translation || denial.sentence}" (${denial.source})`),
+                ...(card.angles ?? []).map(angle => `Other angle: ${angle.titleTranslation ?? angle.title} (${angle.source}) ${angle.url}`),
                 lead ? `Read the article at ${lead.source}: ${lead.url}` : '',
                 '',
             ].filter((line, j, lines) => line !== '' || lines[j - 1] !== '').join('\n');

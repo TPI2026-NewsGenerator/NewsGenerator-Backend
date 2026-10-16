@@ -71,7 +71,7 @@ describe('BriefingService.email', () => {
         const mail = sendMail.mock.calls[0][0];
         expect(mail.to).toBe('reader@example.test');
         // the name of the profile, the day without its hour
-        expect(mail.subject).toBe('Football’s Briefing · 2 stories · 8 October 2026');
+        expect(mail.subject).toBe('Football’s Briefing · 8 October 2026 · 2 stories');
         expect(mail.html).toContain('>Football’s Briefing · 8 October 2026<');
         // the title alone, no count of the stories under it
         expect(mail.html).not.toContain('shared');
@@ -98,7 +98,7 @@ describe('BriefingService.email', () => {
         const mail = sendMail.mock.calls[0][0];
         expect(mail.to).toBe('friend@example.org');
         expect(mail.replyTo).toBe('reader@example.test');
-        expect(mail.subject).toBe('Football’s Briefing · 1 story · 8 October 2026');
+        expect(mail.subject).toBe('Football’s Briefing · 8 October 2026 · 1 story');
         expect(mail.html).toContain('>Football’s Briefing · 8 October 2026<');
         expect(mail.html).not.toContain('08:01');
         expect(mail.html).not.toContain('lecteur');
@@ -113,7 +113,7 @@ describe('BriefingService.email', () => {
 
         const mail = sendMail.mock.calls[0][0];
         expect(mail.replyTo).toBeUndefined();
-        expect(mail.subject).toBe('Football’s Briefing · 1 story · 8 October 2026');
+        expect(mail.subject).toBe('Football’s Briefing · 8 October 2026 · 1 story');
     });
 
     it('should send the cards in the way the reader chose, and refuse a way that does not exist, before reading the briefing', async () => {
@@ -261,15 +261,18 @@ describe('briefingMail', () => {
     it('should lay out a card as the page: number, translated title, why, picture, passages, denial, angles, links, notes', () => {
         const {html} = briefingMail(briefing);
 
-        for (const part of ['>01<', 'Sommet contre Infantino', 'Translated from German', '“Gipfel gegen Infantino”', 'Du football, que vous suivez.',
+        for (const part of ['>01<', 'Sommet contre Infantino', 'Du football, que vous suivez.',
             'src="https://cdn.example/a.jpg"', 'Picture — sport1.de', 'Key passages', 'second.', '[…]',
-            'Contested', 'Infantino denies:', 'Machine translation: “Ce n’est pas vrai.”', 'Same affair, other angles', 'Le Nigeria porte plainte',
+            'Contested', 'Infantino denies:', 'Infantino denies:</b> “Ce n’est pas vrai.”', 'Same affair, other angles', 'Le Nigeria porte plainte',
             'told by 3 media', 'Read the article at media.fr', 'Also covered by', 'kicker.de', 'Not confirmed']) {
             expect(html).toContain(part);
         }
         // who tells it: its sources say it already (the user, 13.10.2026)
         expect(html).not.toContain('Who tells it');
         expect(html).not.toContain('written independently');
+        // nothing says what is translated, the original title neither (the user, 16.10.2026)
+        expect(html).not.toMatch(/translat/i);
+        expect(html).not.toContain('Gipfel gegen Infantino');
     });
 
     it('should keep each medium and its language on one line, the media following each other with a comma', () => {
@@ -355,7 +358,7 @@ describe('briefingMail', () => {
             language: 'pt', url: 'https://www.abola.pt/1', source: 'abola.pt', channel: 'reported', publishedAt: null}]});
         const {html, text} = briefingMail({...briefing, items: [reported]});
         expect(html).toContain('<b>FPF</b> said it, reported by <a href="https://www.abola.pt/1"');
-        expect(html).toContain('“The FPF published a statement.” (machine translation)');
+        expect(html).toContain('“The FPF published a statement.”</p>');
         expect(text).toContain('Official source — FPF said it, reported by abola.pt: "The FPF published a statement." https://www.abola.pt/1');
     });
 
@@ -388,7 +391,7 @@ describe('briefingMail', () => {
     it('should send the translated sentences of a way, and the key passages of a card made before the other ways', () => {
         const translated = card(1, 'Gipfel', {language: 'de', points: 'Erster.', pointsTranslation: 'Premier.', translation: 'Passage.'});
         const {html, text} = briefingMail({...briefing, items: [translated, card(2, 'Older')]}, {format: 'points'});
-        expect(html).toContain('Translated from German');
+        expect(html).toContain('Premier.');
         expect(text).toContain('• Premier.');
         expect(text).not.toContain('Erster.');
         // the older card: its key passages, as written
