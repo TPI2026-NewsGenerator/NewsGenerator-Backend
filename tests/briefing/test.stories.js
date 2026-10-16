@@ -8,6 +8,7 @@
 
 import process from 'node:process'
 import 'dotenv/config';
+import {jest} from '@jest/globals';
 import pg from 'pg';
 import {toSparsevec, toVector} from '../../services/utils/embedder.js'
 
@@ -22,6 +23,9 @@ try {
     console.warn('Database, pgvector or db/add_briefing.sql not available, the story tests are skipped');
 }
 afterAll(() => pool.end());
+// the database is the one of the server, shared with the ingestion: a call of a function takes
+// about 1 s there even with nothing to judge, and a test makes several
+jest.setTimeout(30_000);
 
 const SINCE = '2099-12-31T00:00:00Z';
 const THRESHOLD = 0.70;
