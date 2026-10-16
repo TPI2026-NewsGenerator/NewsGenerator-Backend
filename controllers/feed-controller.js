@@ -14,7 +14,7 @@ import {RecommendationService} from '../services/recommendation-service.js';
 import {findFeeds} from '../services/utils/feed-finder.js';
 import {assertPublicUrl, forClient, hostOf, isBridgeUrl} from '../services/utils/public-url.js';
 import {IngestService} from '../services/ingest-service.js';
-import {bridgeRoom, isFlood, looksPrivate, MAX_USER_FEEDS} from '../services/utils/feed-limits.js';
+import {bridgeRoom, isFlood, MAX_USER_FEEDS} from '../services/utils/feed-limits.js';
 import {Crawlers} from '../services/utils/crawlers.js';
 import {feedLanguage} from '../services/utils/language.js';
 
@@ -42,7 +42,6 @@ const toFeed = (feed) => ({
     category: feed.category,
     origin: feed.origin,                        // 'user' added by hand, 'profile' found for the profile
     trusted: feed.trusted ?? false,             // a source the user trusts, its stories come first
-    shared: feed.shared ?? false,               // a source the user shares: it can be suggested to others
     createdAt: feed.created_at,
     error: feed.last_error ?? null,             // why the last refresh of this feed failed
     lastFetchedAt: feed.last_fetched_at ?? null,
@@ -269,41 +268,30 @@ export const FeedController = {
         res.status(200).json({feeds: added.map(toFeed), errors});
     },
 
-    // One or both of:
-    //  - {trusted}: among the stories close to the profile, the ones this source tells come first in
-    //    the briefing and its article leads the card. Any source, one found for the profile too: it is
-    //    then never removed, by its relevance or by the thumbs
-    //  - {shared}: only a source added by hand. It can be suggested to the other readers whose
-    //    interests it publishes on. Refused for an address that may hold a key of the reader (a paid
-    //    newsletter, a private podcast)
+    // {trusted}: among the stories close to the profile, the ones this source tells come first in the
+    // briefing and its article leads the card. Any source, one found for the profile too: it is then
+    // never removed, by its relevance or by the thumbs. ({shared} is gone: every source is for everyone
+    // since 8.10.2026, those that may hold a key aside)
     updateUserFeed: async (req, res) => {
         const id = Number(req.params.id);
         if (!Number.isInteger(id)) {
             return res.status(400).json({error: "An id is required."});
         }
-        const {trusted, shared} = req.body ?? {};
-        if ((trusted === undefined && shared === undefined)
-            || ![trusted, shared].every(value => value === undefined || typeof value === 'boolean')) {
-            return res.status(400).json({error: "trusted and/or shared: true or false."});
+        const {trusted} = req.body ?? {};
+        if (typeof trusted !== 'boolean') {
+            return res.status(400).json({error: "trusted: true or false."});
         }
 
         const feed = await FeedModel.getUserFeed(req.profileId, id);
         if (!feed) {
             return res.status(404).json({error: "This source does not exist."});
         }
-        if (shared !== undefined && feed.origin !== 'user') {
-            return res.status(400).json({error: "Only a source you added can be shared: the ones found for your profile are already suggested to the others."});
-        }
-        if (shared && looksPrivate(feed.url)) {
-            return res.status(400).json({error: "The address of this feed looks like it holds a private key: it can't be shared."});
-        }
 
-        const changes = {...(trusted !== undefined ? {trusted} : {}), ...(shared !== undefined ? {shared} : {})};
-        await FeedModel.updateUserFeed(req.profileId, id, changes);
-        res.status(200).json({id, trusted: feed.trusted, shared: feed.shared, ...changes});
+        await FeedModel.updateUserFeed(req.profileId, id, {trusted});
+        res.status(200).json({id, trusted});
     },
 
-    // the sources this reader could add: found for the profile of other readers, or shared by them,
+    // the sources this reader could add: found for the profile of other readers, or added by them,
     // and publishing on the interests of this one. [{id, site, url, category, language, news, relevant, samples}]
     getRecommended: async (req, res) => {
         try {

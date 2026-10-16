@@ -232,7 +232,8 @@ const joinFacts = async (cards, articleOf) => {
 // A thread links the facts of one affair followed over days: the preview of a match, its result, the
 // reactions to it (see assign_threads, db/add_threads.sql). The facts found of one thread are one card,
 // the first one found leading it, and the card shows the whole affair in its order: the facts the
-// search did not find too, read from the feeds of this reader only (a feed added by hand stays private).
+// search did not find too, read from the feeds the search or the briefing read (every reader's sources
+// since 8.10.2026, those that may hold a key aside).
 // The key passages are still asked for one fact.
 // Measured on a replay of the ingestion over five days, 74 search cards judged one news by hand: 55 in
 // one thread, 33 in one story (bench/story-threads-online.py)
@@ -319,9 +320,9 @@ export const NewsService = {
     // its meaning (one call to the AI, see searchByMeaning), keywords with operators as written, in SQL
     getNews: async ({keywords, category, timeframe, profileId, language = 'en'}) => {
         try {
-            // 1. get links from categories, with the feeds this user added (private to them) and those
-            // of every reader that are not private: found for a profile, shared, and the searches of
-            // Google News of the profiles. A reader's search of "cartes Pokémon" found 1 news in the
+            // 1. get links from categories, with the feeds this user added and those of every reader
+            // (every source is for everyone since 8.10.2026, those that may hold a key aside), and the
+            // searches of Google News of the profiles. A reader's search of "cartes Pokémon" found 1 news in the
             // shared feeds and their own, 10 with the searches of the profile of another reader
             // (bench/pool-sources.mjs). The feeds of the directory too, found by the server itself (see
             // DirectoryService), and the feeds of Google News of the sentences already searched (see
@@ -522,31 +523,6 @@ export const NewsService = {
         }
 
         return articles;
-    },
-
-    // full content of the news selected by the user, scraped only now
-    getNewsContent: async (urls) => {
-        const articles = await NewsService.cachedArticles(urls);
-
-        const scraped = await Crawlers.Html(urls.map(url => ({
-            url: url,
-            userData: { thumbnail: articles.get(url).thumbnail }
-        })));
-        const contents = new Map(scraped.map(page => [page.url, page]));
-
-        // same order as asked, RSS description used when the page can't be read (paywall, 403...)
-        return urls.map(url => {
-            const news = toNews(articles.get(url));
-            const page = contents.get(url);
-
-            return {
-                ...news,
-                author: page?.author ?? '',
-                lang: page?.lang ?? '',
-                content: page?.content || news.description,
-                fullContent: Boolean(page?.content),
-            };
-        });
     },
 
     // The key passages of each card chosen by the user, and who tells it, as in the briefing.

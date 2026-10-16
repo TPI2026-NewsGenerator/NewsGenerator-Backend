@@ -6,16 +6,10 @@
 //
 
 import express from 'express'
-import { body } from 'express-validator';
 import {LoginController} from "../controllers/login-controller.js";
 import {rateLimit} from "../services/utils/rate-limit.js";
 
 const router = express.Router();
-
-const fetchLoginValidator = [
-    body('username').isString().withMessage('username must be a string'),
-    body('password').isString().withMessage('password must be a string'),
-];
 
 // served on the internet: passwords tried one after another from one address are stopped
 const loginLimit = rateLimit({
@@ -24,6 +18,7 @@ const loginLimit = rateLimit({
     message: 'Too many sign-in attempts from here, try again in 15 minutes.',
 });
 
-router.post('', loginLimit, fetchLoginValidator, LoginController.authUser);
+// the fields are checked by the controller
+router.post('', loginLimit, LoginController.authUser);
 
 export default router;

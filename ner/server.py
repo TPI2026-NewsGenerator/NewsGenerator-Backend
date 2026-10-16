@@ -8,7 +8,8 @@
 # GLiNER multi v2.1 (urchade/gliner_multi-v2.1, Apache-2.0) reads every language of the feeds and is
 # asked for the kinds wanted ("person", "organization", "location") instead of the fixed ones of a
 # model trained for them. Measured on 294 news of 26 languages (bench/ner, 13.10.2026), on 3 cores of
-# the server: 2.2 news a second on the title and 400 characters of the description, the same entities run
+# the server: 2.2 news a second on the title and 400 characters of the description (the server sends 700
+# since, see TAGGED_CHARS of tagging-service.js: the speed was not measured again), the same entities run
 # after run; the title alone was 3 times faster but found 44% of them ("LFF", "Latvian Football
 # Federation" are in the description). In int8 (ONNX of onnx-community, or PyTorch quantized) it found
 # none: fp32 only.

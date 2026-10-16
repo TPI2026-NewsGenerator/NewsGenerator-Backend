@@ -1019,7 +1019,7 @@ const analysisOfRow = (analysis) => analysis?.status === 'running' && Date.now()
 const toBriefing = (row) => row && ({
     id: row.id,
     status: row.status,             // running, ready, failed
-    step: row.step,                 // ranking, choosing, reading, summarizing
+    step: row.step,                 // ranking, choosing, checking, reading, summarizing, angles
     error: row.error,
     items: row.items ?? [],
     // the news of the terms the profile follows (see watchedNews), null for a briefing written before

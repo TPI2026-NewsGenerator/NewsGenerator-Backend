@@ -9,7 +9,7 @@
 
 import {CustomSearchService} from '../services/customsearch-service.js';
 
-// the status the service gives (404: a search that is not this user's), else 500, with its message:
+// the status the service gives (404: a search that is not this user's, 409: a title already used), else 500, with its message:
 // an Error sent as JSON is only {}
 const fail = (res, error) => res.status(error?.status || 500).json({error: error?.message ?? String(error)});
 

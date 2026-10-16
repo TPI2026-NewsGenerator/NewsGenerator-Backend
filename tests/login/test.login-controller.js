@@ -43,10 +43,10 @@ describe('authUser', () => {
         expect(result.cookie).toHaveBeenCalledWith('session', 'mock-token', expect.objectContaining({httpOnly: true, sameSite: 'strict', path: '/api'}));
     });
 
-    it('should return status 404 if service has no username', async () => {
+    it('should return status 401 with the message of the service', async () => {
         // given
-        const mockError = new Error(`This username does not exist...`);
-        mockError.status = 404;
+        const mockError = new Error(`Invalid username or password...`);
+        mockError.status = 401;
         LoginService.authUser.mockRejectedValue(mockError)
         mockReq = { body: { username: "joe", password: "strongPass" }}
 
@@ -54,8 +54,8 @@ describe('authUser', () => {
         const result = await LoginController.authUser(mockReq, mockRes);
 
         // then
-        expect(result.status).toHaveBeenCalledWith(404);
-        expect(result.json).toHaveBeenCalledWith({error: "This username does not exist..."});
+        expect(result.status).toHaveBeenCalledWith(401);
+        expect(result.json).toHaveBeenCalledWith({error: "Invalid username or password..."});
     });
 
     it('should return error 400 if no username', async () => {

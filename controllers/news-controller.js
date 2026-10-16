@@ -14,31 +14,6 @@ import {FeedService} from '../services/feed-service.js';
 const MAX_TRANSLATED_NEWS = 30;
 const MAX_TRANSLATED_TITLES = 60;
 
-// validate the urls of the selected news, then answer with the result of 'serviceFn'
-const respondWithSelectedNews = async (req, res, serviceFn) => {
-    const {urls} = req.body;
-
-    // validate data
-    if (!Array.isArray(urls) || urls.length === 0 || !urls.every(url => typeof url === 'string')) {
-        return res.status(400).json({error: "Please select at least one news."});
-    }
-
-    const uniqueUrls = [...new Set(urls)];
-    if (uniqueUrls.length > MAX_SELECTED_NEWS) {
-        return res.status(400).json({error: `${MAX_SELECTED_NEWS} news max.`});
-    }
-
-    try {
-        const news = await serviceFn(uniqueUrls);
-        res.status(200).json({
-            totalResults: news.length,
-            news: news
-        });
-    } catch (error) {
-        res.status(error.status || 500).json({error: error.message ?? error});
-    }
-};
-
 export const NewsController = {
     getNews: async (req, res) => {
         const filters = req.body;
@@ -117,10 +92,6 @@ export const NewsController = {
             categories: FeedService.categories(req.query.language || 'en'),
             languages: FeedService.languages(),
         });
-    },
-
-    getNewsContent: async (req, res) => {
-        await respondWithSelectedNews(req, res, NewsService.getNewsContent);
     },
 
     // body: {news: [url], titles: [url], language}: the cards the reader reaches, their title and

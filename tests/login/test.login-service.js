@@ -58,15 +58,18 @@ describe('authUser', () => {
         expect(verifyPassword).toHaveBeenCalledWith('password123', 'hashedPassword');
     });
 
-    it('should throw 404 if user does not exist', async () => {
+    it('should throw 401 if user does not exist, as for a wrong password', async () => {
         // given
         LoginModel.getUserByUsername.mockResolvedValue(null);
+        verifyPassword.mockResolvedValue(false);
 
         // when & then
         await expect(LoginService.authUser(mockCredentials)).rejects.toMatchObject({
-            message: 'This username does not exist...',
-            status: 404
+            message: 'Invalid username or password...',
+            status: 401
         });
+        // a password is still checked: an unknown username takes as long as a wrong password
+        expect(verifyPassword).toHaveBeenCalledWith('password123', expect.stringMatching(/^\$2b\$12\$/));
     });
 
     it('should throw 401 if password is incorrect', async () => {
@@ -76,7 +79,7 @@ describe('authUser', () => {
 
         // when & then
         await expect(LoginService.authUser(mockCredentials)).rejects.toMatchObject({
-            message: 'Invalid password...',
+            message: 'Invalid username or password...',
             status: 401
         });
     });

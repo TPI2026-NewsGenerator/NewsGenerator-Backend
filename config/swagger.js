@@ -90,8 +90,7 @@ const options = {
                         },
                         "400": {"description": "Username or password missing"},
                         "429": {"description": "More than 10 attempts from this address in 15 minutes"},
-                        "401": {"description": "Wrong password"},
-                        "404": {"description": "No such user"}
+                        "401": {"description": "Unknown username or wrong password: the same answer for both, so it never tells which usernames exist"}
                     }
                 }
             },
@@ -131,7 +130,7 @@ const options = {
                 "put": {
                     "tags": ["Login"],
                     "summary": "Change the username of the signed in user",
-                    "description": "Asks the current password. The session cookie starts again with the new name. At most 10 changes per address in 15 minutes, with the ones of the password.",
+                    "description": "Asks the current password. The session cookie starts again with the new name. At most 10 changes per address in 15 minutes, with the ones of the email and the password.",
                     "requestBody": {
                         "required": true,
                         "content": {
@@ -191,7 +190,7 @@ const options = {
                 "put": {
                     "tags": ["Login"],
                     "summary": "Change the password of the signed in user",
-                    "description": "Asks the current password. The sessions opened before, on the other devices, are refused from then on (403); the one of this device starts again. At most 10 changes per address in 15 minutes, with the ones of the username.",
+                    "description": "Asks the current password. The sessions opened before, on the other devices, are refused from then on (403); the one of this device starts again. At most 10 changes per address in 15 minutes, with the ones of the username and the email.",
                     "requestBody": {
                         "required": true,
                         "content": {
@@ -233,9 +232,9 @@ const options = {
                                         "email": {"type": "string", "format": "email", "description": "Unique whatever its case"},
                                         "password": {"type": "string", "format": "password", "description": "10 to 72 characters"},
                                         "text": {"type": "string", "description": "The profile in the reader's words, 20 to 3000 characters"},
-                                        "languages": {"type": "array", "items": {"type": "string"}, "example": ["fr", "en"]}
+                                        "language": {"type": "string", "example": "fr", "description": "The language the news are shown in, one of GET /profile/options; the news of every language are read"}
                                     },
-                                    "required": ["username", "email", "password", "text", "languages"]
+                                    "required": ["username", "email", "password", "text", "language"]
                                 }
                             }
                         }
@@ -560,18 +559,18 @@ const options = {
                 },
                 "patch": {
                     "tags": ["Feeds"],
-                    "summary": "Trust or share one of the sources added by hand, or not",
-                    "description": "`trusted`: among the stories already close to the profile, the ones a trusted source tells get a bonus in the briefing, the AI that chooses is told so, and its article leads the card. It changes nothing to the corroboration.\n\n`shared`: the source can be recommended to the other readers whose interests it publishes on (GET /feeds/recommended). A source added by hand is never recommended without it. Refused when its address looks like it holds a private key (`?key=`, `?token=`, a long random part...).\n\nOnly for the sources added by hand.",
+                    "summary": "Trust one of the sources of the profile, or not",
+                    "description": "`trusted`: among the stories already close to the profile, the ones a trusted source tells get a bonus in the briefing, the AI that chooses is told so, and its article leads the card. It changes nothing to the corroboration. Any source of the profile, added by hand or found for it: a trusted one is never removed, by its relevance or by the thumbs.",
                     "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
-                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"trusted": {"type": "boolean"}, "shared": {"type": "boolean"}}}}}},
-                    "responses": {"200": {"description": "{id, trusted, shared}"}, "400": {"description": "Neither trusted nor shared given, or an address that can't be shared"}, "404": {"description": "Not a source added by hand by this user"}}
+                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"trusted": {"type": "boolean"}}, "required": ["trusted"]}}}},
+                    "responses": {"200": {"description": "{id, trusted}"}, "400": {"description": "trusted is not true or false"}, "404": {"description": "Not a source of this profile"}}
                 }
             },
             "/feeds/recommended": {
                 "get": {
                     "tags": ["Feeds"],
                     "summary": "Sources this reader could add",
-                    "description": "Among the feeds the server already reads for the other readers, only the ones read for a **public reason**: found by the discovery of a profile, or shared by the reader who added them. A feed another reader only added by hand is never a candidate. Kept: the ones with at least 3 news of the last 7 days on the interests of this reader, in their languages, without the media they already read and the sources their thumbs left out. Then the AI reads up to 12 titles of each the vectors put on the interests, and a feed is kept on the ones it confirms (its answer kept a day per feed, the interests unchanged). The most relevant first, 20 at most.",
+                    "description": "Among the feeds the server already reads for the other readers, found by the discovery of a profile or added by hand (every source is for everyone since 8.10.2026), never one whose address looks like it holds a private key (`?key=`, `?token=`, a long random part...). Kept: the ones with at least 3 news of the last 7 days on the interests of this reader, of every language, without the media they already read and the sources their thumbs left out. Then the AI reads up to 12 titles of each the vectors put on the interests, and a feed is kept on the ones it confirms (its answer kept a day per feed, the interests unchanged). The most relevant first, 20 at most.",
                     "responses": {
                         "200": {
                             "description": "The recommended sources",
@@ -583,7 +582,7 @@ const options = {
                                     "url": {"type": "string", "nullable": true, "description": "null for a site read through the RSS-Bridge of the project"},
                                     "category": {"type": "string"},
                                     "language": {"type": "string", "nullable": true},
-                                    "news": {"type": "integer", "description": "Its news of the last 7 days in the languages of the reader"},
+                                    "news": {"type": "integer", "description": "Its news of the last 7 days, of every language"},
                                     "relevant": {"type": "integer", "description": "How many of them are on the interests of the reader, in the share the AI confirmed"},
                                     "samples": {"type": "array", "items": {"type": "string"}, "description": "The titles closest to them, among the ones the AI confirmed"}
                                 }
@@ -594,7 +593,7 @@ const options = {
                 "post": {
                     "tags": ["Feeds"],
                     "summary": "Add recommended sources",
-                    "description": "Only ids are sent: each is checked to be recommended to this reader right now, so every address added is one the server already reads, never one the client names. They are added as if by hand: counted in the limit of 800, never removed without the reader, and not shared.",
+                    "description": "Only ids are sent: each is checked to be recommended to this reader right now, so every address added is one the server already reads, never one the client names. They are added as if by hand: counted in the limit of 800, never removed without the reader.",
                     "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"ids": {"type": "array", "items": {"type": "integer"}, "maxItems": 20}}, "required": ["ids"]}}}},
                     "responses": {
                         "200": {"description": "{feeds, errors}: the sources added, and why the others were not ({id, site, error})"},
@@ -644,63 +643,13 @@ const options = {
                     }
                 }
             },
-            "/news/content": {
-                "post": {
-                    "tags": [
-                        "News"
-                    ],
-                    "summary": "Scrape the full content of the selected news",
-                    "description": "Scrapes the pages of the news selected by the user (10 max). Only urls returned by POST /news are accepted. When a page can't be read (paywall, 403...), the RSS description is returned as content and fullContent is false.",
-                    "requestBody": {
-                        "required": true,
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "urls": {
-                                            "type": "array",
-                                            "maxItems": 10,
-                                            "items": {
-                                                "type": "string",
-                                                "format": "uri"
-                                            }
-                                        }
-                                    },
-                                    "required": [
-                                        "urls"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "responses": {
-                        "200": {
-                            "description": "Content of the selected news, in the same order as asked.",
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/NewsResponse"
-                                    }
-                                }
-                            }
-                        },
-                        "400": {
-                            "description": "No url, more than 10 urls, or url not found in the news cache"
-                        },
-                        "500": {
-                            "description": "Internal Server Error"
-                        }
-                    }
-                }
-            },
             "/news/summary": {
                 "post": {
                     "tags": [
                         "News"
                     ],
                     "summary": "AI resume of the selected news",
-                    "description": "Scrapes the selected news (10 max, like POST /news/content), then asks the AI for a resume of 120 to 150 words and the topic of the news. The resume is kept, so asking twice costs nothing. News that could not be scraped get no resume: summary is null and summaryError explains why.",
+                    "description": "Scrapes the selected news (10 max), then asks the AI for a resume of 120 to 150 words and the topic of the news. The resume is kept, so asking twice costs nothing. News that could not be scraped get no resume: summary is null and summaryError explains why.",
                     "requestBody": {
                         "required": true,
                         "content": {
@@ -807,7 +756,9 @@ const options = {
                     },
                     "responses": {
                         "200": {"description": "The search as it was saved"},
-                        "400": {"description": "Title, keyword, language or category missing, or that title is already used"}
+                        "400": {"description": "Title, keyword, language or category missing"},
+                        "404": {"description": "The id given is not a search of this user"},
+                        "409": {"description": "This user already has a search with that title"}
                     }
                 },
                 "delete": {
@@ -827,7 +778,8 @@ const options = {
                     },
                     "responses": {
                         "200": {"description": "Removed"},
-                        "400": {"description": "No id given, or not a search of this user"}
+                        "400": {"description": "No id given"},
+                        "404": {"description": "Not a search of this user, or already removed"}
                     }
                 }
             },
@@ -847,9 +799,9 @@ const options = {
                             "type": "object",
                             "properties": {
                                 "text": {"type": "string", "minLength": 20, "maxLength": 3000, "example": "Je suis passionné de rugby (Top 14, Six Nations). J'aime aussi la mode. Pas de football."},
-                                "languages": {"type": "array", "items": {"type": "string"}, "example": ["fr", "en"]}
+                                "language": {"type": "string", "example": "fr", "description": "The language the news are shown in, one of GET /profile/options; the news of every language are read"}
                             },
-                            "required": ["text", "languages"]
+                            "required": ["text", "language"]
                         }}}
                     },
                     "responses": {
@@ -1135,13 +1087,6 @@ const options = {
                         "title": {
                             "type": "string"
                         },
-                        "author": {
-                            "type": "string"
-                        },
-                        "lang": {
-                            "type": "string",
-                            "description": "News language, read on its page (only in POST /news/content)."
-                        },
                         "language": {
                             "type": "string",
                             "nullable": true,
@@ -1155,10 +1100,6 @@ const options = {
                             "type": "string",
                             "format": "uri",
                             "nullable": true
-                        },
-                        "content": {
-                            "type": "string",
-                            "description": "The raw news content (only in POST /news/content)."
                         },
                         "topic": {
                             "type": "string",
@@ -1222,10 +1163,6 @@ const options = {
                                     "sources": {"type": "array", "items": {"type": "object"}}
                                 }
                             }
-                        },
-                        "fullContent": {
-                            "type": "boolean",
-                            "description": "False when the page could not be scraped and content is the RSS description (only in POST /news/content)."
                         },
                         "summary": {
                             "type": "string",

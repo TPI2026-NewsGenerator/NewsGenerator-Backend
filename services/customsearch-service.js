@@ -8,6 +8,7 @@
 "use strict"
 
 import { CustomSearchModel } from '../models/customsearch-model.js'
+import { isTaken } from './utils/account-rules.js'
 
 // Prisma answers P2025 when no row matched the id and the user: a search of another user, or one
 // already deleted. It is a 404, not an error of the server
@@ -15,6 +16,17 @@ const notFound = (error) => {
     if (error?.code === 'P2025') {
         const err = new Error(`This custom search does not exist...`);
         err.status = 404;
+        throw err;
+    }
+    throw error;
+};
+
+// Prisma answers P2002 when the user already has a search with that title (u_custom_searches): the
+// reader picks another title, it is not an error of the server
+const titleTaken = (error) => {
+    if (isTaken(error)) {
+        const err = new Error(`You already have a search with this title...`);
+        err.status = 409;
         throw err;
     }
     throw error;
@@ -43,9 +55,9 @@ export const CustomSearchService = {
     },
     postPutUserCustomSearch: async ({id, userId, title, keyword, language, category}) => {
         if (id) {
-            return await CustomSearchModel.updateUserCustomSearch(parseInt(id), parseInt(userId), title, keyword, language, category).catch(notFound)
+            return await CustomSearchModel.updateUserCustomSearch(parseInt(id), parseInt(userId), title, keyword, language, category).catch(notFound).catch(titleTaken)
         } else {
-            return await CustomSearchModel.postUserCustomSearch(parseInt(userId), title, keyword, language, category)
+            return await CustomSearchModel.postUserCustomSearch(parseInt(userId), title, keyword, language, category).catch(titleTaken)
         }
     },
     deleteUserCustomSearch: async ({id, userId}) => {

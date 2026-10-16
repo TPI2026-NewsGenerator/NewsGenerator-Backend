@@ -3,8 +3,8 @@
 //  Date: 25.09.2026
 //  File: recommendation-service.js
 //  Description: The sources a reader could add, among the feeds the server already reads for the
-//               others: the ones found for their profiles and the ones they shared, never one another
-//               reader only added by hand
+//               others: found for their profiles or added by hand (every source is for everyone since
+//               8.10.2026), never one whose address may hold the key of its reader
 //
 
 "use strict"
@@ -81,9 +81,9 @@ export const afterConfirmation = (row, verdict) => {
     return {...row, relevant, samples: verdict.titles.slice(0, 2)};
 };
 
-// Only feeds read for another reader for a public reason are candidates (see recommendedFeeds): a
-// source a reader added by hand says what they follow, and its address may hold their key. Then the
-// media this reader already reads are left out, even through another feed: a second section of
+// The feeds of the other readers are candidates, found for a profile or added by hand (see
+// recommendedFeeds), but never one whose address may hold the key of its reader (looksPrivate). Then
+// the media this reader already reads are left out, even through another feed: a second section of
 // goal.com is not a new source
 const recommended = async (profileId) => {
     const profile = await ProfileModel.get(profileId);

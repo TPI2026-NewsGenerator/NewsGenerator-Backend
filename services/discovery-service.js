@@ -244,7 +244,6 @@ export const DiscoveryService = {
         running.set(profileId, next);
     },
 
-    isRunning: (profileId) => running.has(profileId),
     // 'google', 'press' while it runs (see discover), else null
     phaseOf: (profileId) => phases.get(profileId) ?? null,
 

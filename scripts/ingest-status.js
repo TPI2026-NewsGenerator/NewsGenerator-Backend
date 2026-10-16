@@ -45,9 +45,9 @@ console.log(`  with vectors:  ${status.embedded} (${percent}%), in a story: ${st
 console.log(`  waiting:       ${status.pending}`);
 console.log(`  last saved:    ${status.last ? status.last.toLocaleString('fr-CH') : 'never'}`);
 console.log(`  pace:          ${perMinute.toFixed(1)} news/min over the last ${PACE_MINUTES} min`);
-console.log(`  time left:     ${status.pending === 0 ? 'none' : left === null ? `unknown, nothing saved in the last ${PACE_MINUTES} min (a batch is ${process.env.INGEST_MAX_EMBEDDED || 300} news)` : `about ${time(left)} at this pace`}`);
+console.log(`  time left:     ${status.pending === 0 ? 'none' : left === null ? `unknown, nothing saved in the last ${PACE_MINUTES} min (a batch is ${process.env.INGEST_MAX_EMBEDDED || 100} news)` : `about ${time(left)} at this pace`}`);
 
 console.log(`Older news of the ${RETENTION_DAYS} days kept: ${older.news}, waiting for vectors: ${older.pending}` +
-    (older.pending > 0 ? ` (${process.env.INGEST_OLDER_BATCHES || 1} batch of ${process.env.INGEST_MAX_EMBEDDED || 300} per run, after the window)` : ''));
+    (older.pending > 0 ? ` (${process.env.INGEST_OLDER_BATCHES || 1} batch of ${process.env.INGEST_MAX_EMBEDDED || 100} per run, after the window)` : ''));
 
 await prisma.$disconnect();

@@ -144,7 +144,8 @@ export const normalizeInterests = (answer, {categories}) => {
 export const MAX_REFUSED = 6;
 
 // what the reader says they do not want, in their words: shown on their profile so they see it was
-// read. The choice and the review of a briefing read it in the profile text itself
+// read. The choice of a briefing reads it in the profile text itself, its review gets this list (see
+// reviewPrompt)
 export const normalizeRefused = (answer) => [...new Set((Array.isArray(answer?.refused) ? answer.refused : [])
     .map(refused => cleanText(refused, 200)).filter(Boolean))].slice(0, MAX_REFUSED);
 

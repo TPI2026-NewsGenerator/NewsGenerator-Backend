@@ -47,6 +47,16 @@ describe('CustomSearchService', () => {
         await expect(CustomSearchService.deleteUserCustomSearch({id: 7, userId: 4})).resolves.toBeUndefined();
     });
 
+    it('should answer 409 when the user already has a search with that title', async () => {
+        const taken = () => Object.assign(new Error('Unique constraint failed on the fields: (`id_user`,`title`)'), {code: 'P2002'});
+        CustomSearchModel.postUserCustomSearch.mockRejectedValue(taken());
+        CustomSearchModel.updateUserCustomSearch.mockRejectedValue(taken());
+        const search = {userId: 4, title: 'Foot', keyword: 'goal', language: 'en', category: ['sport']};
+
+        await expect(CustomSearchService.postPutUserCustomSearch(search)).rejects.toMatchObject({status: 409});
+        await expect(CustomSearchService.postPutUserCustomSearch({...search, id: 7})).rejects.toMatchObject({status: 409});
+    });
+
     it('should let any other error through', async () => {
         CustomSearchModel.deleteUserCustomSearch.mockRejectedValue(new Error('database down'));
 

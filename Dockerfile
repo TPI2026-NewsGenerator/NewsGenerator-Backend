@@ -1,6 +1,6 @@
 # The API of NewsGenerator and its background work (the ingestion), as it runs on the machine that
-# stays on (see deploy/compose.yml). Every dependency is installed: express-validator, used by the
-# routes, is listed among the devDependencies
+# stays on (see deploy/compose.yml). Every dependency is installed: the prisma CLI, which generates the
+# client below, is listed among the devDependencies
 FROM node:24-slim
 # ps: Crawlee reads the memory of the machine with it before reading the pages of the articles, the
 # slim image has none and every briefing failed ("spawn ps ENOENT")

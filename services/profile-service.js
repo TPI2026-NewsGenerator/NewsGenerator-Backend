@@ -21,7 +21,7 @@ import {isFlood, MAX_PROFILE_FEEDS} from "./utils/feed-limits.js";
 import {searchesOfUser} from "./ingest-service.js";
 import {readerLanguage} from "./utils/language.js";
 import {forClient, sourceKey} from "./utils/public-url.js";
-import {cleanWatchTerms, MAX_WATCH_TERMS} from "./utils/watch-terms.js";
+import {MAX_WATCH_TERMS} from "./utils/watch-terms.js";
 import {isAdmin} from "./utils/admin.js";
 import {keptResult} from "./utils/kept-result.js";
 
@@ -364,13 +364,6 @@ export const ProfileService = {
         await ownProfile(userId, profileId);
         const end = cleanEnd(endsOn);
         if (!Number.isInteger(id) || await ProfileModel.setProjectEnd(profileId, id, end) === 0) throw notFound('Unknown project.');
-        return ProfileService.get(userId, profileId);
-    },
-
-    // the names or words whose news are always shown (see watchedNews in briefing-service.js)
-    setWatchTerms: async (userId, profileId, terms) => {
-        await ownProfile(userId, profileId);
-        await ProfileModel.setWatchTerms(profileId, cleanWatchTerms(terms));
         return ProfileService.get(userId, profileId);
     },
 

@@ -69,9 +69,6 @@ export const ProfileController = {
     setProjectEnd: (req, res) => respond(res, () => ProfileService.setProjectEnd(req.user.id, req.profileId, idOf(req), req.body?.endsOn ?? null)),
     removeProject: (req, res) => respond(res, () => ProfileService.removeProject(req.user.id, req.profileId, idOf(req))),
 
-    // {terms}: the names or words whose news are always shown
-    setWatchTerms: (req, res) => respond(res, () => ProfileService.setWatchTerms(req.user.id, req.profileId, req.body?.terms)),
-
     updateInterest: (req, res) => {
         const {text, weight} = req.body ?? {};
         return respond(res, () => ProfileService.updateInterest(req.user.id, req.profileId, idOf(req), {text, weight}));

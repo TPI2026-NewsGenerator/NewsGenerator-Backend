@@ -311,11 +311,10 @@ export const FeedModel = {
             data: { id_user: userId, id_profile: profileId, url: url, site: site, category: category, language: language },
         });
     },
-    // {trusted} on any source, {shared} only on one added by hand: one found for the profile is
-    // already a public find (see RecommendationService)
+    // {trusted}, on any source of the profile
     updateUserFeed: async (profileId, id, data) => {
         const { count } = await prisma.user_feeds.updateMany({
-            where: { id: id, id_profile: profileId, ...('shared' in data ? { origin: 'user' } : {}) },
+            where: { id: id, id_profile: profileId },
             data: data,
         });
         return count;
