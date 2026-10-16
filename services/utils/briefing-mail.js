@@ -183,7 +183,7 @@ const officialHtml = (given) => {
     const posts = given.filter(post => webUrl(post.url));
     return posts.length === 0 ? '' : `
 <div class="ng-secondary ng-rule" style="margin-top:24px;background:${LIGHT.secondary};border-left:3px solid ${LIGHT.ink};padding:14px 18px">
-  ${kicker('Official source', 'ink')}
+  ${kicker('Official sources', 'ink')}
   ${posts.map(post => `<p class="ng-ink" style="${BODY};margin-top:8px">${officialLine(post)}</p>`).join('')}
 </div>`;
 };

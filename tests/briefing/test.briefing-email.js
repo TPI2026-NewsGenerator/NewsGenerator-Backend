@@ -341,7 +341,7 @@ describe('briefingMail', () => {
             {party: '<FIGC>', title: 'Malagò commissario', url: 'javascript:alert(1)', channel: 'site', publishedAt: null},
         ]});
         let {html, text} = briefingMail({...briefing, items: [official]});
-        expect(html).toContain('Official source');
+        expect(html).toContain('>Official sources<');
         expect(html).toContain('<b>UEFA</b> said it: <a href="https://www.uefa.com/news/1"');
         // a post without a web address is no link
         expect(html).not.toContain('javascript:');
