@@ -8,6 +8,16 @@ into account user parameters such as keywords, desired/undesired topics, languag
 It also writes a daily briefing for each user, from a profile written in their own words (see **The briefing**
 below).
 
+In a few lines, from A to Z: in background, every minute, the server reads thousands of feeds and
+searches of Google News, gives each news its bge-m3 vectors and its names (people, organisations,
+places), and groups the news of several media telling one fact into a story, the stories of one affair
+into a thread. A reader writes their profile with the AI's questions; the AI splits it into interests,
+and the server finds sources for them. On demand, a briefing ranks the stories of 1 to 7 days on those
+interests in SQL, the AI chooses and checks them, the articles are read, and each card shows the
+article's own sentences (key passages, points or a summary), who tells it, its other angles, its
+official source, an AI analysis, and the news of the names the profile follows. An administrator can
+send the cards by e-mail. The diagrams of `docs/UML/sprint4/` draw it all (see **Documentation**).
+
 Because it reads hundreds of media at once, it also says how widely a news is carried and how its
 article credits its sources. That describes what was measured, never whether the news is true.
 
@@ -21,7 +31,13 @@ article credits its sources. That describes what was measured, never whether the
     gpt-oss:20b, gpt-oss:120b and nemotron-3-nano:30b: the best choice and check of the stories, and 5 to 10
     times fewer tokens, because it does not reason before answering. It can be hosted on one GPU.
   - fallback: the same model on the [Gemini API](https://ai.google.dev/) (gemma-4-31b-it, free), asked
-    when Ollama fails (`AISTUDIO_API_KEY`, see **Ollama** below)
+    when Ollama fails or does not answer within 120 s (`AISTUDIO_API_KEY`, see **Ollama** below)
+  - deepseek-v4-pro:0813 for the two texts the AI writes itself, the AI version of a card
+    (`OLLAMA_WRITE_MODEL`) and the analysis of the cards (`OLLAMA_ANALYSIS_MODEL`): fewer meaning errors
+    and clearer than gemma4:31b where it was measured, at about 11 times its cost; no Gemini after it
+- **Names of the news:** [GLiNER](https://github.com/urchade/GLiNER) multi v2.1, a Python process of its
+  own (`ner/`, see **Tagger** below), and [Wikidata](https://www.wikidata.org) for the items followed
+- **E-mail:** [Nodemailer](https://nodemailer.com/) through an SMTP account (`services/utils/mailer.js`)
 - **Vectors of the news:** [bge-m3](https://huggingface.co/BAAI/bge-m3), dense and sparse, computed by a
   Python process of its own (`embedder/`, see **Embedder** below): [FlagEmbedding](https://github.com/FlagOpen/FlagEmbedding)
   and [PyTorch](https://pytorch.org/) on a graphics card, [ONNX Runtime](https://onnxruntime.ai/) on a
@@ -79,6 +95,12 @@ same model on the Gemini API answers when Ollama fails (`services/utils/ollama.j
 key leaves Ollama aside for 15 minutes, a service down only that call. A fallback only: measured on 8
 calls, 30 to 86 s each where Ollama answers in 1 to 7, 2 of them an immediate error 500 (asked again
 once), and its JSON mode answers an error 500 for this model. The free tier lets Google read the prompts.
+
+5. The whole server sends 6 calls at once to Ollama at most (`OLLAMA_CONCURRENCY`): Ollama cloud takes
+6 and refuses the next ones at once (`bench/ollama-concurrency.mjs`, 14.10.2026), which lost the angles
+of a card. A call is given up after 120 s and asked of Gemini; Ollama answering "too many concurrent
+requests" is asked again after 2, 5 and 10 s. A call of deepseek-v4-pro waits longer (20 and 30 s more)
+and never goes to Gemini: failing only gives up what it was for.
 
 #### Embedder
 
@@ -192,6 +214,7 @@ second. The `.env` of the server lists the taggers in `NER_URL`, separated by co
 33. Do the same with "add_follow_in_briefing.sql" (what a profile follows in one list, see **What a
     profile follows** below)
 34. Do the same with "add_mentions_wanted.sql" (the names a reader sees looked for in Wikidata first)
+35. Do the same with "add_briefing_analysis.sql" (the AI analysis of the cards of a briefing)
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.
@@ -234,13 +257,21 @@ bge-m3 vectors, groups them into stories and links the stories of one affair int
 | 1 to 5 | 30 min |
 | none | 60 min |
 
-A feed failing is read twice less often per failure in a row, every hour at most; a search of Google
-News every `GOOGLE_NEWS_EVERY_MINUTES`. Every feed read every 20 minutes, a news waited 19 minutes in
+A feed failing is read twice less often per failure in a row, every hour at most, and once a day when
+its last success is 3 days old or more (`last_success_at`); a search of Google News every
+`GOOGLE_NEWS_EVERY_MINUTES`, 60 of them at most per run, one after the other. The feeds are read 50
+at a time, each given 8 seconds (40 through RSS-Bridge). Before a news is saved, the ones without a
+link or a title are skipped, and a news its feed already gave under another link (same title, same date
+of publication, `FeedModel.withoutRepeats`) is dropped. Every feed read every 20 minutes, a news waited 19 minutes in
 the median to be read and 28 to have its vectors, half of them more; every feed read every minute would
 be 24 requests a second to sites whose feed changes every few minutes at best. With these rhythms, 220
 requests a minute (77 before), the 200 feeds giving two thirds of the news read every 2 minutes, and
-each run embeds and groups the few news it found. The old news are dropped once an hour, and the
-directory looks at more media every 20 minutes. Nobody waits for it: the
+each run embeds and groups the few news it found. The old news are dropped once an hour, with the
+stories and threads left empty; the directory looks at more media every 20 minutes and takes out the
+feeds that serve no reader once a day (see **The directory** below). The feeds giving 500 news a day
+or more are embedded last, after the others. Once an hour, the log warns when 8000 news or more wait
+for their vectors, with the 5 feeds that gave the most in the last 3 hours. A run asked for some feeds
+(a discovery) while another run holds the lock still reads them. Nobody waits for it: the
 searches and the briefing read what it has already stored. The vectors come from the embedder, a
 Python process (`embedder/server.py`, on this machine or another one with a graphics card, see
 `EMBEDDER_URL` in `.env.example`); while it is down the news are stored anyway and get their vectors
@@ -278,6 +309,7 @@ when it is free and leaves it to the site and the other work of the machine when
 
 ```bash
 pnpm run ingest:status   # where it stands: news of the window with their vectors, waiting ones, pace, time left
+pnpm run ner:status      # the same for the tagger: news tagged, waiting, names linked to Wikidata
 node scripts/assign-threads.js   # once, after db/add_threads.sql: a thread for the stories grouped before
 pnpm run ingest          # one run now, by hand (a run of the server at the same time is skipped, a lock keeps them apart)
 pnpm run embedder        # starts the embedder on this machine
@@ -312,7 +344,7 @@ Optional variables in `.env`:
 
 | Variable | Default | Description |
 |---|---|---|
-| `INGEST_IN_SERVER` | on | `false` leaves the background work to `pnpm run ingest`, run by a scheduler of the system |
+| `INGEST_IN_SERVER` | on | `false` leaves the background work to `pnpm run ingest`, run by a scheduler of the system. It also stops the tagging of the names (see **The names of the news**), which `pnpm run ingest` does not do: with `false`, nothing is tagged |
 | `INGEST_INTERVAL_MINUTES` | 1 | the time between the starts of two runs (the next one at once after a longer run), each reading the feeds due |
 | `INGEST_MAX_EMBEDDED` | 100 | news embedded, saved and grouped at a time, the newest first. On a busy processor 1500 news at once took over an hour, all lost if the process stopped before saving them; 300 took 4 to 5 minutes on the processor alone, the busiest feeds read every 5 minutes instead of 2 |
 | `INGEST_GROUP_MINUTES` | 1 | a run starts no batch of the window after these minutes, the feeds read included: the rest waits for the next run, the busiest feeds read before |
@@ -333,35 +365,42 @@ Optional variables in `.env`:
 | Where | What |
 |---|---|
 | `http://localhost:3001/docs` | every route, with its body and its answers (Swagger UI). It is written in `config/swagger.js`, which is the only source: there is no `.yaml` to keep in step with it |
-| `docs/MLD_sprint4.md` | the fifteen tables, their columns and their keys, to redraw the MLD |
-| `docs/UML/sprint4/` | the class diagrams, one per feature (accounts, saved searches, search, ingestion, sources, profile, discovery, briefing) and an overview of what links them (`0*`), and the sequence diagrams of the signup, the search, the briefing, the discovery and the ingestion (`1*`), as source and as PNG. Render them again with `java -jar plantuml.jar -charset UTF-8 docs/UML/sprint4/*.puml` |
+| `docs/MLD_sprint4.md` | the twenty-four tables, their columns, their keys and the SQL functions, to redraw the MLD (checked against the database in service, 16.10.2026) |
+| `docs/UML/sprint4/` | as source and as PNG (16.10.2026): an overview of the features and what links them (`00`); the class diagrams, one per feature (`01` accounts, `02` saved searches, `03` search, `04` ingestion, `05` sources, `06` profile, `07` discovery, `08` and `08b` briefing, `09` e-mail, `10` following); the sequence diagrams (`20` signup, `21` search, `22` briefing, `23` discovery, `24` ingestion, `25` profile, `26` e-mail, `27` following); the database (`30`), the machines (`31`) and the whole system from A to Z (`32`). Render them again with `java -jar plantuml.jar -charset UTF-8 docs/UML/sprint4/*.puml` |
+| `docs/Parcours NewsGenerator.md` (`.html`) | in French, the walk of a reader from the account to the reading of a card, every step with its mechanism and its technology |
+| `docs/Parcours d'une nouvelle.md` (`.html`) | in French, one news followed from the page of its medium to the card of a reader |
 | `docs/UML/*-diagram.puml` | the sequence diagrams of the login and of the saved searches, from sprint 1, brought up to date |
 | `docs/*.png` | the MCD, MLD and class diagrams of sprints 1 to 3, kept as they were |
+| `../client/docs/UML/` | the use cases, the client's class diagrams by feature and its sequence diagrams |
 
 ### How a search works
 
 1. The feeds of `db/rss-links.js` are grouped by language, then by category (world, press, sport,
    politics, economy, technology, science). The user chooses the categories, that is the first
-   filter, and the language the cards are **shown** in. There are 415 feeds: 335 in English, 25 in
-   French, 20 in Spanish, 20 in German, 15 in Italian. A search reads the feeds of **every language**:
+   filter, and the language the cards are **shown** in. There are 386 feeds: 290 in English, 30 in
+   French, 23 in Spanish, 21 in German, 22 in Italian. A search reads the feeds of **every language**:
    read in the language searched only, a reader with sources in 34 languages found 4 news for
-   "Schiedsrichter im FuÃŸball" and 28 in the languages of their profile, 11 and 28 for "les
-   dÃ©signations d'arbitres" (`bench/search-languages.mjs`).
+   "Schiedsrichter im Fußball" and 28 in the languages of their profile, 11 and 28 for "les
+   désignations d'arbitres" (`bench/search-languages.mjs`).
 2. A search fetches no feed: it only reads the `articles` table, filled in background (see
    **Background work** above), so nobody waits for a feed. Besides the shared feeds of the categories
-   chosen, a search reads the sources of the readers that are not private, of every language and
-   those categories (`FeedModel.publicFeedUrls`, `searchesOfCategories`):
-   - the sources of the user searching, those they added by hand included;
-   - the feeds found for the profile of any reader, and the ones a reader chose to share;
-   - the searches of Google News of the interests of every profile. They say which subjects are
-     followed, never by whom;
+   chosen, a search reads, all at once and in every language (`services/news-service.js`):
+   - the sources of the profile searching (the active profile, see **What a profile follows**), those
+     added by hand included (`FeedModel.userFeedUrls`);
+   - the sources of **every** reader of those categories, found for a profile or added by hand,
+     except the addresses that hold a key (`FeedModel.publicFeedUrls`, `looksPrivate`). Since
+     8.10.2026 a source is no longer private: the feeds of one reader serve the searches and the
+     briefings of all;
+   - the searches of Google News of the interests of every profile (`searchesOfCategories`). They say
+     which subjects are followed, never by whom;
+   - the feeds of Google News of the sentences searched in the last 30 days (`sentenceFeeds`);
    - the feeds of the directory of the project, found by the server itself, of those categories or of
      none (see **The directory** below).
 
-   A source added by hand and not shared stays its reader's: nobody else searches it. Measured for
-   one reader (`bench/pool-sources.mjs`, French, 30 days): "cartes PokÃ©mon" found 1 news in the shared
-   feeds and their own, 2 with the feeds found for the other profiles, 10 with their searches of
-   Google News. The briefing still reads only the sources of its reader.
+   Measured for one reader (`bench/pool-sources.mjs`, French, 30 days): "cartes Pokémon" found 1 news
+   in the shared feeds and their own, 2 with the feeds found for the other profiles, 10 with their
+   searches of Google News. The briefing reads the sources of every reader too
+   (`FeedModel.everyoneFeedUrls`).
 
    A news read through Google News is shown under the medium Google names. Its real address is only
    asked to Google when its key passages are asked for and the card has no other article to read
@@ -370,22 +409,25 @@ Optional variables in `.env`:
 3. What was typed decides how it is searched (`Filter.hasOperators`):
    - **A sentence**, without any operator, is searched by its meaning (`NewsService.searchByMeaning`).
      The embedder gives the vector of the sentence, and `FeedModel.closestArticles` takes, among the
-     news of the chosen feeds and timeframe that have their vectors, the **80 closest** (dense + 0.5 Ã—
+     news of the chosen feeds and timeframe that have their vectors, the **80 closest** (dense + 0.5 ×
      sparse, as the briefing ranks the news of an interest) and the **30 with the most of its words**
      (the sparse vector alone), which keeps the news naming what the sentence names when their meaning
      is further. The news in the language searched and the news in the others each get their 80 and
      30: taken together, the news of every language buried the ones of the language searched (the two
-     French answers of "les dÃ©cisions d'arbitrage et la VAR en Ligue des champions" were left out). The AI then reads their titles and the start of their descriptions, each title once,
-     and sorts them into two lists (`services/utils/search-ai.js`): the **answers** to the sentence, and
-     the news that are only **related** to it (another place, another aspect). The cards come in its
-     order, the answers first, and the news in no list are left out.
+     French answers of "les décisions d'arbitrage et la VAR en Ligue des champions" were left out). The AI then reads their titles and the start of their descriptions, each title once,
+     one line per story, and gives each a verdict (`services/utils/search-ai.js`, asked once more when
+     its answer is no JSON): an **answer** to the sentence, or a news only **related** to it (another
+     place, another aspect). The cards come in its order, the answers first, and the news with no
+     verdict are left out.
 
      Measured on 13 sentences in French and English (`bench/meaning.mjs`, `meaning-ai.mjs`): the vectors
      alone rank a broad subject well, but not a sentence that names someone, a place or an aspect ("AI
      at the hospital" gave AI in general), nor one that excludes something, and their scores do not say
      where the answers stop. So they only bring the candidates, the AI judges them. Asked for one list,
      it left out news a reader would want (fuel prices for "the rise of energy prices"), hence the
-     second one. 80 + 30 news are 4000 to 7000 tokens, answered in 1 to 3 seconds.
+     second one. 80 + 30 news are 4000 to 7000 tokens, answered in 1 to 3 seconds; with their 80 + 30
+     for the language searched and for the others, and the 40 of Google News on a second pass, up to
+     260 news are read, and a verdict per news costs 0.4 to 2.3 s more than two lists.
 
      Without the AI, the 30 closest are given, marked as not checked. Without the embedder, the
      sentence cannot be searched: the reader is told to put their words between quotes.
@@ -409,54 +451,59 @@ Optional variables in `.env`:
        little, 40% of Google's first 30 news were in none of our feeds (01.10.2026), all of them from
        the 8 searches it was not asked.
 
-     `SEARCH_GOOGLE_NEWS=off` turns both off.
+     `SEARCH_GOOGLE_NEWS=off` (or `GOOGLE_NEWS=off`) turns both off.
    - **Keywords with an operator** (a quote, a comma or a `-word`) are searched as written, in SQL, with
      the excluded keywords and the timeframe. They work like on Google: commas separate alternatives
      (OR), the words of an alternative must all be found (AND), `"quoted text"` is an exact word or
-     phrase and `-word` excludes. A Latin letter is searched with and without its accents (`ZÃ¼rich`
-     finds `Zurich`, `-BarÃ§a` leaves out `Barca`: 8 to 100 ms a term with the trigram index,
+     phrase and `-word` excludes. A Latin letter is searched with and without its accents (`Zürich`
+     finds `Zurich`, `-Barça` leaves out `Barca`: 8 to 100 ms a term with the trigram index,
      `bench/accent-patterns.mjs`), and the facts of an affair shown on a card are left out too when
      they hold an excluded word.
 
    In the keyword search, asking for every word at once is strict: `"referee" football soccer` wants
    the three of them in the same news, and almost none has all three. So when a search finds fewer
    than five news, the wider search asking for *any* of the words is counted and **offered**, not
-   done â€” widening `"red card"` on its own would answer everything about red or about card. See
-   `canWiden` and `widen` in `services/utils/filter.js`.
+   done — widening `"red card"` on its own would answer everything about red or about card. See
+   `canWiden` and `widen` in `services/utils/filter.js`. Nothing found answers
+   `{totalResults: 0, news: [], wider, mode: 'words'}` at once.
 4. The cards written in another language than the one searched carry their language, and their title
    and description are translated by the AI when the reader reaches them (`POST /news/translations`,
    `NewsService.translateNews`): 20 texts per call, each figure checked as in the key passages, a text
-   translated once per language. The card says it is a machine translation and shows the text as
-   written on demand. A card of the search is grouped with the others of its language only (see
-   below): the cards telling the same fact are joined when the AI says so (the prompt of the briefing,
-   `mergeStories`), asked only of the cards with two articles at least 0.65 alike in their texts, in
+   translated once per language (30 cards and 60 titles a call at most; the translations are kept in
+   the memory of the process, 20 000 at most, and lost when it restarts). The card says it is a
+   machine translation and shows the text as written on demand.
+
+   In the **search by meaning** only, after the grouping of point 5, the cards telling the same fact
+   are joined when the AI says so (the prompt of the briefing, `mergeStories`, 30 cards asked at most),
+   asked only of the cards with two articles at least 0.65 alike in their texts, in
    two languages or in one (two stories of one fact told from two angles), a card joining the fact
    when it is close to one of its cards. The vectors alone put the inflation of Belgium with the one
    of Germany (0.885) above most real pairs. Judged by hand on 12 searches (`bench/join-cards.mjs`):
    about 50 cards joined, 2 wrongly; at 0.55 a quarter of the joins below 0.75 were wrong. A card
    whose text does not say enough stays apart: in doubt, the AI joins nothing.
-5. News telling the same story are grouped: one card, with the other sources listed under it. The
-   list of a search is grouped here, with the trigrams of the titles; the briefing reads the stories
-   built in background with the vectors instead (see **How the groups are built** below). An
-   article joins the group it resembles **on average** above **0.25** of trigram similarity â€” under
+5. News telling the same story are grouped: one card, with the other sources listed under it. A news
+   already in a story built in background with the vectors goes with its story (see **How the groups
+   are built** below); only the news in no story yet are grouped here, with the trigrams of their
+   titles. Such an article joins the group it resembles **on average** above **0.25** of trigram similarity — under
    40 characters the stricter **0.45** is kept, because a short title is mostly the template its
    paper puts around it and trigrams cannot tell "Health Care Roundup: Market Talk" from "Auto &
    Transport Roundup: Market Talk". Both constants are at the top of `services/news-service.js`, and
    **How the groups are built** below says why the average and not a single link.
 
    The accents are removed before comparing. Two papers do not spell a name the same way: the
-   Guardian writes "HiguaÃ­n" where the Independent writes "Higuain", and that one accent moves the
+   Guardian writes "Higuaín" where the Independent writes "Higuain", and that one accent moves the
    pair from 0.325 to 0.294, which is the difference between grouped and not grouped. Measured on a
    day of articles it adds 0.75% of pairs, almost all of them French, Spanish or Italian, where
    accents are common. It needs `db/add_unaccent.sql`.
    The cards of one affair are then one card (see **The threads** below): the preview of a match, its
    result and the reactions are three facts, shown under the card in their order, with the facts of
-   the affair the search did not find, read from the feeds of this user only. Each fact can be chosen
-   for its key passages.
+   the affair the search did not find (12 at most, 30 articles each), read from every feed the search
+   read. Each fact can be chosen for its key passages.
 6. Each card says what the grouping measured, and nothing more (see **Corroboration** below).
 7. A user can add their own sources (`POST /api/feeds` with a site address): the server finds the
-   RSS feed of the site and checks it answers. These sources are **private**, they are only used in
-   the searches of this user, unless they share them. Addresses of private networks are refused, see `services/utils/public-url.js`.
+   RSS feed of the site and checks it answers. Like every source, it is read by the searches and the
+   briefings of all the readers (an address that holds a key excepted, `looksPrivate`), and it can be
+   recommended to the others. Addresses of private networks are refused, see `services/utils/public-url.js`.
    800 at most (`MAX_USER_FEEDS`): a reader's list of the football media of Europe had 180 feeds,
    about 500 news a day for the 108 the server did not read yet; a list of 865 sources gave 510 feeds.
    A **list** can be imported from a file of the reader (Excel `.xlsx`, CSV, OPML or text): the client
@@ -465,27 +512,38 @@ Optional variables in `.env`:
    feed of each as for one site and says what keeps it out: no feed (read from its page through the
    bridge), fewer than 3 news in 7 days, more than 300 news at once (a flood or an archive), already
    added. The reader ticks the ones to keep, added by `POST /api/feeds/import`. The 495 sites of that
-   list took about 4 minutes.
-   The feed of a site is looked for in four steps, each one tried only when the one before found
+   list took about 4 minutes. A check reads 25 sites a request, 6 at once, 60 seconds each at most,
+   and 2000 sites an hour per account (4000 per address).
+   The feed of a site is looked for in five steps, each one tried only when the one before found
    nothing (`services/utils/feed-finder.js`):
    1. the feed the page declares, `<link rel="alternate" type="application/rss+xml">`, except the
       feed of the comments a WordPress site declares next to its news (`/comments/feed`);
-   2. the usual paths, `/rss`, `/feed`, `/rss/news`...;
+   2. the 13 usual paths, `/rss`, `/feed`, `/rss/news`, those of the Arc and Reach sites...;
    3. a directory of feeds, which knows the ones a site declares nowhere and that are on no usual
-      path (`feed-directory.js`): this is what finds football.london and uefa.com;
-   4. the site read as a page and turned into a feed by RSS-Bridge (`feed-bridge.js`), for the news
-      sites that publish none at all: goal.com, onefootball.com, realmadrid.com.
+      path (`feed-directory.js`, Feedly): this is what finds football.london and uefa.com. Looking for
+      a subject (the discovery, a missing source), up to 3 section pages of the site, its page of feeds
+      and the feeds already known of the medium are tried with it, 20 checked at most;
+   4. the news sitemap of the site (named by its `robots.txt` or on the usual paths, 4 at most): 9 of
+      40 media without a feed have one (`bench/news-sitemaps.mjs`);
+   5. the site read as a page and turned into a feed by RSS-Bridge (`feed-bridge.js`), for the news
+      sites that publish none at all: goal.com, onefootball.com, realmadrid.com. The directory never
+      uses this step. The address of a feed built this way never reaches the browser: the client gets a
+      key (16 characters of its sha256), and an import builds the feed again from the site's name.
 
    On 30 media that searches were missing, 17 publish a feed, 6 more are reached by step 4, and 7
    answer 401 or 403 to any server and stay out of reach (Reuters, AP, Man City).
 8. The media the search missed are named to the user, so the list of sources grows from what the
-   searches actually lacked (see **Missing sources** below).
+   searches actually lacked (see **Missing sources** below). The client asks for them in a call of its
+   own after the search, `POST /api/feeds/suggestions`.
 9. The pages are read and the AI is called **only** on the cards selected by the user
    (`NewsService.summarizeStories`, at most 10 cards). Up to 5 articles of each card are read, one per
    medium and a source the reader trusts first: their texts say how many were written apart from the
    others (no AI, see **Corroboration** below). The first one that can be read in full gives the
    **key passages** of the card (see **Key passages** below). They are saved with the article, so the
-   same news asked twice costs nothing, and its translation is kept for the last language asked.
+   same news asked twice costs nothing, and its translation is kept for the last language asked. At
+   the same time the AI looks for a denial among the sentences of the card's articles (`contested.js`,
+   25 sentences at most, 2 denials shown, translated), and the lead titles are translated. A card
+   holds 30 addresses at most, and an address that is not in the cache is refused (400).
 
 #### Key passages
 
@@ -501,9 +559,15 @@ those sentences **word for word, as the article published them**, back in the or
 about 170 words at most; sentences that follow each other make one passage, and a gap between two
 passages is shown. A page with fewer than 60 words (a teaser, a paywall) is not used.
 
+Two shorter ways to read a card are made of the same sentences, the reader choosing one of the three
+on the page and for the e-mail: the **points**, the 3 most important sentences, one passage each, the
+most important first; and the **summary**, the most important sentences while they fit in 65 words.
+Points and summaries written by the AI changed the meaning of 2 or 3 of 30 articles: they are only
+offered apart, as the **AI version** of a card (see **The briefing**).
+
 A story no article of which can be read that way (a paywall, a protected site, its first lines only)
-never becomes a card: it only showed its title and "No article could be read". The AI chooses up to 15
-stories for the 10 cards, and the next ones it chose take the places left, read only when a card is
+never becomes a card: it only showed its title and "No article could be read". The AI chooses 20
+stories for 10 cards (30 for 20, 45 for 30), and the next ones it chose take the places left, read only when a card is
 missing, two more rounds at most (`services/utils/readable-cards.js`). When even those can't be read,
 the briefing has fewer cards. A card whose article was read but whose passages the AI failed to choose
 is kept, and says so.
@@ -524,15 +588,18 @@ These things are shown next to a news, each one measured, none of them a verdict
 
 | Shown | Where it comes from |
 |---|---|
-| `N media` | how many different media the group holds, counted per medium and not per feed (`mediumOf`). In the briefing, a news read through Google News counts for the medium Google names as its publisher, not for google.com |
-| `M wordings` | in the list of a search: the same titles grouped a second time at 0.85, which is the threshold of the same text: a wire of Reuters republished by twenty sites gives twenty media but one wording, and that is one report seen twenty times, not twenty confirmations. Never more than `N`. |
-| written apart, agencies | once the articles are read (a card selected in a search, a story of the briefing): up to 5 texts per card, compared on their sequences of eight words. Two texts are the same copy when half of the sequences of the shorter one are found in the other, because a paper rewrites the title of a wire and keeps its text. It also names the agencies the texts credit ("avec AFP", "(Reuters)"). No AI, see `services/utils/corroboration.js`. |
+| `Told by N media` | how many different media the group holds, counted per medium and not per feed (`mediumOf`). In the briefing, a news read through Google News counts for the medium Google names as its publisher, not for google.com |
+| `M own headlines` / `one single text republished` | in the list of a search: the same titles grouped a second time at 0.85, which is the threshold of the same text: a wire of Reuters republished by twenty sites gives twenty media but one wording, and that is one report seen twenty times, not twenty confirmations. Never more than `N`. |
+| `M different texts of R read`, `wire: AFP` | once the articles are read (a card selected in a search, a story of the briefing): up to 5 texts per card, compared on their sequences of eight words. Two texts are the same copy when half of the sequences of the shorter one are found in the other, because a paper rewrites the title of a wire and keeps its text. It also names the agencies the texts credit ("avec AFP", "(Reuters)"). No AI, see `services/utils/corroboration.js`. |
 | `says "reportedly"` | the words the article itself used to say it has no confirmation (`services/utils/hedging.js`). It reports how the article presents itself, and the article's own words are shown rather than a label. Conditionals are left out: French and Italian use them for ordinary reported speech. |
 | `named` / `unnamed` / `no source given` | who the article credits, answered by the AI in the call that picks the key passages, so it costs no extra call. It describes the article, never the truth of the news: an official statement can be a lie and an unnamed source can be right. |
 
-A group of one medium says `this source only`, which is the honest answer and not a warning.
+A group of one medium says `Only one medium`, which is the honest answer and not a warning. The
+labels are written by the client (`client/src/features/briefing/corroboration.js`), the same on the
+cards of the briefing and of the search; "different" and not "independent" since 15.10.2026: a wire
+reworded counts as another text.
 
-**Above ten articles, the card stops claiming to be one news** and says `N media on this story`.
+**From ten articles, the card stops claiming to be one news** and says `Told by N media: a running story`.
 It is a safety net that nothing reaches today: the largest true group measured holds eight
 articles, and nothing between nine and eleven exists at all. It used to be five, when the grouping
 chained (see below) and a card could hold thirty-one articles from a court filing to the late-night
@@ -589,8 +656,8 @@ fetched. Measured both ways, that changes nothing, so the query stays as it is.
 Two other answers were measured and rejected. Weighing the words by how rare they are (TF-IDF) does
 worse, because a template is rare too: "Prediction and Betting Tips" is written by one site alone,
 so rarity hands it a high weight and joins eight unrelated matches. Dense embeddings alone, run by
-Ollama, judge **pairs** better than anything else here â€” they alone bring "Columbus Crew sack coach
-HiguaÃ­n" near "MLS coach sacked after sexist remark" â€” but they build worse **groups**, 32/40 against
+Ollama, judge **pairs** better than anything else here — they alone bring "Columbus Crew sack coach
+Higuaín" near "MLS coach sacked after sexist remark" — but they build worse **groups**, 32/40 against
 39/40, and cost ten seconds on a large search when computed at the search. A better judge of pairs
 does not make a better grouper.
 
@@ -722,14 +789,16 @@ of all, so only the threads at least as close are sorted.
 
 A search only finds what the sources publish, so the sources are grown from what the searches
 actually missed, not from a list decided in advance. After a search, the same keywords are asked to
-two public directories, and the media they name that are not in the cache are shown to the user:
+two public directories (`POST /api/feeds/suggestions`, `SourceService.suggest`, 8 media tried, 4 at a
+time), and the media they name that neither `db/rss-links.js` nor the sources of this reader read are
+shown to the user, with 25 of their news at most:
 
 - **Google News**, whose RSS gives the publisher of each result in clear (`services/utils/google-news.js`);
 - **GDELT**, the DOC 2.0 API, as a second opinion (`services/utils/gdelt.js`).
 
-Their news are shown **read-only** â€” the pages are not scraped and the AI never sees them, they are
+Their news are shown **read-only** — the pages are not scraped and the AI never sees them, they are
 only there to show what the search did not have. Next to them, the media whose feed was found can be
-added in one click, and they become private sources of that user.
+added in one click, and they become sources of that profile (read for every reader, like all of them).
 
 The feed offered for a medium is its section on the search, not its main feed, and a medium with no
 feed on the search is not offered (`SourceService.suggest`). Which news of a feed are on the search is
@@ -742,8 +811,8 @@ midilibre.fr and ladepeche.fr). Without the embedder the feeds are judged by the
 
 Having the AI sort the news of Google first, and trying only the media of its answers, was measured and
 left out: 10 feeds instead of 21, with the same share on the search. A sentence gets few answers (1 of
-17 for the Ligue 1 one), so good media were never tried (dsih.fr for "l'intelligence artificielle Ã 
-l'hÃ´pital", the Top 14 feed of sudouest.fr), and the rugby news stayed as close to the Ligue 1 all
+17 for the Ligue 1 one), so good media were never tried (dsih.fr for "l'intelligence artificielle à
+l'hôpital", the Top 14 feed of sudouest.fr), and the rugby news stayed as close to the Ligue 1 all
 the same. The news shown read-only are Google's, newest first, unsorted.
 
 The judge makes the search wait on the embedder: about 20 seconds, but 13 minutes measured while the
@@ -775,6 +844,23 @@ social network and no medium already read in that language and category. Nothing
 the ones chosen are pasted into `db/rss-links.js`; the ones not wanted are set aside in the script, so
 a new run only proposes what is new in their lists. 34 were added this way on 30.09.2026.
 
+A reader can also look for sources themselves (`POST /api/feeds/search`): in the directory of Feedly
+(`from: 'directory'`, about a second, 15 results, the media already read left out), or on the web
+(`from: 'web'`, the work of the suggestions over 30 days, 20 to 45 seconds).
+
+**Recommended sources** (`GET` and `POST /api/feeds/recommended`, `services/recommendation-service.js`):
+the feeds of the other profiles, found for them or added by hand, that are not read already by this
+profile, not refused nor removed by it, and hold no key in their address. A feed is recommended when 3
+of its titles of the last 7 days at least, and 2% of its news, reach 0.45 with an interest of the
+profile, and the AI agrees on up to 12 of its titles (`confirmOnSubject`, its answer kept 24 hours, 4
+feeds at once). 20 are shown at most, added by their id only.
+
+A source can be starred as trusted (`PATCH /api/feeds/:id {trusted}`), and removed (`DELETE`). A
+source found for the profile and removed by the reader (`DELETE /api/profile/sources/:id`) goes to
+`user_profiles.removed_sources`: never found nor recommended again, until the reader brings it back
+(`POST /api/profile/removed-sources/restore`). A source the thumbs left out can be kept for good (`POST
+/api/profile/kept-sources`, see **The briefing**).
+
 `find-missing-sources.js` separates what it finds: the media that publish a real feed are printed
 ready to paste into `db/rss-links.js`, and the ones that only work through RSS-Bridge are printed
 apart. The second group is deliberately **not** put in the shared catalogue, which would make it
@@ -804,12 +890,16 @@ read by every search, from two things it already has:
   7 days are news our feeds of that medium miss (3 at least): a feed "all the news" of a medium read
   through its main feed brings the same news twice, and nothing else. 2 per medium at most, the one
   bringing the most first, the news of the first counting as read for the second. Its category is
-  read in its address ("/health/" is science), else it is the one of the medium.
+  read in its address ("/health/" is science), else it has none and is read by a search of any
+  category. A section in a language that is not ours is left out.
 
 Neither kind of feed is kept when it holds more than 300 news at once: a flood or an archive, not a feed
 of news (gurufocus.com/rss.php held 3611 notes on stocks, 2539 of the last 48 h, an hour of the
 processor of the embedder; 99% of the feeds read hold 256 at most). A feed a reader adds themselves is
-never judged by this.
+never judged by this. A medium whose feed carries `<itunes:` or audio and video enclosures is a
+podcast or a video channel and is left out; a feed with a key in its address is refused
+(`looksPrivate`); a feed taken out before (`directory_removed`, below) is checked at each add, and why it
+stays out is logged.
 
 A medium looked at is not looked at again before 30 days, found or not. The first time, every medium is
 looked at by `node scripts/grow-directory.js` (30.09.2026: 601 media named, 316 main feeds kept; 480 media read, 112 sections kept; a few minutes); after that, the server looks at
@@ -865,8 +955,10 @@ of her new songs that was missed); a subject nobody follows is reached by asking
 sentence (see **How a search works**), not by the directory.
 
 The first read of the new feeds brought 21,935 news, the last 20 to 100 of each. Their vectors took a
-few minutes on the graphics card, but grouping the 12,000 of the last 48 hours into stories goes at about
-75 news a minute, more than two hours, while the lock of the background work is held.
+few minutes on the graphics card, but grouping the 12,000 of the last 48 hours into stories went at
+about 75 news a minute, more than two hours, while the lock of the background work was held. Since
+then each batch of 100 is grouped in a transaction of its own and a run starts no batch after a minute
+(see **Background work** above): such a backlog is grouped over the next runs, the feeds read between.
 
 #### RSS-Bridge
 
@@ -886,8 +978,9 @@ where every key must exist in the default configuration of RSS-Bridge, or every 
 `500 Config [...] is invalid`.
 
 A feed built this way is a scraper: it breaks the day the site changes its pages. The server only
-keeps one when the articles have a real headline and a date, so a wrong reading is refused instead
-of filling the cache with menus and contact pages.
+keeps one with 3 articles at least, of headlines of 12 characters or more, half of them dated, so a
+wrong reading is refused instead of filling the cache with menus and contact pages. It is tried last,
+after the news sitemap of the site, and never by the directory.
 
 It costs far more than a feed: the page of the site and up to 15 of its articles. Measured on 10 sites
 (1.10.2026): 1 to 12 s a build, 3 KB to 1.4 MB, and RSS-Bridge keeps it an hour, so the reads of the
@@ -914,8 +1007,11 @@ directory the words had taken for English were in Arabic, Turkish, Albanian or V
 (`scripts/fix-feed-languages.js` tells them again). A news of a feed in a language the short words
 do not know keeps the language of its feed: "a" and "is" made Hungarian titles English (94.5% right
 against 76.2%). Croatian, Bosnian and Serbian are told apart by the country of the site.
-The AI splits it once, when it is saved, into at most 6 **interests**, each with
-its own vector, a weight, keywords to find media and short searches for Google News. It chooses the
+The AI splits it when it is saved (20 to 3000 characters) into at most 6 **interests**, each with
+its own vectors (bge-m3 dense and sparse), a weight, keywords to find media and short searches for
+Google News. It is asked a second time when a word of the reader is in no interest or an interest is
+over 500 characters, and its second answer is kept when it is better on one and no worse on the other
+(`bench/split-long.mjs`, 13.10.2026); no interest read, the profile is refused (422). It chooses the
 languages of the searches of each interest: the reader's, English, and the ones of the countries the
 subject is about, 4 at most. Measured (`bench/search-languages-ai.mjs`, 8 test profiles and 5 written
 ones, twice): Serbian football got Serbian, the Swiss votes German and Italian, Japanese politics
@@ -928,20 +1024,23 @@ a reader refuses pull it.
 The text of an interest is its subject and the reader's precisions, words and groups of words, never
 their sentences, and never what they refuse: the interests of a profile of tennis, AI and Swiss
 politics written in other words found 23% of the news of 48 h its own interests find as the AI
-split it ("Tennis : Je suis attentivement le tennis, â€¦, sans vouloir lire de choses sur â€¦ les paris
+split it ("Tennis : Je suis attentivement le tennis, …, sans vouloir lire de choses sur … les paris
 sportifs"), 50% without the refusals and 80% without the reader's words either (`bench/split-clean.mjs`).
 The AI is told so, and the code cuts a refusal still in an interest, from "sans", "mais je refuse",
-"tout en ignorant"â€¦ when what follows names what the reader refused. The words of how a profile is
+"tout en ignorant"… when what follows names what the reader refused, and leaves out the keywords and
+searches that name it. What the reader refuses is kept apart (`user_profiles.refused`, 6 at most),
+shown on the profile page and read by the review of the cards. The words of how a profile is
 written ("concernant", "attentivement", "surveille") are not asked again to the AI as missing: it put
 the sentences around them back. An interest holds 500 characters: 300 cut the governance of the UEFA
 profile, its crises, conflicts and judicial affairs, each time. Measured on the 5 profiles rewritten by
 the AI with all their content (`bench/profile-ceiling.mjs`, 3 times each), the share of the news of 48 h
 the interests of their own text find went from 60 to 70% (UEFA), 27 to 75% (tennis), 59 to 63%
-(PokÃ©mon), 61 to 74% (astronomy) and 22 to 29% (a computer scientist of 3 short lines).
+(Pokémon), 61 to 74% (astronomy) and 22 to 29% (a computer scientist of 3 short lines).
 
 A profile is created by the AI asking (`services/utils/profile-funnel.js`, `POST
-/profile/funnel/questions` then `/profile/funnel/text`, before the account too, 40 calls an hour per
-address), at the signup and for each new profile: no empty field to fill. A few words ("Tennis"), then
+/profile/funnel/questions` then `/profile/funnel/text`; before the account while the signup is open,
+with an account otherwise; 40 calls an hour per address, the questions of the projects included), at
+the signup and for each new profile: no empty field to fill. A few words ("Tennis", 3 to 300 characters), then
 up to 3 rounds of 2 to 4 questions, each with 4 to 8 choices to tick and room for their own words,
 then gemma4:31b writes the profile in the first person from what was ticked and written only. With
 nothing ticked nor written it writes back the few words, and the reader is asked for more. A
@@ -957,10 +1056,10 @@ share of the news of 48 hours the interests of the reader's own text find:
 
 | start | the profile written with the questions | the start alone | the reader's text rewritten by the AI |
 |---|---|---|---|
-| "Je travaille dans l'arbitrage Ã  l'UEFA." (a text of 1 085 characters) | 57% (59, 52, 60), 80% of its words | 11% | 70% |
+| "Je travaille dans l'arbitrage à l'UEFA." (a text of 1 085 characters) | 57% (59, 52, 60), 80% of its words | 11% | 70% |
 | "Le tennis." (tennis, AI, Swiss politics) | 32% (42, 28, 27) | 0% | 75%, 36% in English |
 | "L'astronomie." | 34% | 1% | 74% |
-| "Les cartes PokÃ©mon." | 33% | 34% | 63%, 29% in English |
+| "Les cartes Pokémon." | 33% | 34% | 63%, 29% in English |
 | "Je suis informaticien." | 29% | 10% | 29% |
 
 The last column is the most a profile saying the same in other words finds (`bench/profile-ceiling.mjs`):
@@ -968,75 +1067,119 @@ the reader's text split twice finds 82 to 100% of its own news, but only because
 same. The first two rows were measured after the interests stopped holding the reader's sentences and
 refusals (49% and 30% before), the others before. The tennis reader chose English and wrote in French:
 the profile written is in English. 6 to 8 questions, 1 to 4 s each call. What the profile written still misses is said in the reader's
-own words only ("dÃ©signations importantes", "sous l'angle des relations internationales"): the
+own words only ("désignations importantes", "sous l'angle des relations internationales"): the
 choices bring the subjects, the room left for their words the precision. The tennis reader found
 Swiss politics once in three: when they write it in that room.
 
 A reader with two subjects or more is asked, at the last round at the latest, which of them it is
 enough to follow from afar, only when something important happens; the profile written says it ("Je
-suis aussi, de plus loin, â€¦"), and the split gives those interests the weight 0.85, the one of the
+suis aussi, de plus loin, …"), and the split gives those interests the weight 0.85, the one of the
 button of the profile page, the others 1. A briefing gives fewer places to an interest of 0.85 and
 ranks its news lower. Without the question no reader said it, and every interest came out at 1.
 Measured with the AI playing readers whose text says what counts most (`bench/profile-importance.mjs`,
 3 times each): tennis with AI and Swiss politics from afar, sailing with astronomy now and then, 9 of 9
 subjects followed from afar at 0.85 (0 of 6 before); football and gastronomy that count as much, and the
-PokÃ©mon cards alone, no interest under 1. Asked which to follow closely, the reader ticked them all and
+Pokémon cards alone, no interest under 1. Asked which to follow closely, the reader ticked them all and
 details came as choices ("PSG", "OM"), an unticked one falling to 0.85: asked the other way, a question
 passed leaves every subject at 1. The writing of the profile once put "de plus loin" on a subject never
 asked about: it is told only the reader's answers say it. The news found did not move (UEFA 56%,
 tennis 41%).
 
-A briefing is written in background (`services/briefing-service.js`): the answer is the briefing still
-running, the client asks for it again until it is ready, one at a time per reader. The reader chooses
-the news it is written from: the last 24 hours, 2 days (the default, the window of every bench) or 7
-days (`hours` of `POST /briefing`, kept in `briefings.hours`). A month is not offered: the articles are
+A briefing is written in background (`services/briefing-service.js`): `POST /briefing` answers 202
+with the briefing still running, the client asks for it again every 3 seconds until it is ready, one at
+a time per profile (one still running after 30 minutes is marked failed). The reader chooses the news
+it is written from, 1 to 7 days (`hours` of `POST /briefing`, 48 by default, kept in `briefings.hours`),
+and its size, 10, 20 or 30 cards (`size`, `briefings.size`). A month is not offered: the articles are
 kept 30 days. Over 7 days the ranking took the same 2 to 3 s (5 s against 3 for 2 days on 3.10.2026,
 the ingestion working) and the same 40 candidates go to the AI, so a briefing of the week costs no more
 (`bench/briefing-window.mjs`); but its 40 closest stories were 34
-affairs of several days and guides of no day rose among them, so it keeps one candidate per thread
-(the closest) and tells the AI how many media told each story, to prefer the news that mattered. It
-reads only the stories built by the background work, and goes through these steps:
+affairs of several days and guides of no day rose among them, so from 3 days on it keeps one candidate
+per thread (the closest) and tells the AI how many media told each story, to prefer the news that
+mattered. It reads only the stories built by the background work, and goes through these steps, named
+as the page shows them while it runs (`briefings.step`):
 
-1. **Ranking**, in SQL (`rank_stories` in `db/add_briefing.sql`). The news of the hours chosen of the
-   feeds of the reader (every shared feed, their own sources, the searches of Google News of their
-   interests, without the sources their thumbs left out), in every language. Replayed on a reader of 7
+1. **Ranking**, in SQL (`rank_profile_stories`, `db/add_projects.sql`), on the interests of the profile
+   and of its projects running. First the sources found for the profile that bring nothing are taken
+   out (`DiscoveryService.prune`) and the thumbs of 30 days are read (`FeedbackService.of`). The news of
+   the hours chosen of the feeds read (every shared feed, the sources of every reader, the searches of
+   Google News of the interests, without the sources the thumbs left out), in every language. Replayed on a reader of 7
    languages with sources in 30 (`bench/briefing-languages.mjs`): the other languages took 13 of the 42
    candidates and 2 of the 10 cards, both on the profile; the title of a card in another language is
    translated with its passages.
-   Each news scores its best interest, weight Ã— (dense + 0.5 Ã— sparse) of its title and the start of
-   its description, and a story scores its best news. A story already shown can come back: the reader
-   passes it, and leaving out every card shown left fewer news to choose from. The AI chooses from the
+   Each news scores its best interest, weight × (dense + 0.5 × sparse) of its title and the start of
+   its description, and a story scores its best news; 600 stories are ranked for 10 cards, each
+   interest given its share. A story only shown can come back, but not one sent by e-mail in the last
+   48 hours, unless it has news since (see **A story shown before**). The AI chooses from the
    40 best stories told by a feed, and at most 10 known only through Google News (see **Google News**
    below). A source the reader trusts counts for its medium (`FeedModel.trustedMedia`: the medium of
    its site and the one its news link to), through any feed and through Google News: its stories among
    the 60 closest are candidates too, 10 at most, besides the 40. A trusted source never brings a story
    far from the profile, and never takes the place of a closer one: a bonus of the score did
    (`bench/trust-thumbs.mjs`), 2 stories of a trusted medium off the profile went into the 40 and the
-   40th, chosen before, was gone.
-2. **Choosing.** The AI reads the candidates against the whole profile, with the cards the reader
-   gave a thumb as examples, and chooses up to 15. The refusals of the profile are left to it: as
-   vectors they removed good stories with the bad. Then each interest gets its share of the 10 places,
-   by its weight, and the places left go to the next stories of the AI (`balanceSelection`): asked for
-   ten, it gave most of them to the strongest interest.
+   40th, chosen before, was gone. For 20 or 30 cards, every count is twice or three times as big.
+2. **Choosing.** The AI reads the candidates against the whole profile and the descriptions of its
+   projects, with the cards the reader gave a thumb as examples (15 liked and 15 refused at most), and
+   chooses 20 (30 for 20 cards, 45 for 30: `chosenFor`), asked once more when its answer is no JSON.
+   The refusals of the profile are left to it: as vectors they removed good stories with the bad. Then
+   each interest gets its share of the places, by its weight, and the places left go to the next
+   stories of the AI (`balanceSelection`); the others wait as a reserve. Asked for ten, it gave most of
+   them to the strongest interest.
 3. **Checking**, two calls sent together (`services/utils/profile-ai.js`). `checkStories`: which
    articles of each story tell the news of its best one, up to 12 read per story, one per medium first;
    the card counts and lists only those. `mergeStories`: two cards telling the same news become one. If
    the AI fails, the stories are shown as the vectors grouped them: the check never costs the briefing.
    A story is of one language: a card in another language than the reader's brings to that call the 2
    stories of the reader's language closest to it (centroids, from 0.75, `StoryModel.versionsIn`), and
-   the ones the AI says tell its news join it. Replayed on a briefing of a reader of French with 7 cards
+   the ones the AI says tell its news join it, and the 4 closest of the other languages (from 0.78,
+   `versionsAcross`). Replayed on a briefing of a reader of French with 7 cards
    in 4 other languages (`bench/versions-replay.mjs`): the French versions of the Negreira affair (2),
    of the UEFA payments and of Ceferin against Infantino joined, 4 of 4 right; another news of the same
    club association (0.765) stayed apart, and the 2 Romanian cards had no French version.
 4. **Reading.** Up to 5 articles per story, one of a source the reader trusts first, else one in the
    language of the reader (the card is then summarized from it, with no translation), then one per
    medium. The real address of a news of Google News is asked only for the stories no feed lets read,
-   and for the article in the language of the reader read first.
-5. **Key passages** of the first article read in full, translated for a reader of another language
-   (see **Key passages** above), and who wrote the story apart from the others (see **Corroboration**).
-6. **Review.** The cards are read once more with their passages, which say what a title may not, and
-   the ones on what the reader refuses are left out. Meanwhile the titles written in another language
-   than the reader's are translated, as their passages.
+   and for the article in the language of the reader read first (2 per story, 10 per briefing).
+5. **Summarizing**, 5 stories at once. For each, three calls together: the **key passages** of the
+   first article read in full, with the shorter ways to read the card made of the same published
+   sentences, 3 **points** and a **summary** of 65 words, translated for a reader of another language
+   (see **Key passages** above); a **denial** among its articles (`contested.js`); and the **AI version**
+   of its points and summary (see below). Then a title the feed cut is taken back whole from its page,
+   who wrote the story apart from the others is measured (see **Corroboration**), and the cards are read
+   once more with their passages, which say what a title may not: the ones on what the reader refuses
+   are left out (`reviewCards`). Meanwhile the titles written in another language than the reader's are
+   translated, as their passages. A card that can't be read takes the next story of the reserve, two
+   rounds at most (`readable-cards.js`).
+6. **Angles**, four parts together, none of which can fail the briefing: the **other angles** of each
+   card, 5 at most (`other-angles.js`: the closest stories of the window and the stories of 30 days naming
+   its rare names, judged by the AI, one per fact, never the lead's news told again); its **official
+   source** (`official-sources.js`, below); the news of what the profile follows (see **What a profile
+   follows**); and the **names** shown on each card, 4 at most (`card-names.js`).
+
+Once the cards are shown, the **analysis** of the cards that merit one is written, not awaited by the
+briefing (`services/utils/card-analysis.js`, `briefings.analysis`; the client asks again every 8 s
+while it runs). deepseek-v4-pro without reasoning picks the cards (an affair, a dispute, stakes the
+title does not tell, a step to come), then, with reasoning, 3 cards at once, writes for each why it
+matters (2 lines), what could come next as "if this, then that" (2 lines) and the story so far from the
+earlier stories of its affair (12 at most), every line citing the card's own sources; the code drops a
+line whose figure or name its sources do not give (the tagger reads the names). Measured on the 139
+cards of 10 briefings of 7 profiles (`bench/card-analysis-*.mjs`, 15.10.2026): 1 to 4 plain news picked
+of about 50, a misleading line on 4 to 5 of 74 cards (20 without reasoning, 29 with gemma4:31b), 71 s a
+card, up to 161. One still running after 12 minutes is shown as failed. No limit of cards (the user,
+15.10.2026).
+
+The **AI version** of a card's points and summary is written by deepseek-v4-pro (`services/utils/ai-ways.js`,
+thinking off, no Gemini after it), shown only when the reader asks for it ("Show AI version"), marked as
+written by the AI, and dropped when it holds a figure the article does not. No model is free of errors:
+measured on 30 articles, 2 runs each (`bench/formats-models.mjs`, 15.10.2026), articles with a meaning
+error, points / summary: deepseek-v4-pro 1-2 / 2, kimi-k3 1-2 / 2-3, gemma4:31b 2-3 / 2, the published
+sentences 0. deepseek-v4-pro writes the clearest, at 4.9 s a call. Hence a version the reader asks
+for, beside the published sentences.
+
+The **official source** of a card is where a party of the news said it itself: the AI names the parties
+(a club, a body, a company), three cards at a time; each is found in Wikidata (`party_names`, then
+`entities` with its own channels: its site, X, Bluesky...), and its posts of the last days, read through
+our feeds of its site or its own feed, are judged by the AI, 2 shown at most; the statements of a party
+the articles report are shown too (`statements.js`).
 
 Measured on four profiles and 249 stories judged by hand: one vector per interest gave 88% of relevant
 cards, and 95% once the AI chose among the 40 best. One vector for the whole profile gave 38%, worse than
@@ -1067,7 +1210,9 @@ The discovery of the sources of a profile (`services/discovery-service.js`) also
 [Media Cloud](https://search.mediacloud.org), which indexes the national and regional press of each
 country and searches the whole text of its news (`services/utils/media-cloud.js`). Its searches are the
 ones of the interests, every word asked and in their language, over the last 30 days, in the press of that
-language (France, Switzerland and Belgium for French). A medium it names that Google News did not is
+language (France, Switzerland and Belgium for French; the United States, the United Kingdom and Canada
+for English; Germany, Switzerland and Austria for German; Spain for Spanish; Italy and Switzerland for
+Italian), 2 news of a medium at least. Without `MEDIACLOUD_API_TOKEN` this step is skipped. A medium it names that Google News did not is
 tried after the media of Google, with a budget of its own (2 kept or 3 tried per language), and the
 feeds its directory knows for it are candidates with the ones the site declares.
 
@@ -1095,14 +1240,20 @@ the same medium, as between two runs). When a discovery finds more feeds than it
 of Google News now go first.
 
 A discovery runs in the memory of the server: one a restart stopped (a deploy) is started again when the
-server starts, instead of staying "running" for good.
+server starts, instead of staying "running" for good. It reads the interests of the profile, never the
+ones of its projects. A profile has room for 60 feeds found (`MAX_PROFILE_FEEDS`), 20 new ones per
+discovery; with no room left, it reads nothing. The sources the reader removed are never found again.
+
+Before each discovery and each briefing, the feeds found for the profile that bring nothing are taken
+out (`DiscoveryService.prune`): no news at 0.45 with an interest in 14 days, once the feed is 14 days
+old or has 30 news. The feeds kept or trusted by the reader stay.
 
 A feed of a medium, from Google or Media Cloud, is kept when the vectors put 2 of its last 30 news on an
 interest (0.45, as above). For a precise subject a good general feed has no more (2 of 30 for the
 refereeing of football in the feeds of L'Equipe and So Foot), but news of other subjects reach 0.45
 too: a cricket feed and the home of a newspaper were kept on 2 of them. So the AI reads the titles the
-vectors put on the profile, 12 at most, and the feed is kept on the ones it confirms
-(`confirmOnSubject`). Replayed on 4 profiles (`bench/discovery-confirm.mjs`): it left out the home of a
+vectors put on the profile, 12 at most, and the feed is kept when it confirms 2 of them
+(`confirmOnSubject`; when the AI does not answer, the feed is kept). Replayed on 4 profiles (`bench/discovery-confirm.mjs`): it left out the home of a
 newspaper (judo, a court ruling), a feed of match previews for refereeing, the guides of a mobile game
 and two video game feeds for trading cards, and kept the 8 feeds on their subject. A share of the news
 on the subject was measured first and left out: the right feeds of a precise profile had no higher
@@ -1160,24 +1311,30 @@ languages, the ones of the UEFA and FIFA mostly line-ups and where to watch a ma
 
 #### An item of Wikidata
 
-A profile follows items of **Wikidata** (`db/add_entities.sql`): a club, a person, an organisation. Each is read once a week from Wikidata
-(`services/utils/wikidata.js`): its names in the languages read (an alias of one common word left out,
+A profile follows items of **Wikidata** (`db/add_entities.sql`), 30 at most: a club, a person, an
+organisation. An item is read from Wikidata when it is followed or its page opened, again only when what
+is stored is more than 7 days old (no job reads them on its own; Wikidata down, the stored row is used)
+(`services/utils/wikidata.js`). The search, a follow and the page of an item are 30 a minute per
+reader. It gives its names in the languages read (an alias of one common word left out,
 "Paris" for Paris Saint-Germain; a club also without its "FC", which gives "PSG"), and its links still
 true, the current players and coach of a club, the team of a player, the chair of a body. Its page lists
-the news of the window naming it and the ones naming each link, from every feed, with no relevance, as
-the terms followed. The names are looked for as plain texts, with and without their accents, which the
-trigram index answers, then checked as whole words: 45 names of a club and its people took 387 s with
-the patterns of the terms followed, 11 s this way on 48 hours (`FeedModel.articlesHolding`). The reader
-takes out a name that finds other things and adds their own.
+the news of the window naming it and the ones naming each link (60 links searched, 30 news each),
+from every feed, with no relevance, as the terms followed; the pages are kept 10 minutes. The news are
+found by the names the tagger read in them (`MentionModel.articlesNamed`, see **The names of the
+news**); only the news not tagged yet are looked for in their texts, as plain texts with and without
+their accents, which the trigram index answers, then checked as whole words (`FeedModel.articlesHolding`:
+45 names of a club and its people took 387 s with the patterns of the terms followed, 11 s this way on
+48 hours). The reader takes out a name that finds other things and adds their own, 10 at most. In the
+briefing, each item followed brings its 100 newest news, all counted.
 
 ### A story shown before
 
-A story on a card of the profile's briefings of the last 48 hours is left out of the next one
+A story on a card the reader **sent by e-mail** in the last 48 hours (`sentAt` of the card, since
+14.10.2026: a card only shown counts no more) is left out of the next briefings
 (`services/utils/repeats.js`), and so is any other story of the same thread: an affair is not told two
 days in a row. It comes back only when news published since tell something new, which one call of the
 AI decides for all of them ("when in doubt, it is not new"); it is then shown as a follow-up of the card
-read, from the news since. A briefing written again within 3 hours keeps its stories: one rewritten to
-change its size would lose them all.
+read, from the news since.
 
 ### Projects
 
@@ -1186,14 +1343,18 @@ each with a last day or none (`db/add_projects.sql`, `/api/profile/projects`). I
 is, the AI asking questions on the project only (it reads the profile, never asks how long it lasts),
 then split into interests by the AI. The briefing ranks the stories with the interests of the profile
 and of the projects running, and gives the AI their descriptions; the news come from the profile's
-sources and the Google News searches of the projects. A project ended is no longer read.
+sources and the Google News searches of the projects (no source is found for a project). The last day
+is within a year. A project ended is kept but read no more, until its last day is moved
+(`PATCH /api/profile/projects/<id>`) or it is deleted. Its prompts were not measured on a bench yet
+(13.10.2026).
 
 ### A news added by its link
 
 An administrator can add a news to a briefing by its link (`POST /api/briefing/<id>/news`): the page is
 read (public addresses only, no headless browser), its key passages chosen and translated as for a card,
-and it comes last, ticked for the e-mail, said "Added by you", with no other media nor angle. 10 at most
-per briefing; taken out again by `DELETE /api/briefing/<id>/news/<storyId>`.
+and its AI version written, and it comes last, ticked for the e-mail, said "Added by you", with no other
+media nor angle (a card of a negative `storyId` in `briefings.items`). 10 at most per briefing, 30 an
+hour; taken out again by `DELETE /api/briefing/<id>/news/<storyId>`.
 
 ### The names of the news
 
@@ -1204,20 +1365,25 @@ of a long one is mostly links to other articles of the medium). Measured on
 294 news of 26 languages (`bench/ner`, 13.10.2026), on 3 cores of the server: 2.2 news a second, the
 same names run after run; the title alone was 3 times faster but found 44% of the names; in int8
 (ONNX or PyTorch) it found none, so fp32 only. The news of the day come at about 1.4 different texts a
-second.
+second. A tagger takes 16 news at a time on a processor, 128 on a graphics card, with a threshold of
+0.5; only the news of the last 30 days are tagged, and one the grouping holds is left for later (`FOR
+UPDATE SKIP LOCKED`): the tagging never makes the background work wait. An acronym inside a longer name
+is added as an organisation ("UEFA" in "UEFA Champions League"), a name over 120 characters is dropped.
+A tagger idle or down is asked again after 60 s. The log reports the tagging once an hour, and the names
+no news names any more are deleted once a day.
 
 Each tagger of `NER_URL` works on its own, the newest news first, none read by two: the processor of the
 server keeps up with the day, a graphics card switched on now and then takes the backlog of the month
 with it. A name is stored once per kind (`mentions`), compared without case, accents nor leading article
 ("La Fédération lettone de football"), and each news says which it names (`article_mentions`). The
-names most met are looked for in Wikidata in background, one every 7 s (it refused more than about 10
-searches a minute without an account): a name is the item when only one item is called exactly so
+names met in 3 news at least are looked for in Wikidata in background, the most met first, one every 7 s (it refused more than about 10
+searches a minute without an account; a 429 pauses it as long as Wikidata asks): a name is the item when only one item is called exactly so
 ("Latvian Football Federation"), none when several are ("LFF", of Latvia and of Lithuania; "Paris").
 About 150 000 names wait for it (13.10.2026, 12 000 a day): the ones a reader sees, on a card or as the
 page of a name, are looked for first, whatever their news (`mentions.wanted_at`), so a name of a card
 opens the page of its item within minutes.
 
-They serve twice:
+They serve three times (the third: the names shown on the cards, see **What a profile follows**):
 
 - **The page of an item followed** finds its news by the names the tagger found in them and the ones
   it linked to the item, instead of searching every text, and counts every story (the page said 101
@@ -1232,14 +1398,40 @@ They serve twice:
 
 ### What the administrators can do
 
-Sending the briefing by e-mail and having several profiles are for the accounts of the role `Admin`
-(`services/utils/admin.js`). The role is read in the database at each request, never in the token: an
-account made an administrator has it at once. `GET /api/session` says it (`admin`).
+Sending the briefing by e-mail, its pictures, adding a news by its link and having several profiles
+(15 at most) are for the accounts of the role `Admin` (`services/utils/admin.js`); the others get 403.
+The role is read in the database at each request, never in the token: an account made an administrator
+has it at once. `GET /api/session` says it (`admin`).
+
+A reader has one profile, an administrator several, each independent: its text, interests, projects,
+refusals, sources, trusted sources, briefings and thumbs, what it follows (`/api/profile/profiles`:
+list, create, rename, delete; deleting one deletes all that, the last one can't be). The client sends
+the profile chosen with every request (`X-Profile` header); the server takes it when it is one of the
+reader's, else their first one (`services/utils/active-profile.js`), and the routes of the sources and
+of what is followed answer 400 without a profile.
+
+The account is changed in the settings (`PUT /api/account/username`, `/email`, `/password`), each change
+asking the current password, 10 an hour per address for the three. A new password ends the sessions of
+the other devices: a session opened before `users.password_changed_at` is refused.
 
 ### The e-mail
 
+An administrator sends the cards of a briefing by e-mail (`POST /api/briefing/<id>/email`,
+`services/utils/briefing-mail.js`, `mailer.js`), 10 an hour per address and 30 a day per account. In the
+bar of the page they tick and order the cards, choose how they are read (key passages, points or the
+summary), the AI version of a card's points or summary, the picture of each card (one of its story, a
+public address, or a file of 2 MB at most, 6 MB in all), their own title, and take out the lines they do
+not want (a denial, an angle, an official source, a line of the analysis). Each card carries its AI
+analysis, its official source boxed right under its sentences; nothing says what is translated. Sent
+to another address than the account's, the "why" of each card is left out and the reply goes to the
+reader. The e-mail calls no AI: it lays out what the briefing wrote. Its cards are marked sent
+(`sentAt`), and their stories are left out of the next briefings for 48 hours (see **A story shown
+before**). Without an SMTP account (`SMTP_USER`, `SMTP_PASS`) it answers 503, refused by the SMTP server
+502.
+
 The e-mail is titled with the name of the profile and the day, "Roberto’s Briefing · 13 October 2026",
-never the name of the account; its subject adds the number of stories, without an hour. It gives no
+never the name of the account; its subject adds the day and the number of stories ("Fab's Briefing ·
+16 October 2026 · 2 stories"), without an hour. It gives no
 "Who tells it" (the sources of each card say it) and, since 13.10.2026, no link to a copy of it: no copy
 is kept any more. The links of the e-mails sent before still lead to theirs (`GET /api/mails/<token>`,
 `sent_mails`): a page for anyone who has the link, no account, that runs nothing
@@ -1332,22 +1524,25 @@ port 5433) with `INGEST_IN_SERVER=false`: the background work stays on the machi
 |-- deploy                  # the containers of the machine that stays on (compose.yml) and deploy.sh, which sends the code there
 |-- docker
 |   `-- rss-bridge          # configuration of the RSS-Bridge container
-|-- docs
-|   |-- UML
+|-- docs                    # the MLD, the walkthroughs (Parcours *.md / .html), the diagrams of sprints 1 to 3
+|   |-- UML                 # the sequence diagrams of sprint 1 brought up to date
+|       `-- sprint4         # every diagram of today: features, sequences, database, machines, A to Z
 |-- embedder                # bge-m3 vectors over HTTP, in Python (server.py, requirements.txt)
 |-- generated
 |-- models
+|-- ner                     # the tagger of the names of the news over HTTP, GLiNER in Python (server.py)
 |-- prisma
 |-- routes
 |-- scripts                 # offline tools, run by hand, never by the server (ingest.js and ingest-status.js: pnpm run ingest, grow-directory.js)
 |-- server.js
-|-- services                # search, briefing, background work (ingest-service.js), sources, profiles
-|   `-- utils               # key passages (extract.js), search by meaning (search-ai.js), Google News, embedder client...
+|-- services                # search, briefing, background work (ingest-service.js, tagging-service.js), sources, profiles, items followed
+|   `-- utils               # key passages (extract.js), search by meaning (search-ai.js), analysis (card-analysis.js), official sources, e-mail, Google News, embedder and tagger clients...
 `-- tests
     |-- briefing            # corroboration, key passages, interests, shares of the interests, stories, vectors, thumbs
     |-- custom-search
     |-- data
     |-- dates
+    |-- entities            # items followed, names of the news
     |-- feeds
     |-- filtering
     |-- grouping            # average link of the search list

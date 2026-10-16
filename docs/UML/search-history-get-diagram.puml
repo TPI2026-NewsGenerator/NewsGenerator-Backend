@@ -10,8 +10,11 @@ participant "Model" as Model
 database "Storage (DB)" as Storage
 
 
-Client -> Router : GET /customsearch (JWT)
+Client -> Router : GET /customsearch (cookie "session")
 Router -> Router : authenticateToken()
+alt pas de session, ou une session expirée\nou ouverte avant le dernier changement de mot de passe
+    Router --> Client : HTTP 403
+end
 Router -> Controller : getUserCustomSearch(req)
 note right of Controller : l'id de l'utilisateur vient du token vérifié,\njamais de la requête
 Controller -> Service : getUserCustomSearch(userId)

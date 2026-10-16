@@ -1,0 +1,337 @@
+@startuml 30-database
+' The MLD of docs/MLD_sprint4.md as a diagram: the 24 tables of a fresh install (16.10.2026).
+' * marks NOT NULL; PK and FK are the keys. A dotted line is a link by value, without a foreign key.
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam titleFontSize 18
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam packageStyle rectangle
+skinparam noteBackgroundColor #FFFBE6
+skinparam noteBorderColor #C9B458
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #555555
+    ArrowColor #555555
+}
+skinparam class<<shared>> {
+    BackgroundColor #EEF3FA
+    BorderColor #7A93B8
+}
+hide circle
+hide methods
+hide stereotype
+title Database — the 24 tables (PostgreSQL 18 + pgvector)
+
+package "Accounts and saved searches" {
+    entity roles {
+        * id : integer <<PK>>
+        --
+        * role : text <<UNIQUE>>
+    }
+    entity users {
+        * id : integer <<PK>>
+        --
+        * username : text
+        * email : text
+        * password : text (bcrypt)
+        * role : integer <<FK>>
+        password_changed_at : timestamptz
+    }
+    entity custom_searches {
+        * id : integer <<PK>>
+        --
+        * id_user : integer <<FK>>
+        * title : text
+        * language : text
+        * timeframe : text
+        * keyword : text
+    }
+    entity custom_searches_has_categories {
+        * id : integer <<PK>>
+        --
+        * id_custom_search : integer <<FK>>
+        * id_category : integer <<FK>>
+    }
+    entity categories {
+        * id : integer <<PK>>
+        --
+        * category_name : text <<UNIQUE>>
+    }
+}
+
+package "Profiles" {
+    entity user_profiles {
+        * id : integer <<PK>>
+        --
+        * id_user : integer <<FK>>
+        * name : text
+        * text : text
+        * languages : text[]
+        * watch_terms : text[]
+        * refused : text[]
+        * kept_sources : text[]
+        * removed_sources : jsonb
+        * discovery_status : text
+        discovery_error : text
+        discovered_at : timestamptz
+        * created_at : timestamptz
+        * updated_at : timestamptz
+    }
+    entity profile_projects {
+        * id : integer <<PK>>
+        --
+        * id_profile : integer <<FK>>
+        * name : text
+        * text : text
+        ends_on : date
+        * created_at : timestamptz
+    }
+    entity profile_interests {
+        * id : integer <<PK>>
+        --
+        * id_user : integer <<FK>>
+        * id_profile : integer <<FK>>
+        id_project : integer <<FK>>
+        * position : integer
+        * text : text
+        * weight : real
+        * keywords : text
+        * searches : text[]
+        * sections : text[]
+        category : text
+        dense : vector(1024)
+        sparse : sparsevec(250002)
+    }
+    entity user_feeds {
+        * id : integer <<PK>>
+        --
+        * id_user : integer <<FK>>
+        id_profile : integer <<FK>>
+        * url : text
+        * site : text
+        * category : text
+        * origin : text (user | profile)
+        language : text
+        * trusted : boolean
+        * shared : boolean
+        * created_at : timestamptz
+    }
+}
+
+package "Briefings" {
+    entity briefings {
+        * id : integer <<PK>>
+        --
+        * id_user : integer <<FK>>
+        * id_profile : integer <<FK>>
+        * status : text (running | ready | failed)
+        step : text
+        error : text
+        * hours : integer
+        * size : integer
+        * items : jsonb (cards, votes, sentAt)
+        watched : jsonb
+        analysis : jsonb
+        * created_at : timestamptz
+        finished_at : timestamptz
+    }
+    entity sent_mails {
+        * id : integer <<PK>>
+        --
+        * token : text <<UNIQUE>>
+        * id_user : integer <<FK>>
+        id_briefing : integer <<FK>>
+        * subject : text
+        * html : text
+        * created_at : timestamptz
+    }
+}
+
+package "Followed items (Wikidata)" {
+    entity profile_entities {
+        * id_profile : integer <<PK, FK>>
+        * id_entity : integer <<PK, FK>>
+        --
+        * added_names : text[]
+        * removed_names : text[]
+        * in_briefing : boolean
+        * created_at : timestamptz
+    }
+    entity entities <<shared>> {
+        * id : integer <<PK>>
+        --
+        * qid : text <<UNIQUE>>
+        * label : text
+        description : text
+        * kind : text
+        * names : text[]
+        fetched_at : timestamptz
+        channels : jsonb
+        channels_at : timestamptz
+        site_feed : text
+        site_feed_at : timestamptz
+    }
+    entity entity_links <<shared>> {
+        * id_from : integer <<PK, FK>>
+        * id_to : integer <<PK, FK>>
+        * relation : text <<PK>>
+    }
+    entity party_names <<shared>> {
+        * name : text <<PK>>
+        * what : text <<PK>>
+        --
+        qid : text
+        * checked_at : timestamptz
+    }
+}
+
+package "Shared cache of the news" {
+    entity feeds <<shared>> {
+        * id : integer <<PK>>
+        --
+        * url : text <<UNIQUE>>
+        etag : text
+        last_modified : text
+        last_fetched_at : timestamptz
+        last_error : text
+        * failures : integer
+        * last_success_at : timestamptz
+    }
+    entity articles <<shared>> {
+        * id : integer <<PK>>
+        --
+        * id_feed : integer <<FK>>
+        id_story : integer <<FK>>
+        * link : text
+        * title : text
+        * description : text
+        thumbnail : text
+        * category : text[]
+        published_at : timestamptz
+        * created_at : timestamptz
+        source_url : text
+        resolved_link : text
+        lang : text
+        topic, summary, sourcing : text
+        extract, translation : jsonb
+        translation_language : text
+        search_text : text (generated)
+        medium : text (generated)
+        title_figures : text[] (generated)
+        title_dense, text_dense : halfvec(1024)
+        title_sparse, text_sparse : sparsevec(250002)
+        embedded_at : timestamptz
+        entities_at : timestamptz
+    }
+    entity stories <<shared>> {
+        * id : integer <<PK>>
+        --
+        id_thread : integer <<FK>>
+        * lang : text
+        centroid : halfvec(1024)
+        * media : text[]
+        * created_at : timestamptz
+        * updated_at : timestamptz
+        grouped_at : timestamptz
+        threaded_at : timestamptz
+    }
+    entity threads <<shared>> {
+        * id : integer <<PK>>
+        --
+        * lang : text
+        centroid : halfvec(1024)
+        * media : text[]
+        * n_stories : integer
+        * created_at : timestamptz
+        * updated_at : timestamptz
+    }
+    entity mentions <<shared>> {
+        * id : integer <<PK>>
+        --
+        * key : text
+        * kind : text
+        * name : text
+        lang : text
+        qid : text
+        linked_at : timestamptz
+        wanted_at : timestamptz
+        * seen : integer
+        * created_at : timestamptz
+    }
+    entity article_mentions <<shared>> {
+        * id_mention : integer <<PK, FK>>
+        * id_article : integer <<PK, FK>>
+    }
+}
+
+package "Directory of media" {
+    entity directory_feeds <<shared>> {
+        * url : text <<PK>>
+        --
+        * medium : text
+        * origin : text (named | section)
+        language : text
+        category : text
+        * created_at : timestamptz
+    }
+    entity directory_tries <<shared>> {
+        * medium : text <<PK>>
+        * origin : text <<PK>>
+        --
+        * tried_at : timestamptz
+        * kept : integer
+        reason : text
+    }
+    entity directory_removed <<shared>> {
+        * url : text <<PK>>
+        --
+        * medium : text
+        * origin : text
+        language : text
+        category : text
+        * news : integer
+        * relevant : integer
+        * reason : text
+        * removed_at : timestamptz
+    }
+}
+
+roles ||--o{ users
+users ||--o{ custom_searches
+custom_searches ||--o{ custom_searches_has_categories
+categories ||--o{ custom_searches_has_categories
+users ||--o{ user_profiles
+user_profiles ||--o{ profile_projects
+user_profiles ||--o{ profile_interests
+profile_projects |o--o{ profile_interests
+user_profiles |o--o{ user_feeds
+user_profiles ||--o{ briefings
+briefings |o--o{ sent_mails
+users ||--o{ sent_mails
+user_profiles ||--o{ profile_entities
+entities ||--o{ profile_entities
+entities ||--o{ entity_links : from
+entities ||--o{ entity_links : to
+feeds ||--o{ articles
+stories |o--o{ articles
+threads |o--o{ stories
+articles ||--o{ article_mentions
+mentions ||--o{ article_mentions
+
+mentions }o..o| entities : qid
+party_names }o..o| entities : qid
+user_feeds }o..o| feeds : url
+
+note as Legend
+    White: the tables of a reader, deleted with the account
+    (users ON DELETE CASCADE; user_feeds, profile_interests
+    and briefings also carry id_user for it).
+    Blue: the shared cache, attached to no reader, filled
+    in background and purged after the retention days.
+    Dotted: a link by value (qid, url), no foreign key.
+    Not drawn: filters and users_has_last_filters, leftovers
+    of the dropped "last filter" feature.
+end note
+@enduml

@@ -1,0 +1,194 @@
+@startuml 10-following
+!include _style.iuml
+title Following — the items of Wikidata and the names or words a profile follows, and the names of the news
+
+class EndUser
+package "Presentation" {
+    class entityRouter {
+        + GET /entities
+        + GET /entities/search
+        + GET /entities/suggestions
+        + GET /entities/name
+        + POST /entities/words
+        + DELETE /entities/words/:word
+        + POST /entities
+        + GET /entities/:qid
+        + PUT /entities/:qid/names
+        + PUT /entities/:qid/briefing
+        + DELETE /entities/:qid
+    }
+    class entityController {
+        + list()
+        + search()
+        + suggestions()
+        + namePage()
+        + addWord()
+        + removeWord()
+        + follow()
+        + page()
+        + setNames()
+        + setInBriefing()
+        + unfollow()
+    }
+}
+note left of entityRouter
+    The search, a follow and the page of an
+    item ask Wikidata: 30 a minute per reader.
+    All but the list and the search need a
+    profile (needsProfile)
+end note
+package "Business" {
+    class entityService {
+        + search()
+        + all()
+        + follow()
+        + unfollow()
+        + setNames()
+        + setInBriefing()
+        + addWord()
+        + removeWord()
+        + page()
+        + namePage()
+        + suggestions()
+        + briefingGroups()
+        + followTerms()
+    }
+    class taggingService {
+        + schedule()
+        + tagBatch()
+        + tagRows()
+    }
+    class briefingService <<other feature>> {
+        + feedsOf()
+        + newsOfTerms()
+        + namingTerm()
+        + watchedNews()
+        + withMarks()
+    }
+}
+note right of entityService
+    30 items and 20 names or words per profile.
+    An item is read again from Wikidata when
+    opened or followed 7 days after (its names,
+    its links still true); a reader adds 10 names
+    of their own and takes out the others
+end note
+note left of taggingService
+    In background, with the server: each tagger
+    of NER_URL takes the newest news not tagged
+    (16 a batch on a processor, 128 on a graphics
+    card); one name every 7 s looked for in
+    Wikidata, the ones a reader saw first
+end note
+package "Wikidata" as WikidataPkg {
+    class wikidata {
+        + searchItems()
+        + readItem()
+        + exactItems()
+    }
+    class wikidataNames {
+        + isQid()
+        + kindOf()
+        + namesOf()
+    }
+}
+package "The names of the news" as Names {
+    class tagger {
+        + taggerUrls()
+        + taggerDevice()
+        + tagTexts()
+    }
+    class mentions {
+        + mentionKey()
+        + cleanMentions()
+        + rareNames()
+    }
+    class cardNames {
+        + namesOfCards()
+        + suggestedNames()
+        + shortName()
+    }
+    class affairNames {
+        + storiesOfSameNames()
+    }
+}
+class watchTerms {
+    + cleanWatchTerms()
+}
+note bottom of cardNames
+    Up to 4 people or organisations a card
+    shows: named by a quarter of its articles
+    at least, by 3 news or 2 of the card,
+    never an agency nor the medium itself
+end note
+note bottom of affairNames
+    The rare names of a card (400 news a
+    month at most) find the stories of
+    30 days of the same actors, for the
+    other angles
+end note
+package "Data" as Data {
+    class entityModel {
+        + byQid()
+        + save()
+        + links()
+        + followed()
+        + following()
+        + count()
+        + follow()
+        + unfollow()
+        + setNames()
+        + setInBriefing()
+    }
+    class mentionModel {
+        + untagged()
+        + save()
+        + toLink()
+        + want()
+        + setLink()
+        + articlesNamed()
+        + anyUntagged()
+        + qidsOfKey()
+        + namesOfArticles()
+        + storiesNaming()
+        + articlesOfStories()
+    }
+    class profileModel {
+        + get()
+        + setWatchTerms()
+    }
+    class briefingModel {
+        + recentCards()
+    }
+    class feedModel {
+        + articlesHolding()
+    }
+}
+class "Wikidata\n(API + SPARQL)" as WikidataApi <<external>>
+class "Tagger (ner/server.py,\nGLiNER multi v2.1)" as Ner <<external>>
+class "PostgreSQL" as PostgreSQL <<external>>
+
+class "server start" as Start
+
+tagger -[hidden]right- mentions
+cardNames -[hidden]right- affairNames
+wikidata -[hidden]down- wikidataNames
+
+EndUser --> entityRouter
+Start --> taggingService
+entityRouter --> entityController
+entityController --> entityService
+entityService --> briefingService
+briefingService --> entityService : briefingGroups(), followTerms()
+briefingService --> Names : namesOfCards(), storiesOfSameNames()
+entityService --> watchTerms
+entityService --> Names
+entityService --> WikidataPkg
+entityService --> Data
+taggingService --> Names
+taggingService --> WikidataPkg
+Names --> Data
+Names --> Ner
+WikidataPkg --> WikidataApi
+Data --> PostgreSQL
+@enduml

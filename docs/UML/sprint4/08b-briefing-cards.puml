@@ -1,0 +1,234 @@
+@startuml 08b-briefing-cards
+!include _style.iuml
+left to right direction
+title Briefing — the cards: the articles read, their passages, what is around them, and the analysis
+
+package "Business" {
+    class briefingService {
+        + readStories()
+        + importedCard()
+        + anglesOf()
+        + angleCardsOf()
+        + cardAnalyses()
+        + analysisArticles()
+    }
+    class entityService <<other feature>> {
+        + briefingGroups()
+    }
+}
+note top of briefingService
+    Reads the chosen stories (08-briefing), 5 articles each, a trusted
+    medium first, then the reader's language, one per medium; a story
+    none of whose pages can be read, or whose card is on a refusal, gives
+    its place to the reserve (2 rounds more at most). Step "angles": the
+    angles, the official sources, the names and what the profile follows,
+    together, none of them can fail the briefing. Then the analysis
+end note
+package "Reading the articles" as Reading {
+    class googleNews {
+        + decodeLinks()
+        + isNotNews()
+    }
+    class crawlers {
+        + Html()
+        + Pages()
+    }
+    class readableCards {
+        + readableCards()
+    }
+    class titles {
+        + wholeTitle()
+        + cleanTitle()
+    }
+    class readingOrder {
+        + onceEach()
+    }
+}
+note right of googleNews
+    The real address of a news of Google
+    News: 10 a briefing, 2 a story at most,
+    only for the stories no feed lets read
+end note
+note right of crawlers
+    Html: a plain fetch and Readability,
+    Crawlee for the pages it missed;
+    Pages, the fetch only, for a news
+    added by its link (public addresses)
+end note
+package "Writing the cards" as Writing {
+    class extract {
+        + extractArticle()
+        + passagesText()
+        + translateTexts()
+        + canSummarize()
+        + sentencesOf()
+    }
+    class contested {
+        + contestedOf()
+    }
+    class profileAi {
+        + reviewCards()
+    }
+    class corroboration {
+        + corroborationOf()
+    }
+    class hedging {
+        + hedgedBy()
+    }
+}
+note right of extract
+    The AI gives the numbers of 5 sentences at
+    most (170 words), shown word for word; the
+    points (3) and the summary (65 words) are
+    made of the same sentences. A translation,
+    marked, its figures checked
+end note
+note right of contested
+    A sentence of an article where
+    someone named denies the news,
+    found by its words, confirmed
+    by one call of the AI
+end note
+package "AI version" as AiVersion {
+    class aiWays {
+        + aiWaysOf()
+    }
+}
+note right of aiWays
+    Points and a summary written by
+    deepseek-v4-pro:0813, shown when the
+    reader asks for them, marked; left out
+    when a figure is not in the article
+end note
+package "Around the card (step angles)" as Around {
+    class otherAngles {
+        + otherAnglesOf()
+        + nearCardsOf()
+        + sameFactsOut()
+        + placeAngles()
+    }
+    class affairNames {
+        + storiesOfSameNames()
+    }
+    class officialSources {
+        + officialSourcesOf()
+    }
+    class statements {
+        + statementsOf()
+    }
+    class cardNames {
+        + namesOfCards()
+    }
+    class wikidata {
+        + searchItems()
+        + readChannels()
+        + exactItems()
+    }
+    class feedFinder <<other feature>> {
+        + findFeeds()
+    }
+}
+note right of otherAngles
+    The stories of the last 3 days (or of the
+    briefing's days) closest to the card (from
+    0.6, 8 judged), and 5
+    naming its rare names over 30 days; the
+    AI judges them on their titles, 5 shown
+end note
+note right of officialSources
+    The AI names the parties of the news,
+    Wikidata their site and open accounts,
+    their posts near the card are judged
+    twice: 2 shown at most. With them, the
+    statements its own articles report
+end note
+package "Analysis (after the briefing)" as Analysis {
+    class cardAnalysis {
+        + analysesOf()
+        + pickedCards()
+        + analysisOfCard()
+        + checkedLines()
+        + fittedArticles()
+    }
+    class tagger {
+        + tagTexts()
+    }
+}
+note right of cardAnalysis
+    deepseek-v4-pro:0813 picks the cards that merit
+    one (no reasoning), then writes, 3 cards at once
+    and reasoning (300 s at most), why it matters and
+    what may come next, each line citing its sources;
+    the code drops a line whose figure or name its
+    sources do not give. With the timeline of the
+    earlier stories of the affair. Not awaited
+end note
+package "Data" as Data {
+    class storyModel {
+        + storyArticles()
+        + closeStories()
+        + likenessTo()
+        + likenessAmong()
+        + earlierInThreads()
+    }
+    class feedModel {
+        + saveResolvedLinks()
+        + searchArticles()
+    }
+    class officialModel {
+        + names()
+        + saveNames()
+        + items()
+        + saveChannels()
+        + saveSiteFeed()
+        + newsOfMedia()
+    }
+    class mentionModel {
+        + namesOfArticles()
+        + storiesNaming()
+        + want()
+        + setLink()
+    }
+    class briefingModel {
+        + watched()
+        + analysis()
+    }
+}
+note right of officialModel
+    party_names: the item of Wikidata
+    of a name the AI gave; entities:
+    the channels of each item
+end note
+class ollama {
+    + ollamaJson()
+}
+class "News sites" as Web <<external>>
+class "Ollama cloud\n(gemma4:31b, deepseek-v4-pro:0813)" as OllamaCloud <<external>>
+class "Wikidata" as WikidataApi <<external>>
+class "NER tagger (GLiNER)" as Ner <<external>>
+class "PostgreSQL + pgvector" as PostgreSQL <<external>>
+
+
+briefingService --> Reading
+briefingService --> Writing
+briefingService --> AiVersion
+briefingService --> Around
+briefingService --> Analysis
+briefingService --> entityService : the news of what\nthe profile follows
+briefingService --> Data
+officialSources --> statements
+officialSources --> wikidata
+officialSources --> feedFinder : the feed of\na party's site
+affairNames --> wikidata
+cardAnalysis --> tagger
+Around --> Data
+Writing --> ollama
+AiVersion --> ollama
+Around --> ollama
+Analysis --> ollama
+crawlers --> Web
+ollama --> OllamaCloud
+wikidata --> WikidataApi
+tagger --> Ner
+Data --> PostgreSQL
+@enduml

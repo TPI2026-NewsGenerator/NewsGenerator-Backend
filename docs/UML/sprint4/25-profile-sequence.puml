@@ -1,0 +1,138 @@
+@startuml 25-profile-sequence
+!include _sequence.iuml
+title Profile — written with the questions of the AI, saved, then another profile chosen
+
+actor Reader
+participant "Client (React)" as Client
+participant "profileRouter\n+ activeProfile" as Router
+participant "profileController" as Controller
+participant profileService as Profile
+participant profileFunnel as Funnel
+participant profileAi as AI
+participant "ollama\n(gemma4:31b)" as Ollama
+participant "embedder\n(bge-m3)" as Embedder
+participant profileModel as ProfileModel
+participant discoveryService as Discovery
+database "PostgreSQL" as DB
+
+== The AI asks, then writes the profile (nothing saved) ==
+
+Reader -> Client : a few words ("Le tennis."), the language read in
+loop up to 3 rounds, while the AI asks
+    Client -> Router : POST /profile/funnel/questions\n{start, rounds, language}
+    note right of Router
+        no account needed while accounts can be
+        made (signupOpen), else a token;
+        40 calls an hour per address
+    end note
+    Router -> Controller : funnelQuestions(req)
+    Controller -> Profile : funnelQuestions({start, rounds, language})
+    Profile -> Profile : funnelOf: start 3 to 300 characters,\na language of the list; cleanRounds
+    Profile -> Funnel : nextQuestions(funnel)
+    Funnel -> Ollama : ollamaJson(questionsPrompt)
+    Ollama --> Funnel : {enough, questions}
+    Funnel -> Funnel : 2 to 4 questions, 4 to 8 choices each;\na question passed before left out
+    Funnel --> Profile : {enough, questions}
+    Profile --> Client : {enough, questions, maxRounds}
+    Reader -> Client : ticks choices, writes their own words
+end
+note right of Funnel
+    The first round always asks for
+    other subjects; the last one at the
+    latest asks what the reader refuses
+    and, with two subjects or more, which
+    ones are followed from afar (weight 0.85)
+end note
+Client -> Router : POST /profile/funnel/text {start, rounds, language}
+Router -> Controller : funnelText(req)
+Controller -> Profile : funnelText(asked)
+Profile -> Funnel : writeProfile(funnel)
+Funnel -> Ollama : ollamaJson(writePrompt)
+Ollama --> Funnel : {text}, in the first person
+alt under 20 characters
+    Profile --> Client : 422, tick or write a little more
+end
+Profile --> Client : {text}
+Reader -> Client : reads the text, changes it if they want
+
+== Saved: the interests read by the AI, their vectors, the discovery started ==
+
+alt the profile shown written again
+    Client -> Router : PUT /profile {text, language}
+    Router -> ProfileModel : idsOf(user)
+    Router -> Controller : save(req)
+    Controller -> Profile : save(userId, profileId, {text, language})
+else another profile (administrators only, 15 at most)
+    Client -> Router : POST /profile/profiles {name, text, language}
+    Router -> Controller : create(req)
+    Controller -> Profile : create(userId, {name, text, language})
+end
+note right of Client
+    The signup saves the first profile the same
+    way, before the account (20-signup-sequence)
+end note
+
+Profile -> Profile : prepare: text 20 to 3000 characters,\na language of the list
+Profile -> AI : interestsOf({text, language, categories})
+AI -> Ollama : ollamaJson(interestsPrompt)
+Ollama --> AI : {interests, refused}
+AI -> AI : normalizeInterests: 6 at most,\n500 characters each, weight 0.5 to 1,\na category of the list; the refusals cut\nout of the texts, keywords and searches
+opt a word of the reader in no interest, or an interest over 500 characters
+    AI -> Ollama : ollamaJson(the prompt, its answer,\nwhat to fix)
+    Ollama --> AI : the whole answer again
+    AI -> AI : the second answer kept when better\non one, not worse on the other
+end
+AI --> Profile : {interests, refused}
+note right of AI
+    Each interest: its text (the subject and every
+    precision of the reader), weight, keywords,
+    Google News searches in up to 4 languages,
+    sections, category. "refused" is never an
+    interest: its vector would bring those news
+end note
+alt no interest read
+    Profile --> Client : 422
+end
+Profile -> Embedder : embed(the texts of the interests)
+Embedder --> Profile : a dense and a sparse vector each
+Profile -> ProfileModel : save(userId, profileId, {text, languages, refused, name}, interests)
+ProfileModel -> DB : one transaction: user_profiles written,\nthe interests of the profile replaced\n(not the ones of its projects), their vectors
+Profile -> Discovery : start(profileId)
+Discovery -> ProfileModel : setDiscovery('running')
+Discovery -->> Profile : returns at once
+note right of Discovery
+    the sources are found in background
+    (23-discovery-sequence)
+end note
+Profile -> Profile : get(userId, profileId)
+Profile --> Client : the profile, its interests, sources,\nprojects, every profile of the reader
+
+== The reader chooses another of their profiles ==
+
+Client -> Router : GET /profile/profiles
+Router -> Controller : list(req)
+Controller -> Profile : list(userId)
+Profile -> ProfileModel : ofUser(userId)
+Profile --> Client : {profiles: [{id, name}]}
+Reader -> Client : chooses one
+Client -> Client : setActiveProfile(id), kept in the browser
+note right of Client
+    every call sends it in the header X-Profile:
+    the profile page, the briefing, the sources,
+    what the profile follows
+end note
+Client -> Router : GET /profile (X-Profile: id)
+Router -> ProfileModel : idsOf(user)
+Router -> Router : activeProfile: req.profileId = the id asked\nif it is one of the user, else their first one
+Router -> Controller : get(req)
+Controller -> Profile : get(userId, profileId)
+par read at once
+    Profile -> ProfileModel : owned, interests, projects,\nprojectInterests, removedSources
+else
+    Profile -> Profile : the sources found (listUserFeeds), the ones\nthe thumbs left out (refusedSources),\nthe Google News searches (searchesOfUser)
+else
+    Profile -> ProfileModel : profileFeedRelevance
+    note right : the news of 14 days of each source\non the interests, kept 15 minutes
+end
+Profile --> Client : the profile chosen and its data
+@enduml

@@ -10,6 +10,10 @@ participant "Model" as Model
 database "Storage (DB)" as Storage
 
 Client -> Router : POST /login (username, password)
+Router -> Router : rateLimit()
+alt plus de 10 essais de cette adresse en 15 minutes
+    Router --> Client : HTTP 429 {error, retryAfter}
+end
 Router -> Controller : authUser(req)
 alt nom ou mot de passe vide
     Controller --> Client : HTTP 400
@@ -28,8 +32,13 @@ alt mot de passe faux
     Service --> Controller : 401
     Controller --> Client : HTTP 401
 end
-Service -> Service : generateAccessToken() (JWT)
+Service -> Service : generateAccessToken({id, username, email, role})\n(JWT, 7 jours)
 Service --> Controller : {id_user, token}
-Controller --> Client : HTTP 200 {id_user, token}
+Controller -> Controller : startSession(res, token) : cookie "session"\nHttpOnly, SameSite=Strict, Secure en https
+note right of Controller : le token n'est jamais dans la réponse :\nle script de la page ne peut pas le lire
+Controller --> Client : HTTP 200 {id_user} + Set-Cookie session
+Client -> Router : GET /session (le cookie) : la page demande qui est connecté
+Router -> Router : authenticateToken()
+Router --> Client : HTTP 200 {id, username, email, role, admin}
 
 @enduml

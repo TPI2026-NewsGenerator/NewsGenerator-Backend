@@ -11,7 +11,10 @@ database "Storage (DB)" as Storage
 
 
 Client -> Router : DELETE /customsearch (id)
-Router -> Router : authenticateToken()
+Router -> Router : authenticateToken() (cookie "session")
+alt pas de session, ou une session expirée\nou ouverte avant le dernier changement de mot de passe
+    Router --> Client : HTTP 403
+end
 Router -> Controller : deleteUserCustomSearch(req)
 alt id manquant
     Controller --> Client : HTTP 400

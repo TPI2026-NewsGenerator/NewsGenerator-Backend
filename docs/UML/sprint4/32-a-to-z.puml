@@ -1,0 +1,159 @@
+@startuml 32-a-to-z
+' The whole system from A to Z (16.10.2026): the background work that runs for everyone, then the
+' path of one reader, from the account to the e-mail. Each step names the module or the diagram
+' that says more.
+skinparam shadowing false
+skinparam defaultFontSize 13
+skinparam titleFontSize 18
+skinparam noteBackgroundColor #FFFBE6
+skinparam noteBorderColor #C9B458
+skinparam ArrowColor #555555
+skinparam activity {
+    BackgroundColor #FFFFFF
+    BorderColor #555555
+    DiamondBackgroundColor #FFFFFF
+    DiamondBorderColor #555555
+}
+skinparam swimlane {
+    BorderColor #AAAAAA
+    TitleFontSize 14
+}
+skinparam partition {
+    BorderColor #7A93B8
+}
+title NewsGenerator from A to Z — the background work, then one reader
+
+|#EEF3FA|Background work\n(server, every minute)|
+start
+partition "A · Fill the shared cache (04-ingestion, 24-ingestion-sequence)" {
+    :Read the feeds due at their rhythm
+    (2 to 60 min) and the Google News
+    searches of every interest (each hour);
+    note right
+        386 shared feeds, the sources of every
+        reader, the directory (2 300 feeds),
+        RSS-Bridge for the sites without one
+    end note
+    :Save the new news in **articles**
+    (repeats and old news left out);
+    fork
+        :Embedder: two bge-m3 vectors per news
+        (dense + sparse, graphics card first);
+        :**assign_stories**: the news of several
+        media telling one fact form a story;
+        :**assign_threads**: the stories of one
+        affair are linked over days;
+    fork again
+        :Tagger (GLiNER): the people, organisations
+        and places each news names;
+        :Wikidata: the item each name is,
+        one every 7 s;
+    end fork
+    :Every 20 min the directory adds media,
+    once a day it takes out what serves nobody,
+    once an hour the news over 30 days go;
+}
+note right
+    This loop never stops; everything
+    below reads what it stored
+end note
+
+|Reader|
+partition "B · The account and the profile (20-signup, 25-profile, 06-profile)" {
+    :Answer the AI's questions
+    (a few words, then up to 3 rounds);
+    |AI (Ollama)|
+    :gemma4:31b writes the profile
+    in the reader's own words;
+    |Reader|
+    :Read it, change it, sign up
+    (or save a new profile);
+    |AI (Ollama)|
+    :Split the profile into 1 to 6 interests
+    (keywords, Google News searches, refusals apart);
+    |Server (API)|
+    :Vectors of each interest,
+    store the account and the profile;
+}
+partition "C · Its sources (23-discovery, 07-discovery, 05-sources)" {
+    :Discovery in background:
+    Google News then Media Cloud name media,
+    their feeds are found and judged
+    (2 news of 30 at 0.45, then the AI);
+    :Read the feeds found at once:
+    ready ~2 min after the profile;
+    note right
+        The reader can add sites, import a list,
+        take recommended sources, star one
+    end note
+}
+|Reader|
+partition "D · Search (21-search, 03-search)" {
+    if (A sentence or keywords?) then (sentence)
+        |Server (API)|
+        :Its vector; the 80 + 30 closest news
+        per language; Google News asked too;
+        |AI (Ollama)|
+        :A verdict per news:
+        answer, related, or out;
+    else (keywords with operators)
+        |Server (API)|
+        :SQL on the text (pg_trgm),
+        commas OR, quotes, -word;
+    endif
+    |Server (API)|
+    :Cards: a story is one card, an affair
+    one card with its facts in order;
+    :On the cards chosen: key passages, denials,
+    who tells it (no AI for the counts);
+}
+|Reader|
+partition "E · The briefing (22-briefing-sequence, 08-briefing, 08b-briefing-cards)" {
+    :New briefing: 1 to 7 days, 10/20/30 cards;
+    |Server (API)|
+    :**ranking**: rank_profile_stories on the
+    interests of the profile and its projects
+    (SQL, pgvector), Google News candidates,
+    the stories sent before left out;
+    |AI (Ollama)|
+    :**choosing**: the AI picks among the
+    candidates, with the thumbs as examples;
+    :**checking**: the articles that tell the
+    same news, two cards of one news joined;
+    |Server (API)|
+    :**reading**: 5 articles per story
+    (trusted medium, the reader's language first);
+    |AI (Ollama)|
+    :**summarizing**: the numbers of the sentences
+    to show (passages, points, summary), a denial,
+    the AI version (deepseek-v4-pro), the review;
+    :**angles**: other angles, official source,
+    news of what the profile follows, names;
+    |Server (API)|
+    :Cards ready: the client shows them;
+    |AI (Ollama)|
+    :**analysis** of the cards that merit one
+    (deepseek-v4-pro): why it matters,
+    what could come next, the story so far;
+}
+|Reader|
+partition "F · Read, follow, send (10-following, 27-following, 09-email, 26-email)" {
+    :Read the cards: passages, points or summary,
+    who tells it, AI version on demand;
+    :Thumb up or down: the examples
+    of the next choice, sources refused;
+    :Follow a name or a Wikidata item:
+    its news in a tab of the briefing;
+    if (Administrator?) then (yes)
+        :Mail bar: order, picture, title,
+        lines left out, the AI version;
+        |Server (API)|
+        :Build the e-mail, send it by SMTP,
+        mark the cards sent: their stories
+        wait 48 h before coming back;
+    else (no)
+    endif
+}
+|Reader|
+stop
+@enduml

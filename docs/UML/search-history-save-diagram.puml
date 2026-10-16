@@ -10,7 +10,10 @@ participant "Model" as Model
 database "Storage (DB)" as Storage
 
 Client -> Router : POST /customsearch (title, keyword, language, category, sans id)
-Router -> Router : authenticateToken()
+Router -> Router : authenticateToken() (cookie "session")
+alt pas de session, ou une session expirée\nou ouverte avant le dernier changement de mot de passe
+    Router --> Client : HTTP 403
+end
 Router -> Controller : postUserCustomSearch(req)
 alt titre, mots, langue ou catégorie manquant
     Controller --> Client : HTTP 400
@@ -18,6 +21,12 @@ end
 Controller -> Service : postPutUserCustomSearch(data, userId du token)
 Service -> Model : postUserCustomSearch(userId, data)
 Model -> Storage : INSERT custom_searches\n+ custom_searches_has_categories
+alt un titre que cet utilisateur a déjà (index unique u_custom_searches)
+    Storage --> Model : erreur Prisma (P2002)
+    Model --> Service : P2002
+    Service --> Controller : P2002, sans status
+    Controller --> Client : HTTP 500 (le message de Prisma)
+end
 Storage --> Model : la recherche créée
 Model --> Service : la recherche créée
 Service --> Controller : la recherche créée

@@ -4,16 +4,16 @@ NewsGenerator · schéma du processus
 
 Deux chaînes tournent en parallèle. Le serveur lit, comprend et regroupe toutes les nouvelles en continu, sans attendre personne. Le lecteur, lui, s'inscrit une fois, puis demande un briefing : l'application cherche alors dans ce qui est déjà prêt, et l'IA n'intervient que sur les quelques nouvelles qui seront montrées.
 
-Mesuré le **7 octobre 2026** sur le serveur Ubuntu · Lecteur d'exemple : **Enzo** (arbitrage, UEFA, lit en français) · Script : **server/bench/funnel-now.mjs** · Texte mis à jour le **12 octobre 2026**
+Mesuré le **7 octobre 2026** sur le serveur Ubuntu · Lecteur d'exemple : **Enzo** (arbitrage, UEFA, lit en français) · Script : **server/bench/funnel-now.mjs** · Texte mis à jour le **16 octobre 2026**
 
-Le fonctionnement décrit est celui du 12 octobre 2026. Les chiffres viennent de la mesure du 7 octobre vers 1 h 30, sauf quand une autre date est donnée. « Parcours d'une nouvelle » suit, lui, un briefing complet d'Enzo écrit le même jour à 15 h 29 : ses nombres diffèrent un peu de ceux-ci (68 259 nouvelles au lieu de 67 636, 15 histoires choisies au lieu de 12, 9 cartes au lieu de 10), c'est un autre moment et un autre briefing.
+Le fonctionnement décrit est celui du 16 octobre 2026. Les chiffres viennent de la mesure du 7 octobre vers 1 h 30, sauf quand une autre date est donnée. « Parcours d'une nouvelle » suit, lui, un briefing complet d'Enzo écrit le même jour à 15 h 29 : ses nombres diffèrent un peu de ceux-ci (68 259 nouvelles au lieu de 67 636, 15 histoires choisies au lieu de 12, 9 cartes au lieu de 10), c'est un autre moment et un autre briefing.
 
 ## Vue d'ensemble : deux chaînes qui se rejoignent au briefing
 
 En haut, le travail de fond du serveur, toutes les minutes. En bas, ce que fait le lecteur. La découverte ajoute ses sources à la lecture du serveur ; le briefing et la recherche puisent dans les histoires déjà prêtes.
 
 - **EN CONTINU** (serveur Ubuntu, chaque minute) : Sources (RSS, Google News, RSS-Bridge ; 2 488 flux) → Lecture (chaque flux à son rythme (2 à 60 min) ; 136 023 / 24 h) → Vecteurs (bge-m3, dense + creux (mots) ; 126 122) → Histoires (un même fait, plusieurs médias ; 71 214) → Fils d'affaires (une affaire suivie sur plusieurs jours ; 63 226)
-- **LE LECTEUR** (à son rythme, 1 à 2 fois par jour) : Inscription (compte, une langue, questions de l'IA ; ≈ 5 s) → Intérêts (l'IA découpe le texte en intérêts + vecteurs ; 3 intérêts) → Découverte (Google News d'abord, puis la presse ; 36 flux + 24 req.) → Briefing (7 étapes, 10 à 30 cartes sur 24 h, 2 j ou 7 j ; 43 931 → 10 cartes) → Lecture (passages clés, médias, fil de l'affaire, vote ; ≈ 6 médias / carte) ; à côté : Recherche par phrase
+- **LE LECTEUR** (à son rythme, 1 à 2 fois par jour) : Inscription (compte, une langue, questions de l'IA ; ≈ 5 s) → Intérêts (l'IA découpe le texte en intérêts + vecteurs ; 3 intérêts) → Découverte (Google News d'abord, puis la presse ; 36 flux + 24 req.) → Briefing (6 étapes + analyse, 10 à 30 cartes sur 1 à 7 jours ; 43 931 → 10 cartes) → Lecture (passages clés, médias, fil de l'affaire, vote ; ≈ 6 médias / carte) ; à côté : Recherche par phrase
 - Base PostgreSQL + pgvector, 30 jours gardés : 691 147 nouvelles
 - ses flux rejoignent la lecture
 - histoires de 24 h à 7 jours
@@ -73,13 +73,14 @@ Le lecteur choisit un nom, un e-mail, un mot de passe et la langue dans laquelle
 
 - Le site est ouvert sur internet ; ses lecteurs sont ceux qui ont un compte. La création de compte est fermée par défaut et s'ouvre avec `SIGNUP_OPEN=1`. Le mot de passe du site (Caddy, puis une page à lui) a été retiré le 10 octobre.
 - Les questions : 3 tours au plus, de 2 à 4 questions avec 4 à 8 choix et un texte libre chacune, dans la langue choisie. Elles demandent aussi ce qu'il suffit de suivre « de plus loin ». Au plus 40 tours par heure et par adresse.
-- Contrôles d'abord : nom de 3 à 30 caractères, mot de passe de 10 caractères minimum, texte du profil de 20 à 2 000 caractères.
+- Contrôles d'abord : nom de 3 à 30 caractères, mot de passe de 10 caractères minimum, texte du profil de 20 à 3 000 caractères.
 - Nom ou e-mail déjà pris : refus immédiat (409), sans appeler l'IA. L'unicité ignore les majuscules.
 - Le compte n'est créé qu'une fois le profil compris (étape A2). Si l'IA ou les vecteurs échouent, aucun compte ne reste.
 - Au plus 5 inscriptions par heure et 10 connexions par quart d'heure par adresse IP.
 - Connexion : mot de passe vérifié par bcrypt, session dans un cookie que la page ne peut pas lire (HttpOnly), valable 7 jours et renouvelée chaque jour d'usage.
 - Compte : nom d'utilisateur, e-mail et mot de passe changés depuis la page Settings ou la section « Your account » du profil, chacun avec le mot de passe actuel ; un nouveau mot de passe ferme les sessions des autres appareils.
-- Plusieurs profils (« Travail », « Loisirs ») pour les administrateurs, 15 au plus : chacun a ses intérêts, ses sources, ses votes, ses termes suivis et ses briefings.
+- Plusieurs profils (« Travail », « Loisirs ») pour les administrateurs, 15 au plus : chacun a ses intérêts, ses projets, ses sources, ses votes, ce qu'il suit et ses briefings. La page envoie le profil choisi avec chaque demande (en-tête `X-Profile`).
+- Projets (13 octobre) : ce que le lecteur prépare pour un temps (un voyage, un achat, un rapport), 5 au plus par profil, écrits avec les questions de l'IA comme un profil, avec un dernier jour dans l'année ou aucun. Leurs intérêts entrent dans le classement du briefing jusqu'à ce jour ; aucune source n'est cherchée pour eux.
 
 *Technologies :* React 19 + Vite · Express 5 · bcrypt · cookie HttpOnly · Prisma 7 · gemma4:31b (les questions)
 
@@ -87,13 +88,14 @@ Le lecteur choisit un nom, un e-mail, un mot de passe et la langue dans laquelle
 
 ### A2 · Comprendre le profil
 
-L'IA lit le texte libre et le découpe en intérêts distincts, et met à part ce que le lecteur refuse. Chaque intérêt reçoit son propre vecteur et ses recherches Google News.
+L'IA lit le texte libre et le découpe en intérêts distincts (6 au plus), et met à part ce que le lecteur refuse. Chaque intérêt reçoit ses deux vecteurs (dense et creux) et ses recherches Google News.
 
 - Un vecteur par intérêt plutôt qu'un seul pour tout le profil : 88 % de cartes pertinentes contre 38 % (mesuré sur 4 profils, 249 histoires jugées à la main).
 - L'IA choisit les langues des recherches de chaque intérêt : celle du lecteur, l'anglais, celles des pays dont parle le sujet, 4 au plus.
 - Les refus sont gardés et montrés sur le profil, dans les mots du lecteur ; ils ne deviennent jamais un intérêt (son vecteur ramènerait justement ces nouvelles).
 - Un intérêt est principal (poids 1) ou secondaire (0,85), selon les réponses ou le bouton du profil ; le lecteur corrige chaque intérêt, et changer la langue du profil le fait relire.
 - L'IA reçoit la date du jour, pour ne pas écrire « Euro 2024 » en 2026.
+- Un mot du lecteur absent de tous les intérêts, ou un intérêt de plus de 500 caractères : l'IA découpe une seconde fois, et la seconde réponse est gardée si elle fait mieux sur un point sans faire pire sur l'autre (13 octobre).
 - Le texte entier reste la référence : c'est lui que l'IA relit au moment de choisir (C2).
 
 *Technologies :* gemma4:31b (Ollama cloud) · Gemini en secours · bge-m3
@@ -201,13 +203,27 @@ Toutes les heures, les nouvelles de plus de 30 jours et les histoires vides sont
 
 *Chiffres :* Gardé en base : 691 147 nouvelles (331 832 histoires, 269 165 fils) · Annuaire : 1 382 flux (938 le 3 octobre : c'est lui qui fait grandir le volume ; 1 623 le 10 octobre, après le tri) · Premier tri, 9 octobre : 187 flux retirés (environ 40 % du volume ; 2 à 11 % de leurs nouvelles touchaient un intérêt, aucune n'était dans un briefing. Depuis, plus aucune nouvelle n'attend ses vecteurs)
 
-## C · Le briefing : un clic, sept étapes, 30 secondes à une minute
+### B6 · Relever les noms de chaque nouvelle
 
-Le briefing ne lit rien de nouveau sur le web avant d'avoir choisi : il classe ce que le serveur a déjà préparé, et l'IA ne voit qu'une quarantaine d'histoires. Le lecteur choisit la période (24 heures, 2 jours ou 7 jours) et la taille : 10, 20 ou 30 cartes. Les nombres ci-dessous sont ceux de 10 cartes ; pour 20 ou 30, les histoires classées, les candidates et la réserve sont 2 ou 3 fois plus nombreuses.
+À côté des passes (13 octobre), un étiqueteur lit le titre et le début de la description de chaque nouvelle et en relève les personnes, les organisations et les lieux. Les noms les plus cités sont ensuite cherchés dans Wikidata, pour savoir de quelle fiche ils parlent.
+
+- GLiNER multi v2.1, toutes les langues des flux, sur le titre et 700 caractères de la description ; les nouvelles les plus récentes d'abord, seulement celles des 30 jours gardés.
+- 16 nouvelles à la fois sur le processeur du serveur, 128 sur la carte graphique du PC de jeu quand il est allumé ; chaque étiqueteur travaille de son côté, aucune nouvelle n'est lue deux fois.
+- Un nom est gardé une fois par sorte, comparé sans majuscules, accents ni article (« La Fédération lettone de football »). Une nouvelle que le regroupement tient est reprise plus tard : l'étiquetage ne fait jamais attendre les passes.
+- Wikidata : un nom cité par 3 nouvelles au moins, un toutes les 7 s. Il devient une fiche seulement quand une seule fiche porte exactement ce nom (« LFF » en a deux, la Lettonie et la Lituanie). Les noms qu'un lecteur voit (sur une carte, sur la page d'un nom) passent en premier.
+- Ils servent trois fois : la page d'une fiche suivie trouve ses nouvelles par eux (D3), les autres angles d'une carte cherchent les histoires qui nomment ses noms rares (C7), et chaque carte montre ses noms (D1).
+
+*Technologies :* GLiNER (Python) · mentions · article_mentions · Wikidata · FOR UPDATE SKIP LOCKED
+
+*Mesuré le 13 octobre :* Vitesse : 2,2 nouvelles/s (294 nouvelles de 26 langues, 3 cœurs du serveur ; le titre seul trouvait 44 % des noms) · Noms en attente de Wikidata : ≈ 150 000 (12 000 nouveaux par jour)
+
+## C · Le briefing : un clic, six étapes, puis l'analyse
+
+Le briefing ne lit rien de nouveau sur le web avant d'avoir choisi : il classe ce que le serveur a déjà préparé, et l'IA ne voit qu'une quarantaine d'histoires. Le lecteur choisit la période (1 à 7 jours, 2 par défaut) et la taille : 10, 20 ou 30 cartes. La page montre l'étape en cours : ranking, choosing, checking, reading, summarizing, angles ; l'analyse des cartes s'écrit ensuite, les cartes déjà montrées. Les nombres ci-dessous sont ceux de 10 cartes ; pour 20 ou 30, les histoires classées, les candidates et la réserve sont 2 ou 3 fois plus nombreuses.
 
 ### C1 · Classer les histoires de la période
 
-Sur la période choisie (2 jours par défaut), une seule requête SQL note chaque nouvelle des sources lues, dans toutes les langues, contre chacun des intérêts du profil, et garde la meilleure note de chaque histoire.
+Sur la période choisie (2 jours par défaut), une seule requête SQL note chaque nouvelle des sources lues, dans toutes les langues, contre chacun des intérêts du profil et de ses projets en cours, et garde la meilleure note de chaque histoire.
 
 - Avant de classer, les sources trouvées pour le profil qui n'apportent plus rien depuis 14 jours sont retirées (A3).
 - Note : proximité dense + la moitié de la proximité creuse, multipliée par le poids de l'intérêt.
@@ -215,16 +231,17 @@ Sur la période choisie (2 jours par défaut), une seule requête SQL note chaqu
 - Toutes les langues comptent : le lecteur lit dans la sienne, les titres et passages des autres lui sont traduits.
 - Sources refusées par ses votes retirées. Médias de confiance du lecteur : leurs histoires parmi les 60 plus proches entrent en plus des 40 (10 au plus), sans bonus de note.
 - Écartées ensuite : pages répétées et histoires connues seulement par Google News sans média établi.
+- Déjà envoyées (14 octobre) : une histoire d'une carte envoyée par e-mail dans les 48 dernières heures, et toute autre histoire de son fil, ne revient pas. Elle revient comme une suite quand des nouvelles publiées depuis disent du neuf, ce qu'un appel de l'IA décide (« dans le doute, ce n'est pas neuf »).
 - Candidates : les 40 meilleures venues de flux, plus au plus 10 connues seulement par Google News (2 par média). Quand Google bloque la lecture de ses liens, ces dernières ne sont plus proposées, sauf si leur adresse réelle est déjà connue.
-- Sur 7 jours : une seule candidate par fil d'affaire, et l'IA reçoit le nombre de médias de chaque histoire pour préférer ce qui a compté. Même coût : 40 candidates.
+- Dès 3 jours : une seule candidate par fil d'affaire, et l'IA reçoit le nombre de médias de chaque histoire pour préférer ce qui a compté. Même coût : 40 candidates.
 
-*Technologies :* rank_stories (SQL) · pgvector · fils (threads)
+*Technologies :* rank_profile_stories (SQL) · pgvector · fils (threads)
 
 *Enzo :* Nouvelles des 48 h dans ses sources : 67 636 (34 langues ; 5 919 en français) · Histoires notées : 43 931 → 150 (en 17 à 20 s, serveur très chargé (3,1 s le 3 octobre, base deux fois plus petite) ; notes de 0,766 à 0,555) · Candidates : 47 (261 articles, 11 langues ; 4 écartées sur 150) · Sur 7 jours : 182 783 nouvelles → 45 (en 14 à 16 s ; 123 histoires après une par fil)
 
 ### C2 · L'IA choisit
 
-L'IA reçoit le texte du profil, les intérêts et les candidates. Elle en choisit au plus 20 (30 pour 20 cartes, 45 pour 30 ; 15 le 7 octobre), avec une raison tirée du titre et de la description seulement ; le briefing en garde 10, les suivantes restent en réserve (C4).
+L'IA reçoit le texte du profil et de ses projets, les intérêts et les candidates. Elle en choisit au plus 20 (30 pour 20 cartes, 45 pour 30 ; 15 le 7 octobre), avec une raison tirée du titre et de la description seulement ; le briefing en garde 10, les suivantes restent en réserve (C4).
 
 - Ce que lit l'IA : une ligne par candidate, « [id] titre — début de description (aussi : 3 autres titres) », avec « source de confiance du lecteur » ou, sur 7 jours, le nombre de médias. Jamais de vecteur.
 - Refuse les pages-dossiers, les guides pratiques (« comment regarder »), les compilations vidéo ; préfère les faits aux pronostics ; varie les sujets.
@@ -254,7 +271,7 @@ Deux appels partent ensemble. Le premier garde, dans chaque histoire, les articl
 
 ### C4 · Lire les articles
 
-Maintenant seulement, les pages sont téléchargées : 5 articles par histoire au plus, un par média. L'article dans la langue du lecteur est lu en premier, puis celui d'un média de confiance.
+Maintenant seulement, les pages sont téléchargées : 5 articles par histoire au plus, un par média. L'article d'un média de confiance est lu en premier, puis celui dans la langue du lecteur.
 
 - Le texte est extrait de la page comme le fait le mode lecture de Firefox. Depuis le 8 octobre, une simple lecture de la page d'abord, Crawlee seulement pour les pages manquées : ses en-têtes de navigateur inventés faisaient refuser L'Équipe, Le Télégramme ou phys.org.
 - Chaque carte garde l'article d'où viennent ses passages, et l'image de sa page (og:image) quand le flux n'en donnait pas.
@@ -266,17 +283,20 @@ Maintenant seulement, les pages sont téléchargées : 5 articles par histoire a
 
 *Briefings d'Enzo :* Durée : 2 à 7 s (2 octobre) · Articles par carte : 7 à 10 en moyenne (briefings de 48 h des 2 et 3 octobre) · Cartes illisibles remplacées : 1 par briefing (2 briefings de 48 h rejoués le 6 octobre sans rien enregistrer ; avant, environ une carte « aucun article lisible » par briefing)
 
-### C5 · Choisir les passages clés
+### C5 · Choisir les passages clés, les points et le résumé
 
 L'IA ne réécrit rien. Elle reçoit l'article découpé en phrases numérotées et renvoie les numéros des passages qui portent la nouvelle. Le lecteur lit donc les phrases du journaliste.
 
 - Au plus 5 passages, 170 mots ; traduction automatique marquée comme telle, chiffres contrôlés.
+- Deux façons plus courtes de lire la carte, faites des mêmes phrases publiées (12 octobre) : 3 points, les phrases les plus importantes d'abord, et un résumé de 65 mots. Le lecteur choisit l'une des trois sur la page et pour l'e-mail.
+- Version de l'IA (15 octobre) : sur demande (« Show AI version »), les points et le résumé écrits par deepseek-v4-pro, marqués comme tels, retirés s'ils contiennent un chiffre absent de l'article. Mesuré sur 30 articles, 2 passes : 1 à 2 articles avec une erreur de sens (gemma4:31b 2 à 3, les phrases publiées 0) ; d'où une version à demander, à côté des phrases du journaliste.
+- Un titre coupé par le flux est repris en entier de la page (14 octobre).
 - Pourquoi : les résumés réécrits changeaient le sens dans 4 cas sur 30.
 - Corroboration : chaque média compte, mais deux textes qui partagent la moitié de leurs suites de 8 mots sont une même dépêche d'agence.
 - Mots de prudence relevés dans le titre et la description (« selon », « aurait »…).
 - « Contesté » : les phrases des pages lues qui contiennent un verbe de démenti (nier, démentir, deny, niega…, cherchés dans le code, dans la langue de chaque article), puis un appel de l'IA par carte confirme qui dément quoi. Montré seulement quand le démenti porte sur le fait principal et vient de celui qu'il concerne : 21 cartes justes sur 22 à la main.
 
-*Technologies :* extractArticle · gemma4:31b · corroboration (shingles) · contested
+*Technologies :* extractArticle · gemma4:31b · aiWaysOf (deepseek-v4-pro) · corroboration (shingles) · contested
 
 *Briefings d'Enzo :* Durée : ≈ 25 s (lecture et passages, 5 appels en parallèle (6 octobre) ; 11 à 13 s le 2 octobre) · Jetons : 16 000 à 17 000 (19 appels, démentis compris (6 octobre)) · Cartes avec passages : 10 sur 10 (48 h) (6 octobre, réserve comprise ; avant : 8 sur 9)
 
@@ -291,29 +311,46 @@ Une dernière lecture des cartes avec leurs passages : celles qui parlent de ce 
 
 *Briefings d'Enzo :* Retirées : 0 (≈ 1 800 jetons, réponse de 12 (2 octobre)) · Total du briefing : ≈ 34 s (48 h, 6 octobre) (17 à 32 s sur 24 h (4 au 6 octobre), 28 à 50 s sur 7 jours (3 octobre) ; le classement plus lent du 7 octobre y ajoute environ 15 s)
 
-### C7 · Autres angles et termes suivis
+### C7 · Autres angles, source officielle, ce que le profil suit
 
-Les cartes prêtes, deux recherches partent ensemble (8 octobre). Pour chaque carte, l'IA cherche d'autres angles de la même affaire : des articles qui ne disent pas la même chose. Et les nouvelles des noms et des termes que le profil suit sont listées (D3).
+Les cartes prêtes, quatre recherches partent ensemble (étape « angles ») : les autres angles de chaque carte, sa source officielle, les nouvelles de ce que le profil suit (D3) et les noms de chaque carte.
 
-- Angles : les histoires de toutes les langues des 3 derniers jours proches de la carte (0,6 et plus), 8 au plus par carte, jugées par l'IA sur leurs titres, avec jusqu'à 5 autres titres de la carte : « le même fait », « un autre angle », « le même thème » ou « autre chose ». 3 angles au plus par carte.
+- Angles : les histoires de toutes les langues des 3 derniers jours proches de la carte (0,6 et plus), 8 au plus par carte, jugées par l'IA sur leurs titres, avec jusqu'à 5 autres titres de la carte : « le même fait », « un autre angle », « le même thème » ou « autre chose ». S'y ajoutent les histoires des 30 derniers jours qui nomment les noms rares de la carte (13 octobre, B6). 5 angles au plus par carte, un par fait, jamais la nouvelle de la carte racontée une seconde fois.
 - Le même fait avec un détail de plus n'est pas un autre angle : sans cette règle, une candidature racontée dans 16 langues revenait en angles d'elle-même.
-- Termes suivis : toutes les nouvelles de la période qui nomment un terme du profil, de toutes ses sources, sans pertinence ni IA.
+- Source officielle (12 octobre) : l'IA nomme les parties de la nouvelle (un club, une instance, une entreprise), trois cartes à la fois ; chacune est cherchée dans Wikidata, avec ses propres canaux (son site, X, Bluesky…), et ses publications des derniers jours, lues par nos flux de son site ou par son propre flux, sont jugées par l'IA : 2 au plus. Les déclarations d'une partie que les articles rapportent sont montrées aussi.
+- Ce que le profil suit : toutes les nouvelles de la période qui nomment une fiche suivie ou un mot du profil, de toutes ses sources, sans pertinence ni IA.
+- Noms de chaque carte : les personnes et organisations qu'un quart de ses articles au moins nomment, 4 au plus.
+- Au plus 6 appels à Ollama en même temps pour tout le serveur (14 octobre) : Ollama cloud refuse le septième, et une carte avait perdu ses angles.
 - Le briefing n'attend jamais l'une ou l'autre : en cas d'échec, il paraît sans elles.
 
-*Technologies :* closeStories (SQL) · other-angles (gemma4:31b) · watchedNews
+*Technologies :* closeStories (SQL) · other-angles (gemma4:31b) · official-sources · card-names · watchedNews
 
 *Mesuré le 8 octobre :* Angles d'Enzo : 83 % justes (17 cartes sur 30 en reçoivent un) · Recherche : 1,4 s par carte (206 000 histoires sur 3 jours, 5 cartes à la fois)
+
+### C8 · L'analyse des cartes qui en méritent une
+
+Les cartes montrées, l'IA écrit en arrière-plan l'analyse de celles qui en méritent une (15 octobre) : une affaire, un conflit, un enjeu que le titre ne dit pas, une étape à venir. La page la montre dans la carte dès qu'elle est prête.
+
+- deepseek-v4-pro sans raisonnement choisit les cartes ; puis, avec raisonnement, 3 cartes à la fois, il écrit pour chacune pourquoi elle compte (2 lignes), ce qui pourrait suivre, « si ceci, alors cela » (2 lignes), et l'histoire jusqu'ici, tirée des histoires plus anciennes de son affaire (12 au plus).
+- Chaque ligne cite les sources de la carte seulement ; le code retire une ligne dont un chiffre ou un nom n'est pas dans ses sources (les noms lus par l'étiqueteur, B6).
+- Pas de limite de cartes ; une analyse encore en cours après 12 minutes est montrée en échec. Elle ne passe jamais à Gemini : un échec, c'est seulement pas d'analyse.
+
+*Technologies :* card-analysis.js · deepseek-v4-pro · briefings.analysis
+
+*Mesuré le 15 octobre :* Cartes jugées : 139 (10 briefings de 7 profils, chaque ligne jugée à l'aveugle) · Ligne trompeuse : 4 à 5 cartes sur 74 (20 sans raisonnement, 29 avec gemma4:31b) · Durée : 71 s par carte (jusqu'à 161 s ; le choix des cartes ≈ 5 s)
 
 ## D · La lecture : ce que le lecteur a sous les yeux
 
 ### D1 · Lire une carte
 
-Chaque carte donne le titre (traduit, avec l'original dessous), la raison du choix, son image, les passages clés, le nombre de médias, de rédactions indépendantes et d'agences citées, les mots de prudence, qui dément la nouvelle (« Contesté », avec sa phrase), les autres angles de l'affaire, sa chronologie et la liste des articles.
+Chaque carte donne le titre (traduit, avec l'original dessous), la raison du choix, son image, les passages clés (ou ses points, ou son résumé, et leur version de l'IA sur demande), le nombre de médias, de textes différents et d'agences citées, les mots de prudence, qui dément la nouvelle (« Contesté », avec sa phrase), sa source officielle, ses noms, son analyse, les autres angles de l'affaire, sa chronologie et la liste des articles.
 
 - Titre et passages sont montrés traduits, avec « Show original » pour lire le texte d'origine ; la langue de chaque article est marquée par son code (FR, ES…).
 - Chaque étiquette de la carte s'explique dans un petit « i », au survol, au focus ou au toucher.
-- Deux onglets : « Briefing » et « Names and terms », les nouvelles des termes suivis, un onglet par terme. Le bouton « Names and terms found » ne montre que les cartes qui en nomment un, le terme surligné.
-- Le fil d'affaire montre les autres faits de la même affaire, pris dans les sources du lecteur seulement.
+- Deux onglets : « Briefing » et celui de ce que le profil suit, un onglet par fiche ou par mot. Le bouton des noms trouvés ne montre que les cartes qui en nomment un, le nom surligné.
+- Le compte des médias dit « 2 textes différents sur 3 lus » plutôt que « écrits indépendamment » (15 octobre) : une dépêche réécrite compte pour un autre texte.
+- Chaque nom d'une carte ouvre sa page : celle de sa fiche Wikidata, ou une page du nom tel qu'il est écrit.
+- Le fil d'affaire montre les autres faits de la même affaire, pris dans toutes les sources lues.
 - Pouce levé ou baissé : les exemples du prochain choix (C2). Un flux refusé 3 fois et 2 fois plus refusé qu'aimé est mis de côté, sauf s'il le garde depuis son profil.
 - Étoile sur une source : son média devient de confiance, quel que soit le flux ou Google News qui apporte ses nouvelles (C1) ; son article est lu en premier.
 - Les sources du profil sont réunies dans une seule liste, avec un seul endroit pour en ajouter. Une source en déluge y est signalée (« N news a day: prepared last »).
@@ -339,24 +376,27 @@ Le lecteur écrit une phrase. Elle devient un vecteur, comparé aux nouvelles de
 
 ### D3 · Suivre des noms, des clubs, des personnes
 
-Deux façons de suivre un nom, sans pertinence ni IA : toutes les nouvelles des sources qui le citent. Les termes du profil apparaissent dans le briefing ; la page Following ouvre un dossier sur un club, une personne ou une organisation, avec tout ce qui gravite autour.
+Une seule liste, une seule page Following (13 octobre) : des fiches de Wikidata (un club, une personne, une organisation, avec tout ce qui gravite autour) et des noms ou des mots tels qu'écrits. Sans pertinence ni IA : toutes les nouvelles des sources qui les citent, dans un onglet du briefing.
 
-- Termes (page Profile, « Names and terms you follow ») : 20 au plus par profil, tapés par le lecteur (« VAR », « Infantino »). Cherchés comme mots entiers dans le titre et la description, accents et majuscules ignorés ; un sigle garde ses majuscules et ne compte pas dans un titre crié (« LA VALETTE-DU-VAR »). Listés dans le briefing, 100 histoires au plus par terme.
-- Following : une fiche de Wikidata choisie dans une liste, 30 au plus. Ses noms sont ceux de la fiche (nom, variantes, « PSG » pour « Paris Saint-Germain F.C. », nom de famille d'une personne) ; le lecteur en ajoute 10 et en retire. Ses liens aussi : joueurs, entraîneur, ligue, président, stade… Relue tous les 7 jours.
-- Sa page montre les nouvelles qui la citent sur 24 h, 2 jours ou 7 jours, puis celles de chaque lien, les plus cités d'abord ; jamais dans le briefing.
-- Depuis le 12 octobre, une fiche envoie les noms choisis dans les termes du profil : ses noms sont cochés d'après leurs nouvelles de la période, les plus cités d'abord, autant que les termes libres le permettent. L'UEFA a 18 noms dans Wikidata, son nom dans une douzaine de langues : 2 seulement trouvent des nouvelles.
+- Mots : 20 au plus par profil, tapés par le lecteur (« VAR », « Infantino »). Cherchés comme mots entiers dans le titre et la description, accents et majuscules ignorés ; un sigle garde ses majuscules et ne compte pas dans un titre crié (« LA VALETTE-DU-VAR »). Listés dans le briefing, 100 histoires au plus par terme.
+- Fiches : une fiche de Wikidata choisie dans une liste, 30 au plus. Ses noms sont ceux de la fiche (nom, variantes, « PSG » pour « Paris Saint-Germain F.C. », nom de famille d'une personne) ; le lecteur en ajoute 10 et en retire. Ses liens aussi : joueurs, entraîneur, ligue, président, stade… Relue de Wikidata quand elle est suivie ou ouverte, si elle a plus de 7 jours.
+- Sa page montre les nouvelles qui la citent, trouvées par les noms que l'étiqueteur a relevés (B6), puis celles de chaque lien, les plus cités d'abord. Ses nouvelles entrent aussi dans le briefing, sauf si le lecteur la décoche (l'UEFA seule est nommée par une centaine de nouvelles par jour) : les 100 plus récentes par fiche.
+- Un nom que Wikidata n'a pas comme une seule fiche (« LFF », « Vadims Ļašenko ») a sa propre page, suivi tel qu'écrit ; un nom que l'étiqueteur a relié à une fiche ouvre celle de la fiche.
+- Suggestions : les noms vus sur deux cartes au moins des briefings des deux dernières semaines, pas encore suivis (8 au plus).
 
-*Technologies :* Wikidata (wbsearchentities, SPARQL) · pg_trgm · watchedNews · Radix Tabs
+*Technologies :* Wikidata (wbsearchentities, SPARQL) · mentions (B6) · pg_trgm · watchedNews · Radix Tabs
 
 *Mesuré :* « VAR », 7 jours : 264 histoires (8 octobre ; 7 s pour deux termes) · PSG, 48 h : 144 histoires (sources de fab ; Parc des Princes 53, Dembélé 27, Luis Enrique 25 (8 octobre)) · Recherche d'une fiche : 11 s sur 48 h (30 s sur 7 jours, gardée 10 minutes) · UEFA, 48 h : « UEFA » : 152 histoires (sources d'Enzo, 12 octobre ; 16 de ses 18 noms n'en trouvent aucune)
 
 ### D4 · Envoyer des cartes par e-mail
 
-Pour les administrateurs : le lecteur coche des cartes, les met dans l'ordre voulu et les envoie à son adresse ou à une autre. L'e-mail reprend la mise en page du site.
+Pour les administrateurs : le lecteur coche des cartes, les met dans l'ordre voulu, choisit comment elles se lisent (passages clés, points ou résumé, et la version de l'IA carte par carte) et les envoie à son adresse ou à une autre. L'e-mail reprend la mise en page du site et n'appelle aucune IA : il reprend ce que le briefing a écrit.
 
 - Pour chaque carte : un autre titre, une autre image (celles de l'histoire, une adresse ou un fichier), sans les démentis ou les angles qu'il retire. Seules les images d'au moins 560 pixels de large sont proposées ; une image trop petite est remplacée par la meilleure de l'histoire.
-- Neutre : titre « Briefing - 12 October 2026 », objet « Briefing · 3 stories · … », expéditeur « Briefing », rien sous le titre. Personne n'y est nommé ; une réponse va au lecteur qui l'a envoyé.
-- Une copie est gardée telle qu'elle est partie, au bout d'un lien discret « View the original e-mail » : quiconque transfère un e-mail peut le changer. Sa page n'exécute rien et n'appartient à aucun site (Content-Security-Policy `sandbox`).
+- Titre au nom du profil et du jour, « Roberto’s Briefing · 13 October 2026 », jamais celui du compte ; objet « Fab's Briefing · 16 October 2026 · 2 stories ». Envoyé à une autre adresse, la raison du choix de chaque carte est retirée et une réponse va au lecteur.
+- Chaque carte porte son analyse, ligne par ligne (15 octobre), et sa source officielle dans un encadré juste sous ses phrases (16 octobre). Rien ne dit ce qui est traduit (16 octobre). Le lecteur peut retirer une ligne : un démenti, un angle, une source officielle, une ligne d'analyse.
+- Les cartes envoyées sont marquées : leurs histoires ne reviennent pas dans les briefings des 48 heures suivantes, sauf comme suite (C1).
+- Plus aucune copie n'est gardée depuis le 13 octobre ; les liens « View the original e-mail » des e-mails envoyés avant mènent toujours à la leur. Sa page n'exécute rien et n'appartient à aucun site (Content-Security-Policy `sandbox`).
 - Envoyé par le compte Gmail du serveur (SMTP). Au plus 10 par heure et par adresse, 30 par jour et par compte.
 
 *Technologies :* nodemailer (SMTP Gmail) · briefing-mail.js · sent_mails
@@ -365,15 +405,15 @@ Pour les administrateurs : le lecteur coche des cartes, les met dans l'ordre vou
 
 ### Serveur Ubuntu · 192.168.1.135 — Tout le travail de fond
 
-Docker Compose : API Node/Express avec l'ingestion, PostgreSQL 18 + pgvector, RSS-Bridge, Caddy (le site) et un tunnel Cloudflare vers internet. À part, un embedder bge-m3 sur processeur (ONNX Runtime), en priorité basse. Redémarrage automatique.
+Docker Compose : API Node/Express avec l'ingestion, PostgreSQL 18 + pgvector, RSS-Bridge, Caddy (le site) et un tunnel Cloudflare vers internet. À part, un embedder bge-m3 sur processeur (ONNX Runtime) et l'étiqueteur des noms (GLiNER, 3 cœurs), en priorité basse. Redémarrage automatique.
 
 ### PC de jeu · RTX 4070 Ti — Les vecteurs, vite
 
-bge-m3 sur la carte graphique, 55 textes par seconde. Depuis le 9 octobre, il travaille avec le processeur de l'Ubuntu : chacun prend les lots qu'il finit le plus vite. Éteint, le serveur continue sur son processeur, et le reprend une minute après son retour. Éteint lors de la mesure du 7 octobre : tout tournait sur le processeur de l'Ubuntu.
+bge-m3 et l'étiqueteur des noms sur la carte graphique, 55 textes par seconde pour les vecteurs. Depuis le 9 octobre, il travaille avec le processeur de l'Ubuntu : chacun prend les lots qu'il finit le plus vite. Éteint, le serveur continue sur son processeur, et le reprend une minute après son retour. Éteint lors de la mesure du 7 octobre : tout tournait sur le processeur de l'Ubuntu.
 
 ### Ollama cloud · API Gemini — L'IA
 
-gemma4:31b pour toutes les tâches. Si Ollama ne répond pas, le même modèle via l'API Gemini (plus lente, 30 à 90 s).
+gemma4:31b pour presque tout. Si Ollama ne répond pas, ou pas en 120 s, le même modèle via l'API Gemini (plus lente, 30 à 90 s). deepseek-v4-pro écrit les deux textes que l'IA rédige elle-même : la version de l'IA d'une carte et son analyse, sans Gemini derrière. 6 appels en même temps au plus.
 
 ### Portable — Le code
 
@@ -387,4 +427,4 @@ Le classement des histoires (C1) et la recherche (D2) étaient 3 à 6 fois plus 
 
 Le 3 octobre, environ 90 histoires mélangées avant la règle des affiches ont été découpées après coup (plus de 400 nouvelles déplacées, sauvegardes dans server/bench/data/matchups).
 
-Texte mis à jour le 12 octobre 2026 avec ce qui a changé depuis la mesure : création de compte par les questions de l'IA et fermée par défaut, mot de passe du site retiré, plusieurs profils, compte modifiable depuis le profil, part de chaque intérêt, briefings de 10, 20 ou 30 cartes, réserve plus grande, versions dans les autres langues, lecture des pages sans Crawlee d'abord, relecture par les refus, autres angles, termes suivis et page Following, envoi par e-mail, sources de chaque lecteur lues pour tous, archives sautées, embedders ensemble et tri de l'annuaire. Ces changements n'ont pas été remesurés en entier : leurs chiffres portent leur date.
+Texte mis à jour le 16 octobre 2026 : briefings de 1 à 7 jours, projets, cartes envoyées écartées 48 h, points et résumé, version de l'IA, analyse des cartes, source officielle, noms relevés dans chaque nouvelle et noms des cartes, une seule liste de ce que le profil suit, e-mail aux formats choisis, 6 appels à Ollama au plus. Mis à jour le 12 octobre 2026 avec ce qui a changé depuis la mesure : création de compte par les questions de l'IA et fermée par défaut, mot de passe du site retiré, plusieurs profils, compte modifiable depuis le profil, part de chaque intérêt, briefings de 10, 20 ou 30 cartes, réserve plus grande, versions dans les autres langues, lecture des pages sans Crawlee d'abord, relecture par les refus, autres angles, termes suivis et page Following, envoi par e-mail, sources de chaque lecteur lues pour tous, archives sautées, embedders ensemble et tri de l'annuaire. Ces changements n'ont pas été remesurés en entier : leurs chiffres portent leur date.

@@ -1,72 +1,90 @@
-@startuml 13-discovery-sequence
+@startuml 23-discovery-sequence
 !include _sequence.iuml
 title Discovery — the sources found for the interests of a profile
 
-participant "profileService\n(signup, profile saved,\nfind again)" as Profile
+participant "profileService\n(signup, profile saved,\nfind again) or\nserver start" as Profile
 participant discoveryService as Discovery
-participant profileModel as ProfileModel
+participant "profileModel\n+ feedModel" as Models
 participant "sourceService\n+ feedbackService" as Known
 participant googleNews as Google
 participant mediaCloud as MC
 participant "feedFinder\n+ meaningJudge" as Finder
+participant profileAi as AI
 participant ingestService as Ingest
 database "PostgreSQL" as DB
 
-Profile -> Discovery : start(userId)
-Discovery -> ProfileModel : setDiscovery('running')
+Profile -> Discovery : start(profileId)
+Discovery -> Models : setDiscovery('running')
 Discovery -->> Profile : returns at once
 note over Discovery
     Asked again while it runs, it runs once
-    more after, with the profile as it is then
+    more after, with the profile as it is then.
+    A restart: resumeInterrupted() starts the
+    ones still 'running' again
 end note
 
-Discovery -> Discovery : prune: the feeds found that bring\nnothing on the profile any more, removed
-Discovery -> ProfileModel : interestsForDiscovery, get
-Discovery -> DB : the feeds of the reader, how many for the profile
-note right of Discovery
-    The room of the profile full: no medium
-    is looked for, only the Google News
-    searches of the reader are read
-end note
-Discovery -> Known : the media known and refused
-note right : only new media are looked for
-Discovery -> Discovery : judgeOf(the vectors of the interests)
+group discover(profileId), phase 'google'
+    Discovery -> Discovery : prune(): the feeds found with no news on\nthe profile in 14 days removed, the kept\nand trusted ones aside
+    Discovery -> Models : interestsForDiscovery, userFeedUrls,\ncountUserFeeds('profile')
+    Models -> DB : the interests with their vectors,\nnot the ones of a project
+    alt no room (60 feeds for the profile)
+        Discovery -> Discovery : no medium looked for, nothing read
+    end
+    Discovery -> Known : FeedbackService.of, removedSources,\nknownMedia(their feeds + refused + removed)
+    note right : only new media are looked for
+    Discovery -> Finder : judgeOf(the vectors of the interests)
+    opt Media Cloud on
+        Discovery ->> MC : mediaFor(pressSearches(...)) of every interest
+        note right of MC
+            asked at once: its queue waits
+            (2 searches a minute) while Google
+            is tried
+        end note
+    end
 
-loop each interest
-    Discovery ->> MC : mediaFor(each search, language)
-    note right of MC
-        asked at once: its queue waits
-        (2 searches a minute) while Google
-        is tried. Every word (AND), 30 days,
-        the press of the countries
+    loop each interest
+        loop each search of the interest
+            Discovery -> Google : search(q, 7 days, language)
+            Google --> Discovery : the media that wrote on it
+        end
+        loop tryPerLanguage: the new media, 2 kept or 5 tried per language, 3 at a time
+            Discovery -> Finder : findFeeds(site, subject, judge)
+            Finder --> Discovery : its feed most on the subject, or none
+            opt 2 of its last 30 news on an interest
+                Discovery -> AI : confirmOnSubject(interests, 12 titles)
+                AI --> Discovery : the titles on the interests
+                note right : kept on 2 confirmed; the AI\nnot answering keeps the feed
+            end
+        end
+    end
+    Discovery -> Discovery : allocate among the interests,\nwithinBridgeRoom, 20 at most
+    Discovery -> Models : addProfileFeeds(feeds)
+    Models -> DB : user_feeds, origin 'profile'
+    Discovery ->> Ingest : run({urls: the new feeds +\nsearchesOfUser(profileId)})
+    note right of Ingest
+        read and embedded at once,
+        while the press is looked for
     end note
-    loop each search of the interest
-        Discovery -> Google : search(q, 7 days, language)
-        Google --> Discovery : the media that wrote on it
-    end
-    loop the new media of Google, per language: 2 kept, 5 tried at most
-        Discovery -> Finder : findFeeds(site, subject, judge)
-        Finder -> Finder : the page, the sections, the directory,\nRSS-Bridge; the news judged by meaning
-        Finder --> Discovery : its feed on the subject, or none
-    end
-    MC -->> Discovery : the press media and their news
-    loop the media of Media Cloud Google did not name: 2 kept, 3 tried
-        Discovery -> MC : knownFeeds(site)
-        Discovery -> Finder : findFeeds(site, subject, judge, known)
-    end
 end
 
-Discovery -> Discovery : allocate among the interests,\nwithinBridgeRoom
-Discovery -> ProfileModel : addProfileFeeds(feeds)
-ProfileModel -> DB : user_feeds, origin 'profile'
-Discovery -> Ingest : run({urls: the new feeds +\nthe Google News searches of the reader})
-note right of Ingest
-    read and embedded at once:
-    the next briefing has them
-end note
+group phase 'press' (Media Cloud on)
+    loop each interest
+        MC -->> Discovery : the press media and their news
+        loop the media only Media Cloud named: 2 kept or 3 tried per language
+            Discovery -> MC : knownFeeds(site)
+            Discovery -> Finder : findFeeds(site, subject, judge, known)
+            Discovery -> AI : confirmOnSubject(...)
+        end
+    end
+    Discovery -> Discovery : allocate, the room left
+    Discovery -> Models : addProfileFeeds(feeds)
+    Discovery ->> Ingest : run({urls: the new feeds})
+end
+
+Discovery -> Ingest : waits for the reads
 alt done
-    Discovery -> ProfileModel : setDiscovery('done')
+    Discovery -> Models : setDiscovery('done')
 else an error
-    Discovery -> ProfileModel : setDiscovery('failed', message)
+    Discovery -> Models : setDiscovery('failed', message)
 end
 @enduml

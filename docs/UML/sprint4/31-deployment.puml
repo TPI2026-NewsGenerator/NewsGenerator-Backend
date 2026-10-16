@@ -1,0 +1,101 @@
+@startuml 31-deployment
+' Where each part runs (16.10.2026): deploy/compose.yml, deploy/Caddyfile, embedder/ and ner/,
+' and the services the server calls.
+skinparam shadowing false
+skinparam defaultFontSize 13
+skinparam titleFontSize 18
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam noteBackgroundColor #FFFBE6
+skinparam noteBorderColor #C9B458
+skinparam node {
+    BackgroundColor #FFFFFF
+    BorderColor #555555
+}
+skinparam rectangle {
+    BackgroundColor #FFFFFF
+    BorderColor #555555
+}
+skinparam cloud {
+    BackgroundColor #F2F2F2
+    BorderColor #888888
+}
+skinparam database {
+    BackgroundColor #F2F2F2
+    BorderColor #888888
+}
+skinparam ArrowColor #555555
+title Deployment — the machines, the containers and the services outside
+
+actor Reader
+node "Browser of the reader\n(phone, laptop)" as Browser {
+    rectangle "Client React\n(client-dist, built by deploy.sh)" as Client
+}
+cloud "Cloudflare\nnews.fabianrostello.com\n(ends the https)" as Cloudflare
+
+node "Ubuntu server 192.168.1.135 — stays on (Docker, compose project newsgenerator)" as Ubuntu {
+    rectangle "newsgenerator-tunnel\ncloudflared (profile tunnel)" as Tunnel
+    rectangle "newsgenerator-web\nCaddy :8080 → :80\n/srv = the client, /api → api:3001" as Web
+    rectangle "newsgenerator-api\nNode 22 + Express :3001\nroutes + background work\n(ingestion every minute, tagging,\ndirectory every 20 min)" as Api
+    database "newsgenerator-db\nPostgreSQL 18 + pgvector :5433\n(volume newsgenerator_db)" as Db
+    rectangle "newsgenerator-rss-bridge\nfeeds of the sites that publish none\n(reached by the API only)" as Bridge
+    rectangle "newsgenerator-embedder\nbge-m3 on ONNX Runtime, 6 cores\n:8020 (started apart)" as EmbedCpu
+    rectangle "newsgenerator-ner\nGLiNER on 3 cores\n:8021 (started apart)" as NerCpu
+}
+
+node "Gaming PC 192.168.1.22 — RTX 4070 Ti, when on" as Gaming {
+    rectangle "embedder/server.py\nbge-m3, PyTorch on CUDA :8020" as EmbedGpu
+    rectangle "ner/server.py\nGLiNER on CUDA :8021" as NerGpu
+}
+
+node "Windows laptop — the code" as Laptop {
+    rectangle "server run by hand\nINGEST_IN_SERVER=false" as DevServer
+    rectangle "Vite dev server :5173\n/api → 192.168.1.135:3001" as DevClient
+}
+
+cloud "Services outside" as Outside {
+    rectangle "Ollama cloud\ngemma4:31b, deepseek-v4-pro" as Ollama
+    rectangle "Gemini API\ngemma-4-31b-it (fallback)" as Gemini
+    rectangle "Google News\nsearches and articles" as GoogleNews
+    rectangle "Wikidata\nitems, names, channels" as Wikidata
+    rectangle "Media Cloud, Feedly\ndirectories of media" as Directories
+    rectangle "SMTP (Gmail)\nthe e-mails" as Smtp
+    rectangle "The media\nRSS feeds and article pages" as Media
+}
+
+Reader --> Client
+Client --> Cloudflare : https
+Cloudflare <-- Tunnel : outgoing tunnel\n(nothing listens on the internet)
+Tunnel --> Web : http://web:80
+Web --> Api : /api
+Api --> Db : Prisma + SQL
+Api --> Bridge : http://rss-bridge
+Api --> EmbedGpu : EMBEDDER_URL, first
+Api --> EmbedCpu : EMBEDDER_URL, then
+Api --> NerGpu : NER_URL, first
+Api --> NerCpu : NER_URL, then
+Api --> Ollama
+Api --> Gemini : after 120 s\nwithout Ollama
+Api --> GoogleNews
+Api --> Wikidata
+Api --> Directories
+Api --> Smtp
+Api --> Media
+Bridge --> Media
+DevServer --> Db : 192.168.1.135:5433
+DevClient --> Api : LAN
+
+note right of Api
+    Secrets beside the code in ~~/newsgenerator
+    (db.env, api.env, tunnel.env), readable by
+    their owner only. Code sent by
+    bash deploy/deploy.sh (tar over ssh, then
+    docker compose up -d --build); db/*.sql
+    run by hand.
+end note
+note bottom of Gaming
+    An embedder or a tagger that does not
+    answer is skipped: the ones of the
+    server do the work, slower
+end note
+@enduml

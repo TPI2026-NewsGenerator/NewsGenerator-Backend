@@ -1,129 +1,244 @@
 @startuml 04-ingestion
 !include _style.iuml
+left to right direction
 title Ingestion — the cache filled in background
+
+class "server.js" as serverStart {
+    + IngestService.schedule()
+    + TaggingService.schedule()
+}
+note bottom of serverStart
+    "pnpm run ingest" (scripts/ingest.js) makes
+    one run by hand. INGEST_IN_SERVER=false
+    starts neither schedule: the runs are then
+    left to "pnpm run ingest", nothing is tagged
+end note
 
 package "Business" {
     class ingestService {
+        + schedule()
         + run()
         + readNow()
-        + schedule()
-        + searchesOfCategories()
-        + searchesOfUser()
-    }
-    class directoryService {
-        + grow()
-        + chooseSections()
-        + sectionCategory()
+        + readEvery()
+        + feedsDue()
+        + threadPending()
     }
     class feedService {
         + refreshUrls()
         + syncCategories()
     }
+    class directoryService {
+        + grow()
+        + prune()
+        + chooseSections()
+        + uselessFeeds()
+        + sectionCategory()
+    }
+    class taggingService {
+        + schedule()
+        + tagBatch()
+        + tagRows()
+        + textOf()
+    }
 }
-note right of ingestService
-    Every few minutes: reads the feeds due
-    and the Google News searches of the
-    interests, embeds the new news, then
-    groups them into stories and threads
-    (SQL functions assign_stories and
-    assign_threads). News older than the
-    retention days are deleted.
+note top of ingestService
+    Every minute, one run at a time (a lock of Postgres):
+    the feeds due by their news of 24 h (every 2 to 60 min,
+    once a day after 3 days failing), the Google News
+    searches of the interests not read for an hour (60 at
+    most), then batches of 100 news of the last 48 h
+    embedded and grouped into stories and threads, for
+    1 minute. Every 20 min the directory grows, once an
+    hour the old news go, once a day the directory is pruned
 end note
-note left of directoryService
-    After each run, a few more media:
-    the ones Google News names that no
-    feed reads (their main feed), and
-    the sections of the media read
-    that bring what their feeds miss
+note bottom of feedService
+    Not saved: a news published before the
+    30 days kept, or one its feed gave already
+    under another link (same title and date)
 end note
+note bottom of directoryService
+    Every 20 min, 10 media of each kind: named
+    by Google News and read by no feed (their
+    main feed), or read already (the sections
+    bringing what their feeds miss). Once a day
+    the feeds of the directory serving no reader
+    are taken out (directory_removed)
+end note
+note top of taggingService
+    Its own loops, next to the runs: each tagger of
+    NER_URL takes the newest news not tagged (16 at a
+    time on a processor, 128 on a graphics card); the
+    names met in 3 news or more are looked for in
+    Wikidata, one every 7 s
+end note
+
 package "Data" {
     class "db/rss-links.js" as rssLinks {
-        387 shared feeds
+        386 shared feeds
     }
     class feedModel {
+        + feedRhythms()
         + dueFeeds()
         + allUserFeedUrls()
         + syncFeeds()
-        + syncCategories()
-        + insertArticles()
         + updateFeed()
+        + withoutRepeats()
+        + insertArticles()
         + deleteArticlesOlderThan()
+        + busiestFeeds()
     }
     class storyModel {
         + pendingArticles()
+        + pendingCount()
         + saveVectors()
         + assignStories()
         + assignThreads()
         + deleteEmptyStories()
     }
-    class profileModel {
-        + searchesOf()
-    }
     class directoryModel {
         + all()
         + namedMedia()
+        + triedSince()
         + mediaOfFeeds()
         + linksOf()
         + addFeeds()
         + tried()
+        + stillRemoved()
+        + readers()
+        + usage()
+        + remove()
+    }
+    class mentionModel {
+        + untagged()
+        + untaggedCount()
+        + save()
+        + toLink()
+        + setLink()
+        + deleteUnused()
+    }
+    class profileModel <<other feature>> {
+        + searchesOf()
     }
 }
+note right of mentionModel
+    save skips the news the grouping
+    holds (SKIP LOCKED): tagged later
+end note
+
 package "utils" {
     class googleNews {
         + readSearches()
         + interestSearchUrls()
         + googleAvailable()
+        + isGoogleNewsUrl()
     }
     class crawlers {
         + Xml()
     }
     class embedder {
         + embed()
+        + toVector()
+        + toSparsevec()
     }
     class language {
         + languageOf()
+        + feedLanguage()
     }
     class dates {
         + toDate()
+    }
+    class feedLimits {
+        + isFlood()
+        + looksPrivate()
     }
     class feedFinder {
         + findFeeds()
         + siteFeeds()
         + readFeeds()
     }
+    class feedDirectory {
+        + searchDirectory()
+    }
+    class tagger {
+        + taggerUrls()
+        + taggerDevice()
+        + tagTexts()
+    }
+    class mentions {
+        + cleanMentions()
+    }
+    class wikidata {
+        + exactItems()
+    }
 }
-note bottom of googleNews
-    Two pauses: a blocked article page
-    stops only the decoding of the links,
-    a blocked search stops both
-end note
+
+class "RSS feeds of the media\n(and RSS-Bridge)" as Sites <<external>>
 class "Google News" as GoogleNewsApi <<external>>
-class "Embedder (bge-m3)" as Embedder <<external>>
-class Crawlee <<external>>
+class "Embedder bge-m3\n(embedder/server.py)" as Embedder <<external>>
+class "Tagger GLiNER\n(ner/server.py)" as Ner <<external>>
+class Wikidata <<external>>
+class Feedly <<external>>
 class "PostgreSQL + pgvector" as PostgreSQL <<external>>
+note right of GoogleNewsApi
+    One queue for every request of the server
+    to Google. A blocked article page stops only
+    the decoding of the links for an hour, a
+    blocked search stops both
+end note
+note right of Embedder
+    Every embedder of EMBEDDER_URL that
+    answers takes batches at the same time
+end note
+note right of Ner
+    Every tagger of NER_URL that answers
+    takes its own news
+end note
+
+serverStart --> ingestService
+serverStart --> taggingService
+serverStart --> feedService
 
 ingestService --> rssLinks
 ingestService --> feedService
 ingestService --> feedModel
 ingestService --> storyModel
 ingestService --> profileModel
+ingestService --> directoryModel
+ingestService --> directoryService
 ingestService --> googleNews
 ingestService --> embedder
 ingestService --> language
-ingestService --> directoryModel
-ingestService --> directoryService
-directoryService --> directoryModel
-directoryService --> feedFinder
-feedFinder --> crawlers
-directoryModel --> PostgreSQL
+ingestService --> feedLimits
+
 feedService --> feedModel
 feedService --> crawlers
 feedService --> googleNews
 feedService --> dates
+
+directoryService --> directoryModel
+directoryService --> feedFinder
+directoryService --> language
+directoryService --> feedLimits
+feedFinder --> crawlers
+feedFinder --> feedDirectory
+
+taggingService --> mentionModel
+taggingService --> tagger
+taggingService --> mentions
+taggingService --> language
+taggingService --> wikidata
+
+googleNews --> crawlers
 googleNews --> GoogleNewsApi
-crawlers --> Crawlee
+crawlers --> Sites
 embedder --> Embedder
+tagger --> Ner
+wikidata --> Wikidata
+feedDirectory --> Feedly
+
 feedModel --> PostgreSQL
 storyModel --> PostgreSQL
+directoryModel --> PostgreSQL
+mentionModel --> PostgreSQL
 profileModel --> PostgreSQL
 @enduml

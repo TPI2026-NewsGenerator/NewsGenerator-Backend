@@ -1,26 +1,59 @@
 @startuml 08-briefing
 !include _style.iuml
-title Briefing — the stories chosen for a reader, and their thumbs
+title Briefing — the stories ranked, chosen and checked for a profile (the cards: 08b-briefing-cards)
 
 class EndUser
 package "Presentation" {
-    class briefingRouter
+    class briefingRouter {
+        + GET /briefing
+        + POST /briefing
+        + POST /briefing/:id/vote
+        + POST /briefing/:id/news
+        + DELETE /briefing/:id/news/:storyId
+        + GET /briefing/:id/stories/:storyId/pictures
+    }
     class briefingController {
         + latest()
         + start()
         + vote()
+        + importNews()
+        + removeNews()
+        + pictures()
+    }
+}
+note left of briefingRouter
+    The briefing of the profile the page
+    chose (x-profile). A news added by its
+    link and the pictures are for the
+    administrators only, 30 news an hour
+end note
+package "Guards" as Guards {
+    class jwt {
+        + authenticateToken()
+    }
+    class activeProfile {
+        + activeProfile()
+    }
+    class admin {
+        + adminOnly()
+        + isAdmin()
+    }
+    class rateLimit {
+        + rateLimit()
     }
 }
 package "Business" {
     class briefingService {
         + latest()
         + start()
+        + write()
         + vote()
+        + importNews()
+        + removeNews()
+        + pictures()
     }
     class feedbackService {
         + of()
-        + refusedSources()
-        + keep()
     }
     class discoveryService <<other feature>> {
         + prune()
@@ -28,20 +61,33 @@ package "Business" {
     class ingestService <<other feature>> {
         + searchesOfUser()
     }
+    class entityService <<other feature>> {
+        + briefingGroups()
+        + followTerms()
+    }
+    class briefingMail <<other feature>> {
+        + briefingMail()
+    }
 }
 note left of briefingService
-    Stories of the last 24 hours, 2 days
-    or 7 days (one per thread) ranked
-    in SQL on the interests, in every
-    language; the AI chooses among
-    them and checks the cards, then
-    the key passages are taken word
-    for word from the articles.
+    1 to 7 days of news (hours, 48 by default),
+    10, 20 or 30 cards (size), written in background,
+    one at a time per profile. Its steps saved in
+    briefings.step: ranking, choosing, checking,
+    reading, summarizing, angles; then the analysis,
+    not awaited. The cards are read and written
+    with the utils of 08b-briefing-cards
 end note
-note right of feedbackService
-    The thumbs of the last 30 days:
-    examples for the AI, and the
-    sources refused again and again
+note bottom of briefingMail
+    Sent by e-mail (09-email): the
+    cards sent are left out of the
+    next briefings for 48 hours
+end note
+note bottom of feedbackService
+    The thumbs of the last 30 days: 15 titles liked
+    and 15 refused as examples for the AI; a source
+    found for the profile refused 3 times, and twice
+    as often as liked, is left out
 end note
 package "Data" as Data {
     class briefingModel {
@@ -49,95 +95,134 @@ package "Data" as Data {
         + step()
         + finish()
         + fail()
+        + failAbandoned()
+        + running()
         + latest()
+        + ofUser()
         + vote()
         + votes()
+        + sentSince()
+        + watched()
+        + analysis()
+        + addItem()
+        + removeItem()
+        + articlePictures()
     }
     class storyModel {
         + rank()
         + storyArticles()
         + threadsOf()
         + versionsIn()
+        + versionsAcross()
     }
     class profileModel {
         + get()
-        + interests()
+        + briefingInterests()
+        + projects()
+        + ownFeedUrls()
         + keptSources()
-        + keepSource()
     }
     class feedModel {
-        + feedMedia()
         + userFeedUrls()
+        + everyoneFeedUrls()
+        + feedMedia()
         + trustedMedia()
-        + saveResolvedLinks()
+        + trustedFeedUrls()
     }
 }
-package "Choosing the stories" as Choosing {
+note bottom of storyModel
+    rank: rank_profile_stories in SQL, each news
+    scores its best interest of the profile and of
+    its projects running, weight × (dense + 0.5 sparse);
+    versionsIn / versionsAcross: the closest stories
+    in the reader's language (from 0.75) and in the
+    others (from 0.78), by their centroids
+end note
+package "Ranking, choosing and checking" as Choosing {
     class googleNews {
-        + pickCandidates()
         + credibleStory()
         + isRepeatedPage()
-        + isNotNews()
-        + decodeLinks()
+        + googleAvailable()
+        + pickCandidates()
+    }
+    class repeats {
+        + shownStories()
+        + withoutRepeats()
+        + evolvedStories()
+    }
+    class feedback {
+        + examplesOf()
+        + refusedCounts()
     }
     class profileAi {
+        + shareOut()
         + selectStories()
         + balanceSelection()
-        + reviewCards()
         + checkStories()
         + mergeStories()
-    }
-    class corroboration {
-        + corroborationOf()
+        + reviewCards()
     }
 }
 note bottom of googleNews
-    Candidates told by credible media;
-    a title one medium republishes
-    for hours is left out
+    Candidates: 40 stories of the feeds and 10 known
+    only through Google News (2 per medium), more for
+    20 or 30 cards; plus 10 of a trusted medium among
+    the 60 closest. Left out: a story of Google News
+    told by one medium we read no feed of, and a
+    title one medium gives again for hours
 end note
-package "Writing the cards" as Writing {
-    class extract {
-        + extractArticle()
-        + passagesText()
-    }
-    class crawlers {
-        + Html()
-    }
-    class hedging {
-        + hedgedBy()
+note bottom of repeats
+    A story of a card sent by e-mail in the
+    last 48 hours, or of its affair, is left
+    out, unless the AI says its news since
+    tell something new: then a follow-up
+end note
+note bottom of profileAi
+    selectStories: up to 20 stories for 10 cards (30
+    for 20, 45 for 30), the next ones a reserve; balanceSelection: each
+    interest its share. checkStories and mergeStories
+    sent together: the articles telling the news of the
+    lead kept, two cards of one news joined, with the
+    versions in other languages. reviewCards in 08b
+end note
+package "AI" as AiPackage {
+    class ollama {
+        + ollamaJson()
+        + newUsage()
     }
 }
-class feedback {
-    + examplesOf()
-    + refusedCounts()
-}
-class ollama {
-    + ollamaJson()
-}
-class "Ollama (gemma4:31b)" as Ollama <<external>>
-class "Google News" as GoogleNewsApi <<external>>
+note left of ollama
+    6 calls at once for the whole server. A call
+    unanswered after 120 s, or failing, goes to
+    Gemini (the same model); a call naming its own
+    model (deepseek-v4-pro) never does
+end note
+class "Ollama cloud\n(gemma4:31b, deepseek-v4-pro:0813)" as OllamaCloud <<external>>
+class "Gemini API (gemma-4-31b-it)" as Gemini <<external>>
 class "PostgreSQL + pgvector" as PostgreSQL <<external>>
 
-googleNews -[hidden]down- profileAi
-profileAi -[hidden]down- corroboration
-extract -[hidden]down- crawlers
-crawlers -[hidden]down- hedging
-
 EndUser --> briefingRouter
+briefingRouter --> Guards
 briefingRouter --> briefingController
 briefingController --> briefingService
+briefingController --> admin : isAdmin
 briefingService --> feedbackService
-briefingService --> discoveryService
-briefingService --> ingestService
-briefingService --> Data
+briefingService --> discoveryService : prune the sources\nthat bring nothing
+briefingService --> ingestService : the Google News\nsearches of the interests
+briefingService --> entityService : what the\nprofile follows
+briefingService ..> briefingMail
 briefingService --> Choosing
-briefingService --> Writing
+briefingService --> Data
 feedbackService --> feedback
 feedbackService --> Data
+googleNews -[hidden]down- feedback
+jwt -[hidden]right- activeProfile
+activeProfile -[hidden]right- admin
+admin -[hidden]right- rateLimit
+repeats -[hidden]down- profileAi
+repeats --> ollama
 profileAi --> ollama
-extract --> ollama
-ollama --> Ollama
-googleNews --> GoogleNewsApi
+ollama --> OllamaCloud
+ollama --> Gemini
 Data --> PostgreSQL
 @enduml

@@ -1,0 +1,98 @@
+@startuml 26-email-sequence
+!include _sequence.iuml
+title E-mail — the cards chosen in the mail bar, sent, and the copy of an e-mail sent before
+
+actor Reader
+participant "Client (React)\nMailBar" as Client
+participant "briefingRouter\n+ jwt, admin, rateLimit" as Router
+participant briefingController as Controller
+participant briefingService as Briefing
+participant "mailPictures\n+ publicUrl" as Pictures
+participant briefingMail as Mail
+participant "briefingModel, userModel,\nprofileModel, sentMailModel" as Models
+participant mailer as Mailer
+participant "SMTP account\n(Gmail)" as Smtp
+database "PostgreSQL" as DB
+
+== The mail bar ==
+Client -> Router : GET /briefing
+Router -> Controller : latest(req)
+Controller --> Client : {briefing, mail}
+note right : mail: mailEnabled() (SMTP_USER and SMTP_PASS)\nand isAdmin(user): the bar is shown to them only
+Reader -> Client : ticks cards, opens the bar
+Reader -> Client : the order (up, down), a title of their own,\nthe lines to leave out (analysis, denials, angles,\nofficial sources), the way of the sentences\n(key points, summary, key passages), the AI version
+opt the picture of a card changed, or its own too small
+    Client -> Router : GET /briefing/:id/stories/:storyId/pictures
+    Router -> Router : authenticateToken, adminOnly(MAIL_REFUSED)
+    Router -> Controller : pictures(req)
+    Controller -> Briefing : pictures(userId, briefingId, storyId)
+    Briefing -> Models : ofUser(userId, briefingId)
+    note right : not a ready briefing of this reader: 404
+    Briefing -> Models : articlePictures(storyId, links of the card)
+    Models -> DB : the thumbnails the feeds gave its articles (30)
+    Briefing -> Pictures : storyPictures(item, rows)
+    Briefing --> Client : [{url, source}], the one of the card first
+    note right of Client : the browser measures them: one narrower than\n560 px is put aside, the best other of the story\ntaken instead, else none
+end
+note over Client : a news can also be added by its link\n(POST /briefing/:id/news, see importNews)
+
+== Sent ==
+Reader -> Client : the address (the one of the account written in), "Send"
+Client -> Router : POST /briefing/:id/email {storyIds, to, pictures,\ntitles, removed, format, ai}
+Router -> Router : authenticateToken, adminOnly(MAIL_REFUSED),\nrateLimit 10 an hour per IP, 30 a day per reader
+Router -> Controller : email(req)
+Controller -> Briefing : email(userId, briefingId, storyIds, to,\npictures, titles, removed, format, ai)
+Briefing -> Briefing : check storyIds, ai, format (MAIL_FORMATS),\nisEmail(to)
+note right : a mistake: 400
+Briefing -> Models : ofUser(userId, briefingId)
+Briefing -> Briefing : each card with its AI analysis when ready,\nthe ones ticked in the order given, once each
+Briefing -> Models : email(userId), get(profileId)
+alt no address given and none on the account
+    Briefing --> Client : 400
+end
+note right of Briefing
+    Sent to another address than the account's:
+    the "why" of each card is left out, and
+    the answers go to the reader (Reply-To)
+end note
+opt pictures of the story chosen
+    Briefing -> Models : articlePictures, to credit their medium
+end
+Briefing -> Briefing : withOwnTitles(ticked, titles)
+Briefing -> Briefing : withoutTakenOut(cards, removed)
+Briefing -> Pictures : withChosenPictures(cards, pictures, {sender, known})
+Pictures -> Pictures : assertPublicUrl(url), or the type\nof a file by its first bytes
+note right : 2 MB a file, 6 MB an e-mail: else 400
+Pictures --> Briefing : {items, attachments}
+Briefing -> Mail : briefingMail(briefing, {profile, sender, format})
+note right : "Roberto’s Briefing · 13 October 2026";\nthe subject adds the number of stories
+Mail --> Briefing : {subject, html, text}
+Briefing -> Mailer : sendMail({to, replyTo, subject, html, text, attachments})
+alt no SMTP account
+    Mailer --> Client : 503
+else an account set
+    Mailer -> Smtp : nodemailer sendMail
+    note right : refused: 502, the answer\nof the server in the logs
+end
+Briefing -> Models : markSent(userId, briefingId, storyIds)
+Models -> DB : UPDATE briefings: sentAt on each card sent
+note right : left out of the next briefings for 48 hours\n(sentSince, repeats.js); a failure is only logged
+Controller --> Client : 204
+
+== The copy of an e-mail sent before 13.10.2026 ==
+actor "Anyone with the link" as Receiver
+Receiver -> Router : GET /mails/:token (mailRouter)
+Router -> Router : rateLimit 60 in 15 minutes per IP
+Router -> Controller : original(req)
+Controller -> Controller : Content-Security-Policy without scripts, sandbox,\nframe-ancestors 'none', noindex, no-referrer
+Controller -> Briefing : original(token)
+Briefing -> Models : SentMailModel.byToken(token)
+note right : only a token of 24 letters, digits, - or _ is looked for
+Models -> DB : SELECT subject, html FROM sent_mails
+alt no such copy
+    Controller --> Receiver : 404, "No e-mail has this address."
+else a copy found
+    Controller --> Receiver : the html as it was sent
+end
+note over Briefing : no copy is written any more:\nthe e-mails since 13.10.2026 carry no link
+@enduml

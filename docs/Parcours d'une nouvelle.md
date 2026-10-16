@@ -156,7 +156,7 @@ Boursorama ne dit ni « Norvège », ni « plainte », ni « Infantino » : le c
 
 Le 7 octobre à 15 h 29, Enzo demande un briefing de 48 h. Rien n'est relu sur le web avant que l'IA ait choisi : la base classe ce que le serveur a déjà préparé.
 
-### 4 · Le classement pour le lecteur (`rank_stories`)
+### 4 · Le classement pour le lecteur (`rank_stories`, aujourd'hui `rank_profile_stories`)
 
 Une seule requête SQL prend toutes les nouvelles de ses 765 flux sur 48 h, dans toutes les langues. Chaque nouvelle est notée contre chacun de ses intérêts : **poids × (dense + 0,5 × creux)**, sur le texte complet. Chaque intérêt a ses propres vecteurs, calculés une fois à partir de son texte. Une nouvelle garde son meilleur intérêt, une histoire sa meilleure nouvelle.
 
@@ -347,3 +347,5 @@ Mesuré le 7 octobre 2026 à 15 h 29 (heure suisse) sur la base du serveur Ubunt
 Le briefing n'a rien montré à Enzo et n'a rien changé à ses sources. Les pourcentages de qualité (96 %, 82 %) et les vitesses de l'embedder viennent des mesures précédentes du projet.
 
 Texte mis à jour le 12 octobre 2026 : le parcours n'a pas été rejoué, ce qui a changé depuis est signalé à sa place (réserve plus grande, versions dans les autres langues, lecture des pages, relecture par les refus, autres angles et termes suivis, embedders ensemble). « Parcours NewsGenerator » décrit le reste du fonctionnement d'aujourd'hui.
+
+Depuis, au 16 octobre 2026 : le classement se fait par profil et lit aussi les intérêts de ses projets (`rank_profile_stories`) ; une carte envoyée par e-mail est écartée 48 heures ; chaque carte a aussi ses points et son résumé faits des phrases publiées, une version de l'IA sur demande (deepseek-v4-pro), une analyse, une source officielle et ses noms ; les noms de chaque nouvelle sont relevés par un étiqueteur. Le parcours ci-dessus n'a pas été rejoué avec ces changements.

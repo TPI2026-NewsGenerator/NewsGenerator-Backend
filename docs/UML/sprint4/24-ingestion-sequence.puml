@@ -1,65 +1,73 @@
-@startuml 14-ingestion-sequence
+@startuml 24-ingestion-sequence
 !include _sequence.iuml
-title Ingestion — one run of the background work
+title Ingestion — one run of the background work, and the tagging next to it
 
-participant "server start\n(timer, every minute)" as Timer
+participant "server.js\n(schedule)" as Timer
 participant ingestService as Ingest
 participant feedService as Feeds
 participant "crawlers\n+ googleNews" as Web
 participant feedModel as FeedModel
 participant storyModel as StoryModel
 participant embedder as Embedder
+participant directoryService as Directory
+participant taggingService as Tagging
+participant "tagger\n+ wikidata" as Ner
 database "PostgreSQL" as DB
 
 Timer -> Ingest : run()
-Ingest -> DB : pg_try_advisory_lock
+Ingest -> DB : pg_try_advisory_lock (a connection of its own)
 alt another run holds it
     Ingest --> Timer : skipped
-    note right : with urls (a discovery): those\nfeeds are read anyway
+    note right : with urls (sources just found or added):\nthose feeds are read anyway, the run\nat work gives them their vectors
 end
 
 group the feeds read
-    Ingest -> Ingest : db/rss-links.js + the feeds of every reader
+    Ingest -> FeedModel : feedRhythms(rss-links + directory + feeds of every reader)
+    Ingest -> Ingest : feedsDue (readEvery)
+    note right : every 2 to 60 min by their news of 24 h;\ntwice less often per failure in a row (every\nhour at most), once a day after 3 days failing
     opt Google News not paused
-        Ingest -> DB : the searches of the interests\nnot read for an hour (60 at most)
+        Ingest -> FeedModel : dueFeeds(searches of the interests,\nnot read for an hour, 60 at most)
     end
-    Ingest -> Feeds : refreshUrls(feeds, purge)
+    opt a run of every feed
+        Ingest ->> Ingest : embedPending: the news already waiting\n(or the batch the last run left encoding),\nencoded while the feeds are read
+    end
+    Ingest -> Feeds : refreshUrls(feeds, purge once an hour)
     Feeds -> FeedModel : syncFeeds(urls)
-    par the feeds, all at once
+    par the feeds, 50 at a time
         Feeds -> Web : Crawlers.Xml(feeds, etag, last-modified)
-        note right : an unchanged feed answers 304
+        note right : 8 s at most (40 s through RSS-Bridge),\nan unchanged feed answers 304
     else the searches, one after the other
         Feeds -> Web : readSearches(urls)
-        note right : Google blocking: the searches pause
+        note right : one request to Google a second;\na block pauses the searches an hour
     end
-    Feeds -> FeedModel : updateFeed(etag, error, failures)
+    Feeds -> FeedModel : updateFeed(etag, last_error, failures)
+    Feeds -> FeedModel : withoutRepeats(news)
+    note right : the news published before the 30 days\nkept are left out first, then the ones their\nfeed gave already under another link
     Feeds -> FeedModel : insertArticles(news)
     FeedModel -> DB : INSERT articles, a link once per feed
     opt purge
-        Feeds -> FeedModel : deleteArticlesOlderThan(retention)
+        Feeds -> FeedModel : deleteArticlesOlderThan(30 days)
     end
 end
 
-loop batches of 100 news of the last 48 hours without vectors, the newest first, a scheduled run starts none after 1 minute
+loop batches of 100 news of the last 48 hours without vectors, the newest first (the floods of 500 news a day last); a run of every feed starts none after 1 minute, a run of some feeds embeds all of theirs
     par the next batch encoded while this one is grouped
         Ingest ->> Ingest : embedPending (next batch)
-        Ingest -> StoryModel : pendingArticles
-        Ingest -> Embedder : embed(titles, title + description)
+        Ingest -> StoryModel : pendingArticles(48 h, 100)
+        Ingest -> Embedder : embed(titles, title + 400 characters)
         Embedder --> Ingest : dense + sparse vectors (bge-m3)
         Ingest -> StoryModel : saveVectors(vectors, language)
     else
         Ingest -> StoryModel : assignStories(100)
-        StoryModel -> DB : assign_stories(): join a story or start one,\nnot one of another match
+        StoryModel -> DB : assign_stories(): join a story or start one,\none transaction per call
         Ingest -> StoryModel : assignThreads(300)
         StoryModel -> DB : assign_threads(): the stories of one affair
     end
 end
 note right of Ingest
-    The first batch is encoded while the feeds
-    are read (or was left encoding by the run
-    before); a scheduled run out of time with
-    more news waiting leaves the next batch
-    encoding for the next run
+    A scheduled run out of time with more
+    news waiting leaves the next batch
+    encoding: the next run groups it first
 end note
 opt news with vectors still in no story (a search read Google News, a run stopped)
     Ingest -> StoryModel : assignStories(100), assignThreads(300)
@@ -68,11 +76,52 @@ end
 note right of Embedder
     The embedder down: the news
     are stored anyway and get their
-    vectors at the next run
+    vectors at a next run
 end note
-opt a scheduled run
-    Ingest -> StoryModel : the older news without vectors,\nfor the search by meaning
-    Ingest -> StoryModel : deleteEmptyStories
+opt a run of every feed, the window done and time left
+    Ingest -> StoryModel : one batch of the older news without vectors,\nfor the search by meaning (no story)
+end
+opt purge
+    Ingest -> StoryModel : deleteEmptyStories (stories, then threads)
 end
 Ingest -> DB : pg_advisory_unlock
+Ingest -> Ingest : warnIfLate: 8000 news waiting or more,\nthe log names the busiest feeds (once an hour)
+Ingest --> Timer : {feeds, inserted, embedded, grouped, ...}
+
+opt every 20 minutes
+    Timer -> Directory : grow()
+    note right : 10 media named by Google News, 10 media\nread already; the feeds added are read\nby the next run
+end
+opt once a day (and after the first run)
+    Timer -> Directory : prune()
+    note right : the feeds of the directory serving\nno reader go to directory_removed
+end
+Timer -> Timer : next run 1 minute after the start of this one,\nat once when it worked longer
+
+== next to the runs, from the start of the server: the tagging (TaggingService.schedule) ==
+
+loop each tagger of NER_URL, for as long as the server lives
+    Tagging -> Ner : taggerDevice(url): GET /health
+    alt it answers
+        Tagging -> DB : MentionModel.untagged(30 days, 16 or 128, not taken)
+        note right : 16 news on a processor, 128 on a graphics\ncard, the newest first, none taken by\nanother tagger
+        Tagging -> Ner : tagTexts: POST /entities (title + 700 characters)
+        Ner --> Tagging : people, organisations, places (GLiNER)
+        Tagging -> Tagging : cleanMentions
+        Tagging -> DB : MentionModel.save: entities_at, mentions, article_mentions
+        note right : the news the grouping holds are skipped\n(SKIP LOCKED) and tagged later
+    else off, failing, or nothing left
+        Tagging -> Tagging : wait 60 s
+    end
+end
+loop the names in Wikidata, one every 7 s
+    Tagging -> DB : MentionModel.toLink: the names a reader saw first,\nthen the ones named by 3 news or more
+    Tagging -> Ner : exactItems(name, lang)
+    Tagging -> DB : MentionModel.setLink(qid when one item only)
+end
+note over Tagging
+    Also: a report in the log every hour,
+    and the names no news names any more
+    deleted once a day (deleteUnused)
+end note
 @enduml

@@ -1,44 +1,94 @@
 @startuml 05-sources
 !include _style.iuml
-title Sources — the feeds a reader adds, finds or is recommended
+title Sources — the feeds a reader adds, finds, imports or is recommended
 
 class EndUser
 package "Presentation" {
-    class feedRouter
+    class feedRouter {
+        + GET /feeds
+        + POST /feeds
+        + POST /feeds/suggestions
+        + POST /feeds/search
+        + POST /feeds/check
+        + POST /feeds/import
+        + GET /feeds/recommended
+        + POST /feeds/recommended
+        + PATCH /feeds/:id
+        + DELETE /feeds/:id
+    }
+    class profileRouter {
+        + POST /profile/kept-sources
+        + DELETE /profile/sources/:id
+        + POST /profile/removed-sources/restore
+    }
     class feedController {
         + getUserFeeds()
         + addUserFeed()
-        + updateUserFeed()
-        + deleteUserFeed()
         + suggestSources()
         + searchSources()
+        + checkSites()
         + importSources()
+        + updateUserFeed()
         + getRecommended()
         + addRecommended()
+        + deleteUserFeed()
+    }
+    class profileController {
+        + keepSource()
+        + removeSource()
+        + restoreSource()
     }
 }
+note right of feedRouter
+    /check: 25 sites a request, 2000 sites
+    an hour per account, 4000 per address
+end note
+note left of feedController
+    What the client sends back is read
+    again: a feed is read once before it
+    is added, a site read through our
+    bridge is looked at again from its name
+end note
 package "Business" {
     class sourceService {
+        + knownMedia()
+        + suggest()
         + searchDirectory()
         + searchWeb()
-        + suggest()
-        + knownMedia()
+        + checkSites()
     }
     class recommendationService {
         + list()
         + add()
     }
-    class feedbackService <<other feature>> {
+    class profileService {
+        + keepSource()
+        + removeSource()
+        + restoreSource()
+    }
+    class feedbackService {
         + of()
+        + refusedSources()
+        + keep()
+    }
+    class feedService <<other feature>> {
+        + categories()
+        + languages()
     }
     class ingestService <<other feature>> {
         + run()
     }
 }
-note right of recommendationService
-    Feeds found for another profile or
-    shared, never one added by hand
-    and kept private
+note bottom of recommendationService
+    The feeds of the other readers, a key
+    aside: 3 of their news of 7 days and 2%
+    on the interests, the AI confirming the
+    titles (kept a day); 20 at most
+end note
+note bottom of feedbackService
+    A source found for the profile with 3
+    cards refused, twice as many as liked,
+    is left out until the reader keeps it
 end note
 package "Data" as Data {
     class feedModel {
@@ -49,10 +99,30 @@ package "Data" as Data {
         + deleteUserFeed()
         + countUserFeeds()
         + userFeedUrls()
-        + recommendedFeeds()
+        + trustedFeedUrls()
         + articleHosts()
+        + recommendedFeeds()
+    }
+    class profileModel {
+        + get()
+        + interests()
+        + ownFeedUrls()
+        + keptSources()
+        + keepSource()
+        + removedSources()
+        + removeProfileFeed()
+        + restoreProfileFeed()
+    }
+    class briefingModel <<other feature>> {
+        + votes()
     }
 }
+note bottom of profileModel
+    user_feeds (origin 'user' or 'profile',
+    trusted); user_profiles.kept_sources
+    and removed_sources: a source removed is
+    never found again until brought back
+end note
 package "Media on a subject" as Looking {
     class googleNews {
         + search()
@@ -71,6 +141,8 @@ package "The feed of a site" as OnSite {
     }
     class siteSections {
         + sectionLinks()
+        + feedLinks()
+        + subjectStats()
         + keywordJudge()
     }
     class feedBridge {
@@ -80,29 +152,48 @@ package "The feed of a site" as OnSite {
         + judgeOf()
     }
     class crawlers {
-        + Html()
         + Xml()
     }
 }
-note bottom of feedBridge
-    A site with no feed: RSS-Bridge
-    makes one from its pages
+note bottom of feedFinder
+    The page, its sections, its page of
+    feeds, Feedly, the usual paths, its
+    news sitemap; RSS-Bridge last
 end note
 package "Limits and safety" as Limits {
     class feedLimits {
         + bridgeRoom()
         + looksPrivate()
+        + isFlood()
     }
     class publicUrl {
         + assertPublicUrl()
         + isBridgeUrl()
+        + forClient()
+        + sourceKey()
+        + nameOf()
     }
 }
+package "Thumbs and AI" as Judging {
+    class feedback {
+        + refusedCounts()
+        + examplesOf()
+    }
+    class profileAi {
+        + confirmOnSubject()
+    }
+}
+note bottom of feedLimits
+    800 sources by hand, 50 sites read
+    through the bridge, a feed of 300
+    news at once is a flood
+end note
 class "Google News" as GoogleNewsApi <<external>>
 class "GDELT DOC 2.0" as GdeltApi <<external>>
-class "Feed directory" as DirectoryApi <<external>>
+class "Feedly search" as DirectoryApi <<external>>
 class "RSS-Bridge" as RssBridge <<external>>
 class "Embedder (bge-m3)" as Embedder <<external>>
+class "Ollama (gemma4:31b)" as Ollama <<external>>
 class "PostgreSQL + pgvector" as PostgreSQL <<external>>
 
 googleNews -[hidden]down- gdelt
@@ -110,27 +201,41 @@ gdelt -[hidden]down- feedDirectory
 feedFinder -[hidden]down- siteSections
 siteSections -[hidden]down- feedBridge
 feedLimits -[hidden]down- publicUrl
+feedback -[hidden]down- profileAi
 
 EndUser --> feedRouter
+EndUser --> profileRouter
 feedRouter --> feedController
+profileRouter --> profileController
+profileController --> profileService
 feedController --> sourceService
 feedController --> recommendationService
+feedController --> feedService
 feedController --> ingestService
-feedController --> Data
+feedController --> feedModel
 feedController --> OnSite
 feedController --> Limits
-sourceService --> Data
+sourceService --> feedModel
 sourceService --> Looking
 sourceService --> OnSite
 recommendationService --> sourceService
 recommendationService --> feedbackService
-recommendationService --> Data
+recommendationService --> feedModel
+recommendationService --> profileModel
 recommendationService --> Limits
+recommendationService --> profileAi
+profileService --> feedbackService
+profileService --> profileModel
+feedbackService --> briefingModel
+feedbackService --> profileModel
+feedbackService --> feedModel
+feedbackService --> feedback
 feedFinder --> feedDirectory
 googleNews --> GoogleNewsApi
 gdelt --> GdeltApi
 feedDirectory --> DirectoryApi
 feedBridge --> RssBridge
 meaningJudge --> Embedder
+profileAi --> Ollama
 Data --> PostgreSQL
 @enduml

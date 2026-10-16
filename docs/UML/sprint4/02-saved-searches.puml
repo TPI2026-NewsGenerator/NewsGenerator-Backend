@@ -4,13 +4,21 @@ title Saved searches — the forms of the Search page a reader keeps
 
 class EndUser
 package "Presentation" {
-    class customSearchRouter
+    class customSearchRouter {
+        + GET /customsearch
+        + POST /customsearch
+        + DELETE /customsearch
+    }
     class customSearchController {
         + getUserCustomSearch()
         + postUserCustomSearch()
         + deleteUserCustomSearch()
     }
 }
+note left of customSearchController
+    The user is the one of the session,
+    never one named in the request
+end note
 package "Business" {
     class customSearchService {
         + getUserCustomSearch()
@@ -20,7 +28,8 @@ package "Business" {
 }
 note right of customSearchService
     With an id: replaces that search,
-    without: saves a new one
+    without: saves a new one. No row of
+    this user with this id (Prisma P2025): 404
 end note
 package "Data" {
     class customSearchModel {
@@ -30,8 +39,15 @@ package "Data" {
         + deleteUserCustomSearch()
     }
 }
-class jwt {
-    + authenticateToken()
+note right of customSearchModel
+    custom_searches, one title per user,
+    and custom_searches_has_categories,
+    the categories named as in categories
+end note
+package "utils" {
+    class jwt {
+        + authenticateToken()
+    }
 }
 class Prisma <<external>>
 

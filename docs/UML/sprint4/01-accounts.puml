@@ -1,17 +1,24 @@
 @startuml 01-accounts
 !include _style.iuml
-title Accounts — log in, sign up, the session and the settings
+' many modules point at jwt and userModel: straight lines keep them apart
+skinparam linetype ortho
+title Accounts — log in, sign up, the session, the settings and the administrators
 
 class EndUser
 package "Presentation" {
-    class loginRouter
-    class signupRouter
+    class loginRouter {
+        + POST /login
+    }
+    class signupRouter {
+        + POST /signup
+    }
     class sessionRouter {
         + GET /session
         + DELETE /session
     }
     class accountRouter {
         + PUT /account/username
+        + PUT /account/email
         + PUT /account/password
     }
     class loginController {
@@ -22,9 +29,23 @@ package "Presentation" {
     }
     class accountController {
         + rename()
+        + changeEmail()
         + changePassword()
     }
+    class otherRouters <<other feature>> {
+        briefing, feeds, news,
+        entities, profile
+    }
 }
+note top of signupRouter
+    Closed (403) unless SIGNUP_OPEN=1;
+    5 accounts per address and hour
+end note
+note bottom of sessionRouter
+    The page cannot read the cookie:
+    it asks here who is signed in,
+    and if they are an administrator
+end note
 package "Business" {
     class loginService {
         + authUser()
@@ -34,6 +55,7 @@ package "Business" {
     }
     class accountService {
         + rename()
+        + changeEmail()
         + changePassword()
     }
     class profileService <<other feature>> {
@@ -42,9 +64,9 @@ package "Business" {
     }
 }
 note right of signupService
-    The account and its profile in one
-    call: when the profile cannot be
-    stored, the account is deleted again
+    The profile is read by the AI before
+    the account is created; when it cannot
+    be stored, the account is deleted again
 end note
 note left of accountService
     Each change asks the current password;
@@ -60,9 +82,15 @@ package "Data" {
         + create()
         + delete()
         + nameTakenByOther()
+        + emailTakenByOther()
         + withPassword()
         + passwordChangedAt()
         + update()
+        + roleName()
+        + email()
+    }
+    class profileModel <<other feature>> {
+        + idsOf()
     }
 }
 package "utils" {
@@ -85,16 +113,37 @@ package "utils" {
     }
     class accountRules {
         + isUsername()
+        + isEmail()
         + isPassword()
+        + isTaken()
+        + signupOpen()
+    }
+    class admin {
+        + isAdmin()
+        + adminOnly()
+    }
+    class activeProfile {
+        + activeProfile()
+        + needsProfile()
     }
 }
-note right of jwt
+note bottom of jwt
     The token is set in an HttpOnly cookie
     (SameSite=Strict, Secure through https),
     never answered to the page: 7 days,
     renewed once a day while used; one opened
     before the last change of password is
     refused (passwordChanges)
+end note
+note bottom of admin
+    The role 'Admin' read in the database at
+    each request, never in the token: e-mail
+    of the briefing and several profiles
+end note
+note bottom of activeProfile
+    The profile of the request: the header
+    X-Profile when it is one of the user, else
+    their first; needsProfile: 400 without one
 end note
 class bcrypt <<external>>
 class JsonWebToken <<external>>
@@ -104,35 +153,45 @@ EndUser --> loginRouter
 EndUser --> signupRouter
 EndUser --> sessionRouter
 EndUser --> accountRouter
+EndUser --> otherRouters
+loginRouter --> rateLimit
+loginRouter --> loginController
+signupRouter --> accountRules
+signupRouter --> rateLimit
+signupRouter --> signupController
+sessionRouter --> jwt
+sessionRouter --> admin
+sessionRouter --> userModel
 accountRouter --> jwt
 accountRouter --> rateLimit
 accountRouter --> accountController
-accountController --> accountService
-accountController --> jwt
-accountService --> userModel
-accountService --> pwdHasher
-accountService --> accountRules
-accountService --> jwt
-signupService --> accountRules
-accountService --> passwordChanges
-jwt --> passwordChanges
-passwordChanges --> userModel
-loginRouter --> rateLimit
-loginRouter --> loginController
-sessionRouter --> jwt
-signupRouter --> rateLimit
-signupRouter --> signupController
+otherRouters --> jwt
+otherRouters --> activeProfile
+otherRouters --> admin
+otherRouters --> accountRules : signupOpen(): the profile\nfunnel before an account
 loginController --> loginService
 loginController --> jwt
 signupController --> signupService
 signupController --> jwt
+accountController --> accountService
+accountController --> jwt
 loginService --> loginModel
 loginService --> pwdHasher
 loginService --> jwt
+signupService --> accountRules
 signupService --> userModel
 signupService --> profileService
 signupService --> pwdHasher
 signupService --> jwt
+accountService --> accountRules
+accountService --> userModel
+accountService --> pwdHasher
+accountService --> passwordChanges
+accountService --> jwt
+jwt --> passwordChanges
+passwordChanges --> userModel
+admin --> userModel
+activeProfile --> profileModel
 pwdHasher --> bcrypt
 jwt --> JsonWebToken
 loginModel --> Prisma

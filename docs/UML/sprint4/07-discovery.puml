@@ -2,18 +2,24 @@
 !include _style.iuml
 title Discovery — the sources found for the interests of a profile
 
+class "server start" as ServerStart <<other feature>> {
+    + resumeInterrupted()
+}
 class profileService <<other feature>> {
     + store()
     + rediscover()
+    + get()
 }
 class briefingService <<other feature>> {
-    + start()
+    + write()
 }
 package "Business" {
     class discoveryService {
         + start()
-        + isRunning()
+        + discover()
         + prune()
+        + phaseOf()
+        + resumeInterrupted()
     }
     class sourceService <<other feature>> {
         + knownMedia()
@@ -27,22 +33,25 @@ package "Business" {
     }
 }
 note right of discoveryService
-    Per interest and per language read:
-    the media Google News names first,
-    then the press Media Cloud names
-    that Google did not, each with its
-    own budget. The new feeds are read
-    at once.
+    Two steps: the media Google News names
+    for each interest, saved and read at once
+    (phase 'google'), then the press only
+    Media Cloud names (phase 'press'). Each
+    step tries per interest and per language
+    with its own budget. Lives in memory: a
+    restart starts it again
 end note
 package "Data" as Data {
     class profileModel {
         + get()
         + interestsForDiscovery()
         + setDiscovery()
+        + discovering()
+        + removedSources()
+        + keptSources()
         + addProfileFeeds()
         + deleteProfileFeeds()
         + profileFeedRelevance()
-        + keptSources()
     }
     class feedModel {
         + userFeedUrls()
@@ -50,28 +59,44 @@ package "Data" as Data {
         + trustedFeedUrls()
     }
 }
+note bottom of profileModel
+    user_feeds origin 'profile'; status in
+    user_profiles.discovery_status (running,
+    done, failed). The interests of a
+    project are not looked for
+end note
 package "The media of an interest" as Media {
     class googleNews {
         + search()
     }
     class mediaCloud {
+        + mediaCloudEnabled()
         + mediaFor()
-        + toQuery()
         + knownFeeds()
     }
     class profileAi {
         + parseSearch()
+        + confirmOnSubject()
     }
     class publicUrl {
         + nameOf()
     }
+    class language {
+        + readerLanguage()
+    }
 }
 note bottom of mediaCloud
-    Every word of a search (AND), in
-    the language, over 30 days, in the
-    press of its countries. 2 searches
-    a minute, 8000 a week. knownFeeds():
-    the feeds its directory knows.
+    Every word of a search (AND), in its
+    language, over 30 days, in the press of
+    its countries; 2 news at least. 2 searches
+    a minute, a refusal pauses it 15 minutes,
+    an answer kept a day. Off without
+    MEDIACLOUD_API_TOKEN
+end note
+note bottom of profileAi
+    The AI reads the 12 newest titles the
+    vectors put on the interests: the feed
+    stays on 2 it confirms
 end note
 package "The feeds of a medium" as Feeds {
     class feedFinder {
@@ -87,45 +112,53 @@ package "The feeds of a medium" as Feeds {
     }
 }
 note bottom of feedFinder
-    Kept when its news are on the
-    subject. Looks in the page, the
-    sections, the feed directory and
-    RSS-Bridge: see 05-sources
+    Kept when 2 of its last 30 news reach
+    0.45 with an interest. Looks in the page,
+    the sections, Feedly, the news sitemap
+    and RSS-Bridge: see 05-sources
 end note
 package "The budget" as Budget {
     class allocation {
-        + allocate()
         + tryPerLanguage()
+        + pressSearches()
+        + allocate()
         + staleFeeds()
     }
     class feedLimits {
-        + withinBridgeRoom()
         + bridgeRoom()
+        + withinBridgeRoom()
     }
 }
+note bottom of allocation
+    20 new feeds a discovery, 60 for the
+    profile. Removed: no news on the profile
+    in 14 days, once 14 days old or 30 news;
+    the kept and trusted ones stay
+end note
 class "Google News" as GoogleNewsApi <<external>>
 class "Media Cloud" as MediaCloudApi <<external>>
 class "Embedder (bge-m3)" as Embedder <<external>>
+class "Ollama (gemma4:31b)" as Ollama <<external>>
 class "PostgreSQL + pgvector" as PostgreSQL <<external>>
 
 googleNews -[hidden]down- mediaCloud
-mediaCloud -[hidden]down- profileAi
 feedFinder -[hidden]down- meaningJudge
 allocation -[hidden]down- feedLimits
 
+ServerStart --> discoveryService
 profileService --> discoveryService
 briefingService --> discoveryService
 discoveryService --> sourceService
 discoveryService --> ingestService
 discoveryService --> feedbackService
-discoveryService --> Data
+discoveryService ----> Data
 discoveryService --> Media
 discoveryService --> Feeds
-discoveryService --> Budget
+discoveryService ----> Budget
 mediaCloud --> publicUrl
-meaningJudge --> embedder
 googleNews --> GoogleNewsApi
 mediaCloud --> MediaCloudApi
-embedder --> Embedder
+profileAi --> Ollama
+meaningJudge --> Embedder
 Data --> PostgreSQL
 @enduml

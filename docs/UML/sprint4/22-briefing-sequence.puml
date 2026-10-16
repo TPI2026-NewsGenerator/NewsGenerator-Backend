@@ -1,6 +1,6 @@
-@startuml 12-briefing-sequence
+@startuml 22-briefing-sequence
 !include _sequence.iuml
-title Briefing — written in background, followed by the client, then voted
+title Briefing — written in background in six steps, followed by the client, then its analysis
 
 actor Reader
 participant "Client (React)" as Client
@@ -8,90 +8,132 @@ participant "briefingRouter\n+ briefingController" as Controller
 participant briefingService as Briefing
 participant "discoveryService\n+ feedbackService" as Feedback
 participant "storyModel\n+ feedModel" as Stories
-participant googleNews as Google
+participant "googleNews\n+ repeats" as Pick
 participant profileAi as AI
-participant "crawlers\n+ extract" as Read
+participant "crawlers\n+ extract\n+ contested\n+ aiWays" as Read
+participant "otherAngles\n+ officialSources\n+ cardNames\n+ entityService" as Around
+participant cardAnalysis as Analysis
 participant briefingModel as BriefingModel
 database "PostgreSQL" as DB
 
 == Asked ==
-Reader -> Client : "New briefing", of the last 24 hours, 2 days or 7 days
-Client -> Controller : POST /briefing {hours}
-Controller -> Briefing : start(userId, hours)
+Reader -> Client : "New briefing": 1 to 7 days, 10, 20 or 30 cards
+Client -> Controller : POST /briefing {hours, size}
+Controller -> Briefing : start(userId, profileId, hours, size)
 Briefing -> BriefingModel : failAbandoned(30 minutes ago)
-alt a briefing of this reader is already being written
-    Briefing -> BriefingModel : running(userId)
+alt a briefing of this profile is being written
+    Briefing -> BriefingModel : running(profileId)
     Briefing --> Controller : that one
 else
-    Briefing -> BriefingModel : create(userId, hours)
-    BriefingModel -> DB : INSERT briefings (running, hours)
-    Briefing ->> Briefing : write(briefing, userId, hours), not awaited
+    Briefing -> BriefingModel : create(userId, profileId, hours, size)
+    BriefingModel -> DB : INSERT briefings (running, hours, size)
+    Briefing ->> Briefing : write(briefing, profileId, hours, size), not awaited
     Briefing --> Controller : the briefing, running
 end
 Controller --> Client : 202
 
 == Written in background ==
+note over Briefing : profile, interests and running projects read first;\nstep(name) saves the step in briefings.step
 group step "ranking"
-    Briefing -> Feedback : DiscoveryService.prune(userId)
-    note right : the sources found that\nbring nothing any more
-    Briefing -> Feedback : FeedbackService.of(userId)
-    Feedback --> Briefing : examples for the AI, sources refused
-    Briefing -> Stories : rank(interests, feeds, hours, every language)
-    Stories -> DB : stories closest to the interests (SQL, pgvector)
-    Briefing -> Stories : storyArticles(stories)
-    Briefing -> Stories : trustedMedia(userId)
-    Briefing -> Google : credibleStory, isRepeatedPage, pickCandidates
-    note right : told by credible media; a title one medium\nrepublishes for hours is left out; 40 stories\nof feeds, 10 more of Google News at most;\nthe stories of a trusted medium among the\n60 closest besides them, 10 at most
-    opt 7 days
-        Briefing -> Stories : threadsOf(stories)
-        note right : one candidate per thread, the closest:\nan affair of several days is one card
+    Briefing -> Feedback : DiscoveryService.prune(profileId)
+    Briefing -> Feedback : FeedbackService.of(profileId)
+    Feedback --> Briefing : 15 titles liked and 15 refused, sources refused
+    Briefing -> Stories : feedsOf: the shared feeds, every reader's sources,\nthe Google News searches of the interests
+    Briefing -> Stories : rank(profileId, feeds, since, every language)
+    Stories -> DB : rank_profile_stories (SQL, pgvector)
+    note right : 600 ranked (x size / 10), each interest\nits share of 150 (shareOut)
+    Briefing -> Stories : storyArticles, trustedMedia, feedMedia
+    Briefing -> Pick : credibleStory, isRepeatedPage, googleAvailable
+    Briefing -> Pick : notShownBefore: withoutRepeats(evolvedStories)
+    note right : a story of a card sent by e-mail in 48 h left out,\nback as a follow-up when the AI says it evolved
+    opt 3 days or more
+        Briefing -> Stories : threadsOf: one story per thread
     end
+    Briefing -> Pick : pickCandidates: 40 of feeds + 10 of Google News
+    note right : plus 10 of a trusted medium\namong the 60 closest
 end
 group step "choosing"
-    Briefing -> AI : selectStories(profile, candidates, examples)
-    note right : a story of a trusted medium is marked:\npreferred at equal relevance; over 7 days\nthe media of each story are counted
-    Briefing -> Briefing : balanceSelection: every interest has its share
+    Briefing -> AI : selectStories(profile + projects, candidates,\nthumbs, interests, days, size, language)
+    note right : up to 20 for 10 cards (30, 45),\nasked again once when it fails
+    Briefing -> AI : balanceSelection: the cards, each interest its share
+    note right : the next ones chosen: the reserve
 end
 group step "checking"
-    Briefing -> Stories : versionsIn(cards in another language)
-    note right : the 2 stories of the reader's language\nclosest to each (centroids, from 0.75)
     par
-        Briefing -> AI : checkStories: the articles that tell\nthe same news as the lead
+        Briefing -> Stories : versionsIn (reader's language, from 0.75)
     else
-        Briefing -> AI : mergeStories: two cards of one news joined,\nand the versions telling its news
-    end
-end
-group step "reading"
-    opt a story known only through Google News
-        Briefing -> Google : decodeLinks
-        Briefing -> Stories : saveResolvedLinks
-    end
-    Briefing -> Read : Crawlers.Html(5 articles per story)
-end
-group step "summarizing"
-    loop each story, 5 at once
-        Briefing -> Read : extractArticle(title, page, language)
-        note right : key passages word for word,\nand their translation
+        Briefing -> Stories : versionsAcross (other languages, from 0.78)
     end
     par
-        Briefing -> AI : reviewCards: a card on what the reader\nrefuses is left out
+        Briefing -> AI : checkStories: the articles that tell the news\nof the lead (12 per story), versions included
     else
-        Briefing -> AI : translateTexts: the titles in another\nlanguage than the reader's
+        Briefing -> AI : mergeStories: two cards of one news joined
+    end
+    note right : the AI failing: the stories as the vectors grouped them
+end
+loop the cards, then the reserve for the places left (2 rounds more at most)
+    group step "reading" (first round)
+        opt a story no feed lets read
+            Briefing -> Read : decodeLinks (10 at most), saveResolvedLinks
+        end
+        Briefing -> Read : Crawlers.Html(5 articles per story)
+    end
+    group step "summarizing" (first round)
+        loop each story, 5 at once
+            par
+                Briefing -> Read : extractArticle: key passages, points, summary,\ntranslation, topic, sourcing (gemma4:31b)
+            else
+                Briefing -> Read : contestedOf: a denial in its articles (gemma4:31b)
+            else
+                Briefing -> Read : aiWaysOf: points and summary written\nby deepseek-v4-pro:0813
+            end
+        end
+        Briefing -> Briefing : wholeTitle: a title its feed cut, whole
+        par
+            Briefing -> AI : reviewCards: a card on a refusal left out
+        else
+            Briefing -> Read : translateTexts: the titles in another language
+        end
     end
 end
+group step "angles"
+    par
+        Briefing -> Around : anglesOf: closeStories + storiesOfSameNames,\notherAnglesOf, titles translated
+    else
+        Briefing -> Around : officialSourcesOf: parties, Wikidata, posts\njudged twice, statementsOf
+    else
+        Briefing -> Around : followedNews: briefingGroups + watchedNews
+    else
+        Briefing -> Around : namesOfCards
+    end
+    note right : none of them can fail the briefing
+    Briefing -> BriefingModel : watched(briefing, watched)
+end
+Briefing -> Briefing : the cards: corroborationOf, hedgedBy, pictureOf
 alt written
     Briefing -> BriefingModel : finish(briefing, cards)
     BriefingModel -> DB : items, status ready
+    Briefing ->> Analysis : analyze(briefing, cards), not awaited
 else an error
     Briefing -> BriefingModel : fail(briefing, message)
 end
 
+== The analysis, after the cards ==
+Analysis -> BriefingModel : analysis {status running}
+Analysis -> Stories : earlierInThreads: the timeline of each affair
+Analysis -> Analysis : pickedCards (deepseek-v4-pro:0813, no reasoning)
+Analysis -> BriefingModel : analysis {running, picked}
+loop each card picked, 3 at once
+    Analysis -> Analysis : analysisOfCard (reasoning, 300 s at most),\ncheckedLines: a line without its sources dropped
+end
+Analysis -> BriefingModel : analysis {ready, cards} or {failed}
+
 == Followed by the client ==
-loop every 3 seconds while it runs
+loop every 3 s while it runs, then every 8 s while its analysis runs
     Client -> Controller : GET /briefing
-    Controller -> Briefing : latest(userId)
-    Briefing -> BriefingModel : latest(userId)
-    Controller --> Client : 200 {status, step, items}
+    Controller -> Briefing : latest(profileId)
+    Briefing -> BriefingModel : latest(profileId)
+    Controller --> Client : 200 {briefing: status, step, items, watched, analysis}
 end
 Client --> Reader : the cards
 
@@ -102,9 +144,4 @@ Controller -> Briefing : vote(userId, id, storyId, vote)
 Briefing -> BriefingModel : vote
 BriefingModel -> DB : vote and votedAt in items
 Controller --> Client : 204
-note over Feedback
-    The thumbs of the last 30 days are the examples of
-    the next choice, and the sources refused again and
-    again are left out of the next briefings
-end note
 @enduml

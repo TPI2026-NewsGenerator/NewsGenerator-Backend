@@ -1,0 +1,152 @@
+@startuml 09-email
+!include _style.iuml
+title E-mail — the cards of a briefing sent, and the copy of an e-mail sent before
+
+class EndUser
+class "Anyone with the link" as Receiver
+package "Presentation" {
+    class briefingRouter {
+        + GET /briefing/:id/stories/:storyId/pictures
+        + POST /briefing/:id/news
+        + DELETE /briefing/:id/news/:storyId
+        + POST /briefing/:id/email
+    }
+    class mailRouter {
+        + GET /mails/:token
+    }
+    class briefingController {
+        + latest()
+        + pictures()
+        + importNews()
+        + removeNews()
+        + email()
+        + original()
+    }
+}
+note left of briefingRouter
+    Each route for the administrators only
+    (MAIL_REFUSED, 403). The e-mail: 10 an
+    hour per IP address, 30 a day per reader;
+    its body up to 9 MB (app.js), the files
+    of the reader in base64
+end note
+note right of mailRouter
+    No account: 60 reads in 15 minutes per IP
+    address. The page runs nothing (CSP
+    without scripts, sandbox), is not
+    indexed nor framed
+end note
+package "Business" {
+    class briefingService {
+        + pictures()
+        + importNews()
+        + removeNews()
+        + email()
+        + withOwnTitles()
+        + withoutTakenOut()
+        + original()
+    }
+    class cardAnalysis <<other feature>> {
+        + analysesOf()
+    }
+    class officialSources <<other feature>> {
+        + officialSourcesOf()
+    }
+}
+note right of briefingService
+    The cards ticked, in the order of the reader,
+    with the titles they wrote, without the lines
+    they took out. Sent to another address: no
+    "why" of the cards, the answers to the reader
+    (Reply-To). No copy is kept since 13.10.2026.
+    The cards sent are marked: left out of the
+    next briefings for 48 hours (repeats.js)
+end note
+note bottom of cardAnalysis
+    Written with the briefing (08-briefing),
+    stored on it: the e-mail lays out
+    what they found, in boxes of their own
+end note
+package "Data" as Data {
+    class briefingModel {
+        + ofUser()
+        + articlePictures()
+        + addItem()
+        + removeItem()
+        + markSent()
+    }
+    class userModel {
+        + email()
+        + roleName()
+    }
+    class profileModel {
+        + get()
+    }
+    class sentMailModel {
+        + byToken()
+    }
+}
+package "Guards" as Guards {
+    class jwt {
+        + authenticateToken()
+    }
+    class admin {
+        + adminOnly()
+        + isAdmin()
+    }
+    class rateLimit {
+        + rateLimit()
+    }
+}
+package "Writing the e-mail" as Writing {
+    class accountRules {
+        + isEmail()
+    }
+    class mailPictures {
+        + storyPictures()
+        + withChosenPictures()
+    }
+    class publicUrl {
+        + assertPublicUrl()
+    }
+    class briefingMail {
+        + MAIL_FORMATS
+        + briefingMail()
+    }
+}
+note bottom of mailPictures
+    Per card: taken out, an address of the
+    web, or a file of the reader joined (cid:),
+    JPEG, PNG, GIF or WebP told by its first
+    bytes, 2 MB each, 6 MB per e-mail
+end note
+note bottom of briefingMail
+    The page as a table with inline styles,
+    its colours and fonts, dark where the
+    mail app follows the system. The sentences
+    as key points, a summary or key passages,
+    the AI version of a card when asked
+end note
+class mailer {
+    + mailEnabled()
+    + sendMail()
+}
+class "SMTP account (Gmail)" as Smtp <<external>>
+class "PostgreSQL" as PostgreSQL <<external>>
+
+EndUser --> briefingRouter
+Receiver --> mailRouter
+briefingRouter --> Guards
+mailRouter --> Guards
+briefingRouter --> briefingController
+mailRouter --> briefingController
+briefingController --> briefingService
+briefingService --> Writing
+briefingService --> mailer
+briefingService ..> cardAnalysis : reads what they stored
+briefingService ..> officialSources
+briefingService --> Data
+mailPictures --> publicUrl
+mailer --> Smtp
+Data --> PostgreSQL
+@enduml

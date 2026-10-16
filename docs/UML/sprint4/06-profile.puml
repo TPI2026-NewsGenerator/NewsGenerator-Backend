@@ -1,91 +1,217 @@
 @startuml 06-profile
 !include _style.iuml
-title Profile — what a reader wants to read, split into interests
+title Profile — what a reader wants to read, split into interests, several profiles per reader
 
 class EndUser
 package "Presentation" {
-    class profileRouter
+    class profileRouter {
+        + GET, PUT /profile
+        + GET /profile/options
+        + POST /profile/funnel/questions, /text
+        + PATCH, DELETE /profile/interests/:id
+        + POST /profile/discover
+        + POST /profile/kept-sources
+        + DELETE /profile/sources/:id
+        + POST /profile/removed-sources/restore
+        + POST /profile/projects/funnel/questions, /text
+        + POST /profile/projects
+        + PATCH, DELETE /profile/projects/:id
+        + GET, POST /profile/profiles
+        + PATCH, DELETE /profile/profiles/:id
+    }
     class profileController {
         + get()
         + options()
         + save()
+        + funnelQuestions()
+        + funnelText()
+        + list()
+        + create()
+        + rename()
+        + remove()
         + updateInterest()
         + deleteInterest()
         + rediscover()
         + keepSource()
+        + removeSource()
+        + restoreSource()
+        + projectQuestions()
+        + projectText()
+        + createProject()
+        + setProjectEnd()
+        + removeProject()
     }
 }
+note right of profileRouter
+    /profile/funnel/* needs no account
+    while accounts can be made (signupOpen),
+    40 calls an hour per address, shared
+    with the funnel of the projects
+end note
+
 package "Business" {
     class profileService {
         + get()
         + prepare()
         + store()
         + save()
+        + funnelQuestions()
+        + funnelText()
+        + list()
+        + create()
+        + rename()
+        + remove()
         + updateInterest()
         + deleteInterest()
         + rediscover()
         + keepSource()
+        + removeSource()
+        + restoreSource()
+        + projectQuestions()
+        + projectText()
+        + createProject()
+        + setProjectEnd()
+        + removeProject()
+    }
+    class signupService <<other feature>> {
+        + register()
     }
     class feedService <<other feature>> {
         + languages()
+        + categories()
     }
     class discoveryService <<other feature>> {
         + start()
+        + phaseOf()
     }
     class feedbackService <<other feature>> {
         + refusedSources()
         + keep()
     }
+    class ingestService <<other feature>> {
+        + searchesOfUser()
+    }
 }
 note right of profileService
-    prepare(): the AI splits the text into
-    interests, each gets its vectors; what
-    the reader refuses is kept apart, never
-    an interest, and shown on the profile.
-    store(): saves them all, then starts
-    the discovery of sources.
-    The profile chooses the briefing, it
-    never narrows a search.
+    prepare(): the AI splits the text (20 to
+    3000 characters) into 1 to 6 interests,
+    each with its dense + sparse vectors;
+    what the reader refuses is kept apart,
+    never an interest. No interest: 422.
+    store(): saves them, the old interests
+    replaced, then starts the discovery.
+    create(): for the administrators only,
+    15 profiles at most; the last one is
+    written again, never deleted.
+    A project (5 at most, a last day within
+    a year or none) is split the same way;
+    no source is found for it.
 end note
+
 package "Data" {
     class profileModel {
-        + get()
-        + interests()
+        + owned()
+        + ofUser()
+        + idsOf()
+        + count()
         + save()
+        + rename()
+        + delete()
+        + interests()
         + updateInterest()
         + deleteInterest()
+        + setWatchTerms()
+        + projects()
+        + projectInterests()
+        + addProject()
+        + setProjectEnd()
+        + deleteProject()
+        + keepSource()
+        + removedSources()
+        + removeProfileFeed()
+        + restoreProfileFeed()
         + profileFeedRelevance()
     }
-    class feedModel {
+    class feedModel <<other feature>> {
         + listUserFeeds()
     }
+    note left of profileModel
+        user_profiles (text, refused, watch_terms,
+        kept_sources, removed_sources, discovery),
+        profile_interests (dense vector, sparse
+        sparsevec; id_project for a project),
+        profile_projects (ends_on), user_feeds
+        (origin 'profile'). Deleting a profile
+        deletes all of it (ON DELETE CASCADE)
+    end note
 }
+
 package "utils" {
+    class activeProfile {
+        + activeProfile()
+    }
     class profileAi {
         + interestsOf()
     }
+    class profileFunnel {
+        + nextQuestions()
+        + writeProfile()
+        + cleanRounds()
+    }
+    class watchTerms {
+        + cleanWatchTerms()
+    }
     class embedder {
         + embed()
+        + toVector()
+        + toSparsevec()
     }
     class ollama {
         + ollamaJson()
     }
+    class admin {
+        + isAdmin()
+    }
+    note left of activeProfile
+        The profile of the header X-Profile
+        when it is one of the user's, else
+        their first one (null: none yet)
+    end note
+    note bottom of profileAi
+        interestsOf(): asked once more when a word
+        of the reader is in no interest or an
+        interest is over 500 characters, the second
+        answer kept only when better. A refusal is
+        cut out of the texts, keywords and searches.
+        profileFunnel: up to 3 rounds of 2 to 4
+        questions, then the profile written in the
+        first person; nothing saved
+    end note
 }
-class "Ollama (gemma4:31b)" as Ollama <<external>>
+
+class "Ollama (gemma4:31b)\nGemini when it fails" as Ollama <<external>>
 class "Embedder (bge-m3)" as Embedder <<external>>
 class "PostgreSQL + pgvector" as PostgreSQL <<external>>
 
 EndUser --> profileRouter
+profileRouter --> activeProfile
 profileRouter --> profileController
 profileController --> profileService
 profileController --> feedService
+signupService --> profileService
 profileService --> profileModel
 profileService --> feedModel
+profileService --> feedService
 profileService --> discoveryService
 profileService --> feedbackService
+profileService --> ingestService
 profileService --> profileAi
+profileService --> profileFunnel
+profileService --> watchTerms
 profileService --> embedder
+profileService --> admin
 profileAi --> ollama
+profileFunnel --> ollama
 ollama --> Ollama
 embedder --> Embedder
 profileModel --> PostgreSQL

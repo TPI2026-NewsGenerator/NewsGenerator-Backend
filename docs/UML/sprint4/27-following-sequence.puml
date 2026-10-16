@@ -1,0 +1,118 @@
+@startuml 27-following-sequence
+!include _sequence.iuml
+title Following — the names of the news, an item searched and followed, its names, its news in the briefing
+
+actor Reader
+participant "Client (React)\n/following" as Client
+participant "entityRouter\n+ entityController" as Controller
+participant entityService as Entity
+participant briefingService as Briefing
+participant "taggingService\n(server start)" as Tagging
+participant "tagger\n(ner/server.py)" as Tagger
+participant "wikidata" as Wiki
+participant "Wikidata\n(API + SPARQL)" as WikiApi
+participant "cardNames" as CardNames
+participant "entityModel\n+ profileModel" as EntityModel
+participant "mentionModel\n+ feedModel" as MentionModel
+database "PostgreSQL" as DB
+
+== The names of the news, in background ==
+loop each tagger of NER_URL, for as long as the server lives
+    Tagging -> Tagger : taggerDevice(url): GET /health
+    Tagging -> MentionModel : untagged({since 30 days, 16 or 128, not taken})
+    note right : the newest first; one taken by\nanother tagger is left to it
+    Tagging -> Tagger : tagTexts(url, title + 700 characters of the description)
+    Tagger --> Tagging : the names of each text, {text, label, score}\n(GLiNER multi v2.1)
+    Tagging -> Tagging : cleanMentions: a key per name (mentionKey),\nthe acronyms inside a name as organisations
+    Tagging -> MentionModel : save(news and their names)
+    MentionModel -> DB : articles.entities_at, mentions (seen + 1),\narticle_mentions
+end
+loop the names, one every 7 s
+    Tagging -> MentionModel : toLink: the ones a reader saw first (wanted_at),\nthen the ones of 3 news at least, the most met first
+    Tagging -> Wiki : exactItems(name, lang)
+    Wiki -> WikiApi : wbsearchentities
+    note right : 429 or too busy: nobody of the\nprocess asks for 30 s, or the time asked
+    Tagging -> MentionModel : setLink(id, the qid when one item only is called so, else null)
+end
+
+== An item searched and followed ==
+Reader -> Client : "UEFA"
+Client -> Controller : GET /entities/search?q=UEFA
+note right : 30 calls of Wikidata a minute per reader
+Controller -> Entity : search(profileId, q)
+Entity -> Wiki : searchItems(q, language of the reader)
+Wiki -> WikiApi : wbsearchentities (8 at most)
+Entity --> Client : [{qid, label, description}]
+note right : Wikidata down: 502
+Reader -> Client : follows one
+Client -> Controller : POST /entities {qid}
+Controller -> Entity : follow(profileId, qid)
+Entity -> EntityModel : count(profileId)
+note right : 30 followed already: 400
+Entity -> EntityModel : byQid(qid)
+alt known and read in the last 7 days
+    Entity -> Entity : the row known
+else new, met as a link only, or older
+    Entity -> Wiki : readItem(qid, language)
+    Wiki -> WikiApi : wbgetentities: labels, aliases, claims;\nthe family name of a person (P734)
+    Wiki -> WikiApi : SPARQL: its links still true (coach, league,\nchair, team, players since 6 years...)
+    Wiki --> Entity : {qid, kind, label, names, links}
+    note right : namesOf: labels and aliases in latin letters,\nan alias of one common word left out,\na club also without its "FC"
+    Entity -> EntityModel : save(item)
+    EntityModel -> DB : entities, its linked items (label only),\nentity_links replaced, in one transaction
+end
+Entity -> EntityModel : follow(profileId, id)
+EntityModel -> DB : INSERT profile_entities (in_briefing true)
+Entity --> Client : the items followed
+
+== Its names, and its news in the briefing or not ==
+Reader -> Client : adds "PSG", takes out "Paris"
+Client -> Controller : PUT /entities/:qid/names {added, removed}
+Controller -> Entity : setNames(profileId, qid, {added, removed})
+note right : 10 names of the reader at most;\nonly names of Wikidata are taken out
+Entity -> EntityModel : setNames(profileId, id, added, removed)
+Reader -> Client : unticks "in the briefing"
+Client -> Controller : PUT /entities/:qid/briefing {on: false}
+Controller -> Entity : setInBriefing(profileId, qid, on)
+Entity -> EntityModel : setInBriefing(profileId, id, on)
+
+== Its page ==
+Client -> Controller : GET /entities/:qid?hours=48
+Controller -> Entity : page(profileId, qid, hours)
+Entity -> Entity : loaded(qid), following, links (60 at most)
+Entity -> Entity : namedNews(its names and the links', qids)
+note right : kept 10 minutes: the page is\nopened, then a link, then back
+Entity -> Briefing : feedsOf(profileId)
+par the news tagged
+    Entity -> MentionModel : articlesNamed({keys, qids, feeds, since})
+    note right : by the names the tagger found, and the ones\nit linked to the item, in any language
+else the news not tagged yet
+    Entity -> MentionModel : anyUntagged(since, 10 minutes ago)
+    opt some wait for the tagger
+        Entity -> MentionModel : articlesHolding({feeds, names with\nand without accents, since})
+    end
+end
+Entity -> Briefing : newsOfTerms(terms, articles, {holds})
+Entity -> Entity : mergeNews: one news per story, the newest first
+Entity --> Client : {entity, count, news, links: [{relation, count, news}]}
+
+== In the briefing ==
+Briefing -> Briefing : write(): the cards chosen and read
+par what the profile follows
+    Briefing -> Entity : briefingGroups(profileId, hours)
+    Entity -> EntityModel : followed(profileId, {inBriefing: true})
+    Entity -> Entity : namedNews per item (3 at once), mergeNews (100 kept, all counted)
+    Briefing -> MentionModel : watchedNews: FeedModel.searchArticles(the words,\nby their text, as whole words)
+else the names of the cards
+    Briefing -> CardNames : namesOfCards(stories, ids of their articles, media)
+    CardNames -> MentionModel : namesOfArticles(ids, 3)
+    CardNames -> CardNames : 4 at most: a quarter of its articles at least,\nwritten as a name, one writing per name,\nno agency nor the medium itself
+    CardNames -> MentionModel : want(ids of the names never looked for)
+    note right : looked for in Wikidata first: a name of a\ncard soon opens the page of its item
+end
+Briefing -> DB : the cards with their names, the news followed (watched)
+Client -> Briefing : GET /briefing: latest(profileId)
+Briefing -> Entity : followTerms(profileId, words)
+Briefing -> Briefing : withMarks: what it follows marked in the cards,\nfound on a card or only in its other angles
+Briefing --> Client : the briefing, a tab of the news followed
+@enduml

@@ -1,10 +1,11 @@
 @startuml 00-overview
 !include _style.iuml
-title Backend sprint 4 — the features and what links them
+title Backend — the features and what links them (16.10.2026)
 
 package "Accounts\n(01-accounts)" as Accounts {
     class loginService
     class signupService
+    class accountService
 }
 package "Saved searches\n(02-saved-searches)" as Saved {
     class customSearchService
@@ -15,6 +16,8 @@ package "Search\n(03-search)" as Search {
 package "Ingestion\n(04-ingestion)" as Ingestion {
     class ingestService
     class feedService
+    class taggingService
+    class directoryService
 }
 package "Sources\n(05-sources)" as Sources {
     class sourceService
@@ -26,30 +29,43 @@ package "Profile\n(06-profile)" as Profile {
 package "Discovery\n(07-discovery)" as Discovery {
     class discoveryService
 }
-package "Briefing\n(08-briefing)" as Briefing {
+package "Briefing\n(08-briefing, 08b-briefing-cards)" as Briefing {
     class briefingService
     class feedbackService
 }
+package "E-mail\n(09-email)" as Email {
+    class briefingMail
+    class mailer
+}
+package "Following\n(10-following)" as Following {
+    class entityService
+}
 
-signupService --> profileService : creates the profile\nwith the account
+signupService --> profileService : prepares and stores\nthe first profile
 profileService --> discoveryService : looks for sources\nfor the profile
-profileService --> feedbackService
-briefingService --> discoveryService : prunes the\nsources refused
-briefingService --> feedbackService
-briefingService --> ingestService
+profileService --> feedbackService : sources left out
 discoveryService --> sourceService
 discoveryService --> ingestService : reads the\nfeeds found
 discoveryService --> feedbackService
 recommendationService --> feedbackService
-recommendationService --> sourceService
-newsService --> ingestService : Google News searches\nof the profiles
+briefingService --> discoveryService : prunes the\nsources that bring nothing
+briefingService --> feedbackService : thumbs as examples
+briefingService --> ingestService : searches of\nthe interests
+briefingService --> entityService : news and names\nof what is followed
+briefingService --> briefingMail : sends the cards
+briefingMail --> mailer
+newsService --> ingestService : Google News asked\nthe sentence
 newsService --> feedService
 ingestService --> feedService
+ingestService --> directoryService : more media\nevery 20 minutes
+entityService ..> taggingService : reads the names it found\nand linked to Wikidata
 
 note as Legend
-    Every request goes router → controller → service → model → Prisma → PostgreSQL + pgvector.
-    Each package has its own diagram, with its modules, their methods and the outside services.
-    The shared cache (feeds, articles, stories, threads) is filled by the Ingestion in background
-    and read by the Search and the Briefing.
+    Every request goes router → controller → service → model → Prisma (or SQL) → PostgreSQL + pgvector.
+    Each package has its own class diagram (0x, 10) and most have a sequence diagram (2x).
+    The shared cache (feeds, articles, stories, threads, names) is filled in background by the Ingestion,
+    started with the server (server.js), and read by the Search, the Briefing and the Following.
+    The AI (Ollama: gemma4:31b, deepseek-v4-pro; Gemini as fallback) is only asked on what a reader asks for:
+    a profile, a search by meaning, a briefing. 30-database, 31-deployment and 32-a-to-z draw the rest.
 end note
 @enduml

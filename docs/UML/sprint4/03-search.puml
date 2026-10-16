@@ -4,20 +4,38 @@ title Search — words or a sentence, answered from the cache
 
 class EndUser
 package "Presentation" {
-    class newsRouter
+    class newsRouter {
+        + POST /news
+        + GET /news/categories
+        + POST /news/translations
+        + POST /news/summary
+    }
     class newsController {
         + getNews()
         + getCategories()
-        + getNewsContent()
+        + translateNews()
         + getNewsSummary()
     }
 }
+package "Who asks" as Who {
+    class jwt {
+        + authenticateToken()
+    }
+    class activeProfile {
+        + activeProfile()
+    }
+}
+note right of Who
+    The profile of the header X-Profile
+    when it is one of the user's,
+    else their first one
+end note
 package "Business" {
     class newsService {
         + getNews()
         + searchByMeaning()
+        + translateNews()
         + cachedArticles()
-        + getNewsContent()
         + summarizeStories()
     }
     class feedService <<other feature>> {
@@ -26,47 +44,54 @@ package "Business" {
     }
     class ingestService <<other feature>> {
         + searchesOfCategories()
+        + sentenceFeeds()
         + readNow()
     }
 }
 note left of newsService
-    Reads, in the language of the search:
-    the shared feeds, the own ones, those
-    of the other readers found for a
-    profile or shared, every Google News
-    search of the profiles and the feeds
-    of the directory. Never narrowed by
-    the profile of the reader. A sentence
-    with fewer than 5 answers is asked
-    to Google News too, then searched again.
+    Reads the news of every language and
+    shows the cards in the one chosen: the
+    shared feeds of the categories, the
+    sources of the profile, those of every
+    other reader (but an address that may
+    hold a key), the Google News searches
+    of the profiles and of the sentences
+    searched before, and the directory.
+    A link not in the cache is refused (400).
 end note
 package "Data" as Data {
-    class links {
-        + getCategoriesLinks()
-    }
     class feedModel {
-        + searchArticles()
-        + closestArticles()
-        + threadArticles()
-        + similarArticlePairs()
         + userFeedUrls()
         + publicFeedUrls()
+        + searchArticles()
+        + closestArticles()
+        + similarArticlePairs()
+        + closeCardPairs()
+        + threadArticles()
         + getArticlesByLinks()
+        + trustedMedia()
+        + saveResolvedLinks()
         + saveExtract()
         + saveTranslation()
-        + saveResolvedLinks()
-    }
-    class profileModel <<other feature>> {
-        + searchesOf()
     }
     class directoryModel <<other feature>> {
         + feedUrls()
     }
+    class profileModel <<other feature>> {
+        + idsOf()
+        + searchesOf()
+    }
 }
 package "Finding the news" as Finding {
+    class links {
+        + getAllLanguagesLinks()
+    }
     class filter {
+        + hasOperators()
         + parse()
-        + keywordsSql()
+        + canWiden()
+        + widen()
+        + matcher()
     }
     class embedder {
         + embed()
@@ -74,46 +99,67 @@ package "Finding the news" as Finding {
     class searchAi {
         + sortByMeaning()
     }
+    class googleNews {
+        + sentenceUrl()
+        + googleAvailable()
+        + decodeLinks()
+    }
 }
 note bottom of Finding
-    Words: keyword SQL on the cache.
-    A sentence: the closest news by
-    their vectors, sorted by the AI.
+    Words with an operator: SQL on the cache.
+    A sentence: the closest news by their
+    vectors, the AI says which ones answer.
+    Every sentence is asked to Google News;
+    under 5 answers it is searched again
+    with its news.
 end note
 package "Building the cards" as Cards {
     class grouping {
-        + unionFind()
         + averageLink()
+        + unionFind()
     }
-    class corroboration {
-        + corroborationOf()
+    class profileAi <<other feature>> {
+        + mergeStories()
     }
     class hedging {
         + hedgedBy()
     }
-    class readingOrder {
-        + readingOrder()
+    class language {
+        + languageOf()
+        + writtenIn()
     }
 }
 note bottom of Cards
-    Cards grouped by story, then by thread.
-    How many media and how many wordings,
-    never a verdict.
+    One card per story, the cards of one fact
+    joined by the AI (a sentence only), one
+    card per thread. How many media and
+    wordings, never a verdict.
 end note
-package "Reading an article" as Reading {
-    class extract {
-        + extractArticle()
-        + translationFor()
+package "Reading the cards chosen" as Reading {
+    class readingOrder {
+        + readingOrder()
+        + onceEach()
     }
     class crawlers {
         + Html()
     }
-    class googleNews {
-        + decodeLinks()
-        + sentenceUrl()
-        + googleAvailable()
+    class extract {
+        + extractArticle()
+        + translationFor()
+        + translateTexts()
+    }
+    class contested {
+        + contestedOf()
+    }
+    class corroboration {
+        + corroborationOf()
     }
 }
+note bottom of Reading
+    10 cards at most, 5 articles each, a
+    trusted medium first. The AI picks the
+    sentences, copied word for word, saved.
+end note
 class ollama {
     + ollamaJson()
 }
@@ -122,15 +168,23 @@ class "Embedder (bge-m3)" as Embedder <<external>>
 class "Google News" as GoogleNewsApi <<external>>
 class "PostgreSQL + pgvector" as PostgreSQL <<external>>
 
+jwt -[hidden]down- activeProfile
+links -[hidden]down- filter
 filter -[hidden]down- embedder
 embedder -[hidden]down- searchAi
-grouping -[hidden]down- corroboration
-corroboration -[hidden]down- hedging
-hedging -[hidden]down- readingOrder
-extract -[hidden]down- crawlers
-crawlers -[hidden]down- googleNews
+searchAi -[hidden]down- googleNews
+grouping -[hidden]down- profileAi
+profileAi -[hidden]down- hedging
+hedging -[hidden]down- language
+readingOrder -[hidden]down- crawlers
+crawlers -[hidden]down- extract
+extract -[hidden]down- contested
+contested -[hidden]down- corroboration
 
 EndUser --> newsRouter
+newsRouter --> jwt
+newsRouter --> activeProfile
+activeProfile --> profileModel
 newsRouter --> newsController
 newsController --> newsService
 newsController --> feedService
@@ -141,9 +195,11 @@ newsService --> Cards
 newsService --> Reading
 ingestService --> profileModel
 searchAi --> ollama
+profileAi --> ollama
 extract --> ollama
+contested --> ollama
 ollama --> Ollama
 embedder --> Embedder
 googleNews --> GoogleNewsApi
-feedModel --> PostgreSQL
+Data --> PostgreSQL
 @enduml

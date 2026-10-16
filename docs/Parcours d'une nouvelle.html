@@ -409,7 +409,7 @@ footer { font-size: 0.86rem; color: var(--mute); border-top: 1px solid var(--rul
     <article class="station">
       <div class="no">4</div>
       <div class="body">
-        <h3>Le classement pour le lecteur (<code>rank_stories</code>)</h3>
+        <h3>Le classement pour le lecteur (<code>rank_stories</code>, aujourd'hui <code>rank_profile_stories</code>)</h3>
         <p>Une seule requête SQL prend toutes les nouvelles de ses 765 flux sur 48 h, dans toutes les langues. Chaque nouvelle est notée contre chacun de ses intérêts : <b>poids × (dense + 0,5 × creux)</b>, sur le texte complet. Chaque intérêt a ses propres vecteurs, calculés une fois à partir de son texte. Une nouvelle garde son meilleur intérêt, une histoire sa meilleure nouvelle.</p>
         <div class="table-wrap"><table style="--lane: var(--reader); --lane-soft: var(--reader-soft)">
           <thead><tr><th>Intérêt d'Enzo</th><th>Dense</th><th>Creux</th><th>Note</th><th style="min-width: 160px">dense + 0,5 × creux</th></tr></thead>
@@ -561,6 +561,7 @@ SENTENCES:
   <p>Mesuré le 7 octobre 2026 à 15 h 29 (heure suisse) sur la base du serveur Ubuntu. Le briefing de 48 h d'Enzo a été écrit en entier avec le code du jour, sans rien enregistrer. Chaque appel à l'IA a été gardé avec son prompt et sa réponse (server/bench/news-journey.mjs). Les vecteurs, les proximités, le fil et les scores du regroupement viennent de la base (server/bench/news-journey-story.mjs). Pour le regroupement, les membres de chaque histoire ont été pris tels qu'ils étaient quand la nouvelle a reçu ses vecteurs. Les jetons ont été traduits en mots par le tokenizer de bge-m3.</p>
   <p>Le briefing n'a rien montré à Enzo et n'a rien changé à ses sources. Les pourcentages de qualité (96 %, 82 %) et les vitesses de l'embedder viennent des mesures précédentes du projet.</p>
   <p>Texte mis à jour le 12 octobre 2026 : le parcours n'a pas été rejoué, ce qui a changé depuis est signalé à sa place (réserve plus grande, versions dans les autres langues, lecture des pages, relecture par les refus, autres angles et termes suivis, embedders ensemble). « Parcours NewsGenerator » décrit le reste du fonctionnement d'aujourd'hui.</p>
+  <p>Depuis, au 16 octobre 2026 : le classement se fait par profil et lit aussi les intérêts de ses projets (<code>rank_profile_stories</code>) ; une carte envoyée par e-mail est écartée 48 heures ; chaque carte a aussi ses points et son résumé faits des phrases publiées, une version de l'IA sur demande (deepseek-v4-pro), une analyse, une source officielle et ses noms ; les noms de chaque nouvelle sont relevés par un étiqueteur. Le parcours ci-dessus n'a pas été rejoué avec ces changements.</p>
 </footer>
 
 </div>
