@@ -11,11 +11,20 @@ import {prisma} from '../config/db.js';
 import {Filter} from '../services/utils/filter.js';
 import {mediumOf} from '../services/utils/public-url.js';
 import {looksPrivate} from '../services/utils/feed-limits.js';
+import {keptResult} from '../services/utils/kept-result.js';
 
 const INSERT_SLICE = 1000;      // rows per INSERT, 7 values each: far under the 65535 of Postgres
 // A feed is shown as not working once it failed this many times in a row: once is often the site
 // slow while every feed is read at once (tennisuptodate.com timed out after a long stop of the server)
 const FAILURES_SHOWN = 3;
+// The news each feed saved in the last 24 hours, of every feed: one reading of the news of the day (148 k
+// of them, 0.9 s on 16.10.2026, the same for one profile: they are all read before the feed is known),
+// kept for every reader and read again every 15 minutes. Map url -> news
+const newsOfDay = keptResult(async () => new Map((await prisma.$queryRawUnsafe(`
+    SELECT f.url, count(*)::int AS news
+    FROM feeds f JOIN articles a ON a.id_feed = f.id
+    WHERE a.created_at > now() - interval '24 hours'
+    GROUP BY f.url`)).map(row => [row.url, row.news])), {minutes: 15});
 
 export const FeedModel = {
     // make sure every url has a row in feeds, then return these rows
@@ -288,11 +297,7 @@ export const FeedModel = {
             last_error: feed.failures >= FAILURES_SHOWN ? feed.last_error : null,
         }]));
         // the news each one saved in the last 24 hours: a flood is shown to its reader (see FLOOD_NEWS_PER_DAY)
-        const saved = new Map((await prisma.$queryRawUnsafe(`
-            SELECT f.url, count(*)::int AS news
-            FROM feeds f JOIN articles a ON a.id_feed = f.id
-            WHERE f.url = ANY($1::text[]) AND a.created_at > now() - interval '24 hours'
-            GROUP BY f.url`, userFeeds.map(feed => feed.url))).map(row => [row.url, row.news]));
+        const saved = await newsOfDay('all', 0);
 
         return userFeeds.map(feed => ({ ...feed, ...status.get(feed.url), news_per_day: saved.get(feed.url) ?? 0 }));
     },

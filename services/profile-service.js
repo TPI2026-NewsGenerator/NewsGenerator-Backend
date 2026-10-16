@@ -23,6 +23,7 @@ import {readerLanguage} from "./utils/language.js";
 import {forClient, sourceKey} from "./utils/public-url.js";
 import {cleanWatchTerms, MAX_WATCH_TERMS} from "./utils/watch-terms.js";
 import {isAdmin} from "./utils/admin.js";
+import {keptResult} from "./utils/kept-result.js";
 
 const MIN_TEXT = 20;            // "rugby" says too little to split into interests
 const MAX_TEXT = 3000;
@@ -33,6 +34,19 @@ const MAX_NAME = 40;
 // The projects of a profile (db/add_projects.sql): read with it until their last day, a year at most
 export const MAX_PROJECTS = 5;
 const MAX_PROJECT_DAYS = 366;
+
+// The news of the last RELEVANCE_DAYS of each source found for the profile, and how many are on its
+// interests: 26 k news against 24 interests, 0.8 s of the 0.9 s of the profile page (16.10.2026). Kept
+// and read again every 15 minutes; read at once when the sources found or the interests changed.
+// The discovery prunes on the ones of the moment (see DiscoveryService)
+const keptRelevance = keptResult((profileId) => ProfileModel.profileFeedRelevance(profileId, {
+    since: new Date(Date.now() - RELEVANCE_DAYS * 24 * 3600e3),
+    threshold: JUDGE_THRESHOLD,
+}), {minutes: 15});
+const relevanceOf = (profileId, interests, feeds) => keptRelevance(profileId, JSON.stringify([
+    interests.map(({id, text}) => [id, text]),
+    feeds.filter(feed => feed.origin === 'profile').map(feed => feed.id).sort((a, b) => a - b),
+]), profileId);
 
 const badRequest = (message) => Object.assign(new Error(message), {status: 400});
 const notFound = (message) => Object.assign(new Error(message), {status: 404});
@@ -142,16 +156,15 @@ export const ProfileService = {
                 limits: {profileFeeds: MAX_PROFILE_FEEDS, relevanceDays: RELEVANCE_DAYS, profiles: MAX_PROFILES, watchTerms: MAX_WATCH_TERMS, projects: MAX_PROJECTS},
                 languages: FeedService.languages(), googleSearches: 0, refusedSources: [], removedSources: [], projects: []};
         }
+        const interestsRead = ProfileModel.interests(profileId);
+        const feedsRead = FeedModel.listUserFeeds(profileId);
         const [profile, profiles, interests, feeds, refusedSources, relevance, searches, removed, projects, projectInterests] = await Promise.all([
             ownProfile(userId, profileId),
             ProfileService.list(userId),
-            ProfileModel.interests(profileId),
-            FeedModel.listUserFeeds(profileId),
+            interestsRead,
+            feedsRead,
             FeedbackService.refusedSources(profileId),
-            ProfileModel.profileFeedRelevance(profileId, {
-                since: new Date(Date.now() - RELEVANCE_DAYS * 24 * 3600e3),
-                threshold: JUDGE_THRESHOLD,
-            }),
+            Promise.all([interestsRead, feedsRead]).then(([interests, feeds]) => relevanceOf(profileId, interests, feeds)),
             searchesOfUser(profileId),
             ProfileModel.removedSources(profileId),
             ProfileModel.projects(profileId),
