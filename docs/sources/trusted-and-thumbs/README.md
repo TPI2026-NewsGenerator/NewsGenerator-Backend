@@ -40,7 +40,9 @@ nor recommended again, until the reader brings it back.
   otherwise); its url is appended to `user_profiles.kept_sources`. It is never left out again, nor pruned.
 - **Removed** (`removeSource`): `REMOVE_PROFILE_FEED` deletes the `user_feeds` row of this profile
   (`origin 'profile'` only) and appends `{url, site, category, language}` to `user_profiles.removed_sources`
-  in one statement (0 rows: 404). The discovery treats its medium as known, the recommendations exclude it.
+  in one statement (0 rows: 404). The discovery treats its medium as known, the recommendations exclude it,
+  and the briefing of this profile no longer reads it, even when another reader has it (`feedsOf`,
+  since 17.10.2026).
   A source added by hand is deleted with `DELETE /feeds/:id` and not remembered.
 - **Restored** (`restoreSource`): the removed source whose key matches (404 otherwise);
   `RESTORE_PROFILE_FEED` takes it out of `removed_sources` and inserts it back as a `profile` feed

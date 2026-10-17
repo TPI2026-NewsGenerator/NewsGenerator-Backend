@@ -138,9 +138,9 @@ code { font-family: var(--mono); font-size: 0.86em; }
     <span>Mesuré le <b>7 octobre 2026</b> sur le serveur Ubuntu</span>
     <span>Lecteur d'exemple : <b>Enzo</b> (arbitrage, UEFA, lit en français)</span>
     <span>Script : <b>server/bench/funnel-now.mjs</b></span>
-    <span>Texte mis à jour le <b>16 octobre 2026</b></span>
+    <span>Texte mis à jour le <b>17 octobre 2026</b></span>
   </div>
-  <p class="note">Le fonctionnement décrit est celui du 16 octobre 2026. Les chiffres viennent de la mesure du 7 octobre vers 1 h 30, sauf quand une autre date est donnée. « Parcours d'une nouvelle » suit, lui, une nouvelle dans un briefing complet d'Enzo écrit le 17 octobre, analyse comprise : ses nombres sont de ce jour-là (107 545 nouvelles dans ses sources, 47 candidates, 10 cartes), c'est un autre moment et un autre briefing.</p>
+  <p class="note">Le fonctionnement décrit est celui du 17 octobre 2026. Les chiffres viennent de la mesure du 7 octobre vers 1 h 30, sauf quand une autre date est donnée. « Parcours d'une nouvelle » suit, lui, une nouvelle dans un briefing complet d'Enzo écrit le 17 octobre, analyse comprise : ses nombres sont de ce jour-là (107 545 nouvelles dans ses sources, 47 candidates, 10 cartes), c'est un autre moment et un autre briefing.</p>
 </header>
 
 <section>
@@ -303,7 +303,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
           <li>Nom ou e-mail déjà pris : refus immédiat (409), sans appeler l'IA. L'unicité ignore les majuscules.</li>
           <li>Le compte n'est créé qu'une fois le profil compris (étape A2). Si l'IA ou les vecteurs échouent, aucun compte ne reste.</li>
           <li>Au plus 5 inscriptions par heure et 10 connexions par quart d'heure par adresse IP.</li>
-          <li>Connexion : mot de passe vérifié par bcrypt, session dans un cookie que la page ne peut pas lire (HttpOnly), valable 7 jours et renouvelée chaque jour d'usage.</li>
+          <li>Connexion : le nom quelle que soit sa casse, le mot de passe vérifié par bcrypt ; un nom inconnu et un mauvais mot de passe reçoivent la même réponse, dans le même temps (17 octobre). Session dans un cookie que la page ne peut pas lire (HttpOnly), valable 7 jours et renouvelée chaque jour d'usage.</li>
           <li>Compte : nom d'utilisateur, e-mail et mot de passe changés depuis la page Settings ou la section « Your account » du profil, chacun avec le mot de passe actuel ; un nouveau mot de passe ferme les sessions des autres appareils.</li>
           <li>Plusieurs profils (« Travail », « Loisirs ») pour les administrateurs, 15 au plus : chacun a ses intérêts, ses projets, ses sources, ses votes, ce qu'il suit et ses briefings. La page envoie le profil choisi avec chaque demande (en-tête <code>X-Profile</code>).</li>
           <li>Projets (13 octobre) : ce que le lecteur prépare pour un temps (un voyage, un achat, un rapport), 5 au plus par profil, écrits avec les questions de l'IA comme un profil, avec un dernier jour dans l'année ou aucun. Leurs intérêts entrent dans le classement du briefing jusqu'à ce jour ; aucune source n'est cherchée pour eux.</li>
@@ -358,7 +358,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
           <li>Deux temps : les flux trouvés par Google News sont ajoutés et lus aussitôt, puis vient la presse de Media Cloud. La page du profil dit quel temps tourne, et qu'il est inutile d'attendre sur la page.</li>
           <li>Media Cloud répond à 2 recherches par minute : toutes sont posées dès le départ et gardées un jour ; une seule par langue hors celle du lecteur et l'anglais (file de 27 à 13 min sur 5 profils).</li>
           <li>Une découverte arrêtée par un redémarrage reprend d'elle-même.</li>
-          <li>Au plus 20 flux par découverte, 60 au total. Un flux qui n'apporte plus rien sur le profil en 14 jours est retiré ; le lecteur peut aussi en retirer un lui-même (il n'est alors plus jamais retrouvé) et le ramener.</li>
+          <li>Au plus 20 flux par découverte, 60 au total. Un flux qui n'apporte plus rien sur le profil en 14 jours est retiré ; le lecteur peut aussi en retirer un lui-même (il n'est alors plus jamais retrouvé, ni lu pour ses briefings même si un autre lecteur l'a) et le ramener.</li>
           <li>Le lecteur ajoute aussi ses propres sources, 800 au plus : un site, une recherche dans l'annuaire et sur le web, un fichier (OPML, CSV, Excel), ou une source que d'autres lecteurs lisent sur ses intérêts, confirmée par l'IA.</li>
           <li>Les sources de chaque lecteur sont lues pour tous les briefings et toutes les recherches (depuis le 8 octobre). Seules restent à part les adresses qui portent une clé et celles de notre RSS-Bridge.</li>
         </ul>
@@ -656,7 +656,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <ul>
           <li>Au plus 5 passages, 170 mots ; traduction automatique marquée comme telle, chiffres contrôlés.</li>
           <li>Deux façons plus courtes de lire la carte, faites des mêmes phrases publiées (12 octobre) : 3 points, les phrases les plus importantes d'abord, et un résumé de 65 mots. Le lecteur choisit l'une des trois sur la page et pour l'e-mail.</li>
-          <li>Version de l'IA (15 octobre) : sur demande (« Show AI version »), les points et le résumé écrits par deepseek-v4-pro, marqués comme tels, retirés s'ils contiennent un chiffre absent de l'article. Mesuré sur 30 articles, 2 passes : 1 à 2 articles avec une erreur de sens (gemma4:31b 2 à 3, les phrases publiées 0) ; d'où une version à demander, à côté des phrases du journaliste.</li>
+          <li>Version de l'IA (15 octobre) : sur demande (« Show AI version »), les points et le résumé écrits par deepseek-v4-pro, pour les cartes gardées seulement, à l'étape « angles » (C7, depuis le 17 octobre), marqués comme tels, retirés s'ils contiennent un chiffre absent de l'article. Mesuré sur 30 articles, 2 passes : 1 à 2 articles avec une erreur de sens (gemma4:31b 2 à 3, les phrases publiées 0) ; d'où une version à demander, à côté des phrases du journaliste.</li>
           <li>Un titre coupé par le flux est repris en entier de la page (14 octobre).</li>
           <li>Pourquoi : les résumés réécrits changeaient le sens dans 4 cas sur 30.</li>
           <li>Corroboration : chaque média compte, mais deux textes qui partagent la moitié de leurs suites de 8 mots sont une même dépêche d'agence.</li>
@@ -699,7 +699,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
       <div class="no">C7</div>
       <div class="body">
         <h3>Autres angles, source officielle, ce que le profil suit</h3>
-        <p>Les cartes prêtes, quatre recherches partent ensemble (étape « angles ») : les autres angles de chaque carte, sa source officielle, les nouvelles de ce que le profil suit (D3) et les noms de chaque carte.</p>
+        <p>Les cartes prêtes, cinq recherches partent ensemble (étape « angles ») : la version de l'IA des cartes gardées (C5), les autres angles de chaque carte, sa source officielle, les nouvelles de ce que le profil suit (D3) et les noms de chaque carte.</p>
         <ul>
           <li>Angles : les histoires de toutes les langues des 3 derniers jours proches de la carte (0,6 et plus), 8 au plus par carte, jugées par l'IA sur leurs titres, avec jusqu'à 5 autres titres de la carte : « le même fait », « un autre angle », « le même thème » ou « autre chose ». S'y ajoutent les histoires des 30 derniers jours qui nomment les noms rares de la carte (13 octobre, B6). 5 angles au plus par carte, un par fait, jamais la nouvelle de la carte racontée une seconde fois.</li>
           <li>Le même fait avec un détail de plus n'est pas un autre angle : sans cette règle, une candidature racontée dans 16 langues revenait en angles d'elle-même.</li>
@@ -728,7 +728,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <ul>
           <li>deepseek-v4-pro sans raisonnement choisit les cartes ; puis, avec raisonnement, 3 cartes à la fois, il écrit pour chacune pourquoi elle compte (2 lignes), ce qui pourrait suivre, « si ceci, alors cela » (2 lignes), et l'histoire jusqu'ici, tirée des histoires plus anciennes de son affaire (12 au plus).</li>
           <li>Chaque ligne cite les sources de la carte seulement ; le code retire une ligne dont un chiffre ou un nom n'est pas dans ses sources (les noms lus par l'étiqueteur, B6).</li>
-          <li>Pas de limite de cartes ; une analyse encore en cours après 12 minutes est montrée en échec. Elle ne passe jamais à Gemini : un échec, c'est seulement pas d'analyse.</li>
+          <li>Pas de limite de cartes ; chaque carte finie note son heure, et une analyse n'est montrée en échec qu'après 12 minutes sans carte finie (17 octobre : avant, 12 minutes après son début, alors qu'une longue tournait encore). Elle ne passe jamais à Gemini : un échec, c'est seulement pas d'analyse.</li>
         </ul>
         <div class="chips"><span class="chip">card-analysis.js</span><span class="chip">deepseek-v4-pro</span><span class="chip">briefings.analysis</span></div>
       </div>
@@ -879,7 +879,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
   <p>Chiffres mesurés le 7 octobre 2026 vers 1 h 30 (heure suisse) sur la base du serveur, le PC de jeu éteint : l'embedder tournait sur le processeur de l'Ubuntu, très chargé (charge moyenne de 10 à 15 pour 6 cœurs). Ingestion : 24 dernières heures de la base ; lectures de flux et durée des passes tirées des 76 passes des 3 dernières heures du journal. Briefing : rejoué avec le code du 7 octobre sur le compte d'Enzo jusqu'à la vérification et la fusion, sans rien enregistrer (sans le retrait des sources inutiles ni les versions dans sa langue) ; lecture, passages, réserve et durée totale tirés de 2 briefings de 48 h écrits en entier le 6 octobre sans être enregistrés (server/bench/briefing-relevance.mjs) ; durées sur 24 h tirées de ses vrais briefings du 4 au 6 octobre. Découverte : server/bench/discovery-phases.mjs, à blanc, le 6 octobre. Les chiffres marqués d'une date plus ancienne n'ont pas été mesurés à nouveau. Les pourcentages de qualité (88 %, 95 %, 96 %, 85 %) viennent des mesures précédentes du projet, jugées à la main.</p>
   <p>Le classement des histoires (C1) et la recherche (D2) étaient 3 à 6 fois plus lents que le 3 octobre : la base a doublé en 4 jours, surtout par l'annuaire qui s'agrandit seul (938 → 1 382 flux), et le processeur était occupé par l'embedder.</p>
   <p>Le 3 octobre, environ 90 histoires mélangées avant la règle des affiches ont été découpées après coup (plus de 400 nouvelles déplacées, sauvegardes dans server/bench/data/matchups).</p>
-  <p>Texte mis à jour le 16 octobre 2026 : briefings de 1 à 7 jours, projets, cartes envoyées écartées 48 h, points et résumé, version de l'IA, analyse des cartes, source officielle, noms relevés dans chaque nouvelle et noms des cartes, une seule liste de ce que le profil suit, e-mail aux formats choisis, 6 appels à Ollama au plus. Mis à jour le 12 octobre 2026 avec ce qui a changé depuis la mesure : création de compte par les questions de l'IA et fermée par défaut, mot de passe du site retiré, plusieurs profils, compte modifiable depuis le profil, part de chaque intérêt, briefings de 10, 20 ou 30 cartes, réserve plus grande, versions dans les autres langues, lecture des pages sans Crawlee d'abord, relecture par les refus, autres angles, termes suivis et page Following, envoi par e-mail, sources de chaque lecteur lues pour tous, archives sautées, embedders ensemble et tri de l'annuaire. Ces changements n'ont pas été remesurés en entier : leurs chiffres portent leur date.</p>
+  <p>Mis à jour le 17 octobre 2026 : la version de l'IA des seules cartes gardées, une analyse en échec seulement sans carte finie depuis 12 minutes, une source retirée plus lue pour son profil, la connexion quelle que soit la casse du nom. Texte mis à jour le 16 octobre 2026 : briefings de 1 à 7 jours, projets, cartes envoyées écartées 48 h, points et résumé, version de l'IA, analyse des cartes, source officielle, noms relevés dans chaque nouvelle et noms des cartes, une seule liste de ce que le profil suit, e-mail aux formats choisis, 6 appels à Ollama au plus. Mis à jour le 12 octobre 2026 avec ce qui a changé depuis la mesure : création de compte par les questions de l'IA et fermée par défaut, mot de passe du site retiré, plusieurs profils, compte modifiable depuis le profil, part de chaque intérêt, briefings de 10, 20 ou 30 cartes, réserve plus grande, versions dans les autres langues, lecture des pages sans Crawlee d'abord, relecture par les refus, autres angles, termes suivis et page Following, envoi par e-mail, sources de chaque lecteur lues pour tous, archives sautées, embedders ensemble et tri de l'annuaire. Ces changements n'ont pas été remesurés en entier : leurs chiffres portent leur date.</p>
 </footer>
 
 </div>

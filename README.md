@@ -1160,17 +1160,17 @@ as the page shows them while it runs (`briefings.step`):
    language of the reader (the card is then summarized from it, with no translation), then one per
    medium. The real address of a news of Google News is asked only for the stories no feed lets read,
    and for the article in the language of the reader read first (2 per story, 10 per briefing).
-5. **Summarizing**, 5 stories at once. For each, three calls together: the **key passages** of the
+5. **Summarizing**, 5 stories at once. For each, two calls together: the **key passages** of the
    first article read in full, with the shorter ways to read the card made of the same published
    sentences, 3 **points** and a **summary** of 65 words, translated for a reader of another language
-   (see **Key passages** above); a **denial** among its articles (`contested.js`); and the **AI version**
-   of its points and summary (see below). Then a title the feed cut is taken back whole from its page,
+   (see **Key passages** above); and a **denial** among its articles (`contested.js`). Then a title the feed cut is taken back whole from its page,
    who wrote the story apart from the others is measured (see **Corroboration**), and the cards are read
    once more with their passages, which say what a title may not: the ones on what the reader refuses
    are left out (`reviewCards`). Meanwhile the titles written in another language than the reader's are
    translated, as their passages. A card that can't be read takes the next story of the reserve, two
    rounds at most (`readable-cards.js`).
-6. **Angles**, four parts together, none of which can fail the briefing: the **other angles** of each
+6. **Angles**, for the cards kept, five parts together, none of which can fail the briefing: the **AI
+   version** of their points and summary (see below); the **other angles** of each
    card, 5 at most (`other-angles.js`: the closest stories of the window and the stories of 30 days naming
    its rare names, judged by the AI, one per fact, never the lead's news told again); its **official
    source** (`official-sources.js`, below); the news of what the profile follows (see **What a profile

@@ -126,8 +126,9 @@ partition "E · The briefing (22-briefing-sequence, 08-briefing, 08b-briefing-ca
     |AI (Ollama)|
     :**summarizing**: the numbers of the sentences
     to show (passages, points, summary), a denial,
-    the AI version (deepseek-v4-pro), the review;
-    :**angles**: other angles, official source,
+    the review;
+    :**angles**, for the cards kept: the AI version
+    (deepseek-v4-pro), other angles, official source,
     news of what the profile follows, names;
     |Server (API)|
     :Cards ready: the client shows them;
