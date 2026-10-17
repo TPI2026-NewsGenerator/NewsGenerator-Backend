@@ -135,12 +135,12 @@ code { font-family: var(--mono); font-size: 0.86em; }
   <h1>De la création du compte à la lecture d'une nouvelle</h1>
   <p class="lede">Deux chaînes tournent en parallèle. Le serveur lit, comprend et regroupe toutes les nouvelles en continu, sans attendre personne. Le lecteur, lui, s'inscrit une fois, puis demande un briefing : l'application cherche alors dans ce qui est déjà prêt, et l'IA n'intervient que sur les quelques nouvelles qui seront montrées.</p>
   <div class="meta">
-    <span>Mesuré le <b>7 octobre 2026</b> sur le serveur Ubuntu</span>
-    <span>Lecteur d'exemple : <b>Enzo</b> (arbitrage, UEFA, lit en français)</span>
-    <span>Script : <b>server/bench/funnel-now.mjs</b></span>
+    <span>Mesuré le <b>17 octobre 2026</b> sur le serveur Ubuntu</span>
+    <span>Lecteur d'exemple : <b>Enzo</b> (arbitrage, UEFA, lit en anglais)</span>
+    <span>Scripts : <b>server/bench/funnel-now.mjs</b>, <b>news-journey.mjs</b></span>
     <span>Texte mis à jour le <b>17 octobre 2026</b></span>
   </div>
-  <p class="note">Le fonctionnement décrit est celui du 17 octobre 2026. Les chiffres viennent de la mesure du 7 octobre vers 1 h 30, sauf quand une autre date est donnée. « Parcours d'une nouvelle » suit, lui, une nouvelle dans un briefing complet d'Enzo écrit le 17 octobre, analyse comprise : ses nombres sont de ce jour-là (107 545 nouvelles dans ses sources, 47 candidates, 10 cartes), c'est un autre moment et un autre briefing.</p>
+  <p class="note">Le fonctionnement décrit est celui du 17 octobre 2026. Les chiffres viennent de la mesure du 17 octobre entre 15 h 15 et 15 h 50, sauf quand une autre date est donnée. Les étapes du briefing après la vérification (lecture, passages, angles, analyse, durées, jetons) viennent du briefing complet d'Enzo écrit à 15 h 21, celui que suit « Parcours d'une nouvelle » : 107 545 nouvelles dans ses sources à ce moment, contre 106 673 une demi-heure plus tard pour l'entonnoir rejoué.</p>
 </header>
 
 <section>
@@ -275,7 +275,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
     <p>Échelle logarithmique : chaque graduation multiplie par dix. Une barre deux fois plus courte veut dire beaucoup moins que la moitié. En rouge, ce qui a été retiré et pourquoi.</p>
   </div>
   <div class="funnel" id="funnel"></div>
-  <p class="note">Les trois groupes ne se suivent pas un à un : le serveur traite tout ce qui arrive, le briefing ne regarde que la période choisie (ici 48 heures) dans les sources du lecteur, toutes langues comprises, la recherche les 7 derniers jours de toutes les sources. Les étapes du briefing jusqu'à la vérification ont été rejouées avec le code du 7 octobre sans rien enregistrer ; la dernière ligne vient de 2 briefings de 48 heures d'Enzo écrits en entier le 6 octobre, sans être enregistrés (10 cartes sur 10 avec passages, une carte illisible remplacée par la réserve dans chacun). Depuis le 8 octobre, l'IA choisit jusqu'à 20 histoires pour 10 cartes (15 le 7 octobre) : la réserve est plus grande.</p>
+  <p class="note">Les trois groupes ne se suivent pas un à un : le serveur traite tout ce qui arrive, le briefing ne regarde que la période choisie (ici 48 heures) dans les sources du lecteur, toutes langues comprises, la recherche les 7 derniers jours de toutes les sources. Les étapes du briefing jusqu'à la vérification ont été rejouées avec le code du 17 octobre à 15 h 49, sans rien enregistrer ; la dernière ligne vient du briefing de 48 heures d'Enzo écrit en entier à 15 h 21 (13 histoires choisies, 10 cartes sur 10 avec passages, une carte illisible remplacée par la réserve).</p>
 </section>
 
 <section>
@@ -314,7 +314,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <p class="label">Chiffres</p>
         <dl>
           <div><dt>Compte + intérêts prêts</dt><dd>≈ 5 s</dd></div>
-          <div><dt>Profil d'Enzo</dt><dd>1 084 caractères<small>lit en français</small></dd></div>
+          <div><dt>Profil d'Enzo</dt><dd>1 085 caractères<small>lit en anglais</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -338,9 +338,9 @@ code { font-family: var(--mono); font-size: 0.86em; }
       <aside class="figures">
         <p class="label">Chiffres</p>
         <dl>
-          <div><dt>Enzo</dt><dd>3 intérêts<small>gouvernance et institutions du football ; arbitrage et réglementation ; économie de l'arbitrage</small></dd></div>
+          <div><dt>Enzo</dt><dd>2 intérêts<small>gouvernance du football (l'UEFA et ses 55 associations, la FIFA) ; arbitrage</small></dd></div>
           <div><dt>Refus</dt><dd>3</dd></div>
-          <div><dt>Recherches Google News</dt><dd>24<small>langues choisies par l'IA pour chaque intérêt</small></dd></div>
+          <div><dt>Recherches Google News</dt><dd>16<small>langues choisies par l'IA pour chaque intérêt</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -369,8 +369,8 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <dl>
           <div><dt>Premières sources (Google News)</dt><dd>7 à 18 min<small>sur processeur, profils pris comme à l'inscription (6 octobre) ; ≈ 2 min avec la carte graphique (25 septembre)</small></dd></div>
           <div><dt>Fin, avec la presse</dt><dd>14 à 43 min<small>avant : aucune source avant la fin</small></dd></div>
-          <div><dt>Flux trouvés pour Enzo</dt><dd>36<small>+ 325 ajoutés à la main</small></dd></div>
-          <div><dt>Sources lues pour lui</dt><dd>765 flux<small>386 partagés (toutes langues) + les siens + 24 recherches</small></dd></div>
+          <div><dt>Flux trouvés pour Enzo</dt><dd>46<small>+ 600 ajoutés à la main</small></dd></div>
+          <div><dt>Sources lues pour lui</dt><dd>1 150 flux<small>386 partagés (toutes langues) + les 759 de tous les lecteurs, les siens compris + 16 recherches, moins les doublons</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -380,7 +380,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
     <div class="part-head">
       <p class="kicker">B · Le travail de fond</p>
       <h2>Lire, comprendre et regrouper, toutes les minutes</h2>
-      <p>Une passe démarre une minute après le début de la précédente, ou dès sa fin si elle a duré plus, protégée par un verrou PostgreSQL pour qu'elles ne se chevauchent jamais. Dans la nuit du 7 octobre, embedder sur processeur : 140 s en moyenne sur 76 passes (3 h), 224 nouvelles encodées et regroupées par passe, environ 5 700 par heure.</p>
+      <p>Une passe démarre une minute après le début de la précédente, ou dès sa fin si elle a duré plus, protégée par un verrou PostgreSQL pour qu'elles ne se chevauchent jamais. Le 17 octobre après-midi, embedder sur processeur : 145 s en moyenne sur 14 passes (35 min, de 106 à 245 s), 207 nouvelles encodées et regroupées par passe, environ 5 100 par heure.</p>
     </div>
 
     <article class="station">
@@ -405,9 +405,9 @@ code { font-family: var(--mono); font-size: 0.86em; }
       <aside class="figures">
         <p class="label">Chiffres</p>
         <dl>
-          <div><dt>Flux suivis</dt><dd>2 488<small>1 981 ont publié dans les 24 h</small></dd></div>
-          <div><dt>Lectures sur 76 passes (3 h)</dt><dd>41 352<small>10 580 « rien de neuf » (26 %), 163 en échec (0,4 %)</small></dd></div>
-          <div><dt>Nouvelles enregistrées en 24 h</dt><dd>136 023<small>36 langues, 2 406 médias ; en 60 790, fr 18 192, es 13 932, de 12 371</small></dd></div>
+          <div><dt>Flux suivis</dt><dd>4 391<small>3 089 ont publié dans les 24 h (2 488 et 1 981 le 7 octobre)</small></dd></div>
+          <div><dt>Lectures sur 14 passes (35 min)</dt><dd>9 923<small>2 552 « rien de neuf » (26 %), 20 en échec (0,2 %)</small></dd></div>
+          <div><dt>Nouvelles enregistrées en 24 h</dt><dd>118 598<small>39 langues, 3 515 médias ; en 45 347, es 17 419, fr 13 392, it 8 835 (136 023 le 7 octobre, avant le tri de l'annuaire)</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -431,9 +431,9 @@ code { font-family: var(--mono); font-size: 0.86em; }
       <aside class="figures">
         <p class="label">Chiffres</p>
         <dl>
-          <div><dt>Vecteurs donnés en 24 h</dt><dd>126 122<small>93 % des nouvelles enregistrées ; 8 555 en attente dans la fenêtre de 48 h</small></dd></div>
-          <div><dt>Délai médian lecture → vecteur</dt><dd>87 s<small>sur processeur ; 44 s le 3 octobre</small></dd></div>
-          <div><dt>Vitesse</dt><dd>55 textes/s<small>sur la RTX ; ≈ 4 sur le processeur du serveur (16 textes en 2 à 6 s)</small></dd></div>
+          <div><dt>Vecteurs donnés en 24 h</dt><dd>115 681<small>98 % des nouvelles enregistrées ; 5 529 en attente sur les 257 818 de la fenêtre de 48 h</small></dd></div>
+          <div><dt>Délai médian lecture → vecteur</dt><dd>113 s<small>sur processeur, PC de jeu éteint ; 87 s le 7 octobre, 44 s le 3 octobre</small></dd></div>
+          <div><dt>Vitesse</dt><dd>55 textes/s<small>sur la RTX ; ≈ 4 sur le processeur du serveur (16 textes en 2 à 6 s), mesuré avant le 7 octobre</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -458,10 +458,11 @@ code { font-family: var(--mono); font-size: 0.86em; }
       <aside class="figures">
         <p class="label">Chiffres (24 h)</p>
         <dl>
-          <div><dt>Nouvelles placées</dt><dd>125 542<small>2 198 publiées il y a plus de 48 h, sans histoire</small></dd></div>
-          <div><dt>Histoires</dt><dd>71 214<small>1,8 nouvelle par histoire en moyenne</small></dd></div>
-          <div><dt>Racontées par 2 médias ou plus</dt><dd>13 382<small>52 096 histoires d'une seule nouvelle</small></dd></div>
-          <div><dt>Durée par lot de 100</dt><dd>2,5 à 4 s<small>7 à 20 s avant la présélection (5 octobre)</small></dd></div>
+          <div><dt>Nouvelles placées</dt><dd>115 544<small>1 732 publiées il y a plus de 48 h, sans histoire</small></dd></div>
+          <div><dt>Histoires</dt><dd>63 985<small>1,8 nouvelle par histoire en moyenne</small></dd></div>
+          <div><dt>Racontées par 2 médias ou plus</dt><dd>11 230<small>45 851 histoires d'une seule nouvelle</small></dd></div>
+          <div><dt>Par passe</dt><dd>207 placées<small>86 histoires créées, 26 réunies à une autre (14 passes du 17 octobre)</small></dd></div>
+          <div><dt>Durée par lot de 100</dt><dd>2,5 à 4 s<small>7 octobre ; 7 à 20 s avant la présélection (5 octobre)</small></dd></div>
           <div><dt>Choix mesuré</dt><dd>96 % de bonnes cartes<small>contre 82 % avec les mots seuls</small></dd></div>
           <div><dt>Règle des affiches</dt><dd>19 décisions sur 1 075<small>changées sur 36 h de nouvelles anglaises : 12 à raison, 2 neutres, 5 un match coupé en deux (alias)</small></dd></div>
         </dl>
@@ -485,8 +486,8 @@ code { font-family: var(--mono); font-size: 0.86em; }
       <aside class="figures">
         <p class="label">Chiffres</p>
         <dl>
-          <div><dt>Fils des histoires du jour</dt><dd>63 226</dd></div>
-          <div><dt>Durée par appel</dt><dd>7 à 12 s<small>30 à 88 s avant les présélections (3 et 5 octobre)</small></dd></div>
+          <div><dt>Fils des histoires du jour</dt><dd>58 493<small>184 histoires rangées par passe (17 octobre)</small></dd></div>
+          <div><dt>Durée par appel</dt><dd>7 à 12 s<small>7 octobre ; 30 à 88 s avant les présélections (3 et 5 octobre)</small></dd></div>
           <div><dt>Mesuré à la main</dt><dd>93 %<small>des faits rangés dans un seul fil</small></dd></div>
         </dl>
       </aside>
@@ -507,8 +508,8 @@ code { font-family: var(--mono); font-size: 0.86em; }
       <aside class="figures">
         <p class="label">Chiffres</p>
         <dl>
-          <div><dt>Gardé en base</dt><dd>691 147 nouvelles<small>331 832 histoires, 269 165 fils</small></dd></div>
-          <div><dt>Annuaire</dt><dd>1 382 flux<small>938 le 3 octobre : c'est lui qui fait grandir le volume ; 1 623 le 10 octobre, après le tri</small></dd></div>
+          <div><dt>Gardé en base</dt><dd>2 099 425 nouvelles<small>971 883 histoires, 773 076 fils ; 691 147 nouvelles le 7 octobre</small></dd></div>
+          <div><dt>Annuaire</dt><dd>2 369 flux<small>938 le 3 octobre, 1 382 le 7, 1 623 le 10 après le tri : c'est lui qui fait grandir le volume</small></dd></div>
           <div><dt>Premier tri, 9 octobre</dt><dd>187 flux retirés<small>environ 40 % du volume ; 2 à 11 % de leurs nouvelles touchaient un intérêt, aucune n'était dans un briefing. Depuis, plus aucune nouvelle n'attend ses vecteurs</small></dd></div>
         </dl>
       </aside>
@@ -566,10 +567,11 @@ code { font-family: var(--mono); font-size: 0.86em; }
       <aside class="figures">
         <p class="label">Enzo</p>
         <dl>
-          <div><dt>Nouvelles des 48 h dans ses sources</dt><dd>67 636<small>34 langues ; 5 919 en français</small></dd></div>
-          <div><dt>Histoires notées</dt><dd>43 931 → 150<small>en 17 à 20 s, serveur très chargé (3,1 s le 3 octobre, base deux fois plus petite) ; notes de 0,766 à 0,555</small></dd></div>
-          <div><dt>Candidates</dt><dd>47<small>261 articles, 11 langues ; 4 écartées sur 150</small></dd></div>
-          <div><dt>Sur 7 jours</dt><dd>182 783 nouvelles → 45<small>en 14 à 16 s ; 123 histoires après une par fil</small></dd></div>
+          <div><dt>Nouvelles des 48 h dans ses sources</dt><dd>106 673<small>38 langues ; 32 496 en anglais</small></dd></div>
+          <div><dt>Histoires notées</dt><dd>67 500 → 600 → 150<small>600 gardées en 6,2 s (notes de 0,802 à 0,524), puis 75 par intérêt (0,552 et plus) ; 17 à 20 s le 7 octobre, serveur plus chargé</small></dd></div>
+          <div><dt>Déjà envoyées</dt><dd>29 écartées<small>sur 147 crédibles ; 8 autres gardées comme suites</small></dd></div>
+          <div><dt>Candidates</dt><dd>47<small>40 venues de flux + 7 de Google News ; 346 articles, 15 langues</small></dd></div>
+          <div><dt>Sur 7 jours</dt><dd>387 990 nouvelles → 47<small>227 789 histoires, classées en 30 s ; 15 déjà envoyées écartées, 119 histoires après une par fil</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -591,9 +593,9 @@ code { font-family: var(--mono); font-size: 0.86em; }
       <aside class="figures">
         <p class="label">Enzo</p>
         <dl>
-          <div><dt>Choisies par l'IA</dt><dd>47 → 12</dd></div>
-          <div><dt>Après équilibre</dt><dd>10 + 2 en réserve<small>4 en français, 6 d'autres langues</small></dd></div>
-          <div><dt>Durée</dt><dd>3,1 s</dd></div>
+          <div><dt>Choisies par l'IA</dt><dd>47 → 12<small>13 dans le briefing complet de 15 h 21</small></dd></div>
+          <div><dt>Après équilibre</dt><dd>10 + 2 en réserve<small>3 en anglais, 6 langues</small></dd></div>
+          <div><dt>Durée</dt><dd>2,2 s<small>3,1 s pour le briefing complet ; 5 806 jetons lus, 563 écrits</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -617,9 +619,9 @@ code { font-family: var(--mono); font-size: 0.86em; }
       <aside class="figures">
         <p class="label">Enzo</p>
         <dl>
-          <div><dt>Articles vérifiés</dt><dd>31 → 31<small>aucun retiré (8 sur 62 le 3 octobre)</small></dd></div>
-          <div><dt>Cartes</dt><dd>10 → 10<small>aucune fusion</small></dd></div>
-          <div><dt>Durée</dt><dd>2,7 s</dd></div>
+          <div><dt>Articles vérifiés</dt><dd>48 → 34<small>14 retirés, cartes et réserve (aucun sur 31 le 7 octobre)</small></dd></div>
+          <div><dt>Cartes</dt><dd>12 → 12<small>aucune fusion ; dans le briefing complet, 9 versions d'autres langues et 1 en anglais rejoignent leur carte</small></dd></div>
+          <div><dt>Durée</dt><dd>3,3 s<small>7,4 s avec les versions (briefing complet)</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -639,11 +641,11 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <div class="chips"><span class="chip">fetch + @mozilla/readability</span><span class="chip">Crawlee (Cheerio) en secours</span><span class="chip">linkedom</span></div>
       </div>
       <aside class="figures">
-        <p class="label">Briefings d'Enzo</p>
+        <p class="label">Briefing d'Enzo, 15 h 21</p>
         <dl>
-          <div><dt>Durée</dt><dd>2 à 7 s<small>2 octobre</small></dd></div>
-          <div><dt>Articles par carte</dt><dd>7 à 10 en moyenne<small>briefings de 48 h des 2 et 3 octobre</small></dd></div>
-          <div><dt>Cartes illisibles remplacées</dt><dd>1 par briefing<small>2 briefings de 48 h rejoués le 6 octobre sans rien enregistrer ; avant, environ une carte « aucun article lisible » par briefing</small></dd></div>
+          <div><dt>Durée</dt><dd>7 s<small>2 à 7 s le 2 octobre</small></dd></div>
+          <div><dt>Articles par carte</dt><dd>7,4 en moyenne<small>de 1 à 27 ; 7 à 10 les 2 et 3 octobre</small></dd></div>
+          <div><dt>Cartes illisibles remplacées</dt><dd>1<small>par la réserve ; 1 par briefing aussi le 6 octobre</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -666,11 +668,12 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <div class="chips"><span class="chip">extractArticle</span><span class="chip">gemma4:31b</span><span class="chip">aiWaysOf (deepseek-v4-pro)</span><span class="chip">corroboration (shingles)</span><span class="chip">contested</span></div>
       </div>
       <aside class="figures">
-        <p class="label">Briefings d'Enzo</p>
+        <p class="label">Briefing d'Enzo, 15 h 21</p>
         <dl>
-          <div><dt>Durée</dt><dd>≈ 25 s<small>lecture et passages, 5 appels en parallèle (6 octobre) ; 11 à 13 s le 2 octobre</small></dd></div>
-          <div><dt>Jetons</dt><dd>16 000 à 17 000<small>19 appels, démentis compris (6 octobre)</small></dd></div>
-          <div><dt>Cartes avec passages</dt><dd>10 sur 10 (48 h)<small>6 octobre, réserve comprise ; avant : 8 sur 9</small></dd></div>
+          <div><dt>Durée</dt><dd>33 s<small>passages et relecture, 5 histoires à la fois ; ≈ 25 s le 6 octobre</small></dd></div>
+          <div><dt>Jetons</dt><dd>17 680<small>21 appels : passages 17 (14 116 lus, 1 302 écrits), démentis 4 ; 1 carte contestée</small></dd></div>
+          <div><dt>Cartes avec passages</dt><dd>10 sur 10<small>avec points et résumé ; 10 sur 10 aussi le 6 octobre</small></dd></div>
+          <div><dt>Version de l'IA</dt><dd>10 cartes<small>20 appels à deepseek-v4-pro, 23 786 jetons lus, 2 840 écrits, à l'étape « angles »</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -687,10 +690,11 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <div class="chips"><span class="chip">reviewCards</span><span class="chip">translateTexts</span></div>
       </div>
       <aside class="figures">
-        <p class="label">Briefings d'Enzo</p>
+        <p class="label">Briefing d'Enzo, 15 h 21</p>
         <dl>
-          <div><dt>Retirées</dt><dd>0<small>≈ 1 800 jetons, réponse de 12 (2 octobre)</small></dd></div>
-          <div><dt>Total du briefing</dt><dd>≈ 34 s (48 h, 6 octobre)<small>17 à 32 s sur 24 h (4 au 6 octobre), 28 à 50 s sur 7 jours (3 octobre) ; le classement plus lent du 7 octobre y ajoute environ 15 s</small></dd></div>
+          <div><dt>Retirées</dt><dd>0<small>2 appels, 3 508 jetons lus, 492 écrits</small></dd></div>
+          <div><dt>Total du briefing</dt><dd>154 s (48 h)<small>classement 33 s (le retrait des sources inutiles compris), choix 3, vérification 7, lecture 7, passages 33, angles 69 ; ≈ 34 s le 6 octobre, sans angles, source officielle ni version de l'IA</small></dd></div>
+          <div><dt>Jetons du briefing</dt><dd>92 008<small>82 appels à gemma4:31b et deepseek-v4-pro, sans l'analyse (42 544 jetons de plus)</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -712,10 +716,11 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <div class="chips"><span class="chip">closeStories (SQL)</span><span class="chip">other-angles (gemma4:31b)</span><span class="chip">official-sources</span><span class="chip">card-names</span><span class="chip">watchedNews</span></div>
       </div>
       <aside class="figures">
-        <p class="label">Mesuré le 8 octobre</p>
+        <p class="label">Briefing d'Enzo, 15 h 21</p>
         <dl>
-          <div><dt>Angles d'Enzo</dt><dd>83 % justes<small>17 cartes sur 30 en reçoivent un</small></dd></div>
-          <div><dt>Recherche</dt><dd>1,4 s par carte<small>206 000 histoires sur 3 jours, 5 cartes à la fois</small></dd></div>
+          <div><dt>Durée</dt><dd>69 s<small>versions de l'IA comprises ; source officielle : parties 44 s, déclarations 17 s</small></dd></div>
+          <div><dt>Angles</dt><dd>10 cartes sur 10<small>25 en tout, 11 appels ; 83 % justes et 17 cartes sur 30 le 8 octobre</small></dd></div>
+          <div><dt>Source officielle</dt><dd>2 cartes<small>7 parties trouvées dans Wikidata, 5 lues, 3 déclarations ; 24 appels</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -738,6 +743,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
           <div><dt>Cartes jugées</dt><dd>139<small>10 briefings de 7 profils, chaque ligne jugée à l'aveugle</small></dd></div>
           <div><dt>Ligne trompeuse</dt><dd>4 à 5 cartes sur 74<small>20 sans raisonnement, 29 avec gemma4:31b</small></dd></div>
           <div><dt>Durée</dt><dd>71 s par carte<small>jusqu'à 161 s ; le choix des cartes ≈ 5 s</small></dd></div>
+          <div><dt>Briefing d'Enzo, 17 octobre</dt><dd>6 cartes sur 10<small>écrites en 103 s, 8 appels, 22 385 jetons lus, 20 159 écrits ; aucune ligne retirée</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -768,10 +774,10 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <div class="chips"><span class="chip">React 19</span><span class="chip">Tailwind 4</span><span class="chip">shadcn / Radix</span><span class="chip">Fraunces + Source Serif 4</span></div>
       </div>
       <aside class="figures">
-        <p class="label">Briefings d'Enzo</p>
+        <p class="label">Briefing d'Enzo, 15 h 21</p>
         <dl>
-          <div><dt>Cartes</dt><dd>9 à 10<small>5 à 10 sur 24 h</small></dd></div>
-          <div><dt>Médias par carte</dt><dd>5,7 à 8,1 en moyenne<small>briefings de 48 h des 2 et 3 octobre (3,1 le 2 octobre à 00 h 01)</small></dd></div>
+          <div><dt>Cartes</dt><dd>10<small>en 5 langues : 5 en anglais, 2 en français, 1 en italien, en allemand, en espagnol</small></dd></div>
+          <div><dt>Médias par carte</dt><dd>6,6 en moyenne<small>de 1 à 21 ; 5,7 à 8,1 les 2 et 3 octobre</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -792,12 +798,12 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <div class="chips"><span class="chip">closestArticles (SQL)</span><span class="chip">sortByMeaning</span><span class="chip">joinFacts</span><span class="chip">IntersectionObserver</span></div>
       </div>
       <aside class="figures">
-        <p class="label">Mesuré, compte d'Enzo</p>
+        <p class="label">Mesuré le 17 octobre, compte d'Enzo</p>
         <dl>
           <div><dt>Phrase</dt><dd style="font-family: var(--text); font-size: 0.92rem">« les décisions d'arbitrage contestées en Ligue des champions », 7 jours</dd></div>
-          <div><dt>Candidates</dt><dd>216 articles<small>9 langues ; 116 lignes envoyées à l'IA</small></dd></div>
-          <div><dt>Résultat</dt><dd>4 cartes<small>2 réponses, 2 proches ; 12 articles joints</small></dd></div>
-          <div><dt>Durée</dt><dd>20,1 s<small>sans Google News, serveur très chargé (8,1 s le 3 octobre)</small></dd></div>
+          <div><dt>Candidates</dt><dd>211 articles<small>8 langues ; 106 lignes envoyées à l'IA</small></dd></div>
+          <div><dt>Résultat</dt><dd>10 cartes<small>9 réponses, 1 proche ; 11 articles joints (4 cartes le 7 octobre)</small></dd></div>
+          <div><dt>Durée</dt><dd>31,9 s<small>sans Google News, base trois fois plus grande (20,1 s le 7 octobre, 8,1 s le 3)</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -860,7 +866,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
     <div class="machine">
       <p class="kicker">PC de jeu · RTX 4070 Ti</p>
       <h3>Les vecteurs, vite</h3>
-      <p>bge-m3 et l'étiqueteur des noms sur la carte graphique, 55 textes par seconde pour les vecteurs. Depuis le 9 octobre, il travaille avec le processeur de l'Ubuntu : chacun prend les lots qu'il finit le plus vite. Éteint, le serveur continue sur son processeur, et le reprend une minute après son retour. Éteint lors de la mesure du 7 octobre : tout tournait sur le processeur de l'Ubuntu.</p>
+      <p>bge-m3 et l'étiqueteur des noms sur la carte graphique, 55 textes par seconde pour les vecteurs. Depuis le 9 octobre, il travaille avec le processeur de l'Ubuntu : chacun prend les lots qu'il finit le plus vite. Éteint, le serveur continue sur son processeur, et le reprend une minute après son retour. Éteint lors de la mesure du 17 octobre : tout tournait sur le processeur de l'Ubuntu.</p>
     </div>
     <div class="machine">
       <p class="kicker">Ollama cloud · API Gemini</p>
@@ -876,10 +882,10 @@ code { font-family: var(--mono); font-size: 0.86em; }
 </section>
 
 <footer>
-  <p>Chiffres mesurés le 7 octobre 2026 vers 1 h 30 (heure suisse) sur la base du serveur, le PC de jeu éteint : l'embedder tournait sur le processeur de l'Ubuntu, très chargé (charge moyenne de 10 à 15 pour 6 cœurs). Ingestion : 24 dernières heures de la base ; lectures de flux et durée des passes tirées des 76 passes des 3 dernières heures du journal. Briefing : rejoué avec le code du 7 octobre sur le compte d'Enzo jusqu'à la vérification et la fusion, sans rien enregistrer (sans le retrait des sources inutiles ni les versions dans sa langue) ; lecture, passages, réserve et durée totale tirés de 2 briefings de 48 h écrits en entier le 6 octobre sans être enregistrés (server/bench/briefing-relevance.mjs) ; durées sur 24 h tirées de ses vrais briefings du 4 au 6 octobre. Découverte : server/bench/discovery-phases.mjs, à blanc, le 6 octobre. Les chiffres marqués d'une date plus ancienne n'ont pas été mesurés à nouveau. Les pourcentages de qualité (88 %, 95 %, 96 %, 85 %) viennent des mesures précédentes du projet, jugées à la main.</p>
-  <p>Le classement des histoires (C1) et la recherche (D2) étaient 3 à 6 fois plus lents que le 3 octobre : la base a doublé en 4 jours, surtout par l'annuaire qui s'agrandit seul (938 → 1 382 flux), et le processeur était occupé par l'embedder.</p>
+  <p>Chiffres mesurés le 17 octobre 2026 entre 15 h 15 et 15 h 50 (heure suisse) sur la base du serveur, le PC de jeu éteint : l'embedder tournait sur le processeur de l'Ubuntu (charge moyenne de 8 à 10 pour 12 cœurs logiques). Ingestion : 24 dernières heures de la base (server/bench/funnel-now.mjs, 15 h 49) ; lectures de flux et durée des passes tirées des 14 passes du journal depuis le redémarrage de l'API à 15 h 15. Briefing : rejoué avec le code du 17 octobre sur le profil d'Enzo jusqu'à la vérification et la fusion, sans rien enregistrer (sans le retrait des sources inutiles ni les versions dans les autres langues), sur 48 heures et 7 jours ; lecture, passages, version de l'IA, angles, source officielle, analyse, durées et jetons tirés de son briefing de 48 h écrit en entier à 15 h 21 sans être enregistré (server/bench/news-journey.mjs), celui que suit « Parcours d'une nouvelle ». Recherche par phrase : même phrase que le 7 octobre, sans Google News, dans la langue du profil (l'anglais). Non remesurés, avec leur date : la découverte des sources (server/bench/discovery-phases.mjs, 6 octobre : elle interroge Google News et Media Cloud, partagés avec le serveur en marche), les vitesses des embedders, les durées par lot de regroupement et par appel des fils (7 octobre), l'étiqueteur des noms (13 octobre), les termes suivis (8 et 12 octobre) et la qualité de l'analyse (15 octobre). Les pourcentages de qualité (88 %, 95 %, 96 %, 85 %, 93 %) viennent des mesures précédentes du projet, jugées à la main.</p>
+  <p>Depuis le 7 octobre, la base a triplé (691 147 → 2 099 425 nouvelles), surtout par l'annuaire qui s'agrandit seul (1 382 → 2 369 flux) et les sources des lecteurs, lues pour tous depuis le 8 octobre : Enzo lit 1 150 flux au lieu de 765. Le classement des 48 heures reste à 6 s ; celui des 7 jours, 30 s.</p>
   <p>Le 3 octobre, environ 90 histoires mélangées avant la règle des affiches ont été découpées après coup (plus de 400 nouvelles déplacées, sauvegardes dans server/bench/data/matchups).</p>
-  <p>Mis à jour le 17 octobre 2026 : la version de l'IA des seules cartes gardées, une analyse en échec seulement sans carte finie depuis 12 minutes, une source retirée plus lue pour son profil, la connexion quelle que soit la casse du nom. Texte mis à jour le 16 octobre 2026 : briefings de 1 à 7 jours, projets, cartes envoyées écartées 48 h, points et résumé, version de l'IA, analyse des cartes, source officielle, noms relevés dans chaque nouvelle et noms des cartes, une seule liste de ce que le profil suit, e-mail aux formats choisis, 6 appels à Ollama au plus. Mis à jour le 12 octobre 2026 avec ce qui a changé depuis la mesure : création de compte par les questions de l'IA et fermée par défaut, mot de passe du site retiré, plusieurs profils, compte modifiable depuis le profil, part de chaque intérêt, briefings de 10, 20 ou 30 cartes, réserve plus grande, versions dans les autres langues, lecture des pages sans Crawlee d'abord, relecture par les refus, autres angles, termes suivis et page Following, envoi par e-mail, sources de chaque lecteur lues pour tous, archives sautées, embedders ensemble et tri de l'annuaire. Ces changements n'ont pas été remesurés en entier : leurs chiffres portent leur date.</p>
+  <p>Remesuré en entier le 17 octobre 2026. Mis à jour le même jour : la version de l'IA des seules cartes gardées, une analyse en échec seulement sans carte finie depuis 12 minutes, une source retirée plus lue pour son profil, la connexion quelle que soit la casse du nom. Texte mis à jour le 16 octobre 2026 : briefings de 1 à 7 jours, projets, cartes envoyées écartées 48 h, points et résumé, version de l'IA, analyse des cartes, source officielle, noms relevés dans chaque nouvelle et noms des cartes, une seule liste de ce que le profil suit, e-mail aux formats choisis, 6 appels à Ollama au plus. Mis à jour le 12 octobre 2026 avec ce qui a changé depuis la mesure : création de compte par les questions de l'IA et fermée par défaut, mot de passe du site retiré, plusieurs profils, compte modifiable depuis le profil, part de chaque intérêt, briefings de 10, 20 ou 30 cartes, réserve plus grande, versions dans les autres langues, lecture des pages sans Crawlee d'abord, relecture par les refus, autres angles, termes suivis et page Following, envoi par e-mail, sources de chaque lecteur lues pour tous, archives sautées, embedders ensemble et tri de l'annuaire. Ces changements ont été remesurés le 17 octobre.</p>
 </footer>
 
 </div>
@@ -887,28 +893,30 @@ code { font-family: var(--mono); font-size: 0.86em; }
 <script>
 const GROUPS = [
   {lane: 'server', title: 'Travail de fond', scope: 'toutes les sources · 24 h', rows: [
-    {what: 'Flux suivis', n: 2488, why: '1 981 ont publié dans les 24 h'},
-    {what: 'Nouvelles enregistrées', n: 136023, why: 'Les liens déjà connus et les nouvelles redonnées sous un autre lien ne sont pas comptés ; une lecture sur quatre ne renvoie rien de neuf'},
-    {what: 'Avec vecteurs', n: 126122, cut: 9901, why: 'encore en file d’attente au moment de la mesure (embedder sur processeur)'},
-    {what: 'Placées dans une histoire', n: 125542, cut: 580, why: 'publiées il y a plus de 48 h : vecteurs pour la recherche seulement'},
-    {what: 'Histoires', n: 71214, why: 'les nouvelles d’un même fait regroupées (1,8 par histoire)'},
-    {what: 'Histoires de 2 médias ou plus', n: 13382, why: '52 096 histoires restent d’une seule nouvelle'},
+    {what: 'Flux suivis', n: 4391, why: '3 089 ont publié dans les 24 h'},
+    {what: 'Nouvelles enregistrées', n: 118598, why: 'Les liens déjà connus et les nouvelles redonnées sous un autre lien ne sont pas comptés ; une lecture sur quatre ne renvoie rien de neuf'},
+    {what: 'Avec vecteurs', n: 115681, cut: 2917, why: 'encore en file d’attente au moment de la mesure (embedder sur processeur) : 1 618 de la fenêtre de 48 h, les autres plus anciennes, encodées après'},
+    {what: 'Placées dans une histoire', n: 115544, cut: 137, why: 'publiées il y a plus de 48 h : vecteurs pour la recherche seulement'},
+    {what: 'Histoires', n: 63985, why: 'les nouvelles d’un même fait regroupées (1,8 par histoire)'},
+    {what: 'Histoires de 2 médias ou plus', n: 11230, why: '45 851 histoires restent d’une seule nouvelle'},
   ]},
-  {lane: 'reader', title: 'Briefing d’Enzo', scope: 'ses 765 flux · 48 h · toutes langues', rows: [
-    {what: 'Nouvelles dans ses sources', n: 67636, why: '34 langues, dont 5 919 en français : aucune n’est écartée pour sa langue'},
-    {what: 'Histoires', n: 43931, why: 'une note par histoire, la meilleure de ses nouvelles'},
-    {what: 'Classées par le SQL', n: 150, cut: 43781, why: 'moins proches de ses intérêts (note sous 0,555)'},
-    {what: 'Crédibles', n: 146, cut: 4, why: 'pages répétées ou connues seulement par Google sans média établi'},
-    {what: 'Candidates pour l’IA', n: 47, cut: 99, why: 'au-delà des 40 premières venues de flux (+7 connues par Google News)'},
+  {lane: 'reader', title: 'Briefing d’Enzo', scope: 'ses 1 150 flux · 48 h · toutes langues', rows: [
+    {what: 'Nouvelles dans ses sources', n: 106673, why: '38 langues, dont 32 496 en anglais : aucune n’est écartée pour sa langue'},
+    {what: 'Histoires', n: 67500, why: 'une note par histoire, la meilleure de ses nouvelles'},
+    {what: 'Gardées par le SQL', n: 600, cut: 66900, why: 'moins proches de ses intérêts (note sous 0,524)'},
+    {what: 'Partagées entre ses intérêts', n: 150, cut: 450, why: '75 par intérêt, ses meilleures d’abord'},
+    {what: 'Crédibles', n: 147, cut: 3, why: 'pages répétées ou connues seulement par Google sans média établi'},
+    {what: 'Pas encore envoyées', n: 118, cut: 29, why: 'déjà dans une carte envoyée par e-mail dans les 48 h, ou de son fil ; 8 autres gardées comme suites'},
+    {what: 'Candidates pour l’IA', n: 47, cut: 71, why: 'au-delà des 40 premières venues de flux (+7 connues par Google News)'},
     {what: 'Choisies par l’IA', n: 12, cut: 35, why: 'hors du profil, dossiers, guides, pronostics, doublons'},
     {what: 'Après équilibre des intérêts', n: 10, cut: 2, why: 'gardées en réserve, pour remplacer une carte illisible'},
-    {what: 'Cartes après vérification', n: 10, why: 'aucune fusion ; 31 articles vérifiés, aucun retiré'},
-    {what: 'Cartes avec passages clés', n: 10, why: '2 briefings de 48 h du 6 octobre : 10 sur 10, une carte illisible remplacée par la réserve dans chacun'},
+    {what: 'Cartes après vérification', n: 10, why: 'aucune fusion ; 48 articles vérifiés avec la réserve, 14 retirés'},
+    {what: 'Cartes avec passages clés', n: 10, why: 'briefing complet de 15 h 21 : 10 sur 10, une carte illisible remplacée par la réserve'},
   ]},
   {lane: 'reader', title: 'Recherche par phrase', scope: 'toutes les langues · 7 jours', rows: [
-    {what: 'Articles candidats', n: 216, why: '9 langues, 80 + 30 par langue au plus'},
-    {what: 'Lignes envoyées à l’IA', n: 116, cut: 100, why: 'une ligne par histoire'},
-    {what: 'Cartes', n: 4, cut: 112, why: 'hors du sujet de la phrase ; 2 réponses et 2 nouvelles proches, 12 articles joints'},
+    {what: 'Articles candidats', n: 211, why: '8 langues, 80 + 30 par langue au plus'},
+    {what: 'Lignes envoyées à l’IA', n: 106, cut: 105, why: 'une ligne par histoire'},
+    {what: 'Cartes', n: 10, cut: 96, why: 'hors du sujet de la phrase ; 9 réponses et 1 nouvelle proche, 11 articles joints'},
   ]},
 ];
 
