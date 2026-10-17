@@ -6,7 +6,8 @@
 #               the same on GitHub; the site adds three things at build:
 #               - the docs of the client (../client/docs, its own repo) under client/, its links and the
 #                 server's links to it pointed to their place in the site;
-#               - the diagrams linked as .png shown in the page, zoomable;
+#               - the diagrams linked as .png shown in the page, zoomable (not in diagrams.md, which
+#                 lists them all);
 #               - the versions of docs/tools.md checked against node_modules: a version this page gives
 #                 that is not the one installed fails the build (mkdocs build --strict)
 #
@@ -26,6 +27,8 @@ CLIENT = os.path.normpath(os.path.join(SERVER, '..', 'client'))
 SERVER_DOCS = os.path.join(SERVER, 'docs')
 CLIENT_DOCS = os.path.join(CLIENT, 'docs')
 CLIENT_PREFIX = 'client'
+# every diagram in one page (written by docs-site/diagrams.mjs): its diagrams stay links
+DIAGRAMS_PAGE = 'diagrams.md'
 
 # [text](target) and ![text](target), the target in <...> when it holds spaces
 LINK = re.compile(r'(!?)\[([^\]]*)\]\((<[^>]+>|[^)\s]+)\)')
@@ -95,8 +98,8 @@ def on_page_markdown(markdown, page, config, files):
         if uri is not None:
             relative = os.path.relpath(uri, page_dir or '.').replace(os.sep, '/')
             path = quote(relative)
-        # a diagram linked is shown, zoomable
-        if not bang and path.lower().endswith('.png'):
+        # a diagram linked is shown, zoomable; the index of the diagrams lists them, each opened on its own
+        if not bang and path.lower().endswith('.png') and page.file.src_uri != DIAGRAMS_PAGE:
             bang = '!'
         return f'{bang}[{text}]({path}{"#" + anchor if anchor else ""})'
 

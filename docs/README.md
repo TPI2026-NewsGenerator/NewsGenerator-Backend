@@ -3,7 +3,8 @@
 Where to start: **[`a-to-z/parcours-newsgenerator.md`](a-to-z/parcours-newsgenerator.md)** (in French) tells how
 the whole system works, from the account of a reader to the card they read, every step with its mechanism and
 its technology. Then each feature has a folder, and each part of it a folder of its own: a `README.md` that says
-what it does and how, a class diagram and a sequence diagram (source `.puml` and `.png`).
+what it does and how, a class diagram and a sequence diagram (source `.puml` and `.png`). All the diagrams, by
+feature and by kind, are listed in **[`diagrams.md`](diagrams.md)**.
 
 The client's diagrams (its use cases, and its pages and components by feature) are in
 [`../../client/docs/`](../../client/docs/README.md). Every route of the API, with its body and its answers, is

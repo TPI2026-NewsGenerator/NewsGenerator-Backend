@@ -6,6 +6,7 @@
 //                 pnpm run docs          the site on http://127.0.0.1:8000, rebuilt at each change
 //                 pnpm run docs:build    site/, failing on a broken link or a wrong version in tools.md
 //                 pnpm run docs:zip      NewsGenerator-docs.zip, the site read without a server, to send
+//               Each writes docs/diagrams.md again first (diagrams.mjs).
 //               The same on Windows and on Linux: python is "python" or "python3", the venv's in
 //               Scripts/ or bin/
 //
@@ -33,6 +34,9 @@ if (!existsSync(venvPython)) {
     run(python, ['-m', 'venv', VENV]);
     run(venvPython, ['-m', 'pip', 'install', '-q', '-r', path.join('docs-site', 'requirements.txt')]);
 }
+
+// the index of the diagrams written again, so it lists the ones added since
+run(process.execPath, [path.join('docs-site', 'diagrams.mjs')]);
 
 const [command = 'serve', ...rest] = process.argv.slice(2);
 if (command === 'zip') {

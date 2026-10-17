@@ -87,6 +87,7 @@ nav:
       - The walk of a news (FR): a-to-z/parcours-d-une-nouvelle.md
       - Tools: tools.md
       - Database: database/mld.md
+  - Diagrams: diagrams.md
   - Accounts:
       - accounts/README.md
       - Signup: accounts/signup/README.md
