@@ -648,8 +648,8 @@ const options = {
                     "tags": [
                         "News"
                     ],
-                    "summary": "AI resume of the selected news",
-                    "description": "Scrapes the selected news (10 max), then asks the AI for a resume of 120 to 150 words and the topic of the news. The resume is kept, so asking twice costs nothing. News that could not be scraped get no resume: summary is null and summaryError explains why.",
+                    "summary": "Key passages of the cards chosen, and who tells them",
+                    "description": "For each card chosen in a search (10 at most), up to 5 of its articles are read, one per medium and a source the reader trusts first (the active profile, X-Profile header). The AI writes nothing: it gives the numbers of the 2 to 5 sentences of the first article read in full (60 words at least) that tell the news best, shown word for word as published, 170 words at most, with its topic and its sourcing. A machine translation is added when the article is not in 'language', each figure checked. The texts read say how many media wrote their own (no AI). At the same time the AI looks for a denial among the sentences of the articles. The passages of an article are kept: a news asked twice costs nothing, its translation is kept for the last language asked. A news of Google News is read at its real address, asked to Google only for the cards with no other article (2 per card, 10 at most). A card that could not be read gets no passages: summary is null and summaryError says why.",
                     "requestBody": {
                         "required": true,
                         "content": {
@@ -657,25 +657,40 @@ const options = {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
+                                        "stories": {
+                                            "type": "array",
+                                            "maxItems": 10,
+                                            "description": "The cards chosen; the same card twice is one card.",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "urls": {
+                                                        "type": "array",
+                                                        "minItems": 1,
+                                                        "maxItems": 30,
+                                                        "description": "The articles of the card, its lead first; every one must be in the cache.",
+                                                        "items": {"type": "string", "format": "uri"}
+                                                    }
+                                                },
+                                                "required": ["urls"]
+                                            }
+                                        },
                                         "urls": {
                                             "type": "array",
                                             "maxItems": 10,
-                                            "items": {
-                                                "type": "string",
-                                                "format": "uri"
-                                            }
-                                        }
-                                    },
-                                    "required": [
-                                        "urls"
-                                    ]
+                                            "deprecated": true,
+                                            "description": "The old form, one article per card: read only when 'stories' is not given.",
+                                            "items": {"type": "string", "format": "uri"}
+                                        },
+                                        "language": {"type": "string", "enum": ["en", "fr", "es", "de", "it"], "default": "en", "description": "The language the reader reads: the passages and the titles in another one are translated into it."}
+                                    }
                                 }
                             }
                         }
                     },
                     "responses": {
                         "200": {
-                            "description": "Selected news with their resume, in the same order as asked.",
+                            "description": "{totalResults, news}: the cards in the order asked, each an Article with id (the url of its lead), summary, translation, titleTranslation, topic, sourcing, contested, summaryError, corroboration {media, read, independent, agencies, mediaNames} and articles.",
                             "content": {
                                 "application/json": {
                                     "schema": {
@@ -685,8 +700,9 @@ const options = {
                             }
                         },
                         "400": {
-                            "description": "No url, more than 10 urls, or url not found in the news cache"
+                            "description": "No card, more than 10 cards, a card of no url or of more than 30, an unknown language, or a url not in the news cache"
                         },
+                        "401": {"description": "No session"},
                         "500": {
                             "description": "Internal Server Error"
                         }
@@ -1104,13 +1120,13 @@ const options = {
                         "topic": {
                             "type": "string",
                             "nullable": true,
-                            "description": "Topic given by the AI with the resume, null while the news has no resume."
+                            "description": "Topic given by the AI with the key passages, null while the news has none."
                         },
                         "sourcing": {
                             "type": "string",
                             "nullable": true,
                             "enum": ["named", "anonymous", "none"],
-                            "description": "Who the article credits for what it reports, answered by the AI with the resume, so it costs no extra call. It describes the article, never whether the news is true: an official statement can be a lie and an unnamed source can be right. Null while the news has no resume."
+                            "description": "Who the article credits for what it reports, answered by the AI with the key passages, so it costs no extra call. It describes the article, never whether the news is true: an official statement can be a lie and an unnamed source can be right. Null while the news has none."
                         },
                         "hedged": {
                             "type": "string",
@@ -1149,7 +1165,7 @@ const options = {
                         "thread": {"type": "integer", "nullable": true, "description": "The thread (the affair followed over days) of its story (only in POST /news), null when it has none."},
                         "facts": {
                             "type": "array",
-                            "description": "Only in POST /news: the facts of the affair of this card in time order, this news among them (a preview, the result, the reactions; see db/add_threads.sql). The facts found by the search have found true; the others are read from the feeds of this reader only, and carry corroboration.media alone. Each can be asked for its key passages with its url and the urls of its sources. One item when the news is in no thread.",
+                            "description": "Only in POST /news: the facts of the affair of this card in time order, this news among them (a preview, the result, the reactions; see db/add_threads.sql). The facts found by the search have found true; the others are read from every feed the search read, and carry corroboration.media alone. Each can be asked for its key passages with its url and the urls of its sources. One item when the news is in no thread.",
                             "items": {
                                 "type": "object",
                                 "properties": {
@@ -1167,12 +1183,30 @@ const options = {
                         "summary": {
                             "type": "string",
                             "nullable": true,
-                            "description": "The AI resume, 120 to 150 words (only in POST /news/summary)."
+                            "description": "Only in POST /news/summary: the key passages of the article, its own sentences as published (the AI only chose them), one paragraph per passage; null when none could be read."
                         },
                         "summaryError": {
                             "type": "string",
                             "nullable": true,
-                            "description": "Why there is no resume (only in POST /news/summary)."
+                            "description": "Only in POST /news/summary: why the card has no key passages (the AI failed, a news known only through Google News whose address Google did not give, no article readable in full)."
+                        },
+                        "translation": {"type": "string", "nullable": true, "description": "Only in POST /news/summary: the machine translation of the key passages into the language asked, null when the article is in it or a figure was lost."},
+                        "titleTranslation": {"type": "string", "nullable": true, "description": "Only in POST /news/summary: the title of the lead in the language asked, when it is written in another."},
+                        "contested": {
+                            "type": "array",
+                            "description": "Only in POST /news/summary: someone named who denies the news, in the words of one of its articles (2 at most).",
+                            "items": {"type": "object", "properties": {
+                                "by": {"type": "string"}, "sentence": {"type": "string"}, "translation": {"type": "string", "nullable": true},
+                                "source": {"type": "string"}, "url": {"type": "string", "format": "uri"}, "publishedAt": {"type": "string", "nullable": true}
+                            }}
+                        },
+                        "articles": {
+                            "type": "array",
+                            "description": "Only in POST /news/summary: the articles of the card, a trusted source first, then the newest, one per medium.",
+                            "items": {"type": "object", "properties": {
+                                "url": {"type": "string", "format": "uri"}, "source": {"type": "string"}, "title": {"type": "string"},
+                                "publishedAt": {"type": "string"}, "trusted": {"type": "boolean"}, "language": {"type": "string", "nullable": true}
+                            }}
                         }
                     },
                     // "required": [
