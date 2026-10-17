@@ -373,6 +373,7 @@ pages, zoomable. The Markdown stays the source and reads the same on GitHub. Fro
 ```bash
 pnpm run docs          # the site on http://127.0.0.1:8000, rebuilt at each change (makes .venv-docs/ the first time)
 pnpm run docs:build    # the site in site/, failing on a broken link or a version of docs/tools.md not installed
+pnpm run docs:zip      # NewsGenerator-docs.zip, the site read without a server: to send it, unzip it, open index.html
 ```
 
 `mkdocs.yml` is its menu and its settings, `docs-site/hooks.py` adds the client's docs, shows the diagrams
