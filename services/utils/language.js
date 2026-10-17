@@ -102,6 +102,18 @@ export const languageOf = (text, fallback = null) => {
     return longTextLanguage(text ?? '', words);
 };
 
+// The language of a text read for itself before its default: the default is a guess on something
+// else (the whole page of an article: menus and side links in English took the Vietnamese passages
+// of a vietnam.vn card for English, shown untranslated to an English reader, 17.10.2026). A text of
+// MIN_TRIGRAM_CHARS and more keeps its own language when franc names it and the short words do not
+// say another; shorter, or in a language written like another (NEAR_LANGUAGES), the default decides
+// as in languageOf
+export const ownLanguage = (text, fallback = null) => {
+    const trigrams = FRANC_CODES[franc(text ?? '', {minLength: MIN_TRIGRAM_CHARS})] ?? null;
+    if (trigrams && !NEAR_LANGUAGES.has(trigrams) && languageOf(text) === trigrams) return trigrams;
+    return languageOf(text, fallback);
+};
+
 // The language most of these texts (the news of one feed) are written in, null when too few of them
 // tell it or they do not agree. Measured on 345 feeds: every feed of a listed language was told right
 // by the words. With franc on the texts joined, the other languages too (see longTextLanguage).

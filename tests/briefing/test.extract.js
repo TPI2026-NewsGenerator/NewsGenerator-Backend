@@ -197,6 +197,29 @@ describe('extractArticle', () => {
         chat.mockReset().mockResolvedValueOnce(json({topic: 'society', sourcing: 'none', sentences: []}));
         expect((await extractArticle('Vidéo', {content: text, blocks: []}, {language: 'fr'})).passages).toEqual([]);
     });
+
+    it('should translate passages in another language than their page', async () => {
+        // a vietnam.vn page (17.10.2026): an English lead, its news in Vietnamese, the page told English
+        const lead = 'FIFA President Gianni Infantino apologized for shortcomings in the consultation process for the controversial '
+            + 'commercial project. However, English and German football leaders are still demanding clarification on governance issues. ';
+        const vietnamese = ['Dù vậy, lời xin lỗi chưa thuyết phục được một số quan chức Châu Âu về khả năng tiếp tục lãnh đạo của ông.',
+            'Tuy nhiên, dự án đã bị dừng lại sau khi vấp phải phản đối.',
+            'Infantino nhận trách nhiệm về những thiếu sót trong quá trình trao đổi và tham vấn.',
+            'Ông nhấn mạnh FFE mới chỉ là đề xuất, chưa phải quyết định cuối cùng.'];
+        const translations = ['However, the apology did not convince some European officials about his continued leadership.',
+            'However, the project was halted after facing opposition.',
+            'Infantino took responsibility for the shortcomings in the communication and consultation process.',
+            'He stressed that the FFE was only a proposal, not a final decision.'];
+        chat.mockReset()
+            .mockResolvedValueOnce(json({topic: 'sport', sourcing: 'named', sentences: [5, 6, 7, 8]}))
+            .mockResolvedValueOnce(json({translations}));
+        const result = await extractArticle('Lãnh đạo bóng đá Anh và Đức chưa hài lòng',
+            {content: `${lead.repeat(2)}${vietnamese.join(' ')}`, blocks: []}, {language: 'en'});
+        expect(result.passages).toEqual([vietnamese.map(sentence => s(sentence))]);
+        expect(result.from).toBe('vi');
+        expect(result.translation).toEqual([translations.map(sentence => s(sentence))]);
+        expect(chat.mock.calls[1][0].messages.at(-1).content).toContain('from Vietnamese into English');
+    });
 });
 
 describe('canSummarize', () => {

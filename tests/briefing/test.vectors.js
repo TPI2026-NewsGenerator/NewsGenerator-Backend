@@ -8,7 +8,7 @@
 import process from 'node:process'
 import {jest} from '@jest/globals'
 import {denseSimilarity, embed, parseVector, SPARSE_DIMENSIONS, toSparsevec, toVector} from '../../services/utils/embedder.js'
-import {feedLanguage, languageOf} from '../../services/utils/language.js'
+import {feedLanguage, languageOf, ownLanguage} from '../../services/utils/language.js'
 
 const unit = (...values) => {
     const norm = Math.hypot(...values);
@@ -299,6 +299,30 @@ describe('languageOf', () => {
         expect(languageOf(portuguese, 'pt')).toBe('pt');
         expect(languageOf('Também está em causa a presença das equipas portuguesas após o sorteio')).toBe('pt');
         expect(languageOf('Le président de la FIFA répond à la Norvège dans une lettre aux fédérations', 'es')).toBe('fr');
+    });
+});
+
+describe('ownLanguage', () => {
+    // passages of a vietnam.vn card (17.10.2026): its page, an English lead and side links, was told English
+    const vietnamese = 'Dù vậy, lời xin lỗi chưa thuyết phục được một số quan chức Châu Âu về khả năng tiếp tục lãnh đạo của ông. '
+        + 'Tuy nhiên, dự án đã bị dừng lại sau khi vấp phải phản đối. Infantino nhận trách nhiệm về những thiếu sót '
+        + 'trong quá trình trao đổi và tham vấn. Ông nhấn mạnh FFE mới chỉ là đề xuất, chưa phải quyết định cuối cùng.';
+
+    it('should read a long text in its own language whatever the default', () => {
+        expect(languageOf(vietnamese, 'en')).toBe('en');
+        expect(ownLanguage(vietnamese, 'en')).toBe('vi');
+        const english = 'The city council voted to close the bridge to cars on the river. The vote took place on Tuesday evening '
+            + 'at the town hall, after a debate of three hours with the residents of the old town and the shopkeepers.';
+        expect(ownLanguage(english, 'vi')).toBe('en');
+    });
+
+    it('should keep the default for a short text and between languages written alike', () => {
+        expect(ownLanguage('Tuy nhiên, dự án đã bị dừng lại sau khi vấp phải phản đối.', 'en')).toBe('en');
+        expect(ownLanguage('Top 14 : Toulon', 'fr')).toBe('fr');
+        const portuguese = 'O treinador do Benfica disse que a equipa não esteve bem na primeira parte e que os jogadores sabem o que '
+            + 'têm de fazer. Também está em causa a presença das equipas portuguesas após o sorteio da Liga dos Campeões.';
+        expect(ownLanguage(portuguese, 'pt')).toBe('pt');
+        expect(ownLanguage(vietnamese)).toBe('vi');
     });
 });
 
