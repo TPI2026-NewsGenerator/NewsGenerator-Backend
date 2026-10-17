@@ -162,15 +162,16 @@ export const ProfileModel = {
     setProjectEnd: async (profileId, id, endsOn) => prisma.$executeRawUnsafe(
         'UPDATE profile_projects SET ends_on = $3::date WHERE id = $1::int AND id_profile = $2::int', id, profileId, endsOn),
 
-    // one interest changed by the user, only one of this profile; its vectors when its text changed
+    // one interest changed by the user, only one of the profile itself (never one of its projects, which
+    // go with their project); its vectors when its text changed
     updateInterest: async (profileId, id, {dense, sparse, ...data}) => {
-        const {count} = await prisma.profile_interests.updateMany({where: {id, id_profile: profileId}, data});
-        if (count > 0 && dense) await setVectors('id = $3::int AND id_profile = $4::int', [id, profileId], {dense, sparse});
+        const {count} = await prisma.profile_interests.updateMany({where: {id, id_profile: profileId, id_project: null}, data});
+        if (count > 0 && dense) await setVectors('id = $3::int AND id_profile = $4::int AND id_project IS NULL', [id, profileId], {dense, sparse});
         return count;
     },
 
     deleteInterest: async (profileId, id) => {
-        const {count} = await prisma.profile_interests.deleteMany({where: {id, id_profile: profileId}});
+        const {count} = await prisma.profile_interests.deleteMany({where: {id, id_profile: profileId, id_project: null}});
         return count;
     },
 

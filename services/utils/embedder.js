@@ -27,7 +27,7 @@ const HEADERS = () => ({
     'Content-Type': 'application/json',
     ...(process.env.EMBEDDER_TOKEN ? {Authorization: `Bearer ${process.env.EMBEDDER_TOKEN}`} : {}),
 });
-// Texts per request. fetch gives up after 300 s without an answer whatever TIMEOUT_MS says, and on a
+// Texts per request. fetch gives up after 300 s without an answer (TIMEOUT_MS), and on a
 // busy processor 64 texts took up to 310 s: a batch must stay short enough to wait behind the one of
 // another process (the server and "pnpm run ingest") and still be answered in time. A graphics card
 // answers 16 texts in a fraction of a second, EMBEDDER_BATCH=128 there saves the round trips. An
@@ -35,7 +35,8 @@ const HEADERS = () => ({
 // for about 50 s.
 const BATCH = () => Number(process.env.EMBEDDER_BATCH) || 16;
 const CPU_BATCH = 16;
-const TIMEOUT_MS = 10 * 60 * 1000;
+// fetch's own limit (see above): a longer one never applied
+const TIMEOUT_MS = 300 * 1000;
 const HEALTH_TIMEOUT_MS = 2000;
 // An embedder off (or never asked) is asked again this often: a machine switched on joins the work
 const RECHECK_MS = 60 * 1000;

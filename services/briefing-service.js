@@ -135,13 +135,17 @@ const spanOf = (hours) => hours > 24 && hours % 24 === 0 ? `${hours / 24} days` 
 // that may hold a key aside), and the searches of Google News of its interests. Every language is read
 // and translated: replayed on a reader of 7 languages with sources in 30 (bench/briefing-languages.mjs),
 // the others took 13 of the 42 candidates and 2 of the 10 cards, both on the profile (the UEFA president
-// on Infantino in Albanian)
-export const feedsOf = async (profileId) => [...new Set([
-    ...Object.values(rss).flatMap(categories => Object.values(categories).flat()),
-    ...await FeedModel.userFeedUrls(profileId),
-    ...await FeedModel.everyoneFeedUrls(),
-    ...await searchesOfUser(profileId),
-])];
+// on Infantino in Albanian). A source found for the profile the reader removed is not read for it, even
+// when another reader has it: the page says it is "no longer read for your briefing"
+export const feedsOf = async (profileId) => {
+    const removed = new Set((await ProfileModel.removedSources(profileId)).map(source => source.url));
+    return [...new Set([
+        ...Object.values(rss).flatMap(categories => Object.values(categories).flat()),
+        ...await FeedModel.userFeedUrls(profileId),
+        ...(await FeedModel.everyoneFeedUrls()).filter(url => !removed.has(url)),
+        ...await searchesOfUser(profileId),
+    ])];
+};
 
 // the media read through a feed of their own, for the stories known only through Google News
 let feedMedia = {at: 0, media: new Set()};
@@ -503,21 +507,19 @@ export const readStories = async (chosen, {trusted = new Set(), language = null,
         if (!lead) return {unreadable: true};
         const texts = reads[i].filter(article => content.has(article.link))
             .map(article => ({...toArticle(article), page: content.get(article.link)}));
-        const [{passages, translation, points, pointsTranslation, digest, digestTranslation, topic, sourcing}, contested, ai] = await Promise.all([
+        const [{passages, translation, points, pointsTranslation, digest, digestTranslation, topic, sourcing}, contested] = await Promise.all([
             extractArticle(lead.title, content.get(lead.link), {language, usage: usage.summarizing}),
             contestedOf(lead.title, texts, {language, usage: usage.contesting}).catch(err => {
                 console.error(`Briefing: the denials of story ${story.storyId} were not read (${err.message})`);
                 return [];
             }),
-            // the AI version of its points and summary, asked for by the reader only (see ai-ways.js)
-            aiWaysOf(lead.title, content.get(lead.link), {language, usage: usage.writing}).catch(() => null),
         ]);
         // no passage of the news in its page: what was read is not the article
         if (passages.length === 0) return {unreadable: true};
         return {summary: {summary: passagesText(passages), translation: passagesText(translation),
             points: passagesText(points), pointsTranslation: passagesText(pointsTranslation),
             digest: passagesText(digest), digestTranslation: passagesText(digestTranslation),
-            topic, sourcing, contested, ai, from: lead.link}};
+            topic, sourcing, contested, from: lead.link}};
     });
     return stories.map((story, i) => summaries[i].status === 'fulfilled'
         ? {story, unreadable: Boolean(summaries[i].value.unreadable), summary: summaries[i].value.summary ?? null}
@@ -729,9 +731,10 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     const summaryOf = (i) => cards[i].summary;
     const leads = cards.map(leadOf);
     // 7. the other angles of the cards, their official sources, the people and organisations they name,
-    // and the news of what the profile follows beside them. The briefing never waits on any of them failing
+    // the AI version of their points and summary, and the news of what the profile follows beside them.
+    // The briefing never waits on any of them failing
     await step('angles');
-    const [angles, official, watched, names] = await Promise.all([
+    const [angles, official, watched, names, ais] = await Promise.all([
         anglesOf(stories, leads.map(lead => lead.title), {language, feedUrls, hours, trusted, usage: usage.angles}).catch(err => {
             console.error(`Briefing: no other angle looked for (${err.message})`);
             return new Map();
@@ -761,6 +764,11 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             console.error(`Briefing: the names of the cards were not read (${err.message})`);
             return new Map();
         }),
+        // asked for by the reader only (see ai-ways.js), two calls a card: of the cards kept only, not of
+        // every story read (the ones unreadable or left out by reviewCards were paid for too)
+        mapWithConcurrency(stories, AI_CONCURRENCY, (story, i) => summaryOf(i)
+            ? aiWaysOf(leads[i].title, content.get(summaryOf(i).from), {language, usage: usage.writing}).catch(() => null)
+            : null),
     ]);
     if (briefingId && watched) await BriefingModel.watched(briefingId, watched);
     await step(null);
@@ -808,7 +816,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             // the points and the summary written by the AI, in the reader's language, shown when the reader
             // asks for them: {points: ['...'] | null, summary: '...' | null, model}, null when the AI could
             // not write them (see ai-ways.js). Absent from the briefings made before 15.10.2026
-            ai: summary?.ai ?? null,
+            ai: ais[i].status === 'fulfilled' ? ais[i].value ?? null : null,
             topic: summary?.topic ?? null,
             sourcing: summary?.sourcing ?? null,
             // the words the article itself used to say it has no confirmation
@@ -934,9 +942,9 @@ export const newsOfTerms = (terms, articles, {limit = WATCHED_PER_TERM, holds = 
 // The analysis of the cards of a briefing that merit one (see card-analysis.js): {status: 'ready', model,
 // picked: [{storyId, reason}], cards: {storyId: {why: ['...'], next: [{if, then}], timeline: [{date,
 // title, titleTranslation, medium, url}]}}}. items: the cards of the briefing; articles: {storyId: its
-// articles read, as fittedArticles gives them}; onPicked(picked) once the cards are chosen. Exported for
+// articles read, as fittedArticles gives them}; onPicked(picked) once the cards are chosen, onCard() once each is done. Exported for
 // the benches, which write it without saving it (bench/card-analysis-mock-api.mjs)
-export const cardAnalyses = async (items, articles, language, {usage = null, onPicked, now = new Date()} = {}) => {
+export const cardAnalyses = async (items, articles, language, {usage = null, onPicked, onCard, now = new Date()} = {}) => {
     const shown = items.filter(item => item.summary && articles.get(item.storyId)?.length > 0);
     // the earlier stories of each card's affair, its own stories and articles left out, the oldest first
     const earlier = shown.length === 0 ? [] : await StoryModel.earlierInThreads(shown.map(item => item.storyId), now);
@@ -970,22 +978,25 @@ export const cardAnalyses = async (items, articles, language, {usage = null, onP
         articles: articles.get(item.storyId), timeline: timelines.get(item.storyId),
         angles: item.angles ?? [], contested: item.contested ?? [], official: item.official ?? [],
     }));
-    const {picked, cards: written} = cards.length === 0 ? {picked: [], cards: {}} : await analysesOf(cards, language, {usage, onPicked});
+    const {picked, cards: written} = cards.length === 0 ? {picked: [], cards: {}} : await analysesOf(cards, language, {usage, onPicked, onCard});
     return {status: 'ready', model: ANALYSIS_MODEL, picked, dropped: Object.values(written).reduce((n, lines) => n + lines.dropped, 0),
         cards: Object.fromEntries(Object.entries(written).map(([storyId, lines]) =>
             [storyId, {why: lines.why, next: lines.next, timeline: timelines.get(Number(storyId))?.items ?? []}]))};
 };
 
 // The analysis of the cards of a briefing (see cardAnalyses), saved 'running' at once, with the cards
-// picked once chosen, then written or 'failed'
+// picked once chosen and the time each card is done (beatAt, see analysisOfRow), then written or 'failed'
 const analyze = async (briefingId, items, articles, language) => {
     const usage = newUsage();
     const started = new Date();
     const running = {status: 'running', model: ANALYSIS_MODEL, startedAt: started.toISOString()};
+    let saved = running;
+    const save = (analysis) => BriefingModel.analysis(briefingId, saved = analysis);
     try {
-        await BriefingModel.analysis(briefingId, running);
+        await save(running);
         const analysis = await cardAnalyses(items, articles, language, {usage, now: started,
-            onPicked: (picked) => BriefingModel.analysis(briefingId, {...running, picked})});
+            onPicked: (picked) => save({...running, picked}),
+            onCard: () => save({...saved, beatAt: new Date().toISOString()})});
         await BriefingModel.analysis(briefingId, {...analysis, startedAt: running.startedAt});
         console.log(`Briefing ${briefingId}: ${analysis.picked.length} cards picked for an analysis, ${Object.keys(analysis.cards).length} written in ${Math.round((Date.now() - started) / 1000)} s, ${analysis.dropped} lines dropped by the checks, tokens ${JSON.stringify(usage)}`);
     } catch (err) {
@@ -1011,9 +1022,13 @@ export const analysisArticles = (stories, {lead, summary, readOf}) => {
     }));
 };
 
-// an analysis still 'running' after this long was left by a server that stopped
+// An analysis still 'running' with no card done for this long was left by a server that stopped. Its
+// cards take up to 300 s each (see card-analysis.js) and their busy waits, 3 at a time, with no limit on
+// their number: counted from its start, a long one was said failed while it ran, and the page stopped
+// asking for it. Exported for the tests
 const ANALYSIS_ABANDONED_MS = 12 * 60e3;
-const analysisOfRow = (analysis) => analysis?.status === 'running' && Date.now() - new Date(analysis.startedAt).getTime() > ANALYSIS_ABANDONED_MS
+export const analysisOfRow = (analysis, now = Date.now()) => analysis?.status === 'running'
+    && now - new Date(analysis.beatAt ?? analysis.startedAt).getTime() > ANALYSIS_ABANDONED_MS
     ? {status: 'failed'} : analysis ?? null;
 
 const toBriefing = (row) => row && ({
@@ -1130,11 +1145,12 @@ const dateOf = (value) => {
 // translated as theirs; no story, no why, no other media, no angle nor official source
 export const importedCard = async (address, page, {language, usage}) => {
     const title = (page.title || page.description || address).replace(/\s+/g, ' ').trim();
-    const [extract, ai] = await Promise.all([extractArticle(title, page, {language, usage}),
-        aiWaysOf(title, page, {language, usage}).catch(() => null)]);
+    const extract = await extractArticle(title, page, {language, usage});
     if (extract.passages.length === 0) {
         throw Object.assign(new Error('No passage of a news could be read in this page.'), {status: 422});
     }
+    // asked once the page is known to be a news: a page refused cost two calls of deepseek
+    const ai = await aiWaysOf(title, page, {language, usage}).catch(() => null);
     const lang = extract.from ?? languageOf(`${title} ${page.content.slice(0, 2000)}`);
     const [titleTranslation] = lang && lang !== language && writtenIn(lang) && writtenIn(language)
         ? await translateTexts([{text: title, from: writtenIn(lang)}], writtenIn(language), usage).catch(() => [null])
@@ -1242,13 +1258,16 @@ export const BriefingService = {
         if (!asked || asked.length > MAX_URL) throw Object.assign(new Error('url: the address of the news.'), {status: 400});
         const address = (await assertPublicUrl(asked)).href;
         const {row, briefing} = await readyBriefing(userId, briefingId);
-        const known = (article) => article?.url === address || article?.url === asked;
-        if (briefing.items.some(item => [item.lead, ...(item.articles ?? [])].some(known))) {
-            throw Object.assign(new Error('This news is already in the briefing.'), {status: 409});
-        }
-        if (briefing.items.filter(item => item.imported).length >= MAX_IMPORTED) {
-            throw Object.assign(new Error(`At most ${MAX_IMPORTED} news added to a briefing.`), {status: 400});
-        }
+        const links = [...new Set([address, asked])];
+        // checked before the page is read, and again by the statement that adds it: two news added at
+        // the same time are read together
+        const refused = (items) => items.some(item => [item.lead, ...(item.articles ?? [])].some(article => links.includes(article?.url)))
+            ? Object.assign(new Error('This news is already in the briefing.'), {status: 409})
+            : items.filter(item => item.imported).length >= MAX_IMPORTED
+                ? Object.assign(new Error(`At most ${MAX_IMPORTED} news added to a briefing.`), {status: 400})
+                : null;
+        const early = refused(briefing.items);
+        if (early) throw early;
         const [page] = await Crawlers.Pages([address]);
         if (!page?.content || !canSummarize(page.content)) {
             throw Object.assign(new Error('This page could not be read: no article in it, a paywall or a protected site.'), {status: 422});
@@ -1256,8 +1275,12 @@ export const BriefingService = {
         const profile = row.id_profile ? await ProfileModel.get(row.id_profile) : null;
         const usage = newUsage();
         const card = await importedCard(address, page, {language: readerLanguage(profile ?? {}), usage});
-        const storyId = await BriefingModel.addItem(userId, row.id, card);
-        if (storyId === null) throw Object.assign(new Error('Unknown briefing.'), {status: 404});
+        const storyId = await BriefingModel.addItem(userId, row.id, card, {max: MAX_IMPORTED, links});
+        if (storyId === null) {
+            // another news added meanwhile filled it or was this one, else the briefing is gone
+            const now = await BriefingModel.ofUser(userId, row.id);
+            throw (now?.status === 'ready' && refused(toBriefing(now).items)) || Object.assign(new Error('Unknown briefing.'), {status: 404});
+        }
         console.log(`Briefing ${row.id}: news added by its link, tokens ${JSON.stringify(usage)}`);
         return withMarks({items: [{...card, storyId}]}, await EntityService.followTerms(row.id_profile ?? null, profile?.watch_terms)).items[0];
     },

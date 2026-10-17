@@ -104,6 +104,14 @@ const canWiden = ({groups}) => groups.some(terms => terms.length > 1);
 
 const widen = ({groups, excluded}) => ({groups: groups.flat().map(term => [term]), excluded});
 
+// The keywords written again from what parse read, searching the same: 'referee -rugby, "red card"'
+// gives 'referee, "red card", -rugby'. The wider search is offered this way, its exact phrases and
+// excluded words with it: run from its words alone, it was not the one counted
+const toKeywords = ({groups, excluded}) => {
+    const written = ({text, exact}) => exact ? `"${text}"` : text;
+    return [...groups.map(terms => terms.map(written).join(' ')), ...excluded.map(term => `-${written(term)}`)].join(', ');
+};
+
 // The same keywords read in JavaScript, for texts that are not in the database yet (the items of a
 // feed being chosen, see findFeeds). The accents are ignored on both sides: "defile" finds "défilé".
 // The letters and digits are listed without the i flag: under /iu a negated \p{} class also refuses
@@ -227,4 +235,4 @@ const matcher = ({groups, excluded}) => {
 // or with the operators above when the reader wants exact words: quotes, a comma or -word say it
 const hasOperators = (keywords) => (keywords ?? []).some(keyword => /["“”,]|(?:^|\s)-\S/.test(String(keyword)));
 
-export const Filter = { parse, toPattern, keywordsSql, canWiden, widen, matcher, withoutAccents, hasOperators, highlights };
+export const Filter = { parse, toPattern, keywordsSql, canWiden, widen, toKeywords, matcher, withoutAccents, hasOperators, highlights };

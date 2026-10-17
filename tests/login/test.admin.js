@@ -62,4 +62,9 @@ describe('ProfileService.create', () => {
         await expect(ProfileService.create(311, {name: 'Second', text: 'Le tennis', language: 'fr'})).rejects.toMatchObject({status: 403});
         expect(count).not.toHaveBeenCalled();
     });
+
+    it('should tell a reader who is not an administrator so, whatever the name they wrote', async () => {
+        roleName.mockResolvedValue('User');
+        await expect(ProfileService.create(311, {name: '', text: 'Le tennis', language: 'fr'})).rejects.toMatchObject({status: 403});
+    });
 });

@@ -149,7 +149,9 @@ export const MentionModel = {
     articlesOfStories: async (storyIds) => storyIds.length === 0 ? [] : prisma.$queryRawUnsafe(`
         SELECT id_story, array_agg(id) AS ids FROM articles WHERE id_story = ANY($1::int[]) GROUP BY id_story`, storyIds),
 
-    // the names no news names any more, never looked for in Wikidata: the item of the others is kept
+    // the names no news names any more, never looked for in Wikidata: the item of the others is kept on
+    // purpose (the user, 17.10.2026), so a name that comes back is not looked for again in Wikidata,
+    // which limits its calls; the linked ones are never deleted
     deleteUnused: async () => prisma.$executeRawUnsafe(`
         DELETE FROM mentions m WHERE m.linked_at IS NULL
           AND NOT EXISTS (SELECT 1 FROM article_mentions am WHERE am.id_mention = m.id)`),

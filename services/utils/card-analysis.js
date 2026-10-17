@@ -379,11 +379,13 @@ export const analysisOfCard = async (card, language, usage = null) => {
 // The analyses of the cards (see the card above, numbered n from 1) for a reader of 'language' (a code):
 // {picked: [{storyId, reason}], cards: {storyId: {why, next, dropped}}}. onPicked(picked) is called once
 // the cards are chosen, before they are written; a card the AI fails on has none
-export const analysesOf = async (cards, language, {usage = null, onPicked = async () => {}} = {}) => {
+export const analysesOf = async (cards, language, {usage = null, onPicked = async () => {}, onCard = async () => {}} = {}) => {
     const reader = writtenIn(language) ?? 'English';
     const picked = (await pickedCards(cards, language, usage)).map(({n, reason}) => ({card: cards[n - 1], reason}));
     await onPicked(picked.map(({card, reason}) => ({storyId: card.storyId, reason})));
-    const written = await mapWithConcurrency(picked, CARDS_AT_ONCE, ({card}) => analysisOfCard(card, reader, usage));
+    // onCard() after each card, written or not: the analysis still runs (see analysisOfRow in briefing-service.js)
+    const written = await mapWithConcurrency(picked, CARDS_AT_ONCE, ({card}) => analysisOfCard(card, reader, usage)
+        .finally(() => onCard().catch(() => {})));
     const analyses = {};
     written.forEach((result, i) => {
         if (result.status === 'fulfilled' && result.value) analyses[picked[i].card.storyId] = result.value;

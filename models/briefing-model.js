@@ -9,6 +9,23 @@
 
 import {prisma} from '../config/db.js';
 
+// the cards of a briefing, and the links of each card (its lead and its articles)
+const CARDS = `jsonb_array_elements(items) AS card`;
+const LINKS_OF_CARD = `jsonb_array_elements(jsonb_build_array(card->'lead')
+    || CASE WHEN jsonb_typeof(card->'articles') = 'array' THEN card->'articles' ELSE '[]'::jsonb END) AS article`;
+// A card added by the reader (see addItem). Exported for the tests, which run it in a transaction rolled
+// back (tests/briefing/test.add-item.js). $1 the briefing, $2 the user, $3 the card, $4 the cards added at
+// most, $5 the links none of its cards may have. A second statement waits for the first to commit and is
+// checked again on the items it wrote
+export const ADD_ITEM = `
+    UPDATE briefings
+    SET items = items || jsonb_build_array($3::jsonb || jsonb_build_object('storyId',
+            (SELECT LEAST(0, COALESCE(min((card->>'storyId')::int), 0)) - 1 FROM ${CARDS})))
+    WHERE id = $1 AND id_user = $2 AND status = 'ready' AND jsonb_typeof(items) = 'array'
+      AND (SELECT count(*) FROM ${CARDS} WHERE card->>'imported' = 'true') < $4::int
+      AND NOT EXISTS (SELECT 1 FROM ${CARDS}, ${LINKS_OF_CARD} WHERE article->>'url' = ANY($5::text[]))
+    RETURNING (items->-1->>'storyId')::int AS "storyId"`;
+
 export const BriefingModel = {
     // hours: of news it is written from, size: the cards asked for
     create: async (userId, profileId, hours, size) => prisma.briefings.create({data: {id_user: userId, id_profile: profileId, status: 'running', step: 'starting', hours, size}}),
@@ -31,7 +48,7 @@ export const BriefingModel = {
         data: {status: 'ready', step: null, items, finished_at: new Date()},
     }),
 
-    // the analysis of its cards, saved when it starts and again when written (see briefing-analysis.js)
+    // the analysis of its cards, saved when it starts and again when written (see card-analysis.js)
     analysis: async (id, analysis) => prisma.briefings.update({where: {id}, data: {analysis}}),
 
     fail: async (id, error) => prisma.briefings.update({
@@ -40,15 +57,12 @@ export const BriefingModel = {
     }),
 
     // A card added at the end of a ready briefing of this user, its id the next negative one (a news
-    // added by the reader is of no story, see importNews): one statement, so two added at the same time
-    // get two ids. Answers that id, null when the briefing is not a ready one of this user
-    addItem: async (userId, briefingId, item) => (await prisma.$queryRawUnsafe(`
-        UPDATE briefings
-        SET items = items || jsonb_build_array($3::jsonb || jsonb_build_object('storyId',
-                (SELECT LEAST(0, COALESCE(min((card->>'storyId')::int), 0)) - 1 FROM jsonb_array_elements(items) AS card)))
-        WHERE id = $1 AND id_user = $2 AND status = 'ready' AND jsonb_typeof(items) = 'array'
-        RETURNING (items->-1->>'storyId')::int AS "storyId"`,
-        briefingId, userId, JSON.stringify(item)))[0]?.storyId ?? null,
+    // added by the reader is of no story, see importNews), while the briefing has fewer than 'max' cards
+    // added and none of these 'links' (as lead or article of a card): one statement, so two added at the
+    // same time get two ids, and can't pass 'max' nor add one link twice. Answers that id, null when the
+    // briefing is not a ready one of this user, is full or has one of the links
+    addItem: async (userId, briefingId, item, {max, links}) => (await prisma.$queryRawUnsafe(ADD_ITEM,
+        briefingId, userId, JSON.stringify(item), max, links))[0]?.storyId ?? null,
 
     // a card added by the reader taken out again (a negative id): 0 when there is none
     removeItem: async (userId, briefingId, storyId) => prisma.$executeRawUnsafe(`

@@ -68,6 +68,18 @@ describe('translateNews', () => {
         expect(chat).toHaveBeenCalledTimes(1);
     });
 
+    it('should ask a text again when the AI did not answer, not keep it untranslated until a restart', async () => {
+        FeedModel.getArticlesByLinks.mockResolvedValue([article('https://bild.test/6', 'Dortmund verliert in Mainz', null, 'de')]);
+        // no translation for the text, twice: what translateTexts answers when the AI is down too
+        answer(); answer();
+
+        expect(await NewsService.translateNews({news: ['https://bild.test/6'], language: 'en'})).toEqual([]);
+        answer('Dortmund loses in Mainz');
+        const again = await NewsService.translateNews({news: ['https://bild.test/6'], language: 'en'});
+
+        expect(again).toEqual([{url: 'https://bild.test/6', language: 'de', title: 'Dortmund loses in Mainz', description: null}]);
+    });
+
     it('should read the language of a news without vectors from its text', async () => {
         FeedModel.getArticlesByLinks.mockResolvedValueOnce([
             article('https://gazzetta.test/5', "L'arbitro ha annullato il gol della Juventus", "Polemica per la decisione del VAR durante la partita di ieri sera", null),

@@ -375,6 +375,8 @@ export const NewsService = {
                     wider = {
                         found: found.length,
                         terms: loose.groups.map(([term]) => term.text),
+                        // the search counted, to run it: its exact phrases and excluded words too
+                        keywords: Filter.toKeywords(loose),
                     };
                 }
             }
@@ -493,6 +495,9 @@ export const NewsService = {
         for (let i = 0; i < missing.length; i += TEXTS_PER_CALL) calls.push(missing.slice(i, i + TEXTS_PER_CALL));
         await mapWithConcurrency(calls, AI_CONCURRENCY, async (texts) => {
             const translations = await translateTexts(texts, to);
+            // none at all: the AI did not answer (down, busy), the texts are asked again next time. One
+            // null among others dropped a figure, and would again
+            if (translations.every(translation => translation === null)) return;
             texts.forEach(({text}, i) => translated.set(keyOf(text), translations[i]));
         });
         for (const key of translated.keys()) {

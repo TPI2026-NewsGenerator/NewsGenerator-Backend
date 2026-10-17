@@ -28,7 +28,8 @@ jest.unstable_mockModule('../../models/user-model.js', () => ({UserModel: {email
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: {get: jest.fn(async () => ({name: 'Roberto', text: 'Je lis en français.', languages: ['fr'], watch_terms: ['SBB']}))}}));
 jest.unstable_mockModule('../../services/utils/mailer.js', () => ({sendMail, mailEnabled: () => true}));
 jest.unstable_mockModule('../../services/utils/crawlers.js', () => ({Crawlers: {Pages: pages, Html: pages}}));
-jest.unstable_mockModule('../../services/utils/ai-ways.js', () => ({aiWaysOf: jest.fn(async () => null)}));
+const aiWaysOf = jest.fn(async () => null);
+jest.unstable_mockModule('../../services/utils/ai-ways.js', () => ({aiWaysOf}));
 const extract = await import('../../services/utils/extract.js');
 jest.unstable_mockModule('../../services/utils/extract.js', () => ({...extract, extractArticle, translateTexts}));
 const {BriefingService} = await import('../../services/briefing-service.js');
@@ -57,8 +58,10 @@ describe('BriefingService.importNews', () => {
 
         expect(pages).toHaveBeenCalledWith(['https://news.example/strike']);
         expect(extractArticle).toHaveBeenCalledWith('SBB: train strike on Monday', page, expect.objectContaining({language: 'fr'}));
-        const [userId, briefingId, added] = addItem.mock.calls[0];
+        const [userId, briefingId, added, conditions] = addItem.mock.calls[0];
         expect([userId, briefingId]).toEqual([4, 7]);
+        // checked again by the statement that adds it
+        expect(conditions).toEqual({max: 10, links: ['https://news.example/strike']});
         expect(added).toMatchObject({
             imported: true, title: 'SBB: train strike on Monday', titleTranslation: 'Grève des trains', language: 'en',
             summary: 'Trains will stop on Monday.', translation: 'Les trains s’arrêteront lundi.', topic: 'transport',
@@ -83,9 +86,26 @@ describe('BriefingService.importNews', () => {
         expect(addItem).not.toHaveBeenCalled();
     });
 
+    it('should not ask the AI versions of a page that gives no passage of a news', async () => {
+        aiWaysOf.mockClear();
+        extractArticle.mockResolvedValueOnce({passages: [], translation: null, points: [], pointsTranslation: null, digest: [], digestTranslation: null,
+            from: null, topic: null, sourcing: null});
+
+        await expect(BriefingService.importNews(4, 7, 'https://news.example/strike')).rejects.toMatchObject({status: 422});
+        expect(aiWaysOf).not.toHaveBeenCalled();
+        expect(addItem).not.toHaveBeenCalled();
+    });
+
     it('should refuse an eleventh news added to one briefing', async () => {
         ofUser.mockResolvedValue({...row, items: [...row.items, ...Array.from({length: 10}, (_, i) => ({...card(-i - 1, `https://x.example/${i}`), imported: true}))]});
         await expect(BriefingService.importNews(4, 7, 'https://news.example/strike')).rejects.toMatchObject({status: 400});
+    });
+
+    it('should say why when the same news, added at the same time, was added first', async () => {
+        addItem.mockResolvedValueOnce(null);
+        ofUser.mockResolvedValueOnce(row).mockResolvedValueOnce({...row, items: [...row.items, {...card(-1, 'https://news.example/strike'), imported: true}]});
+
+        await expect(BriefingService.importNews(4, 7, 'https://news.example/strike')).rejects.toMatchObject({status: 409});
     });
 });
 

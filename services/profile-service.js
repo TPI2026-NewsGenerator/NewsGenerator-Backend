@@ -289,8 +289,9 @@ export const ProfileService = {
     // another profile of the user: {name, text, language}, written as the first one
     // Several profiles are for the administrators (see admin.js): the others write theirs again
     create: async (userId, {name, ...written}) => {
-        const named = cleanName(name);
+        // a reader who may not add one is told so first, whatever the name they wrote
         if (!await isAdmin(userId)) throw Object.assign(new Error('Several profiles are for the administrators: write yours again instead.'), {status: 403});
+        const named = cleanName(name);
         if (await ProfileModel.count(userId) >= MAX_PROFILES) throw badRequest(`At most ${MAX_PROFILES} profiles.`);
         const prepared = await ProfileService.prepare(written);
         const id = await ProfileService.store(userId, null, {...prepared, profile: {...prepared.profile, name: named}});

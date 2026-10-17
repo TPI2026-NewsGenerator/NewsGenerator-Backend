@@ -285,6 +285,13 @@ describe('Filter.canWiden and Filter.widen', () => {
         expect(wider.groups.map(terms => terms.map(term => term.text))).toEqual([['red card'], ['referee']]);
         expect(wider.groups[0][0].exact).toBe(true);
     });
+
+    it('should write the wider search back as keywords that search the same, its phrases and excluded words kept', () => {
+        const wider = Filter.widen(Filter.parse(['"red card" referee -rugby -"yellow card"']));
+
+        expect(Filter.toKeywords(wider)).toBe('"red card", referee, -rugby, -"yellow card"');
+        expect(Filter.parse([Filter.toKeywords(wider)])).toEqual(wider);
+    });
 });
 
 describe('Filter.matcher', () => {

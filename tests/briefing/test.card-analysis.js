@@ -12,6 +12,8 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const chat = jest.fn();
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
+// the briefing service is read for its analysisOfRow only
+jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 
 // no tagger: the names are the words in capitals; no Gemini
 process.env.NER_URL = '';
@@ -126,5 +128,32 @@ describe('the analyses of a briefing', () => {
 
         expect(result).toEqual({picked: [{storyId: 11, reason: null}], cards: {}});
         expect(chat.mock.calls.every(([request]) => request.model === ANALYSIS_MODEL)).toBe(true);
+    });
+
+    it('should say each card done, written or not, so a long analysis is not taken for one abandoned', async () => {
+        chat.mockImplementation(async ({messages}) => {
+            if (messages[0].content.startsWith('You choose which cards')) return answer({cards: [{n: 1}, {n: 2}]});
+            if (messages[0].content.includes('Card 2')) throw Object.assign(new Error('bad request'), {status_code: 400});
+            return answer({why: [{text: 'UEFA says the plan of Infantino lacks support.', cites: ['A2 s1']}], next: []});
+        });
+        const onCard = jest.fn(async () => { throw new Error('the database is away'); });
+
+        const result = await analysesOf([card(1, 11), card(2, 12, {title: 'Card 2'})], 'en', {onCard});
+
+        expect(onCard).toHaveBeenCalledTimes(2);
+        expect(Object.keys(result.cards)).toEqual(['11']);
+    });
+});
+
+describe('an analysis still running', () => {
+    it('should be taken for one abandoned only after 12 minutes without a card done', async () => {
+        const {analysisOfRow} = await import('../../services/briefing-service.js');
+        const now = new Date('2026-10-17T12:00:00Z').getTime();
+        const running = {status: 'running', startedAt: '2026-10-17T11:30:00Z'};
+
+        expect(analysisOfRow(running, now)).toEqual({status: 'failed'});
+        expect(analysisOfRow({...running, beatAt: '2026-10-17T11:55:00Z'}, now)).toEqual({...running, beatAt: '2026-10-17T11:55:00Z'});
+        expect(analysisOfRow({...running, beatAt: '2026-10-17T11:45:00Z'}, now)).toEqual({status: 'failed'});
+        expect(analysisOfRow({status: 'ready', startedAt: '2026-10-17T08:00:00Z'}, now)).toMatchObject({status: 'ready'});
     });
 });

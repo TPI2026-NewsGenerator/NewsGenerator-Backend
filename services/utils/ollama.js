@@ -165,7 +165,7 @@ const ask = async (messages, usage, think, model, timeoutMs) => {
 // its answer in a markdown json block, so that is removed before reading it. A conversation can be
 // given for the prompt, to ask again after an answer. model: another model of Ollama for this call
 // (see ai-ways.js), never answered by Gemini; timeoutMs: a call that reasons for minutes (see
-// briefing-analysis.js), OLLAMA_TIMEOUT_MS else
+// card-analysis.js), OLLAMA_TIMEOUT_MS else
 export const ollamaJson = async (prompt, usage = null, {think, model, timeoutMs} = {}) => {
     const content = await ask(Array.isArray(prompt) ? prompt : [{role: 'user', content: prompt}], usage, think, model, timeoutMs);
 

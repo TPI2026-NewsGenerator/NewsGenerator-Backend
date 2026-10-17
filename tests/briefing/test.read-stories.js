@@ -12,7 +12,8 @@ jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 jest.unstable_mockModule('../../services/utils/crawlers.js', () => ({Crawlers: {Html: jest.fn()}}));
 jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {saveResolvedLinks: jest.fn(async () => {})}}));
 jest.unstable_mockModule('../../services/utils/contested.js', () => ({contestedOf: jest.fn(async () => [])}));
-jest.unstable_mockModule('../../services/utils/ai-ways.js', () => ({aiWaysOf: jest.fn(async () => null)}));
+const aiWaysOf = jest.fn(async () => null);
+jest.unstable_mockModule('../../services/utils/ai-ways.js', () => ({aiWaysOf}));
 const extract = await import('../../services/utils/extract.js');
 jest.unstable_mockModule('../../services/utils/extract.js', () => ({...extract, extractArticle: jest.fn()}));
 
@@ -66,6 +67,14 @@ describe('readStories', () => {
         extractArticle.mockResolvedValue({passages: [], translation: [], topic: null, sourcing: null});
         const [read] = await readStories([story(1, article('https://www.example.org/a'))], {usage});
         expect(read.unreadable).toBe(true);
+    });
+
+    it('should not ask the AI versions of a story read: only the cards kept get them, later', async () => {
+        Crawlers.Html.mockResolvedValue([{url: 'https://www.example.org/a', content: FULL}]);
+        const [read] = await readStories([story(1, article('https://www.example.org/a'))], {usage});
+        expect(read.summary.summary).toBe('The first sentence.');
+        expect(read.summary.ai).toBeUndefined();
+        expect(aiWaysOf).not.toHaveBeenCalled();
     });
 
     it('should keep a story read when the AI fails on it, without calling it unreadable', async () => {
