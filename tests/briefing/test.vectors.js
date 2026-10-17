@@ -8,7 +8,7 @@
 import process from 'node:process'
 import {jest} from '@jest/globals'
 import {denseSimilarity, embed, parseVector, SPARSE_DIMENSIONS, toSparsevec, toVector} from '../../services/utils/embedder.js'
-import {feedLanguage, languageOf, ownLanguage} from '../../services/utils/language.js'
+import {feedLanguage, languageOf, ownLanguage, severalLanguages} from '../../services/utils/language.js'
 
 const unit = (...values) => {
     const norm = Math.hypot(...values);
@@ -323,6 +323,45 @@ describe('ownLanguage', () => {
             + 'têm de fazer. Também está em causa a presença das equipas portuguesas após o sorteio da Liga dos Campeões.';
         expect(ownLanguage(portuguese, 'pt')).toBe('pt');
         expect(ownLanguage(vietnamese)).toBe('vi');
+    });
+});
+
+describe('severalLanguages', () => {
+    // news of the news sitemap of Reuters (17.10.2026), told Spanish when a reader added it
+    const reuters = [
+        'FIFA to amend Article 27 of disciplinary code after Balogun case',
+        'Pope Leo to be discharged from hospital - Vatican',
+        'Islamist fighters kill 10 soldiers in attack on northeast Nigeria army base',
+        'Shell agrees sale of French mobility unit to DCC Energy, source says',
+        'Central bankers eye higher rates as AI boom fuels scramble for cash',
+        'Fires surge in Brazil\'s Amazon, fueled by El Niño and climate change',
+        'Las exportaciones chinas de septiembre baten previsiones y las importaciones se aceleran',
+        'Zelenski afirma que la reunión trilateral de líderes podría celebrarse en la cumbre del G-20',
+        'Le pape Léon XIV se rétablit comme prévu de son opération d\'un cancer du poumon',
+        'Rússia flexibiliza proibição às exportações de diesel após acordo entre Putin e Trump',
+    ];
+
+    it('should tell a feed whose news are clearly in several languages', () => {
+        expect(severalLanguages(reuters)).toBe(true);
+        // its English news, told by their words once the feed gives none
+        expect(languageOf(`${reuters[0]} `, 'es')).toBe('es');
+        expect(languageOf(`${reuters[0]} `)).toBe('en');
+    });
+
+    it('should not take the short words of other languages in news of one for several languages', () => {
+        // news of ojogo.pt and sicnoticias.pt whose short words are Spanish, Italian or English ones
+        expect(severalLanguages([
+            'O Braga tem de assumir-se claramente como favorito',
+            'Rúben Amorim e Paulo Fonseca vitoriosos na Liga Europa e Gonçalo Ramos marcou',
+            'Foguetes europeus rumam a Portugal: equipas nacionais prontas para a competição',
+            'EUA ponderam usar a "mãe de todas as bombas" contra o Irão',
+            'Também está em causa a presença das equipas portuguesas após o sorteio',
+            'Benfica vence em casa e já está nos oitavos da Taça de Portugal',
+            'Mourinho perde Vinícius para o El Clássico',
+            'O treinador do Sporting não esconde a desilusão com a derrota em casa',
+        ])).toBe(false);
+        expect(severalLanguages(reuters.slice(0, 6))).toBe(false);
+        expect(severalLanguages([])).toBe(false);
     });
 });
 

@@ -142,6 +142,46 @@ export const feedLanguage = (texts, url = null) => {
     return COUNTRY_LANGUAGE[country] ?? language;
 };
 
+// A feed in several languages has none to give its news: the news sitemap of Reuters gives its English,
+// Spanish, Portuguese, French, German and Italian news in one feed, was told Spanish when a reader added
+// it (the Spanish titles have more short words), and its English titles, often with one short word or
+// none, were kept Spanish: 41% of its news of 14 days in the language of their address (/latam/, /pt/,
+// /fr/, /de/, /it/, English otherwise), 84% read without the language of the feed
+// (bench/language-mixed-feeds.mjs, 17.10.2026). A feed is in several languages when, of its news
+// clearly in one (see clearLanguage), MIXED_OTHERS and MIXED_SHARE are in another than most of them.
+// Measured on the last 100 news of 7 days of 3158 feeds (bench/language-mixed-detect.mjs): 8 to 10 feeds,
+// Reuters (27%), American stations with news in Spanish, Moroccan and African ones in French and
+// English. The short words alone took 39, Portuguese and Czech ones among them, whose news read
+// without the language of their feed fell from 96 to 52% and from 88 to 46% right; at 10% Somali and
+// Basque feeds came in (franc made to choose among the languages below)
+const MIXED_OTHERS = 3;
+const MIXED_SHARE = 0.2;
+export const MIXED_TEXTS = 100;     // the last news of a feed read to tell it
+const FRANC_WORDS = Object.keys(FRANC_CODES).filter(code => SETS[FRANC_CODES[code]]);
+
+// the language a text is clearly in, null when unsure: its short words give it MIN_HITS and more than
+// any other, and franc, among the languages of the short words, says the same
+const clearLanguage = (text) => {
+    const words = (text ?? '').toLowerCase().match(/[\p{L}]+/gu) ?? [];
+    const hits = Object.entries(SETS)
+        .map(([language, set]) => [language, words.reduce((count, word) => count + (set.has(word) ? 1 : 0), 0)])
+        .sort((a, b) => b[1] - a[1]);
+    if (hits[0][1] < MIN_HITS || hits[0][1] === hits[1][1]) return null;
+    return FRANC_CODES[franc(text, {minLength: 10, only: FRANC_WORDS})] === hits[0][0] ? hits[0][0] : null;
+};
+
+// whether these texts (the last news of one feed) are in several languages, see MIXED_OTHERS
+export const severalLanguages = (texts) => {
+    const counts = new Map();
+    for (const text of texts.slice(0, MIXED_TEXTS)) {
+        const language = clearLanguage(text);
+        if (language) counts.set(language, (counts.get(language) ?? 0) + 1);
+    }
+    const told = [...counts.values()].reduce((sum, count) => sum + count, 0);
+    const others = told - Math.max(0, ...counts.values());
+    return others >= MIXED_OTHERS && others >= told * MIXED_SHARE;
+};
+
 // The name of a language, in another one: languageName('hu') is "Hungarian", languageName('el', 'fr')
 // "grec". The code itself when it names none
 const names = new Map();

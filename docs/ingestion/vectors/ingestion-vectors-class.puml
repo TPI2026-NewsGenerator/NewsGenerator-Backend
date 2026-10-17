@@ -9,6 +9,7 @@ package "Business" {
         + readNow(urls)
         + richText(title, description)
         - embedPending(urls, since)
+        - mixedOf(pending, fallbackOf)
         - warnIfLate()
     }
     class newsService <<other feature>> {
@@ -21,7 +22,9 @@ note top of ingestService
     The next batch is encoded while this one is grouped;
     a run out of time leaves it encoding for the next run.
     Then 1 batch of older news (INGEST_OLDER_BATCHES), for
-    the search by meaning only
+    the search by meaning only. A feed whose news are
+    in several languages gives them none: each is told
+    by its words (asked once a day per feed)
 end note
 
 package "utils" {
@@ -37,6 +40,8 @@ package "utils" {
     }
     class language {
         + languageOf(text, fallback)
+        + severalLanguages(texts)
+        - clearLanguage(text)
     }
     class googleNews {
         + languageOfSearch(url)
@@ -58,6 +63,7 @@ end note
 package "Data" {
     class storyModel {
         + pendingArticles(since, limit, urls, floods)
+        + lastTexts(urls, limit, since)
         + pendingCount(since)
         + saveVectors(rows)
     }

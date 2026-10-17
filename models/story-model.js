@@ -31,6 +31,18 @@ export const StoryModel = {
         LIMIT $2::int`,
         since, limit, urls, last),
 
+    // the titles and descriptions of the last 'limit' news of each of these feeds published since 'since':
+    // [{url, texts}]. By their date of publication alone, which i_articles_feed_published reads in order
+    lastTexts: async (urls, limit, since) => prisma.$queryRawUnsafe(`
+        SELECT f.url, array_agg(a.title || ' ' || a.description ORDER BY a.published_at DESC) AS texts
+        FROM feeds f
+        JOIN LATERAL (SELECT title, description, published_at FROM articles
+                      WHERE id_feed = f.id AND published_at >= $3::timestamptz
+                      ORDER BY published_at DESC LIMIT $2::int) a ON true
+        WHERE f.url = ANY($1::text[])
+        GROUP BY f.url`,
+        urls, limit, since),
+
     // how many news published since 'since' still have no vectors
     pendingCount: async (since) => Number((await prisma.$queryRawUnsafe(`
         SELECT count(*) AS waiting FROM articles

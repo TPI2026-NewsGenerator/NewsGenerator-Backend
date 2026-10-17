@@ -15,7 +15,7 @@ import {FeedService, RETENTION_DAYS} from "./feed-service.js";
 import {FeedModel} from "../models/feed-model.js";
 import {StoryModel} from "../models/story-model.js";
 import {embed, toSparsevec, toVector} from "./utils/embedder.js";
-import {languageOf} from "./utils/language.js";
+import {LANGUAGES, languageOf, MIXED_TEXTS, severalLanguages} from "./utils/language.js";
 import {FLOOD_NEWS_PER_DAY, isFlood} from "./utils/feed-limits.js";
 import {ProfileModel} from "../models/profile-model.js";
 import {DirectoryModel} from "../models/directory-model.js";
@@ -97,6 +97,29 @@ export const GOOGLE_ENABLED = () => process.env.GOOGLE_NEWS !== 'off';
 const sharedLanguage = new Map(Object.entries(rss).flatMap(([language, categories]) =>
     Object.values(categories).flat().map(url => [url, language])));
 
+// The feeds whose news are in several languages (see severalLanguages): their language, given by the
+// reader who added them or the directory, is not their news'; each news is then told by its own words.
+// Told again every MIXED_EVERY_HOURS from their news of MIXED_DAYS. Map url -> {mixed, at}
+const MIXED_EVERY_HOURS = 24;
+const MIXED_DAYS = 7;
+const mixedFeeds = new Map();
+
+// the feeds of these news, with a language of the short words, whose news are in several languages
+const mixedOf = async (pending, fallbackOf) => {
+    const urls = [...new Set(pending.filter(a => LANGUAGES.includes(fallbackOf(a))).map(a => a.feed))];
+    const due = urls.filter(url => Date.now() - (mixedFeeds.get(url)?.at ?? 0) >= MIXED_EVERY_HOURS * 3600e3);
+    if (due.length > 0) {
+        const texts = new Map((await StoryModel.lastTexts(due, MIXED_TEXTS, new Date(Date.now() - MIXED_DAYS * 24 * 3600e3)))
+            .map(row => [row.url, row.texts]));
+        for (const url of due) {
+            const mixed = severalLanguages(texts.get(url) ?? []);
+            if (mixed && !mixedFeeds.get(url)?.mixed) console.log(`Ingestion: the news of ${url} are in several languages, each told by its words`);
+            mixedFeeds.set(url, {mixed, at: Date.now()});
+        }
+    }
+    return new Set(urls.filter(url => mixedFeeds.get(url).mixed));
+};
+
 // what is embedded for the profiles: the title and the start of the description
 export const richText = (title, description) => {
     const text = (description ?? '').replace(/\s+/g, ' ').trim().slice(0, DESCRIPTION_CHARS);
@@ -112,11 +135,13 @@ const embedPending = async (urls = null, since = new Date(Date.now() - WINDOW_HO
     // a news in several feeds, or a title republished, is encoded once
     const texts = [...new Set(pending.flatMap(a => [a.title, richText(a.title, a.description)]))];
     const vectors = new Map((await embed(texts)).map((vector, i) => [texts[i], vector]));
+    const fallbackOf = (a) => a.feed_language ?? sharedLanguage.get(a.feed) ?? languageOfSearch(a.feed) ?? null;
+    const mixed = await mixedOf(pending, fallbackOf);
 
     await StoryModel.saveVectors(pending.map(a => {
         const title = vectors.get(a.title);
         const text = vectors.get(richText(a.title, a.description));
-        const fallback = a.feed_language ?? sharedLanguage.get(a.feed) ?? languageOfSearch(a.feed) ?? null;
+        const fallback = mixed.has(a.feed) ? null : fallbackOf(a);
         return {
             id: a.id,
             lang: languageOf(`${a.title} ${a.description ?? ''}`, fallback) ?? 'en',

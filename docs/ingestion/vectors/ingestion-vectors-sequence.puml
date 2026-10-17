@@ -41,7 +41,14 @@ loop while a batch is full (100) and the minute of the run lasts (INGEST_GROUP_M
     else
         Embedder --> Ingest : the vectors, in the order of the texts
     end
-    Ingest -> Lang : languageOf(title + description, the language of the feed)
+    opt feeds of the batch not asked for 24 h, of a language of the short words
+        Ingest -> StoryModel : lastTexts(urls, 100, 7 days)
+        StoryModel -> DB : the last 100 news of each feed (i_articles_feed_published)
+        StoryModel --> Ingest : [{url, texts}]
+        Ingest -> Lang : severalLanguages(texts): 3 and 20% of the news\nclearly in one language are in another than most
+        note right : kept in memory a day (mixedOf)
+    end
+    Ingest -> Lang : languageOf(title + description, the language of the feed,\nnone for a feed in several languages)
     Ingest -> StoryModel : saveVectors(rows): toVector, toSparsevec
     StoryModel -> DB : UPDATE articles SET lang, title_dense::halfvec,\ntitle_sparse, text_dense::halfvec, text_sparse,\nembedded_at = now() (200 rows a statement)
     par the next batch encoded

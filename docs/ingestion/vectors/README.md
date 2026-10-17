@@ -33,8 +33,14 @@ the news are stored anyway and get their vectors at a next run.
   (PyTorch) on a graphics card, the same vectors; `GET /health` says `device: cpu | cuda`, `POST /embed`
   answers `{dense, sparse}`, 256 texts a request at most; it refuses to listen on the network without a token
   of 32 characters at least.
-- **Saved.** The language is told by the text (`languageOf`), the one of the feed as fallback, else `en`.
-  `StoryModel.saveVectors` writes `title_dense`, `text_dense` as `halfvec(1024)` (half precision, kept in the
+- **Language.** Told by the text (`languageOf`), the language of the feed kept unless another one has 3
+  short words more (`FEED_MARGIN`), else `en`. A feed whose news are in several languages gives none: each of
+  its news is told by its own words (`severalLanguages`, `services/utils/language.js`). It is in several
+  when, of its last 100 news of 7 days (`StoryModel.lastTexts`), the ones clearly in one language (the short
+  words give it more than any other, and franc among those 9 languages says the same) are 3 and 20% or more
+  in another language than most of them. Asked once a day per feed (`mixedOf`, kept in memory), only for the
+  feeds whose language the short words know; the log says when a feed is found in several.
+- **Saved.**`StoryModel.saveVectors` writes `title_dense`, `text_dense` as `halfvec(1024)` (half precision, kept in the
   row: `STORAGE PLAIN`), `title_sparse`, `text_sparse` as `sparsevec(250002)` (`toVector`, `toSparsevec`),
   `lang` and `embedded_at`, 200 rows a statement (`db/add_briefing.sql`).
 - **Overlap.** The embedder works while the database groups: a scheduled run encodes the news already waiting
@@ -58,6 +64,16 @@ the news are stored anyway and get their vectors at a next run.
 - Overlapping the embedder with the grouping: it worked 35 s of each run of 95 s before; 200 news a run
   instead of 100 (3.10.2026).
 - On a busy processor 64 texts took up to 310 s, past the 300 s `fetch` waits: hence 16 a request there.
+- A feed in several languages (17.10.2026, `bench/language-mixed-feeds.mjs`): the news sitemap of Reuters
+  gives its English, Spanish, Portuguese, French, German and Italian news in one feed, and was told Spanish
+  when a reader added it. Of its 4,506 news of 14 days, 40.8% were stored in the language of their address
+  (`/latam/`, `/pt/`, `/fr/`, `/de/`, `/it/`, English otherwise); 84.1% are read right without the language of
+  the feed, 46 to 49% with a rule on the title alone (its words beating the feed's by 1 or 2, with franc). The
+  test of several languages (`bench/language-mixed-detect.mjs`) takes 8 to 10 of 3,158 feeds: Reuters (27%),
+  American stations with news in Spanish, Moroccan and African ones in French and English. On the short words
+  alone it took 39, Portuguese and Czech feeds among them, whose news read without their feed's language fell
+  from 96 to 52% and from 88 to 46% right; at 10% Somali and Basque feeds came in. The last news of a feed are
+  read on `i_articles_feed_published`: 0.4 s for 60 feeds, 17.5 s for all once a day.
 
 ## Diagrams
 
