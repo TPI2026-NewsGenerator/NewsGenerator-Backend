@@ -6,7 +6,7 @@ Deux chaînes tournent en parallèle. Le serveur lit, comprend et regroupe toute
 
 Mesuré le **7 octobre 2026** sur le serveur Ubuntu · Lecteur d'exemple : **Enzo** (arbitrage, UEFA, lit en français) · Script : **server/bench/funnel-now.mjs** · Texte mis à jour le **16 octobre 2026**
 
-Le fonctionnement décrit est celui du 16 octobre 2026. Les chiffres viennent de la mesure du 7 octobre vers 1 h 30, sauf quand une autre date est donnée. « Parcours d'une nouvelle » suit, lui, un briefing complet d'Enzo écrit le même jour à 15 h 29 : ses nombres diffèrent un peu de ceux-ci (68 259 nouvelles au lieu de 67 636, 15 histoires choisies au lieu de 12, 9 cartes au lieu de 10), c'est un autre moment et un autre briefing.
+Le fonctionnement décrit est celui du 16 octobre 2026. Les chiffres viennent de la mesure du 7 octobre vers 1 h 30, sauf quand une autre date est donnée. « Parcours d'une nouvelle » suit, lui, une nouvelle dans un briefing complet d'Enzo écrit le 17 octobre, analyse comprise : ses nombres sont de ce jour-là (107 545 nouvelles dans ses sources, 47 candidates, 10 cartes), c'est un autre moment et un autre briefing.
 
 ## Vue d'ensemble : deux chaînes qui se rejoignent au briefing
 

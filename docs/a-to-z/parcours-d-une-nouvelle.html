@@ -173,14 +173,13 @@ footer { font-size: 0.86rem; color: var(--mute); border-top: 1px solid var(--rul
 <header>
   <p class="kicker">NewsGenerator · parcours d'une nouvelle</p>
   <h1>Du texte d'une nouvelle à la carte du lecteur</h1>
-  <p class="lede">Une seule nouvelle, suivie du début à la fin. Le flux de Foot Mercato la publie le 6 octobre à 16 h 49. Le serveur la lit, bge-m3 en fait deux vecteurs, et PostgreSQL la range avec les autres médias qui racontent le même fait. Le lendemain, Enzo demande son briefing : la base la classe parmi 44 526 histoires, puis l'IA la choisit, vérifie ses articles et choisit les phrases montrées. Elle devient la troisième carte du briefing.</p>
+  <p class="lede">Une seule nouvelle, suivie du début à la fin. Le flux de tribuna.com la publie le 16 octobre à 22 h 34. Le serveur la lit, relève ses noms, bge-m3 en fait deux vecteurs, et PostgreSQL la range avec les 37 autres médias anglophones qui racontent le même fait. Le lendemain, Enzo demande son briefing : la base la classe parmi 68 101 histoires, l'IA la choisit, vérifie ses articles et lui joint ses versions en quatre autres langues, choisit les phrases montrées, écrit sa version IA, cherche ses autres angles et sa source officielle, puis, la carte déjà montrée, son analyse. Elle devient la quatrième carte du briefing.</p>
   <div class="meta">
-    <span>Mesuré le <b>7 octobre 2026</b> sur la base du serveur Ubuntu</span>
-    <span>Lecteur : <b>Enzo</b> (lit en français, 3 intérêts)</span>
-    <span>Scripts : <b>server/bench/news-journey.mjs</b> + <b>news-journey-story.mjs</b></span>
-    <span>Texte mis à jour le <b>12 octobre 2026</b></span>
+    <span>Mesuré le <b>17 octobre 2026</b> sur la base du serveur Ubuntu</span>
+    <span>Lecteur : <b>Enzo</b>, profil « Enzo » (lit en anglais, 2 intérêts)</span>
+    <span>Scripts : <b>server/bench/news-journey.mjs</b> + <b>news-journey-story.mjs</b>, <b>-grouping.mjs</b>, <b>-rank.mjs</b></span>
   </div>
-  <p class="note">Le parcours est celui du 7 octobre ; ce qui a changé depuis est signalé à sa place. « Parcours NewsGenerator » mesure, lui, l'ensemble du serveur le même jour vers 1 h 30, avec un briefing rejoué jusqu'à la fusion : ses nombres diffèrent un peu de ceux-ci (67 636 nouvelles au lieu de 68 259, 12 histoires choisies au lieu de 15, 10 cartes au lieu de 9), c'est un autre moment et un autre briefing.</p>
+  <p class="note">Le profil d'Enzo lit maintenant en anglais : la carte et les réponses de l'IA sont en anglais, le reste de la page en français. Ce parcours remplace celui du 7 octobre (Foot Mercato, les plaintes de la Norvège contre Infantino), mesuré avant les points, le résumé, les versions IA, l'analyse et la source officielle. « Parcours NewsGenerator » décrit l'ensemble du serveur avec des mesures du 7 octobre : ses nombres sont d'un autre moment.</p>
 </header>
 
 <section>
@@ -203,10 +202,11 @@ footer { font-size: 0.86rem; color: var(--mute); border-top: 1px solid var(--rul
         <rect x="22" y="58" width="152" height="164" rx="3" fill="var(--paper)" stroke="var(--server)"/>
         <text x="34" y="82" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--server)">1</text>
         <text x="34" y="104" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="16" fill="var(--ink)">Texte</text>
-        <text x="34" y="126" fill="var(--mute)">titre + début de la</text>
-        <text x="34" y="142" fill="var(--mute)">description, découpés</text>
-        <text x="34" y="158" fill="var(--mute)">en jetons</text>
-        <text x="34" y="196" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--server)">18 + 74 jetons</text>
+        <text x="34" y="126" fill="var(--mute)">titre + description,</text>
+        <text x="34" y="142" fill="var(--mute)">en jetons ; ses noms</text>
+        <text x="34" y="158" fill="var(--mute)">relevés par GLiNER</text>
+        <text x="34" y="190" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--server)">16 + 90 jetons</text>
+        <text x="34" y="206" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--server)">5 noms</text>
 
         <rect x="196" y="58" width="152" height="164" rx="3" fill="var(--paper)" stroke="var(--server)"/>
         <text x="208" y="82" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--server)">2</text>
@@ -215,7 +215,7 @@ footer { font-size: 0.86rem; color: var(--mute); border-top: 1px solid var(--rul
         <text x="208" y="142" fill="var(--mute)">creux : le poids</text>
         <text x="208" y="158" fill="var(--mute)">de chaque mot</text>
         <text x="208" y="190" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--server)">1 024 nombres</text>
-        <text x="208" y="206" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--server)">+ 48 mots</text>
+        <text x="208" y="206" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--server)">+ 51 mots</text>
 
         <rect x="370" y="58" width="156" height="164" rx="3" fill="var(--paper)" stroke="var(--server)"/>
         <text x="382" y="82" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--server)">3</text>
@@ -223,8 +223,8 @@ footer { font-size: 0.86rem; color: var(--mute); border-top: 1px solid var(--rul
         <text x="382" y="126" fill="var(--mute)">pgvector : l'histoire</text>
         <text x="382" y="142" fill="var(--mute)">du même fait, puis</text>
         <text x="382" y="158" fill="var(--mute)">le fil de l'affaire</text>
-        <text x="382" y="190" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--server)">histoire 305801</text>
-        <text x="382" y="206" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--server)">score 0,871</text>
+        <text x="382" y="190" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--server)">histoire 798086</text>
+        <text x="382" y="206" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--server)">score 0,953</text>
 
         <rect x="574" y="58" width="152" height="164" rx="3" fill="var(--paper)" stroke="var(--reader)"/>
         <text x="586" y="82" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--reader)">4</text>
@@ -232,26 +232,26 @@ footer { font-size: 0.86rem; color: var(--mute); border-top: 1px solid var(--rul
         <text x="586" y="126" fill="var(--mute)">une requête SQL note</text>
         <text x="586" y="142" fill="var(--mute)">chaque histoire contre</text>
         <text x="586" y="158" fill="var(--mute)">ses intérêts</text>
-        <text x="586" y="190" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--reader)">16e / 44 526</text>
-        <text x="586" y="206" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--reader)">note 0,622</text>
+        <text x="586" y="190" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--reader)">45e / 68 101</text>
+        <text x="586" y="206" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--reader)">note 0,611</text>
 
         <rect x="748" y="58" width="152" height="164" rx="3" fill="var(--paper)" stroke="var(--reader)" stroke-width="2"/>
         <text x="760" y="82" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--reader)">5</text>
         <text x="760" y="104" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="16" fill="var(--ink)">IA</text>
-        <text x="760" y="126" fill="var(--mute)">choisir, vérifier,</text>
-        <text x="760" y="142" fill="var(--mute)">fusionner, choisir</text>
-        <text x="760" y="158" fill="var(--mute)">les phrases, relire</text>
-        <text x="760" y="190" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--reader)">3e sur 47</text>
-        <text x="760" y="206" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--reader)">phrases 1, 2, 3, 5</text>
+        <text x="760" y="126" fill="var(--mute)">choisir, vérifier, les</text>
+        <text x="760" y="142" fill="var(--mute)">phrases, version IA,</text>
+        <text x="760" y="158" fill="var(--mute)">angles, analyse</text>
+        <text x="760" y="190" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--reader)">4e sur 47</text>
+        <text x="760" y="206" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--reader)">phrases 7, 1, 8</text>
 
         <rect x="922" y="58" width="156" height="164" rx="3" fill="var(--paper)" stroke="var(--reader)"/>
         <text x="934" y="82" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--reader)">6</text>
         <text x="934" y="104" font-family="Fraunces, Georgia, serif" font-weight="600" font-size="16" fill="var(--ink)">Carte</text>
-        <text x="934" y="126" fill="var(--mute)">titre, raison,</text>
-        <text x="934" y="142" fill="var(--mute)">passages, médias,</text>
-        <text x="934" y="158" fill="var(--mute)">fil de l'affaire</text>
-        <text x="934" y="190" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--reader)">3e de 9</text>
-        <text x="934" y="206" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--reader)">18 médias</text>
+        <text x="934" y="126" fill="var(--mute)">passages, médias,</text>
+        <text x="934" y="142" fill="var(--mute)">source officielle,</text>
+        <text x="934" y="158" fill="var(--mute)">angles, analyse</text>
+        <text x="934" y="190" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--reader)">4e de 10</text>
+        <text x="934" y="206" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--reader)">21 médias</text>
       </g>
       <g stroke-width="1.6" fill="none">
         <path d="M174 140 H194" stroke="var(--server)" marker-end="url(#aS)"/>
@@ -263,12 +263,13 @@ footer { font-size: 0.86rem; color: var(--mute); border-top: 1px solid var(--rul
     </svg>
   </div>
   <div class="timeline" aria-label="Chronologie">
-    <div><span class="when">6 oct. 16:49:35</span><span class="what">Foot Mercato publie</span></div>
-    <div><span class="when">16:52:54</span><span class="what">le serveur lit le flux</span><span class="gap">+3 min 19 s</span></div>
-    <div><span class="when">16:53:43</span><span class="what">les deux vecteurs sont prêts</span><span class="gap">+49 s</span></div>
-    <div><span class="when">peu après</span><span class="what">histoire 305801, puis le fil de l'affaire</span></div>
-    <div><span class="when">7 oct. 15:29</span><span class="what">Enzo demande un briefing de 48 h</span></div>
-    <div><span class="when">+57,6 s</span><span class="what">la carte est prête, avec 8 autres</span></div>
+    <div><span class="when">16 oct. 22:34:00</span><span class="what">tribuna.com publie</span></div>
+    <div><span class="when">22:40:36</span><span class="what">le serveur lit le flux</span><span class="gap">+6 min 36 s</span></div>
+    <div><span class="when">22:41:28</span><span class="what">ses noms sont relevés</span><span class="gap">+52 s</span></div>
+    <div><span class="when">22:41:34</span><span class="what">les deux vecteurs sont prêts, puis l'histoire 798086</span><span class="gap">+6 s</span></div>
+    <div><span class="when">17 oct. 15:21</span><span class="what">Enzo demande un briefing de 48 h</span></div>
+    <div><span class="when">+2 min 34 s</span><span class="what">la carte est prête, avec 9 autres</span></div>
+    <div><span class="when">+1 min 43 s</span><span class="what">son analyse est écrite</span></div>
   </div>
 </section>
 
@@ -277,7 +278,7 @@ footer { font-size: 0.86rem; color: var(--mute); border-top: 1px solid var(--rul
     <div class="part-head">
       <p class="kicker">À la lecture · le serveur, pour tous les lecteurs</p>
       <h2>Comprendre la nouvelle et la ranger</h2>
-      <p>Ce travail est fait une fois par nouvelle, quel que soit le nombre de lecteurs. Aucune IA n'y intervient : seulement bge-m3 et des calculs en SQL.</p>
+      <p>Ce travail est fait une fois par nouvelle, quel que soit le nombre de lecteurs. Aucune IA générative n'y intervient : bge-m3 pour les vecteurs, GLiNER pour les noms, et des calculs en SQL.</p>
     </div>
 
     <article class="station wide">
@@ -286,22 +287,23 @@ footer { font-size: 0.86rem; color: var(--mute); border-top: 1px solid var(--rul
         <h3>Le texte : ce qui est lu de la nouvelle</h3>
         <p>Le flux RSS donne le titre, une description, le lien et la date. Le serveur n'ouvre pas encore la page : à ce stade, il garde seulement ce que le flux donne.</p>
         <div class="quote">
-          <span class="t">FIFA : la Norvège dépose deux nouvelles plaintes contre Infantino</span>
-          <span class="d">La Fédération norvégienne (NFF) a déposé ce mardi deux plaintes auprès de la FIFA visant notamment la gouvernance de Gianni Infantino. La première demande au Comité d'éthique de l'instance d'examiner (…)</span>
+          <span class="t">FIFA to amend Article 27 after controversy surrounding Balogun case</span>
+          <span class="d">FIFA has committed to amending Article 27 of its disciplinary regulations following questions raised by the Belgian Football Association (RBFA) over the Folarin Balogun case. The announcement came after a FIFA Council meeting in Zurich, where RBFA president Pascale Van Damme raised concerns about the disciplinary process and the circumstances surrounding the case.</span>
         </div>
         <ul>
-          <li>La description est coupée par le flux lui-même : « (…) ». Langue : celle du flux, confirmée par les petits mots du texte (« la », « ce »…) : français.</li>
-          <li>Deux textes partent vers bge-m3 : <b>le titre seul</b>, pour regrouper les titres du même fait, et <b>le titre suivi des 400 premiers caractères de la description</b> (<code>richText</code>), pour le texte des histoires et pour les intérêts des lecteurs.</li>
+          <li>La description du flux tient en deux phrases. Langue : celle du flux, confirmée par les petits mots du texte (« to », « the », « after ») : anglais.</li>
+          <li>Deux textes partent vers bge-m3 : <b>le titre seul</b>, pour regrouper les titres du même fait, et <b>le titre suivi des 400 premiers caractères de la description</b> (<code>richText</code>), pour le texte des histoires et pour les intérêts des lecteurs. Ici, la description entière y tient.</li>
           <li>Un même texte vu dans plusieurs flux n'est encodé qu'une fois.</li>
+          <li>À côté, l'étiqueteur (GLiNER multi v2.1) lit le titre et 700 caractères de la description et relève 5 noms : <b>FIFA</b>, <b>RBFA</b>, <b>Belgian Football Association</b>, <b>Pascale Van Damme</b> (organisations et personne) et <b>Zurich</b> (lieu). Deux deviennent une fiche de Wikidata, la seule fiche qui porte exactement ce nom : Pascale Van Damme et la Belgian Football Association. « FIFA », cité par 8 734 nouvelles, n'en a aucune : plusieurs fiches s'appellent ainsi.</li>
         </ul>
         <p class="sub">Les jetons</p>
-        <p>bge-m3 ne lit pas des mots mais des jetons, des morceaux de mots tirés d'un vocabulaire de 250 002 entrées commun à une centaine de langues. Le signe ▁ marque le début d'un mot. En jaune, les mots rares découpés en morceaux.</p>
-        <div class="tokens" id="tok-title" aria-label="Les 18 jetons du titre"></div>
+        <p>bge-m3 ne lit pas des mots mais des jetons, des morceaux de mots tirés d'un vocabulaire de 250 002 entrées commun à une centaine de langues. Le signe ▁ marque le début d'un mot. En jaune, les mots découpés en morceaux.</p>
+        <div class="tokens" id="tok-title" aria-label="Les 16 jetons du titre"></div>
         <ul>
-          <li>Un mot courant reste entier : ▁FIFA, ▁contre, ▁nouvelles. Un nom rare est découpé : Infantino → ▁In | fa | ntino, Norvège → ▁Nor | v | ège ; plus loin, gouvernance → ▁gou | vern | ance.</li>
-          <li>Le titre fait 18 jetons, le texte complet 74. bge-m3 lit au plus 256 jetons par texte : assez pour un titre et 400 caractères.</li>
+          <li>Un mot courant reste entier : ▁FIFA, ▁Article, ▁after, ▁case. Un mot plus rare est découpé : amend → ▁a | mend, controversy → ▁contro | vers | y, Balogun → ▁Balo | gun ; plus loin, disciplinary → ▁disciplina | ry, Folarin → ▁Fol | arin.</li>
+          <li>Le titre fait 16 jetons, le texte complet 90. bge-m3 lit au plus 256 jetons par texte : assez pour un titre et 400 caractères.</li>
         </ul>
-        <div class="chips"><span class="chip">fetch Node 24</span><span class="chip">fast-xml-parser</span><span class="chip">langue : mots courants, franc</span><span class="chip">tokenizer XLM-RoBERTa (SentencePiece)</span></div>
+        <div class="chips"><span class="chip">fetch Node 24</span><span class="chip">fast-xml-parser</span><span class="chip">langue : mots courants, franc</span><span class="chip">tokenizer XLM-RoBERTa (SentencePiece)</span><span class="chip">GLiNER (noms)</span></div>
       </div>
     </article>
 
@@ -309,22 +311,22 @@ footer { font-size: 0.86rem; color: var(--mute); border-top: 1px solid var(--rul
       <div class="no">2</div>
       <div class="body">
         <h3>bge-m3 : deux vecteurs pour chaque texte</h3>
-        <p>Le modèle reçoit les jetons. Ses 24 couches réécrivent chacun d'eux en 1 024 nombres, à la lumière des autres jetons de la phrase : « ▁In », entre « Gianni » et « fa ntino », ne veut plus dire « dans ». Deux lectures en sortent.</p>
+        <p>Le modèle reçoit les jetons. Ses 24 couches réécrivent chacun d'eux en 1 024 nombres, à la lumière des autres jetons de la phrase : « ▁a », suivi de « mend », ne veut plus dire « un ». Deux lectures en sortent.</p>
 
         <p class="sub">Le vecteur dense : le sens de tout le texte</p>
         <canvas class="barcode" id="barcode" width="1024" height="70" aria-label="Les 1024 nombres du vecteur dense du texte"></canvas>
-        <div class="legend"><span><i style="background: var(--pos)"></i>positif</span><span><i style="background: var(--neg)"></i>négatif</span><span>chaque trait est un des 1 024 nombres ; plus il est haut, plus le nombre est grand (−0,181 à 0,227)</span></div>
+        <div class="legend"><span><i style="background: var(--pos)"></i>positif</span><span><i style="background: var(--neg)"></i>négatif</span><span>chaque trait est un des 1 024 nombres ; plus il est haut, plus le nombre est grand (−0,163 à 0,191)</span></div>
         <ul>
-          <li>On prend la sortie du premier jeton (<code>&lt;s&gt;</code>), qui a lu toute la phrase, puis on la ramène à une longueur de 1. Ses huit premiers nombres : <span class="num">−0,0256 ; 0,0175 ; −0,0157 ; 0,0073 ; 0,0083 ; 0,0071 ; −0,0038 ; −0,0080</span>.</li>
-          <li>Aucun nombre ne veut rien dire seul (ils vont de −0,181 à 0,227) : c'est leur ensemble qui situe le sens. Deux textes proches pointent dans la même direction, et leur produit scalaire (la somme des 1 024 produits deux à deux) est leur cosinus : 1 pour deux textes pareils, bien moins pour deux sans rapport.</li>
-          <li>Le sens dépend peu de la langue : le titre d'El Mundo, « La federación noruega denuncia la gobernanza de Infantino ante la propia FIFA », fait 0,820 avec celui de Foot Mercato.</li>
+          <li>On prend la sortie du premier jeton (<code>&lt;s&gt;</code>), qui a lu toute la phrase, puis on la ramène à une longueur de 1. Ses huit premiers nombres : <span class="num">−0,0055 ; −0,0336 ; −0,0280 ; 0,0228 ; −0,0092 ; −0,0022 ; 0,0462 ; −0,0235</span>.</li>
+          <li>Aucun nombre ne veut rien dire seul (ils vont de −0,163 à 0,191) : c'est leur ensemble qui situe le sens. Deux textes proches pointent dans la même direction, et leur produit scalaire (la somme des 1 024 produits deux à deux) est leur cosinus : 1 pour deux textes pareils, bien moins pour deux sans rapport.</li>
+          <li>Le sens dépend peu de la langue : le titre de Mundo Deportivo, « La FIFA propone cambiar el reglamento para justificar el 'caso Balogun' », fait 0,823 avec celui de tribuna.com ; celui de Calcio e Finanza, « Niente più casi Balogun: la FIFA modificherà il proprio regolamento disciplinare », 0,793.</li>
         </ul>
 
         <p class="sub">Le vecteur creux : le poids de chaque mot</p>
         <div class="weights" id="weights" aria-label="Les poids des jetons du texte"></div>
         <ul>
           <li>Une petite couche apprise donne à chaque jeton un poids : <code>max(0, w · sortie du jeton + b)</code>. Un jeton répété garde son plus grand poids, et les jetons spéciaux sont retirés.</li>
-          <li>Seuls les jetons du texte reçoivent un poids : le vecteur a 250 002 cases, et 48 seulement sont remplies (15 pour le titre). Les noms pèsent le plus, les petits mots presque rien.</li>
+          <li>Seuls les jetons du texte reçoivent un poids : le vecteur a 250 002 cases, et 51 seulement sont remplies (13 pour le titre). Les noms et les chiffres pèsent le plus (FIFA, Balogun, 27), les petits mots presque rien.</li>
           <li>Pourquoi les deux ? Le dense trouve deux titres qui disent la même chose avec d'autres mots, mais il rapproche aussi deux pages modèles : « Egypt vs Angola – Betting Tips » et « Togo vs Burundi – Betting Tips » font 0,79. Le creux les sépare, parce qu'elles n'ont aucun nom en commun. Mesuré : 96 % de bonnes cartes avec les deux, 82 % avec les mots seuls.</li>
         </ul>
         <div class="chips"><span class="chip">BAAI/bge-m3 (XLM-RoBERTa large)</span><span class="chip">FlagEmbedding + PyTorch (carte graphique)</span><span class="chip">ONNX Runtime (processeur)</span><span class="chip">POST /embed</span></div>
@@ -333,9 +335,9 @@ footer { font-size: 0.86rem; color: var(--mute); border-top: 1px solid var(--rul
         <p class="label">Où ça tourne</p>
         <dl>
           <div><dt>L'embedder</dt><dd>Python, HTTP<small><code>POST /embed {"texts": [...]}</code> → <code>{"dense": [[1024 nombres]], "sparse": [{"id du jeton": poids}]}</code>, avec un jeton secret</small></dd></div>
-          <div><dt>PC de jeu, RTX 4070 Ti</dt><dd>55 textes/s<small>PyTorch</small></dd></div>
+          <div><dt>PC de jeu, RTX 4070 Ti</dt><dd>55 textes/s<small>PyTorch, quand il est allumé</small></dd></div>
           <div><dt>Processeur du serveur Ubuntu</dt><dd>≈ 4 textes/s<small>ONNX Runtime, mêmes vecteurs (cosinus 0,99997)</small></dd></div>
-          <div><dt>Choix</dt><dd>tous ensemble<small>depuis le 9 octobre, chaque embedder de la liste EMBEDDER_URL qui répond prend les lots qu'il finit le plus vite ; le 7 octobre, le premier qui répondait</small></dd></div>
+          <div><dt>Choix</dt><dd>tous ensemble<small>chaque embedder de la liste EMBEDDER_URL qui répond prend les lots qu'il finit le plus vite</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -349,37 +351,39 @@ footer { font-size: 0.86rem; color: var(--mute); border-top: 1px solid var(--rul
           <thead><tr><th>Colonne</th><th>Type pgvector</th><th>Ce qu'elle garde</th></tr></thead>
           <tbody>
             <tr><td><code>title_dense</code>, <code>text_dense</code></td><td><code>halfvec(1024)</code></td><td>2 Ko chacun, en demi-précision, dans la ligne : un cosinus bouge de 0,0001 au plus, la table passe de 1,48 à 0,99 Go et se relit 8 fois plus vite</td></tr>
-            <tr><td><code>title_sparse</code>, <code>text_sparse</code></td><td><code>sparsevec(250002)</code></td><td>seulement les jetons présents : <code>{37672:0.21973,78245:0.21454,…}/250002</code></td></tr>
+            <tr><td><code>title_sparse</code>, <code>text_sparse</code></td><td><code>sparsevec(250002)</code></td><td>seulement les jetons présents : <code>{37672:0.31029,6968:0.2732,…}/250002</code></td></tr>
           </tbody>
         </table></div>
         <p><code>&lt;#&gt;</code> est l'opérateur de pgvector qui donne le produit scalaire, négatif. <code>-(a &lt;#&gt; b)</code> vaut donc le cosinus de deux vecteurs denses, et pour deux vecteurs creux la somme des poids multipliés des jetons partagés.</p>
 
         <p class="sub">L'histoire : la même nouvelle chez d'autres médias (<code>assign_stories</code>)</p>
         <ul>
-          <li><b>Présélection</b> : les 100 histoires françaises des 48 h dont la moyenne des textes est la plus proche.</li>
+          <li><b>Une langue à la fois</b> : une nouvelle anglaise ne rejoint qu'une histoire anglaise.</li>
+          <li><b>Présélection</b> : les 100 histoires anglaises des 48 h dont la moyenne des textes est la plus proche.</li>
           <li><b>Score</b> : la moyenne, sur les nouvelles de chaque histoire venues d'autres médias, de la proximité des titres, dense + creux.</li>
           <li><b>Conditions</b> : titres ≥ 0,70 et textes ≥ 0,60. Une histoire calme depuis plus de 6 h demande 0,003 de plus par heure.</li>
           <li>La nouvelle rejoint la meilleure histoire qui passe, sinon elle en commence une.</li>
         </ul>
-        <p>Au moment où la nouvelle de Foot Mercato a été placée (le trait noir marque le seuil) :</p>
+        <p>Au moment où la nouvelle de tribuna.com a été placée, le 16 octobre à 22 h 41, avec les membres que chaque histoire avait alors (le trait noir marque le seuil) :</p>
         <div class="table-wrap"><table class="part server" style="--lane: var(--server); --lane-soft: var(--server-soft)">
           <thead><tr><th>Histoire candidate</th><th>Autres médias</th><th>Titres : dense + creux</th><th style="min-width: 170px">seuil 0,70</th><th>Textes</th><th>Décision</th></tr></thead>
           <tbody id="join"></tbody>
         </table></div>
 
-        <p>Dans l'histoire 305801, quelques titres comparés à celui de Foot Mercato :</p>
+        <p>Dans l'histoire 798086, quelques titres comparés à celui de tribuna.com :</p>
         <div class="table-wrap"><table>
           <thead><tr><th>Média</th><th>Titre</th><th>Dense</th><th>Creux</th><th>Total</th></tr></thead>
           <tbody>
-            <tr><td>sport.fr</td><td>FIFA : La Norvège dépose deux plaintes contre Gianni Infantino</td><td class="n">0,962</td><td class="n">0,293</td><td class="n">1,255</td></tr>
-            <tr><td>L'Équipe</td><td>La fronde contre Gianni Infantino continue : la Fédération norvégienne a porté plainte à deux reprises auprès de la FIFA</td><td class="n">0,861</td><td class="n">0,199</td><td class="n">1,060</td></tr>
-            <tr><td>El Mundo</td><td>La federación noruega denuncia la gobernanza de Infantino ante la propia FIFA</td><td class="n">0,820</td><td class="n">0,162</td><td class="n">0,982</td></tr>
-            <tr><td>Ouest-France</td><td>Après les multiples polémiques autour de la Fifa et Infantino, la Fédération norvégienne de football porte plainte</td><td class="n">0,809</td><td class="n">0,122</td><td class="n">0,931</td></tr>
-            <tr><td>Boursorama</td><td>Football-La Fédération norvégienne saisit deux commissions de la Fifa sur la gouvernance et l'éthique</td><td class="n">0,660</td><td class="n">0,044</td><td class="n">0,704</td></tr>
+            <tr><td>Arab News</td><td>FIFA to amend Article 27 of disciplinary code after Balogun case</td><td class="n">0,951</td><td class="n">0,284</td><td class="n">1,235</td></tr>
+            <tr><td>9 radios (dépêche Reuters)</td><td>Soccer-FIFA to amend Article 27 of disciplinary code after Balogun case</td><td class="n">0,896</td><td class="n">0,226</td><td class="n">1,122</td></tr>
+            <tr><td>RTÉ</td><td>FIFA to amend disciplinary rule over Balogun case fallout</td><td class="n">0,875</td><td class="n">0,227</td><td class="n">1,102</td></tr>
+            <tr><td>The New York Times</td><td>FIFA seeking to amend rules to prevent repeat of Folarin Balogun scandal at World Cup</td><td class="n">0,783</td><td class="n">0,198</td><td class="n">0,981</td></tr>
+            <tr><td>Daily Express</td><td>Donald Trump to force FIFA into major rule change today after explosive scandal</td><td class="n">0,607</td><td class="n">0,102</td><td class="n">0,709</td></tr>
+            <tr><td>ABC News</td><td>What to know about US soccer star Folarin Balogun's 1-game red card suspension, why team can't appeal</td><td class="n">0,594</td><td class="n">0,076</td><td class="n">0,670</td></tr>
           </tbody>
         </table></div>
-        <p>Boursorama ne dit ni « Norvège », ni « plainte », ni « Infantino » : le creux est presque nul, mais le dense reconnaît le même fait. Aujourd'hui, l'histoire compte 39 lignes, 28 liens différents et 20 médias : une nouvelle présente dans plusieurs flux a une ligne par flux.</p>
-        <p><b>Ce que le regroupement ne fait pas.</b> Une nouvelle choisit une histoire, mais deux histoires ne fusionnent jamais après coup. L'histoire 312864, née 2 h 40 plus tôt sur le même fait, reste à part : c'est le fil, puis l'IA (5c), qui les réunissent.</p>
+        <p>La même dépêche de Reuters, « Soccer-FIFA to amend… », est reprise mot pour mot par 9 sites de radios américaines : 9 médias, un seul texte. Le compte des médias le dit, la corroboration (5d) le mesure à part. En bas du tableau, deux titres d'autres faits de la même affaire ont rejoint l'histoire : l'annonce d'un changement « aujourd'hui », la suspension du 1er octobre. La vérification de l'IA (5b) retire le premier de la carte ; le second n'est pas parmi les articles qu'elle montre. Aujourd'hui, l'histoire compte 64 lignes, 55 liens différents et 38 médias : une nouvelle présente dans plusieurs flux a une ligne par flux.</p>
+        <p><b>Ce que le regroupement ne fait pas.</b> Une histoire est d'une seule langue, et deux histoires ne fusionnent jamais après coup. Le même fait existe donc aussi en espagnol (histoire 792389, 21 médias), en italien (790739, 13), en portugais (800836, 6) et en néerlandais (794732, 4) : c'est la vérification de l'IA (5b) qui les réunit sur une carte.</p>
 
         <p class="sub">Le fil : l'affaire suivie dans le temps (<code>assign_threads</code>)</p>
         <ul>
@@ -387,13 +391,13 @@ footer { font-size: 0.86rem; color: var(--mute); border-top: 1px solid var(--rul
           <li>La comparaison se fait sur le centre (<code>centroid</code>) de chaque histoire : la moyenne normalisée des textes de ses nouvelles.</li>
         </ul>
         <div class="table-wrap"><table>
-          <thead><tr><th>Histoire</th><th>Née le</th><th>Médias</th><th>Proximité avec 305801</th><th>Premier titre</th></tr></thead>
+          <thead><tr><th>Histoire</th><th>Née le</th><th>Médias</th><th>Proximité avec 798086</th><th>Premier titre</th></tr></thead>
           <tbody>
-            <tr><td class="n">212419</td><td>4 oct.</td><td class="n">3</td><td class="n">0,746</td><td>Tout ce qu'il faut savoir sur la crise entre Gianni Infantino et la FIFA : historique, dates clés et actualités</td></tr>
-            <tr class="win"><td class="n">305801</td><td>6 oct.</td><td class="n">20</td><td class="n">1</td><td>La Norvège s'attaque à Gianni Infantino : deux plaintes qui pourraient secouer la FIFA</td></tr>
-            <tr><td class="n">312864</td><td>6 oct.</td><td class="n">7</td><td class="n">0,861</td><td>FIFA : deux nouvelles plaintes contre Gianni Infantino</td></tr>
+            <tr><td class="n">52126</td><td>1er oct.</td><td class="n">5</td><td class="n">0,817</td><td>What to know about US soccer star Folarin Balogun's 1-game red card suspension, why team can't appeal</td></tr>
+            <tr class="win"><td class="n">798086</td><td>14 oct.</td><td class="n">38</td><td class="n">1</td><td>FIFA moves to avoid repeating Balogun scandal amid ac… | YSscores</td></tr>
           </tbody>
         </table></div>
+        <p>Le fil, créé le 17 octobre à 5 h 51, relie l'annonce à la suspension de Balogun pendant la Coupe du monde, deux semaines plus tôt. C'est lui que l'analyse (5h) lit pour raconter « l'histoire jusqu'ici ».</p>
         <div class="chips"><span class="chip">PostgreSQL 18</span><span class="chip">pgvector 0.8 (halfvec, sparsevec, &lt;#&gt;)</span><span class="chip">assign_stories (PL/pgSQL)</span><span class="chip">assign_threads (PL/pgSQL)</span></div>
       </div>
     </article>
@@ -403,38 +407,40 @@ footer { font-size: 0.86rem; color: var(--mute); border-top: 1px solid var(--rul
     <div class="part-head">
       <p class="kicker">Au briefing · pour un lecteur</p>
       <h2>La choisir pour Enzo et la montrer</h2>
-      <p>Le 7 octobre à 15 h 29, Enzo demande un briefing de 48 h. Rien n'est relu sur le web avant que l'IA ait choisi : la base classe ce que le serveur a déjà préparé.</p>
+      <p>Le 17 octobre à 15 h 21, Enzo demande un briefing de 48 h, 10 cartes. Rien n'est relu sur le web avant que l'IA ait choisi : la base classe ce que le serveur a déjà préparé.</p>
     </div>
 
     <article class="station">
       <div class="no">4</div>
       <div class="body">
-        <h3>Le classement pour le lecteur (<code>rank_stories</code>, aujourd'hui <code>rank_profile_stories</code>)</h3>
-        <p>Une seule requête SQL prend toutes les nouvelles de ses 765 flux sur 48 h, dans toutes les langues. Chaque nouvelle est notée contre chacun de ses intérêts : <b>poids × (dense + 0,5 × creux)</b>, sur le texte complet. Chaque intérêt a ses propres vecteurs, calculés une fois à partir de son texte. Une nouvelle garde son meilleur intérêt, une histoire sa meilleure nouvelle.</p>
+        <h3>Le classement pour le lecteur (<code>rank_profile_stories</code>)</h3>
+        <p>Une seule requête SQL prend toutes les nouvelles de ses 1 152 flux sur 48 h, dans toutes les langues. Chaque nouvelle est notée contre chacun des intérêts du profil (et de ses projets en cours, il n'en a pas) : <b>poids × (dense + 0,5 × creux)</b>, sur le texte complet. Chaque intérêt a ses propres vecteurs, calculés une fois à partir de son texte. Une nouvelle garde son meilleur intérêt, une histoire sa meilleure nouvelle.</p>
         <div class="table-wrap"><table style="--lane: var(--reader); --lane-soft: var(--reader-soft)">
           <thead><tr><th>Intérêt d'Enzo</th><th>Dense</th><th>Creux</th><th>Note</th><th style="min-width: 160px">dense + 0,5 × creux</th></tr></thead>
           <tbody id="interests"></tbody>
         </table></div>
         <ul>
-          <li>Le creux ne compte que les jetons partagés. Avec « Gouvernance » : vern 0,197 × 0,223 = 0,044 ; ▁gou 0,149 × 0,157 = 0,024 ; ance 0,096 × 0,127 = 0,012 ; 3 petits mots, 0,007. Total 0,087 : c'est le mot « gouvernance » de la description qui fait le lien.</li>
-          <li>Avec « Instances internationales » : ▁FIFA 0,285 × 0,188 = 0,054, plus quelques miettes.</li>
+          <li>Le creux ne compte que les jetons partagés. Avec « Arbitrage » : FA 0,218 × 0,199 = 0,044 ; ▁contro 0,111 × 0,073 = 0,008. Total 0,052. Le jeton « FA » vient de RBFA dans la nouvelle et d'IFAB dans l'intérêt : deux instances différentes, un même morceau de mot. Le creux compte des jetons, pas des sens.</li>
+          <li>Avec « Gouvernance » : ▁FIFA 0,310 × 0,186 = 0,058, et rien d'autre.</li>
+          <li>L'histoire est notée par sa meilleure nouvelle, celle de RTÉ : 0,611, contre 0,601 pour celle de tribuna.com.</li>
         </ul>
         <p class="sub">Du tout au peu : où se trouve la nouvelle</p>
         <div class="ladder" id="ladder"></div>
         <ul>
-          <li>Les 600 meilleures histoires sont gardées, et chaque intérêt reçoit 50 places sur 150. Notes : de 0,766 (1re) à 0,536 (150e).</li>
-          <li>Juste devant elle dans son intérêt : « From Cristiano Ronaldo to Diego Maradona: seven of football's messiest national-team exits ». Juste derrière : une analyse de la crise bancaire de 2008 par Gordon Brown, puis un quiz. Les vecteurs ne distinguent pas un fait d'un quiz : c'est le travail de l'IA.</li>
+          <li>Les 600 meilleures histoires sont gardées, puis 150 partagées entre les intérêts : 88 pour « Gouvernance », 62 pour « Arbitrage ». Notes : de 0,802 (1re) à 0,561 (150e).</li>
+          <li>Juste devant elle dans son intérêt : « Real : Tebas provoque la colère du club ! » (0,611). Juste derrière : « Moment nemaivăzut în fotbal! Arbitrul a arătat cartonașul roșu pe telefon » (0,610), un carton rouge montré sur un téléphone. Les vecteurs notent presque pareil une décision de la FIFA, une colère de club et une curiosité d'arbitrage : c'est à l'IA de trier.</li>
+          <li><b>Déjà envoyée, mais l'affaire a bougé.</b> Les histoires des affaires envoyées à Enzo par e-mail dans les 48 dernières heures sont écartées : 28 cette fois ; 9 autres restent, parce qu'elles disent du neuf. Celle-ci en est : sa carte « FIFA amends red card rules in connection with Trump's controversy. » est partie le 16 octobre à 11 h 52. Un appel de l'IA (gemma4:31b, 2 768 jetons lus, 729 écrits, 2,2 s) lit les nouvelles publiées depuis et répond « Reports indicate Gianni Infantino personally intervened in the Balogun red card case. », <code>evolved: true</code>. La carte revient comme une suite de celle envoyée.</li>
           <li>Candidates : les 40 meilleures venues de flux, partagées entre les intérêts, et 7 de plus, connues seulement par Google News ou racontées par une source de confiance.</li>
         </ul>
-        <div class="chips"><span class="chip">rank_stories (SQL)</span><span class="chip">pgvector</span><span class="chip">shareOut</span><span class="chip">pickCandidates</span></div>
+        <div class="chips"><span class="chip">rank_profile_stories (SQL)</span><span class="chip">pgvector</span><span class="chip">shareOut</span><span class="chip">repeats (gemma4:31b)</span><span class="chip">pickCandidates</span></div>
       </div>
       <aside class="figures">
         <p class="label">Enzo, 48 h</p>
         <dl>
-          <div><dt>Dans ses sources</dt><dd>68 259 nouvelles<small>44 526 histoires, 34 langues, 765 flux</small></dd></div>
-          <div><dt>Rang de la nouvelle</dt><dd>16e<small>2e de son intérêt, note 0,622</small></dd></div>
-          <div><dt>Candidates pour l'IA</dt><dd>47<small>17, 15 et 15 par intérêt</small></dd></div>
-          <div><dt>Durée</dt><dd>5,3 s<small>le SQL des 600 ; 23 s pour l'étape entière, serveur chargé</small></dd></div>
+          <div><dt>Dans ses sources</dt><dd>107 545 nouvelles<small>68 101 histoires, 38 langues, 1 152 flux ; 32 856 nouvelles en anglais</small></dd></div>
+          <div><dt>Rang de la nouvelle</dt><dd>45e<small>12e de son intérêt, note 0,611</small></dd></div>
+          <div><dt>Candidates pour l'IA</dt><dd>47</dd></div>
+          <div><dt>Durée</dt><dd>5,9 s<small>le SQL des 600 ; 33 s pour l'étape entière, avec le tri des sources du profil et les suites</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -442,76 +448,119 @@ footer { font-size: 0.86rem; color: var(--mute); border-top: 1px solid var(--rul
     <article class="station wide">
       <div class="no">5</div>
       <div class="body">
-        <h3>L'IA : choisir, vérifier, fusionner, choisir les phrases, relire</h3>
-        <p>Toutes ces étapes utilisent gemma4:31b sur Ollama cloud, à une température de 0,1, avec une réponse en JSON. L'IA ne voit jamais de vecteur : seulement du texte. En jaune, ce qui concerne la nouvelle suivie.</p>
+        <h3>L'IA : choisir, vérifier, choisir les phrases, relire, version IA, angles, analyse</h3>
+        <p>Deux modèles, sur Ollama cloud, avec une réponse en JSON. <b>gemma4:31b</b>, à une température de 0,1, choisit, vérifie, juge et relit. <b>deepseek-v4-pro</b> écrit les deux seuls textes que l'IA rédige elle-même : la version IA de la carte et son analyse. L'IA ne voit jamais de vecteur : seulement du texte. En jaune, ce qui concerne la nouvelle suivie.</p>
 
-        <p class="sub">5a · Choisir (<code>selectStories</code>) · 4 811 jetons lus, 761 écrits, 2,7 s</p>
-        <p>L'IA reçoit le profil d'Enzo dans ses mots, ses 3 intérêts, puis une ligne par candidate. Celle de l'exemple :</p>
-        <div class="prompt"><span class="hl">[305801] FIFA : la Norvège dépose deux nouvelles plaintes contre Infantino — La Fédération norvégienne (NFF) a déposé ce mardi deux plaintes auprès de la FIFA visant notamment la gouvernance de Gianni Infantino. La première demande au Comité d'éthique de l'instance d'examiner  (aussi : Nouvelle tempête pour la FIFA ! La Norvège dépose une plainte éthique remettant en question la conduite de Gianni Infantino / La Federación de Futbol de Noruega pide a la FIFA investigar a Infantino / La Federación de Noruega pide formalmente a la FIFA investigar a Infantino)</span>
+        <p class="sub">5a · Choisir (<code>selectStories</code>) · gemma4:31b, 5 806 jetons lus, 563 écrits, 3,1 s</p>
+        <p>L'IA reçoit le profil d'Enzo dans ses mots, ses 2 intérêts, puis une ligne par candidate, menée par la meilleure nouvelle de l'histoire (ici celle de RTÉ). Celle de l'exemple :</p>
+        <div class="prompt"><span class="hl">[798086] FIFA to amend disciplinary rule over Balogun case fallout — FIFA will amend its disciplinary regulations after controversy over its decision to suspend US forward Folarin Balogun's automatic World Cup ban, the Belgian Football Association (RBFA) said on Thursd (aussi : FIFA to amend Article 27 after controversy surrounding Balogun case / Gianni Infantino reportedly intervened in Folarin Balogun’s red card case / FIFA will amend Article 27 of its disciplinary rules following the Balogun incident.)</span>
 <span class="dim">… 46 autres lignes …
 
-Choisis au plus 15 histoires qui correspondent vraiment à ce que ce lecteur demande, de la plus à la moins pertinente.
-Couvre tous ses intérêts […] Ce qu'il dit ne pas vouloir est exclu […] une liste courte vaut mieux qu'une histoire hors sujet. Varie […] Préfère les faits du jour […] Ne choisis jamais une page qui n'apporte aucun fait nouveau […]
+Choisis au plus 20 histoires qui correspondent vraiment à ce que ce lecteur demande, de la plus à la moins pertinente.
+Couvre tous ses intérêts […] Son résumé en gardera 10, réparties entre ses intérêts. Ce qu'il dit ne pas vouloir est exclu […] une liste courte vaut mieux qu'une histoire hors sujet. Varie […] Préfère les faits du jour […] Ne choisis jamais une page qui n'apporte aucun fait nouveau […]
+Pour chacune, "why" est une phrase courte qui dit au lecteur pourquoi elle est pour lui, en anglais, tirée seulement de ce que disent son titre et sa description […]
 Réponds uniquement en JSON : {"selected": [{"id": "...", "why": "une phrase courte"}]}</span></div>
         <div class="prompt answer">{"selected": [
-  {"id": "309953", "why": "Concerne la mise sous tutelle de la Fédération italienne de football …"},
-  {"id": "370308", "why": "Traite de la stratégie de l'UEFA pour évincer le président de la FIFA …"},
-  <span class="hl">{"id": "305801", "why": "Plaintes déposées par la Fédération norvégienne contre la gouvernance de Gianni Infantino auprès de la FIFA."},</span>
-  … 12 autres]}</div>
+  {"id": "769743", "why": "UEFA is searching for a candidate to challenge Gianni Infantino for the FIFA presidency."},
+  {"id": "969493", "why": "Details on UEFA's direction regarding referee centrality and reduced VAR usage."},
+  {"id": "945451", "why": "Tensions between club presidents and the FFF regarding football governance reform."},
+  <span class="hl">{"id": "798086", "why": "FIFA is amending its disciplinary regulations following the Balogun case controversy."},</span>
+  … 10 autres]}</div>
         <ul>
-          <li>15 histoires choisies, celle de l'exemple en 3e. La raison est tirée seulement du titre et de la description.</li>
-          <li>Équilibre : 3 places par intérêt, puis le reste dans l'ordre de l'IA. Elle est gardée parmi les 10 ; les 5 dernières restent en réserve, pour remplacer une carte illisible.</li>
+          <li>13 histoires retenues, celle de l'exemple en 4e. La raison est tirée seulement du titre et de la description.</li>
+          <li>Équilibre entre les intérêts, puis le reste dans l'ordre de l'IA : 10 pour les cartes, 3 en réserve, pour remplacer une carte illisible. Une carte n'a pas pu être lue ; une de la réserve a pris sa place.</li>
         </ul>
-        <p class="since">Depuis le 8 octobre, l'IA choisit jusqu'à 20 histoires pour 10 cartes (30 pour 20 cartes, 45 pour 30) : la réserve est plus grande.</p>
 
-        <p class="sub">5b · Vérifier les articles de l'histoire (<code>checkStories</code>) · toutes les cartes en un appel, 1 796 jetons lus, 352 écrits, 1,9 s</p>
-        <p>Le regroupement par vecteurs peut mêler deux faits proches. L'IA reçoit l'article principal (P) et jusqu'à 12 autres titres, un par média d'abord, et dit lesquels racontent le même événement.</p>
-        <div class="prompt"><span class="hl">[305801]
-P. FIFA : la Norvège dépose deux nouvelles plaintes contre Infantino — …
-1. Nouvelle tempête pour la FIFA ! La Norvège dépose une plainte éthique …
-2. La Federación de Futbol de Noruega pide a la FIFA investigar a Infantino
-3. Les murs se resserrent ! La Norvège dépose une plainte explosive contre Infantino
+        <p class="sub">5b · Vérifier les articles de l'histoire (<code>checkStories</code>) · toutes les cartes en un appel, 3 199 jetons lus, 394 écrits, 4,2 s</p>
+        <p>Le regroupement par vecteurs peut mêler deux faits proches. L'IA reçoit l'article principal (P) et jusqu'à 12 autres titres, un par média d'abord, et dit lesquels racontent le même événement. Chaque carte apporte aussi ses versions dans les autres langues : les histoires d'autres langues dont le centre est à 0,78 ou plus du sien, 4 au plus (ici les lignes 10 à 13).</p>
+        <div class="prompt"><span class="hl">[798086]
+P. FIFA to amend disciplinary rule over Balogun case fallout — …
+1. FIFA to amend Article 27 after controversy surrounding Balogun case — …
+2. Gianni Infantino reportedly intervened in Folarin Balogun’s red card case — …
 …
-12. La fronde contre Gianni Infantino continue : la Fédération norvégienne a porté plainte à deux reprises auprès de la FIFA</span></div>
-        <div class="prompt answer"><span class="hl">{"id": "305801", "same": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}</span></div>
-        <p>Les 12 sont gardés, titres espagnols compris. Ailleurs, la même vérification a retiré 2 articles de l'histoire de Manchester City.</p>
-        <p class="since">Depuis le 8 octobre, chaque carte apporte aussi à cette vérification ses versions dans les autres langues (0,78 et plus, 4 au plus) : celles qui racontent le même fait la rejoignent.</p>
-
-        <p class="sub">5c · Fusionner les cartes du même fait (<code>mergeStories</code>) · 20 lignes, 1 328 jetons lus, 1 015 écrits, 5,8 s</p>
-        <p>L'IA reçoit les cartes, la réserve et les versions dans la langue du lecteur. Pour chacune, elle écrit d'abord le fait principal, puis dit s'il est le même qu'une histoire plus haut.</p>
-        <div class="prompt answer"><span class="hl">{"id": "305801", "fait": "La Fédération norvégienne dépose deux plaintes contre Gianni Infantino à la FIFA", "sameAs": null}</span>
+7. Donald Trump to force FIFA into major rule change today after explosive scandal — …
 …
-<span class="hl">{"id": "312864", "fait": "La Fédération norvégienne demande l'enquête sur Infantino (Trump, Balogun, FFE)", "sameAs": "305801"}</span></div>
-        <p>L'histoire 312864, arrivée comme version française d'une autre carte, rejoint 305801. La séparation de l'étape 3 est réparée ici : la carte compte les médias des deux. Deux autres fusions dans ce briefing : Manchester City et la CAN.</p>
+10. FIFA modificaría su reglamento disciplinario tras polémica por Folarin Balogun en el Mundial
+11. Niente più casi Balogun: la FIFA modificherà il proprio regolamento disciplinare
+12. FIFA past regels aan na Balogun-kwestie, maar voor België 'stopt het daar niet' — …
+13. FIFA prepara alteração da regra que beneficiou Folarin Balogun e Cristiano Ronaldo — …</span></div>
+        <div class="prompt answer"><span class="hl">{"id": "798086", "same": [1, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13]}</span></div>
+        <ul>
+          <li>Deux articles sont retirés : l'intervention d'Infantino (2), un autre fait de l'affaire, et l'annonce d'un changement « aujourd'hui » (7), d'avant la décision.</li>
+          <li>Les 4 versions sont gardées : l'espagnole (histoire 792389, centres à 0,950), l'italienne (790739, 0,941), la néerlandaise (794732, 0,917) et la portugaise (800836, 0,916). Leurs médias rejoignent la carte. Dans tout le briefing, 9 versions d'autres langues ont rejoint leur carte.</li>
+        </ul>
 
-        <p class="sub">5d · Lire la page et choisir les phrases (<code>extractArticle</code>) · 783 jetons lus, 34 écrits, 1,3 s</p>
-        <p>Maintenant seulement, les pages sont téléchargées : 5 articles par histoire au plus, un par média, celui dans la langue du lecteur d'abord. Le texte est extrait comme le fait le mode lecture de Firefox, puis découpé en phrases numérotées. L'IA ne réécrit rien, elle renvoie des numéros.</p>
-        <div class="prompt">TITLE: FIFA : la Norvège dépose deux nouvelles plaintes contre Infantino
+        <p class="sub">5c · Fusionner les cartes du même fait (<code>mergeStories</code>) · 1 242 jetons lus, 857 écrits, 2,7 s</p>
+        <p>L'IA reçoit les cartes et la réserve. Pour chacune, elle écrit d'abord le fait principal, puis dit s'il est le même qu'une histoire plus haut.</p>
+        <div class="prompt answer"><span class="hl">{"id": "798086", "fait": "La FIFA va modifier son règlement disciplinaire suite au cas Balogun", "sameAs": null}</span></div>
+        <p>Aucune autre carte ne raconte ce fait : elle reste seule. Une seule fusion dans ce briefing, deux versions d'une même analyse de la fédération vietnamienne.</p>
+
+        <p class="sub">5d · Lire la page et choisir les phrases (<code>extractArticle</code>) · gemma4:31b, 819 jetons lus, 31 écrits, 11,8 s</p>
+        <p>Maintenant seulement, les pages sont téléchargées : 5 articles par histoire au plus, un par média, une source de confiance puis la langue du lecteur d'abord. Le texte est extrait comme le fait le mode lecture de Firefox, puis découpé en phrases numérotées. La page lue en entier est celle de tribuna.com. L'IA ne réécrit rien, elle renvoie des numéros.</p>
+        <div class="prompt">TITLE: FIFA to amend Article 27 after controversy surrounding Balogun case
 
 SENTENCES:
-<span class="hl">[1] La Fédération norvégienne (NFF) a déposé ce mardi deux plaintes auprès de la FIFA visant notamment la gouvernance de Gianni Infantino.</span>
-<span class="hl">[2] La première demande au Comité d'éthique de l'instance d'examiner la conduite du président de la FIFA et d'autres responsables concernant de potentielles violations du code d'éthique.</span>
-<span class="hl">[3] La seconde saisit la Commission d'audit et de conformité afin de vérifier si les règles de gouvernance, les contrôles financiers et internes ainsi que les processus décisionnels de la FIFA ont bien été respectés.</span>
-<span class="dim">[4] La suite après cette publicité</span>
-<span class="hl">[5] À la pointe de la fronde contre Infantino, la NFF et sa présidente Lise Klaveness ciblent trois dossiers distincts, à savoir l'attribution du Prix de la paix à Donald Trump en décembre dernier, la levée de la suspension de Folarin Balogun pendant la Coupe du Monde et le projet FIFA Forward Enterprise, finalement abandonné après de nombreuses contestations.</span>
-[6] Pour la Fédération norvégienne, ces trois affaires illustrent un même problème, celui d'une « utilisation abusive des pouvoirs et de l'influence de la FIFA ».
-[7] Une nouvelle offensive qui intervient alors qu'Infantino, confronté à une crise de gouvernance, prépare sa candidature à un nouveau mandat en mars prochain.
-<span class="dim">[8] Pub. le 06/10/2026 16:49 - MAJ le 06/10/2026 20:14</span></div>
-        <div class="prompt answer">{"topic": "sport", "sourcing": "named", "sentences": [1, 2, 3, 5]}</div>
+<span class="hl">[1] The announcement came after a FIFA Council meeting in Zurich, where RBFA president Pascale Van Damme raised concerns about the disciplinary process and the circumstances surrounding the case.</span>
+[2] Van Damme, who sits on the FIFA Council, put three questions to the governing body.
+[3] The first concerned US President Donald Trump's publicly acknowledged intervention in the Balogun case, with the RBFA asking FIFA to guarantee that no interference of any kind occurred during the disciplinary procedure.
+[4] The federation also sought clarification on the exceptional circumstances that led to the decision and the criteria used to apply Article 27 in comparable cases.
+[5] Its third question concerned whether member associations would have the right to be heard in future decisions made by FIFA's disciplinary bodies.
+[6] According to the RBFA, FIFA emphasised that decisions are taken independently by its disciplinary bodies.
+<span class="hl">[7] FIFA also confirmed that Article 27 would be amended, following the questions raised by the Belgian federation.</span>
+<span class="hl">[8] The proposal is scheduled to be put to a vote in Doha on December 16, alongside an explanation of the specific circumstances of the Balogun case.</span>
+[9] Van Damme welcomed the commitment to amend the rules but stressed that the federation still wanted clarity on how they were applied.
+[10] (quote) “That FIFA confirms Article 27 will be amended, which we already requested in July, is an important step.
+<span class="dim">[11] … [14] la suite de la citation de Pascale Van Damme</span></div>
+        <div class="prompt answer">{"topic": "sport", "sourcing": "named", "sentences": [7, 1, 8]}</div>
         <ul>
-          <li>Elle laisse la publicité [4] et la date [8]. Les phrases 1 à 3 se suivent et forment un passage, la 5 en forme un second : le lecteur voit le saut entre les deux. Au plus 5 phrases et 170 mots.</li>
-          <li><code>sourcing: named</code> : l'article nomme sa source, la NFF. L'article est en français : rien à traduire. Ailleurs, un autre appel traduit les phrases, et le serveur contrôle que chaque chiffre est gardé.</li>
-          <li>Corroboration, sans IA : 2 pages lues, 2 rédactions indépendantes. Deux textes qui partagent la moitié de leurs suites de 8 mots seraient une même dépêche d'agence ; il n'y en a pas ici. Aucun verbe de démenti dans les pages lues : pas d'appel « contesté ».</li>
+          <li>Les numéros viennent dans l'ordre d'importance : 7, puis 1, puis 8. Les mêmes phrases donnent les trois façons de lire la carte, toutes publiées telles quelles :
+            <b>passages clés</b> dans l'ordre de l'article (1, puis 7 et 8 qui se suivent : le lecteur voit le saut) ;
+            <b>points</b>, une phrase chacun, la plus importante d'abord (7, 1, 8) ;
+            <b>résumé</b>, les plus importantes tant qu'elles tiennent en 65 mots (1 et 7, 48 mots : la 8 n'y entre plus).</li>
+          <li><code>sourcing: named</code> : l'article nomme sa source, la RBFA. L'article est en anglais, la langue d'Enzo : rien à traduire.</li>
+          <li>Corroboration, sans IA : 5 pages lues, de 5 médias, 5 textes différents. Deux textes qui partagent la moitié de leurs suites de 8 mots seraient une même dépêche d'agence ; il n'y en a pas parmi les 5 lues. Aucun verbe de démenti dans les pages lues : pas d'appel « contesté ».</li>
         </ul>
-        <p class="since">Depuis le 8 octobre, la page est d'abord lue par une simple requête, et Crawlee seulement si elle manque ; son image (og:image) est gardée pour la carte.</p>
 
-        <p class="sub">5e · Relire avant de montrer (<code>reviewCards</code>) · 2 210 jetons lus, 70 écrits, 0,8 s</p>
-        <p>L'IA relit les 10 cartes avec leurs passages. Elle cherche seulement celles dont le sujet principal est ce que le profil refuse, et qu'un titre seul pouvait cacher. Celle de l'exemple est gardée. Une autre est retirée, celle du Tribunal arbitral du sport et de la CAN 2025.</p>
-        <p class="since">Depuis le 7 octobre au soir, la relecture reçoit les intérêts et la liste des refus d'Enzo, et seul un de ces refus retire une carte. Elle a lieu à chaque tour de lecture, et une carte retirée est remplacée par la réserve. Cet exemple n'a pas été rejoué avec la nouvelle règle.</p>
+        <p class="sub">5e · Relire avant de montrer (<code>reviewCards</code>) · 2 356 jetons lus, 424 écrits, 1,7 s</p>
+        <p>L'IA relit les cartes avec leurs passages, les intérêts d'Enzo et ce qu'il refuse (« les résultats purement sportifs, les transferts de joueurs ou l'actualité sportive quotidienne »). Elle donne le sujet de chacune : « FIFA disciplinary process amendment », <code>refused: false</code>. Aucune carte n'est retirée.</p>
 
-        <p class="sub">5f · Autres angles et termes suivis (depuis le 8 octobre)</p>
-        <p>Cette étape n'existait pas le 7 octobre. Les cartes prêtes, deux recherches partent ensemble : pour chaque carte, l'IA juge sur leurs titres jusqu'à 8 histoires de toutes les langues des 3 derniers jours (0,6 et plus) et garde au plus 3 autres angles de l'affaire, qui ne disent pas la même chose ; et les nouvelles des termes suivis par le profil sont listées, sans pertinence ni IA. Une carte comme celle-ci, au cœur d'une affaire suivie par une vingtaine de médias, est le cas où les angles servent le plus.</p>
-        <div class="chips"><span class="chip">gemma4:31b (Ollama cloud)</span><span class="chip">JSON, température 0,1</span><span class="chip">fetch + @mozilla/readability</span><span class="chip">Crawlee (Cheerio) en secours</span><span class="chip">corroboration (shingles)</span></div>
+        <p class="sub">5f · La version IA (<code>aiWaysOf</code>) · deepseek-v4-pro sans raisonnement, deux appels en même temps : 747 + 727 jetons lus, 148 + 102 écrits, 6,4 et 6,1 s</p>
+        <p>Une fois les cartes gardées et relues, au début de l'étape « angles », deepseek-v4-pro écrit avec les mêmes phrases numérotées 3 ou 4 points et un résumé de 65 mots au plus, dans la langue d'Enzo, sous dix règles : seulement les faits de l'article, qui a dit quoi, aucun lien de cause qu'il ne donne pas, sa certitude gardée, les chiffres exacts.</p>
+        <div class="prompt answer">{"points": [
+  {"text": "FIFA will amend Article 27 after the RBFA raised concerns.", "sentences": [7]},
+  {"text": "The proposal is scheduled for a vote in Doha on December 16.", "sentences": [8]},
+  {"text": "RBFA president Pascale Van Damme raised concerns at a FIFA Council meeting in Zurich.", "sentences": [1]},
+  {"text": "Van Damme says the federation still wants clarity on how the rules were applied.", "sentences": [9, 12]}]}
+
+{"summary": "FIFA announced after a Council meeting in Zurich that it will amend Article 27, following questions from RBFA president Pascale Van Damme about the Balogun case. FIFA said its disciplinary bodies decide independently. The amendment proposal is scheduled for a vote in Doha on December 16. Van Damme welcomed the step but wants clarity on how rules are applied.", "sentences": [1, 6, 7, 8, 9]}</div>
+        <ul>
+          <li>Le serveur contrôle les chiffres : 27 et 16 sont dans l'article, les deux textes sont gardés. Un chiffre absent de l'article les aurait fait retirer.</li>
+          <li>Ils ne sont montrés que sur demande (« Show AI version »), sous les points ou le résumé publiés, marqués comme écrits par l'IA. deepseek n'écrit que pour les cartes gardées : 20 appels pour les 10 cartes.</li>
+        </ul>
+
+        <p class="sub">5g · Autres angles, source officielle, noms (étape « angles », 69 s pour les 10 cartes, versions IA comprises)</p>
+        <p>Avec les versions IA, quatre recherches partent ensemble ; aucune ne peut faire échouer le briefing.</p>
+        <ul>
+          <li><b>Autres angles</b> (gemma4:31b, 1 033 jetons lus, 329 écrits, 5,9 s) : 13 nouvelles proches de la carte, de toutes les langues, jugées sur leurs titres. 6 racontent le même fait (« same »), 4 un autre angle de l'affaire, 3 répètent un de ces angles. La carte en montre 4, titres traduits : l'intervention de Donald Trump (Przegląd Sportowy, 14 oct.), « Infantino under pressure: FIFA intervened so that Balogun could play against Belgium » (bljesak.info), « One phone call, and the matter was settled – Fifa insider confirms suspicion against Infantino » (Die Welt) et le scandale possible du 6 octobre (laola1.at).</li>
+          <li><b>Source officielle</b> (gemma4:31b, un appel pour nommer les parties, puis deux pour leurs déclarations) : l'IA classe la nouvelle comme « announced », une annonce de ceux qu'elle concerne, et nomme ses parties, FIFA et Royal Belgian Football Association, cherchées dans Wikidata avec leurs canaux. Aucune publication sur leurs propres sites n'a été trouvée. Restent leurs déclarations que les articles rapportent : l'IA lit les phrases de sapo.pt et d'A Bola deux fois, dans deux ordres, et garde ce que les deux lectures disent. La carte en montre 2, traduites du portugais : FIFA et Pascale Van Damme.</li>
+          <li><b>Noms</b> : ceux qu'un quart au moins de ses articles citent, 4 au plus. Ici <b>FIFA</b> (sans fiche Wikidata : sa page est celle du nom) et <b>Folarin Balogun</b> (fiche Q101035007).</li>
+          <li><b>Ce que le profil suit</b> : les nouvelles des fiches et des mots suivis par le profil, listées à part, sans IA.</li>
+        </ul>
+
+        <p class="sub">5h · L'analyse (<code>card-analysis.js</code>) · après le briefing, la carte déjà montrée</p>
+        <p>D'abord, deepseek-v4-pro sans raisonnement (2 133 jetons lus, 184 écrits, 1,7 s) choisit les cartes qui méritent une analyse : 6 sur 10, dont celle-ci, « Rule change after controversy, vote date set for December. » Puis, avec raisonnement, pour chacune, il lit la carte, ses articles numérotés phrase par phrase et les histoires plus anciennes de son fil, et écrit, chaque ligne citant ses sources :</p>
+        <div class="prompt answer">{"why": [
+  {"text": "FIFA's use of Article 27 to lift Balogun's ban before Belgium's last-16 match drew political interference claims and Belgian demands for transparency.", "cites": ["A2 s2", "A2 s3", "A1 s3", "A2 s11"]},
+  {"text": "FIFA confirmed Article 27 would be amended; a proposal is scheduled for a vote in Doha on December 16; Belgium still wants clarity on application.", "cites": ["A1 s7", "A1 s8", "A1 s9", "A2 s5"]}],
+ "next": [
+  {"if": "The proposed amendment is approved at the next FIFA Council meeting in Doha on 16 December.",
+   "then": "The change could help make the eligibility process more consistent and reduce controversial decisions.", "cites": ["A2 s5", "A3 s12"]}]}</div>
+        <ul>
+          <li>4 369 jetons lus, 5 412 écrits (le raisonnement compris), 47,8 s pour cette carte ; 102,7 s pour les 6, 3 à la fois.</li>
+          <li>Le serveur retire une ligne dont un chiffre ou un nom n'est pas dans ses sources (les noms lus par l'étiqueteur) : aucune ligne retirée dans ce briefing.</li>
+          <li>« L'histoire jusqu'ici » vient du fil (étape 3) : la suspension de Balogun, le 1er octobre (ABC News).</li>
+        </ul>
+        <div class="chips"><span class="chip">gemma4:31b (Ollama cloud)</span><span class="chip">deepseek-v4-pro (Ollama cloud)</span><span class="chip">JSON, température 0,1</span><span class="chip">fetch + @mozilla/readability</span><span class="chip">Crawlee (Cheerio) en secours</span><span class="chip">corroboration (shingles)</span><span class="chip">Wikidata</span></div>
       </div>
     </article>
 
@@ -520,24 +569,29 @@ SENTENCES:
       <div class="body">
         <h3>Le résultat : la carte</h3>
         <div class="card">
-          <p class="src">Foot Mercato · 6&nbsp;octobre, 16&nbsp;h&nbsp;49 · Gouvernance du football</p>
-          <h3>FIFA : la Norvège dépose deux nouvelles plaintes contre Infantino</h3>
-          <p class="why">Plaintes déposées par la Fédération norvégienne contre la gouvernance de Gianni Infantino auprès de la FIFA.</p>
-          <p class="passage">La Fédération norvégienne (NFF) a déposé ce mardi deux plaintes auprès de la FIFA visant notamment la gouvernance de Gianni Infantino. La première demande au Comité d'éthique de l'instance d'examiner la conduite du président de la FIFA et d'autres responsables concernant de potentielles violations du code d'éthique. La seconde saisit la Commission d'audit et de conformité afin de vérifier si les règles de gouvernance, les contrôles financiers et internes ainsi que les processus décisionnels de la FIFA ont bien été respectés.</p>
+          <p class="src">tribuna.com · 16&nbsp;octobre, 22&nbsp;h&nbsp;34 · Arbitrage · suite de la carte du 16&nbsp;octobre</p>
+          <h3>FIFA to amend Article 27 after controversy surrounding Balogun case</h3>
+          <p class="why">FIFA is amending its disciplinary regulations following the Balogun case controversy.</p>
+          <p class="passage">The announcement came after a FIFA Council meeting in Zurich, where RBFA president Pascale Van Damme raised concerns about the disciplinary process and the circumstances surrounding the case.</p>
           <p class="gap" aria-hidden="true">· · ·</p>
-          <p class="passage">À la pointe de la fronde contre Infantino, la NFF et sa présidente Lise Klaveness ciblent trois dossiers distincts, à savoir l'attribution du Prix de la paix à Donald Trump en décembre dernier, la levée de la suspension de Folarin Balogun pendant la Coupe du Monde et le projet FIFA Forward Enterprise, finalement abandonné après de nombreuses contestations.</p>
-          <div class="facts"><span><b>18</b> médias</span><span><b>2</b> rédactions lues, indépendantes</span><span>source nommée</span><span>fil de l'affaire : <b>3</b> faits depuis le 4 oct.</span></div>
+          <p class="passage">FIFA also confirmed that Article 27 would be amended, following the questions raised by the Belgian federation. The proposal is scheduled to be put to a vote in Doha on December 16, alongside an explanation of the specific circumstances of the Balogun case.</p>
+          <div class="facts"><span><b>21</b> médias</span><span><b>5</b> textes différents sur 5 lus</span><span>source nommée</span><span>fil de l'affaire : <b>2</b> faits depuis le 1er oct.</span><span>FIFA · Folarin Balogun</span></div>
+          <p class="src">Official sources</p>
+          <p class="passage"><b>FIFA</b> (via sapo.pt) : FIFA announced the change of the controversial rule for the 2026 World Cup, which includes Folarin Balogun and Cristiano Ronaldo, with new disciplinary norms to be applied.<br><b>Pascale Van Damme</b> (via sapo.pt) : Pascale Van Damme, from the Belgian federation, confirmed the revision of Article 27 of the Disciplinary Code.</p>
+          <p class="src">AI analysis</p>
+          <p class="passage"><i>Why it matters</i> — FIFA's use of Article 27 to lift Balogun's ban before Belgium's last-16 match drew political interference claims and Belgian demands for transparency. FIFA confirmed Article 27 would be amended; a proposal is scheduled for a vote in Doha on December 16; Belgium still wants clarity on application.<br><i>What could come next</i> — If the proposed amendment is approved in Doha on 16 December, the change could help make the eligibility process more consistent and reduce controversial decisions.<br><i>The story so far</i> — 1 Oct: What to know about US soccer star Folarin Balogun's 1-game red card suspension (ABC News).</p>
+          <p class="src">Other angles · 4</p>
+          <p class="passage">14 Oct · FIFA wants to change the rules. All because of Donald Trump's intervention <i>(przegladsportowy.onet.pl, PL)</i><br>16 Oct · Infantino under pressure: FIFA intervened so that Balogun could play against Belgium after a red card <i>(bljesak.info, BS)</i><br>15 Oct · “One phone call, and the matter was settled” – Fifa insider confirms suspicion against Infantino <i>(welt.de, DE)</i><br>6 Oct · No eligibility to play? FIFA confronted with possible scandal <i>(laola1.at, DE)</i></p>
         </div>
-        <p>C'est la 3e des 9 cartes du briefing. Parmi les médias : L'Équipe, Ouest-France, Le Parisien, So Foot, El Mundo, Goal, TUDN.</p>
-        <p class="since">Aujourd'hui (16 octobre), la même carte montrerait aussi : son image et le code de langue de chaque article ; trois façons de la lire, au choix du lecteur et toutes faites des phrases publiées, les passages clés ci-dessus, 3 points ou un résumé de 65 mots ; sous les points ou le résumé, « Show AI version », la même chose écrite par deepseek-v4-pro, marquée comme écrite par l'IA et retirée si elle donne un chiffre absent de l'article ; l'analyse de l'IA si la carte en mérite une (une affaire, un conflit, une étape à venir) : pourquoi elle compte, ce qui pourrait suivre et l'histoire jusqu'ici, chaque ligne citant ses sources ; sa source officielle, quand une partie de la nouvelle l'a dite elle-même ; les noms qu'elle cite, chacun ouvrant sa page ; jusqu'à 5 autres angles (5f) ; et l'onglet de ce que le profil suit la retrouverait si elle nomme une fiche ou un mot suivi. Le compte des médias dirait « 2 textes différents sur 2 lus » plutôt que « rédactions indépendantes ». Ces ajouts n'ont pas été mesurés sur cette nouvelle.</p>
+        <p>C'est la 4e des 10 cartes du briefing, menée par l'article de tribuna.com. Parmi ses 21 médias : Reuters, El País, Marca, RTÉ, Goal, De Telegraaf, A Bola, Arab News. La carte se lit en passages clés (ci-dessus), en 3 points ou en résumé, au choix d'Enzo ; sous les points ou le résumé, « Show AI version » montre ceux de deepseek-v4-pro (5e). Elle montre aussi son image (celle de tribuna.com), le code de langue de chaque article, et elle est marquée comme la suite de la carte envoyée le 16 octobre.</p>
       </div>
       <aside class="figures">
         <p class="label">Ce qu'elle a coûté</p>
         <dl>
-          <div><dt>Briefing entier</dt><dd>57,6 s<small>classement 23 s, choix 3 s, vérification et fusion 7 s, lecture 3 s, passages et relecture 22 s</small></dd></div>
-          <div><dt>Jetons de l'IA, briefing entier</dt><dd>30 227<small>23 appels : choix 5 572, vérification et fusion 4 491, passages, traductions et démentis 17 884, relecture 2 280</small></dd></div>
-          <div><dt>Pour cette nouvelle seule</dt><dd>817 jetons<small>pour ses phrases ; plus une ligne dans le choix et la fusion, 13 titres dans la vérification, un paragraphe dans la relecture</small></dd></div>
-          <div><dt>Ses vecteurs</dt><dd>une fois<small>à la lecture, pour tous les lecteurs</small></dd></div>
+          <div><dt>Briefing entier</dt><dd>153,7 s<small>classement 33 s, choix 3 s, vérification 7 s, lecture 7 s, phrases et relecture 33 s, versions IA, angles et sources officielles 69 s ; puis l'analyse, la carte déjà montrée : 102,7 s</small></dd></div>
+          <div><dt>Jetons de l'IA, briefing et analyse</dt><dd>134 552<small>90 appels : gemma4:31b 63 appels, 65 960 jetons ; deepseek-v4-pro 27 appels, 68 592 jetons, dont 42 544 pour les analyses</small></dd></div>
+          <div><dt>Pour cette nouvelle seule</dt><dd>≈ 16 000 jetons<small>phrases 850, version IA 1 724, source officielle 2 240, angles 1 362, analyse 9 781 ; plus une ligne dans le choix, la vérification, la fusion, la relecture et le choix des analyses</small></dd></div>
+          <div><dt>Ses vecteurs et ses noms</dt><dd>une fois<small>à la lecture, pour tous les lecteurs</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -550,38 +604,34 @@ SENTENCES:
     <h2>Quatre leçons d'une seule nouvelle</h2>
   </div>
   <div class="notes">
-    <div><h3>Les vecteurs trouvent, l'IA trie</h3><p>Dans le même intérêt, un palmarès de départs de sélection et un quiz étaient notés presque aussi haut que la nouvelle. Seule l'IA sépare un fait d'un quiz.</p></div>
-    <div><h3>Une histoire coupée en deux est réparée plus loin</h3><p>Deux histoires du même fait (305801 et 312864) sont nées à 2 h 40 d'écart et le restent. Le fil les relie (0,861), puis la fusion de l'IA en fait une seule carte.</p></div>
-    <div><h3>Un autre fait peut passer les seuils</h3><p>L'histoire de la RD Congo, un autre scandale autour d'Infantino, atteignait 0,733 et 0,607 : la nouvelle aurait pu la rejoindre si 305801 n'avait pas été meilleure. C'est pour cela que l'IA vérifie les articles de chaque carte (5b).</p></div>
-    <div class="warn"><h3>Défaut relevé : des titres espagnols marqués « français »</h3><p>Les nouvelles de la recherche Google News espagnole « noticias FIFA » (El Mundo, TUDN, Montevideo) sont enregistrées en français. Leur titre compte trois « la », qui sont autant de mots français qu'espagnols, et sans description rien ne départage. L'égalité va au français, la première langue de la liste, même quand la recherche est espagnole. Ici, c'est sans conséquence : le dense compare toutes les langues, et l'article lu est français. Mais une carte menée par l'un de ces titres ne serait pas traduite.</p><p><strong>Corrigé le 7 octobre</strong> (<code>services/utils/language.js</code>) : en cas d'égalité, la langue du flux ou de la recherche l'emporte. Rejoué sur les 656&nbsp;404 nouvelles des 7 derniers jours, la règle change la langue de 3&nbsp;171 d'entre elles (0,5&nbsp;%), toutes vers celle de leur flux : des titres allemands, tchèques, portugais ou néerlandais pris pour de l'anglais, de l'espagnol ou de l'italien, et 213 titres espagnols pris pour du français. Les nouvelles déjà enregistrées gardent leur langue ; la correction vaut pour les suivantes.</p></div>
+    <div><h3>Les vecteurs trouvent, l'IA trie</h3><p>Le creux relie la nouvelle à l'intérêt « Arbitrage » par le jeton « FA », de RBFA dans l'une et d'IFAB dans l'autre : deux instances différentes. Et dans son intérêt, une colère de club et un carton rouge sur un téléphone sont notés presque aussi haut. Les vecteurs trouvent des candidats ; c'est l'IA qui dit ce qui est pour Enzo.</p></div>
+    <div><h3>Un fait, cinq langues, une carte</h3><p>Le regroupement travaille langue par langue : l'annonce fait cinq histoires, en anglais (38 médias), espagnol (21), italien (13), portugais (6) et néerlandais (4). La vérification les réunit sur une carte, leurs centres étant à 0,92–0,95 du sien : Enzo lit une carte de 21 médias au lieu de cinq cartes du même fait.</p></div>
+    <div><h3>Une carte envoyée revient quand l'affaire bouge</h3><p>La carte de la veille, envoyée par e-mail, aurait dû rester de côté 48 h. Elle revient parce que l'IA a lu du neuf : « Infantino serait intervenu lui-même ». Mais ce neuf vient de l'article que la vérification (5b) retire ensuite de la carte, comme un autre fait : la carte revient pour une raison qu'elle ne montre pas. Le jugement des suites et celui des articles ne se voient pas l'un l'autre.</p></div>
+    <div class="warn"><h3>Défaut relevé : une dépêche anglaise de Reuters marquée « espagnol »</h3><p>Reuters est lu par son plan du site d'actualités (<i>news sitemap</i>), un seul flux pour toutes ses langues. La ligne « FIFA to amend Article 27 of disciplinary code after Balogun case », un titre anglais sans description, y est enregistrée en espagnol. Son titre fait 0,951 avec celui de tribuna.com, mais la langue l'envoie dans l'histoire espagnole 792389 : elle arrive sur la carte seulement parce que la vérification y joint la version espagnole, et elle y est marquée ES. À regarder : la langue que ce flux donne à ses lignes, quand le titre dit autre chose.</p></div>
   </div>
 </section>
 
 <footer>
-  <p>Mesuré le 7 octobre 2026 à 15 h 29 (heure suisse) sur la base du serveur Ubuntu. Le briefing de 48 h d'Enzo a été écrit en entier avec le code du jour, sans rien enregistrer. Chaque appel à l'IA a été gardé avec son prompt et sa réponse (server/bench/news-journey.mjs). Les vecteurs, les proximités, le fil et les scores du regroupement viennent de la base (server/bench/news-journey-story.mjs). Pour le regroupement, les membres de chaque histoire ont été pris tels qu'ils étaient quand la nouvelle a reçu ses vecteurs. Les jetons ont été traduits en mots par le tokenizer de bge-m3.</p>
-  <p>Le briefing n'a rien montré à Enzo et n'a rien changé à ses sources. Les pourcentages de qualité (96 %, 82 %) et les vitesses de l'embedder viennent des mesures précédentes du projet.</p>
-  <p>Texte mis à jour le 12 octobre 2026 : le parcours n'a pas été rejoué, ce qui a changé depuis est signalé à sa place (réserve plus grande, versions dans les autres langues, lecture des pages, relecture par les refus, autres angles et termes suivis, embedders ensemble). « Parcours NewsGenerator » décrit le reste du fonctionnement d'aujourd'hui.</p>
-  <p>Depuis, au 16 octobre 2026 : le classement se fait par profil et lit aussi les intérêts de ses projets (<code>rank_profile_stories</code>) ; une carte envoyée par e-mail est écartée 48 heures ; chaque carte a aussi ses points et son résumé faits des phrases publiées, une version de l'IA sur demande (deepseek-v4-pro), une analyse, une source officielle et ses noms ; les noms de chaque nouvelle sont relevés par un étiqueteur. Le parcours ci-dessus n'a pas été rejoué avec ces changements.</p>
+  <p>Mesuré le 17 octobre 2026 à 15 h 21 (heure suisse) sur la base du serveur Ubuntu, le PC de jeu éteint. Le briefing de 48 h du profil « Enzo » a été écrit en entier avec le code du jour, analyse comprise, sans rien enregistrer : ses écritures (étape, nouvelles suivies, analyse) ont été interceptées par le script. Chaque appel à l'IA a été gardé avec son modèle, son prompt, sa réponse et sa durée (server/bench/news-journey.mjs). Les vecteurs, les proximités et le fil viennent de la base (news-journey-story.mjs) ; les scores du regroupement ont été recalculés avec les membres que chaque histoire avait quand la nouvelle a reçu ses vecteurs (news-journey-grouping.mjs) ; la place dans le classement partagé, avec la même fonction que le briefing (news-journey-rank.mjs). Les jetons ont été traduits en mots par le tokenizer de bge-m3.</p>
+  <p>Le briefing n'a rien montré à Enzo. Comme tout briefing, il a rempli les caches partagés (l'adresse réelle d'une nouvelle de Google News, les fiches Wikidata des sources officielles) et a retiré 2 flux de son profil qui n'apportaient plus rien (turkishminute.com, thescore.com). Les pourcentages de qualité (96 %, 82 %) et les vitesses de l'embedder viennent des mesures précédentes du projet.</p>
 </footer>
 
 </div>
 
 <script>
-// the 18 tokens of the title; cut: a piece of a word split in several
-const TITLE_TOKENS = [['<s>', 'sp'], ['▁FIFA'], ['▁:'], ['▁la'], ['▁Nor', 'cut'], ['v', 'cut join'], ['ège', 'cut join'], ['▁dé', 'cut'], ['pose', 'cut join'],
-  ['▁deux'], ['▁nouvelles'], ['▁plain', 'cut'], ['tes', 'cut join'], ['▁contre'], ['▁In', 'cut'], ['fa', 'cut join'], ['ntino', 'cut join'], ['</s>', 'sp']];
+// the 16 tokens of the title; cut: a piece of a word split in several
+const TITLE_TOKENS = [["<s>", "sp"], ["▁FIFA"], ["▁to"], ["▁a", "cut"], ["mend", "cut join"], ["▁Article"], ["▁27"], ["▁after"], ["▁contro", "cut"], ["vers", "cut join"], ["y", "cut join"], ["▁surrounding"], ["▁Balo", "cut"], ["gun", "cut join"], ["▁case"], ["</s>", "sp"]];
 document.getElementById('tok-title').innerHTML = TITLE_TOKENS.map(([t, c]) => `<span class="${c ?? ''}">${t.replace(/</g, '&lt;')}</span>`).join('');
 
-// the 48 weights of the sparse vector of the text, the 20 heaviest drawn
-const WEIGHTS = [['▁FIFA', .285], ['ntino', .262], ['FF', .254], ['fa', .248], ['▁plain', .223], ['vég', .211], ['ège', .202], ['vern', .197], ['v', .193], ['▁Fédération', .178],
-  ['▁Nor', .177], ['tes', .175], ['▁In', .171], ['▁contre', .170], ['▁Gian', .164], ['▁nor', .164], ['▁déposé', .159], ['▁auprès', .155], ['▁gou', .149], ['▁deux', .148]];
+// the 51 weights of the sparse vector of the text, the 20 heaviest drawn
+const WEIGHTS = [["▁FIFA", 0.31], ["gun", 0.273], ["▁27", 0.241], ["▁disciplina", 0.239], ["mend", 0.238], ["▁Belgi", 0.232], ["arin", 0.23], ["mme", 0.222], ["FA", 0.218], ["▁Balo", 0.211], ["▁amen", 0.209], ["▁regulations", 0.207], ["▁Article", 0.201], ["▁Football", 0.198], ["▁case", 0.194], ["▁committed", 0.186], ["ding", 0.179], ["rich", 0.163], ["ry", 0.159], ["▁Van", 0.151]];
 const fmt = (x, d = 3) => x.toFixed(d).replace('.', ',');
 document.getElementById('weights').innerHTML = WEIGHTS.map(([w, v]) =>
-  `<span class="w">${w}</span><span class="bar" style="width:${v / .3 * 100}%"></span><span class="v">${fmt(v)}</span>`).join('')
-  + `<span class="rest">… et 28 autres, de ▁Comité 0,106 à ▁la 0,098, ▁de 0,069 et ▁ce 0,009</span>`;
+  `<span class="w">${w}</span><span class="bar" style="width:${v / .32 * 100}%"></span><span class="v">${fmt(v)}</span>`).join('')
+  + `<span class="rest">… et 31 autres, de ▁Fol 0,148 et RB 0,143 à ▁following 0,025, ▁in 0,006 et ▁by 0,001</span>`;
 
 // the 1024 numbers of the dense vector of the text, in thousandths
-const DENSE = [-26,18,-16,7,8,7,-4,-8,-41,-3,-8,34,-42,7,-16,30,66,-23,-24,-27,36,13,45,-17,9,35,-5,19,57,-27,53,11,25,-21,-27,30,-5,-56,-24,27,13,-21,32,-51,25,6,-19,12,-44,-16,-6,30,79,-45,-36,90,23,-17,-14,-8,9,-11,-23,-34,21,81,82,-11,-10,-50,-16,-10,-43,-43,-54,-3,0,38,12,25,31,-8,2,-28,7,10,50,36,1,-7,-62,-8,-33,-38,18,-5,-63,-9,49,-11,51,39,19,-52,29,63,32,38,-12,10,6,18,60,-5,-24,28,6,6,-18,-30,40,-14,76,-2,-68,-29,-13,20,-64,-11,32,72,6,20,-24,-40,5,72,-23,-2,-15,33,-9,-61,-6,-21,-1,-16,-15,0,-17,17,8,-11,29,-26,77,-5,-26,7,7,17,9,-31,-3,15,-22,12,-25,-52,24,-17,18,-13,-17,43,21,33,6,-8,-35,-32,27,28,7,39,-19,-16,16,1,-33,1,34,-7,-29,7,10,-32,-10,-34,-14,0,0,-33,0,-23,-10,-6,11,9,-5,-59,4,-9,-36,22,-13,27,39,1,-22,29,10,19,41,7,-23,-24,31,-5,35,28,13,-11,21,9,-56,18,19,-15,41,5,-15,-38,-48,-15,30,-46,3,-18,27,-20,-15,-1,56,-15,2,-21,-26,0,15,6,10,18,19,-26,-1,-42,15,9,-23,6,-8,-10,3,51,2,-39,36,8,23,21,23,17,35,36,-56,-66,16,-68,36,-11,42,12,-17,11,-8,-181,51,-9,16,-27,-4,-9,-5,-12,-23,-5,-46,-3,-26,4,29,-1,3,-1,-19,-21,-63,-63,-65,-26,-44,51,-41,-62,35,-27,10,-17,-45,50,44,-8,-24,27,32,29,32,-50,5,8,18,-11,17,-17,-5,1,13,-8,35,-17,-5,3,22,45,-16,3,-71,36,-10,-35,39,37,24,-27,8,58,-22,39,-52,38,0,4,-14,-13,-83,48,4,-21,58,-14,7,6,12,33,227,20,39,6,36,-22,19,59,22,-41,-8,-46,38,3,-15,35,22,35,54,-48,-2,42,-11,-4,-20,-38,-32,-9,-11,-32,-68,-4,-6,17,-5,-36,-32,30,4,32,52,-31,34,-11,63,15,-31,31,-37,-36,-15,23,-23,-21,-7,2,32,-39,44,48,21,13,-12,-1,-38,26,-26,-35,24,40,-3,21,-11,24,86,-20,6,-6,-31,-3,-1,1,-10,34,25,-52,29,67,16,-7,4,0,-37,16,4,-62,26,-22,-48,-23,1,2,-30,-34,26,76,-16,6,18,52,63,11,-19,16,5,7,-31,-18,5,7,-40,1,4,-22,-31,-17,-41,37,-22,8,-29,-21,-46,28,-10,-1,22,23,-22,17,-4,-3,-31,23,26,29,-31,28,5,10,-30,11,-13,38,28,25,-8,-39,15,-28,1,60,33,76,37,56,6,32,-17,-66,9,-17,-5,15,31,9,-64,35,21,6,-12,25,-33,4,48,32,-18,-32,35,-25,27,40,10,-29,3,8,44,39,31,-6,-8,-28,-7,-60,25,-41,-27,5,-18,-44,20,23,-14,-28,-32,-43,82,-5,-48,-17,-23,-4,18,-13,28,19,7,16,21,4,0,-14,35,-14,-14,-34,0,29,-46,-13,10,15,61,-8,0,22,14,7,67,47,8,-5,19,-39,-24,-41,6,28,-16,-50,-29,-11,3,-83,-13,-73,-5,-21,-29,-28,9,2,-28,0,-51,-14,-17,8,9,-4,17,-5,-37,-3,38,36,13,22,-46,-33,32,-44,-53,19,33,-35,-37,65,-45,-27,-61,30,-13,-54,15,10,-4,26,-9,-6,-12,-48,17,67,20,-36,28,-25,18,-12,31,10,0,-38,-32,-1,4,-10,-6,-27,-30,-12,10,-9,13,-6,34,19,15,-4,23,-39,10,-19,9,-4,-18,23,27,36,59,11,11,-19,15,31,28,-5,-12,11,-2,2,-46,55,-11,40,-24,-36,-48,-6,31,26,-37,-57,-30,40,3,-16,31,30,-13,19,-8,-41,1,-19,-19,45,22,42,22,-30,-10,-13,-105,-33,-20,21,-83,-28,-10,13,9,-61,0,-19,70,-19,12,-14,-33,-6,-11,8,-5,-6,-8,-32,4,5,32,-36,1,-11,18,-37,11,48,16,-17,-29,-8,-27,-10,-18,14,-64,20,40,-6,-39,-33,-37,4,-2,-13,-27,48,-12,3,-27,-3,5,52,-37,-16,26,-33,-20,3,-10,32,-1,-7,-32,-31,15,-47,-13,19,-6,27,-19,-7,-22,7,1,-13,25,14,-23,43,-14,-22,30,-45,-4,-3,-15,65,-36,-23,-32,-67,-24,-46,20,-45,46,52,-52,18,-24,12,15,-9,-8,-5,-8,7,-8,52,22,-10,-10,13,31,-40,41,-37,37,-10,40,21,15,41,-28,-8,24,-25,28,10,-11,-18,-20,9,-10,-30,-25,13,12,2,-30,-14,12,5,-33,35,17,-15,-27,-36,6,10,53,-13,-67,-36,7,27,-6,-19,-15,-42,-35,-8,-29,-5,2,-50,-4,-33,22,0,56,45,-13,-1,-20,-26,6,6,-4,-25,-1,22,-21,15,14,51,-23,40,9,76,-34,-9,5,16,29,-17,-70,-45,1,-30,-3,-40,-16,22,-24,11,14,-37,-6,12,69,40,-46,-33,10,-9,-43,35,41,75,34,-25,-10,14,13,-6,22,-27,1,-28,7,22,18,-49];
+const DENSE = [-5, -34, -28, 23, -9, -2, 46, -24, 7, 2, -25, 42, -30, 0, -13, -42, 53, -31, -1, -21, -8, -39, 10, -13, -2, 39, -3, -7, 56, -13, 11, 53, -4, -49, -16, 5, -3, -28, -17, 11, -6, -17, 9, -8, 12, -9, -38, 24, -39, -32, 6, 0, 74, -35, 5, 94, 19, 24, -43, -21, 6, -47, -13, -73, 30, 61, 66, -21, -2, -34, 23, 9, -43, -27, -67, 43, 4, 5, 16, 22, 13, 14, -23, -23, -25, -1, 30, 29, 0, -4, 3, 1, 5, -17, -21, -1, -41, -9, 47, 10, 8, 55, 3, -45, 16, 43, 23, 79, -24, 27, 11, -49, 31, -8, -18, -1, -28, -55, 26, -13, 20, 24, 49, 6, 12, 15, -24, 44, -20, 14, 22, 67, 18, 8, -42, -34, 15, 30, -18, -37, -27, 40, -45, -62, -7, -16, 11, -6, -25, -30, -51, 7, 18, -53, 2, -64, 17, 23, -39, 28, 57, 51, 0, 8, 4, 47, -14, 26, -9, -47, -51, -3, 20, 10, 6, 21, -3, 27, 2, -17, 3, -32, -5, 3, -33, 51, 18, -14, 2, 6, 16, 11, 23, 4, -9, 6, 17, -1, 23, -40, -15, 17, 19, 7, 6, 12, -5, 27, 46, -5, 13, -37, -61, 11, -59, 27, 1, -35, 21, 5, 18, 22, 4, -10, -26, -23, -19, 0, 15, 14, 55, 8, -33, -14, -1, 29, -8, 56, 36, -27, -30, -37, 29, -41, -27, -5, 22, -25, -9, 14, 47, -47, 26, -45, 38, -1, 26, -14, -15, -10, 18, 18, -32, 19, 26, -35, -12, -4, 2, -52, 13, -1, -5, 9, 37, 79, -13, -33, 67, 10, -2, 25, -31, -48, 33, -4, -69, -25, 36, -29, 42, 8, 61, -28, 8, -32, -13, -163, 26, 8, -20, -20, 23, 52, 25, 6, 24, -33, -47, 32, 15, -16, 30, -15, -3, 13, -37, -22, -50, 6, -15, -5, -10, -9, 11, -52, 7, -1, 50, -18, -14, 71, 50, -2, -14, 22, 34, 53, 15, -25, 28, -18, -1, 42, -21, -12, -70, -45, 5, 31, 21, -10, -23, -28, 13, -5, 18, -30, -44, 4, 8, -44, 15, -4, 3, 13, 18, 15, -32, 36, -3, 0, 29, 7, 34, -23, -82, 19, -24, -2, 31, -1, -39, 5, 33, 34, 191, 53, 47, 3, 85, -30, 63, 35, 20, -33, 12, -3, 3, 21, -4, -8, 27, 16, 48, -20, -8, -13, 27, 44, -12, -38, -5, -51, -27, -6, -92, -17, 24, -39, 12, 10, 10, -10, -14, 51, -18, -41, 8, -14, 59, 15, -71, -19, -75, 2, 20, 5, -35, -12, -42, 30, 10, -7, -3, -4, 32, 4, -3, 35, -49, 9, -3, -28, 29, 33, 38, 11, 20, 19, 63, 50, 17, 47, -25, -31, -34, 6, -8, -25, 24, -23, -6, 55, -17, -10, 24, 0, -21, 26, -30, 37, -25, -27, -50, -18, -30, -29, 6, -52, 72, 16, -4, 1, 16, -10, 15, 2, -23, -6, 36, 36, -48, -35, 3, 54, -38, 11, 13, 25, -7, -15, 51, 18, -13, 7, -19, -3, -27, -21, 4, -19, 5, -17, -15, 9, 6, -22, -21, 30, 23, 12, -46, -3, -36, 35, 10, -4, 1, -20, -14, -7, -3, 12, -38, -13, -7, 18, -7, 53, 33, 76, -31, 40, 16, -34, 16, 16, -21, -40, 3, -1, -44, 39, 13, 15, 21, 32, -86, -1, -1, -30, 25, -11, 34, 25, -24, 47, -36, -7, -11, 37, 32, 21, 22, -25, -50, 11, 7, -40, 18, -4, -38, 31, -3, -11, 30, 9, -22, -5, -12, 4, 38, 24, 24, 26, -18, 28, 17, -27, 7, 31, -21, -23, 41, -19, 7, -6, 0, -6, -16, -13, -13, 15, -34, -10, -32, -15, 53, -53, -10, 20, -23, -16, 32, 54, -11, -22, 71, -43, -37, -39, 31, 32, -52, -68, -24, 9, 19, -57, -12, -14, 53, -12, -9, -49, -9, -10, -10, -17, -52, 27, -86, 50, 23, -10, 77, 10, -22, 9, 4, 32, 45, 30, 0, -46, 23, -25, -76, -36, -41, -15, -14, 41, -17, -15, -10, 58, 12, -25, 6, -44, -42, -34, 50, 54, -22, -94, 8, 19, 11, -37, -30, 15, -20, 8, 6, 2, -5, -23, -24, -2, -10, -10, -29, -47, -18, -13, 37, 32, -50, 15, -21, -3, 35, -11, 28, -19, 19, -8, -11, -25, 14, -10, -33, 7, 3, -13, 21, 2, -9, 54, 13, 43, -12, 57, -39, -29, -28, 51, 5, 38, 15, 15, -62, -1, 14, 17, 10, -2, -29, 38, -16, 20, 18, 4, -4, -35, -31, -60, 3, -5, 11, 26, 22, 3, 19, -8, -17, -35, -109, -30, -36, -17, -31, 4, 7, 4, -38, -14, -19, -21, 88, 0, -4, -7, -19, 15, -13, 15, -28, -5, -41, -47, -4, -21, 15, -54, -35, -14, 26, 9, -22, 27, 6, -68, -9, -9, 47, -17, 0, 5, -41, -2, 23, 37, 16, -3, -45, -17, -29, 5, -24, -5, 25, 33, -19, -37, 22, 30, 16, -18, -28, -21, 15, 29, -41, 17, 6, 31, -34, -18, -1, -8, 5, -7, -21, 18, -20, -31, -24, 14, -92, -73, 14, 28, -3, 27, -40, -48, -24, -26, -30, 52, 10, 25, -22, -18, -57, -43, -27, -48, 7, 26, 14, 72, 3, 22, -11, -7, 8, -5, -7, -2, -39, 9, -10, 75, 35, -52, 7, 25, 24, -36, -12, -41, 74, 13, 28, -20, 8, 47, 3, 8, 42, 0, 44, -7, -56, -8, 43, -55, -12, -5, -23, 32, -2, -23, -22, -54, 59, 29, -20, 24, 23, 1, -48, -23, 12, 59, 10, -24, -27, 17, 57, 5, -11, -53, -25, 4, 30, 6, -8, -9, 24, -48, 11, -54, -9, 19, 18, 34, -46, -22, -34, 6, 15, -25, -4, -22, -5, -18, 8, 40, 52, 101, -32, 54, -33, 41, 39, -34, -4, 46, 1, -5, -43, -27, 30, 1, 31, -7, -69, 18, -17, -1, -16, 2, 31, 4, 48, 59, 20, -23, -11, 0, -15, 36, 16, 4, -8, -13, -35, 21, 44, 23, -1, 8, -5, 31, 27, -6, 6, -8];
 const drawBarcode = () => {
   const canvas = document.getElementById('barcode');
   const css = getComputedStyle(document.documentElement);
@@ -590,19 +640,19 @@ const drawBarcode = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   DENSE.forEach((v, i) => {
     ctx.fillStyle = (v >= 0 ? css.getPropertyValue('--pos') : css.getPropertyValue('--neg')).trim();
-    const h = Math.max(1, Math.abs(v) / 230 * (mid - 2));
+    const h = Math.max(1, Math.abs(v) / 200 * (mid - 2));
     ctx.fillRect(i, v >= 0 ? mid - h : mid, 1, h);
   });
 };
 drawBarcode();
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', drawBarcode);
 
-// the stories the news could join, as it was placed
+// the English stories the news could join, as they were when it got its vectors (16.10.2026, 22:41)
 const JOIN = [
-  {story: '305801', title: 'La Norvège s’attaque à Gianni Infantino : deux plaintes qui pourraient secouer la FIFA', others: '20 (10 médias)', dense: .758, sparse: .113, text: .785, verdict: 'rejointe : la meilleure', cls: 'ok', win: true},
-  {story: '312864', title: 'FIFA : deux nouvelles plaintes contre Gianni Infantino', others: '2', dense: .549, sparse: .184, text: .709, verdict: 'acceptable, moins bonne', cls: ''},
-  {story: '241701', title: 'Acusan a la FIFA de Infantino de tapar la alineación indebida de RD Congo', others: '15', dense: .588, sparse: .145, text: .607, verdict: 'acceptable de justesse : un autre fait', cls: ''},
-  {story: '62971', title: 'Crise à la Fifa : Gianni Infantino reçoit le soutien des associations arabes', others: '27', dense: .537, sparse: .148, text: .582, verdict: 'refusée : sous 0,70 et 0,60, calme depuis 22 h (−0,048)', cls: 'no-go'},
+  {story: '798086', title: 'FIFA to amend disciplinary rule over Balogun case fallout', others: '61 (36 médias)', dense: .785, sparse: .167, text: .742, verdict: 'rejointe : la meilleure (calme depuis 7 h : seuil 0,703)', cls: 'ok', win: true},
+  {story: '880337', title: 'A December deadline in Doha: FIFA panel to rule on Trump peace prize', others: '13 (9 médias)', dense: .547, sparse: .071, text: .521, verdict: 'refusée : sous 0,70 et 0,60', cls: 'no-go'},
+  {story: '876090', title: 'Donald Trump Has Forced FIFA Into Making Major Rule Change After World Cup', others: '9 (6 médias)', dense: .545, sparse: .060, text: .600, verdict: 'refusée : titres sous 0,70, calme depuis 19 h (seuil 0,738)', cls: 'no-go'},
+  {story: '776390', title: 'FIFA governance row: Integrity group calls for independent scrutiny after tense Council meeting', others: '9 (5 médias)', dense: .501, sparse: .075, text: .560, verdict: 'refusée : sous 0,70 et 0,60', cls: 'no-go'},
 ];
 const SCALE = 1.0;      // the bars go from 0 to 1
 document.getElementById('join').innerHTML = JOIN.map(r => `<tr class="${r.win ? 'win' : ''}">`
@@ -611,11 +661,10 @@ document.getElementById('join').innerHTML = JOIN.map(r => `<tr class="${r.win ? 
   + `<td><div class="stack thresh" style="--at:${.70 / SCALE * 100}%"><span class="a" style="width:${r.dense / SCALE * 100}%"></span><span class="b" style="width:${r.sparse / SCALE * 100}%"></span></div></td>`
   + `<td class="n">${fmt(r.text)}</td><td class="${r.cls}">${r.verdict}</td></tr>`).join('');
 
-// the news against the interests of Enzo
+// the news against the interests of the profile
 const INTERESTS = [
-  {name: 'Gouvernance du football (élections, dirigeants, crises de gouvernance…)', dense: .5789, sparse: .0871, win: true},
-  {name: 'Instances internationales (UEFA, ses 55 associations, la FIFA…)', dense: .5682, sparse: .0789},
-  {name: 'Arbitrage (VAR, Lois du Jeu, désignations…)', dense: .5393, sparse: .0062},
+  {name: 'Gouvernance du football (l’UEFA et ses 55 associations, la FIFA, élections, crises…)', dense: 0.5250, sparse: 0.0579},
+  {name: 'Arbitrage (VAR, Lois du Jeu de l’IFAB, désignations, sanctions et controverses…)', dense: 0.5756, sparse: 0.0517, win: true},
 ];
 document.getElementById('interests').innerHTML = INTERESTS.map(r => `<tr class="${r.win ? 'win' : ''}"><td>${r.name}</td>`
   + `<td class="n">${fmt(r.dense)}</td><td class="n">${fmt(r.sparse)}</td><td class="n"><b>${fmt(r.dense + .5 * r.sparse)}</b></td>`
@@ -623,17 +672,16 @@ document.getElementById('interests').innerHTML = INTERESTS.map(r => `<tr class="
 
 // from all the news of the reader to the cards, on a log scale, with the place of the news
 const LADDER = [
-  {what: 'Nouvelles de ses sources (48 h)', n: 68259},
-  {what: 'Histoires notées', n: 44526, pos: '16e'},
-  {what: 'Gardées par le SQL', n: 600, pos: '16e'},
-  {what: 'Partagées entre les intérêts', n: 150, pos: '16e · 2e de « Gouvernance »'},
-  {what: 'Crédibles', n: 146},
+  {what: 'Nouvelles de ses sources (48 h)', n: 107545},
+  {what: 'Histoires notées', n: 68101, pos: '45e'},
+  {what: 'Gardées par le SQL', n: 600, pos: '45e'},
+  {what: 'Partagées entre les intérêts', n: 150, pos: '45e · 12e de « Arbitrage »'},
   {what: 'Candidates pour l’IA', n: 47, pos: 'candidate'},
-  {what: 'Choisies par l’IA', n: 15, pos: '3e'},
-  {what: 'Gardées (10 + 5 en réserve)', n: 10, pos: '3e'},
-  {what: 'Cartes montrées', n: 9, pos: '3e carte'},
+  {what: 'Retenues par l’IA', n: 13, pos: '4e'},
+  {what: 'Gardées (10 + 3 en réserve)', n: 10, pos: '4e'},
+  {what: 'Cartes montrées', n: 10, pos: '4e carte'},
 ];
-const MAX = Math.log10(100000);
+const MAX = Math.log10(200000);
 const pct = (n) => Math.max(1, Math.log10(n) / MAX * 100);
 document.getElementById('ladder').innerHTML = LADDER.map(r => `<div class="step"><span class="what">${r.what}</span>`
   + `<span class="track"><span class="fill" style="width:${pct(r.n)}%"></span>${r.pos ? `<span class="dot" style="left:${pct(r.n) - 1}%"></span>` : ''}</span>`
