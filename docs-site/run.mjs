@@ -5,6 +5,7 @@
 //  Description: Runs MkDocs for the documentation site (mkdocs.yml) from its own venv, made the first time:
 //                 pnpm run docs          the site on http://127.0.0.1:8000, rebuilt at each change
 //                 pnpm run docs:build    site/, failing on a broken link or a wrong version in tools.md
+//                 pnpm run docs:zip      NewsGenerator-docs.zip, the site read without a server, to send
 //               The same on Windows and on Linux: python is "python" or "python3", the venv's in
 //               Scripts/ or bin/
 //
@@ -34,4 +35,16 @@ if (!existsSync(venvPython)) {
 }
 
 const [command = 'serve', ...rest] = process.argv.slice(2);
-run(venvPython, ['-m', 'mkdocs', command, ...(command === 'build' ? ['--strict'] : []), ...rest]);
+if (command === 'zip') {
+    // the site read without a server: one file per page, the search in the pages (offline plugin of
+    // Material), zipped to send it. Who gets it unzips it and opens index.html
+    const OUT = path.join(SERVER, 'site-offline');
+    const ZIP = path.join(SERVER, 'NewsGenerator-docs');
+    process.env.DOCS_OFFLINE = 'true';
+    process.env.DOCS_DIRECTORY_URLS = 'false';
+    run(venvPython, ['-m', 'mkdocs', 'build', '--strict', '--site-dir', OUT, ...rest]);
+    run(venvPython, ['-c', 'import shutil, sys; shutil.make_archive(sys.argv[1], "zip", sys.argv[2])', ZIP, OUT]);
+    console.log(`${ZIP}.zip: unzip it and open index.html`);
+} else {
+    run(venvPython, ['-m', 'mkdocs', command, ...(command === 'build' ? ['--strict'] : []), ...rest]);
+}

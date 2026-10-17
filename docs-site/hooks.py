@@ -31,8 +31,28 @@ CLIENT_PREFIX = 'client'
 LINK = re.compile(r'(!?)\[([^\]]*)\]\((<[^>]+>|[^)\s]+)\)')
 
 
+def original_page(abs_path):
+    """A page of the docs written in HTML whose Markdown is made from it (a-to-z/parcours-*.html, see
+    html-to-md.mjs): the site shows the Markdown at its name, the HTML as original/<name>.html."""
+    return abs_path.lower().endswith('.html') and os.path.isfile(abs_path[:-5] + '.md')
+
+
+def original_uri(uri):
+    """Where the HTML original of a page is in the site: original/ next to its Markdown."""
+    folder, name = os.path.split(uri)
+    return '/'.join(part for part in (folder, 'original', name) if part)
+
+
 def on_files(files, config):
-    """The docs of the client, under client/ of the site, when its repo is next to this one."""
+    """The HTML originals of the pages under their own name (mkdocs.yml excludes them at theirs, the
+    Markdown page has it), and the docs of the client under client/ of the site, when its repo is next
+    to this one."""
+    for folder, _, names in os.walk(SERVER_DOCS):
+        for name in names:
+            path = os.path.join(folder, name)
+            if original_page(path):
+                uri = original_uri(os.path.relpath(path, SERVER_DOCS).replace(os.sep, '/'))
+                files.append(File.generated(config, uri, abs_src_path=path))
     if not os.path.isdir(CLIENT_DOCS):
         log.info('No client docs at %s: the site has the server docs only', CLIENT_DOCS)
         return files
@@ -70,6 +90,8 @@ def on_page_markdown(markdown, page, config, files):
         if os.path.isdir(absolute) and os.path.isfile(os.path.join(absolute, 'README.md')):
             absolute = os.path.join(absolute, 'README.md')
         uri = site_uri(absolute)
+        if uri is not None and original_page(absolute):
+            uri = original_uri(uri)
         if uri is not None:
             relative = os.path.relpath(uri, page_dir or '.').replace(os.sep, '/')
             path = quote(relative)

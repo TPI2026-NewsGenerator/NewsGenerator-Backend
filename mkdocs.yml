@@ -3,15 +3,19 @@
 #   python -m venv .venv-docs && .venv-docs/Scripts/pip install -r docs-site/requirements.txt   (once)
 #   pnpm run docs          # the site on http://127.0.0.1:8000, rebuilt at each change
 #   pnpm run docs:build    # site/, failing on a broken link or a version of tools.md that is not installed
+#   pnpm run docs:zip      # NewsGenerator-docs.zip, the site read without a server: unzip, open index.html
 site_name: NewsGenerator — documentation
 site_description: How NewsGenerator reads the news, groups them and writes the briefing of each reader
 docs_dir: docs
 site_dir: site
 strict: true
-use_directory_urls: true
+# false for the offline version (docs:zip): a page is a file a browser opens without a server
+use_directory_urls: !ENV [DOCS_DIRECTORY_URLS, true]
 
 exclude_docs: |
   *.mjs
+  # the HTML originals of the walkthroughs: published as original/<name>.html by docs-site/hooks.py
+  a-to-z/*.html
 
 validation:
   omitted_files: info
@@ -57,6 +61,9 @@ theme:
 
 plugins:
   - search
+  # the search and the pages without a server, for the zip only (docs-site/run.mjs zip)
+  - offline:
+      enabled: !ENV [DOCS_OFFLINE, false]
   - glightbox:
       zoomable: true
       draggable: true

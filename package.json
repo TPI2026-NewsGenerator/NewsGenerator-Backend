@@ -18,7 +18,8 @@
     "lint": "../node_modules/.bin/eslint .",
     "preview": "../node_modules/.bin/vite preview",
     "docs": "node docs-site/run.mjs serve",
-    "docs:build": "node docs-site/run.mjs build"
+    "docs:build": "node docs-site/run.mjs build",
+    "docs:zip": "node docs-site/run.mjs zip"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",

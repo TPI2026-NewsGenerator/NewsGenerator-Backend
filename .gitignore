@@ -33,3 +33,5 @@ __pycache__/
 # the documentation site: its venv and the site built (pnpm run docs, docs:build)
 .venv-docs/
 site/
+site-offline/
+NewsGenerator-docs.zip
