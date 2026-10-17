@@ -28,7 +28,9 @@ ssh "$HOST" "set -e
     if [ -d ~/newsgenerator/client-dist ]; then mv ~/newsgenerator/client-dist ~/newsgenerator/client-dist.old; fi
     mv ~/newsgenerator/client-dist.new ~/newsgenerator/client-dist"
 
+# the docs stay on the machine that builds them (pnpm run docs): neither their venv nor the site built
 tar -c --exclude=./node_modules --exclude=./generated --exclude=./bench --exclude=./.env \
+    --exclude=./.venv-docs --exclude=./site \
     --exclude=./db/create_insert_NewsGenerator.sql . |
 ssh "$HOST" "set -e
     rm -rf ~/newsgenerator/server.new && mkdir -p ~/newsgenerator/server.new
