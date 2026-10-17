@@ -1,0 +1,137 @@
+@startuml profile-projects-class
+!include ../../_style/class.iuml
+title Profile > Projects — what the reader prepares for a time, read with the profile until its last day
+
+package "Client (React)" as Client {
+    class Projects {
+        projects, max, language, change
+        + save()
+    }
+    class Project {
+        project, onEnd(endsOn), onRemove
+    }
+    class ProfileFunnel {
+        words = PROJECT_FUNNEL
+    }
+    class ProfileApi {
+        + projectQuestions(funnel)
+        + projectText(funnel)
+        + createProject({name, text, endsOn})
+        + setProjectEnd(id, endsOn)
+        + removeProject(id)
+    }
+}
+note right of Projects
+    In the profile page (#projects): "New
+    project", its name (40 characters), its
+    last day (today to a year, or none),
+    the funnel or the text by hand
+end note
+
+package "Presentation" {
+    class profileRouter {
+        + POST /profile/projects/funnel/questions
+        + POST /profile/projects/funnel/text
+        + POST /profile/projects
+        + PATCH /profile/projects/:id
+        + DELETE /profile/projects/:id
+    }
+    class profileController {
+        + projectQuestions()
+        + projectText()
+        + createProject()
+        + setProjectEnd()
+        + removeProject()
+    }
+}
+note right of profileRouter
+    All after authenticateToken + activeProfile;
+    the two funnel routes share funnelLimit
+    (40 an hour per address) with the profile's
+end note
+
+package "Business" {
+    class profileService {
+        + projectQuestions(userId, profileId, asked)
+        + projectText(userId, profileId, asked)
+        + createProject(userId, profileId, project)
+        + setProjectEnd(userId, profileId, id, endsOn)
+        + removeProject(userId, profileId, id)
+        - cleanEnd(endsOn)
+    }
+    class briefingService <<other feature>> {
+        + readerText(text, projects)
+    }
+    class ingestService <<other feature>> {
+        + searchesOfUser(profileId)
+    }
+}
+note right of profileService
+    MAX_PROJECTS 5 per profile, name 1 to 40,
+    text 20 to 3000 characters, last day
+    YYYY-MM-DD from today to 366 days, or
+    null. The funnel asks in the language of
+    the profile, the profile text given to it.
+    The refusals the AI reads in a project
+    are not kept (only its interests)
+end note
+
+package "utils" {
+    class profileFunnel {
+        + nextQuestions({..., profileText})
+        + writeProfile({..., project: true})
+        + projectQuestionsPrompt()
+        + projectWritePrompt()
+    }
+    class profileAi {
+        + interestsOf(profile)
+    }
+    class embedder {
+        + embed(texts)
+    }
+    class ollama {
+        + ollamaJson(prompt)
+    }
+}
+
+package "Data" {
+    class profileModel {
+        + projects(profileId)
+        + projectInterests(profileId)
+        + addProject(userId, profileId, project, interests)
+        + setProjectEnd(profileId, id, endsOn)
+        + deleteProject(profileId, id)
+        + briefingInterests(profileId)
+        + searchesOf(profileId)
+    }
+}
+note right of profileModel
+    profile_projects (id_profile, name, text,
+    ends_on, created_at), ON DELETE CASCADE;
+    profile_interests.id_project. Running:
+    ends_on IS NULL OR ends_on >= current_date
+end note
+
+class "Ollama (gemma4:31b)\nGemini when it fails" as Ollama <<external>>
+class "Embedder (bge-m3)" as Embedder <<external>>
+class "PostgreSQL + pgvector" as PostgreSQL <<external>>
+
+Projects --> Project
+Projects --> ProfileFunnel
+Projects --> ProfileApi
+ProfileFunnel --> ProfileApi
+ProfileApi --> profileRouter
+profileRouter --> profileController
+profileController --> profileService
+profileService --> profileFunnel
+profileService --> profileAi
+profileService --> embedder
+profileService --> profileModel
+profileFunnel --> ollama
+profileAi --> ollama
+ollama --> Ollama
+embedder --> Embedder
+briefingService --> profileModel : briefingInterests, projects
+ingestService --> profileModel : searchesOf
+profileModel --> PostgreSQL
+@enduml

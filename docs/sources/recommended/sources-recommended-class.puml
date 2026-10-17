@@ -1,0 +1,125 @@
+@startuml sources-recommended-class
+!include ../../_style/class.iuml
+title Sources > Recommended — the feeds other readers have, on this profile's interests, confirmed by the AI
+
+package "Client (React)" as Client {
+    class RecommendedSources {
+        reloadKey, onAdded
+        + add(ids)
+    }
+    class FeedApi {
+        + getRecommended()
+        + addRecommended(ids)
+    }
+}
+note right of RecommendedSources
+    Under "Add sources" of the profile page:
+    each site, "n of m news on your interests",
+    2 sample titles, "Add" or "Add all". Asked
+    again when the discovery status or the
+    interests change (reloadKey)
+end note
+
+package "Presentation" {
+    class feedRouter {
+        + GET /feeds/recommended
+        + POST /feeds/recommended
+    }
+    class feedController {
+        + getRecommended()
+        + addRecommended()
+    }
+}
+
+package "Business" {
+    class recommendationService {
+        + list(profileId)
+        + add(userId, profileId, ids)
+        - recommended(profileId)
+        - confirmed(profileId, interests, row)
+        + afterConfirmation(row, verdict)
+    }
+    class sourceService <<other feature>> {
+        + knownMedia(profileId, {userFeeds})
+    }
+    class feedbackService <<other feature>> {
+        + of(profileId)
+        + siteOf(url)
+    }
+}
+note right of recommendationService
+    RECENT_DAYS 7, MIN_RELEVANT 3,
+    MIN_RELEVANT_SHARE 2%, MAX_RECOMMENDED 20
+    (60 candidates asked). The AI reads 12
+    titles per feed, 4 feeds at a time, its
+    answer kept 24 h per profile and feed while
+    the interests are the same (5000 kept)
+end note
+
+package "utils" {
+    class profileAi {
+        + confirmOnSubject(interests, titles)
+    }
+    class feedLimits {
+        + looksPrivate(url)
+        + bridgeRoom(urls)
+        + MAX_USER_FEEDS = 800
+    }
+    class publicUrl {
+        + isBridgeUrl(url)
+        + nameOf(host)
+    }
+    class "db/rss-links.js" as rss {
+        the shared feeds
+    }
+}
+note bottom of feedLimits
+    looksPrivate: user:password, a parameter
+    named key, token, auth..., or a random
+    key of 20 characters or a UUID in it
+end note
+
+package "Data" {
+    class feedModel {
+        + recommendedFeeds(profileId, options)
+        + userFeedUrls(profileId)
+        + countUserFeeds(profileId)
+        + addUserFeed(feed)
+    }
+    class profileModel {
+        + get(profileId)
+        + interests(profileId)
+        + removedSources(profileId)
+    }
+}
+note bottom of feedModel
+    recommendedFeeds: the feeds of the other
+    profiles (user_feeds), one row per url, not
+    in this profile, not excluded; their articles
+    of 7 days scored on the best interest
+    (title_dense <#> dense); 3 at 0.45 and 2%
+end note
+
+class "Ollama (gemma4:31b)\nGemini when it fails" as Ollama <<external>>
+class "PostgreSQL + pgvector" as PostgreSQL <<external>>
+
+profileAi -[hidden]down- feedLimits
+publicUrl -[hidden]down- rss
+profileModel -[hidden]down- feedModel
+
+RecommendedSources --> FeedApi
+FeedApi --> feedRouter
+feedRouter --> feedController
+feedController --> recommendationService
+recommendationService --> feedbackService
+recommendationService --> sourceService
+recommendationService --> profileModel
+recommendationService --> feedModel
+recommendationService --> profileAi
+recommendationService --> feedLimits
+recommendationService --> publicUrl
+recommendationService --> rss
+profileAi --> Ollama
+feedModel --> PostgreSQL
+profileModel --> PostgreSQL
+@enduml

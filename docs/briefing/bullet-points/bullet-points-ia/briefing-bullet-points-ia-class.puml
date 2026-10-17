@@ -1,0 +1,76 @@
+@startuml briefing-bullet-points-ia-class
+!include ../../../_style/class.iuml
+left to right direction
+title Briefing > Bullet points > Bullet points (IA) — written by deepseek-v4-pro, shown on demand
+
+package "Client (React)" as Client {
+    class BriefingCard {
+        item.ai, format 'points'
+        showAi
+        AiVersion
+    }
+    class MailBar {
+        inAi
+        aiTextOf(story, 'points')
+        + send()
+    }
+    class BriefingApi {
+        + getLatest()
+        + email(..., format, ai)
+    }
+}
+package "Business" {
+    class briefingService {
+        + readStories()
+        + importedCard()
+        + email()
+    }
+    class aiWays {
+        WRITE_MODEL
+        + aiWaysOf()
+        + pointsPrompt()
+        RULES()
+        unnumbered()
+        figuresFrom()
+    }
+    class extract {
+        + sentencesOf()
+        + figuresOf()
+    }
+    class language {
+        + writtenIn()
+    }
+    class ollama {
+        + ollamaJson(prompt, usage, {model, think})
+    }
+    class briefingMail {
+        + briefingMail()
+        wayOf()
+    }
+}
+note right of aiWays
+    3 or 4 points (2 for a short article),
+    15 words at most each, 4 kept at most,
+    in the reader's language. One point with
+    a figure the article does not give:
+    all the points left out
+end note
+note right of ollama
+    Its own model: never Gemini;
+    busy, it waits 2, 5, 10, 20, 30 s,
+    then fails (no AI version)
+end note
+class "Ollama cloud\n(deepseek-v4-pro:0813)" as Cloud <<external>>
+class "PostgreSQL\nbriefings.items (ai)" as DB <<external>>
+
+BriefingCard ..> BriefingApi
+MailBar ..> BriefingApi
+BriefingApi --> briefingService : GET /briefing\nPOST /briefing/:id/email
+briefingService --> aiWays : step "summarizing"
+aiWays --> extract
+aiWays --> language
+aiWays --> ollama
+ollama --> Cloud
+briefingService --> briefingMail : the cards of 'ai'
+briefingService --> DB
+@enduml

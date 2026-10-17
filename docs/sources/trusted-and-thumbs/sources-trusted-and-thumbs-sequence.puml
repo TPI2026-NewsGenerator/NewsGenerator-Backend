@@ -1,0 +1,72 @@
+@startuml sources-trusted-and-thumbs-sequence
+!include ../../_style/sequence.iuml
+title Sources > Trusted and thumbs — a star, a source left out by the thumbs kept, one removed then restored
+
+actor Reader
+participant "ProfilePage\n+ SourceList" as Page
+participant "feedRouter\nprofileRouter" as Router
+participant profileService as Service
+participant feedbackService as Feedback
+participant "feedback\n(refusedCounts)" as Counts
+participant "feedModel\nprofileModel\nbriefingModel" as Models
+database "PostgreSQL" as DB
+
+== The list: which sources the thumbs left out ==
+
+Page -> Router : GET /profile
+Router -> Service : get(userId, profileId)
+Service -> Feedback : refusedSources(profileId)
+Feedback -> Models : votes(profileId, 30 days), ownFeedUrls,\nkeptSources, trustedFeedUrls
+Models -> DB : the last vote of each card of the 'ready'\nbriefings, with the feeds of its articles
+Feedback -> Counts : refusedCounts(votes, kept: shared + own\n+ kept + trusted)
+Counts --> Feedback : the feeds with 3 refused at least and\ntwice as many refused as liked
+Service --> Page : sources, refusedSources [{key, url, site,\nrefused, liked}], removedSources [{key, ...}]
+Page -> Page : sourceRows: one list, "left out: n not for me"
+
+== Trusted (the star) ==
+
+Reader -> Page : the star of a source
+Page -> Router : PATCH /feeds/:id {trusted: true}
+Router -> Models : getUserFeed(profileId, id) (404 if not),\nupdateUserFeed(profileId, id, {trusted})
+Router --> Page : {id, trusted}
+note right of Models
+    Read by the briefing: trustedMedia (the medium
+    of its site and the one its news link to most);
+    its stories among the 60 closest are candidates,
+    10 at most, marked for the AI. Never pruned by
+    the discovery, never left out by the thumbs
+end note
+
+== A source left out, kept ==
+
+Reader -> Page : "Keep it"
+Page -> Router : POST /profile/kept-sources {key}
+Router -> Service : keepSource(userId, profileId, key)
+Service -> Feedback : keep(profileId, key)
+Feedback -> Feedback : refusedSources(profileId), the one whose\nsourceKey(url) is key (else 404)
+Feedback -> Models : keepSource(profileId, url)
+Models -> DB : kept_sources = array_append(...)
+Service --> Page : the whole profile
+
+== A source found for the profile, removed, then restored ==
+
+Reader -> Page : the bin of a source "found for you"
+Page -> Router : DELETE /profile/sources/:id
+Router -> Service : removeSource(userId, profileId, id)
+Service -> Models : removeProfileFeed(profileId, id)
+Models -> DB : REMOVE_PROFILE_FEED: the user_feeds row\n(origin 'profile') deleted and appended to\nremoved_sources, one statement (0: 404)
+Service --> Page : the whole profile: "removed by you"
+note right of Service
+    never found again by the discovery, never
+    recommended. A source added by hand is
+    deleted by DELETE /feeds/:id instead,
+    and not remembered
+end note
+Reader -> Page : "Bring it back"
+Page -> Router : POST /profile/removed-sources/restore {key}
+Router -> Service : restoreSource(userId, profileId, key)
+Service -> Models : removedSources(profileId): the one whose\nsourceKey(url) is key (else 404)
+Service -> Models : restoreProfileFeed(profileId, url)
+Models -> DB : RESTORE_PROFILE_FEED: out of removed_sources,\nback in user_feeds as 'profile'
+Service --> Page : the whole profile
+@enduml

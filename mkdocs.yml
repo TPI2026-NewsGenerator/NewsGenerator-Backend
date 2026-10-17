@@ -1,0 +1,137 @@
+# The documentation site of NewsGenerator: docs/ of this repo, and docs/ of the client next to it (see
+# docs-site/hooks.py). From server/:
+#   python -m venv .venv-docs && .venv-docs/Scripts/pip install -r docs-site/requirements.txt   (once)
+#   pnpm run docs          # the site on http://127.0.0.1:8000, rebuilt at each change
+#   pnpm run docs:build    # site/, failing on a broken link or a version of tools.md that is not installed
+site_name: NewsGenerator — documentation
+site_description: How NewsGenerator reads the news, groups them and writes the briefing of each reader
+docs_dir: docs
+site_dir: site
+strict: true
+use_directory_urls: true
+
+exclude_docs: |
+  *.mjs
+
+validation:
+  omitted_files: info
+  absolute_links: warn
+  unrecognized_links: info
+  anchors: info
+  not_found: warn
+
+hooks:
+  - docs-site/hooks.py
+
+theme:
+  name: material
+  language: en
+  icon:
+    logo: material/newspaper-variant-outline
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.path
+    - navigation.footer
+    - toc.follow
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+
+plugins:
+  - search
+  - glightbox:
+      zoomable: true
+      draggable: true
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+
+nav:
+  - Home: README.md
+  - A to Z:
+      - The walk of a reader (FR): a-to-z/parcours-newsgenerator.md
+      - The walk of a news (FR): a-to-z/parcours-d-une-nouvelle.md
+      - Tools: tools.md
+      - Database: database/mld.md
+  - Accounts:
+      - accounts/README.md
+      - Signup: accounts/signup/README.md
+      - Login and session: accounts/login-and-session/README.md
+      - Settings: accounts/settings/README.md
+  - Profile:
+      - profile/README.md
+      - AI questions: profile/ai-questions/README.md
+      - Interests: profile/interests/README.md
+      - Projects: profile/projects/README.md
+      - Several profiles: profile/several-profiles/README.md
+  - Sources:
+      - sources/README.md
+      - Discovery: sources/discovery/README.md
+      - Added by hand: sources/added-by-hand/README.md
+      - Recommended: sources/recommended/README.md
+      - Missing sources: sources/missing-sources/README.md
+      - Trusted and thumbs: sources/trusted-and-thumbs/README.md
+  - Ingestion:
+      - ingestion/README.md
+      - Feeds: ingestion/feeds/README.md
+      - Vectors: ingestion/vectors/README.md
+      - Stories and threads: ingestion/stories-and-threads/README.md
+      - Names: ingestion/names/README.md
+      - Directory: ingestion/directory/README.md
+  - Search:
+      - search/README.md
+      - Search by meaning: search/search-by-meaning/README.md
+      - Keywords: search/keywords/README.md
+      - Key passages: search/key-passages/README.md
+      - Translations: search/translations/README.md
+      - Saved searches: search/saved-searches/README.md
+  - Briefing:
+      - briefing/README.md
+      - How a card reads:
+          - Key passages: briefing/key-passages/README.md
+          - Summary: briefing/summary/README.md
+          - Summary (IA): briefing/summary/summary-ia/README.md
+          - Bullet points: briefing/bullet-points/README.md
+          - Bullet points (IA): briefing/bullet-points/bullet-points-ia/README.md
+      - What a card adds:
+          - Analysis (IA): briefing/analysis-ia/README.md
+          - Official source: briefing/official-source/README.md
+          - Other angles: briefing/other-angles/README.md
+          - Denials: briefing/denials/README.md
+      - What the reader does:
+          - Thumbs: briefing/thumbs/README.md
+          - News by link: briefing/news-by-link/README.md
+          - Email: briefing/email/README.md
+  - Following:
+      - following/README.md
+      - Wikidata items: following/wikidata-items/README.md
+      - Names and words: following/names-and-words/README.md
+      - Names on cards: following/names-on-cards/README.md
+  - Client: client/README.md

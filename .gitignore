@@ -29,3 +29,7 @@ __pycache__/
 
 # benches: the code is kept, the data they record is not
 /bench/data
+
+# the documentation site: its venv and the site built (pnpm run docs, docs:build)
+.venv-docs/
+site/

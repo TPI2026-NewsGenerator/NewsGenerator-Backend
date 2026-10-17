@@ -1,0 +1,128 @@
+@startuml briefing-official-source-class
+!include ../../_style/class.iuml
+title Briefing > Official source — where a party of the news said it itself
+
+package "Client (React)" as Client {
+    class BriefingCard <<BriefingCard.jsx>> {
+        + OfficialSource()
+    }
+}
+note bottom of BriefingCard
+    In the margin of the card: "X said it:"
+    and the post, or "X said it, reported
+    by medium:" and the sentence quoted,
+    its machine translation under it
+end note
+
+package "Business" {
+    class briefingService {
+        + write()
+        - cardTitles()
+    }
+}
+note right of briefingService
+    Step "angles", beside the other angles,
+    the names and what the profile follows:
+    a failure leaves the cards without it
+end note
+
+package "Utils" {
+    class officialSources {
+        + MAX_OFFICIAL = 2
+        + officialSourcesOf()
+        + normalizeParties()
+        + itemsOf()
+        + candidatesOf()
+        + confirmedOf()
+        + partyName()
+        + withStatements()
+        + withSiteLinks()
+    }
+    class statements {
+        + statementsOf()
+        + hasStatement()
+        + retellsLead()
+        + confirmingOf()
+    }
+    class wikidata {
+        + searchItems()
+        + readChannels()
+    }
+    class crawlers {
+        + Xml()
+    }
+    class extract {
+        + sentencesOf()
+        + translateTexts()
+    }
+    class googleNews {
+        + decodeLinks()
+    }
+    class ollama {
+        + ollamaJson()
+    }
+    class feedFinder <<other feature>> {
+        + findFeeds()
+    }
+}
+note right of officialSources
+    The AI (gemma4:31b) names 4 parties
+    at most; Wikidata gives their item and
+    channels; their posts of the days around
+    the card (5 days before its first news),
+    10 at most, judged twice, the second in
+    reverse order: a post counts when both
+    say "confirms". 3 cards at once
+end note
+note bottom of statements
+    The sentences of its articles that report
+    a statement ("communiqué", "statement"),
+    25 at most, read twice by the AI: the
+    party itself, the card's own fact
+end note
+
+package "Data" {
+    class officialModel {
+        + names()
+        + saveNames()
+        + items()
+        + saveChannels()
+        + saveSiteFeed()
+        + newsOfMedia()
+    }
+    class feedModel {
+        + saveResolvedLinks()
+    }
+}
+note bottom of officialModel
+    party_names: name|what -> qid, searched
+    again after 7 days when none. entities:
+    channels read again after 30 days,
+    site_feed after 7 ('' when none)
+end note
+
+class "Ollama cloud\n(gemma4:31b, Gemini after it)" as OllamaCloud <<external>>
+class "Wikidata API" as WikidataApi <<external>>
+class "Sites, Mastodon,\nBluesky public API" as Channels <<external>>
+class "PostgreSQL\nparty_names, entities, articles" as PostgreSQL <<external>>
+
+BriefingCard ..> briefingService : item.official\n(GET /briefing)
+briefingService --> officialSources
+officialSources --> statements
+officialSources --> wikidata
+officialSources --> crawlers : feeds of the site,\nMastodon RSS
+officialSources --> feedFinder : the feed of a\nparty's site, apart
+officialSources --> googleNews
+officialSources --> extract
+officialSources --> officialModel
+officialSources --> feedModel
+officialSources --> ollama
+officialSources --> Channels : Bluesky getAuthorFeed
+statements --> extract
+statements --> ollama
+wikidata --> WikidataApi
+crawlers --> Channels
+ollama --> OllamaCloud
+officialModel --> PostgreSQL
+feedModel --> PostgreSQL
+@enduml

@@ -1,0 +1,67 @@
+@startuml ingestion-stories-and-threads-sequence
+!include ../../_style/sequence.iuml
+title Ingestion > Stories and threads — one batch grouped
+
+participant "server.js\n(schedule)" as Timer
+participant ingestService as Ingest
+participant storyModel as Model
+participant "assign_stories\n(db/add_briefing.sql)" as Stories
+participant "assign_threads\n(db/add_threads.sql)" as Threads
+database "PostgreSQL" as DB
+
+Timer -> Ingest : run()
+Ingest -> DB : pg_try_advisory_lock: one run at a time
+note right of Ingest : the feeds read, a batch given its vectors\n(see Feeds, Vectors)
+loop each batch of 100 news, as long as the minute of the run lasts
+    Ingest -> Model : assignStories({since: 48 h, 0.70, 1, 0.5, 0.6, 0.003, 6, 100})
+    Model -> Stories : SELECT assign_stories(...): one transaction
+    loop each news with vectors and no story, the newest first (100)
+        Stories -> DB : the same news met again: same link, or same title\nof its medium with texts above 0.6
+        opt not met again, and a title
+            Stories -> DB : the 100 stories of its language closest by centroid,\n+ the stories without a centroid yet
+            Stories -> DB : score each: AVG(title dense + sparse) over the members\nof OTHER media when their texts meet (>= 0.6);\nof its medium alone: AVG - 0.5, the same figures;\n- 0.003 per hour quiet after 6 h
+            loop the stories above 0.70, the best first
+                opt the title names a match (matchup_of)
+                    Stories -> DB : vote of the members naming a match:\nmostly another one (different_matches)? next story
+                end
+            end
+        end
+        alt a story found
+            Stories -> DB : UPDATE stories SET updated_at, grouped_at
+        else none
+            Stories -> DB : INSERT stories (lang, updated_at, grouped_at)
+        end
+        Stories -> DB : UPDATE articles SET id_story
+    end
+    Stories --> Ingest : {grouped, created}
+    Ingest -> Model : assignThreads({0.75, 0.10, 0.70, 7 days, 300})
+    Model -> Threads : SELECT assign_threads(...): one transaction
+    Threads -> DB : the stories grouped since threaded: centroid =\nl2_normalize(avg(text_dense)), media
+    Threads -> DB : bounds: the 20th closest of 1 thread in 32 (sample)
+    Threads -> DB : thread_shortlists(batch, bounds): the 20 closest\nthreads of each story, one query, in parallel
+    loop each story of the batch, the oldest first
+        Threads -> DB : score its candidates (shortlist + threads of this call):\nAVG likeness to the stories of other media,\nor AVG - 0.10 through shared media
+        alt best >= 0.75
+            Threads -> DB : UPDATE stories SET id_thread = best
+        else
+            Threads -> DB : back to its own thread if alone, else INSERT threads
+        end
+    end
+    Threads -> DB : the threads touched: centroid, media, n_stories again;\nthe empty ones deleted
+    Threads -> DB : each thread touched joined to the closest one\nabove 0.70 (- 0.10 for shared media)
+    Threads --> Ingest : {touched, created, merged}
+end
+loop while the last call grouped 100 and time is left
+    Ingest -> Model : assignStories(100), assignThreads(300) again
+    note right : news with vectors in no story: a search\nthat read Google News, a run stopped
+end
+opt purge (once an hour)
+    Ingest -> Model : deleteEmptyStories(): stories without news,\nthen threads without story
+end
+Ingest -> DB : pg_advisory_unlock
+Ingest --> Timer : {grouped, created, threaded, merged}
+note over Model, DB
+    The tagger saves the names of the news with FOR UPDATE SKIP LOCKED:
+    a news this transaction holds is tagged later, neither waits for the other
+end note
+@enduml

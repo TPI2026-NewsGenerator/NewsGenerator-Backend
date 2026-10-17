@@ -1,5 +1,5 @@
 @startuml 23-discovery-sequence
-!include _sequence.iuml
+!include ../../_style/sequence.iuml
 title Discovery — the sources found for the interests of a profile
 
 participant "profileService\n(signup, profile saved,\nfind again) or\nserver start" as Profile

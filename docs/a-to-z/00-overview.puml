@@ -1,5 +1,5 @@
 @startuml 00-overview
-!include _style.iuml
+!include ../_style/class.iuml
 title Backend — the features and what links them (16.10.2026)
 
 package "Accounts\n(01-accounts)" as Accounts {
@@ -62,10 +62,10 @@ entityService ..> taggingService : reads the names it found\nand linked to Wikid
 
 note as Legend
     Every request goes router → controller → service → model → Prisma (or SQL) → PostgreSQL + pgvector.
-    Each package has its own class diagram (0x, 10) and most have a sequence diagram (2x).
+    Each package is a folder of docs/ (the number names its class diagram), with a folder per part of it.
     The shared cache (feeds, articles, stories, threads, names) is filled in background by the Ingestion,
     started with the server (server.js), and read by the Search, the Briefing and the Following.
     The AI (Ollama: gemma4:31b, deepseek-v4-pro; Gemini as fallback) is only asked on what a reader asks for:
-    a profile, a search by meaning, a briefing. 30-database, 31-deployment and 32-a-to-z draw the rest.
+    a profile, a search by meaning, a briefing. Database/30-database, 31-deployment and 32-a-to-z draw the rest.
 end note
 @enduml

@@ -1,0 +1,140 @@
+@startuml profile-interests-class
+!include ../../_style/class.iuml
+title Profile > Interests — the text split by the AI, each interest with its vectors, corrected by hand
+
+package "Client (React)" as Client {
+    class ProfilePage {
+        + save()
+        + changeLanguage()
+        + change(call)
+    }
+    class Interest {
+        interest, onSave(changes), onDelete
+    }
+    class ProfileApi {
+        + save({text, language})
+        + updateInterest(id, {text | weight})
+        + deleteInterest(id)
+    }
+}
+note right of Interest
+    Its text in a field, "Save"; "Make it
+    secondary" / "main" sets the weight to
+    0.85 or 1; "Remove". The refusals are
+    listed apart, "Left out"
+end note
+
+package "Presentation" {
+    class profileRouter {
+        + PUT /profile
+        + PATCH /profile/interests/:id
+        + DELETE /profile/interests/:id
+    }
+    class activeProfile {
+        + activeProfile()
+    }
+    class profileController {
+        + save()
+        + updateInterest()
+        + deleteInterest()
+    }
+}
+
+package "Business" {
+    class profileService {
+        + save(userId, profileId, written)
+        + prepare({text, language})
+        + store(userId, profileId, prepared)
+        + updateInterest(userId, profileId, id, changes)
+        + deleteInterest(userId, profileId, id)
+        - withVectors(interests)
+    }
+    class signupService <<other feature>> {
+        + register()
+    }
+    class discoveryService <<other feature>> {
+        + start(profileId)
+    }
+    class feedService <<other feature>> {
+        + languages()
+        + categories()
+    }
+}
+note right of profileService
+    prepare: text 20 to 3000 characters,
+    a known language (400); no interest: 422.
+    updateInterest: text 1 to 500 characters,
+    embedded again; weight 0.5 to 1.
+    Neither change starts the discovery
+end note
+
+package "utils" {
+    class profileAi {
+        + interestsOf(profile)
+        + interestsPrompt()
+        + normalizeInterests(answer)
+        + normalizeRefused(answer)
+        + withoutRefusals(text, refused)
+        + missingWords(text, interests, refused)
+    }
+    class ollama {
+        + ollamaJson(prompt | conversation)
+    }
+    class embedder {
+        + embed(texts)
+        + toVector(dense)
+        + toSparsevec(sparse)
+    }
+}
+note right of profileAi
+    6 interests, 500 characters each, weight
+    0.5 to 1 (1, or 0.85 "from afar"), 400
+    characters of keywords, 2 Google News
+    searches per language in 4 languages at
+    most, 4 sections, a category of the list;
+    6 refusals. Past years and words of a
+    refusal left out of keywords and searches.
+    Asked a second time when a word of the
+    reader is missing or an interest is too long
+end note
+
+package "Data" {
+    class profileModel {
+        + owned(userId, profileId)
+        + save(userId, profileId, profile, interests)
+        + interests(profileId)
+        + updateInterest(profileId, id, data)
+        + deleteInterest(profileId, id)
+    }
+}
+note right of profileModel
+    user_profiles (text, languages, refused);
+    profile_interests (position, text, weight,
+    keywords, searches, sections, category,
+    dense vector(1024), sparse sparsevec).
+    save: one transaction, the interests of the
+    profile replaced, not the ones of its projects
+end note
+
+class "Ollama (gemma4:31b)\nGemini when it fails" as Ollama <<external>>
+class "Embedder (bge-m3)" as Embedder <<external>>
+class "PostgreSQL + pgvector" as PostgreSQL <<external>>
+
+ProfilePage --> Interest
+ProfilePage --> ProfileApi
+Interest ..> ProfileApi : onSave, onDelete
+ProfileApi --> profileRouter
+profileRouter --> activeProfile
+profileRouter --> profileController
+profileController --> profileService
+signupService --> profileService : prepare, store
+profileService --> feedService
+profileService --> profileAi
+profileService --> embedder
+profileService --> profileModel
+profileService --> discoveryService : start (save only)
+profileAi --> ollama
+ollama --> Ollama
+embedder --> Embedder
+profileModel --> PostgreSQL
+@enduml

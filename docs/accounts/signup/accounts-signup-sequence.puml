@@ -1,0 +1,65 @@
+@startuml accounts-signup-sequence
+!include ../../_style/sequence.iuml
+title Accounts > Signup — from the form to the Profile page
+
+actor Reader
+participant "SignupPage\n+ AuthProvider" as Client
+participant "signupRouter\n+ whileOpen, rateLimit" as Router
+participant signupController as Controller
+participant signupService as Signup
+participant accountRules as Rules
+participant "profileService\n(other feature)" as Profile
+participant "pwdHasher\n+ jwt" as Utils
+participant userModel as UserModel
+database "PostgreSQL" as DB
+
+Client -> Client : ProfileApi.getOptions(): GET /api/profile/options\n(profileRouter, no session) -> {languages, signup}
+alt signup false (SIGNUP_OPEN is not 1)
+    Client --> Reader : "Account creation is closed.", a link to log in
+end
+note over Client : the profile text is written with the AI's questions\n(Profile > AI questions), nothing saved yet
+Reader -> Client : username, email, password, language, the profile text
+Client -> Client : the same rules as the server; "Answer the\nquestions first" while the funnel is not done
+Client -> Router : POST /api/signup {username, email, password, text, language}
+alt SIGNUP_OPEN is not 1
+    Router --> Client : 403 "Account creation is closed."
+else more than 5 from this address in an hour
+    Router --> Client : 429 {error, retryAfter}
+end
+Router -> Controller : register(req)
+Controller -> Signup : register({username, email, password, text, language})
+Signup -> Rules : isUsername, isEmail, isPassword (trimmed)
+alt a rule broken
+    Signup --> Client : 400 USERNAME_RULE, EMAIL_RULE or PASSWORD_RULE
+end
+Signup -> UserModel : taken(name, email)
+UserModel -> DB : SELECT users, whatever the case
+alt taken
+    Signup --> Client : 409, before any call of the AI
+end
+Signup -> Profile : prepare({text, language})
+note right of Profile : 20 to 3000 characters; the AI (gemma4:31b)\nreads the interests, bge-m3 gives their vectors
+alt no interest in the text
+    Profile --> Client : 422, no account made
+end
+Signup -> UserModel : roleId('User')
+Signup -> Utils : hashWithSalt(password) (bcrypt, 12)
+Signup -> UserModel : create({username, email, password, role})
+UserModel -> DB : INSERT users
+alt taken meanwhile (u_users_username_ci / u_users_email_ci)
+    Signup --> Client : 409
+end
+Signup -> Profile : store(userId, null, prepared)
+note right of Profile : the profile saved, its sources\nlooked for in background (discovery)
+alt store failed
+    Signup -> UserModel : delete(userId)
+    Signup --> Controller : the error
+    Controller --> Client : 500 "Your account could not be created\nright now, try again in a few minutes."
+end
+Signup -> Utils : generateAccessToken(user)
+Signup --> Controller : {id_user, token}
+Controller -> Utils : startSession(res, token): cookie "session"
+Controller --> Client : 201 {id_user}
+Client -> Router : GET /api/session (refresh)
+Client --> Reader : "Account created...", the Profile page
+@enduml

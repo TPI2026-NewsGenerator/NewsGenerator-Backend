@@ -1,0 +1,59 @@
+@startuml sources-recommended-sequence
+!include ../../_style/sequence.iuml
+title Sources > Recommended — listed with the AI's check, then added by their id
+
+actor Reader
+participant RecommendedSources as Page
+participant "feedRouter\n+ feedController" as Router
+participant recommendationService as Service
+participant "feedbackService\n+ sourceService" as Known
+participant "profileModel\n+ feedModel" as Models
+participant "profileAi\n(confirmOnSubject)" as AI
+participant "ollama\n(gemma4:31b)" as Ollama
+database "PostgreSQL" as DB
+
+== Listed ==
+
+Reader -> Page : opens the profile page
+Page -> Router : GET /feeds/recommended (X-Profile)
+Router -> Service : list(profileId)
+Service -> Models : get(profileId) (none: [])
+par
+    Service -> Known : FeedbackService.of: the feeds the thumbs left out
+else
+    Service -> Models : removedSources, userFeedUrls, interests
+end
+Service -> Known : knownMedia(profileId, {userFeeds: own + removed})
+Service -> Models : recommendedFeeds(profileId, {excluded: shared\n+ refused + removed, since 7 days, 0.45,\n3 relevant, 2%, limit 60, 12 titles})
+Models -> DB : the other profiles' feeds, their news of 7 days\nscored on the interests (title vectors)
+Service -> Service : left out: looksPrivate(url), and a medium\nthe reader already reads (nameOf(siteOf(url)))
+loop 4 candidates at a time, until 20 kept
+    Service -> Service : confirmed(profileId, interests, row):\nthe verdict kept 24 h, same interests
+    opt not kept yet
+        Service -> AI : confirmOnSubject(interests, 12 titles)
+        AI -> Ollama : ollamaJson(confirmPrompt)
+        Ollama --> AI : {onSubject: [numbers]}
+        AI --> Service : the titles confirmed (null: no answer)
+    end
+    Service -> Service : afterConfirmation: relevant = relevant x\nconfirmed / judged; under 3 or 2% of its\nnews: left out; null verdict: kept as is
+end
+Service --> Page : 20 at most, the most relevant first:\n[{id, site, url (null on the bridge), category,\nlanguage, news, relevant, samples}]
+
+== Added ==
+
+Reader -> Page : "Add" or "Add all n"
+Page -> Router : POST /feeds/recommended {ids} (needsProfile)
+Router -> Service : add(userId, profileId, ids)
+Service -> Service : 1 to 20 integer ids (else 400)
+Service -> Service : recommended(profileId) again:\nonly an id still offered is added
+Service -> Models : countUserFeeds, userFeedUrls
+loop each id
+    alt not offered any more, 800 sources, no room on the bridge
+        Service -> Service : an error for this id
+    else
+        Service -> Models : addUserFeed(url of the server's row,\nsite, category, language): origin 'user'
+    end
+end
+Service --> Page : {feeds, errors}
+Page --> Reader : added to "Your sources", the others stay
+@enduml

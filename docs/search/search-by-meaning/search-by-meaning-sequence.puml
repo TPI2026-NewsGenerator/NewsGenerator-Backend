@@ -1,0 +1,62 @@
+@startuml search-by-meaning-sequence
+!include ../../_style/sequence.iuml
+title Search > Search by meaning — a sentence without quote, comma or -word
+
+actor Reader
+participant "SearchPage\n+ FeedList" as Client
+participant "newsRouter\n+ newsController" as Router
+participant newsService as News
+participant "ingestService\n+ googleNews" as Web
+participant embedder as Embedder
+participant feedModel as FeedModel
+participant searchAi as AI
+participant "profileAi\n(mergeStories)" as Merge
+database "PostgreSQL\n+ pgvector" as DB
+
+Reader -> Client : a sentence, display language, categories, dates
+Client -> Router : POST /api/news {keywords: [sentence], category,\nlanguage, timeframe} (X-Profile)
+Router -> Router : authenticateToken, activeProfile;\nfilters, dates and language checked (400)
+Router -> News : getNews(...)
+News -> News : the feeds of every language: shared, the profile's,\nevery reader's, Google searches of the profiles and\nof past sentences, the directory
+News -> News : Filter.hasOperators(keywords): false
+
+par Google News asked the sentence
+    News -> Web : googleAvailable('searches'), sentenceUrl(sentence,\n{days: from the start date, 30 at most, language})
+    Web -> Web : readNow([url]): the feed read,\nits news embedded now
+else searchByMeaning(sentence, feeds)
+    News -> Embedder : embed([sentence])
+    alt the embedder does not answer
+        News --> Client : 503 "Put your words between quotes..."
+    end
+    News -> FeedModel : closestArticles(feeds, dense, sparse, 0.5, 80, 30, language)
+    FeedModel -> DB : dense + 0.5 x sparse: 80 closest, 30 with the most\nwords, in the language searched and in the others each
+    alt no candidate
+        News --> Client : {totalResults: 0, mode: 'meaning'}
+    end
+    News -> News : one line per story (or per title)
+    News -> AI : sortByMeaning(sentence, [{id, title, description}])
+    AI -> AI : ollamaJson (gemma4:31b), once more on failure
+    alt the AI fails twice
+        News -> News : the 30 closest, checked: false
+    else
+        AI --> News : {answers, related}; the others left out
+    end
+    News -> FeedModel : similarArticlePairs (groupDuplicates)
+    News -> News : one card per story, the cards in the AI's order,\nmatch 'answer' or 'related'
+    News -> FeedModel : closeCardPairs(members, 0.65)
+    opt two cards or more close
+        News -> Merge : mergeStories(30 cards at most)
+        Merge --> News : the cards telling one fact joined
+    end
+    News -> FeedModel : threadArticles (withThreads):\nthe facts of each affair, 12 at most
+end
+
+alt 5 answers or more
+    News --> Client : {news, mode: 'meaning', checked}
+    note right of Web : Google's news still join\nthe database for later searches
+else fewer than 5 answers, and Google answered
+    News -> News : searchByMeaning again with the feed of Google:\nits 40 closest read whatever the others
+    News --> Client : {news, mode: 'meaning', checked, web: true}
+end
+Client --> Reader : the answers, then the news close to it;\n"not checked" or "Google News asked" when so
+@enduml

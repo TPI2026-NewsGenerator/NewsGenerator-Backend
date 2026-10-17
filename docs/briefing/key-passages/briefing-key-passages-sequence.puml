@@ -1,0 +1,53 @@
+@startuml briefing-key-passages-sequence
+!include ../../_style/sequence.iuml
+title Briefing > Key passages — picked in step "summarizing", shown on the card
+
+actor Reader
+participant "BriefingPage\n+ BriefingCard" as Client
+participant "briefingRouter\n+ briefingController" as Controller
+participant briefingService as Briefing
+participant extract as Extract
+participant language as Language
+participant ollama as Ollama
+participant "Ollama cloud\n(gemma4:31b)" as Cloud
+participant briefingModel as Model
+database "PostgreSQL" as DB
+
+== Step "summarizing" of a briefing written in background (see 22-briefing-sequence) ==
+loop each story read, 5 at once
+    Briefing -> Briefing : lead: the first article read with 60 words or more (canSummarize)
+    Briefing -> Extract : extractArticle(title, page, {language})
+    Extract -> Extract : sentencesOf(page): [{text, quote}], 80 at most
+    Extract -> Ollama : ollamaJson(extractPrompt(title, sentences))
+    Ollama -> Cloud : chat, format json
+    note right : Gemini (gemma-4-31b-it) when Ollama fails
+    Cloud --> Extract : {topic, sourcing, sentences: [numbers]}
+    Extract -> Extract : buildExtract: kept while they fit 170 words,\nback in the order of the article
+    Extract -> Language : languageOf(passages)
+    opt the article is not in the reader's language
+        loop 2 attempts at most
+            Extract -> Ollama : translatePassages: one translation per sentence
+            Extract -> Extract : keepsFigures(original, translation)
+        end
+        note right : a figure lost twice: no translation,\nthe reader gets the original only
+    end
+    Extract --> Briefing : {passages, translation, topic, sourcing}
+    alt no passage
+        Briefing -> Briefing : unreadable: the reserve takes its place
+    else
+        Briefing -> Briefing : summary = passagesText(passages),\na blank line between two passages
+    end
+end
+Briefing -> Model : finish(briefing, items)
+Model -> DB : UPDATE briefings SET items
+
+== Read ==
+Reader -> Client : opens the briefing, "Read as: Key passages"
+Client -> Controller : GET /briefing
+Controller -> Briefing : latest(profileId)
+Briefing -> Model : latest(profileId)
+Briefing -> Briefing : withMarks: the terms followed marked
+Controller --> Client : 200 {briefing: items [{summary, translation, marks}]}
+Client -> Client : fieldsOf(item, 'passages'), paragraphsWithMarks
+Client --> Reader : the passages, "[…]" between two;\ntranslated with "Show original", or as published
+@enduml

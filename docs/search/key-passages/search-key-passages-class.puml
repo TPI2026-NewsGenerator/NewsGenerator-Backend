@@ -1,0 +1,129 @@
+@startuml search-key-passages-class
+!include ../../_style/class.iuml
+left to right direction
+title Search > Key passages — the cards chosen, read: passages, who tells it, denials
+
+package "Client (React)" as Client {
+    class SearchPage {
+        + handleGenerate(urls)
+    }
+    class FeedList {
+        + handleSelect(id, checked)
+        MAX_SELECTED 10
+    }
+    class SummaryList {
+        summaries, open
+    }
+    class BriefingCard <<other feature>>
+    class SearchApi {
+        + getNewsSummary(stories, language)
+    }
+}
+package "Presentation" {
+    class newsRouter {
+        + POST /news/summary
+    }
+    class newsController {
+        + getNewsSummary()
+    }
+}
+note right of newsController
+    stories [{urls}], the lead first: 10 cards
+    (MAX_SELECTED_NEWS), 30 urls a card
+    (MAX_STORY_ARTICLES); the same card
+    twice is one; a known language (400)
+end note
+package "Business" {
+    class newsService {
+        + summarizeStories()
+        + cachedArticles()
+        + translateNews()
+    }
+}
+note right of newsService
+    An url not in the cache: 400. 5 cards at
+    once to the AI (AI_CONCURRENCY). Google
+    News addresses decoded: 2 a card, 10 at most
+end note
+package "Reading" {
+    class readingOrder {
+        + readingOrder()
+        + onceEach()
+        + mediumOfArticle()
+    }
+    class googleNews {
+        + isGoogleNewsUrl()
+        + decodeLinks()
+    }
+    class crawlers {
+        + Html()
+    }
+}
+note right of readingOrder
+    5 articles a card, one per medium,
+    a trusted medium first, then the newest
+end note
+package "Writing the card" as Writing {
+    class extract {
+        + canSummarize()
+        + extractArticle()
+        + translationFor()
+        + passagesText()
+    }
+    class contested {
+        + contestedOf()
+    }
+    class corroboration {
+        + corroborationOf()
+    }
+    class ollama {
+        + ollamaJson()
+    }
+}
+note right of extract
+    60 words at least; the AI gives 2 to 5
+    sentence numbers, shown word for word
+    (170 words), plus topic and sourcing.
+    The translation checked figure by figure
+end note
+note right of corroboration
+    No AI: texts compared on 8-word
+    sequences, the same copy at 0.5;
+    the agencies they credit
+end note
+package "Data" {
+    class feedModel {
+        + getArticlesByLinks()
+        + trustedMedia()
+        + saveResolvedLinks()
+        + saveExtract()
+        + saveTranslation()
+    }
+}
+class "News sites" as Web <<external>>
+class "Google News" as Google <<external>>
+class "Ollama cloud (gemma4:31b)\nGemini fallback" as Ollama <<external>>
+class "PostgreSQL\n(articles.extract, translation)" as PostgreSQL <<external>>
+
+SearchPage --> FeedList
+SearchPage --> SearchApi
+SearchPage --> SummaryList
+SummaryList --> BriefingCard
+SearchApi --> newsRouter
+newsRouter --> newsController
+newsController --> newsService
+newsService --> readingOrder
+newsService --> googleNews
+newsService --> crawlers
+newsService --> extract
+newsService --> contested
+newsService --> corroboration
+newsService --> feedModel
+contested --> extract
+extract --> ollama
+contested --> ollama
+ollama --> Ollama
+crawlers --> Web
+googleNews --> Google
+feedModel --> PostgreSQL
+@enduml

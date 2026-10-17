@@ -1,0 +1,85 @@
+@startuml accounts-login-and-session-sequence
+!include ../../_style/sequence.iuml
+title Accounts > Login and session — sign in, who is signed in, each request, sign out
+
+actor Reader
+participant "LoginPage\n+ AuthProvider" as Client
+participant "loginRouter\n+ rateLimit" as Router
+participant loginController as Controller
+participant loginService as Service
+participant "pwdHasher\n(bcrypt)" as Hasher
+participant jwt as Jwt
+participant "sessionRouter" as Session
+participant "passwordChanges\n+ admin" as Checks
+participant "loginModel\n+ userModel" as Model
+database "PostgreSQL" as DB
+
+== Sign in ==
+Reader -> Client : username, password
+Client -> Client : both filled, else "This field is required"
+Client -> Router : POST /api/login {username, password}
+alt more than 10 tries from this address in 15 minutes
+    Router --> Client : 429 {error, retryAfter}
+end
+Router -> Controller : authUser(req)
+alt a field missing or not a string
+    Controller --> Client : 400
+end
+Controller -> Service : authUser({username, password})
+Service -> Model : getUserByUsername(username)
+Model -> DB : SELECT users WHERE username, whatever its case\n(the exact name first)
+Service -> Hasher : verifyPassword(password,\nits hash or NO_ACCOUNT)
+note right of Hasher : an unknown name costs\nthe same bcrypt (cost 12)
+alt no such user, or a wrong password
+    Service --> Client : 401 "Invalid username or password..."
+end
+Service -> Jwt : generateAccessToken({id, username, email, role})
+Service --> Controller : {id_user, token}
+Controller -> Jwt : startSession(res, token)
+note right of Jwt : Set-Cookie session: HttpOnly,\nSameSite=Strict, path /api,\nSecure in https, 7 days
+Controller --> Client : 200 {id_user}, never the token
+
+== Who is signed in ==
+Client -> Session : GET /api/session (the cookie)
+Session -> Jwt : authenticateToken
+Jwt -> Checks : passwordChangedAt(id)
+opt not known yet in this process
+    Checks -> Model : passwordChangedAt(id)
+    Model -> DB : SELECT users.password_changed_at
+end
+alt no cookie, a bad or expired token
+    Jwt --> Client : 403 "Forbidden, invalid or expired token..."
+else account gone, or token older than the last change of password
+    Jwt --> Client : 403
+else the check fails (the database)
+    Jwt --> Client : 503
+end
+opt token older than 24 h
+    Jwt -> Jwt : startSession(new token): 7 days again
+end
+par
+    Session -> Model : email(id): username, email now
+else
+    Session -> Checks : isAdmin(id)
+    Checks -> Model : roleName(id)
+    Model -> DB : users JOIN roles
+end
+Session --> Client : 200 {id, username, email, role, admin}
+Client --> Reader : the briefing; the masthead with the name
+
+== Any other route ==
+note over Client, DB
+    Open without a session: /login, /signup, DELETE /session, GET /news/categories, GET /profile/options,
+    the profile funnel while SIGNUP_OPEN=1, GET /mails/:token. Every other route runs authenticateToken
+    first, the same checks, then activeProfile (header X-Profile). useAuth.expired() sends the reader to
+    the login when an answer says "Forbidden, invalid or expired". adminOnly(): 403 for the e-mail of the
+    briefing, its pictures and a news added by its link; a second profile is refused by ProfileService.
+end note
+
+== Sign out ==
+Reader -> Client : Sign out
+Client -> Client : forget(): user null, forgetSearch(),\nsetActiveProfile(null)
+Client -> Session : DELETE /api/session
+Session -> Jwt : endSession(res)
+Session --> Client : 204, the cookie cleared
+@enduml

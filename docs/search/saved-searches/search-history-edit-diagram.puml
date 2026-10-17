@@ -32,8 +32,8 @@ end
 alt un titre d'une autre de ses recherches (index unique u_custom_searches)
     Storage --> Model : erreur Prisma (P2002)
     Model --> Service : P2002
-    Service --> Controller : P2002, sans status
-    Controller --> Client : HTTP 500 (le message de Prisma)
+    Service --> Controller : erreur 409 "You already have a search with this title..."
+    Controller --> Client : HTTP 409
 end
 Storage --> Model : la recherche modifiée
 Model --> Service : la recherche modifiée

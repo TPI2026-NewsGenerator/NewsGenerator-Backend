@@ -1,5 +1,5 @@
 @startuml 04-ingestion
-!include _style.iuml
+!include ../_style/class.iuml
 left to right direction
 title Ingestion — the cache filled in background
 

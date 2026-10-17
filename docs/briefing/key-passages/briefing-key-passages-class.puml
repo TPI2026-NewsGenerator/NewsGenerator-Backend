@@ -1,0 +1,83 @@
+@startuml briefing-key-passages-class
+!include ../../_style/class.iuml
+left to right direction
+title Briefing > Key passages — the sentences the AI picks, shown word for word
+
+package "Client (React)" as Client {
+    class BriefingPage {
+        format
+        + load()
+    }
+    class BriefingCard {
+        item, format
+        Passages
+    }
+    class "formats.js" as formats {
+        + fieldsOf(item, format)
+    }
+    class "marks.js" as marks {
+        + paragraphsWithMarks()
+    }
+    class BriefingApi {
+        + getLatest()
+    }
+}
+package "Business" {
+    class briefingService {
+        + readStories()
+        + write()
+        + withMarks()
+    }
+    class extract {
+        + sentencesOf()
+        + extractPrompt()
+        + buildExtract()
+        + translationFor()
+        + translatePassages()
+        + keepsFigures()
+        + extractArticle()
+        + passagesText()
+        + canSummarize()
+    }
+    class language {
+        + languageOf()
+        + writtenIn()
+    }
+    class ollama {
+        + ollamaJson()
+    }
+    class profileAi <<other feature>> {
+        + reviewCards()
+    }
+}
+note right of extract
+    The article cut in sentences (12 000 chars,
+    80 sentences, 4 to 90 words each, headings
+    and captions out, quotes marked). The AI gives
+    2 to 5 numbers; the code keeps them while they
+    fit 170 words, in the order of the article.
+    Translation: one per sentence, every figure kept,
+    asked twice at most, else none
+end note
+package "Data" {
+    class briefingModel {
+        + finish(id, items)
+        + latest(profileId)
+    }
+}
+class "Ollama cloud (gemma4:31b)\nGemini when it fails" as Cloud <<external>>
+class "PostgreSQL\nbriefings.items" as DB <<external>>
+
+BriefingPage --> BriefingApi
+BriefingPage --> BriefingCard
+BriefingCard --> formats
+BriefingCard --> marks
+BriefingApi --> briefingService : GET /briefing
+briefingService --> extract : step "summarizing"
+briefingService --> profileAi : the passages read\nagain by the review
+extract --> language
+extract --> ollama
+ollama --> Cloud
+briefingService --> briefingModel
+briefingModel --> DB
+@enduml

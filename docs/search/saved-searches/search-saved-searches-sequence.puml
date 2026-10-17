@@ -1,0 +1,65 @@
+@startuml search-saved-searches-sequence
+!include ../../_style/sequence.iuml
+title Search > Saved searches — list, save or replace, delete (as the code answers on 17.10.2026)
+
+actor Reader
+participant "SearchPage\n+ CustomSearchApi" as Client
+participant "customSearchRouter\n+ authenticateToken" as Router
+participant customSearchController as Controller
+participant customSearchService as Service
+participant customSearchModel as Model
+database "PostgreSQL" as DB
+
+== The list, when the page opens ==
+Client -> Router : GET /api/customsearch (the cookie)
+alt no valid session
+    Router --> Client : 403
+end
+Router -> Controller : getUserCustomSearch(req)
+Controller -> Service : getUserCustomSearch({userId: req.user.id})
+Service -> Model : getUserCustomSearch(userId)
+Model -> DB : users + custom_searches\n+ custom_searches_has_categories + categories
+Service --> Client : 200 [{id, title, keyword, language,\ntimeframe, category: [lower case]}]
+Reader -> Client : picks one: the form filled again\n(keyword, language, categories;\nthe timeframe chosen stays)
+
+== Save, or replace the one loaded ==
+Reader -> Client : "Save search", a title
+Client -> Client : title, language, keyword and a category\nrequired; "Save as a new search" drops the id
+Client -> Router : POST /api/customsearch {id?, title, keyword, language, category}
+Router -> Controller : postUserCustomSearch(req)
+alt a field missing
+    Controller --> Client : 400
+end
+Controller -> Service : postPutUserCustomSearch({id, userId, ...})
+alt with an id
+    Service -> Model : updateUserCustomSearch(id, userId, ...)
+    Model -> DB : UPDATE custom_searches WHERE id AND id_user;\nits categories deleted and written again
+    alt no search of this user with this id (Prisma P2025)
+        Service --> Client : 404
+    end
+else without
+    Service -> Model : postUserCustomSearch(userId, ...)
+    Model -> DB : INSERT custom_searches (timeframe 'Weekly')\n+ custom_searches_has_categories
+end
+alt a title this user already has (u_custom_searches, P2002)
+    Service --> Client : 409 "You already have a search with this title..."
+    Client --> Reader : that message, the form kept open
+end
+Service --> Client : 200 the search saved
+Client -> Router : GET /api/customsearch (the list again)
+
+== Delete ==
+Reader -> Client : the cross of a saved search
+Client -> Router : DELETE /api/customsearch {id}
+Router -> Controller : deleteUserCustomSearch(req)
+alt no id
+    Controller --> Client : 400
+end
+Controller -> Service : deleteUserCustomSearch({id, userId})
+Service -> Model : deleteUserCustomSearch(id, userId)
+Model -> DB : one transaction: DELETE its categories,\nDELETE custom_searches WHERE id AND id_user
+alt not a search of this user (P2025)
+    Service --> Client : 404, nothing deleted
+end
+Service --> Client : 200 {deleted: true}
+@enduml

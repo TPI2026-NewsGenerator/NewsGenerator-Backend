@@ -1,5 +1,5 @@
 @startuml 27-following-sequence
-!include _sequence.iuml
+!include ../_style/sequence.iuml
 title Following — the names of the news, an item searched and followed, its names, its news in the briefing
 
 actor Reader

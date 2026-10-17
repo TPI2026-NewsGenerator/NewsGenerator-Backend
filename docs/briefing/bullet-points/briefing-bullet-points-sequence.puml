@@ -1,0 +1,48 @@
+@startuml briefing-bullet-points-sequence
+!include ../../_style/sequence.iuml
+title Briefing > Bullet points — made with the key passages, chosen on the page and for the e-mail
+
+actor Reader
+participant "BriefingPage\n+ BriefingFormat" as Page
+participant "formats.js" as Formats
+participant BriefingCard as Card
+participant MailBar as Mail
+participant "briefingController" as Controller
+participant briefingService as Briefing
+participant extract as Extract
+participant briefingMail as BriefingMail
+database "PostgreSQL" as DB
+
+== Step "summarizing" (see Key passages) ==
+Briefing -> Extract : extractArticle(title, page, {language})
+Extract -> Extract : the AI's numbers (one call, gemma4:31b)
+Extract -> Extract : shorterWays(sentences, picked)
+note right : points: the 3 first kept (170 words, 5 at most),\nthe most important first, one passage each
+opt a translation of the passages
+    Extract -> Extract : pointsTranslation: the same sentences\ntaken from it, no other call
+end
+Extract --> Briefing : {points, pointsTranslation, ...}
+Briefing -> DB : items: points, pointsTranslation (passagesText)
+
+== Read ==
+Page -> Formats : keptFormat(): localStorage, 'passages' by default
+Reader -> Page : "Read as: Bullet points"
+Page -> Formats : keepFormat('points')
+Page -> Card : format 'points'
+Card -> Formats : fieldsOf(item, 'points')
+alt the card has points
+    Card --> Reader : a list, one sentence a point,\ntranslated or as published
+else a briefing written before 12.10.2026
+    Card --> Reader : its key passages
+end
+
+== Sent by e-mail ==
+Reader -> Mail : "Send email": "In the e-mail, as" preset to 'points'
+Mail -> Controller : POST /briefing/:id/email {storyIds, format: 'points', ai?}
+Controller -> Briefing : email(..., format, ai)
+Briefing -> Briefing : format in MAIL_FORMATS, else 400
+Briefing -> BriefingMail : briefingMail(briefing, {format: 'points'})
+BriefingMail -> BriefingMail : wayOf(card, 'points'): pointsTranslation or points,\nthe AI points for a card of 'ai'
+BriefingMail --> Briefing : html (a list) + text ("• "), "Key points" above each card
+Controller --> Mail : 204
+@enduml

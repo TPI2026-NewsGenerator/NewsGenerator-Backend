@@ -1,0 +1,56 @@
+@startuml search-key-passages-sequence
+!include ../../_style/sequence.iuml
+title Search > Key passages — POST /news/summary on the cards chosen
+
+actor Reader
+participant "SearchPage\n+ SummaryList" as Client
+participant "newsRouter\n+ newsController" as Router
+participant newsService as News
+participant feedModel as FeedModel
+participant "readingOrder\n+ googleNews" as Order
+participant crawlers as Crawlers
+participant "extract\n+ contested" as AI
+participant corroboration as Corro
+database "PostgreSQL" as DB
+
+Reader -> Client : ticks up to 10 cards or facts, "Key passages"
+Client -> Router : POST /api/news/summary {stories: [{urls}], language}
+Router -> Router : authenticateToken, activeProfile; 1 to 10 cards,\n30 urls each, a known language (else 400)
+Router -> News : summarizeStories(cards, {profileId, language})
+News -> FeedModel : getArticlesByLinks(urls)
+alt an url not in the cache
+    News --> Client : 400 "Unknown news: ..."
+end
+News -> FeedModel : trustedMedia(profileId)
+News -> Order : readingOrder(card, trusted): 5 a card,\none per medium, a trusted one first
+opt a card known only through Google News
+    News -> Order : decodeLinks (2 a card, 10 at most)
+    News -> FeedModel : saveResolvedLinks
+end
+News -> Crawlers : Html(every address): fetch + Readability,\nCrawlee for the pages missed
+
+par for each card, 5 at once: the denials
+    News -> AI : contestedOf(lead title, the texts read)
+    note right of AI : sentences with a verb of denial (25 at most),\none AI call: who, about the news itself;\n2 deniers shown, translated
+else for each card, 5 at once: the passages
+    News -> News : the first article with 60 words at least
+    alt none
+        News -> News : no passages, summaryError
+    else its passages are kept, in this language
+        News -> News : extract + translation from the row
+    else its passages are kept, another language
+        News -> AI : translationFor(extract, language)
+        News -> FeedModel : saveTranslation
+    else never read
+        News -> AI : extractArticle(title, page, {language})
+        AI -> AI : ollamaJson (gemma4:31b): 2 to 5 sentence\nnumbers, topic, sourcing; then the\ntranslation, twice at most
+        News -> FeedModel : saveExtract, saveTranslation
+        FeedModel -> DB : UPDATE articles (extract, summary,\ntopic, sourcing, translation)
+    end
+end
+News -> News : translateNews({titles: the leads}): the titles\nin another language
+News -> Corro : corroborationOf(the 5 texts read)
+Corro --> News : {media, read, independent, agencies}
+News --> Client : {totalResults, news: [{id, summary, translation, titleTranslation,\ntopic, sourcing, contested, summaryError, corroboration, articles}]}
+Client --> Reader : "N / M news read.", the sheet "Key passages",\neach card as in the briefing
+@enduml

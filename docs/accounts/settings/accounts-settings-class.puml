@@ -1,0 +1,111 @@
+@startuml accounts-settings-class
+!include ../../_style/class.iuml
+left to right direction
+title Accounts > Settings — username, email, password, each with the password of now
+
+package "Client (React)" as Client {
+    class SettingsPage {
+        + rename()
+        + changeEmail()
+        + changePassword()
+        + send(what, call, onDone)
+    }
+    class AccountApi {
+        + rename({username, password})
+        + changeEmail({email, password})
+        + changePassword({password, newPassword})
+    }
+    class useAuth {
+        + refresh()
+        + expired(data)
+    }
+}
+package "Presentation" {
+    class accountRouter {
+        + PUT /account/username
+        + PUT /account/email
+        + PUT /account/password
+    }
+    class accountController {
+        + rename()
+        + changeEmail()
+        + changePassword()
+    }
+}
+note right of accountRouter
+    authenticateToken, then one limiter
+    for the three: 10 per address in
+    15 minutes (429). The account is
+    always the one of the session
+end note
+package "Business" {
+    class accountService {
+        + rename()
+        + changeEmail()
+        + changePassword()
+        - checkedAccount(userId, password)
+        - signedIn(user)
+    }
+}
+note right of accountService
+    The current password checked first
+    (401, never a hint); the same value
+    again: nothing written; taken by
+    another account: 409. A new token
+    with the account as it is now
+end note
+package "utils" {
+    class accountRules {
+        + isUsername()
+        + isEmail()
+        + isPassword()
+        + isTaken()
+    }
+    class pwdHasher {
+        + verifyPassword()
+        + hashWithSalt()
+    }
+    class jwt {
+        + authenticateToken()
+        + generateAccessToken()
+        + startSession()
+    }
+    class passwordChanges {
+        + notePasswordChange()
+    }
+    class rateLimit {
+        + rateLimit()
+    }
+}
+note right of passwordChanges
+    users.password_changed_at, known in
+    memory: the tokens issued before it,
+    on the other devices, get 403
+end note
+package "Data" {
+    class userModel {
+        + withPassword()
+        + nameTakenByOther()
+        + emailTakenByOther()
+        + update()
+    }
+}
+class bcrypt <<external>>
+class "PostgreSQL\n(users)" as PostgreSQL <<external>>
+
+SettingsPage --> AccountApi
+SettingsPage --> useAuth
+AccountApi --> accountRouter
+accountRouter --> jwt
+accountRouter --> rateLimit
+accountRouter --> accountController
+accountController --> accountService
+accountController --> jwt
+accountService --> accountRules
+accountService --> userModel
+accountService --> pwdHasher
+accountService --> passwordChanges
+accountService --> jwt
+pwdHasher --> bcrypt
+userModel --> PostgreSQL
+@enduml

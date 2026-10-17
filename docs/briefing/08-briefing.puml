@@ -1,5 +1,5 @@
 @startuml 08-briefing
-!include _style.iuml
+!include ../_style/class.iuml
 title Briefing — the stories ranked, chosen and checked for a profile (the cards: 08b-briefing-cards)
 
 class EndUser

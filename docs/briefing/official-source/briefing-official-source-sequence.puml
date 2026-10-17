@@ -1,0 +1,74 @@
+@startuml briefing-official-source-sequence
+!include ../../_style/sequence.iuml
+title Briefing > Official source — the parties named, found in Wikidata, their posts judged twice
+
+participant "briefingService\n(step angles)" as Briefing
+participant officialSources as Official
+participant statements as Statements
+participant "ollama\n(gemma4:31b)" as AI
+participant wikidata as Wikidata
+participant "officialModel\n+ feedModel" as Models
+participant "crawlers, Bluesky API,\nfeedFinder, googleNews" as Web
+database "PostgreSQL" as DB
+
+Briefing -> Official : officialSourcesOf(cards, usage, {language})
+note right of Briefing : each card: {id, title, titleTranslation, titles,\ntext: 700 characters of its passages, first: the\ndate of its first news, texts: its articles read}
+loop the cards, 3 at once
+    Official -> AI : partiesPrompt(card)
+    AI --> Official : {kind: claim | announced | event | analysis,\nparties: [{name, what, other}]}
+    note right : 4 parties at most; none for an analysis
+end
+par the statements need the parties only
+    loop the cards, 3 at once
+        Official -> Statements : statementsOf(card, texts, names)
+        Statements -> Statements : sentences with a statement word,\nnot the lead retelling its own news, 25 at most
+        opt some sentences
+            Statements -> AI : statementPrompt, then the sentences reversed
+            Statements -> Statements : confirmingOf: own and confirms in both answers,\none per party
+        end
+    end
+else
+    Official -> Models : names(parties)
+    Models -> DB : party_names: the ones with an item, or with none\nfound less than 7 days ago
+    loop the names not known, 30 searches and 20 s at most
+        Official -> Wikidata : searchItems(name and its other names, 'en')
+        note right : 250 ms between two; a refusal (429)\nstops it, the rest waits for the next briefing
+    end
+    Official -> AI : pickPrompt, 15 names a call: the item of each
+    Official -> Models : saveNames([{name, what, qid}])
+    Official -> Models : items(qids)
+    opt channels unknown or older than 30 days
+        Official -> Wikidata : readChannels(qids)
+        note right : site P856, X, Instagram, Mastodon, Bluesky...
+        Official -> Models : saveChannels(items)
+    end
+    Official -> Models : newsOfMedia(media of the sites, since)
+    Models -> DB : the news our feeds already read of each\nofficial site, 300 newest per medium
+    loop the items with a site, Mastodon or Bluesky, 4 at once
+        Official -> Web : the site's own feed when known (Crawlers.Xml),\nMastodon RSS, Bluesky getAuthorFeed (60 posts)
+        opt the feed of the site never looked for
+            Official ->> Web : findFeeds(site), apart, 45 s at most
+            note right : saved for the next briefing (saveSiteFeed)
+        end
+    end
+end
+loop the cards, 3 at once
+    Official -> Official : candidatesOf(card, parties, posts)
+    note right : from 5 days before its first news, naming another\nparty or sharing words with its titles, 10 at most
+    opt candidates
+        Official -> AI : checkPrompt(card, posts)
+        Official -> AI : checkPrompt(card, posts reversed)
+        Official -> Official : confirmedOf: "confirms" in both,\none per party, 2 at most
+    end
+end
+Official -> Official : withStatements: the posts first, then the statements\nof the parties with none, 2 at most (MAX_OFFICIAL)
+par
+    Official -> AI : translateTexts(statements in another language)
+else
+    Official -> Web : withSiteLinks: decodeLinks(news.google.com links)
+    Official -> Models : saveResolvedLinks
+end
+Official --> Briefing : Map id -> [{party, title, url, channel,\npublishedAt}] (channel 'reported': + source,\nlanguage, translation)
+note over Official : a card the AI fails on has none; the whole part\nfailing leaves every card without (the briefing goes on)
+Briefing -> Briefing : item.official, saved with the cards
+@enduml

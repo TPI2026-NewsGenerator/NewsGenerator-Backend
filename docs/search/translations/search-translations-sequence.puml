@@ -1,0 +1,46 @@
+@startuml search-translations-sequence
+!include ../../_style/sequence.iuml
+title Search > Translations — POST /news/translations as the cards come near the screen
+
+actor Reader
+participant "Article\n+ ThreadTimeline" as Card
+participant "translation.js\n(translator)" as Translator
+participant "newsRouter\n+ newsController" as Router
+participant newsService as News
+participant feedModel as FeedModel
+participant "language\n+ extract" as Utils
+participant "ollama\n(gemma4:31b)" as AI
+database "PostgreSQL" as DB
+
+Reader -> Card : scrolls the results
+Card -> Translator : useTranslation(url, language): the card is in\nanother language than the one searched
+note right of Translator : an IntersectionObserver, 600 px ahead
+Translator -> Translator : request(url, withDescription): a card asks title\n+ description, a fact of an affair its title only
+Translator -> Translator : wait 150 ms for the others,\n30 cards and 60 titles a request
+Translator -> Router : POST /api/news/translations {news, titles, language}
+Router -> Router : authenticateToken, activeProfile; lists of strings,\n30 and 60 at most, one at least; a known language (400)
+Router -> News : translateNews({news, titles, language})
+News -> FeedModel : getArticlesByLinks(urls) (cachedArticles)
+FeedModel -> DB : SELECT articles
+alt an url not in the cache
+    News --> Translator : 400: nothing translated, the cards keep their text
+end
+News -> Utils : languageOf (articles.lang, else read from the text), writtenIn
+News -> News : the texts to translate: not in the language asked,\na language the AI is told; the description cut at 400 chars
+News -> News : the ones not kept in memory (language + text)
+loop 20 texts a call, 5 calls at once
+    News -> Utils : translateTexts(texts, to)
+    Utils -> AI : ollamaJson: "Translate these titles and descriptions..."
+    alt not one translation per text
+        Utils -> AI : asked once more
+        Utils --> News : all null if again
+    end
+    Utils -> Utils : keepsFigures(text, translation): null when a figure is lost
+    News -> News : kept in memory, 20 000 at most (the oldest dropped)
+end
+News --> Translator : {translations: [{url, language, title, description}]}
+Translator -> Translator : a news without translation: null, never asked again
+Translator --> Card : the translated title (and description)
+Card --> Reader : "translated from German", the title as written under it
+note over Translator : the translations of the search are kept\nwith it in localStorage for a day (keptSearch)
+@enduml

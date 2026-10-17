@@ -1,0 +1,61 @@
+@startuml following-names-on-cards-sequence
+!include ../../_style/sequence.iuml
+title Following > Names on cards — the names written on the cards of a briefing
+
+actor Reader
+participant "BriefingPage\nBriefingCard" as Client
+participant briefingService as Briefing
+participant cardNames as CardNames
+participant affairNames as Affair
+participant wikidata as Wiki
+participant mentionModel as Model
+database "PostgreSQL" as DB
+
+Reader -> Client : makes a briefing
+Client -> Briefing : POST /api/briefing -> write() in background
+Briefing -> Briefing : the stories chosen and read (see Briefing)
+
+== step "angles": together, none can fail the briefing ==
+par the other angles
+    Briefing -> Affair : storiesOfSameNames(stories, {30 days, excluded, 13})
+    loop each card, 5 at a time
+        Affair -> Model : namesOfArticles(its news, 401)
+        Affair -> Affair : rareNames: no place, 400 news a month at most,\nnamed beyond the card, 4 at most
+        opt names never looked for (6 a briefing at most)
+            Affair -> Wiki : exactItems(name, lang)
+            Affair -> Model : setLink(id, qid or null)
+            note right : refused or down: the background links it later
+        end
+        Affair -> Model : storiesNaming(names, their qids, feeds,\n30 days, likeness >= 0.45 to the card)
+    end
+    Affair --> Briefing : Map storyId -> stories naming them
+    note right of Briefing : added to the closest stories, judged by\nthe AI (see Briefing > Other angles)
+else the names of the cards
+    Briefing -> CardNames : namesOfCards([{storyId, ids, media}])
+    loop each card
+        CardNames -> Model : namesOfArticles(ids, 3)
+        Model -> DB : article_mentions of its news: inCard,\nand the news naming each (up to 3)
+        CardNames -> CardNames : chosenNames: no place; qid, or 3 news,\nor 2 of the card; writtenAsName; no agency,\nno medium of the card
+        CardNames -> CardNames : asOne: one writing per name\n("Infantino" = "Gianni Infantino", "PSG")
+        CardNames -> CardNames : a quarter of its articles at least, 4 at most
+    end
+    CardNames -> Model : want({ids of the names without a qid})
+    Model -> DB : mentions.wanted_at = now():\nfirst in the queue of Wikidata
+    CardNames --> Briefing : Map storyId -> [{name, qid, kind}]
+end
+alt failed
+    Briefing -> Briefing : logged, the cards without names
+end
+Briefing -> DB : briefings.items[].names
+
+== read ==
+Client -> Briefing : GET /api/briefing
+Briefing --> Client : the cards with their names
+Client --> Reader : "Who it is about", each name a link (pageOf)
+Reader -> Client : clicks a name
+alt it has a qid
+    Client -> Client : /following/:qid (see Wikidata items)
+else
+    Client -> Client : /following/name/:name (see Names and words)
+end
+@enduml

@@ -1,0 +1,55 @@
+@startuml ingestion-directory-sequence
+!include ../../_style/sequence.iuml
+title Ingestion > Directory — grown every 20 minutes, pruned once a day
+
+participant "server.js\n(schedule)" as Timer
+participant directoryService as Directory
+participant "feedFinder\n(+ Feedly)" as Finder
+participant "the sites" as Sites
+participant directoryModel as Model
+database "PostgreSQL" as DB
+
+Timer -> Timer : IngestService.run() (see Feeds)
+opt 20 minutes since the last grow, DIRECTORY not off
+    Timer -> Directory : grow()
+    Directory -> Model : namedMedia(named by Google News >= 3 times in 30 days,\nread by no feed, not tried for 30 days, 10)
+    Directory -> Model : all(), readers(14 days): the categories followed
+    Directory -> Model : mediaOfFeeds(rss-links) + the named feeds of the directory
+    Directory -> Model : triedSince(media, 'section', 30 days): 10 media left
+    group named media, 3 at a time
+        Directory -> Finder : findFeeds(site, {languages, bridge: false})
+        Finder -> Sites : the home page, the usual addresses (Arc, Reach...)
+        Directory -> Directory : the first feed with 3 news of 7 days, in one of our\nlanguages, no key in its address, 300 news at most
+        Directory -> Sites : isPodcast: <itunes: or audio, video enclosures?
+    end
+    group media read already, 3 at a time
+        Directory -> Finder : siteFeeds(medium): declared, its page of feeds,\nthe ones Feedly knows (20 at most)
+        Directory -> Finder : readFeeds(candidates)
+        Directory -> Model : linksOf(its feeds, 30 days)
+        Directory -> Directory : chooseSections: 3 recent news at least the feeds miss,\nhalf of its news at least, the best first, 2 at most
+        Directory -> Directory : left out: a language not ours, a category nobody\nfollows (sectionCategory), a podcast
+    end
+    loop each medium tried (tryAll)
+        Directory -> Model : stillRemoved(urls, 60 days)
+        note right : taken out lately and no profile created\nor written since: not added again
+        Directory -> Model : addFeeds(kept): INSERT directory_feeds
+        Directory -> Model : tried(medium, origin, kept, reason): directory_tries
+    end
+    Directory --> Timer : [{medium, origin, kept, reason}]
+    note right of Timer : the feeds added are read by the next run
+end
+opt 24 hours since the last prune (and after the first run), DIRECTORY_PRUNE not off
+    Timer -> Directory : prune()
+    Directory -> Model : readers(14 days): {briefings, interests, categories}
+    alt no briefing or no interest
+        Directory --> Timer : [] (nothing tells what serves)
+    else
+        Directory -> Model : usage({14 days, 3 days, 0.45})
+        Model -> DB : each feed of the directory: its news of 3 days with vectors,\nthe ones reaching 0.45 with an interest, and whether a\nready briefing of 14 days showed a news of its medium through it
+        Directory -> Directory : uselessFeeds: not used, and older than 14 days or 300 news\nin 3 days, and a section of a category nobody follows,\nor under 11% of its news on an interest
+        Directory -> Model : remove(feeds, reason)
+        Model -> DB : INSERT directory_removed, DELETE directory_feeds\n(one transaction; their news stay until the retention)
+        Directory --> Timer : the feeds taken out (logged)
+    end
+end
+@enduml

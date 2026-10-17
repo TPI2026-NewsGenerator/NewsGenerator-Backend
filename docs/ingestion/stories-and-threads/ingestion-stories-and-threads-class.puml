@@ -1,0 +1,93 @@
+@startuml ingestion-stories-and-threads-class
+!include ../../_style/class.iuml
+left to right direction
+title Ingestion > Stories and threads — the news grouped, in SQL, as they come
+
+package "Business" {
+    class ingestService {
+        + run()
+        + threadPending(maxStories)
+        - groupPending(maxNews)
+        - withLock(task)
+    }
+    class taggingService <<other feature>> {
+        MentionModel.save: FOR UPDATE SKIP LOCKED
+    }
+}
+note top of ingestService
+    STORY_THRESHOLD 0.70, sparse weight 1, same medium
+    + 0.5, texts 0.6, a quiet story - 0.003 an hour after
+    6 h. THREAD_THRESHOLD 0.75, same media + 0.10,
+    threads joined at 0.70, active 7 days.
+    100 news, then 300 stories a call, each call one
+    transaction; no batch started after 1 minute
+end note
+
+package "Data" {
+    class storyModel {
+        + assignStories(options)
+        + assignThreads(options)
+        + deleteEmptyStories()
+    }
+}
+
+package "db/add_briefing.sql" as Briefing {
+    class assign_stories <<SQL>> {
+        + assign_stories(since, threshold, sparse_weight,\n  same_medium_margin, text_threshold,\n  idle_decay, idle_grace, max_news)
+        + matchup_of(title)
+        + different_matches(teams, names, other)
+        + title_names(title)
+        + figures_of(title)
+    }
+}
+note bottom of assign_stories
+    A news, the newest first: the same link or title
+    of its medium joins its story; else the 100 stories
+    closest by centroid (+ those without one) scored
+    on the members of OTHER media (titles dense +
+    sparse, texts above 0.6); a match refused by a
+    story of another match; else a new story
+end note
+
+package "db/add_threads.sql" as Threads {
+    class assign_threads <<SQL>> {
+        + assign_threads(threshold, same_medium_margin,\n  merge_threshold, active_days, max_stories)
+        + thread_shortlists(batch, bounds, active, shortlist)
+    }
+}
+note bottom of assign_threads
+    Each story grouped since: its centroid (the mean
+    of text_dense), its 20 closest threads (one query
+    for the batch, on 3 cores), joins the best above
+    0.75 or starts one; then the threads touched are
+    joined to the closest above 0.70
+end note
+
+package "Tables" {
+    class articles <<table>> {
+        id_story, lang, medium, title_figures
+        title_dense, title_sparse, text_dense
+    }
+    class stories <<table>> {
+        id, lang, updated_at, grouped_at
+        centroid halfvec(1024), media
+        id_thread, threaded_at
+    }
+    class threads <<table>> {
+        id, lang, updated_at
+        centroid halfvec(1024), media, n_stories
+    }
+}
+
+class "PostgreSQL + pgvector\n(advisory lock 'newsgenerator-ingest')" as PostgreSQL <<external>>
+
+ingestService --> storyModel
+ingestService --> PostgreSQL : pg_try_advisory_lock
+storyModel --> assign_stories
+storyModel --> assign_threads
+assign_stories --> articles
+assign_stories --> stories
+assign_threads --> stories
+assign_threads --> threads
+taggingService ..> articles : skips the rows\nthe grouping holds
+@enduml

@@ -1,5 +1,5 @@
 @startuml 20-signup-sequence
-!include _sequence.iuml
+!include ../_style/sequence.iuml
 title Sign up — the account and its first profile at once
 
 actor Reader

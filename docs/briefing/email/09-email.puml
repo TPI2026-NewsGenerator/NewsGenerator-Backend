@@ -1,5 +1,5 @@
 @startuml 09-email
-!include _style.iuml
+!include ../../_style/class.iuml
 title E-mail — the cards of a briefing sent, and the copy of an e-mail sent before
 
 class EndUser

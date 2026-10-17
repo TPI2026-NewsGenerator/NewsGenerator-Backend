@@ -1,0 +1,64 @@
+@startuml ingestion-vectors-sequence
+!include ../../_style/sequence.iuml
+title Ingestion > Vectors — the news of one run given their vectors
+
+participant "server.js\n(schedule)" as Timer
+participant ingestService as Ingest
+participant storyModel as StoryModel
+participant embedder as Embedder
+participant "embedder/server.py\n(each of EMBEDDER_URL)" as Server
+participant language as Lang
+database "PostgreSQL" as DB
+
+Timer -> Ingest : run()
+note right of Ingest : the lock taken, then the feeds read (see Feeds)
+opt a scheduled run
+    Ingest ->> Ingest : embedPending(): the batch the last run left\nencoding (ahead), or the news already waiting,\nencoded while the feeds are read
+end
+loop while a batch is full (100) and the minute of the run lasts (INGEST_GROUP_MINUTES)
+    Ingest -> StoryModel : pendingArticles(48 h, 100, urls, floods)
+    StoryModel -> DB : embedded_at IS NULL, the newest first,\nthe feeds of 500 news a day last
+    StoryModel --> Ingest : [{id, title, description, feed, feed_language}]
+    Ingest -> Ingest : the texts once each: the title, and\nrichText = title + 400 characters of the description
+    Ingest -> Embedder : embed(texts)
+    Embedder -> Server : available(): GET /health of the ones off\n(each at most once a minute, 2 s)
+    Server --> Embedder : {device: cpu | cuda}
+    par every embedder that answers
+        loop while texts are left and worthIt (it ends its batch before the others end the rest)
+            Embedder -> Server : POST /embed {texts} (16 on a processor,\nEMBEDDER_BATCH on a graphics card)
+            alt answered
+                Server --> Embedder : {dense: [1024 numbers], sparse: {token: weight}}
+            else connection closed (UND_ERR_SOCKET, ECONNRESET)
+                Embedder -> Server : asked again once
+            else failed, or no answer (fetch gives up at 300 s)
+                Embedder -> Embedder : the batch given back to the others,\nthis embedder left for the rest of the call
+            end
+        end
+    end
+    alt no embedder answers
+        Embedder --> Ingest : 503 "The embedder does not answer"
+        note right : the news stay stored without vectors,\nthe next run takes them
+    else
+        Embedder --> Ingest : the vectors, in the order of the texts
+    end
+    Ingest -> Lang : languageOf(title + description, the language of the feed)
+    Ingest -> StoryModel : saveVectors(rows): toVector, toSparsevec
+    StoryModel -> DB : UPDATE articles SET lang, title_dense::halfvec,\ntitle_sparse, text_dense::halfvec, text_sparse,\nembedded_at = now() (200 rows a statement)
+    par the next batch encoded
+        Ingest ->> Ingest : embedPending() (next batch)
+    else this batch grouped
+        Ingest -> StoryModel : assignStories, assignThreads (see Stories and threads)
+    end
+end
+opt out of time with news still waiting, a scheduled run
+    Ingest ->> Ingest : ahead = embedPending(): the next run groups it first
+end
+opt the window done and time left
+    Ingest -> StoryModel : pendingArticles(30 days, 100): 1 batch of older news\n(INGEST_OLDER_BATCHES), vectors only, no story
+end
+Ingest -> StoryModel : warnIfLate: pendingCount(48 h)
+opt 8000 news or more waiting, once an hour at most
+    Ingest -> Ingest : console.warn with the 5 feeds that gave\nthe most news in 3 hours (busiestFeeds)
+end
+Ingest --> Timer : {embedded, older, ...}
+@enduml

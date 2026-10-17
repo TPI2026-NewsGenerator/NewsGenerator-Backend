@@ -20,16 +20,13 @@ alt nom ou mot de passe vide
 end
 Controller -> Service : authUser(username, password)
 Service -> Model : getUserByUsername(username)
-Model -> Storage : findFirst(username)
+Model -> Storage : findMany(username, mode insensitive)\n(le nom exact d'abord)
 Storage --> Model : user_data
-Model --> Service : user_data
-alt utilisateur inconnu
-    Service --> Controller : 404
-    Controller --> Client : HTTP 404
-end
+Model --> Service : user_data (null si inconnu)
 Service -> Service : verifyPassword() (bcrypt)
-alt mot de passe faux
-    Service --> Controller : 401
+note right of Service : utilisateur inconnu : comparé à un hash fixe\nde même coût (NO_ACCOUNT), pour que ni la\nréponse ni son temps ne disent si le nom existe
+alt utilisateur inconnu ou mot de passe faux
+    Service --> Controller : 401 "Invalid username or password..."
     Controller --> Client : HTTP 401
 end
 Service -> Service : generateAccessToken({id, username, email, role})\n(JWT, 7 jours)

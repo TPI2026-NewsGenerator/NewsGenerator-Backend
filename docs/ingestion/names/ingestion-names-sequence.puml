@@ -1,0 +1,78 @@
+@startuml ingestion-names-sequence
+!include ../../_style/sequence.iuml
+title Ingestion > Names — the news tagged, and the names linked to Wikidata
+
+participant "server.js" as Start
+participant taggingService as Tagging
+participant "tagger" as TaggerJs
+participant "ner/server.py\n(each of NER_URL)" as Ner
+participant mentions as Mentions
+participant mentionModel as Model
+participant wikidata as Wiki
+participant "Wikidata API" as WikiApi
+database "PostgreSQL" as DB
+
+Start -> Tagging : schedule()
+Tagging -> TaggerJs : taggerUrls(): NER_URL
+note right : none: nothing runs, nothing is tagged
+
+== one loop per tagger, for as long as the server lives ==
+loop work(url)
+    Tagging -> TaggerJs : taggerDevice(url)
+    TaggerJs -> Ner : GET /health (2 s)
+    alt it answers (cpu or cuda)
+        Tagging -> Model : untagged({30 days, 16 or 128, taken})
+        Model -> DB : entities_at IS NULL, the newest first,\nnone another tagger of this process reads
+        Model --> Tagging : [{id, title, description, lang}]
+        alt news waiting
+            Tagging -> Tagging : textOf: title + 700 characters of the\ndescription, each text once
+            Tagging -> TaggerJs : tagTexts(url, texts)
+            TaggerJs -> Ner : POST /entities {texts} (280 s at most)
+            Ner --> TaggerJs : per text, a list of {text, label, score}: person,\norganization, location above 0.5
+            Tagging -> Mentions : cleanMentions(entities)
+            note right : a key per name and kind (mentionKey),\nthe acronyms inside a name as organisations
+            Tagging -> Model : save([{id, lang, names}])
+            Model -> DB : UPDATE articles SET entities_at = now()\nFOR UPDATE SKIP LOCKED
+            note right : a news the grouping holds is skipped:\nit stays untagged, tagged later
+            Model -> DB : INSERT mentions ON CONFLICT (key, kind)\nDO UPDATE SET seen = seen + n
+            Model -> DB : INSERT article_mentions
+        else nothing left
+            Tagging -> Tagging : wait 60 s
+        end
+    else off, or a batch failed
+        Tagging -> Tagging : wait 60 s
+    end
+end
+
+== one loop for Wikidata ==
+loop link()
+    Tagging -> Model : toLink({least: 3, limit: 20})
+    Model -> DB : never looked for: the ones a reader saw first\n(wanted_at), then the most named (seen >= 3)
+    alt none
+        Tagging -> Tagging : wait 10 min
+    else
+        loop each name
+            Tagging -> Wiki : exactItems(name, lang)
+            Wiki -> WikiApi : wbsearchentities in its language\n(then in English), 10 found at most
+            alt 429 or too busy
+                Wiki --> Tagging : paused: nobody of the process asks\nfor Retry-After or 30 s
+            else
+                Wiki --> Tagging : [qid]: called exactly so, no page of a\nfamily or given name
+                Tagging -> Model : setLink(id, the qid when one only, else null)
+                Model -> DB : UPDATE mentions SET qid, linked_at
+            end
+            Tagging -> Tagging : wait 7 s
+        end
+    end
+end
+
+== and next to them ==
+loop every hour
+    Tagging -> Model : untaggedCount(30 days)
+    Tagging -> Tagging : log what each tagger did, what is left
+end
+loop once a day
+    Tagging -> Model : deleteUnused()
+    Model -> DB : DELETE the names no news names any more\nand never looked for in Wikidata
+end
+@enduml

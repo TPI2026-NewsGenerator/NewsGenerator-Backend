@@ -1,5 +1,5 @@
 @startuml 03-search
-!include _style.iuml
+!include ../_style/class.iuml
 title Search — words or a sentence, answered from the cache
 
 class EndUser
@@ -91,6 +91,7 @@ package "Finding the news" as Finding {
         + parse()
         + canWiden()
         + widen()
+        + toKeywords()
         + matcher()
     }
     class embedder {

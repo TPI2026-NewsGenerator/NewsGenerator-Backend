@@ -1,5 +1,5 @@
 @startuml 22-briefing-sequence
-!include _sequence.iuml
+!include ../_style/sequence.iuml
 title Briefing — written in background in six steps, followed by the client, then its analysis
 
 actor Reader
@@ -38,7 +38,7 @@ group step "ranking"
     Briefing -> Feedback : DiscoveryService.prune(profileId)
     Briefing -> Feedback : FeedbackService.of(profileId)
     Feedback --> Briefing : 15 titles liked and 15 refused, sources refused
-    Briefing -> Stories : feedsOf: the shared feeds, every reader's sources,\nthe Google News searches of the interests
+    Briefing -> Stories : feedsOf: the shared feeds, every reader's sources\n(but the ones removed from this profile),\nthe Google News searches of the interests
     Briefing -> Stories : rank(profileId, feeds, since, every language)
     Stories -> DB : rank_profile_stories (SQL, pgvector)
     note right : 600 ranked (x size / 10), each interest\nits share of 150 (shareOut)
@@ -84,8 +84,6 @@ loop the cards, then the reserve for the places left (2 rounds more at most)
                 Briefing -> Read : extractArticle: key passages, points, summary,\ntranslation, topic, sourcing (gemma4:31b)
             else
                 Briefing -> Read : contestedOf: a denial in its articles (gemma4:31b)
-            else
-                Briefing -> Read : aiWaysOf: points and summary written\nby deepseek-v4-pro:0813
             end
         end
         Briefing -> Briefing : wholeTitle: a title its feed cut, whole
@@ -105,6 +103,8 @@ group step "angles"
         Briefing -> Around : followedNews: briefingGroups + watchedNews
     else
         Briefing -> Around : namesOfCards
+    else
+        Briefing -> Read : aiWaysOf: points and summary written\nby deepseek-v4-pro:0813, of the cards kept only
     end
     note right : none of them can fail the briefing
     Briefing -> BriefingModel : watched(briefing, watched)
@@ -125,6 +125,7 @@ Analysis -> Analysis : pickedCards (deepseek-v4-pro:0813, no reasoning)
 Analysis -> BriefingModel : analysis {running, picked}
 loop each card picked, 3 at once
     Analysis -> Analysis : analysisOfCard (reasoning, 300 s at most),\ncheckedLines: a line without its sources dropped
+    Analysis -> BriefingModel : analysis {running, picked, beatAt}: the card done
 end
 Analysis -> BriefingModel : analysis {ready, cards} or {failed}
 

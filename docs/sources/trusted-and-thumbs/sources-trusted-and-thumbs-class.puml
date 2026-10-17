@@ -1,0 +1,142 @@
+@startuml sources-trusted-and-thumbs-class
+!include ../../_style/class.iuml
+title Sources > Trusted and thumbs — the star, the sources the thumbs left out, kept, removed, restored
+
+package "Client (React)" as Client {
+    class SourceList {
+        found, own, refused, removed
+        onTrust, onRemove, onKeep, onRestore
+    }
+    class sourceRows {
+        + sourceRows(found, own, refused, removed)
+    }
+    class ProfilePage {
+        + trust(source)
+        + keep(source)
+        + remove(source)
+        + restore(source)
+    }
+    class "ProfileApi + FeedApi" as Api {
+        + updateFeed(id, {trusted})
+        + deleteUserFeed(id)
+        + keepSource(key)
+        + removeSource(id)
+        + restoreSource(key)
+    }
+}
+note right of SourceList
+    One list: "Found for you", "Added by
+    you", "Left out" (left out by the thumbs
+    or removed), matched by the key of each
+    source (sha256 of its url, 16 characters)
+end note
+
+package "Presentation" {
+    class "feedRouter\n+ feedController" as feedRouter {
+        + PATCH /feeds/:id {trusted}
+        + DELETE /feeds/:id
+    }
+    class "profileRouter\n+ profileController" as profileRouter {
+        + GET /profile
+        + POST /profile/kept-sources {key}
+        + DELETE /profile/sources/:id
+        + POST /profile/removed-sources/restore {key}
+    }
+}
+
+package "Business" {
+    class profileService {
+        + get(userId, profileId)
+        + keepSource(userId, profileId, key)
+        + removeSource(userId, profileId, id)
+        + restoreSource(userId, profileId, key)
+    }
+    class feedbackService {
+        + of(profileId)
+        + refusedSources(profileId)
+        + keep(profileId, key)
+        + siteOf(url)
+    }
+    class "briefingService\ndiscoveryService\nrecommendationService" as Readers <<other feature>> {
+        what they do with it
+    }
+}
+note right of Readers
+    briefing: the refused feeds out of the
+    feeds read; a trusted medium's stories
+    among the 60 closest are candidates too
+    (10 at most). discovery: prune keeps kept
+    and trusted; refused and removed media
+    never found again; nor recommended
+end note
+
+package "utils" {
+    class feedback {
+        + MIN_REFUSED = 3
+        + MAX_EXAMPLES = 15
+        + refusedCounts(votes, kept)
+        + examplesOf(votes)
+    }
+    class publicUrl {
+        + sourceKey(url)
+        + forClient(url)
+    }
+}
+note right of feedback
+    A source is left out with 3 cards refused
+    and twice as many refused as liked, over
+    the thumbs of 30 days (FEEDBACK_DAYS).
+    Never: the shared feeds, the ones added by
+    hand, the kept and the trusted ones
+end note
+
+package "Data" {
+    class feedModel {
+        + getUserFeed(profileId, id)
+        + updateUserFeed(profileId, id, {trusted})
+        + deleteUserFeed(profileId, id)
+        + trustedFeedUrls(profileId)
+        + trustedMedia(profileId)
+    }
+    class profileModel {
+        + ownFeedUrls(profileId)
+        + keptSources(profileId)
+        + keepSource(profileId, url)
+        + removedSources(profileId)
+        + removeProfileFeed(profileId, id)
+        + restoreProfileFeed(profileId, url)
+    }
+    class briefingModel <<other feature>> {
+        + votes(profileId, since)
+    }
+}
+note right of profileModel
+    user_feeds.trusted; user_profiles.kept_sources
+    (text[]) and removed_sources (jsonb: url, site,
+    category, language). REMOVE_PROFILE_FEED: the
+    row deleted and remembered in one statement
+end note
+
+class "PostgreSQL" as PostgreSQL <<external>>
+
+SourceList --> sourceRows
+ProfilePage --> SourceList
+ProfilePage --> Api
+Api --> feedRouter
+Api --> profileRouter
+feedRouter --> feedModel
+profileRouter --> profileService
+profileService --> feedbackService
+profileService --> profileModel
+profileService --> publicUrl
+feedbackService --> feedback
+feedbackService --> briefingModel
+feedbackService --> profileModel
+feedbackService --> feedModel
+feedbackService --> publicUrl
+Readers --> feedbackService : of()
+Readers --> feedModel : trustedMedia, trustedFeedUrls
+feedModel --> PostgreSQL
+profileModel --> PostgreSQL
+briefingModel --> PostgreSQL
+@enduml

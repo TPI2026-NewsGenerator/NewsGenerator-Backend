@@ -1,0 +1,138 @@
+@startuml briefing-news-by-link-class
+!include ../../_style/class.iuml
+title Briefing > News by link — a news added by its link, for the e-mail (administrators)
+
+package "Client (React)" as Client {
+    class BriefingPage <<pages/Briefing.jsx>> {
+        + addNews(url)
+        + removeNews(storyId)
+    }
+    class AddNews <<AddNews.jsx>> {
+        onAdd(url)
+    }
+    class BriefingCard <<BriefingCard.jsx>> {
+        onRemove()
+    }
+    class BriefingApi <<briefingApi.js>> {
+        + addNews(briefingId, url)
+        + removeNews(briefingId, storyId)
+    }
+}
+note bottom of BriefingPage
+    AddNews shown when the server can send
+    e-mails and the reader is an administrator
+    (mail of GET /briefing). The card added
+    comes last, ticked for the e-mail
+end note
+
+package "Presentation" {
+    class briefingRouter {
+        + POST /briefing/:id/news
+        + DELETE /briefing/:id/news/:storyId
+    }
+    class briefingController {
+        + importNews()
+        + removeNews()
+    }
+}
+note right of briefingRouter
+    authenticateToken, adminOnly (403),
+    POST: 30 an hour per reader (rateLimit)
+end note
+
+package "Business" {
+    class briefingService {
+        + importNews()
+        + importedCard()
+        + removeNews()
+        - readyBriefing()
+        + withMarks()
+    }
+    class entityService <<other feature>> {
+        + followTerms()
+    }
+}
+note right of briefingService
+    MAX_URL = 2000, MAX_IMPORTED = 10 per
+    briefing; 409 when already in it, 422
+    when the page holds no article
+end note
+
+package "Utils" {
+    class publicUrl {
+        + assertPublicUrl()
+        + hostOf()
+    }
+    class crawlers {
+        + Pages()
+    }
+    class extract {
+        + canSummarize()
+        + extractArticle()
+        + passagesText()
+        + translateTexts()
+    }
+    class aiWays {
+        + aiWaysOf()
+    }
+    class hedging {
+        + hedgedBy()
+    }
+    class language {
+        + languageOf()
+        + readerLanguage()
+    }
+    class ollama {
+        + ollamaJson()
+    }
+}
+note bottom of crawlers
+    Pages: a plain fetch of a public
+    address (20 s, 5 redirects) and
+    Readability; no headless browser
+end note
+
+package "Data" {
+    class briefingModel {
+        + ofUser()
+        + addItem()
+        + removeItem()
+    }
+    class profileModel {
+        + get()
+    }
+}
+note bottom of briefingModel
+    addItem: the card appended to items,
+    its storyId the next negative one, in
+    one statement that checks again the 10
+    added and the links; removeItem:
+    negative storyIds only
+end note
+
+class "News site" as Web <<external>>
+class "Ollama cloud\n(gemma4:31b; deepseek-v4-pro:0813\nfor the AI version)" as OllamaCloud <<external>>
+class "PostgreSQL\nbriefings.items" as PostgreSQL <<external>>
+
+BriefingPage --> AddNews
+BriefingPage --> BriefingCard
+BriefingPage --> BriefingApi
+BriefingApi --> briefingRouter
+briefingRouter --> briefingController
+briefingController --> briefingService
+briefingService --> publicUrl
+briefingService --> crawlers
+briefingService --> extract
+briefingService --> aiWays
+briefingService --> hedging
+briefingService --> language
+briefingService --> entityService : the terms followed,\nmarked in the card
+briefingService --> briefingModel
+briefingService --> profileModel
+crawlers --> Web
+extract --> ollama
+aiWays --> ollama
+ollama --> OllamaCloud
+briefingModel --> PostgreSQL
+profileModel --> PostgreSQL
+@enduml

@@ -1,5 +1,5 @@
 @startuml 06-profile
-!include _style.iuml
+!include ../_style/class.iuml
 title Profile — what a reader wants to read, split into interests, several profiles per reader
 
 class EndUser

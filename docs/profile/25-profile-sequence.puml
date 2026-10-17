@@ -1,5 +1,5 @@
 @startuml 25-profile-sequence
-!include _sequence.iuml
+!include ../_style/sequence.iuml
 title Profile — written with the questions of the AI, saved, then another profile chosen
 
 actor Reader

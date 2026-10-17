@@ -1,0 +1,118 @@
+@startuml briefing-thumbs-class
+!include ../../_style/class.iuml
+title Briefing > Thumbs — "Good for me" / "Not for me" on a card, read by the next briefings
+
+package "Client (React)" as Client {
+    class BriefingPage <<pages/Briefing.jsx>> {
+        + vote(storyId, value)
+    }
+    class BriefingCard <<BriefingCard.jsx>> {
+        onVote(vote)
+    }
+    class ProfilePage <<pages/Profile.jsx>> {
+        + keep(source)
+    }
+    class SourceList <<SourceList.jsx>>
+    class "BriefingApi\nProfileApi" as Api <<briefingApi.js>> {
+        + vote(briefingId, storyId, vote)
+        + keepSource(key)
+    }
+}
+note bottom of BriefingPage
+    The thumb is shown at once and taken
+    back when the server refuses it. No
+    thumb on a news added by its link
+end note
+
+package "Presentation" {
+    class briefingRouter {
+        + POST /briefing/:id/vote
+    }
+    class profileRouter <<other feature>> {
+        + GET /profile
+        + POST /profile/kept-sources
+    }
+    class briefingController {
+        + vote()
+    }
+}
+
+package "Business" {
+    class briefingService {
+        + vote()
+        + write()
+    }
+    class feedbackService {
+        + of()
+        + refusedSources()
+        + keep()
+    }
+    class profileService <<other feature>> {
+        + get()
+        + keepSource()
+    }
+    class "discoveryService\nrecommendationService" as Others <<other feature>>
+    class profileAi <<other feature>> {
+        + selectStories()
+    }
+}
+note right of feedbackService
+    FEEDBACK_DAYS = 30: the votes of the last
+    30 days, one per story (the last one)
+end note
+
+package "Utils" {
+    class feedback {
+        + MAX_EXAMPLES = 15
+        + MIN_REFUSED = 3
+        + examplesOf()
+        + refusedCounts()
+    }
+}
+note right of feedback
+    A source is refused when its cards got
+    3 "down" at least and twice as many as
+    "up". Never a shared feed, one added by
+    hand, kept or trusted, nor a search of
+    Google News (not in item.feedUrls)
+end note
+
+package "Data" {
+    class briefingModel {
+        + vote()
+        + votes()
+    }
+    class profileModel {
+        + ownFeedUrls()
+        + keptSources()
+        + keepSource()
+    }
+    class feedModel {
+        + trustedFeedUrls()
+    }
+}
+
+class "PostgreSQL\nbriefings.items[].vote, votedAt, feedUrls\nuser_profiles.kept_sources" as PostgreSQL <<external>>
+
+BriefingPage --> BriefingCard
+BriefingPage --> Api
+ProfilePage --> SourceList : refused sources,\n"keep"
+ProfilePage --> Api
+Api --> briefingRouter
+Api --> profileRouter
+briefingRouter --> briefingController
+briefingController --> briefingService
+profileRouter --> profileService
+profileService --> feedbackService
+briefingService --> briefingModel : vote()
+briefingService --> feedbackService : of(), at each briefing
+briefingService --> profileAi : the examples
+Others --> feedbackService : of(): the refused\nfeeds not found again
+feedbackService --> feedback
+feedbackService --> briefingModel : votes()
+feedbackService --> profileModel
+feedbackService --> feedModel
+briefingModel --> PostgreSQL
+profileModel --> PostgreSQL
+feedModel --> PostgreSQL
+@enduml

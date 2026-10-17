@@ -1,0 +1,155 @@
+@startuml sources-added-by-hand-class
+!include ../../_style/class.iuml
+title Sources > Added by hand — a site, a search of the directory and the web, a file of sites
+
+package "Client (React)" as Client {
+    class AddSources {
+        + handleAdd()
+        + handleSearch()
+        + handleAddFound()
+    }
+    class ImportSources {
+        + handleFile(event)
+        + check(from)
+        + handleAdd()
+    }
+    class importFile {
+        + addressesOfFile(file)
+    }
+    class FeedApi {
+        + addUserFeed({site, category, language})
+        + searchSources(query, language, from)
+        + checkSites(sites, language)
+        + importSources(sources, language, subject)
+    }
+}
+note right of ImportSources
+    .xlsx, CSV, OPML or text read in the
+    browser (1000 addresses at most, the feed
+    of a line rather than its site); 25 sites
+    a request to /check, 50 a request to
+    /import; ready ones ticked
+end note
+
+package "Presentation" {
+    class feedRouter {
+        + POST /feeds
+        + POST /feeds/search
+        + POST /feeds/check
+        + POST /feeds/import
+    }
+    class feedController {
+        + addUserFeed()
+        + searchSources()
+        + checkSites()
+        + importSources()
+        - readNow(urls)
+    }
+}
+note right of feedRouter
+    activeProfile; needsProfile on POST /feeds
+    and /import. /check: 25 sites a request,
+    2000 sites an hour per account, 4000 per
+    address (rateLimit with a cost)
+end note
+
+package "Business" {
+    class sourceService {
+        + searchDirectory({query, profileId})
+        + searchWeb({query, profileId, language})
+        + checkSites({sites, profileId, language})
+        + knownMedia(profileId)
+        + suggest(...)
+    }
+    class ingestService <<other feature>> {
+        + run({urls})
+    }
+}
+note right of sourceService
+    directory: 15 results, the media already
+    read left out. web: suggest() over 30 days
+    (see Missing sources). check: 6 sites at a
+    time, 60 s each; ready, bridge, asleep
+    (< 3 news in 7 days), flood (> 300 items),
+    added, none
+end note
+
+package "The feed of a site" as OnSite {
+    class feedFinder {
+        + findFeeds(site, {language, subject, judge})
+        + newsSitemaps(siteUrl)
+        + readFeeds(urls)
+    }
+    class feedDirectory {
+        + searchDirectory(query, count)
+    }
+    class feedBridge {
+        + bridgeFeed(siteUrl, {language, words})
+        + articlePatterns(html)
+    }
+    class crawlers {
+        + Xml(feeds)
+    }
+}
+note right of feedFinder
+    The page (its <link rel=alternate>), else
+    13 usual paths; with a subject also its
+    sections, its page of feeds and Feedly;
+    without, Feedly when none answers; then its
+    news sitemap; RSS-Bridge last. A dead page:
+    its root tried. 20 feeds read at most
+end note
+
+package "Limits and safety" as Limits {
+    class feedLimits {
+        + MAX_USER_FEEDS = 800
+        + MAX_BRIDGE_FEEDS = 50
+        + MAX_FEED_ITEMS = 300
+        + bridgeRoom(urls)
+    }
+    class publicUrl {
+        + assertPublicUrl(url)
+        + fetchPublicUrl(url)
+        + isBridgeUrl(url)
+        + forClient(url)
+    }
+}
+
+package "Data" {
+    class feedModel {
+        + addUserFeed(feed)
+        + countUserFeeds(profileId)
+        + userFeedUrls(profileId)
+    }
+}
+
+class "Websites" as Sites <<external>>
+class "Feedly search" as Feedly <<external>>
+class "RSS-Bridge\n(CssSelectorBridge)" as RssBridge <<external>>
+class "PostgreSQL\n(user_feeds)" as PostgreSQL <<external>>
+
+AddSources --> ImportSources
+AddSources --> FeedApi
+ImportSources --> importFile
+ImportSources --> FeedApi
+FeedApi --> feedRouter
+feedRouter --> feedController
+feedController --> sourceService
+feedController --> feedFinder
+feedController --> feedLimits
+feedController --> publicUrl
+feedController --> crawlers
+feedController --> feedModel
+feedController --> ingestService
+sourceService --> feedDirectory
+sourceService --> feedFinder
+sourceService --> feedModel
+feedFinder --> feedDirectory
+feedFinder --> feedBridge
+feedFinder --> crawlers
+feedFinder --> publicUrl
+feedBridge --> RssBridge
+crawlers --> Sites
+feedDirectory --> Feedly
+feedModel --> PostgreSQL
+@enduml

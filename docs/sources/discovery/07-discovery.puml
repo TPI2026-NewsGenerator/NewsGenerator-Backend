@@ -1,5 +1,5 @@
 @startuml 07-discovery
-!include _style.iuml
+!include ../../_style/class.iuml
 title Discovery — the sources found for the interests of a profile
 
 class "server start" as ServerStart <<other feature>> {

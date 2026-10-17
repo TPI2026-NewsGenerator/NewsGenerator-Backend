@@ -1,0 +1,131 @@
+@startuml profile-several-profiles-class
+!include ../../_style/class.iuml
+title Profile > Several profiles — an administrator's profiles, the one read sent as X-Profile
+
+package "Client (React)" as Client {
+    class ProfileSwitcher {
+        admin
+        + choose(id)
+    }
+    class "ProfilePage\n+ NewProfile" as ProfilePage {
+        creating: admin and ?new=1
+        + create()
+        + created(answer)
+        + rename()
+        + removeProfile()
+    }
+    class activeProfile {
+        + activeProfileId()
+        + setActiveProfile(id)
+        + withProfile(headers)
+        + useActiveProfile()
+        + profilesChanged()
+        + onProfilesChanged(listener)
+    }
+    class "ProfileApi\nFeedApi, BriefingApi..." as Api {
+        + list()
+        + create({name, text, language})
+        + rename(id, name)
+        + remove(id)
+    }
+}
+note right of activeProfile
+    localStorage "newsgenerator.profile"
+    (the page only when refused); every
+    call sends it as the header X-Profile.
+    The pages read their data again when
+    it changes (useSyncExternalStore)
+end note
+note right of ProfileSwitcher
+    In the masthead. Hidden for a reader with
+    one profile who is no administrator;
+    "New profile…" for an administrator
+end note
+
+package "Presentation" {
+    class profileRouter {
+        + GET /profile/profiles
+        + POST /profile/profiles
+        + PATCH /profile/profiles/:id
+        + DELETE /profile/profiles/:id
+    }
+    class "activeProfile (middleware)" as activeProfileMw {
+        + activeProfile(req, res, next)
+        + needsProfile(req, res, next)
+    }
+    class profileController {
+        + list()
+        + create()
+        + rename()
+        + remove()
+    }
+}
+note right of activeProfileMw
+    On /profile, /feeds, /briefing, /entities:
+    req.profileId = X-Profile when it is one of
+    the user's profiles, else their first one,
+    null when none. needsProfile: 400 when null
+end note
+
+package "Business" {
+    class profileService {
+        + list(userId)
+        + create(userId, {name, text, language})
+        + rename(userId, profileId, name)
+        + remove(userId, profileId)
+        + prepare(written)
+        + store(userId, null, prepared)
+        - ownProfile(userId, profileId)
+        - cleanName(name)
+    }
+    class admin {
+        + isAdmin(userId)
+    }
+}
+note right of profileService
+    create: name 1 to 40 characters, then
+    403 unless administrator, 400 at 15
+    profiles (MAX_PROFILES); the text split
+    and the discovery started as for the
+    first one. remove: the last profile
+    can't be deleted (400)
+end note
+
+package "Data" {
+    class profileModel {
+        + ofUser(userId)
+        + idsOf(userId)
+        + owned(userId, profileId)
+        + count(userId)
+        + rename(profileId, name)
+        + delete(profileId)
+    }
+    class userModel <<other feature>> {
+        + roleName(userId)
+    }
+}
+note right of profileModel
+    user_profiles (id, id_user, name, text...).
+    Deleting one deletes, ON DELETE CASCADE,
+    its profile_interests, user_feeds,
+    briefings and profile_projects
+end note
+
+class "PostgreSQL" as PostgreSQL <<external>>
+
+ProfileSwitcher --> activeProfile
+ProfileSwitcher --> Api
+ProfilePage --> activeProfile
+ProfilePage --> Api
+Api --> activeProfile : withProfile()
+Api --> profileRouter
+profileRouter --> activeProfileMw : the other routes
+profileRouter --> profileController
+profileController --> profileService
+profileService --> admin
+profileService --> profileModel
+activeProfileMw --> profileModel : idsOf
+admin --> userModel
+profileModel --> PostgreSQL
+userModel --> PostgreSQL
+@enduml

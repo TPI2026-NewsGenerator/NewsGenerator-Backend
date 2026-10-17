@@ -1,0 +1,92 @@
+@startuml following-names-on-cards-class
+!include ../../_style/class.iuml
+left to right direction
+title Following > Names on cards — who a card is about, and the rare names that find its affair
+
+package "Client (React)" {
+    class BriefingCard <<other feature>> {
+        "Who it is about": item.names
+    }
+    class EntityApi {
+        + pageOf({name, qid})
+    }
+}
+note bottom of EntityApi
+    a qid: /following/:qid,
+    else /following/name/:name
+end note
+
+package "Business" {
+    class briefingService <<other feature>> {
+        + write(briefingId, profileId, hours)
+        + angleCardsOf(stories, titles, options)
+    }
+}
+
+package "utils" {
+    class cardNames {
+        + namesOfCards(cards)
+        + cardNames(rows, articles, {media})
+        + writtenAsName(name)
+        + shortName(label, names)
+        - chosenNames(rows, articles, options)
+        - asOne(items, weight)
+        - sameName(longer, shorter)
+    }
+    class affairNames {
+        + storiesOfSameNames(stories, options)
+        - linkNow(rows, budget)
+    }
+    class mentions {
+        + mentionKey(name)
+        + rareNames(rows, {rare, max})
+    }
+    class wikidata {
+        + exactItems(name, language)
+    }
+}
+note bottom of cardNames
+    4 names a card at most, no place: named by a
+    quarter of its articles at least, by 3 news or 2
+    of the card (or linked to an item), written as a
+    name, one writing per name, never an agency
+    nor the medium itself
+end note
+note bottom of affairNames
+    4 rare names a card: a person or body named
+    by 400 news a month at most, beyond the card;
+    6 linked to Wikidata now at most; the stories
+    of 30 days naming them, 0.45 close at least
+end note
+
+package "Data" {
+    class mentionModel {
+        + namesOfArticles(articleIds, upTo)
+        + want({ids})
+        + setLink(id, qid)
+        + storiesNaming(options)
+    }
+    class "mentions" as mentionsTable <<table>> {
+        name, kind, qid, linked_at, wanted_at
+    }
+    class "article_mentions" as am <<table>>
+    class "briefings" as briefings <<table>> {
+        items[].names [{name, qid, kind}]
+    }
+}
+
+class "Wikidata API" as WikidataApi <<external>>
+
+BriefingCard --> EntityApi
+briefingService --> cardNames : namesOfCards()
+briefingService --> affairNames : storiesOfSameNames()
+briefingService --> briefings
+cardNames --> mentions
+cardNames --> mentionModel
+affairNames --> mentions
+affairNames --> wikidata
+affairNames --> mentionModel
+wikidata --> WikidataApi
+mentionModel --> mentionsTable
+mentionModel --> am
+@enduml

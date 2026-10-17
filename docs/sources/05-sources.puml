@@ -1,5 +1,5 @@
 @startuml 05-sources
-!include _style.iuml
+!include ../_style/class.iuml
 title Sources — the feeds a reader adds, finds, imports or is recommended
 
 class EndUser

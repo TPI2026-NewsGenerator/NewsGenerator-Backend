@@ -1,0 +1,124 @@
+@startuml sources-missing-sources-class
+!include ../../_style/class.iuml
+title Sources > Missing sources — what a search missed: the news of media not read, and their feed to add
+
+package "Client (React)" as Client {
+    class SearchPage <<other feature>> {
+        lastSearch, categoryOptions
+    }
+    class SourceSuggestions {
+        search, categories
+        + handleLook()
+        + handleAdd()
+    }
+    class FeedApi {
+        + suggestSources({keywords, timeframe, language})
+        + importSources(sources, language, subject)
+    }
+}
+note right of SourceSuggestions
+    "What this search misses", under the results
+    of a search: "Look on the web" (about a
+    minute), the news read-only (they open at
+    the publisher), the media with a feed ticked,
+    a category, "Add n sources"
+end note
+
+package "Presentation" {
+    class feedRouter {
+        + POST /feeds/suggestions
+        + POST /feeds/import
+    }
+    class feedController {
+        + suggestSources()
+        + importSources()
+    }
+}
+
+package "Business" {
+    class sourceService {
+        + suggest({keywords, timeframe, profileId, language})
+        + knownMedia(profileId)
+        - mergeMedia(...lists)
+        - meaningJudge(keywords)
+    }
+}
+note right of sourceService
+    MAX_CANDIDATES 8 media tried, 4 at a
+    time (FIND_CONCURRENCY), MAX_NEWS 25
+    news shown. A medium is offered only
+    with a feed on the search (isOnSubject:
+    2 of its 30 newest news at 0.45)
+end note
+
+package "Media on a subject" as Looking {
+    class googleNews {
+        + search(keywords, {days, language})
+    }
+    class gdelt {
+        + mediaFor(keywords, {days, language})
+        + toQuery(keywords)
+    }
+}
+note bottom of googleNews
+    One queue for every request to Google,
+    1 s apart; a 429, 503 or captcha pauses
+    it an hour. 100 items at most. Failing:
+    the whole suggestion fails (502)
+end note
+note bottom of gdelt
+    node:https, 6 s, 1 try: refused or slow
+    is an empty answer. 250 articles, a
+    medium needs 2 of them. 5 languages
+end note
+
+package "The feed of a medium" as Feeds {
+    class feedFinder {
+        + findFeeds(site, {language, subject, judge})
+        + isOnSubject(feed)
+    }
+    class meaningJudge {
+        + judgeOf(subjectDenses)
+        + JUDGE_THRESHOLD = 0.45
+    }
+    class embedder {
+        + embed(texts)
+    }
+    class publicUrl {
+        + forClient(url)
+        + nameOf(host)
+    }
+}
+
+package "Data" {
+    class feedModel {
+        + userFeedUrls(profileId)
+        + articleHosts(urls)
+    }
+}
+
+class "Google News RSS" as GoogleNewsApi <<external>>
+class "GDELT DOC 2.0" as GdeltApi <<external>>
+class "Embedder (bge-m3)" as Embedder <<external>>
+class "Websites,\nFeedly, RSS-Bridge" as Web <<external>>
+
+googleNews -[hidden]right- gdelt
+
+SearchPage --> SourceSuggestions
+SourceSuggestions --> FeedApi
+FeedApi --> feedRouter
+feedRouter --> feedController
+feedController --> sourceService
+sourceService --> googleNews
+sourceService --> gdelt
+sourceService --> feedModel
+sourceService --> meaningJudge
+sourceService --> feedFinder
+sourceService --> publicUrl
+meaningJudge --> embedder
+feedFinder --> meaningJudge : judge(texts)
+googleNews --> GoogleNewsApi
+gdelt --> GdeltApi
+embedder --> Embedder
+feedFinder --> Web
+@enduml

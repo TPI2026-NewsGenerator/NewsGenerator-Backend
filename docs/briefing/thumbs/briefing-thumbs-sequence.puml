@@ -1,0 +1,61 @@
+@startuml briefing-thumbs-sequence
+!include ../../_style/sequence.iuml
+title Briefing > Thumbs — a thumb given, then read by the next briefing and the profile page
+
+actor Reader
+participant "Client (React)\nBriefingCard, Briefing.jsx" as Client
+participant "briefingRouter\n+ jwt, activeProfile" as Router
+participant briefingController as Controller
+participant briefingService as Briefing
+participant feedbackService as Feedback
+participant "feedback.js" as Rules
+participant "briefingModel, profileModel,\nfeedModel" as Models
+database "PostgreSQL" as DB
+
+== A thumb ==
+Reader -> Client : "Good for me" / "Not for me"\n(pressed again: taken back)
+Client -> Client : the thumb shown at once
+Client -> Router : POST /briefing/:id/vote {storyId, vote: 'up' | 'down' | null}
+Router -> Controller : vote(req)
+Controller -> Briefing : vote(userId, briefingId, storyId, vote)
+Briefing -> Briefing : briefingId and storyId positive integers,\nvote 'up', 'down' or null
+note right : else 404 / 400 (a news added by its link,\nof a negative storyId, has no thumb)
+Briefing -> Models : BriefingModel.vote(userId, id, storyId, vote)
+Models -> DB : UPDATE briefings: the card gets vote and votedAt\n(one statement, a ready briefing of this user)
+alt no such card
+    Controller --> Client : 404
+    Client -> Client : the thumb taken back, the error shown
+else
+    Controller --> Client : 204
+end
+
+== The next briefing (step ranking, see 22-briefing-sequence) ==
+Briefing -> Feedback : of(profileId)
+par
+    Feedback -> Models : votes(profileId, 30 days ago)
+    Models -> DB : the last vote of each story: {title, vote, feedUrls}
+else
+    Feedback -> Models : ownFeedUrls, keptSources, trustedFeedUrls
+    note right : with the shared feeds: never refused
+end
+Feedback -> Rules : examplesOf(votes)
+note right : 15 titles liked, 15 refused, the newest
+Feedback -> Rules : refusedCounts(votes, kept)
+note right : a feed of the refused cards, 3 "down"\nat least and twice as many as "up"
+Feedback --> Briefing : {examples: {liked, refused}, refused: [feed url]}
+Briefing -> Briefing : the feeds read, without the refused ones
+Briefing -> Briefing : selectStories(profile, candidates, ..., examples)
+note right : the AI reads the titles as examples: what\nmakes them alike, not every news of one name
+
+== The profile page ==
+Reader -> Client : opens the profile
+Client -> Router : GET /profile (profileRouter)
+Router -> Feedback : refusedSources(profileId) (through profileService)
+Feedback --> Client : [{url, site, refused, liked}]: "left out: 4 not for me"
+Reader -> Client : keeps one
+Client -> Router : POST /profile/kept-sources {key}
+Router -> Feedback : keep(profileId, key) (through profileService)
+Feedback -> Models : ProfileModel.keepSource(profileId, url)
+Models -> DB : user_profiles.kept_sources += url
+note right : never left out again
+@enduml

@@ -1,5 +1,5 @@
 @startuml 21-search-sequence
-!include _sequence.iuml
+!include ../_style/sequence.iuml
 title Search — the cards, then the key passages of the ones chosen
 
 actor Reader
@@ -81,7 +81,7 @@ else exact words (a quote, a comma or -word)
     FeedModel -> DB : keyword SQL, with and without accents (pg_trgm)
     opt fewer than 5 found
         News -> FeedModel : searchArticles(Filter.widen(keywords))
-        note right : counted and offered, not done
+        note right : counted and offered, not done:\nwider {found, terms, keywords (toKeywords)}
     end
     News -> FeedModel : similarArticlePairs(ids)
     News -> News : groupDuplicates: one card per story,\nthe trigrams of the titles for the others

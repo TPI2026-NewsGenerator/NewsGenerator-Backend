@@ -1,0 +1,57 @@
+@startuml briefing-other-angles-sequence
+!include ../../_style/sequence.iuml
+title Briefing > Other angles — the closest stories and the ones naming the card's rare names, judged by the AI
+
+participant "briefingService\n(step angles)" as Briefing
+participant affairNames as Names
+participant otherAngles as Angles
+participant "ollama\n(gemma4:31b)" as AI
+participant "storyModel\n+ mentionModel" as Models
+participant wikidata as Wikidata
+database "PostgreSQL\n+ pgvector" as DB
+
+Briefing -> Briefing : anglesOf(stories, titles, {language, feedUrls,\nhours, trusted, usage})
+Briefing -> Briefing : angleCardsOf: since = the window or 3 days,\nthe longer; the stories and links on the cards left out
+loop the cards, 5 at once (ANGLE_QUERIES)
+    Briefing -> Models : closeStories({storyIds: [card], excluded, feedUrls,\nsince, likeness: 0.6, perStory: 16})
+    Models -> DB : the closest centroids, of the feeds read
+end
+Briefing -> Names : storiesOfSameNames(stories, {since: 30 days,\nexcluded, perStory: 13})
+loop the cards, 5 at once
+    Names -> Models : namesOfArticles(article ids, 401)
+    Names -> Names : rareNames: no place, named by 400 news\nat most and by others than the card, 4 at most
+    opt a name never linked (6 per briefing at most)
+        Names -> Wikidata : exactItems(name, lang)
+        Names -> Models : setLink(id, qid)
+    end
+    Names -> Models : storiesNaming({mentionIds, qids, likeness: 0.45, ...})
+    note right : the stories naming them or a name of the\nsame item, the closest to the card first
+end
+Names --> Briefing : Map storyId -> [{id_story, id_article}]
+Briefing -> Models : storyArticles(ids, feedUrls, since)
+Briefing -> Briefing : othersOf(card): 8 closest, then 5 named,\neach its newest news of a feed, its day, its media
+opt 2 cards or more
+    Briefing -> Models : likenessTo(candidates, cards)
+    Briefing -> Angles : nearCardsOf(cards, likeness)
+    note right : a candidate closer to another card from 0.78:\nthat card's title is given to the AI (3 at most)
+end
+Briefing -> Angles : otherAnglesOf(cards, usage)
+loop the cards with candidates, 5 at once
+    Angles -> AI : anglesPrompt(title, others, cardTitles, at, otherCards)
+    AI --> Angles : {"news": [{n, kind, as}]}
+    Angles -> Angles : normalizeAngles: the "angle" ones only,\n"as" gives sameAs
+end
+note right of Angles : a card the AI fails on has none
+opt some angles tell the fact of an earlier one
+    Briefing -> Models : likenessAmong(their story ids)
+end
+loop the cards in their order
+    Briefing -> Angles : sameFactsOut(angles, likeness): out from 0.85
+    Briefing -> Angles : placeAngles(angles, 5): the first found\nby names takes the last place
+    note right : a story shown under a card is not\nshown under a later one
+end
+opt titles in another language than the reader's
+    Briefing -> AI : translateTexts(titles)
+end
+Briefing -> Briefing : item.angles: [{title, titleTranslation, url, source,\npublishedAt, trusted, language, storyId, media}]
+@enduml

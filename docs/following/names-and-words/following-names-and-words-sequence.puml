@@ -1,0 +1,78 @@
+@startuml following-names-and-words-sequence
+!include ../../_style/sequence.iuml
+title Following > Names and words — a word followed, the page of a name, the suggestions
+
+actor Reader
+participant "FollowingPage\nNamePage" as Client
+participant "entityRouter\n+ entityController" as Controller
+participant entityService as Entity
+participant "watchTerms\n+ cardNames" as Utils
+participant "profileModel" as Profile
+participant "mentionModel\n+ feedModel\n+ briefingModel" as Models
+participant briefingService as Briefing
+database "PostgreSQL" as DB
+
+== a name or a word followed as written ==
+Reader -> Client : "Vadims Ļašenko" -> follow as written
+Client -> Controller : POST /api/entities/words {word}
+Controller -> Entity : addWord(profileId, word)
+Entity -> Profile : get(profileId): watch_terms
+alt already followed (whatever its case)
+    Entity --> Client : {words} unchanged
+else 20 already
+    Entity --> Client : 400
+else
+    Entity -> Utils : cleanWatchTerms([...words, word])
+    note right : 2 to 60 characters, no quotes,\nonce whatever the case
+    Entity -> Profile : setWatchTerms(profileId, kept)
+    Profile -> DB : UPDATE user_profiles SET watch_terms
+    Entity --> Client : 201 {words}
+end
+Reader -> Client : unfollows it
+Client -> Controller : DELETE /api/entities/words/:word
+Controller -> Entity : removeWord(profileId, word)
+note right : not followed: 404
+
+== the page of a name ==
+Reader -> Client : opens /following/name/LFF
+Client -> Controller : GET /api/entities/name?name=LFF&hours=48
+Controller -> Entity : namePage(profileId, name, hours)
+par
+    Entity -> Models : qidsOfKey(mentionKey(name))
+else
+    Entity -> Profile : the words followed
+else
+    Entity -> Models : want({key}): looked for in Wikidata\nbefore the other names
+end
+Entity -> Entity : namedNews([name], hours)
+note right : the news the tagger found naming it,\nthe untagged ones by their text (see\nWikidata items)
+Entity --> Client : {name, qid (one item only), followed,\nwordsLeft, hours, count, news}
+alt qid
+    Client -> Client : Navigate to /following/:qid
+else
+    Client --> Reader : its news (Term), follow as written
+end
+
+== the names suggested ==
+Client -> Controller : GET /api/entities/suggestions
+Controller -> Entity : suggestions(profileId)
+Entity -> Models : BriefingModel.recentCards(profileId, 14 days),\nthe items followed, the words
+opt cards written before they had names (40 at most)
+    Entity -> Models : articlesOfStories(storyIds)
+    Entity -> Utils : namesOfCards(their news)
+end
+Entity -> Utils : suggestedNames(names of each card, {qids, words})
+note right : on 2 cards at least, 8 at most, a writing\nof a name followed counts as followed
+Entity --> Client : {names: [{name, qid, kind, cards}]}
+Reader -> Client : follows one
+Client -> Controller : POST /api/entities {qid} (an item)\nor POST /api/entities/words {word}
+
+== in the briefing ==
+Briefing -> Models : watchedNews(words): FeedModel.searchArticles,\neach word an exact phrase, every feed, the window
+Briefing -> Briefing : newsOfTerms: as whole words, one news per story,\n100 kept per word, all counted
+Briefing -> DB : briefings.watched
+Client -> Briefing : GET /api/briefing
+Briefing -> Entity : followTerms(profileId, words)
+Briefing -> Briefing : withMarks: the names and words marked in\nthe cards, a card naming one is "found"
+Briefing --> Client : the briefing, its tab "What you follow"
+@enduml

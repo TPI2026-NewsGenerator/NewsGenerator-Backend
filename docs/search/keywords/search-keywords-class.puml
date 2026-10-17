@@ -1,0 +1,88 @@
+@startuml search-keywords-class
+!include ../../_style/class.iuml
+left to right direction
+title Search > Keywords — exact words, written like on Google, searched in SQL
+
+package "Client (React)" as Client {
+    class SearchPage {
+        + handleSubmit(keyword)
+        + handleWiden(keywords)
+        KEYWORD_EXAMPLES
+    }
+    class FeedList {
+        newsList, wider
+        + onWiden()
+        - widerKeywords(wider)
+    }
+    class SearchApi {
+        + getNews(query)
+    }
+}
+package "Presentation" {
+    class newsRouter {
+        + POST /news
+    }
+    class newsController {
+        + getNews()
+    }
+}
+package "Business" {
+    class newsService {
+        + getNews()
+        - groupDuplicates()
+        - withThreads(cards, feeds, kept)
+    }
+}
+note right of newsService
+    MIN_RESULTS 5: under it the wider
+    search is counted and offered, not done.
+    SIMILARITY 0.25 (0.45 under 40 chars),
+    SAME_COPY 0.85, MAX_THREAD_FACTS 12
+end note
+package "utils" {
+    class filter {
+        + hasOperators()
+        + parse()
+        + toPattern()
+        + keywordsSql()
+        + canWiden()
+        + widen()
+        + toKeywords()
+        + matcher()
+    }
+    class grouping {
+        + averageLink()
+        + unionFind()
+    }
+    class hedging {
+        + hedgedBy()
+    }
+}
+note right of filter
+    , = OR; the words of an alternative = AND;
+    "quoted" = exact word or phrase; -word excludes.
+    Words of 3 letters or less are whole words; in
+    capitals (AI, VAR) case-sensitive. Latin letters
+    with and without their accents
+end note
+package "Data" {
+    class feedModel {
+        + searchArticles()
+        + similarArticlePairs()
+        + threadArticles()
+    }
+}
+class "PostgreSQL\narticles.search_text\n(pg_trgm GIN, unaccent)" as PostgreSQL <<external>>
+
+SearchPage --> SearchApi
+SearchPage --> FeedList
+SearchApi --> newsRouter
+newsRouter --> newsController
+newsController --> newsService
+newsService --> filter
+newsService --> grouping
+newsService --> hedging
+newsService --> feedModel
+feedModel --> filter : keywordsSql()
+feedModel --> PostgreSQL
+@enduml

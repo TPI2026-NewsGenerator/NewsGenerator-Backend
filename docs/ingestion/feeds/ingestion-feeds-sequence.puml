@@ -1,0 +1,66 @@
+@startuml ingestion-feeds-sequence
+!include ../../_style/sequence.iuml
+title Ingestion > Feeds — the feeds due read by one run
+
+participant "server.js\n(schedule)" as Timer
+participant ingestService as Ingest
+participant feedService as Feeds
+participant crawlers as Crawlers
+participant googleNews as Google
+participant "feedModel\n+ directoryModel\n+ profileModel" as Model
+database "PostgreSQL" as DB
+participant "the media\n(RSS-Bridge)" as Sites
+participant "Google News" as GoogleApi
+
+Timer -> Ingest : run()
+Ingest -> DB : pg_try_advisory_lock(hashtext('newsgenerator-ingest')),\non a connection of its own
+alt another run holds the lock
+    Ingest --> Timer : null (skipped)
+    note right : a run asked for some feeds (a discovery,\nsources added) reads them anyway:\nthe run at work gives them their vectors
+end
+Ingest -> Model : DirectoryModel.all(), allUserFeedUrls()\n+ the feeds of db/rss-links.js
+Ingest -> Model : feedRhythms(every url, 24 h)
+Model --> Ingest : [{url, last_fetched_at, failures, last_success_at, news}]
+Ingest -> Ingest : floods: 500 news a day or more (isFlood)
+Ingest -> Ingest : feedsDue(rows): never read, or read\nlonger ago than readEvery(row)
+note right : 72+ news a day: 2 min, 24+: 5, 6+: 15, 1+: 30, none: 60;\n x 2 per failure in a row, an hour at most;\nonce a day when failing and last success 3 days old
+opt GOOGLE_NEWS on and not paused (googleAvailable)
+    Ingest -> Model : ProfileModel.searchesOf() -> interestSearchUrls
+    Ingest -> Model : dueFeeds(searches, not read for 60 min, 60)
+end
+Ingest -> Feeds : refreshUrls(feeds, {purge: once an hour})
+Feeds -> Model : syncFeeds(urls): a row in feeds for each
+par the feeds, 50 at a time
+    Feeds -> Crawlers : Crawlers.Xml([{url, etag, lastModified}])
+    Crawlers -> Sites : GET, If-None-Match, If-Modified-Since
+    note right : 8 s at most, 40 s through RSS-Bridge;\nthe address checked public at each read
+    Sites --> Crawlers : 304, or the items of the feed
+else the searches of Google News, one after the other
+    Feeds -> Google : readSearches(urls)
+    Google -> GoogleApi : one request a second (the queue)
+    note right : 429, 503 or a captcha: an hour without request;\nthe searches left answer {skipped}
+    Google --> Feeds : items without platforms, titles without\ntheir publisher, the publisher in source
+end
+loop each feed
+    alt skipped (Google paused)
+        Feeds -> Feeds : read at the next run, as if never asked
+    else error
+        Feeds -> Model : updateFeed(last_error, failures + 1)
+    else read (304 included)
+        Feeds -> Model : updateFeed(etag, last_modified,\nlast_success_at, failures 0)
+        Feeds -> Feeds : keep the items with a link and a title,\npublished within the 30 days (toDate)
+    end
+end
+Feeds -> Model : withoutRepeats(articles)
+note right : the same title at the same date of\npublication in the same feed: a repeat
+Feeds -> Model : insertArticles(articles)
+Model -> DB : INSERT articles, 1000 rows a statement,\na link once per feed (skipDuplicates)
+opt purge (once an hour)
+    Feeds -> Model : deleteArticlesOlderThan(30 days)
+end
+Feeds --> Ingest : {feeds, notModified, failed, skipped, inserted, archived, deleted}
+Ingest -> Ingest : the vectors and the groups (see Vectors,\nStories and threads)
+Ingest -> DB : pg_advisory_unlock
+Ingest --> Timer : {feeds, inserted, embedded, grouped, ...}
+Timer -> Timer : next run 1 min after the start of this one,\nat once when it worked longer
+@enduml

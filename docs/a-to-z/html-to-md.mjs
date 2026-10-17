@@ -5,14 +5,14 @@
 //  Description: The Markdown of a page of docs written from its HTML, so both always say the same thing:
 //               the scripts of the page are run first (its funnel, its tables), then each part of the
 //               page is written as Markdown. Run from server/ after changing a page:
-//                 node docs/html-to-md.mjs "docs/Parcours NewsGenerator.html"
+//                 node "docs/a-to-z/html-to-md.mjs" "docs/a-to-z/parcours-newsgenerator.html"
 //
 
 import {readFileSync, writeFileSync} from 'node:fs';
 import {parseHTML} from 'linkedom';
 
 const path = process.argv[2];
-if (!path?.endsWith('.html')) throw new Error('A page of docs: node docs/html-to-md.mjs "docs/<page>.html"');
+if (!path?.endsWith('.html')) throw new Error('A page of docs: node "docs/a-to-z/html-to-md.mjs" "docs/a-to-z/<page>.html"');
 const {document} = parseHTML(readFileSync(path, 'utf8'));
 
 // the scripts of the page fill its tables and its funnel; its drawings on a canvas are left out

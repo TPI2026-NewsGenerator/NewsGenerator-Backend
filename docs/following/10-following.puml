@@ -1,5 +1,5 @@
 @startuml 10-following
-!include _style.iuml
+!include ../_style/class.iuml
 title Following — the items of Wikidata and the names or words a profile follows, and the names of the news
 
 class EndUser

@@ -1,0 +1,61 @@
+@startuml accounts-settings-sequence
+!include ../../_style/sequence.iuml
+title Accounts > Settings — one change, here a new password
+
+actor Reader
+participant "SettingsPage\n+ useAuth" as Client
+participant "accountRouter\n+ authenticateToken, rateLimit" as Router
+participant accountController as Controller
+participant accountService as Service
+participant "accountRules\n+ pwdHasher" as Rules
+participant passwordChanges as Changes
+participant jwt as Jwt
+participant userModel as UserModel
+database "PostgreSQL" as DB
+
+Reader -> Client : current password, new password, again
+Client -> Client : 10 characters at least, the two the same,\nthe current one written
+Client -> Router : PUT /api/account/password {password, newPassword}
+alt no valid session
+    Router --> Client : 403, useAuth.expired(): the login page
+else more than 10 changes from this address in 15 minutes
+    Router --> Client : 429 {error, retryAfter}
+end
+Router -> Controller : changePassword(req)
+Controller -> Service : changePassword(req.user.id, {password, newPassword})
+Service -> Rules : isPassword(newPassword)
+alt 10 characters to 72 bytes broken
+    Service --> Client : 400 PASSWORD_RULE
+end
+Service -> UserModel : withPassword(userId)
+UserModel -> DB : SELECT users (with the hash)
+alt the account is gone
+    Service --> Client : 404
+end
+Service -> Rules : verifyPassword(password, hash)
+alt the current password is wrong
+    Service --> Client : 401 "Your current password is not this one."
+end
+alt the new password is the current one
+    Service --> Client : 400
+end
+Service -> Rules : hashWithSalt(newPassword) (bcrypt, 12)
+Service -> UserModel : update(userId, {password, password_changed_at: now})
+UserModel -> DB : UPDATE users
+Service -> Changes : notePasswordChange(userId, at)
+note right of Changes : every token issued before 'at'\nis refused from now on (403)
+Service -> Jwt : generateAccessToken({id, username, email, role})
+Service --> Controller : {user, token}
+Controller -> Jwt : startSession(res, token)
+note right of Jwt : this device keeps a session,\nthe others are signed out
+Controller --> Client : 200 {id, username, email, role}
+Client -> Router : GET /api/session (refresh)
+Client --> Reader : a toast, the fields emptied
+
+note over Client, DB
+    PUT /account/username and PUT /account/email go the same way: the rule (isUsername, isEmail), the current
+    password, nothing written when it is the same value, 409 when another account has it whatever the case
+    (nameTakenByOther, emailTakenByOther, then the unique index: isTaken), UserModel.update, a new token.
+    An error of the server answers 500 "Your account could not be changed right now."
+end note
+@enduml

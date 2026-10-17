@@ -1,0 +1,46 @@
+@startuml briefing-bullet-points-ia-sequence
+!include ../../../_style/sequence.iuml
+title Briefing > Bullet points > Bullet points (IA) — written for every card kept, shown when the reader asks
+
+actor Reader
+participant BriefingCard as Card
+participant MailBar as Mail
+participant "briefingController" as Controller
+participant briefingService as Briefing
+participant aiWays as AiWays
+participant "ollama\n→ Ollama cloud\n(deepseek-v4-pro:0813)" as Ollama
+participant briefingMail as BriefingMail
+database "PostgreSQL" as DB
+
+== Step "angles", the cards kept, beside the other angles and the official sources ==
+Briefing -> AiWays : aiWaysOf(title, page of the lead, {language})
+AiWays -> AiWays : extract.sentencesOf(page), and\nfiguresOf(title + sentences): the article's figures
+par
+    AiWays -> Ollama : ollamaJson(pointsPrompt,\n{model: WRITE_MODEL, think: false})
+    Ollama --> AiWays : {points: [{text, sentences}]}
+else
+    AiWays -> Ollama : summaryPrompt (see Summary (IA))
+end
+note right of Ollama : busy (429): waits 2, 5, 10, 20, 30 s;\nno Gemini; a failure answers null
+AiWays -> AiWays : unnumbered each point, empty ones out, 4 kept at most
+alt one point holds a figure the article does not give
+    AiWays -> AiWays : points null, logged
+end
+AiWays --> Briefing : {points, summary, model} or null
+Briefing -> DB : items[].ai
+
+== Read ==
+Reader -> Card : "Read as: Bullet points", then "Show AI version"
+Card -> Card : aiText = item.ai.points (none: no button)
+Card --> Reader : "Written by the AI (deepseek-v4-pro)", a list under\nthe published points: "it can get a fact wrong"
+
+== Sent by e-mail ==
+Reader -> Mail : "Edit", ticks "Send its bullet points in the AI version"
+Mail --> Reader : the points the e-mail will send, AI or published
+Mail -> Controller : POST /briefing/:id/email {format: 'points', ai: [storyId]}
+Controller -> Briefing : email(..., format, ai)
+Briefing -> Briefing : ai: integers, else 400; aiVersion on those cards
+Briefing -> BriefingMail : briefingMail(briefing, {format: 'points'})
+BriefingMail -> BriefingMail : wayOf: card.ai.points when it has some,\nelse its points; titled "Key points"
+Controller --> Mail : 204
+@enduml

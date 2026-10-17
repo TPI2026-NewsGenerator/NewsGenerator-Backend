@@ -1,0 +1,92 @@
+@startuml sources-added-by-hand-sequence
+!include ../../_style/sequence.iuml
+title Sources > Added by hand — a site, a search, a file: the feed found, checked, added, read at once
+
+actor Reader
+participant "AddSources\n+ ImportSources" as Page
+participant "feedRouter\n+ activeProfile" as Router
+participant feedController as Controller
+participant sourceService as Source
+participant "feedFinder\n(+ feedDirectory,\nfeedBridge)" as Finder
+participant "Websites, Feedly,\nRSS-Bridge" as Web
+participant feedModel as Model
+participant ingestService as Ingest
+
+== A website ("engadget.com") and a category ==
+
+Reader -> Page : "Add"
+Page -> Router : POST /feeds {site, category, language}
+Router -> Controller : addUserFeed(req) (needsProfile: 400 without a profile)
+Controller -> Model : countUserFeeds(profileId): 800 at most (else 400)
+Controller -> Finder : findFeeds(site, {language})
+Finder -> Web : the page (public address only, 3 redirects),\nits declared feeds, else the 13 usual paths
+opt no feed answers with news
+    Finder -> Web : Feedly (feeds of this same medium),\nthen its news sitemap
+end
+opt still none and RSS_BRIDGE_URL set
+    Finder -> Web : bridgeFeed: the page read, the prefix of its\narticle links, CssSelectorBridge (3 tries)
+    note right of Web
+        kept with 3 articles, titles of 12
+        characters, half of them dated
+    end note
+end
+Finder --> Controller : feeds, the most recent news first
+alt none
+    Controller --> Page : 400 "No RSS feed found"
+else a bridge feed and 50 already
+    Controller --> Page : 400 (no room on the bridge)
+end
+Controller -> Model : addUserFeed(origin 'user', language of its news)
+Controller ->> Ingest : readNow([url]): run({urls}), in background
+Controller --> Page : {feed, sample}; added already: 400
+
+== A search: the directory and the web together ==
+
+par the directory (about 1 s)
+    Page -> Router : POST /feeds/search {query, from: 'directory'}
+    Router -> Source : searchDirectory({query, profileId})
+    Source -> Web : Feedly search (30), knownMedia
+    Source --> Page : 15 feeds not read yet, the most read first
+else the web (20 to 45 s)
+    Page -> Router : POST /feeds/search {query, from: 'web'}
+    Router -> Source : searchWeb: suggest({keywords: [query],\nlast 30 days}) (see Missing sources)
+    Source --> Page : the media that wrote on it, their feed on it
+end
+Reader -> Page : ticks some, "Add n sources"
+Page -> Router : POST /feeds/import {sources: [{site, feed, category}],\nlanguage, subject: [query] when from the web}
+note right of Router
+    /import is the same for the search, the file
+    and Missing sources: see below
+end note
+
+== A file of sites (Excel, CSV, OPML, text) ==
+
+Page -> Page : addressesOfFile: read in the browser,\n1000 addresses at most
+loop 25 addresses a request, until done, stopped or paused
+    Page -> Router : POST /feeds/check {sites, language}
+    alt over 2000 sites this hour (account) or 4000 (address)
+        Router --> Page : 429 {error, retryAfter}: the others wait
+    end
+    Router -> Source : checkSites: 6 at a time, 60 s each
+    Source -> Finder : findFeeds(site, {language}) each
+    Source --> Page : [{site, status, key, feed, recent, items, sample}]
+end
+Reader -> Page : the ready ones ticked; "Add n sources"
+loop 50 sources a request
+    Page -> Router : POST /feeds/import {sources, language}
+    Router -> Controller : importSources(req)
+    Controller -> Web : Crawlers.Xml: each feed sent read once\n(not the ones read from a page)
+    loop each source
+        alt 800 sources, unknown category, dead or empty feed
+            Controller -> Controller : an error for this source
+        else no address (a site read from its page)
+            Controller -> Finder : findFeeds(site, {language, subject}):\nits feed built again by the server
+        else
+            Controller -> Controller : assertPublicUrl(feed)
+        end
+        Controller -> Model : addUserFeed(...)
+    end
+    Controller ->> Ingest : readNow(the urls added)
+    Controller --> Page : {feeds, errors}
+end
+@enduml

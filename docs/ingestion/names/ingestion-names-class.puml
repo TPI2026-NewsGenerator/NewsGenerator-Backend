@@ -1,0 +1,122 @@
+@startuml ingestion-names-class
+!include ../../_style/class.iuml
+left to right direction
+title Ingestion > Names — the people, organisations and places of each news, and their item of Wikidata
+
+class "server.js" as serverStart {
+    + TaggingService.schedule()
+}
+note bottom of serverStart
+    Not started with INGEST_IN_SERVER=false,
+    nor without NER_URL: nothing is tagged
+end note
+
+package "Business" {
+    class taggingService {
+        + schedule()
+        + tagBatch(url, device)
+        + tagRows(url, rows)
+        + textOf(row)
+        - work(url)
+        - link()
+        - report()
+        - housekeeping()
+    }
+}
+note top of taggingService
+    One loop per tagger of NER_URL: 16 news a batch on a
+    processor, 128 on a graphics card, the newest of 30
+    days first, none taken by another; idle or down:
+    asked again after 60 s. One loop links the names met
+    in 3 news or more, one every 7 s. A report every hour,
+    the unused names deleted once a day
+end note
+
+package "utils" {
+    class tagger {
+        + taggerUrls()
+        + taggerDevice(url)
+        + tagTexts(url, texts)
+    }
+    class mentions {
+        + mentionKey(name)
+        + cleanMentions(entities)
+        + acronymsOf(name)
+    }
+    class language {
+        + languageOf(text)
+    }
+    class wikidata {
+        + exactItems(name, language)
+    }
+}
+note bottom of mentions
+    key: small letters, no accent, no quote,
+    no "'s", no leading article; 120 characters
+    at most; "UEFA" of "UEFA Nations League"
+    added as an organisation
+end note
+note bottom of wikidata
+    A 429, or "too busy": nothing asked by
+    the process for Retry-After or 30 s
+end note
+
+package "Data" {
+    class mentionModel {
+        + untagged({since, limit, taken})
+        + untaggedCount(since)
+        + save(tagged)
+        + toLink({least, limit})
+        + setLink(id, qid)
+        + deleteUnused()
+    }
+    class "articles" as articlesTable <<table>> {
+        entities_at
+    }
+    class "mentions" as mentionsTable <<table>> {
+        key, kind, name, lang, seen
+        qid, linked_at, wanted_at
+    }
+    class "article_mentions" as amTable <<table>> {
+        id_mention, id_article
+    }
+}
+note bottom of mentionModel
+    save: the news marked first, FOR UPDATE
+    SKIP LOCKED (the grouping holds some),
+    the names counted (seen) in the order of
+    their key, in one transaction
+end note
+
+package "Readers of the names" {
+    class entityService <<other feature>>
+    class cardNames <<other feature>>
+    class affairNames <<other feature>>
+}
+
+class "ner/server.py\nGLiNER multi v2.1" as Ner <<external>> {
+    GET /health -> device
+    POST /entities {texts} -> {entities}
+}
+note right of Ner
+    person, organization, location;
+    threshold 0.5; 1000 characters a text,
+    256 texts a request at most
+end note
+class "Wikidata API\n(wbsearchentities)" as WikidataApi <<external>>
+
+serverStart --> taggingService
+taggingService --> tagger
+taggingService --> mentions
+taggingService --> language
+taggingService --> wikidata
+taggingService --> mentionModel
+tagger --> Ner
+wikidata --> WikidataApi
+mentionModel --> articlesTable
+mentionModel --> mentionsTable
+mentionModel --> amTable
+entityService ..> mentionModel
+cardNames ..> mentionModel
+affairNames ..> mentionModel
+@enduml

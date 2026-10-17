@@ -1,0 +1,67 @@
+@startuml briefing-analysis-ia-sequence
+!include ../../_style/sequence.iuml
+title Briefing > Analysis (IA) — written after the cards, followed by the client every 8 s
+
+actor Reader
+participant "Client (React)\nBriefingPage, BriefingCard,\nBriefingAnalysis" as Client
+participant "briefingRouter\n+ briefingController" as Controller
+participant briefingService as Briefing
+participant cardAnalysis as Analysis
+participant "NER tagger\n(tagger.js)" as Ner
+participant "ollama\n(Ollama cloud)" as AI
+participant "storyModel\n+ briefingModel" as Models
+database "PostgreSQL" as DB
+
+== The end of write() (see 22-briefing-sequence) ==
+Briefing -> Briefing : analysisArticles(stories, {lead, summary, readOf})
+note right : per card the lead and one article of each other medium,\nwhole, 3 sentences at least; the lead not read whole\nstands as its key passages. fittedArticles: 5 articles,\n12 000 characters, the lead 6 000 at least
+Briefing ->> Briefing : analyze(briefingId, items, articles, language), not awaited
+Briefing -> Models : analysis(id, {status: 'running', model, startedAt})
+Models -> DB : UPDATE briefings SET analysis
+Briefing -> Briefing : cardAnalyses(items, articles, language)
+note right : only the cards with passages and articles read
+Briefing -> Models : earlierInThreads(storyIds, now)
+Models -> DB : the earlier stories of each card's thread,\nwith their first article
+note right : its own stories and links left out, a title once,\n12 at most (TIMELINE_MAX), the oldest first
+opt titles in another language than the reader's
+    Briefing -> AI : translateTexts, 25 titles a call (gemma4:31b)
+end
+Briefing -> Analysis : analysesOf(cards, language, {onPicked, onCard})
+Analysis -> AI : pickedCards: triagePrompt,\ndeepseek-v4-pro:0813, think off
+AI --> Analysis : {"cards": [{n, reason}]}
+note right : an affair, a dispute, stakes the title does\nnot tell, a step to come; none is a good answer
+Analysis -> Models : onPicked: analysis(id, {running, picked})
+loop the cards picked, 3 at once (CARDS_AT_ONCE)
+    Analysis -> AI : analysisOfCard: analysisPrompt,\ndeepseek-v4-pro:0813, think on, 300 s at most
+    AI --> Analysis : {"why": [{text, cites}], "next": [{if, then, cites}]}
+    Analysis -> Analysis : checkedLines(answer, card)
+    note right : 2 why and 2 next at most; ids taken out of the\ntext, "A1" written as its medium
+    Analysis -> Ner : tagTexts(url, lines), the first of NER_URL that answers
+    alt no tagger answers
+        Analysis -> Analysis : the words in capitals are the names
+    end
+    Analysis -> Analysis : lines dropped
+    note right : a line citing no source of the card, or with a figure or\na name in none of its cited sources, is dropped\n(one name found elsewhere in the card passes)
+    Analysis -> Models : onCard: analysis(id, {running, picked, beatAt}),\nwritten or not
+end
+alt written
+    Briefing -> Models : analysis(id, {status: 'ready', model, picked,\ncards: {storyId: {why, next, timeline}}, dropped})
+else an error (the triage failed, ...)
+    Briefing -> Models : analysis(id, {status: 'failed'})
+end
+note over Analysis, AI : a card the AI fails on, or whose lines are all dropped,\nhas none; Gemini never answers for this model
+
+== Meanwhile, the page ==
+loop every 8 s while analysis.status is 'running'
+    Client -> Controller : GET /briefing
+    Controller -> Briefing : latest(profileId)
+    Briefing -> Models : latest(profileId)
+    Briefing -> Briefing : toBriefing: analysisOfRow
+    note right : 'running' with no card done (beatAt, else\nstartedAt) for 12 minutes: answered {status: 'failed'}
+    Briefing --> Client : {briefing: {..., analysis}}
+    Client -> Client : takes only the analysis from it
+end
+Client --> Reader : AnalysisNote on top: "choosing", then "writing (01 · 04)",\nthen the stories that have one; "AI analysis being prepared…"\non each card picked
+Reader -> Client : "Show the AI analysis" on a card
+Client --> Reader : Why it matters, What could come next (If ..., then ...),\nThe story so far, and the model that wrote it
+@enduml

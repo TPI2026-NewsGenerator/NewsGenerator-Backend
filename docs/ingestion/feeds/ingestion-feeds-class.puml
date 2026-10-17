@@ -1,0 +1,129 @@
+@startuml ingestion-feeds-class
+!include ../../_style/class.iuml
+left to right direction
+title Ingestion > Feeds — which feeds are read, and what is kept of them
+
+class "server.js" as serverStart {
+    + IngestService.schedule()
+}
+note bottom of serverStart
+    Not started with INGEST_IN_SERVER=false:
+    "pnpm run ingest" (scripts/ingest.js)
+    makes one run by hand
+end note
+
+package "Business" {
+    class ingestService {
+        + schedule()
+        + run({urls})
+        + readNow(urls)
+        + feedsDue(rows)
+        + readEvery(row)
+        - dueSearches()
+        - withLock(task)
+    }
+    class feedService {
+        + refreshUrls(urls, {purge})
+        - doRefresh()
+        - refreshGroup()
+    }
+    class "discoveryService\n+ feedController" as discoveryService <<other feature>>
+}
+note top of ingestService
+    Every minute (INGEST_INTERVAL_MINUTES), one run at
+    a time (pg_try_advisory_lock). Read every 2, 5, 15,
+    30 or 60 min for 72, 24, 6, 1 or 0 news in 24 h;
+    a failing feed twice less often per failure (an
+    hour at most), once a day after 3 days failing.
+    The searches of Google News every 60 min, 60 a run
+end note
+note bottom of feedService
+    One read of the same feeds at a time (the 'running'
+    map). Not saved: no link, no title, published before
+    the 30 days kept (FEED_RETENTION_DAYS), or given by
+    its feed already under another link
+end note
+
+package "utils" {
+    class crawlers {
+        + Crawlers.Xml(feeds)
+    }
+    class googleNews {
+        + readSearches(urls)
+        + interestSearchUrls(searches)
+        + googleAvailable()
+        + isGoogleNewsUrl(url)
+    }
+    class dates {
+        + toDate(value)
+    }
+    class feedLimits {
+        + isFlood(newsPerDay)
+    }
+}
+note bottom of crawlers
+    50 feeds at a time, 8 s each (40 s through
+    RSS-Bridge), If-None-Match / If-Modified-Since:
+    an unchanged feed answers 304
+end note
+note bottom of googleNews
+    One queue for every request to Google, 1 s
+    apart (GOOGLE_NEWS_INTERVAL_MS); a 429, 503
+    or captcha pauses the searches an hour
+end note
+
+package "Data" {
+    class "db/rss-links.js" as rssLinks {
+        the shared feeds by language and category
+    }
+    class feedModel {
+        + feedRhythms(urls, since)
+        + dueFeeds(urls, before, limit)
+        + allUserFeedUrls()
+        + syncFeeds(urls)
+        + updateFeed(id, data)
+        + withoutRepeats(articles)
+        + insertArticles(articles)
+        + deleteArticlesOlderThan(date)
+    }
+    class directoryModel {
+        + all()
+    }
+    class profileModel <<other feature>> {
+        + searchesOf()
+    }
+    class "feeds" as feedsTable <<table>> {
+        url, etag, last_modified
+        last_fetched_at, last_success_at
+        last_error, failures
+    }
+    class "articles" as articlesTable <<table>> {
+        id_feed, link, title, description
+        published_at, created_at, source_url
+    }
+}
+
+class "RSS feeds of the media" as Sites <<external>>
+class "RSS-Bridge\n(docker, :3002)" as Bridge <<external>>
+class "Google News RSS" as GoogleApi <<external>>
+
+serverStart --> ingestService
+discoveryService --> ingestService : run({urls}),\nthe sources found or added
+ingestService --> rssLinks
+ingestService --> directoryModel
+ingestService --> profileModel
+ingestService --> feedModel
+ingestService --> googleNews
+ingestService --> feedLimits
+ingestService --> feedService
+feedService --> feedModel
+feedService --> crawlers
+feedService --> googleNews
+feedService --> dates
+googleNews --> crawlers
+crawlers --> Sites
+crawlers --> Bridge
+googleNews --> GoogleApi
+feedModel --> feedsTable
+feedModel --> articlesTable
+@enduml

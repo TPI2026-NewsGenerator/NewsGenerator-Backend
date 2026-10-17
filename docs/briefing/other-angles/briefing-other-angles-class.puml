@@ -1,0 +1,103 @@
+@startuml briefing-other-angles-class
+!include ../../_style/class.iuml
+title Briefing > Other angles — the news of the same affair that tell something the card does not
+
+package "Client (React)" as Client {
+    class BriefingCard <<BriefingCard.jsx>> {
+        + OtherAngles()
+    }
+}
+note bottom of BriefingCard
+    "Same affair, other angles": 5 at most,
+    the title translated, its source, its day,
+    "told by N media"
+end note
+
+package "Business" {
+    class briefingService {
+        + write()
+        + angleCardsOf()
+        + anglesOf()
+    }
+}
+note right of briefingService
+    ANGLES_DAYS = 3, ANGLE_LIKENESS = 0.6,
+    ANGLE_CANDIDATES = 8 closest,
+    NAMED_CANDIDATES = 5 more by names,
+    ANGLE_QUERIES = 5 cards at once.
+    Step "angles": a failure leaves
+    the cards without
+end note
+
+package "Utils" {
+    class otherAngles {
+        + MAX_ANGLES = 5
+        + otherAnglesOf()
+        + nearCardsOf()
+        + sameFactsOut()
+        + placeAngles()
+    }
+    class affairNames {
+        + AFFAIR_DAYS = 30
+        + storiesOfSameNames()
+    }
+    class mentions {
+        + rareNames()
+    }
+    class wikidata {
+        + exactItems()
+    }
+    class extract {
+        + translateTexts()
+    }
+    class ollama {
+        + ollamaJson()
+    }
+}
+note right of otherAngles
+    The AI (gemma4:31b) reads the card's
+    titles and the candidates' titles with
+    their day: same | angle | theme | other
+    | card. An "angle" telling the fact of an
+    earlier one ("as") is left out when their
+    likeness is 0.85 or more. 5 cards at once
+end note
+note bottom of affairNames
+    The rare names of the card (400 news a
+    month at most, no place), 4 a card; the
+    stories naming them, from 0.45 to the card
+end note
+
+package "Data" {
+    class storyModel {
+        + closeStories()
+        + storyArticles()
+        + likenessTo()
+        + likenessAmong()
+    }
+    class mentionModel {
+        + namesOfArticles()
+        + storiesNaming()
+        + setLink()
+    }
+}
+
+class "Ollama cloud\n(gemma4:31b, Gemini after it)" as OllamaCloud <<external>>
+class "Wikidata API" as WikidataApi <<external>>
+class "PostgreSQL + pgvector\nstories.centroid, mentions,\narticle_mentions" as PostgreSQL <<external>>
+
+BriefingCard ..> briefingService : item.angles\n(GET /briefing)
+briefingService --> otherAngles
+briefingService --> affairNames
+briefingService --> storyModel
+briefingService --> extract : titles in another\nlanguage translated
+affairNames --> mentions
+affairNames --> mentionModel
+affairNames --> wikidata : the item of a name\nnot linked yet, 6 at most
+otherAngles --> ollama
+extract --> ollama
+ollama --> OllamaCloud
+wikidata --> WikidataApi
+storyModel --> PostgreSQL
+mentionModel --> PostgreSQL
+@enduml

@@ -1,5 +1,5 @@
 @startuml 08b-briefing-cards
-!include _style.iuml
+!include ../_style/class.iuml
 left to right direction
 title Briefing — the cards: the articles read, their passages, what is around them, and the analysis
 

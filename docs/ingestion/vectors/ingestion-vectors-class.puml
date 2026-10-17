@@ -1,0 +1,101 @@
+@startuml ingestion-vectors-class
+!include ../../_style/class.iuml
+left to right direction
+title Ingestion > Vectors — the bge-m3 vectors of each news, dense and sparse
+
+package "Business" {
+    class ingestService {
+        + run({urls})
+        + readNow(urls)
+        + richText(title, description)
+        - embedPending(urls, since)
+        - warnIfLate()
+    }
+    class newsService <<other feature>> {
+        + getNews(): a sentence read on Google News
+    }
+}
+note top of ingestService
+    Batches of 100 news (INGEST_MAX_EMBEDDED) of the last
+    48 h without vectors, the newest first, the floods last.
+    The next batch is encoded while this one is grouped;
+    a run out of time leaves it encoding for the next run.
+    Then 1 batch of older news (INGEST_OLDER_BATCHES), for
+    the search by meaning only
+end note
+
+package "utils" {
+    class embedder {
+        + embed(texts)
+        + embedderIsUp()
+        + toVector(dense)
+        + toSparsevec(sparse)
+        - available()
+        - check(url)
+        - post(url, batch)
+        - worthIt(url, team)
+    }
+    class language {
+        + languageOf(text, fallback)
+    }
+    class googleNews {
+        + languageOfSearch(url)
+    }
+    class feedLimits {
+        + isFlood(newsPerDay)
+    }
+}
+note bottom of embedder
+    EMBEDDER_URL: several, comma separated. Every one
+    that answers takes batches of the same call, one
+    request at a time each, while it would finish its
+    next batch before the others finish the rest.
+    16 texts a request on a processor, EMBEDDER_BATCH
+    on a graphics card; one off is asked its health
+    again every 60 s; one failing hands its batch back
+end note
+
+package "Data" {
+    class storyModel {
+        + pendingArticles(since, limit, urls, floods)
+        + pendingCount(since)
+        + saveVectors(rows)
+    }
+    class feedModel {
+        + busiestFeeds(since, limit)
+    }
+    class "articles" as articlesTable <<table>> {
+        title_dense halfvec(1024)
+        title_sparse sparsevec(250002)
+        text_dense halfvec(1024)
+        text_sparse sparsevec(250002)
+        lang, embedded_at
+    }
+}
+note bottom of articlesTable
+    db/add_briefing.sql: the dense vectors in half
+    precision, STORAGE PLAIN (kept in the row);
+    index i_articles_not_embedded
+end note
+
+class "embedder/server.py\nBAAI/bge-m3, fp32" as Embedder <<external>> {
+    GET /health -> device cpu | cuda
+    POST /embed {texts} -> {dense, sparse}
+}
+note right of Embedder
+    ONNX Runtime on a processor, FlagEmbedding
+    (PyTorch) on a graphics card; 256 texts and
+    256 tokens a text at most; EMBEDDER_TOKEN
+    required once open to the network
+end note
+
+newsService --> ingestService : readNow(urls)
+ingestService --> storyModel
+ingestService --> feedModel
+ingestService --> embedder
+ingestService --> language
+ingestService --> googleNews
+ingestService --> feedLimits
+embedder --> Embedder
+storyModel --> articlesTable
+@enduml

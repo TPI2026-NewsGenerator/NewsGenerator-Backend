@@ -16,7 +16,9 @@
     "test:login": "pnpm run test -- tests/login/test.login-service.js",
     "build": "../node_modules/.bin/vite build",
     "lint": "../node_modules/.bin/eslint .",
-    "preview": "../node_modules/.bin/vite preview"
+    "preview": "../node_modules/.bin/vite preview",
+    "docs": "node docs-site/run.mjs serve",
+    "docs:build": "node docs-site/run.mjs build"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",

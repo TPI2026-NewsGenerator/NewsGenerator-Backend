@@ -1,0 +1,46 @@
+@startuml briefing-summary-ia-sequence
+!include ../../../_style/sequence.iuml
+title Briefing > Summary > Summary (IA) — written for every card kept, shown when the reader asks
+
+actor Reader
+participant BriefingCard as Card
+participant MailBar as Mail
+participant "briefingController" as Controller
+participant briefingService as Briefing
+participant aiWays as AiWays
+participant "ollama\n→ Ollama cloud\n(deepseek-v4-pro:0813)" as Ollama
+participant briefingMail as BriefingMail
+database "PostgreSQL" as DB
+
+== Step "angles", the cards kept, beside the other angles and the official sources ==
+Briefing -> AiWays : aiWaysOf(title, page of the lead, {language})
+AiWays -> AiWays : extract.sentencesOf(page), and\nfiguresOf(title + sentences): the article's figures
+par
+    AiWays -> Ollama : ollamaJson(summaryPrompt,\n{model: WRITE_MODEL, think: false})
+    Ollama --> AiWays : {summary, sentences}
+else
+    AiWays -> Ollama : pointsPrompt (see Bullet points (IA))
+end
+note right of Ollama : busy (429): waits 2, 5, 10, 20, 30 s;\nno Gemini; a failure answers null
+AiWays -> AiWays : unnumbered: a "[13]" left in the text taken out
+alt a figure the article does not give
+    AiWays -> AiWays : summary null, logged
+end
+AiWays --> Briefing : {points, summary, model} or null
+Briefing -> DB : items[].ai
+
+== Read ==
+Reader -> Card : "Read as: Summary", then "Show AI version"
+Card -> Card : aiText = item.ai.summary (none: no button)
+Card --> Reader : "Written by the AI (deepseek-v4-pro)", under the\npublished sentences: "it can get a fact wrong"
+
+== Sent by e-mail ==
+Reader -> Mail : "Edit", ticks "Send its summary in the AI version"
+Mail --> Reader : the text the e-mail will send, AI or published
+Mail -> Controller : POST /briefing/:id/email {format: 'digest', ai: [storyId]}
+Controller -> Briefing : email(..., format, ai)
+Briefing -> Briefing : ai: integers, else 400; aiVersion on those cards
+Briefing -> BriefingMail : briefingMail(briefing, {format: 'digest'})
+BriefingMail -> BriefingMail : wayOf: card.ai.summary when it has one,\nelse its digest; titled "Summary"
+Controller --> Mail : 204
+@enduml

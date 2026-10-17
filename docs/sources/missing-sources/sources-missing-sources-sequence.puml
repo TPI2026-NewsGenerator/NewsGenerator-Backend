@@ -1,0 +1,55 @@
+@startuml sources-missing-sources-sequence
+!include ../../_style/sequence.iuml
+title Sources > Missing sources — after a search: the media not read, their news, their feed on the search
+
+actor Reader
+participant "SourceSuggestions\n(Search page)" as Page
+participant "feedRouter\n+ feedController" as Router
+participant sourceService as Source
+participant googleNews as Google
+participant gdelt as Gdelt
+participant "embedder\n+ meaningJudge" as Judge
+participant "feedFinder" as Finder
+participant feedModel as Model
+
+Reader -> Page : "Look on the web" (after a search)
+Page -> Router : POST /feeds/suggestions\n{keywords, timeframe, language}
+Router -> Router : keywords required (else 400);\nlanguage of the list, else 'en'
+Router -> Source : suggest({keywords, timeframe, profileId, language})
+Source -> Source : days: from timeframe.start, else none
+par all at once
+    Source -> Google : search(keywords, {days, language})
+    Google --> Source : {news: 100 at most, media}
+else
+    Source -> Gdelt : mediaFor(keywords, {days or 2, language})
+    Gdelt --> Source : [{site, news}] with 2 news at least,\n[] when refused or past 6 s
+else
+    Source -> Model : knownMedia: rss-links + userFeedUrls,\nand the hosts of their articles (articleHosts)
+else
+    Source -> Judge : meaningJudge: embed(keywords joined)
+    Judge --> Source : judgeOf([dense]) (null without the embedder:\nthe feeds judged by the words)
+end
+alt Google News fails or is paused
+    Source --> Page : 502 or 500: "The web could not be searched"
+end
+Source -> Source : mergeMedia(Google, GDELT): one medium per name\n(nameOf), news added; the ones not read (missing)
+Source -> Source : missingNews: their news, newest first, 25 at most
+loop the 8 first missing media, 4 at a time
+    Source -> Finder : findFeeds(site, {language, subject: keywords, judge})
+    Finder -> Finder : the page, its sections, its page of feeds,\nFeedly, its news sitemap, RSS-Bridge;\neach feed's 30 newest news judged
+    Finder --> Source : its feed most on the search, or none
+end
+Source -> Source : kept: isOnSubject(feed) (2 news at 0.45);\nforClient(url): {key, feed} (null on the bridge)
+Source --> Page : {news, sources: [{site, name, news, key, feed, sample}],\nmissing, tried}
+Page --> Reader : the news read-only, the media with a feed ticked
+
+Reader -> Page : a category, "Add n sources"
+Page -> Router : POST /feeds/import {sources, language, subject: keywords}
+note right of Router
+    each feed read again, a site read from its
+    page found again on its section about the
+    keywords (see Added by hand)
+end note
+Router --> Page : {feeds, errors}
+Page --> Reader : "Search again to read their news here"
+@enduml

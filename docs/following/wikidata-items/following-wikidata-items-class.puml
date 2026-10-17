@@ -1,0 +1,159 @@
+@startuml following-wikidata-items-class
+!include ../../_style/class.iuml
+left to right direction
+title Following > Wikidata items — a club, a person, a body followed, its names, its links, its news
+
+package "Client (React)" {
+    class FollowingPage {
+        /following
+        + search after 400 ms
+        + followItem(qid)
+        + unfollowItem(qid)
+        + inBriefing(qid, on)
+    }
+    class EntityPage {
+        /following/:qid
+        + follow(yes)
+        + setNames(added, removed)
+        + inBriefing(on)
+    }
+    class Names {
+        + add()
+        + remove(text)
+    }
+    class EntityApi {
+        + search(q)
+        + list()
+        + follow(qid)
+        + unfollow(qid)
+        + setInBriefing(qid, on)
+        + page(qid, hours)
+        + setNames(qid, added, removed)
+    }
+}
+
+package "Presentation" {
+    class entityRouter {
+        GET /api/entities
+        GET /api/entities/search?q=
+        POST /api/entities
+        GET /api/entities/:qid?hours=
+        PUT /api/entities/:qid/names
+        PUT /api/entities/:qid/briefing
+        DELETE /api/entities/:qid
+    }
+    class entityController
+}
+note right of entityRouter
+    The search, a follow and the page ask
+    Wikidata: 30 a minute per reader
+    (wikidataLimit). All but the list and
+    the search need a profile (needsProfile)
+end note
+
+package "Business" {
+    class entityService {
+        + search(profileId, q)
+        + all(profileId)
+        + follow(profileId, qid)
+        + unfollow(profileId, qid)
+        + setNames(profileId, qid, {added, removed})
+        + setInBriefing(profileId, qid, on)
+        + page(profileId, qid, hours)
+        + briefingGroups(profileId, hours)
+        - loaded(qid, language)
+        - namedNews(profileId, names, hours, qids)
+        + namesFor(row, following)
+        + mergeNews(groups, limit)
+    }
+    class briefingService <<other feature>> {
+        + feedsOf(profileId)
+        + newsOfTerms(terms, articles)
+        + namingTerm(term)
+    }
+}
+note bottom of entityService
+    30 items per profile; read again from
+    Wikidata 7 days after; 10 names of the
+    reader; 60 links searched, 30 news each;
+    the news kept 10 minutes
+end note
+
+package "utils" {
+    class wikidata {
+        + searchItems(q, language)
+        + readItem(qid, language)
+    }
+    class wikidataNames {
+        + isQid(value)
+        + kindOf(instanceOf)
+        + namesOf(labels, aliases, extra, {club})
+    }
+    class mentions {
+        + mentionKey(name)
+    }
+    class cardNames {
+        + shortName(label, names)
+    }
+}
+note bottom of wikidataNames
+    Latin letters only; an alias of one word
+    kept only as an acronym or with a figure
+    ("PSG", "Schalke 04"); a club also
+    without its "FC"
+end note
+
+package "Data" {
+    class entityModel {
+        + byQid(qid)
+        + save(item)
+        + links(id)
+        + followed(profileId, {inBriefing})
+        + following(profileId, id)
+        + count(profileId)
+        + follow(profileId, id)
+        + unfollow(profileId, id)
+        + setInBriefing(profileId, id, on)
+        + setNames(profileId, id, added, removed)
+    }
+    class mentionModel <<other feature>> {
+        + articlesNamed({keys, qids, feeds, since})
+        + anyUntagged(since, before)
+    }
+    class feedModel {
+        + articlesHolding({feeds, texts, since})
+    }
+    class "entities" as entities <<table>> {
+        qid, label, description, kind
+        names, fetched_at
+    }
+    class "entity_links" as links <<table>> {
+        id_from, id_to, relation
+    }
+    class "profile_entities" as pe <<table>> {
+        id_profile, id_entity, in_briefing
+        added_names, removed_names
+    }
+}
+
+class "Wikidata\n(API + SPARQL)" as WikidataApi <<external>>
+
+FollowingPage --> EntityApi
+EntityPage --> EntityApi
+EntityPage --> Names
+EntityApi --> entityRouter
+entityRouter --> entityController
+entityController --> entityService
+entityService --> briefingService
+entityService --> wikidata
+entityService --> mentions
+entityService --> cardNames
+entityService --> entityModel
+entityService --> mentionModel
+entityService --> feedModel
+wikidata --> wikidataNames
+wikidata --> WikidataApi
+entityModel --> entities
+entityModel --> links
+entityModel --> pe
+@enduml

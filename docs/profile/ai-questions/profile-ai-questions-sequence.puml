@@ -1,0 +1,67 @@
+@startuml profile-ai-questions-sequence
+!include ../../_style/sequence.iuml
+title Profile > AI questions — from a few words to the profile written, nothing saved
+
+actor Reader
+participant "ProfileFunnel\n(ProfilePage, NewProfile,\nSignupPage)" as Funnel
+participant "profileRouter\nfunnelAccess + funnelLimit" as Router
+participant "profileController" as Controller
+participant profileService as Service
+participant profileFunnel as PF
+participant "ollama\n(gemma4:31b)" as Ollama
+
+Reader -> Funnel : a few words ("Le tennis.", 3 to 300 characters)
+loop until the AI has enough, or 3 rounds, or "Write my profile now"
+    Funnel -> Router : POST /profile/funnel/questions\n{start, rounds, language}
+    alt signup closed and no session
+        Router --> Funnel : 403
+    else over 40 calls this hour from this address
+        Router --> Funnel : 429 {error, retryAfter}
+    end
+    Router -> Controller : funnelQuestions(req)
+    Controller -> Service : funnelQuestions(body)
+    Service -> Service : funnelOf: start 3 to 300 characters, a known\nlanguage (else 400); cleanRounds(rounds)
+    Service -> PF : nextQuestions({start, rounds, language})
+    alt 3 rounds answered already
+        PF --> Service : {enough: true, questions: []}
+    else
+        PF -> Ollama : ollamaJson(questionsPrompt)
+        Ollama --> PF : {enough, questions: [{question, options}]}
+        PF -> PF : normalizeQuestions: 4 questions, 8 choices;\n"enough" ignored at the first round;\nthe ones asked again after a pass left out
+        PF --> Service : {enough, questions}
+    end
+    Service --> Funnel : {enough, questions, maxRounds: 3}
+    opt questions
+        Reader -> Funnel : ticks choices, writes their own words,\nor leaves a question blank (passed)
+    end
+end
+note right of PF
+    The prompt (in French, the questions in the
+    reader's language): the first round asks for
+    other subjects; the last one at the latest asks
+    what the reader refuses and, with two subjects
+    or more, which ones are followed from afar
+end note
+
+Funnel -> Router : POST /profile/funnel/text {start, rounds, language}
+Router -> Controller : funnelText(req)
+Controller -> Service : funnelText(body)
+alt no round and the start under 20 characters
+    Service --> Funnel : 422 "tick or write a little more"
+end
+Service -> PF : writeProfile({start, rounds, language})
+PF -> Ollama : ollamaJson(writePrompt)
+Ollama --> PF : {text}, first person, short paragraphs
+PF --> Service : the text, 3000 characters at most
+alt under 20 characters
+    Service --> Funnel : 422
+else
+    Service --> Funnel : {text}
+end
+Funnel -> Funnel : onWritten(text): the field of the page filled
+Reader -> Funnel : reads it, changes it, then saves it\n(PUT /profile, POST /profile/profiles or the signup)
+note right of Funnel
+    Nothing is saved here: the text is split into
+    interests only when saved (see ../Interests)
+end note
+@enduml

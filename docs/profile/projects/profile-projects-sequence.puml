@@ -1,0 +1,85 @@
+@startuml profile-projects-sequence
+!include ../../_style/sequence.iuml
+title Profile > Projects — written with the AI, saved as interests, read until its last day
+
+actor Reader
+participant "Projects\n+ ProfileFunnel" as Page
+participant "profileRouter\n+ activeProfile" as Router
+participant profileService as Service
+participant "profileFunnel\n+ profileAi" as PF
+participant "ollama\n(gemma4:31b)" as Ollama
+participant "embedder\n(bge-m3)" as Embedder
+participant profileModel as Model
+participant "briefingService\n(other feature)" as Briefing
+database "PostgreSQL" as DB
+
+== Written with the AI (nothing saved) ==
+
+Reader -> Page : "New project": a name, a last day,\na few words ("A trip to Japan in November")
+loop up to 3 rounds, as for a profile
+    Page -> Router : POST /profile/projects/funnel/questions {start, rounds}
+    Router -> Service : projectQuestions(userId, profileId, body)
+    Service -> Model : owned(userId, profileId) (404 if not)
+    Service -> PF : nextQuestions({start, rounds,\nlanguage of the profile, profileText})
+    PF -> Ollama : ollamaJson(projectQuestionsPrompt)
+    note right of Ollama
+        the questions are on the project only,
+        nothing the profile says, never how
+        long it lasts
+    end note
+    PF --> Service : {enough, questions}
+    Service --> Page : {enough, questions, maxRounds: 3}
+end
+Page -> Router : POST /profile/projects/funnel/text {start, rounds}
+Router -> Service : projectText(...)
+Service -> PF : writeProfile({..., project: true})
+PF -> Ollama : ollamaJson(projectWritePrompt)
+Service --> Page : {text} (422 under 20 characters)
+Reader -> Page : reads it, changes it, "Save the project"
+
+== Saved ==
+
+Page -> Router : POST /profile/projects {name, text, endsOn}
+Router -> Service : createProject(userId, profileId, {name, text, endsOn})
+Service -> Service : name 1 to 40, text 20 to 3000 characters,\ncleanEnd: today to 366 days or null (else 400)
+Service -> Model : projects(profileId)
+alt 5 projects already
+    Service --> Page : 400 "At most 5 projects per profile"
+end
+Service -> PF : profileAi.interestsOf({text, language, categories})
+PF -> Ollama : ollamaJson(interestsPrompt) (asked again if needed)
+PF --> Service : {interests} (its refusals not kept)
+alt no interest
+    Service --> Page : 422 "say what news you want for the project"
+end
+Service -> Embedder : embed(the texts of the interests)
+Service -> Model : addProject(userId, profileId, project, interests)
+Model -> DB : transaction: profile_projects row, then\nprofile_interests with id_project, their vectors
+Service --> Page : the whole profile: projects with their\ninterests, running or not
+note right of Service
+    No discovery: no source is found for a project
+end note
+
+== Read by the briefing while it runs ==
+
+Briefing -> Model : briefingInterests(profileId), projects(profileId)
+Model -> DB : the interests of the profile and\nof the projects whose ends_on IS NULL or >= current_date
+Briefing -> Briefing : readerText: the profile text, then\n"il prépare aussi ..." each running project
+note left of Briefing
+    The stories come from the profile's sources and
+    the Google News searches of the running projects
+    (searchesOf); rank_profile_stories ranks them
+    on every interest
+end note
+
+== Its last day changed, or deleted ==
+
+alt last day
+    Page -> Router : PATCH /profile/projects/:id {endsOn}
+    Router -> Service : setProjectEnd(...): cleanEnd, then\nModel.setProjectEnd (0 rows: 404)
+else deleted
+    Page -> Router : DELETE /profile/projects/:id
+    Router -> Service : removeProject(...): Model.deleteProject,\nits interests deleted with it (CASCADE)
+end
+Service --> Page : the whole profile
+@enduml

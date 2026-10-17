@@ -1,0 +1,95 @@
+@startuml search-translations-class
+!include ../../_style/class.iuml
+left to right direction
+title Search > Translations — titles and descriptions translated as the reader reaches them
+
+package "Client (React)" as Client {
+    class SearchPage {
+        translator (one per search)
+    }
+    class "translation.js" as translation {
+        + createTranslator(language, translate, known)
+        + useTranslation(url, language)
+        TranslationContext
+    }
+    class Article {
+        news
+    }
+    class ThreadTimeline {
+        facts
+    }
+    class keptSearch {
+        + keepSearch(userId, state)
+    }
+    class SearchApi {
+        + translateNews({news, titles}, language)
+    }
+}
+note right of translation
+    A card asks when it comes 600 px near
+    the screen; the ones reached in 150 ms go
+    together, 30 cards and 60 titles a request.
+    Shown "translated from ...", the title
+    as written under it
+end note
+package "Presentation" {
+    class newsRouter {
+        + POST /news/translations
+    }
+    class newsController {
+        + translateNews()
+    }
+}
+note right of newsController
+    MAX_TRANSLATED_NEWS 30,
+    MAX_TRANSLATED_TITLES 60,
+    a known language (400)
+end note
+package "Business" {
+    class newsService {
+        + translateNews()
+        + cachedArticles()
+    }
+}
+note right of newsService
+    TEXTS_PER_CALL 20, 5 calls at once;
+    the translations kept in memory, per
+    language and text, 20 000 at most
+    (MAX_KEPT_TRANSLATIONS), lost at restart
+end note
+package "utils" {
+    class extract {
+        + translateTexts(texts, to)
+        + keepsFigures()
+    }
+    class language {
+        + languageOf()
+        + writtenIn()
+    }
+    class ollama {
+        + ollamaJson()
+    }
+}
+package "Data" {
+    class feedModel {
+        + getArticlesByLinks()
+    }
+}
+class "Ollama cloud (gemma4:31b)\nGemini fallback" as Ollama <<external>>
+class "PostgreSQL\n(articles.lang)" as PostgreSQL <<external>>
+
+SearchPage --> translation
+SearchPage --> keptSearch
+Article --> translation
+ThreadTimeline --> translation
+translation --> SearchApi
+SearchApi --> newsRouter
+newsRouter --> newsController
+newsController --> newsService
+newsService --> feedModel
+newsService --> language
+newsService --> extract
+extract --> ollama
+ollama --> Ollama
+feedModel --> PostgreSQL
+@enduml

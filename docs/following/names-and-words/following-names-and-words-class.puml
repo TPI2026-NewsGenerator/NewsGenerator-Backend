@@ -1,0 +1,122 @@
+@startuml following-names-and-words-class
+!include ../../_style/class.iuml
+left to right direction
+title Following > Names and words — followed as written, the page of a name, the names suggested
+
+package "Client (React)" {
+    class FollowingPage {
+        /following
+        + followWord(word)
+        + unfollowWord(word)
+        + followSuggested(name)
+    }
+    class NamePage {
+        /following/name/:name
+        + follow(yes)
+    }
+    class "WatchedNews\n+ Term" as WatchedNews <<other feature>> {
+        the tab #terms of the briefing
+    }
+    class EntityApi {
+        + list()
+        + addWord(word)
+        + removeWord(word)
+        + namePage(name, hours)
+        + suggestions()
+        + pageOf({name, qid})
+    }
+}
+note bottom of NamePage
+    A name the tagger linked to one item
+    (page.qid) opens /following/:qid instead
+end note
+
+package "Presentation" {
+    class entityRouter {
+        GET /api/entities
+        POST /api/entities/words
+        DELETE /api/entities/words/:word
+        GET /api/entities/name?name=&hours=
+        GET /api/entities/suggestions
+    }
+    class entityController
+}
+
+package "Business" {
+    class entityService {
+        + all(profileId)
+        + addWord(profileId, word)
+        + removeWord(profileId, word)
+        + namePage(profileId, name, hours)
+        + suggestions(profileId)
+        + followTerms(profileId, words)
+        - namedNews(profileId, names, hours)
+    }
+    class briefingService <<other feature>> {
+        + watchedNews(terms, {feedUrls, since})
+        + newsOfTerms(terms, articles)
+        + withMarks(briefing, followed)
+    }
+}
+note bottom of entityService
+    20 names or words per profile, 2 to 60
+    characters, once whatever their case.
+    Suggested: met on 2 cards at least of the
+    briefings of 14 days, 8 at most, followed
+    neither as an item nor as a word
+end note
+
+package "utils" {
+    class watchTerms {
+        + cleanWatchTerms(terms)
+        + MAX_WATCH_TERMS = 20
+    }
+    class mentions {
+        + mentionKey(name)
+    }
+    class cardNames {
+        + namesOfCards(cards)
+        + suggestedNames(cards, {qids, words})
+    }
+}
+
+package "Data" {
+    class profileModel {
+        + get(profileId)
+        + setWatchTerms(profileId, terms)
+    }
+    class mentionModel <<other feature>> {
+        + qidsOfKey(key)
+        + want({key})
+        + articlesNamed(...)
+        + articlesOfStories(storyIds)
+    }
+    class briefingModel <<other feature>> {
+        + recentCards(profileId, days)
+    }
+    class feedModel {
+        + searchArticles({feedUrls, keywords})
+        + articlesHolding(...)
+    }
+    class "user_profiles" as profiles <<table>> {
+        watch_terms text[]
+    }
+}
+
+FollowingPage --> EntityApi
+NamePage --> EntityApi
+NamePage --> WatchedNews : Term
+EntityApi --> entityRouter
+entityRouter --> entityController
+entityController --> entityService
+entityService --> watchTerms
+entityService --> mentions
+entityService --> cardNames
+entityService --> profileModel
+entityService --> mentionModel
+entityService --> briefingModel
+entityService --> feedModel
+briefingService --> entityService : followTerms()
+briefingService --> feedModel : searchArticles()
+profileModel --> profiles
+@enduml

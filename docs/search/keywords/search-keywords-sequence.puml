@@ -1,0 +1,49 @@
+@startuml search-keywords-sequence
+!include ../../_style/sequence.iuml
+title Search > Keywords — words with a quote, a comma or a -word
+
+actor Reader
+participant "SearchPage\n+ FeedList" as Client
+participant "newsRouter\n+ newsController" as Router
+participant newsService as News
+participant filter as Filter
+participant feedModel as FeedModel
+participant grouping as Grouping
+database "PostgreSQL" as DB
+
+Reader -> Client : referee -rugby, "red card"
+Client -> Router : POST /api/news {keywords: [text], category, language, timeframe}
+Router -> News : getNews(...) (after the checks of the controller)
+News -> News : the feeds of every language (as for a sentence)
+News -> Filter : hasOperators(keywords): true
+News -> Filter : parse(keywords)
+Filter --> News : {groups: [[referee], ["red card"]], excluded: [rugby]}
+News -> FeedModel : searchArticles({feeds, keywords: parsed, timeframe})
+FeedModel -> Filter : keywordsSql(parsed, 4, 'a.search_text')
+note right of Filter : toPattern: a Postgres regex per term,\n(?c) for an acronym, [aàáâãäå] for a letter
+FeedModel -> DB : WHERE feed in the feeds, published in the dates,\n(search_text <U+007E>* $4) OR (...) AND NOT (...)\nORDER BY date DESC
+note right of DB : search_text = title | description |\ncategories, GIN gin_trgm_ops index
+
+opt fewer than 5 news and an alternative with several words (canWiden)
+    News -> Filter : widen(parsed): each word alone, the -words kept
+    News -> FeedModel : searchArticles(the wider keywords)
+    FeedModel -> DB : the same query
+    News -> News : wider = {found, terms, keywords: toKeywords(loose)}\nwhen it finds more
+end
+alt nothing found
+    News --> Client : {totalResults: 0, news: [], wider, mode: 'words'}
+end
+News -> News : once per link
+News -> FeedModel : similarArticlePairs(ids, 0.25, short 40 -> 0.45)
+FeedModel -> DB : similarity(unaccent(title), unaccent(title))
+News -> Grouping : averageLink (news in no story),\nunionFind (same copy, 0.85)
+News -> News : one card per story or title group,\ncorroboration {media, wordings}
+News -> FeedModel : threadArticles (withThreads)
+News -> Filter : matcher({excluded}): the facts holding\nan excluded word left out
+News --> Client : {totalResults, news, wider, mode: 'words'}
+Client --> Reader : the cards, newest first; "Show those N"\nwhen a wider search finds more
+opt the reader takes the wider search
+    Reader -> Client : Show those N
+    Client -> Client : handleWiden: wider.keywords (its "phrases" and\n-words kept) put back in the field, searched again
+end
+@enduml

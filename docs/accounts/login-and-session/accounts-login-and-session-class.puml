@@ -1,0 +1,129 @@
+@startuml accounts-login-and-session-class
+!include ../../_style/class.iuml
+left to right direction
+title Accounts > Login and session — the cookie the page never reads
+
+package "Client (React)" as Client {
+    class LoginPage {
+        + handleSubmit()
+    }
+    class LoginApi {
+        + authUser({username, password})
+    }
+    class AuthProvider {
+        user
+        + refresh()
+        + forget()
+    }
+    class useAuth {
+        + logout(to)
+        + expired(data)
+    }
+}
+note right of AuthProvider
+    Asks GET /session once when the app
+    opens; the pages wait for the answer.
+    forget(): the kept search and the active
+    profile are dropped, DELETE /session
+end note
+package "Presentation" {
+    class loginRouter {
+        + POST /login
+    }
+    class sessionRouter {
+        + GET /session
+        + DELETE /session
+    }
+    class loginController {
+        + authUser()
+    }
+}
+note right of loginRouter
+    10 tries per address
+    in 15 minutes (429)
+end note
+package "Business" {
+    class loginService {
+        + authUser()
+    }
+}
+note right of loginService
+    An unknown username is checked against
+    a dummy bcrypt hash of cost 12: 401
+    "Invalid username or password" for both,
+    in the same time
+end note
+package "utils" {
+    class rateLimit {
+        + rateLimit()
+    }
+    class pwdHasher {
+        + verifyPassword()
+    }
+    class jwt {
+        + generateAccessToken()
+        + startSession()
+        + endSession()
+        + authenticateToken()
+    }
+    class passwordChanges {
+        + passwordChangedAt()
+    }
+    class admin {
+        + isAdmin()
+        + adminOnly()
+    }
+    class activeProfile <<other feature>> {
+        + activeProfile()
+    }
+}
+note right of jwt
+    Cookie "session": HttpOnly, SameSite=Strict,
+    path /api, Secure through https; 7 days,
+    a new one after 24 h of use. 403 when the
+    token is older than the last change of
+    password or the account is gone
+end note
+note right of admin
+    The role 'Admin' read in the
+    database at each request,
+    never in the token
+end note
+package "Data" {
+    class loginModel {
+        + getUserByUsername()
+    }
+    class userModel {
+        + email()
+        + roleName()
+        + passwordChangedAt()
+    }
+}
+class bcrypt <<external>>
+class jsonwebtoken <<external>>
+class "PostgreSQL\n(users, roles)" as PostgreSQL <<external>>
+
+LoginPage --> LoginApi
+LoginPage --> useAuth
+useAuth --> AuthProvider
+LoginApi --> loginRouter
+AuthProvider --> sessionRouter
+loginRouter --> rateLimit
+loginRouter --> loginController
+loginController --> loginService
+loginController --> jwt
+loginService --> loginModel
+loginService --> pwdHasher
+loginService --> jwt
+sessionRouter --> jwt
+sessionRouter --> admin
+sessionRouter --> userModel
+jwt --> passwordChanges
+passwordChanges --> userModel
+admin --> userModel
+activeProfile ..> jwt : after it
+pwdHasher --> bcrypt
+jwt --> jsonwebtoken
+loginModel --> PostgreSQL
+userModel --> PostgreSQL
+@enduml

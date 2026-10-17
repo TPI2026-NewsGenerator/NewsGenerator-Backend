@@ -1,0 +1,85 @@
+@startuml profile-interests-sequence
+!include ../../_style/sequence.iuml
+title Profile > Interests — the profile saved and split, then one interest corrected
+
+actor Reader
+participant "ProfilePage\n+ Interest" as Page
+participant "profileRouter\n+ activeProfile" as Router
+participant profileController as Controller
+participant profileService as Service
+participant profileAi as AI
+participant "ollama\n(gemma4:31b)" as Ollama
+participant "embedder\n(bge-m3)" as Embedder
+participant profileModel as Model
+participant discoveryService as Discovery
+database "PostgreSQL" as DB
+
+== The profile saved: split into interests ==
+
+Reader -> Page : "Save my profile" (or "Change" of its language)
+Page -> Router : PUT /profile {text, language} (X-Profile)
+Router -> Model : idsOf(user): req.profileId
+Router -> Controller : save(req)
+Controller -> Service : save(userId, profileId, {text, language})
+Service -> Model : owned(userId, profileId) (404 if not)
+Service -> Service : prepare: 20 to 3000 characters,\na known language (else 400)
+Service -> AI : interestsOf({text, language, categories})
+AI -> Ollama : ollamaJson(interestsPrompt)
+Ollama --> AI : {interests, refused}
+AI -> AI : normalizeInterests: withoutRefusals on each text,\nweights 0.5 to 1, searches checked, 6 at most;\nmissingWords, tooLong
+opt a word of the reader in no interest, or an interest over 500 characters
+    AI -> Ollama : ollamaJson([the prompt, its answer, what to fix])
+    Ollama --> AI : the whole answer again (null when it fails)
+    AI -> AI : kept when better on one and not worse on the other
+end
+AI --> Service : {interests, refused}
+alt no interest
+    Service --> Page : 422 "describe the subjects you want to follow"
+end
+Service -> Embedder : embed(the texts of the interests)
+Embedder --> Service : a dense (1024) and a sparse vector each
+note right of Embedder
+    no embedder answering: 503,
+    nothing saved
+end note
+Service -> Model : save(userId, profileId, {text, languages, refused}, interests)
+Model -> DB : transaction: user_profiles updated; the interests\nwith id_project NULL deleted and created again;\ntheir vectors (::vector, ::sparsevec)
+Service -> Discovery : start(profileId)
+Discovery -->> Service : returns at once (see Sources > Discovery)
+Service -> Service : get(userId, profileId)
+Service --> Page : the profile, its interests, sources, projects
+Page --> Reader : "Your interests", "Left out" (the refusals)
+
+== One interest corrected ==
+
+alt its text saved
+    Reader -> Page : edits the text, "Save"
+    Page -> Router : PATCH /profile/interests/:id {text}
+    Router -> Controller : updateInterest(req)
+    Controller -> Service : updateInterest(userId, profileId, id, {text})
+    Service -> Service : 1 to 500 characters (else 400)
+    Service -> Embedder : embed([text])
+    Service -> Model : updateInterest(profileId, id, {text, dense, sparse})
+else made secondary or main
+    Reader -> Page : "Make it secondary"
+    Page -> Router : PATCH /profile/interests/:id {weight: 0.85}
+    Router -> Controller : updateInterest(req)
+    Controller -> Service : updateInterest(userId, profileId, id, {weight})
+    Service -> Service : 0.5 to 1 (else 400)
+    Service -> Model : updateInterest(profileId, id, {weight})
+else removed
+    Reader -> Page : "Remove"
+    Page -> Router : DELETE /profile/interests/:id
+    Router -> Controller : deleteInterest(req)
+    Controller -> Service : deleteInterest(userId, profileId, id)
+    Service -> Model : deleteInterest(profileId, id)
+end
+Model -> DB : only a row of this profile (0 rows: 404)
+note right of Service
+    No discovery started: the sources found stay;
+    "Find more sources" looks again, and the ones
+    with nothing on the interests in 14 days are
+    removed before the next discovery or briefing
+end note
+Service --> Page : the whole profile again
+@enduml

@@ -1,5 +1,5 @@
 @startuml 02-saved-searches
-!include _style.iuml
+!include ../../_style/class.iuml
 title Saved searches — the forms of the Search page a reader keeps
 
 class EndUser

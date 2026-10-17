@@ -1,5 +1,5 @@
 @startuml 26-email-sequence
-!include _sequence.iuml
+!include ../../_style/sequence.iuml
 title E-mail — the cards chosen in the mail bar, sent, and the copy of an e-mail sent before
 
 actor Reader

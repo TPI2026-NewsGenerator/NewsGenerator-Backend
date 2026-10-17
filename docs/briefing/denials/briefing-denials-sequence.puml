@@ -1,0 +1,47 @@
+@startuml briefing-denials-sequence
+!include ../../_style/sequence.iuml
+title Briefing > Denials — found by their words, confirmed by the AI, shown as "Contested"
+
+actor Reader
+participant "BriefingCard\n+ MailAside" as Client
+participant "briefingController" as Controller
+participant briefingService as Briefing
+participant contested as Contested
+participant "extract\n+ language" as Extract
+participant "ollama\n→ Ollama cloud (gemma4:31b)" as Ollama
+database "PostgreSQL" as DB
+
+== Step "summarizing", beside the key passages and the AI version ==
+Briefing -> Contested : contestedOf(lead title, texts: the articles read (5 at most), {language})
+loop each article read, in the order they are read
+    Contested -> Extract : languageOf(page.content)
+    Contested -> Extract : sentencesOf(page)
+    Contested -> Contested : hasDenial(sentence, its language), each sentence once
+end
+Contested -> Contested : 25 candidates at most
+alt no sentence with a verb of denial
+    Contested --> Briefing : [] (no call)
+else
+    Contested -> Ollama : ollamaJson(prompt: the title, the sentences and their media)
+    Ollama --> Contested : {sentences: [{n, denied_by, claim, self, about, denial}]}
+    Contested -> Contested : kept: denial, self, about "main", someone named,\na denier once; 2 at most
+    opt a quote in another language than the reader's
+        Contested -> Extract : translateTexts (figures checked)
+    end
+    Contested --> Briefing : [{by, sentence, translation, language, source, url, publishedAt}]
+end
+note right of Briefing : a failure: no denial, the card stays
+Briefing -> DB : items[].contested
+
+== Read ==
+Client -> Controller : GET /briefing
+Controller -> Briefing : latest: withMarks (marks of each denial)
+Controller --> Client : 200 {items [{contested}]}
+Client --> Reader : "Contested": "X denies: “…”", a machine translation\nunder it, the medium and its date
+
+== Sent by e-mail ==
+Reader -> Client : "Edit" in the e-mail bar, unticks a denial
+Client -> Controller : POST /briefing/:id/email {removed: {storyId: {contested: [index]}}}
+Controller -> Briefing : email: withoutTakenOut, then briefingMail
+Briefing --> Reader : "Contested" in the e-mail, the denials left
+@enduml

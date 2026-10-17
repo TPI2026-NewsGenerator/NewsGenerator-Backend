@@ -1,5 +1,5 @@
 @startuml 30-database
-' The MLD of docs/MLD_sprint4.md as a diagram: the 24 tables of a fresh install (16.10.2026).
+' The MLD of mld.md (next to it) as a diagram: the 24 tables of a fresh install (16.10.2026).
 ' * marks NOT NULL; PK and FK are the keys. A dotted line is a link by value, without a foreign key.
 skinparam shadowing false
 skinparam defaultFontSize 12

@@ -1,5 +1,5 @@
 @startuml 24-ingestion-sequence
-!include _sequence.iuml
+!include ../_style/sequence.iuml
 title Ingestion — one run of the background work, and the tagging next to it
 
 participant "server.js\n(schedule)" as Timer

@@ -16,14 +16,17 @@ and the server finds sources for them. On demand, a briefing ranks the stories o
 interests in SQL, the AI chooses and checks them, the articles are read, and each card shows the
 article's own sentences (key passages, points or a summary), who tells it, its other angles, its
 official source, an AI analysis, and the news of the names the profile follows. An administrator can
-send the cards by e-mail. The diagrams of `docs/UML/sprint4/` draw it all (see **Documentation**).
+send the cards by e-mail. `docs/a-to-z/` tells it step by step, and the diagrams of `docs/` draw it all
+(see **Documentation**).
 
 Because it reads hundreds of media at once, it also says how widely a news is carried and how its
 article credits its sources. That describes what was measured, never whether the news is true.
 
 ## Tech Stack
 
-- [Node.js](https://nodejs.org/) [v22.18.0]
+Every tool, its exact version and where it is used: `docs/tools.md` (checked against `node_modules` at each build of the docs).
+
+- [Node.js](https://nodejs.org/) [v24] (`node:24-slim`; 24.21.0 on the laptop)
 - **Server:** [Express](https://expressjs.com/) [v5.2.1]
 - **AI Orchestration:** [Ollama](https://ollama.com/) [v0.6.3], Ollama cloud by default or an Ollama server
   of our own (`OLLAMA_HOST`)
@@ -45,17 +48,17 @@ article credits its sources. That describes what was measured, never whether the
 - **Scraper:** [Crawlee](https://crawlee.dev/js) [v3.16.0]
 - **Parsers:**
   - HTML: [LinkeDOM](https://www.npmjs.com/package/linkedom) [v0.18.12] and [Readability](https://github.com/mozilla/readability) [v0.6.0] to extract content
-  - XML: [fast-xml-parser](https://www.npmjs.com/package/fast-xml-parser) [v5.3.5]
+  - XML: [fast-xml-parser](https://www.npmjs.com/package/fast-xml-parser) [v5.7.2]
 - **Security**
   - [JsonWebToken](https://www.npmjs.com/package/jsonwebtoken) [v9.0.3] for JWT creation
   - [bcrypt](https://www.npmjs.com/package/bcrypt) [v6.0.0] for password hashing
 - **Database**
-  - [PostgreSQL](https://www.postgresql.org/) [v18.3-3] (17 at least, see `db/add_google_news.sql`), with:
+  - [PostgreSQL](https://www.postgresql.org/) [v18.6] (17 at least, see `db/add_google_news.sql`), with:
     - `pg_trgm`, for the keyword search and for grouping the cards of a search list
     - `unaccent`, to compare the titles without their accents
     - [pgvector](https://github.com/pgvector/pgvector), for the bge-m3 vectors: the stories of the briefing,
       the ranking of the interests and the search by meaning are computed in SQL, where the vectors are
-  - [Prisma](https://www.prisma.io/) [v7.8.0] as the client
+  - [Prisma](https://www.prisma.io/) [v7.10.0] as the client
 - **Feeds of the sites that publish none:** [RSS-Bridge](https://rss-bridge.org/), self-hosted with
   Docker (optional, see below)
 
@@ -66,9 +69,9 @@ article credits its sources. That describes what was measured, never whether the
 List all dependencies and their version needed by the project as :
 
 [//]: # (* DataBase Engine &#40;MySql, PostgreSQL, MSSQL,...&#41;)
-* [Node.js](https://nodejs.org/) [v22.18.0]
+* [Node.js](https://nodejs.org/) [v24]
 * IDE used: [IntelliJ](https://www.jetbrains.com/idea/) [v2025.3.3]
-* Package manager: [pnpm](https://pnpm.io/fr/) [v10.28.2]
+* Package manager: [pnpm](https://pnpm.io/fr/) [v10.33.2]
 * [Python](https://www.python.org/) with pip, for the embedder (`embedder/requirements.txt`)
 * [PostgreSQL](https://www.postgresql.org/download/) 17 or later, with [pgvector](https://github.com/pgvector/pgvector)
   installed on the database server
@@ -362,16 +365,32 @@ Optional variables in `.env`:
 
 ### Documentation
 
+The documentation of the server and of the client is one site, built with [MkDocs](https://www.mkdocs.org)
+and [Material](https://squidfunk.github.io/mkdocs-material/) from the Markdown and the diagrams of `docs/` and
+of `../client/docs/` (the client repo next to this one): a menu by feature, a search, the diagrams in the
+pages, zoomable. The Markdown stays the source and reads the same on GitHub. From `server/`:
+
+```bash
+pnpm run docs          # the site on http://127.0.0.1:8000, rebuilt at each change (makes .venv-docs/ the first time)
+pnpm run docs:build    # the site in site/, failing on a broken link or a version of docs/tools.md not installed
+```
+
+`mkdocs.yml` is its menu and its settings, `docs-site/hooks.py` adds the client's docs, shows the diagrams
+and checks the versions of `docs/tools.md`, `docs-site/requirements.txt` pins its Python packages.
+
 | Where | What |
 |---|---|
+| `docs/tools.md` | every tool, its version, what it is for, where it is in the code, and which parts of the docs explain it |
 | `http://localhost:3001/docs` | every route, with its body and its answers (Swagger UI). It is written in `config/swagger.js`, which is the only source: there is no `.yaml` to keep in step with it |
-| `docs/MLD_sprint4.md` | the twenty-four tables, their columns, their keys and the SQL functions, to redraw the MLD (checked against the database in service, 16.10.2026) |
-| `docs/UML/sprint4/` | as source and as PNG (16.10.2026): an overview of the features and what links them (`00`); the class diagrams, one per feature (`01` accounts, `02` saved searches, `03` search, `04` ingestion, `05` sources, `06` profile, `07` discovery, `08` and `08b` briefing, `09` e-mail, `10` following); the sequence diagrams (`20` signup, `21` search, `22` briefing, `23` discovery, `24` ingestion, `25` profile, `26` e-mail, `27` following); the database (`30`), the machines (`31`) and the whole system from A to Z (`32`). Render them again with `java -jar plantuml.jar -charset UTF-8 docs/UML/sprint4/*.puml` |
-| `docs/Parcours NewsGenerator.md` (`.html`) | in French, the walk of a reader from the account to the reading of a card, every step with its mechanism and its technology |
-| `docs/Parcours d'une nouvelle.md` (`.html`) | in French, one news followed from the page of its medium to the card of a reader |
-| `docs/UML/*-diagram.puml` | the sequence diagrams of the login and of the saved searches, from sprint 1, brought up to date |
-| `docs/*.png` | the MCD, MLD and class diagrams of sprints 1 to 3, kept as they were |
-| `../client/docs/UML/` | the use cases, the client's class diagrams by feature and its sequence diagrams |
+| `docs/README.md` | where to start, and the list of every feature and of its parts |
+| `docs/a-to-z/` | how the whole system works, from A to Z: `parcours-newsgenerator.md` (`.html`, in French), the walk of a reader from the account to the reading of a card, every step with its mechanism and its technology; `parcours-d-une-nouvelle.md` (`.html`, in French), one news followed from the page of its medium to the card of a reader; `32-a-to-z` the same as one diagram, `00-overview` the features and what links them, `31-deployment` the machines |
+| `docs/<feature>/` | one folder per feature: Accounts, Profile, Sources, Ingestion, Search, Briefing, Following. Its `README.md`, its overview class and sequence diagrams, and a folder per part of it (`briefing/summary/summary-ia/`, `search/key-passages/`...), each with a `README.md` (what it does and how: its routes, modules, tables, AI calls, limits and measures), a class diagram and a sequence diagram from the click of the reader to the database |
+| `docs/database/` | `mld.md`, the twenty-four tables, their columns, their keys and the SQL functions (checked against the database in service, 16.10.2026), and `30-database`, the same as a diagram |
+| `docs/archive/` | the MCD, MLD and class diagrams of sprints 1 to 3, kept as they were |
+| `../client/docs/` | the use cases, and the client's pages and components by feature |
+
+Every diagram is there as source (`.puml`) and as PNG. Render a folder again, from `server/`, with
+`java -jar plantuml.jar -charset UTF-8 "docs/briefing/summary/summary-ia/*.puml"`.
 
 ### How a search works
 
@@ -464,8 +483,9 @@ Optional variables in `.env`:
    the three of them in the same news, and almost none has all three. So when a search finds fewer
    than five news, the wider search asking for *any* of the words is counted and **offered**, not
    done — widening `"red card"` on its own would answer everything about red or about card. See
-   `canWiden` and `widen` in `services/utils/filter.js`. Nothing found answers
-   `{totalResults: 0, news: [], wider, mode: 'words'}` at once.
+   `canWiden` and `widen` in `services/utils/filter.js`; the wider search is answered written back
+   as keywords (`wider.keywords`, `toKeywords`), so "Show those N" runs the one counted, its exact phrases
+   and `-words` with it. Nothing found answers `{totalResults: 0, news: [], wider, mode: 'words'}` at once.
 4. The cards written in another language than the one searched carry their language, and their title
    and description are translated by the AI when the reader reaches them (`POST /news/translations`,
    `NewsService.translateNews`): 20 texts per call, each figure checked as in the key passages, a text
@@ -926,7 +946,7 @@ run, a feed of the directory is taken out (`DirectoryService.prune`) when:
 A feed is given 14 days to be used, unless it published 300 news in 3 days: a flood costs more every
 day it waits, so it is judged at once, on the same share (ssbcrack.com, 1,600 news and 15% on an
 interest, stays). A feed without news these days costs nothing and stays, and nothing is taken out when
-no briefing was made or no profile has interests in 14 days. Measured the same day, without writing:
+no briefing was made in 14 days or no profile has interests. Measured the same day, without writing:
 169 feeds taken out at once (52k news a day), 993 once all are 14 days old (76k a day), 580 kept
 without a briefing for their share. A feed taken out goes to `directory_removed` with why and what it
 gave, and its news stay until the retention drops them. It comes back two ways. A reader whose
@@ -1164,11 +1184,13 @@ earlier stories of its affair (12 at most), every line citing the card's own sou
 line whose figure or name its sources do not give (the tagger reads the names). Measured on the 139
 cards of 10 briefings of 7 profiles (`bench/card-analysis-*.mjs`, 15.10.2026): 1 to 4 plain news picked
 of about 50, a misleading line on 4 to 5 of 74 cards (20 without reasoning, 29 with gemma4:31b), 71 s a
-card, up to 161. One still running after 12 minutes is shown as failed. No limit of cards (the user,
-15.10.2026).
+card, up to 161. One still running with no card done for 12 minutes (a server that stopped) is shown as
+failed: each card done saves the time it was done, so a long run is never said failed while it runs. No
+limit of cards (the user, 15.10.2026).
 
 The **AI version** of a card's points and summary is written by deepseek-v4-pro (`services/utils/ai-ways.js`,
-thinking off, no Gemini after it), shown only when the reader asks for it ("Show AI version"), marked as
+thinking off, no Gemini after it), for the cards kept only (since 17.10.2026; every story read was
+asked before, the ones unreadable or left out too), shown only when the reader asks for it ("Show AI version"), marked as
 written by the AI, and dropped when it holds a figure the article does not. No model is free of errors:
 measured on 30 articles, 2 runs each (`bench/formats-models.mjs`, 15.10.2026), articles with a meaning
 error, points / summary: deepseek-v4-pro 1-2 / 2, kimi-k3 1-2 / 2-3, gemma4:31b 2-3 / 2, the published
@@ -1352,9 +1374,10 @@ is within a year. A project ended is kept but read no more, until its last day i
 
 An administrator can add a news to a briefing by its link (`POST /api/briefing/<id>/news`): the page is
 read (public addresses only, no headless browser), its key passages chosen and translated as for a card,
-and its AI version written, and it comes last, ticked for the e-mail, said "Added by you", with no other
-media nor angle (a card of a negative `storyId` in `briefings.items`). 10 at most per briefing, 30 an
-hour; taken out again by `DELETE /api/briefing/<id>/news/<storyId>`.
+then its AI version written (only when it gave passages), and it comes last, ticked for the e-mail, said
+"Added by you", with no other media nor angle (a card of a negative `storyId` in `briefings.items`). 10 at
+most per briefing, 30 an hour, both the limit and a link already in the briefing checked by the statement
+that adds it (two added at once can't pass them); taken out again by `DELETE /api/briefing/<id>/news/<storyId>`.
 
 ### The names of the news
 
@@ -1370,7 +1393,8 @@ second. A tagger takes 16 news at a time on a processor, 128 on a graphics card,
 UPDATE SKIP LOCKED`): the tagging never makes the background work wait. An acronym inside a longer name
 is added as an organisation ("UEFA" in "UEFA Champions League"), a name over 120 characters is dropped.
 A tagger idle or down is asked again after 60 s. The log reports the tagging once an hour, and the names
-no news names any more are deleted once a day.
+no news names any more and never looked for in Wikidata are deleted once a day (a name
+linked to an item is kept).
 
 Each tagger of `NER_URL` works on its own, the newest news first, none read by two: the processor of the
 server keeps up with the day, a graphics card switched on now and then takes the backlog of the month
@@ -1407,11 +1431,12 @@ A reader has one profile, an administrator several, each independent: its text, 
 refusals, sources, trusted sources, briefings and thumbs, what it follows (`/api/profile/profiles`:
 list, create, rename, delete; deleting one deletes all that, the last one can't be). The client sends
 the profile chosen with every request (`X-Profile` header); the server takes it when it is one of the
-reader's, else their first one (`services/utils/active-profile.js`), and the routes of the sources and
-of what is followed answer 400 without a profile.
+reader's, else their first one (`services/utils/active-profile.js`), and the routes that write to a profile
+answer 400 without one (`needsProfile`: adding or importing sources, taking a recommended one, and
+the routes of what is followed but its list and its search); the lists answer with no profile.
 
 The account is changed in the settings (`PUT /api/account/username`, `/email`, `/password`), each change
-asking the current password, 10 an hour per address for the three. A new password ends the sessions of
+asking the current password, 10 in 15 minutes per address for the three together. A new password ends the sessions of
 the other devices: a session opened before `users.password_changed_at` is refused.
 
 ### The e-mail
@@ -1524,9 +1549,13 @@ port 5433) with `INGEST_IN_SERVER=false`: the background work stays on the machi
 |-- deploy                  # the containers of the machine that stays on (compose.yml) and deploy.sh, which sends the code there
 |-- docker
 |   `-- rss-bridge          # configuration of the RSS-Bridge container
-|-- docs                    # the MLD, the walkthroughs (Parcours *.md / .html), the diagrams of sprints 1 to 3
-|   |-- UML                 # the sequence diagrams of sprint 1 brought up to date
-|       `-- sprint4         # every diagram of today: features, sequences, database, machines, A to Z
+|-- docs                    # README.md says what each folder holds
+|   |-- A to Z              # how the whole system works: the walkthroughs (Parcours *.md / .html), the A to Z, overview and deployment diagrams
+|   |-- accounts, profile, sources, ingestion, search, briefing, following
+|   |                       # one folder per feature, a folder per part of it (briefing/summary/summary-ia...)
+|   |-- Archive             # the MCD, MLD and class diagrams of sprints 1 to 3
+|   |-- Database            # the MLD and its diagram
+|   `-- _style              # the style the diagrams include
 |-- embedder                # bge-m3 vectors over HTTP, in Python (server.py, requirements.txt)
 |-- generated
 |-- models

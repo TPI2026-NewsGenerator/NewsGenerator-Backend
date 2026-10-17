@@ -1,0 +1,75 @@
+@startuml profile-several-profiles-sequence
+!include ../../_style/sequence.iuml
+title Profile > Several profiles — another profile written, chosen, renamed, deleted
+
+actor "Administrator" as Reader
+participant "ProfileSwitcher\n+ ProfilePage" as Page
+participant "activeProfile\n(client)" as Active
+participant "profileRouter" as Router
+participant "activeProfile\n(middleware)" as Mw
+participant profileService as Service
+participant admin
+participant profileModel as Model
+database "PostgreSQL" as DB
+
+== Another profile ==
+
+Reader -> Page : "New profile…" (/profile?new=1): a name,\na language, the AI questions or a text
+Page -> Router : POST /profile/profiles {name, text, language}
+Router -> Service : create(userId, {name, text, language})
+Service -> admin : isAdmin(userId)
+admin -> DB : the role of the user ('Admin'), read at each request
+alt not an administrator
+    Service --> Page : 403 "Several profiles are for the administrators"
+end
+Service -> Service : cleanName: 1 to 40 characters (else 400)
+Service -> Model : count(userId)
+alt 15 profiles already
+    Service --> Page : 400 "At most 15 profiles."
+end
+Service -> Service : prepare(text, language): the interests\nby the AI and their vectors (see ../Interests)
+Service -> Service : store(userId, null, ...): ProfileModel.save\nwrites a new user_profiles row, then\nDiscoveryService.start(id)
+Service --> Page : 201, the new profile (get)
+Page -> Active : setActiveProfile(id), profilesChanged()
+Active -> Page : the switcher lists it, the page reads it
+
+== One chosen ==
+
+Page -> Router : GET /profile/profiles
+Router -> Service : list(userId)
+Service -> Model : ofUser(userId)
+Service --> Page : {profiles: [{id, name}]}
+Reader -> Page : chooses one in the masthead
+Page -> Active : setActiveProfile(id): localStorage
+note right of Active
+    a profile kept that is no longer the
+    reader's: setActiveProfile(null)
+end note
+Page -> Router : GET /profile, /feeds, /briefing...\n(X-Profile: id)
+Router -> Mw : activeProfile(req)
+Mw -> Model : idsOf(userId)
+Mw -> Mw : req.profileId = the id asked if it is one\nof the user's, else the first one (null: none)
+Router -> Service : get(userId, req.profileId)
+Service --> Page : the data of that profile only
+
+== Renamed, deleted ==
+
+alt renamed
+    Page -> Router : PATCH /profile/profiles/:id {name}
+    Router -> Service : rename(userId, id, name)
+    Service -> Model : owned(userId, id) (404 if not)
+    Service -> Model : rename(id, cleanName(name))
+    Service --> Page : the profile
+else deleted
+    Page -> Router : DELETE /profile/profiles/:id
+    Router -> Service : remove(userId, id)
+    Service -> Model : owned(userId, id), count(userId)
+    alt the last profile
+        Service --> Page : 400 "can be written again, not deleted"
+    end
+    Service -> Model : delete(id)
+    Model -> DB : DELETE user_profiles: its interests,\nsources, briefings and projects go with it
+    Service --> Page : {profiles} left
+    Page -> Active : setActiveProfile(the first left), profilesChanged()
+end
+@enduml

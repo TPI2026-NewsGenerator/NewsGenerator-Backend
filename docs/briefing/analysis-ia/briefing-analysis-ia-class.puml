@@ -1,0 +1,115 @@
+@startuml briefing-analysis-ia-class
+!include ../../_style/class.iuml
+title Briefing > Analysis (IA) — why it matters, what may come next, the story so far
+
+package "Client (React)" as Client {
+    class BriefingPage <<pages/Briefing.jsx>> {
+        + load()
+        ANALYSIS_POLL_MS = 8000
+    }
+    class BriefingAnalysis <<BriefingAnalysis.jsx>> {
+        + AnalysisNote()
+        + CardAnalysis()
+    }
+    class BriefingCard <<BriefingCard.jsx>>
+    class BriefingApi <<briefingApi.js>> {
+        + getLatest()
+    }
+}
+note bottom of BriefingPage
+    Asks GET /briefing again every 8 s
+    while analysis.status is 'running',
+    and takes only the analysis from it
+end note
+
+package "Presentation" {
+    class briefingRouter {
+        + GET /briefing
+    }
+    class briefingController {
+        + latest()
+    }
+}
+
+package "Business" {
+    class briefingService {
+        + write()
+        + analysisArticles()
+        + cardAnalyses()
+        - analyze()
+        - analysisOfRow()
+    }
+}
+note right of briefingService
+    analyze() is called at the end of write(),
+    not awaited: 'running' at once, the cards
+    picked, each card done (beatAt), then
+    'ready' or 'failed'. Still running with no
+    card done for 12 min: read as 'failed'
+end note
+
+package "Utils" {
+    class cardAnalysis {
+        + ANALYSIS_MODEL
+        + fittedArticles()
+        + pickedCards()
+        + analysisOfCard()
+        + checkedLines()
+        + analysesOf()
+    }
+    class tagger {
+        + taggerUrls()
+        + tagTexts()
+    }
+    class extract {
+        + sentencesOf()
+        + translateTexts()
+    }
+    class ollama {
+        + ollamaJson()
+    }
+}
+note right of cardAnalysis
+    Triage: deepseek-v4-pro:0813, think off.
+    Analysis: same model, think on, 300 s at
+    most, 3 cards at once. No Gemini after it.
+    A card reads 12 000 characters (lead 6 000
+    at least, 3 000 each other), 5 articles.
+    2 "why", 2 "next" kept at most, each line
+    cites its sources (A1 s3, T2, G1, D1, O1);
+    a line whose figure or name its cited
+    sources do not give is dropped
+end note
+
+package "Data" {
+    class storyModel {
+        + earlierInThreads()
+    }
+    class briefingModel {
+        + analysis()
+        + latest()
+    }
+}
+
+class "Ollama cloud\n(deepseek-v4-pro:0813;\ngemma4:31b for the titles)" as OllamaCloud <<external>>
+class "NER tagger (GLiNER)\nNER_URL" as Ner <<external>>
+class "PostgreSQL\nbriefings.analysis (jsonb)\nstories.id_thread" as PostgreSQL <<external>>
+
+BriefingPage --> BriefingApi
+BriefingPage --> BriefingCard
+BriefingPage --> BriefingAnalysis : AnalysisNote
+BriefingCard --> BriefingAnalysis : CardAnalysis
+BriefingApi --> briefingRouter
+briefingRouter --> briefingController
+briefingController --> briefingService
+briefingService --> cardAnalysis
+briefingService --> extract : sentences of the\npages, titles translated
+briefingService --> storyModel : the timeline
+briefingService --> briefingModel
+cardAnalysis --> ollama
+cardAnalysis --> tagger : the names\nof the lines
+ollama --> OllamaCloud
+tagger --> Ner
+storyModel --> PostgreSQL
+briefingModel --> PostgreSQL
+@enduml

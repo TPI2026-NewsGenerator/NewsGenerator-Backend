@@ -1,0 +1,109 @@
+@startuml ingestion-directory-class
+!include ../../_style/class.iuml
+left to right direction
+title Ingestion > Directory — the feeds the server adds, and takes out, by itself
+
+package "Business" {
+    class ingestService {
+        + schedule(): grow every 20 min,\n  prune every 24 h, after a run
+    }
+    class directoryService {
+        + grow({named, sections, concurrency})
+        + prune()
+        + chooseSections(feeds, known)
+        + uselessFeeds(rows, {followed})
+        + sectionCategory(url)
+        - tryNamed(medium)
+        - trySections(medium, readByUrl, followed)
+        - tryAll(media, origin, attempt)
+        - isPodcast(url)
+        - baseMedia()
+    }
+}
+note top of directoryService
+    DIRECTORY_PER_RUN (10) media of each kind a time, 3 at
+    once. Named: by Google News 3 times in 30 days, read by
+    no feed; its main feed, 3 news of 7 days, one of our
+    languages, no podcast, 300 news at once at most.
+    Sections: 2 per medium, most of their news (3 at
+    least) missed by its feeds, on everything or on a
+    category a profile follows. A medium looked at waits
+    30 days. A feed taken out waits 60 days, unless a
+    profile is created or written since
+end note
+note bottom of directoryService
+    prune: a feed whose medium no ready briefing of
+    14 days showed, and under 11% of its news of 3 days
+    reach 0.45 with an interest (or a section of a
+    category nobody follows). 14 days of grace, unless
+    300 news in 3 days. Nothing taken out without
+    briefings or interests
+end note
+
+package "utils" {
+    class feedFinder {
+        + findFeeds(site, {languages, bridge: false})
+        + siteFeeds(site)
+        + readFeeds(urls)
+    }
+    class feedDirectory {
+        + searchDirectory(host)
+    }
+    class language {
+        + feedLanguage(texts, url)
+        + LANGUAGES
+    }
+    class feedLimits {
+        + looksPrivate(url)
+        + MAX_FEED_ITEMS = 300
+    }
+    class meaningJudge <<other feature>> {
+        + JUDGE_THRESHOLD = 0.45
+    }
+}
+
+package "Data" {
+    class "db/rss-links.js" as rssLinks
+    class directoryModel {
+        + namedMedia(options)
+        + all()
+        + readers(days)
+        + triedSince(media, origin, days)
+        + mediaOfFeeds(urls)
+        + linksOf(urls, days)
+        + stillRemoved(urls, days)
+        + addFeeds(feeds)
+        + tried(medium, origin, kept, reason)
+        + usage({usedDays, newsDays, threshold})
+        + remove(feeds)
+    }
+    class "directory_feeds" as dFeeds <<table>> {
+        url, medium, origin (named | section)
+        language, category, created_at
+    }
+    class "directory_tries" as dTries <<table>> {
+        medium, origin, tried_at, kept, reason
+    }
+    class "directory_removed" as dRemoved <<table>> {
+        url, medium, origin, language, category
+        news, relevant, reason, removed_at
+    }
+}
+
+class "the sites of the media" as Sites <<external>>
+class "Feedly\n(search of feeds)" as Feedly <<external>>
+
+ingestService --> directoryService
+directoryService --> rssLinks
+directoryService --> directoryModel
+directoryService --> feedFinder
+directoryService --> language
+directoryService --> feedLimits
+directoryService --> meaningJudge
+feedFinder --> feedDirectory
+feedFinder --> Sites
+feedDirectory --> Feedly
+directoryModel --> dFeeds
+directoryModel --> dTries
+directoryModel --> dRemoved
+@enduml

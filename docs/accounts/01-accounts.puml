@@ -1,5 +1,5 @@
 @startuml 01-accounts
-!include _style.iuml
+!include ../_style/class.iuml
 ' many modules point at jwt and userModel: straight lines keep them apart
 skinparam linetype ortho
 title Accounts — log in, sign up, the session, the settings and the administrators

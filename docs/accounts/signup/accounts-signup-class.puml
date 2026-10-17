@@ -1,0 +1,109 @@
+@startuml accounts-signup-class
+!include ../../_style/class.iuml
+left to right direction
+title Accounts > Signup — the account and its first profile at once
+
+package "Client (React)" as Client {
+    class SignupPage {
+        form: username, email, password, text, language
+        + handleSubmit()
+    }
+    class ProfileFunnel <<other feature>>
+    class LoginApi {
+        + register(account)
+    }
+    class ProfileApi <<other feature>> {
+        + getOptions()
+    }
+    class AuthProvider {
+        + refresh()
+    }
+}
+note right of SignupPage
+    Checks the rules first; the profile text
+    comes from the questions of the AI (the
+    funnel). signup false: "Account creation
+    is closed", no form
+end note
+package "Presentation" {
+    class signupRouter {
+        + POST /signup
+        whileOpen
+    }
+    class signupController {
+        + register()
+    }
+}
+note right of signupRouter
+    403 unless SIGNUP_OPEN=1;
+    5 accounts per address and hour (429)
+end note
+package "Business" {
+    class signupService {
+        + register()
+    }
+    class profileService <<other feature>> {
+        + prepare({text, language})
+        + store(userId, null, prepared)
+    }
+}
+note right of signupService
+    Order: the rules, name or email taken
+    (409, no AI), the profile read by the
+    AI (422: no account), the account, the
+    profile stored; if that fails the
+    account is deleted again
+end note
+package "utils" {
+    class accountRules {
+        + isUsername()
+        + isEmail()
+        + isPassword()
+        + isTaken()
+        + signupOpen()
+    }
+    class rateLimit {
+        + rateLimit()
+    }
+    class pwdHasher {
+        + hashWithSalt()
+    }
+    class jwt {
+        + generateAccessToken()
+        + startSession()
+    }
+}
+note right of accountRules
+    username 3-30 letters, digits . _ -
+    email one address, 254 at most
+    password 10 characters to 72 bytes
+end note
+package "Data" {
+    class userModel {
+        + taken()
+        + roleId()
+        + create()
+        + delete()
+    }
+}
+class bcrypt <<external>>
+class "PostgreSQL\n(users, roles)" as PostgreSQL <<external>>
+
+SignupPage --> ProfileApi
+SignupPage --> ProfileFunnel
+SignupPage --> LoginApi
+SignupPage --> AuthProvider
+LoginApi --> signupRouter
+signupRouter --> accountRules
+signupRouter --> rateLimit
+signupRouter --> signupController
+signupController --> signupService
+signupController --> jwt
+signupService --> accountRules
+signupService --> userModel
+signupService --> profileService
+signupService --> pwdHasher
+signupService --> jwt
+pwdHasher --> bcrypt
+userModel --> PostgreSQL
+@enduml

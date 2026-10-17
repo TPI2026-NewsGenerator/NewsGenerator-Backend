@@ -1,0 +1,84 @@
+@startuml following-wikidata-items-sequence
+!include ../../_style/sequence.iuml
+title Following > Wikidata items — searched, followed, named, opened
+
+actor Reader
+participant "FollowingPage\nEntityPage" as Client
+participant "entityRouter\n+ entityController" as Controller
+participant entityService as Entity
+participant wikidata as Wiki
+participant "Wikidata\n(API + SPARQL)" as WikiApi
+participant "entityModel" as EntityModel
+participant "mentionModel\n+ feedModel" as News
+database "PostgreSQL" as DB
+
+== searched ==
+Reader -> Client : types "UEFA"
+Client -> Controller : GET /api/entities/search?q=UEFA
+note right : 400 ms after the last key, 2 letters at least;\n30 calls of Wikidata a minute per reader
+Controller -> Entity : search(profileId, q)
+Entity -> Wiki : searchItems(q, language of the reader)
+Wiki -> WikiApi : wbsearchentities, 8 at most
+Entity --> Client : {items: [{qid, label, description}]}
+note right : Wikidata down: 502
+
+== followed ==
+Reader -> Client : follows one
+Client -> Controller : POST /api/entities {qid}
+Controller -> Entity : follow(profileId, qid)
+Entity -> EntityModel : count(profileId)
+note right : 30 followed already: 400
+Entity -> EntityModel : byQid(qid)
+alt known, read in the last 7 days
+    Entity -> Entity : the row known
+else new, a link only, or older
+    Entity -> Wiki : readItem(qid, language)
+    Wiki -> WikiApi : wbgetentities: labels, aliases,\ndescriptions, claims (7 languages + the reader's)
+    opt a person with a family name (P734)
+        Wiki -> WikiApi : wbgetentities: the family name
+    end
+    Wiki -> WikiApi : SPARQL: its links still true,\nthe players since 6 years (80 at most)
+    Wiki -> Wiki : kindOf(P31), namesOf(labels, aliases,\nshort name P1813, family name)
+    Wiki --> Entity : {qid, kind, label, names, links}
+    alt Wikidata failed
+        Entity -> Entity : the row known, or 502
+    else
+        Entity -> EntityModel : save(item)
+        EntityModel -> DB : entities, the linked items (label only),\nentity_links replaced: one transaction
+    end
+end
+Entity -> EntityModel : follow(profileId, id)
+EntityModel -> DB : INSERT profile_entities (in_briefing true)
+Entity --> Client : {entities}
+
+== its names, in the briefing or not ==
+Reader -> Client : adds "PSG", takes out "Paris"
+Client -> Controller : PUT /api/entities/:qid/names {added, removed}
+Controller -> Entity : setNames(profileId, qid, {added, removed})
+note right : 10 names of the reader, 2 to 60 characters;\nonly names of Wikidata are taken out
+Entity -> EntityModel : setNames(profileId, id, added, removed)
+Reader -> Client : unticks "in the briefing"
+Client -> Controller : PUT /api/entities/:qid/briefing {on: false}
+Controller -> Entity : setInBriefing(profileId, qid, on)
+Entity -> EntityModel : setInBriefing(profileId, id, on)
+
+== its page ==
+Reader -> Client : opens /following/:qid
+Client -> Controller : GET /api/entities/:qid?hours=48
+Controller -> Entity : page(profileId, qid, hours)
+Entity -> Entity : loaded(qid), following, links:\none per item, 60 at most
+Entity -> Entity : namedNews(its names and the links',\nits qid and theirs)
+note right : kept 10 minutes per profile, window,\nnames and items
+par the news tagged
+    Entity -> News : articlesNamed({keys, qids, feeds, since})
+    note right : the names the tagger found,\nand the ones it linked to the items
+else the news the tagger has not read
+    Entity -> News : anyUntagged(since, 10 minutes ago)
+    opt some wait
+        Entity -> News : articlesHolding({feeds, names with and\nwithout accents, since})
+    end
+end
+Entity -> Entity : newsOfTerms(terms, articles, {holds}),\nmergeNews: one news per story, the newest first
+Entity --> Client : {entity, hours, count, news,\nlinks: [{relation, count, news (30)}]}
+Client --> Reader : its news, then the links named
+@enduml

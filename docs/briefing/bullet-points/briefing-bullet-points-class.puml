@@ -1,0 +1,73 @@
+@startuml briefing-bullet-points-class
+!include ../../_style/class.iuml
+left to right direction
+title Briefing > Bullet points — the 3 most important published sentences, one per point
+
+package "Client (React)" as Client {
+    class BriefingPage {
+        format
+        + chooseFormat(value)
+    }
+    class BriefingFormat {
+        format, onChange, label
+    }
+    class "formats.js" as formats {
+        FORMATS, DEFAULT_FORMAT
+        + keptFormat()
+        + keepFormat(format)
+        + fieldsOf(item, 'points')
+    }
+    class BriefingCard {
+        item, format
+        Points
+    }
+    class MailBar {
+        way
+        + send()
+    }
+    class BriefingApi {
+        + getLatest()
+        + email(..., format, ai)
+    }
+}
+package "Business" {
+    class briefingService {
+        + readStories()
+        + email()
+    }
+    class extract {
+        + extractArticle()
+        + shorterWays()
+        + passagesText()
+    }
+    class briefingMail {
+        MAIL_FORMATS
+        + briefingMail()
+        wayOf()
+        pointsHtml()
+    }
+}
+note right of extract
+    points: the first 3 of the sentences
+    kept for the key passages, the most
+    important first, one passage each.
+    Translation: the one of the passages
+end note
+note right of briefingMail
+    "Key points" above each card:
+    a list in the html, "• " in the text
+end note
+class "PostgreSQL\nbriefings.items\n(points, pointsTranslation)" as DB <<external>>
+
+BriefingPage --> BriefingFormat
+BriefingPage --> formats
+BriefingPage --> BriefingCard
+BriefingPage --> MailBar
+BriefingCard --> formats
+MailBar --> BriefingFormat : "In the e-mail, as"
+BriefingPage --> BriefingApi
+BriefingApi --> briefingService : GET /briefing\nPOST /briefing/:id/email
+briefingService --> extract : step "summarizing"
+briefingService --> briefingMail
+briefingService --> DB
+@enduml

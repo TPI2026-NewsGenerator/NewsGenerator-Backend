@@ -1,0 +1,96 @@
+@startuml profile-ai-questions-class
+!include ../../_style/class.iuml
+title Profile > AI questions — a few words, rounds of questions, then the profile written (nothing saved)
+
+package "Client (React)" as Client {
+    class ProfileFunnel {
+        language, words, onWritten(text)
+        + ask(answered)
+        + write(answered)
+    }
+    class "ProfilePage\nNewProfile\nSignupPage" as Pages {
+        + onWritten(text): the field filled
+    }
+    class ProfileApi {
+        + funnelQuestions({start, rounds, language})
+        + funnelText({start, rounds, language})
+    }
+}
+note right of ProfileFunnel
+    3 to 300 characters to start; each
+    question: choices to tick (chips) and
+    400 characters of the reader's own words.
+    "Next questions" or "Write my profile now";
+    the last round only "Write my profile"
+end note
+
+package "Presentation" {
+    class profileRouter {
+        + POST /profile/funnel/questions
+        + POST /profile/funnel/text
+    }
+    class profileController {
+        + funnelQuestions()
+        + funnelText()
+    }
+}
+note right of profileRouter
+    funnelAccess: no account needed while
+    signupOpen() (SIGNUP_OPEN=1), else a
+    session; funnelLimit: 40 calls an hour
+    per address, shared with the projects
+end note
+
+package "Business" {
+    class profileService {
+        + funnelQuestions(asked)
+        + funnelText(asked)
+        - funnelOf({start, rounds, language})
+    }
+    class feedService <<other feature>> {
+        + languages()
+    }
+}
+note right of profileService
+    funnelOf: start 3 to 300 characters,
+    a language of FeedService.languages().
+    funnelText: under 20 characters
+    (MIN_TEXT) before or after the AI: 422
+end note
+
+package "utils" {
+    class profileFunnel {
+        + cleanRounds(rounds)
+        + nextQuestions(funnel)
+        + writeProfile(funnel)
+        + questionsPrompt()
+        + writePrompt()
+        - normalizeQuestions(answer)
+        - askedAgain(question, passed)
+    }
+    class ollama {
+        + ollamaJson(prompt)
+    }
+}
+note right of profileFunnel
+    MAX_ROUNDS 3, MAX_QUESTIONS 4, 8 choices
+    of 80 characters at most. A ticked choice
+    must be one of the choices sent. The AI's
+    "enough" is not taken at the first round.
+    A question sharing 3/4 of its words (2 at
+    least) with one passed is left out.
+    writeProfile: 3000 characters at most
+end note
+
+class "Ollama (gemma4:31b)\nGemini when it fails" as Ollama <<external>>
+
+Pages --> ProfileFunnel
+ProfileFunnel --> ProfileApi
+ProfileApi --> profileRouter
+profileRouter --> profileController
+profileController --> profileService
+profileService --> profileFunnel
+profileService --> feedService
+profileFunnel --> ollama
+ollama --> Ollama
+@enduml

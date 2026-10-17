@@ -1,8 +1,8 @@
-# MLD — sprint 4
+# MLD
 
 What to reproduce in the diagram tool. Taken from `prisma/schema.prisma`, the scripts of `db/`, which
 are what a fresh install creates, and checked against the database in service (its `information_schema`)
-on 16.10.2026. Drawn as a diagram in `docs/UML/sprint4/30-database.puml` (and `.png`).
+on 16.10.2026. Drawn as a diagram in `30-database.puml` (and `.png`), next to this file.
 
 Some tables are not in `prisma/schema.prisma`: `entities`, `entity_links`, `profile_entities`,
 `mentions`, `article_mentions`, `party_names` and `sent_mails` are read and written in SQL only

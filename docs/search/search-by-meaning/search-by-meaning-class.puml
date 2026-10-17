@@ -1,0 +1,115 @@
+@startuml search-by-meaning-class
+!include ../../_style/class.iuml
+left to right direction
+title Search > Search by meaning — a sentence, its vectors, the verdicts of the AI, Google News
+
+package "Client (React)" as Client {
+    class SearchPage {
+        + handleSubmit(keyword)
+    }
+    class FeedList {
+        newsList, mode, checked, web
+    }
+    class SearchApi {
+        + getNews(query)
+    }
+}
+note right of FeedList
+    The answers first, then the news
+    "close to it"; says when the AI could
+    not check them, and when Google
+    News was asked
+end note
+package "Presentation" {
+    class newsRouter {
+        + POST /news
+    }
+    class newsController {
+        + getNews()
+    }
+}
+package "Business" {
+    class newsService {
+        + getNews()
+        + searchByMeaning()
+        - webSearch()
+        - groupDuplicates()
+        - joinFacts()
+        - withThreads()
+    }
+    class ingestService <<other feature>> {
+        + readNow(urls)
+        + searchesOfCategories()
+        + sentenceFeeds()
+    }
+}
+note right of newsService
+    BY_MEANING 80, BY_WORDS 30 (in the language
+    searched and in the others each), BY_GOOGLE 40;
+    WEB_MIN_ANSWERS 5; UNCHECKED_RESULTS 30;
+    JOIN_SIMILARITY 0.65, MAX_JOINED_CARDS 30;
+    MAX_THREAD_FACTS 12
+end note
+package "utils" {
+    class filter {
+        + hasOperators()
+    }
+    class embedder {
+        + embed()
+        + toVector()
+        + toSparsevec()
+    }
+    class searchAi {
+        + sortByMeaning()
+        + readVerdicts()
+    }
+    class googleNews {
+        + googleAvailable()
+        + sentenceUrl()
+    }
+    class profileAi <<other feature>> {
+        + mergeStories()
+    }
+    class ollama {
+        + ollamaJson()
+    }
+}
+note right of searchAi
+    One prompt (in French): a verdict
+    "reponse" / "proche" for the news
+    concerned, in the order given; title +
+    160 characters of description each.
+    Asked again once when it fails
+end note
+package "Data" {
+    class feedModel {
+        + closestArticles()
+        + similarArticlePairs()
+        + closeCardPairs()
+        + threadArticles()
+    }
+}
+class "Embedder (bge-m3)" as Bge <<external>>
+class "Ollama cloud (gemma4:31b)\nGemini fallback" as Ollama <<external>>
+class "Google News RSS" as Google <<external>>
+class "PostgreSQL + pgvector\n(articles, stories)" as PostgreSQL <<external>>
+
+SearchPage --> SearchApi
+SearchPage --> FeedList
+SearchApi --> newsRouter
+newsRouter --> newsController
+newsController --> newsService
+newsService --> filter
+newsService --> embedder
+newsService --> searchAi
+newsService --> googleNews
+newsService --> ingestService
+newsService --> profileAi
+newsService --> feedModel
+searchAi --> ollama
+profileAi --> ollama
+ollama --> Ollama
+embedder --> Bge
+ingestService --> Google
+feedModel --> PostgreSQL
+@enduml

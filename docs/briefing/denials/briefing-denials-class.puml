@@ -1,0 +1,72 @@
+@startuml briefing-denials-class
+!include ../../_style/class.iuml
+left to right direction
+title Briefing > Denials — "Contested": someone named denies the news, quoted from an article
+
+package "Client (React)" as Client {
+    class BriefingCard {
+        item.contested
+        Contested
+    }
+    class MailAside {
+        story.contested
+        removed.contested
+    }
+    class BriefingApi {
+        + getLatest()
+        + email(..., removed, ...)
+    }
+}
+package "Business" {
+    class briefingService {
+        + readStories()
+        + withMarks()
+        + withoutTakenOut()
+        + email()
+    }
+    class contested {
+        WORDS, DENIALS
+        + hasDenial(sentence, language)
+        + contestedOf(title, texts, {language})
+    }
+    class extract {
+        + sentencesOf()
+        + translateTexts()
+    }
+    class language {
+        + languageOf()
+        + writtenIn()
+    }
+    class ollama {
+        + ollamaJson()
+    }
+    class newsService <<other feature>> {
+        + summarizeStories()
+    }
+    class briefingMail {
+        contestedHtml()
+    }
+}
+note right of contested
+    The sentences of the articles read with a
+    verb of denial of their own language (en, fr,
+    es, de, it), 25 at most, the lead's first.
+    One AI call keeps a sentence when it is a
+    denial, by someone named, of a claim about
+    them, on the card's own news: 2 deniers at most
+end note
+class "Ollama cloud (gemma4:31b)\nGemini when it fails" as Cloud <<external>>
+class "PostgreSQL\nbriefings.items (contested)" as DB <<external>>
+
+BriefingCard ..> BriefingApi
+MailAside ..> BriefingApi
+BriefingApi --> briefingService : GET /briefing\nPOST /briefing/:id/email
+briefingService --> contested : step "summarizing"
+newsService --> contested : the search's\nkey passages
+contested --> extract
+contested --> language
+contested --> ollama
+ollama --> Cloud
+briefingService --> briefingMail
+briefingService --> DB
+@enduml
