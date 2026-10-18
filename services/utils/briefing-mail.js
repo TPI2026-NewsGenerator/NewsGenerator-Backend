@@ -3,7 +3,7 @@
 //  Date: 08.10.2026
 //  File: briefing-mail.js
 //  Description: The cards of a briefing the reader ticked as an e-mail, laid out as the page shows them
-//               (client BriefingCard.jsx): number, topic, date and language, title, why, picture, its
+//               (client BriefingCard.jsx): number, countries, date and language, title, why, picture, its
 //               sentences in the way the reader chose (bullet points, summary or key passages), who
 //               its official source, who denies it, its analysis when it has one, its other angles, where
 //               to read it, and the note of its margin. Who tells it is left out: its sources say it
@@ -14,7 +14,6 @@
 
 import {languageName} from './language.js';
 import {countryNames} from './country-names.js';
-import {TOPICS} from './topics.js';
 
 // The colours and fonts of the page (client styles/index.css). Mail apps keep inline styles and simple
 // tables only; the fonts of the page are asked from Google Fonts, which Apple Mail and Outlook for Mac
@@ -63,8 +62,6 @@ export const LABELS = {
     briefing: 'Briefing',
     oneStory: '1 story',
     stories: '{count} stories',
-    // the topic of a card (see topics.js), as a word
-    ...Object.fromEntries(TOPICS.map(topic => [`topic.${topic}`, topic])),
 };
 
 // t: the words of the e-mail in the reader's language (labels, see mail-labels.js), the language the
@@ -282,13 +279,13 @@ const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH) =>
     const picture = webUrl(card.thumbnail) ?? (/^cid:[\w.@-]+$/.test(card.thumbnail ?? '') ? card.thumbnail : null);
     return `
 <tr><td class="ng-rule" style="border-top:1px solid ${LIGHT.rule};padding:26px 0 44px">
-  <!-- the number, topic, date and language above the title, not in a column of their own as on the
-       page: on a phone the text keeps the whole width -->
+  <!-- the number, countries, date and language above the title, not in a column of their own as on the
+       page: on a phone the text keeps the whole width. No topic: the cards of one reader are of the same
+       one, "sport" card after card (the user, 18.10.2026) -->
   <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:14px"><tr>
     <td valign="bottom" style="padding-right:14px"><p class="ng-mute" style="margin:0;font:400 46px/1 ${DISPLAY};color:${LIGHT.mute}">${String(i + 1).padStart(2, '0')}</p></td>
     <td valign="bottom" style="padding-bottom:4px"><p class="ng-mute" style="${CAPTION};font-weight:500">${[
-        card.topic ? `<span class="ng-ink" style="${KICKER};color:${LIGHT.ink}">${escape(t.labels[`topic.${card.topic}`] ?? card.topic)}</span>` : '',
-        escape(countriesOf(card, t).join(' · ')),
+        countriesOf(card, t).length > 0 ? `<span class="ng-ink" style="color:${LIGHT.ink}">${escape(countriesOf(card, t).join(' · '))}</span>` : '',
         card.publishedAt ? escape(when(card.publishedAt, t)) : '',
         card.language ? languageMark(card.language, t).trim() : '',
     ].filter(Boolean).join(' · ')}</p></td>

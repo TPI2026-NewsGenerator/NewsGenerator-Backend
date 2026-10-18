@@ -43,7 +43,8 @@ The cards sent count as read: their stories are left out of the next briefings f
 - Sent to another address than the account's: the "why" of each card is left out (it is written to the
   reader) and the answers go to the reader (`Reply-To`).
 - `briefingMail` (`services/utils/briefing-mail.js`): a table with inline styles, the colours and fonts of
-  the page, dark where the mail app follows the system; per card its number, topic, date and language,
+  the page, dark where the mail app follows the system; per card its number, countries (not its topic: the
+  same card after card, the user, 18.10.2026), date and language,
   title, why, picture, its sentences in the way chosen (or the AI's, without saying so), its official
   sources boxed right under them, its analysis, denials, angles, where to read it, and the notes of its
   margin. No "Who tells it", nothing says what is translated. Titled with the profile's name and the day

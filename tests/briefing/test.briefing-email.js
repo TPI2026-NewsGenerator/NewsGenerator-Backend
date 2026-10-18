@@ -275,6 +275,16 @@ describe('briefingMail', () => {
         expect(html).not.toContain('Gipfel gegen Infantino');
     });
 
+    it('should say the countries of a card above its title, in the reader language, never its topic', () => {
+        const items = [{...briefing.items[0], countries: ['CH', 'DE']}, {...briefing.items[1], countries: []}];
+        const {html, text} = briefingMail({...briefing, items}, {language: 'fr', labels: LABELS});
+
+        expect(html).toContain('Suisse · Allemagne');
+        expect(text).toContain('(Suisse, Allemagne)');
+        // the cards of one reader are of one topic, "sport" card after card (the user, 18.10.2026)
+        expect(html).not.toMatch(/>sport</i);
+    });
+
     it('should keep each medium and its language on one line, the media following each other with a comma', () => {
         const {html} = briefingMail({...briefing, items: [card(1, 'Story', {articles: [
             {source: 'media.fr', url: 'https://media.fr/1', language: 'fr'},
