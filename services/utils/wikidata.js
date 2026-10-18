@@ -83,6 +83,26 @@ export const exactItems = async (name, language = 'en') => {
         .map(item => item.id))];
 };
 
+// A person named as several items are: the one of them who is a human (P31 Q5) and is in far more
+// Wikipedias than any other (sitelinks), the famous one. A famous name has the most namesakes: "David
+// Beckham" a Canadian candidate, "Donald Trump" songs. On 40 names often met and never linked (18.10.2026)
+// the persons were all told right (Trump 334 against 6, Messi 226 against 0, Lula 150 against 13), and
+// "Michael Oliver" (the referee among 9) left alone. null when none stands out
+export const MIN_SITELINKS = 10;
+export const SITELINKS_AHEAD = 3;
+export const famousHuman = async (qids) => {
+    const asked = [...new Set(qids.filter(isQid))].slice(0, EXACT_FOUND);
+    if (asked.length === 0) return null;
+    const params = new URLSearchParams({action: 'wbgetentities', ids: asked.join('|'), props: 'claims|sitelinks', format: 'json'});
+    const entities = (await ask(`${API}?${params}`)).entities ?? {};
+    const humans = asked.map(qid => entities[qid])
+        .filter(item => item && item.missing === undefined && (item.claims?.P31 ?? []).some(claim => claim.mainsnak?.datavalue?.value?.id === 'Q5'))
+        .map(item => ({qid: item.id, links: Object.keys(item.sitelinks ?? {}).length}))
+        .sort((a, b) => b.links - a.links);
+    const [first, second] = humans;
+    return first && first.links >= MIN_SITELINKS && first.links >= SITELINKS_AHEAD * (second?.links ?? 0) ? first.qid : null;
+};
+
 // The channels an item publishes on, as Wikidata gives them: its website and its accounts
 const CHANNELS = {site: 'P856', x: 'P2002', instagram: 'P2003', facebook: 'P2013', youtube: 'P2397', tiktok: 'P7085',
     mastodon: 'P4033', bluesky: 'P12361', telegram: 'P3789'};

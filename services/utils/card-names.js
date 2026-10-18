@@ -121,15 +121,57 @@ const chosenNames = (rows, articles, {media = [], max = NAMES_PER_CARD} = {}) =>
         .slice(0, max);
 };
 
+// A family name alone ("Infantino") is no item of Wikidata (a family name, a village, a page of
+// namesakes): it is the person linked whose name ends with it ("Gianni Infantino"), when that one is met
+// SURNAME_AHEAD times more than any other so named; a person whatever the tagger took it for on this card
+// when it takes that word for a person most of the time ("Infantino": a person 1 194 times, an
+// organisation 329, a place 124, 18.10.2026), never a club ("Milan") named like someone
+const SURNAME_AHEAD = 3;
+const MIN_SURNAME = 4;
+const surnameKey = (name) => {
+    const key = bare(mentionKey(name.name));
+    return !name.qid && !key.includes(' ') && key.length >= MIN_SURNAME && ['person', 'organization'].includes(name.kind) ? key : null;
+};
+// names: the names of each card (see chosenNames); rows: [{word, qid, seen, asPerson, asOther}] (see
+// MentionModel.personsEndingWith), the most met first for each word. The names as the card writes them,
+// with the person's item and kind (the writing most met was "President Trump", "C. Ronaldo"); a card
+// naming that person already keeps it once
+export const withSurnamesLinked = (names, rows) => {
+    const byWord = new Map();
+    for (const row of rows) byWord.set(row.word, [...(byWord.get(row.word) ?? []), row]);
+    const personOf = (name) => {
+        const [first, second] = byWord.get(surnameKey(name)) ?? [];
+        if (!first || first.seen < SURNAME_AHEAD * (second?.seen ?? 0)) return null;
+        return name.kind === 'person' || first.asPerson > first.asOther ? first : null;
+    };
+    return names.map(card => {
+        const shown = new Set(card.filter(name => name.qid).map(name => name.qid));
+        return card.flatMap(name => {
+            const person = surnameKey(name) ? personOf(name) : null;
+            if (!person) return [name];
+            if (shown.has(person.qid)) return [];
+            shown.add(person.qid);
+            return [{...name, qid: person.qid, kind: 'person'}];
+        });
+    });
+};
+
 // {storyId -> [{name, qid, kind}]} of these cards: [{storyId, ids (of its articles), media}]. The names
 // shown that Wikidata was never asked for are asked for first (see MentionModel.want): one that is an
-// item opens its page, with its links, instead of the page of the name
+// item opens its page, with its links, instead of the page of the name. A family name alone is the
+// person it is the name of (see withSurnamesLinked)
 export const namesOfCards = async (cards) => {
     const chosen = await Promise.all(cards.map(async (card) =>
         [card.storyId, chosenNames(await MentionModel.namesOfArticles(card.ids, LEAST_NEWS), card.ids.length, {media: card.media})]));
-    const ids = chosen.flatMap(([, names]) => names.filter(name => !name.qid && name.id).map(name => name.id));
+    const words = [...new Set(chosen.flatMap(([, names]) => names.map(surnameKey).filter(Boolean)))];
+    const persons = await MentionModel.personsEndingWith(words).catch(err => {
+        console.error(`Names: the family names were not read (${err.message})`);
+        return [];
+    });
+    const linked = withSurnamesLinked(chosen.map(([, names]) => names), persons);
+    const ids = linked.flatMap(names => names.filter(name => !name.qid && name.id).map(name => name.id));
     if (ids.length > 0) await MentionModel.want({ids}).catch(err => console.error(`Names: not asked first in Wikidata (${err.message})`));
-    return new Map(chosen.map(([storyId, names]) => [storyId, names.map(group => ({name: group.name, qid: group.qid ?? null, kind: group.kind}))]));
+    return new Map(chosen.map(([storyId], i) => [storyId, linked[i].map(group => ({name: group.name, qid: group.qid ?? null, kind: group.kind}))]));
 };
 
 // The names met on several cards a reader was shown that they follow neither as an item of Wikidata nor

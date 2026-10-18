@@ -48,6 +48,7 @@ package "utils" {
     }
     class wikidata {
         + exactItems(name, language)
+        + famousHuman(qids)
     }
 }
 note bottom of mentions
@@ -58,7 +59,9 @@ note bottom of mentions
 end note
 note bottom of wikidata
     A 429, or "too busy": nothing asked by
-    the process for Retry-After or 30 s
+    the process for Retry-After or 30 s.
+    famousHuman: the human of several items
+    far more known (sitelinks) than the others
 end note
 
 package "Data" {
@@ -68,6 +71,7 @@ package "Data" {
         + save(tagged)
         + toLink({least, limit})
         + setLink(id, qid)
+        + personsEndingWith(words)
         + deleteUnused()
     }
     class "articles" as articlesTable <<table>> {

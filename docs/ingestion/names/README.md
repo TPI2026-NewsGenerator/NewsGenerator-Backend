@@ -39,8 +39,18 @@ what finds the other angles of a card through its rare names.
   3 news or more (`LINK_LEAST`), the most named first. `exactItems` (`services/utils/wikidata.js`) searches
   `wbsearchentities` in the language of the name, then in English, and keeps the items called exactly so,
   pages of a family or given name aside. `setLink` stores the qid when one item only is called so, `null`
-  when none or several ("LFF" of Latvia and of Lithuania). One name every 7 s (`LINK_PAUSE_MS`); nothing left:
+  when none or several ("LFF" of Latvia and of Lithuania). Since 18.10.2026 a person named as several items are
+  is the human among them (P31 Q5) in far more Wikipedias than the others (`famousHuman`: 10 at least, 3 times
+  the next one): "Donald Trump" is no song, "David Beckham" no Canadian candidate; "Michael Oliver", the
+  referee among 9, stays unlinked. One name every 7 s (`LINK_PAUSE_MS`); nothing left:
   10 minutes. A 429 or "too busy" pauses every call of the process to Wikidata for `Retry-After` or 30 s.
+- **A family name alone** on a card (`withSurnamesLinked`, `services/utils/card-names.js`, since 18.10.2026):
+  "Infantino" is no item of Wikidata (a family name, a village, a page of namesakes). It is the person linked
+  whose name ends with it (`MentionModel.personsEndingWith`, read through the index of the names linked),
+  when that one is met 3 times more than any other so named, and a person whatever the tagger took it for
+  on that card, when the tagger takes that word for a person most of the time ("Infantino": a person 1,194
+  times, an organisation 329, a place 124). A club named like someone ("Milan", a cyclist) stays a club.
+  The card keeps its writing of the name.
 - **Report and housekeeping.** Every hour the log says what each tagger did and what is left
   (`untaggedCount`); once a day `deleteUnused` deletes the names no news names any more that were never looked
   for in Wikidata. The ones looked for are kept on purpose, whether a news still names them or not (the user,
@@ -56,6 +66,11 @@ what finds the other angles of a card through its rare names.
   to 5,300-5,900 (13.10.2026).
 - Acronyms (`bench/ner-recall.mjs`, 2662 news of 30 days): the names of the UEFA were in 72 of the texts the
   tagger read and in 35 of its names.
+- 18.10.2026: of the 1,072 persons and organisations met 500 times or more, 263 were linked: one item only
+  called so left out the famous ones, who have the most namesakes (FIFA: an album and a song of Angélique
+  Kidjo; Manchester City: its women's team). On 40 of them never linked, the persons told apart by
+  `famousHuman` were 4 out of 4 right; the organisations by their Wikipedias only 9 out of 14 (Liverpool and
+  Roma the cities, Juventus a basketball team): not used for them.
 - Wikidata without an account let 9 or 10 searches through then answered 429 for 12 to 25 s; one every 6.5 s
   went through 30 times in a row (13.10.2026): one every 7 s, about 12,000 names a day, for about 150,000
   waiting.

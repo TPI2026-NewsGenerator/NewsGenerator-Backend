@@ -14,7 +14,7 @@ import {RETENTION_DAYS} from "./feed-service.js";
 import {taggerDevice, taggerUrls, tagTexts} from "./utils/tagger.js";
 import {cleanMentions} from "./utils/mentions.js";
 import {languageOf} from "./utils/language.js";
-import {exactItems} from "./utils/wikidata.js";
+import {exactItems, famousHuman} from "./utils/wikidata.js";
 
 // Each tagger of NER_URL works on its own, the newest news first, none taken by another: the
 // processor of the server (2.2 news a second on 3 cores, 13.10.2026) keeps up with the news of the
@@ -109,7 +109,10 @@ const work = async (url) => {
 };
 
 // The names looked for in Wikidata, one at a time, the ones a reader saw first (on a card, the page of
-// a name: see MentionModel.want), then the most met: linked when one item only is called so
+// a name: see MentionModel.want), then the most met: linked when one item only is called so, or, for a
+// person, when one of the humans called so is far more known than the others (see famousHuman: one item
+// only left 1 186 of 2 130 persons met 100 times or more unlinked, Donald Trump and Messi among them,
+// 18.10.2026)
 const link = async () => {
     for (;;) {
         let rows = [];
@@ -125,7 +128,9 @@ const link = async () => {
         for (const row of rows) {
             try {
                 const qids = await exactItems(row.name, row.lang ?? 'en');
-                await MentionModel.setLink(row.id, qids.length === 1 ? qids[0] : null);
+                const qid = qids.length === 1 ? qids[0]
+                    : qids.length > 1 && row.kind === 'person' ? await famousHuman(qids) : null;
+                await MentionModel.setLink(row.id, qid);
             } catch (err) {
                 // refused (429): wikidata.js waits the time asked before the next one
                 if (!err.paused) console.error(`Tagger: "${row.name}" not looked for in Wikidata (${err.message})`);

@@ -76,7 +76,7 @@ export const MentionModel = {
         ), often AS (
             SELECT id FROM mentions WHERE linked_at IS NULL AND seen >= $1 ORDER BY seen DESC LIMIT $2
         )
-        SELECT m.id, m.name, m.lang, m.seen FROM mentions m
+        SELECT m.id, m.name, m.kind, m.lang, m.seen FROM mentions m
         WHERE m.id IN (SELECT id FROM wanted UNION SELECT id FROM often)
         ORDER BY m.wanted_at NULLS LAST, m.seen DESC LIMIT $2`, least, limit),
 
@@ -85,6 +85,25 @@ export const MentionModel = {
     want: async ({ids = [], key = null}) => ids.length === 0 && !key ? 0 : prisma.$executeRawUnsafe(`
         UPDATE mentions SET wanted_at = now()
         WHERE (id = ANY($1::int[]) OR key = $2) AND linked_at IS NULL AND wanted_at IS NULL`, ids, key),
+
+    // [{word, qid, seen, asPerson, asOther}]: for each of these words (keys of one word: "infantino"),
+    // the persons linked to an item whose name ends with it ("gianni infantino"), each item once with how
+    // often its writings were met, the most met first; asPerson,
+    // asOther: how often the word itself was taken for a person, for anything else. Only the names linked
+    // are read (the index of their qid), not the million others
+    personsEndingWith: async (words) => words.length === 0 ? [] : prisma.$queryRawUnsafe(`
+        WITH w AS (SELECT DISTINCT unnest($1::text[]) AS word),
+        own AS (
+            SELECT key AS word, COALESCE(sum(seen) FILTER (WHERE kind = 'person'), 0)::int AS as_person,
+                   COALESCE(sum(seen) FILTER (WHERE kind <> 'person'), 0)::int AS as_other
+            FROM mentions WHERE key = ANY($1::text[]) GROUP BY key
+        )
+        SELECT w.word, m.qid, sum(m.seen)::int AS seen,
+               COALESCE(max(own.as_person), 0)::int AS "asPerson", COALESCE(max(own.as_other), 0)::int AS "asOther"
+        FROM w JOIN mentions m ON m.qid IS NOT NULL AND m.kind = 'person' AND m.key LIKE '% ' || w.word
+        LEFT JOIN own ON own.word = w.word
+        GROUP BY w.word, m.qid
+        ORDER BY w.word, seen DESC`, words),
 
     // the item of Wikidata a name is, null when none or several are called so: looked for now
     setLink: async (id, qid) => prisma.$executeRawUnsafe(`
