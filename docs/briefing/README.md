@@ -36,7 +36,14 @@ saved in `briefings.step` and shown on the page while it runs:
 6. **angles**: five parts together, none of which can fail the briefing: the [other angles](other-angles/README.md),
    the [official sources](official-source/README.md), the news of what the profile follows, the names shown
    on each card, and the AI version of the points and summary of the cards kept (asked of every story read until
-   17.10.2026, the ones unreadable or left out by `reviewCards` too).
+   17.10.2026, the ones unreadable or left out by `reviewCards` too). Then the illustration of each card
+   (`illustrationsOf`, since 18.10.2026): the picture Wikimedia Commons has of the person, else the
+   organisation, its names are, used as its picture only when none of its articles gives one.
+
+The picture of a card (`pictureOf`) is the one its article's page gives to be shared (`og:image`) first, the one
+its feed gave after (since 18.10.2026: often a thumbnail); a site's picture for pages without one is never taken.
+Without either, its illustration, captioned "Illustration" and credited to its author and licence (see
+[e-mail](email/README.md)).
 
 Then the cards are saved (`briefings.items`, status `ready`), and the [analysis](analysis-ia/README.md) starts,
 not awaited (`briefings.analysis`, the client asking every 8 s while it runs).

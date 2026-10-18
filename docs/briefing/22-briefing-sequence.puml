@@ -11,7 +11,7 @@ participant "storyModel\n+ feedModel" as Stories
 participant "googleNews\n+ repeats" as Pick
 participant profileAi as AI
 participant "crawlers\n+ extract\n+ contested\n+ aiWays" as Read
-participant "otherAngles\n+ officialSources\n+ cardNames\n+ entityService" as Around
+participant "otherAngles\n+ officialSources\n+ cardNames\n+ entityService\n+ illustrations" as Around
 participant cardAnalysis as Analysis
 participant briefingModel as BriefingModel
 database "PostgreSQL" as DB
@@ -108,8 +108,10 @@ group step "angles"
     end
     note right : none of them can fail the briefing
     Briefing -> BriefingModel : watched(briefing, watched)
+    Briefing -> Around : illustrationsOf(names): Wikidata P18,\nWikimedia Commons (a person, else an organisation)
+    note right : cannot fail the briefing either
 end
-Briefing -> Briefing : the cards: corroborationOf, hedgedBy, pictureOf
+Briefing -> Briefing : the cards: corroborationOf, hedgedBy, pictureOf\n(the page's og:image first), withIllustration
 alt written
     Briefing -> BriefingModel : finish(briefing, cards)
     BriefingModel -> DB : items, status ready

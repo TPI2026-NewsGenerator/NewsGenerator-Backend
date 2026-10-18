@@ -1470,7 +1470,16 @@ is kept any more. The links of the e-mails sent before still lead to theirs (`GE
 The pictures offered for an e-mail are the ones at least 560 pixels wide, the width of the picture in the
 e-mail: 49 of the 289 pictures of 6 briefings were narrower, some 72 pixels (`bench/picture-sizes.mjs`).
 The browser measures them as it loads them (client `mailPictures.js`); a card whose own picture is too
-small gets the best other of its story (lying before standing, the widest), else none.
+small gets the best other of its story (one of its articles before its illustration, lying before
+standing, the widest), else none.
+
+Since 18.10.2026 the picture of a card is the one its article's page gives to be shared (`og:image`)
+before its feed's, often a thumbnail: of 142 cards of 12 briefings, 116 have one of 560 pixels or more
+instead of 98. A card none of whose articles gives a picture takes its **illustration**
+(`services/utils/illustrations.js`): the picture Wikimedia Commons has (Wikidata P18) of the person its
+articles name most, else of the organisation, 560 pixels wide at least, captioned "Illustration —
+Wikimedia Commons · author, licence", never taken by the e-mail before a sharp picture of its articles.
+Of 200 cards, 86 have one; an organisation's is its building (the seat of UEFA).
 
 [//]: # (How to set up the database?)
 

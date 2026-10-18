@@ -8,6 +8,7 @@ participant "briefingRouter\n+ jwt, admin, rateLimit" as Router
 participant briefingController as Controller
 participant briefingService as Briefing
 participant "mailPictures\n+ publicUrl" as Pictures
+participant "mailLabels\n+ translateTexts" as Labels
 participant briefingMail as Mail
 participant "briefingModel, userModel,\nprofileModel, sentMailModel" as Models
 participant mailer as Mailer
@@ -31,8 +32,8 @@ opt the picture of a card changed, or its own too small
     Briefing -> Models : articlePictures(storyId, links of the card)
     Models -> DB : the thumbnails the feeds gave its articles (30)
     Briefing -> Pictures : storyPictures(item, rows)
-    Briefing --> Client : [{url, source}], the one of the card first
-    note right of Client : the browser measures them: one narrower than\n560 px is put aside, the best other of the story\ntaken instead, else none
+    Briefing --> Client : [{url, source, illustration}], the one of the card first,\nits illustration (Wikimedia Commons) last
+    note right of Client : the browser measures them: one narrower than\n560 px is put aside, the best other of the story\ntaken instead (one of its articles before its\nillustration), else none
 end
 note over Client : a news can also be added by its link\n(POST /briefing/:id/news, see importNews)
 
@@ -64,8 +65,11 @@ Briefing -> Pictures : withChosenPictures(cards, pictures, {sender, known})
 Pictures -> Pictures : assertPublicUrl(url), or the type\nof a file by its first bytes
 note right : 2 MB a file, 6 MB an e-mail: else 400
 Pictures --> Briefing : {items, attachments}
-Briefing -> Mail : briefingMail(briefing, {profile, sender, format})
-note right : "Roberto’s Briefing · 13 October 2026";\nthe subject adds the number of stories
+Briefing -> Labels : labelsFor(readerLanguage(profile)),\nwithHedgedTranslated(cards, language)
+note right : the words of the e-mail translated once per\nlanguage and kept; English when the AI fails
+Labels --> Briefing : labels, the cards with hedgedTranslation
+Briefing -> Mail : briefingMail(briefing, {profile, sender, format,\nlanguage, labels})
+note right : "Le briefing de Fab · 16 octobre 2026";\nthe subject adds the number of stories
 Mail --> Briefing : {subject, html, text}
 Briefing -> Mailer : sendMail({to, replyTo, subject, html, text, attachments})
 alt no SMTP account

@@ -45,7 +45,8 @@ read, and the sites of most big clubs publish no feed.
   twice, the sentences reversed the second time; kept when both answers say the party itself said the
   card's own fact (`confirmingOf`).
 - `withStatements`: the posts first, then the statements of the parties with no post, 2 at most
-  (`MAX_OFFICIAL`). A statement in another language than the reader's is translated; a post read through
+  (`MAX_OFFICIAL`). A statement in another language than the reader's is translated, and since 18.10.2026 the
+  title of a post too (its language told by its title, `languageOf`), shown in place of it in the e-mail; a post read through
   Google News gets the address of the site (`withSiteLinks`, saved with `saveResolvedLinks`). The party is
   named as its item says it (`partyName`: its acronym, else the AI's name, else the English label).
 - Left out on purpose: YouTube (a title, no statement) and a denial by a party (see the measures).

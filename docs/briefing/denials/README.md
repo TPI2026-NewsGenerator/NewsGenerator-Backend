@@ -28,7 +28,7 @@ at most, of two different deniers; most cards have none.
   (`MAX_CANDIDATES`), in the order the articles are read.
 - No such sentence: no call, no denial. Otherwise one call (`ollamaJson`, gemma4:31b, Gemini when Ollama fails)
   with the card's title and the sentences, each with its medium. For each sentence the AI answers who denies by
-  name (`denied_by`), the claim, whether it is about them (`self`), whether it is the card's own news (`about`
+  name, in the reader's language since 18.10.2026 (`denied_by`, asked in English before), the claim, whether it is about them (`self`), whether it is the card's own news (`about`
   "main" or "side") and whether the sentence reports a denial as a fact ("did not deny", a refusal, an opinion,
   a journalist's analysis are not).
 - The code keeps a sentence only when `denial` and `self` are true, `about` is "main" and a name is given, each
@@ -42,7 +42,8 @@ at most, of two different deniers; most cards have none.
 - In the e-mail, `MailAside` lists the card's denials, each with a box; the ones unticked go to
   `removed: {storyId: {contested: [index]}}`, and `withoutTakenOut` drops them before `briefingMail` writes
   "Contested" (`contestedHtml`). In the e-mail the translation is shown in place of the original sentence when
-  there is one.
+  there is one, and "Contested" and "X denies:" are in the reader's language (`labelsFor`, see
+  [e-mail](../email/README.md)).
 
 The denials do not depend on the way the card is read: they are shown under the key passages, the summary or the
 bullet points alike.

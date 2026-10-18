@@ -276,7 +276,8 @@ Deux appels partent ensemble. Le premier garde, dans chaque histoire, les articl
 Maintenant seulement, les pages sont téléchargées : 5 articles par histoire au plus, un par média. L'article d'un média de confiance est lu en premier, puis celui dans la langue du lecteur.
 
 - Le texte est extrait de la page comme le fait le mode lecture de Firefox. Depuis le 8 octobre, une simple lecture de la page d'abord, Crawlee seulement pour les pages manquées : ses en-têtes de navigateur inventés faisaient refuser L'Équipe, Le Télégramme ou phys.org.
-- Chaque carte garde l'article d'où viennent ses passages, et l'image de sa page (og:image) quand le flux n'en donnait pas.
+- Chaque carte garde l'article d'où viennent ses passages, et l'image de sa page (og:image) avant celle du flux, souvent une miniature (18 octobre : 116 cartes sur 142 avec une image d'au moins 560 pixels au lieu de 98). L'image qu'un site met à toutes ses pages sans photo (« default », « logo ») n'est jamais prise.
+- Sans image d'aucun de ses articles, une carte prend son illustration : la photo que Wikimedia Commons a de la personne, sinon de l'organisation, que ses articles nomment le plus, légendée « Illustration » avec son auteur et sa licence (18 octobre).
 - Un lien Google News n'est qu'une redirection : au plus 10 adresses réelles demandées par briefing (Google bloque vers 40 par heure).
 - Mesuré : 85 % des articles lisibles (60 mots ou plus), 96 % des histoires en ont au moins un.
 - Une histoire dont aucune page n'est lisible (un paywall, un site protégé), ou que la relecture retire (C6), ne devient jamais une carte : la suivante de la réserve prend sa place, lue à son tour, en 2 tours au plus. Sans réserve, le briefing montre moins de cartes plutôt qu'une carte vide.
@@ -392,9 +393,9 @@ Une seule liste, une seule page Following (13 octobre) : des fiches de Wikidata 
 
 ### D4 · Envoyer des cartes par e-mail
 
-Pour les administrateurs : le lecteur coche des cartes, les met dans l'ordre voulu, choisit comment elles se lisent (passages clés, points ou résumé, et la version de l'IA carte par carte) et les envoie à son adresse ou à une autre. L'e-mail reprend la mise en page du site et n'appelle aucune IA : il reprend ce que le briefing a écrit.
+Pour les administrateurs : le lecteur coche des cartes, les met dans l'ordre voulu, choisit comment elles se lisent (passages clés, points ou résumé, et la version de l'IA carte par carte) et les envoie à son adresse ou à une autre. L'e-mail reprend la mise en page du site et ce que le briefing a écrit, entièrement dans la langue du lecteur : ses propres mots (« Key points », « Contested »…) sont traduits par l'IA une fois par langue, ses dates écrites dans cette langue (18 octobre).
 
-- Pour chaque carte : un autre titre, une autre image (celles de l'histoire, une adresse ou un fichier), sans les démentis ou les angles qu'il retire. Seules les images d'au moins 560 pixels de large sont proposées ; une image trop petite est remplacée par la meilleure de l'histoire.
+- Pour chaque carte : un autre titre, une autre image (celles de l'histoire, une adresse ou un fichier), sans les démentis ou les angles qu'il retire. Seules les images d'au moins 560 pixels de large sont proposées ; une image trop petite est remplacée par la meilleure de l'histoire, une photo de ses articles avant son illustration.
 - Titre au nom du profil et du jour, « Roberto’s Briefing · 13 October 2026 », jamais celui du compte ; objet « Fab's Briefing · 16 October 2026 · 2 stories ». Envoyé à une autre adresse, la raison du choix de chaque carte est retirée et une réponse va au lecteur.
 - Chaque carte porte son analyse, ligne par ligne (15 octobre), et sa source officielle dans un encadré juste sous ses phrases (16 octobre). Rien ne dit ce qui est traduit (16 octobre). Le lecteur peut retirer une ligne : un démenti, un angle, une source officielle, une ligne d'analyse.
 - Les cartes envoyées sont marquées : leurs histoires ne reviennent pas dans les briefings des 48 heures suivantes, sauf comme suite (C1).

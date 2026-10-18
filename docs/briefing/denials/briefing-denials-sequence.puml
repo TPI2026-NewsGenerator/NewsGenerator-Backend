@@ -23,7 +23,7 @@ alt no sentence with a verb of denial
     Contested --> Briefing : [] (no call)
 else
     Contested -> Ollama : ollamaJson(prompt: the title, the sentences and their media)
-    Ollama --> Contested : {sentences: [{n, denied_by, claim, self, about, denial}]}
+    Ollama --> Contested : {sentences: [{n, denied_by (in the reader's language),\nclaim, self, about, denial}]}
     Contested -> Contested : kept: denial, self, about "main", someone named,\na denier once; 2 at most
     opt a quote in another language than the reader's
         Contested -> Extract : translateTexts (figures checked)
