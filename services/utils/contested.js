@@ -47,13 +47,15 @@ const ANY_DENIAL = new RegExp(Object.values(WORDS).flat().join('|'), 'iu');
 export const hasDenial = (sentence, language = null) =>
     (language ? DENIALS[language] ?? DENIALS.en : ANY_DENIAL).test(sentence);
 
-const prompt = (title, candidates) => `A news card: "${title}"
+// reader: the name in English of the reader's language, the one "denied_by" is written in (the user,
+// 18.10.2026: all of the e-mail in the reader's language)
+const prompt = (title, candidates, reader = 'English') => `A news card: "${title}"
 
 Sentences of articles on it, each with a verb of denial:
 ${candidates.map((candidate, i) => `[${i + 1}] (${candidate.source}) ${candidate.sentence}`).join('\n')}
 
 For each sentence, in this order:
-denied_by: who denies, disputes or rejects something, in English, by their name: "Manchester City", not
+denied_by: who denies, disputes or rejects something, in ${reader}, by their name: "Manchester City", not
   "the club" or "he", when the card or the sentence tells who it is; "" when nobody named does.
 claim: what they deny, in a few words.
 self: true when that claim is about them or about what they did (an accusation, a charge, a report on
@@ -80,7 +82,7 @@ export const contestedOf = async (title, texts, {language = 'en', usage = null} 
     }).slice(0, MAX_CANDIDATES);
     if (candidates.length === 0) return [];
 
-    const answer = await ollamaJson(prompt(title, candidates), usage);
+    const answer = await ollamaJson(prompt(title, candidates, writtenIn(language) ?? 'English'), usage);
     const deniers = new Set();
     const shown = [];
     for (const read of Array.isArray(answer?.sentences) ? answer.sentences : []) {

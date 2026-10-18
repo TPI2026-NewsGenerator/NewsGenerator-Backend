@@ -4,7 +4,8 @@ An administrator sends cards of a briefing by e-mail, to their own address or to
 at the foot of the page they tick and order the cards, choose how their sentences are read (key passages,
 key points or the summary), the AI version of a card's points or summary, the picture of each card,
 their own title, and take out the lines they do not want (a denial, an angle, an official source, a line
-of the AI analysis). The e-mail lays out what the briefing wrote, as the page shows it: it calls no AI.
+of the AI analysis). The e-mail lays out what the briefing wrote, as the page shows it, all of it in the
+reader's language: only its own words are translated when it is sent, once per language.
 The cards sent count as read: their stories are left out of the next briefings for 48 hours.
 
 ## Where
@@ -47,6 +48,16 @@ The cards sent count as read: their stories are left out of the next briefings f
   sources boxed right under them, its analysis, denials, angles, where to read it, and the notes of its
   margin. No "Who tells it", nothing says what is translated. Titled with the profile's name and the day
   ("Roberto’s Briefing · 13 October 2026"), the subject adds the number of stories.
+- In the reader's language (`readerLanguage` of the profile, `services/utils/mail-labels.js`): `labelsFor`
+  translates `LABELS` (`briefing-mail.js`, "Key points", "Contested", "{by} denies:"...) with
+  `translateTexts`, once per language while the server runs; a translation that lost a `{place}` keeps
+  its English. The AI not answering, the e-mail is in English, its dates too. `withHedgedTranslated`
+  translates the words of an article saying it has no confirmation ("selon nos informations"). Dates
+  and names of languages in that language (`Intl`). Written by the briefing since 18.10.2026: who denies
+  in that language (`contested.js`), the titles of the official posts translated (`official-sources.js`).
+- The picture of a card (`pictureOf`): the one its article's page gives to be shared (`og:image`) first,
+  the one its feed gave after (since 18.10.2026); a site's picture for pages without one ("default",
+  "placeholder", "logo" in its address) is never taken (`crawlers.js` `pageImage`).
 - `sendMail` (nodemailer, Gmail by default): no account 503, refused by the SMTP server 502 (its answer
   in the logs). Then `BriefingModel.markSent` writes `sentAt` on each card sent; the next briefings leave
   their stories out for 48 hours (`repeats.js`); a failure there is only logged.
@@ -58,6 +69,9 @@ The cards sent count as read: their stories are left out of the next briefings f
 
 - 49 of the 289 pictures of 6 briefings were narrower than 560 px, some 72 px (`bench/picture-sizes.mjs`,
   server/README.md "The e-mail"); hence the measure in the browser.
+- 18.10.2026, 142 cards of 12 briefings: the `og:image` of the lead's page is its picture already for 69,
+  wider than its feed's for 35, narrower for 17 (both sharp); with it first, 116 cards have one of 560 px or
+  more instead of 98. Of 122 cards, 8 had no sharp picture in the gallery: 6 have one in a page's `og:image`.
 - The account of the server is a Gmail one, which Gmail limits to 500 e-mails a day (comment of
   `routes/briefing-router.js`): hence 10 an hour and 30 a day.
 

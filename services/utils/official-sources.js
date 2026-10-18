@@ -18,7 +18,7 @@ import {Crawlers} from './crawlers.js';
 import {hostOf, mediumOf} from './public-url.js';
 import {statementsOf} from './statements.js';
 import {translateTexts} from './extract.js';
-import {writtenIn} from './language.js';
+import {languageOf, writtenIn} from './language.js';
 import {OfficialModel} from '../../models/official-model.js';
 import {FeedModel} from '../../models/feed-model.js';
 import {decodeLinks, isGoogleNewsUrl} from './google-news.js';
@@ -404,8 +404,11 @@ export const officialSourcesOf = async (cards, usage = null, {language = 'en'} =
             channel: 'reported',
             publishedAt: statement.publishedAt,
         }))));
-    // the statements quoted in another language than the reader's translated, as the denials are
-    const foreign = shown.flat().filter(item => item.channel === 'reported' && item.language && item.language !== language
+    // the statements quoted and the titles of the posts in another language than the reader's
+    // translated, as the denials are (the user, 18.10.2026: the posts too). A post's language told by
+    // its title
+    for (const item of shown.flat()) if (item.channel !== 'reported') item.language = languageOf(item.title);
+    const foreign = shown.flat().filter(item => item.language && item.language !== language
         && writtenIn(item.language) && writtenIn(language));
     const [translations] = await Promise.all([
         foreign.length === 0 ? [] : translateTexts(foreign.map(item => ({text: item.title, from: writtenIn(item.language)})),

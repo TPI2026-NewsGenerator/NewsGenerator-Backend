@@ -13,6 +13,7 @@
 "use strict"
 
 import {languageName} from './language.js';
+import {TOPICS} from './topics.js';
 
 // The colours and fonts of the page (client styles/index.css). Mail apps keep inline styles and simple
 // tables only; the fonts of the page are asked from Google Fonts, which Apple Mail and Outlook for Mac
@@ -27,8 +28,60 @@ const FONTS = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..14
 const escape = (value) => String(value ?? '').replace(/[&<>"']/g, char => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'})[char]);
 // an address of the web only: a link or a picture never runs anything
 const webUrl = (url) => /^https?:\/\//i.test(String(url ?? '')) ? String(url) : null;
-const when = (iso) => iso ? new Date(iso).toLocaleString('en-GB', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich'}) : '';
-const day = (iso) => iso ? new Date(iso).toLocaleDateString('en-GB', {day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Zurich'}) : '';
+// The words of the e-mail around what its cards say, in English, translated for a reader of another
+// language (see mail-labels.js); {name} a value put in when it is written: a name, a number, a link
+export const LABELS = {
+    keyPoints: 'Key points',
+    summary: 'Summary',
+    keyPassages: 'Key passages',
+    writtenIn: 'Written in {language}',
+    picture: 'Picture',
+    addedByYou: 'added by you',
+    addedBy: 'added by {name}',
+    officialSources: 'Official sources',
+    officialSource: 'Official source',
+    saidIt: '{party} said it:',
+    saidItReported: '{party} said it, reported by {source}:',
+    whyItMatters: 'Why it matters',
+    whatNext: 'What could come next',
+    if: 'If',
+    then: 'then',
+    storySoFar: 'The story so far',
+    contested: 'Contested',
+    denies: '{by} denies:',
+    otherAngles: 'Same affair, other angles',
+    otherAngle: 'Other angle:',
+    toldBy: 'told by {count} media',
+    readAt: 'Read the article at {source}',
+    alsoCovered: 'Also covered by',
+    andMore: 'and {count} more',
+    notConfirmed: 'Not confirmed',
+    unconfirmed: 'unconfirmed: “{words}”',
+    briefingOf: '{name}’s Briefing',
+    briefing: 'Briefing',
+    oneStory: '1 story',
+    stories: '{count} stories',
+    // the topic of a card (see topics.js), as a word
+    ...Object.fromEntries(TOPICS.map(topic => [`topic.${topic}`, topic])),
+};
+
+// t: the words of the e-mail in the reader's language (labels, see mail-labels.js), the language the
+// names of languages are written in, and the locale of its dates
+const toldIn = (language = 'en', labels = LABELS) => {
+    let locale = 'en-GB';
+    try {
+        if (language !== 'en') locale = Intl.DateTimeFormat.supportedLocalesOf([language])[0] ?? 'en-GB';
+    } catch {
+        // not a language code: in English
+    }
+    return {labels, language, locale};
+};
+const ENGLISH = toldIn();
+// a label with its {places} filled: the values are HTML already, the label is escaped
+const fill = (template, values = {}) => escape(template).replace(/\{(\w+)\}/g, (place, name) => values[name] ?? place);
+const fillText = (template, values = {}) => template.replace(/\{(\w+)\}/g, (place, name) => values[name] ?? place);
+const when = (iso, t = ENGLISH) => iso ? new Date(iso).toLocaleString(t.locale, {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich'}) : '';
+const day = (iso, t = ENGLISH) => iso ? new Date(iso).toLocaleDateString(t.locale, {day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Zurich'}) : '';
 const paragraphsOf = (text) => String(text ?? '').split(/\n\s*\n/).map(paragraph => paragraph.trim()).filter(Boolean);
 
 // The ways the sentences of a card can be sent in, as the page shows them (client formats.js): the 3
@@ -36,24 +89,24 @@ const paragraphsOf = (text) => String(text ?? '').split(/\n\s*\n/).map(paragraph
 // card of a briefing written before the first two (12.10.2026) has its key passages only
 export const MAIL_FORMATS = ['points', 'digest', 'passages'];
 const WAYS = {
-    points: {text: 'points', translation: 'pointsTranslation', title: 'Key points'},
-    digest: {text: 'digest', translation: 'digestTranslation', title: 'Summary'},
-    passages: {text: 'summary', translation: 'translation', title: 'Key passages'},
+    points: {text: 'points', translation: 'pointsTranslation', title: 'keyPoints'},
+    digest: {text: 'digest', translation: 'digestTranslation', title: 'summary'},
+    passages: {text: 'summary', translation: 'translation', title: 'keyPassages'},
 };
 // {paragraphs, title, way}: the sentences of the card in the way asked, their translation
 // when the article is written in another language than the reader's. A card the reader sends in its AI
 // version (aiVersion, see ai-ways.js) has the points or the summary the AI wrote in the reader's
 // language, without saying so (the user, 15.10.2026), when it has one in that way
-const wayOf = (card, format) => {
+const wayOf = (card, format, t = ENGLISH) => {
     if (card.aiVersion && format === 'points' && card.ai?.points?.length) {
-        return {paragraphs: card.ai.points, title: WAYS.points.title, way: 'points'};
+        return {paragraphs: card.ai.points, title: t.labels[WAYS.points.title], way: 'points'};
     }
     if (card.aiVersion && format === 'digest' && card.ai?.summary) {
-        return {paragraphs: [card.ai.summary], title: WAYS.digest.title, way: 'digest'};
+        return {paragraphs: [card.ai.summary], title: t.labels[WAYS.digest.title], way: 'digest'};
     }
     const way = format === 'points' && card.points ? 'points' : format === 'digest' && card.digest ? 'digest' : 'passages';
     const {text, translation, title} = WAYS[way];
-    return {paragraphs: paragraphsOf(card[translation] || card[text]), title, way};
+    return {paragraphs: paragraphsOf(card[translation] || card[text]), title: t.labels[title], way};
 };
 
 // the text styles of the page (kicker, caption, body-text, link); the classes ng-* take the dark colours
@@ -76,8 +129,8 @@ const DARK_STYLE = `
 // the language a source writes in, next to its name (client LanguageMark.jsx). Inline, not
 // inline-block: a mail app of the user put each mark on a line of its own, and the medium after it on
 // the next one (14.10.2026)
-const languageMark = (code) => code
-    ? ` <span class="ng-box" title="Written in ${escape(languageName(code))}" style="border:1px solid ${LIGHT.rule};padding:0 4px;font:500 11px/1.35 ${MONO};letter-spacing:.04em;color:${LIGHT.mute};text-transform:uppercase;white-space:nowrap">${escape(code)}</span>`
+const languageMark = (code, t = ENGLISH) => code
+    ? ` <span class="ng-box" title="${fill(t.labels.writtenIn, {language: escape(languageName(code, t.language))})}" style="border:1px solid ${LIGHT.rule};padding:0 4px;font:500 11px/1.35 ${MONO};letter-spacing:.04em;color:${LIGHT.mute};text-transform:uppercase;white-space:nowrap">${escape(code)}</span>`
     : '';
 // a medium and its marks kept together on one line
 const together = (html) => `<span style="white-space:nowrap">${html}</span>`;
@@ -106,28 +159,28 @@ const wayText = ({paragraphs, way}) => way === 'points'
     ? paragraphs.map(paragraph => `• ${paragraph}`).join('\n')
     : paragraphs.join(way === 'digest' ? ' […] ' : '\n[…]\n');
 
-const contestedHtml = (denials) => denials.length === 0 ? '' : `
+const contestedHtml = (denials, t = ENGLISH) => denials.length === 0 ? '' : `
 <div class="ng-rule" style="margin-top:24px;border-left:2px solid ${LIGHT.accent};padding-left:18px">
-  ${kicker('Contested', 'accent')}
+  ${kicker(t.labels.contested, 'accent')}
   ${denials.map(denial => `
-  <p class="ng-ink" style="${BODY};margin-top:12px"><b>${escape(denial.by)} denies:</b> “${escape(denial.translation || denial.sentence)}”</p>
-  <p class="ng-mute" style="${CAPTION};margin-top:4px">— ${webUrl(denial.url) ? `<a href="${escape(denial.url)}" class="ng-mute" style="color:${LIGHT.mute}">${escape(denial.source)}</a>` : escape(denial.source)}${denial.publishedAt ? `, ${escape(when(denial.publishedAt))}` : ''}</p>`).join('')}
+  <p class="ng-ink" style="${BODY};margin-top:12px"><b>${fill(t.labels.denies, {by: escape(denial.by)})}</b> “${escape(denial.translation || denial.sentence)}”</p>
+  <p class="ng-mute" style="${CAPTION};margin-top:4px">— ${webUrl(denial.url) ? `<a href="${escape(denial.url)}" class="ng-mute" style="color:${LIGHT.mute}">${escape(denial.source)}</a>` : escape(denial.source)}${denial.publishedAt ? `, ${escape(when(denial.publishedAt, t))}` : ''}</p>`).join('')}
 </div>`;
 
 // The AI analysis of the card (see card-analysis.js), the lines the reader kept: why it matters, what
 // could come next, the earlier news of its affair. Without the "AI analysis" title nor the note saying
 // the AI wrote it, which the page shows (the user, 15.10.2026: not in the e-mail). None kept, none sent
-const dayOf = (date) => date ? new Date(`${date}T12:00:00Z`).toLocaleDateString('en-GB', {day: 'numeric', month: 'short', timeZone: 'UTC'}) : '';
-const analysisHtml = (analysis) => {
+const dayOf = (date, t = ENGLISH) => date ? new Date(`${date}T12:00:00Z`).toLocaleDateString(t.locale, {day: 'numeric', month: 'short', timeZone: 'UTC'}) : '';
+const analysisHtml = (analysis, t = ENGLISH) => {
     if (!analysis) return '';
     const why = analysis.why ?? [], next = analysis.next ?? [], timeline = (analysis.timeline ?? []).filter(item => item.title);
     if (why.length + next.length + timeline.length === 0) return '';
     const list = (lines) => `<ul style="margin:0;padding-left:22px">${lines.map(line => `<li class="ng-ink" style="${BODY};margin-top:8px">${line}</li>`).join('')}</ul>`;
     const part = (title, html, first) => `<div style="margin-top:${first ? 0 : 14}px">${kicker(title)}${html}</div>`;
     const parts = [
-        why.length > 0 && ['Why it matters', list(why.map(escape))],
-        next.length > 0 && ['What could come next', list(next.map(line => `<b>If</b> ${escape(line.if)}, <b>then</b> ${escape(line.then)}`))],
-        timeline.length > 0 && ['The story so far', timeline.map(item => `<p class="ng-ink" style="${CAPTION};color:${LIGHT.ink};margin-top:6px"><span class="ng-mute" style="color:${LIGHT.mute}">${escape(dayOf(item.date))}</span> ${webUrl(item.url)
+        why.length > 0 && [t.labels.whyItMatters, list(why.map(escape))],
+        next.length > 0 && [t.labels.whatNext, list(next.map(line => `<b>${escape(t.labels.if)}</b> ${escape(line.if)}, <b>${escape(t.labels.then)}</b> ${escape(line.then)}`))],
+        timeline.length > 0 && [t.labels.storySoFar, timeline.map(item => `<p class="ng-ink" style="${CAPTION};color:${LIGHT.ink};margin-top:6px"><span class="ng-mute" style="color:${LIGHT.mute}">${escape(dayOf(item.date, t))}</span> ${webUrl(item.url)
             ? `<a href="${escape(item.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(item.titleTranslation ?? item.title)}</a>`
             : escape(item.titleTranslation ?? item.title)}${item.medium ? ` <span class="ng-mute" style="color:${LIGHT.mute}">· ${escape(item.medium)}</span>` : ''}</p>`).join('')],
     ].filter(Boolean);
@@ -136,62 +189,65 @@ const analysisHtml = (analysis) => {
   ${parts.map(([title, html], i) => part(title, html, i === 0)).join('')}
 </div>`;
 };
-const analysisText = (analysis) => {
+const analysisText = (analysis, t = ENGLISH) => {
     if (!analysis) return [];
     const why = analysis.why ?? [], next = analysis.next ?? [], timeline = (analysis.timeline ?? []).filter(item => item.title);
     return [
-        ...(why.length > 0 ? ['Why it matters:', ...why.map(line => `• ${line}`)] : []),
-        ...(next.length > 0 ? ['What could come next:', ...next.map(line => `• If ${line.if}, then ${line.then}`)] : []),
-        ...(timeline.length > 0 ? ['The story so far:', ...timeline.map(item => `  ${dayOf(item.date)} ${item.titleTranslation ?? item.title}${item.medium ? ` (${item.medium})` : ''}`)] : []),
+        ...(why.length > 0 ? [`${t.labels.whyItMatters}:`, ...why.map(line => `• ${line}`)] : []),
+        ...(next.length > 0 ? [`${t.labels.whatNext}:`, ...next.map(line => `• ${t.labels.if} ${line.if}, ${t.labels.then} ${line.then}`)] : []),
+        ...(timeline.length > 0 ? [`${t.labels.storySoFar}:`, ...timeline.map(item => `  ${dayOf(item.date, t)} ${item.titleTranslation ?? item.title}${item.medium ? ` (${item.medium})` : ''}`)] : []),
     ];
 };
 
 // none left (the reader took them out, or none has a web address): no title either
-const anglesHtml = (given) => {
+const anglesHtml = (given, t = ENGLISH) => {
     const angles = given.filter(angle => webUrl(angle.url));
     return angles.length === 0 ? '' : `
 <div class="ng-rule" style="margin-top:28px;border-left:2px solid ${LIGHT.rule};padding-left:18px">
-  ${kicker('Same affair, other angles')}
+  ${kicker(t.labels.otherAngles)}
   ${angles.map(angle => `
   <p style="margin:12px 0 0"><a href="${escape(angle.url)}" class="ng-ink" style="font:600 17px/1.45 ${TEXT};color:${LIGHT.ink};text-decoration:none">${escape(angle.titleTranslation ?? angle.title)}</a></p>
-  <p class="ng-mute" style="${CAPTION};margin-top:4px">${together(`${escape(angle.source)}${languageMark(angle.language)}`)}${angle.publishedAt ? ` · ${escape(when(angle.publishedAt))}` : ''}${angle.media > 1 ? ` · told by ${angle.media} media` : ''}</p>`).join('')}
+  <p class="ng-mute" style="${CAPTION};margin-top:4px">${together(`${escape(angle.source)}${languageMark(angle.language, t)}`)}${angle.publishedAt ? ` · ${escape(when(angle.publishedAt, t))}` : ''}${angle.media > 1 ? ` · ${fill(t.labels.toldBy, {count: escape(angle.media)})}` : ''}</p>`).join('')}
 </div>`;
 };
 
 // where to read it (client NewsLinks.jsx): the article of the passages, then each other medium once
 const SHOWN_OTHERS = 8;
-const linksHtml = (card) => {
+const linksHtml = (card, t = ENGLISH) => {
     const lead = card.lead ?? card.articles?.[0];
     if (!lead || !webUrl(lead.url)) return '';
     const seen = new Set([lead.source]);
     const others = (card.articles ?? []).filter(other => webUrl(other.url) && !seen.has(other.source) && seen.add(other.source));
     return `
-<p style="margin:28px 0 0;font:16px/1.4 ${TEXT}"><a href="${escape(lead.url)}" class="ng-accent" style="${LINK}">Read the article at ${escape(lead.source)}</a>${lead.trusted ? ` <span class="ng-accent" style="color:${LIGHT.accent}">★</span>` : ''}${languageMark(lead.language)}</p>
-${others.length > 0 ? `<p class="ng-mute" style="${CAPTION};margin-top:8px">Also covered by ${others.slice(0, SHOWN_OTHERS)
-        .map(other => together(`<a href="${escape(other.url)}" class="ng-mute" style="color:${LIGHT.mute};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(other.source)}</a>${other.trusted ? ' ★' : ''}${languageMark(other.language)}`))
-        .join(', ')}${others.length > SHOWN_OTHERS ? ` and ${others.length - SHOWN_OTHERS} more` : ''}</p>` : ''}`;
+<p style="margin:28px 0 0;font:16px/1.4 ${TEXT}"><a href="${escape(lead.url)}" class="ng-accent" style="${LINK}">${fill(t.labels.readAt, {source: escape(lead.source)})}</a>${lead.trusted ? ` <span class="ng-accent" style="color:${LIGHT.accent}">★</span>` : ''}${languageMark(lead.language, t)}</p>
+${others.length > 0 ? `<p class="ng-mute" style="${CAPTION};margin-top:8px">${escape(t.labels.alsoCovered)} ${others.slice(0, SHOWN_OTHERS)
+        .map(other => together(`<a href="${escape(other.url)}" class="ng-mute" style="color:${LIGHT.mute};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(other.source)}</a>${other.trusted ? ' ★' : ''}${languageMark(other.language, t)}`))
+        .join(', ')}${others.length > SHOWN_OTHERS ? ` ${fill(t.labels.andMore, {count: others.length - SHOWN_OTHERS})}` : ''}</p>` : ''}`;
 };
 
 // the posts where a party said the news itself (see official-sources.js), a line each, and its
 // statements an article reports, quoted with the medium. Right under the sentences of the card, in a box
 // of its own, not a note at its foot (the user, 16.10.2026: to be seen). None left (the reader took them
 // out, or none has a web address), no box
-const officialLine = (post) => post.channel === 'reported'
-    ? `<b>${escape(post.party)}</b> said it, reported by <a href="${escape(post.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(post.source)}</a>: “${escape(post.translation ?? post.title)}”`
-    : `<b>${escape(post.party)}</b> said it: <a href="${escape(post.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(post.title)}</a>${post.publishedAt ? `<span class="ng-mute" style="color:${LIGHT.mute}">, ${escape(when(post.publishedAt))}</span>` : ''}`;
-const officialHtml = (given) => {
+// the title of a post in the reader's language when it was translated (briefings since 18.10.2026)
+const officialLine = (post, t = ENGLISH) => post.channel === 'reported'
+    ? `${fill(t.labels.saidItReported, {party: `<b>${escape(post.party)}</b>`, source: `<a href="${escape(post.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(post.source)}</a>`})} “${escape(post.translation ?? post.title)}”`
+    : `${fill(t.labels.saidIt, {party: `<b>${escape(post.party)}</b>`})} <a href="${escape(post.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(post.translation ?? post.title)}</a>${post.publishedAt ? `<span class="ng-mute" style="color:${LIGHT.mute}">, ${escape(when(post.publishedAt, t))}</span>` : ''}`;
+const officialHtml = (given, t = ENGLISH) => {
     const posts = given.filter(post => webUrl(post.url));
     return posts.length === 0 ? '' : `
 <div class="ng-secondary ng-rule" style="margin-top:24px;background:${LIGHT.secondary};border-left:3px solid ${LIGHT.ink};padding:14px 18px">
-  ${kicker('Official sources', 'ink')}
-  ${posts.map(post => `<p class="ng-ink" style="${BODY};margin-top:8px">${officialLine(post)}</p>`).join('')}
+  ${kicker(t.labels.officialSources, 'ink')}
+  ${posts.map(post => `<p class="ng-ink" style="${BODY};margin-top:8px">${officialLine(post, t)}</p>`).join('')}
 </div>`;
 };
 
 // the note of the outer column of the page, under the card in the e-mail
-const notesHtml = (card) => !card.hedged ? '' : `
+// the words of the article translated when it is in another language than the reader's (see
+// withHedgedTranslated)
+const notesHtml = (card, t = ENGLISH) => !card.hedged ? '' : `
 <div class="ng-rule" style="margin-top:24px;border-top:1px solid ${LIGHT.rule}">
-  <div style="padding-top:12px">${kicker('Not confirmed', 'accent')}<p class="ng-ink" style="${CAPTION};color:${LIGHT.ink};margin-top:4px">${escape(`unconfirmed: “${card.hedged}”`)}</p></div>
+  <div style="padding-top:12px">${kicker(t.labels.notConfirmed, 'accent')}<p class="ng-ink" style="${CAPTION};color:${LIGHT.ink};margin-top:4px">${fill(t.labels.unconfirmed, {words: escape(card.hedgedTranslation ?? card.hedged)})}</p></div>
 </div>`;
 
 // the title shown: the one the reader wrote for the e-mail (ownTitle), else the translated one
@@ -199,8 +255,13 @@ const titleOf = (card) => card.ownTitle ?? card.titleTranslation ?? card.title;
 
 // personal: the why of the card, written to the reader ("that you follow"), left out of an e-mail to
 // another; format: the way its sentences are shown (see wayOf)
-const cardHtml = (card, i, personal = true, format = 'passages') => {
-    const sentences = wayOf(card, format);
+// the credit of the picture: its medium, or who added the file (see withChosenPictures)
+const creditOf = (card, t = ENGLISH) => card.addedBy !== undefined
+    ? card.addedBy ? fillText(t.labels.addedBy, {name: card.addedBy}) : t.labels.addedByYou
+    : card.thumbnailSource;
+const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH) => {
+    const sentences = wayOf(card, format, t);
+    const credit = creditOf(card, t);
     // or a file of the reader joined to the e-mail (see mail-pictures.js)
     const picture = webUrl(card.thumbnail) ?? (/^cid:[\w.@-]+$/.test(card.thumbnail ?? '') ? card.thumbnail : null);
     return `
@@ -210,24 +271,24 @@ const cardHtml = (card, i, personal = true, format = 'passages') => {
   <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:14px"><tr>
     <td valign="bottom" style="padding-right:14px"><p class="ng-mute" style="margin:0;font:400 46px/1 ${DISPLAY};color:${LIGHT.mute}">${String(i + 1).padStart(2, '0')}</p></td>
     <td valign="bottom" style="padding-bottom:4px"><p class="ng-mute" style="${CAPTION};font-weight:500">${[
-        card.topic ? `<span class="ng-ink" style="${KICKER};color:${LIGHT.ink}">${escape(card.topic)}</span>` : '',
-        card.publishedAt ? escape(when(card.publishedAt)) : '',
-        card.language ? languageMark(card.language).trim() : '',
+        card.topic ? `<span class="ng-ink" style="${KICKER};color:${LIGHT.ink}">${escape(t.labels[`topic.${card.topic}`] ?? card.topic)}</span>` : '',
+        card.publishedAt ? escape(when(card.publishedAt, t)) : '',
+        card.language ? languageMark(card.language, t).trim() : '',
     ].filter(Boolean).join(' · ')}</p></td>
   </tr></table>
   <h2 class="ng-ink" style="margin:0;font:460 27px/1.12 ${DISPLAY};letter-spacing:-.005em;color:${LIGHT.ink}">${escape(titleOf(card))}</h2>
   ${personal && card.why ? `<p class="ng-mute" style="margin:12px 0 0;font:italic 19px/1.4 ${TEXT};color:${LIGHT.mute}">${escape(card.why)}</p>` : ''}
   ${picture ? `<img src="${escape(picture)}" alt="" width="560" style="display:block;width:100%;max-width:560px;height:auto;margin-top:20px;border:0;background:${LIGHT.secondary}">
-  ${card.thumbnailSource ? `<p class="ng-mute" style="${CAPTION};margin-top:6px">Picture — ${escape(card.thumbnailSource)}</p>` : ''}` : ''}
+  ${credit ? `<p class="ng-mute" style="${CAPTION};margin-top:6px">${escape(t.labels.picture)} — ${escape(credit)}</p>` : ''}` : ''}
   ${sentences.paragraphs.length > 0 ? `
   <div style="margin-top:24px">${kicker(sentences.title)}</div>
   <div style="margin-top:12px;overflow:hidden">${WAYS_HTML[sentences.way](sentences.paragraphs, i === 0)}</div>` : ''}
-  ${officialHtml(card.official ?? [])}
-  ${analysisHtml(card.analysis)}
-  ${contestedHtml(card.contested ?? [])}
-  ${anglesHtml(card.angles ?? [])}
-  ${linksHtml(card)}
-  ${notesHtml(card)}
+  ${officialHtml(card.official ?? [], t)}
+  ${analysisHtml(card.analysis, t)}
+  ${contestedHtml(card.contested ?? [], t)}
+  ${anglesHtml(card.angles ?? [], t)}
+  ${linksHtml(card, t)}
+  ${notesHtml(card, t)}
 </td></tr>`;
 };
 
@@ -238,15 +299,19 @@ const cardHtml = (card, i, personal = true, format = 'passages') => {
 // left out then, who sends it is in its Reply-To); format: the way the sentences of the cards are shown,
 // one of MAIL_FORMATS. The day only, no hour, in its subject and its title, the day before the count in
 // the subject (the user, 16.10.2026); nothing under the title (the user, 14.10.2026: no "N stories
-// shared" line, the title alone). {subject, html, text}
-export const briefingMail = (briefing, {profile = null, sender = null, format = 'passages'} = {}) => {
+// shared" line, the title alone). language: the reader's, a code: its dates and the names of languages
+// are written in it; labels: the words of the e-mail in it (see labelsFor), English when not given.
+// {subject, html, text}
+export const briefingMail = (briefing, {profile = null, sender = null, format = 'passages', language = 'en', labels = LABELS} = {}) => {
+    const t = toldIn(language, labels);
+    const L = t.labels;
     const cards = briefing.items ?? [];
     const finished = briefing.finishedAt ?? briefing.createdAt;
-    const count = `${cards.length} ${cards.length === 1 ? 'story' : 'stories'}`;
+    const count = cards.length === 1 ? L.oneStory : fillText(L.stories, {count: cards.length});
     // "Roberto’s Briefing · 13 October 2026"
-    const name = profile ? `${profile}’s Briefing` : 'Briefing';
-    const title = `${name} · ${day(finished)}`;
-    const subject = `${name} · ${day(finished)} · ${count}`;
+    const name = profile ? fillText(L.briefingOf, {name: profile}) : L.briefing;
+    const title = `${name} · ${day(finished, t)}`;
+    const subject = `${name} · ${day(finished, t)} · ${count}`;
 
     const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark">
@@ -257,7 +322,7 @@ export const briefingMail = (briefing, {profile = null, sender = null, format = 
 <tr><td style="padding-bottom:28px">
   <h1 class="ng-ink" style="margin:0;font:460 40px/1.05 ${DISPLAY};color:${LIGHT.ink}">${escape(title)}</h1>
 </td></tr>
-${cards.map((card, i) => cardHtml(card, i, !sender, format)).join('')}
+${cards.map((card, i) => cardHtml(card, i, !sender, format, t)).join('')}
 </table></td></tr></table></body></html>`;
 
     const text = [
@@ -268,14 +333,14 @@ ${cards.map((card, i) => cardHtml(card, i, !sender, format)).join('')}
                 `${String(i + 1).padStart(2, '0')}. ${titleOf(card)}`,
                 sender ? '' : card.why ?? '',
                 '',
-                wayText(wayOf(card, format)),
+                wayText(wayOf(card, format, t)),
                 ...(card.official ?? []).map(post => post.channel === 'reported'
-                    ? `Official source — ${post.party} said it, reported by ${post.source}: "${post.translation ?? post.title}" ${post.url}`
-                    : `Official source — ${post.party} said it: ${post.title} ${post.url}`),
-                ...analysisText(card.analysis),
-                ...(card.contested ?? []).map(denial => `Contested — ${denial.by} denies: "${denial.translation || denial.sentence}" (${denial.source})`),
-                ...(card.angles ?? []).map(angle => `Other angle: ${angle.titleTranslation ?? angle.title} (${angle.source}) ${angle.url}`),
-                lead ? `Read the article at ${lead.source}: ${lead.url}` : '',
+                    ? `${L.officialSource} — ${fillText(L.saidItReported, {party: post.party, source: post.source})} "${post.translation ?? post.title}" ${post.url}`
+                    : `${L.officialSource} — ${fillText(L.saidIt, {party: post.party})} ${post.translation ?? post.title} ${post.url}`),
+                ...analysisText(card.analysis, t),
+                ...(card.contested ?? []).map(denial => `${L.contested} — ${fillText(L.denies, {by: denial.by})} "${denial.translation || denial.sentence}" (${denial.source})`),
+                ...(card.angles ?? []).map(angle => `${L.otherAngle} ${angle.titleTranslation ?? angle.title} (${angle.source}) ${angle.url}`),
+                lead ? `${fillText(L.readAt, {source: lead.source})}: ${lead.url}` : '',
                 '',
             ].filter((line, j, lines) => line !== '' || lines[j - 1] !== '').join('\n');
         }),

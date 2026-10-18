@@ -1450,7 +1450,11 @@ public address, or a file of 2 MB at most, 6 MB in all), their own title, and ta
 not want (a denial, an angle, an official source, a line of the analysis). Each card carries its AI
 analysis, its official source boxed right under its sentences; nothing says what is translated. Sent
 to another address than the account's, the "why" of each card is left out and the reply goes to the
-reader. The e-mail calls no AI: it lays out what the briefing wrote. Its cards are marked sent
+reader. The e-mail lays out what the briefing wrote, all of it in the reader's language: its words
+("Key points", "Contested", "Read the article at"...) translated by the AI once per language and kept
+while the server runs (`mail-labels.js`), left in English with its dates when the AI does not answer,
+its dates and names of languages written in that language, the words of an article saying it has no
+confirmation translated. Its cards are marked sent
 (`sentAt`), and their stories are left out of the next briefings for 48 hours (see **A story shown
 before**). Without an SMTP account (`SMTP_USER`, `SMTP_PASS`) it answers 503, refused by the SMTP server
 502.

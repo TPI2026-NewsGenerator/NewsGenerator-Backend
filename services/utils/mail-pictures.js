@@ -58,7 +58,8 @@ export const withChosenPictures = async (items, pictures, {sender = null, known 
             if (bytes > MAX_PICTURES_BYTES) throw refuse(`The pictures of an e-mail weigh ${MAX_PICTURES_BYTES / 1024 / 1024} MB at most.`);
             const cid = `picture-${item.storyId}@newsgenerator`;
             attachments.push({filename: `picture-${item.storyId}.${type.ext}`, content: file, contentType: type.type, cid});
-            chosen.set(item.storyId, {thumbnail: `cid:${cid}`, thumbnailSource: sender ? `added by ${sender}` : 'added by you'});
+            // credited to who added it, in the reader's language when the e-mail is written (see briefing-mail.js)
+            chosen.set(item.storyId, {thumbnail: `cid:${cid}`, thumbnailSource: null, addedBy: sender ?? ''});
         } else {
             throw refuse('pictures: {storyId: null, {url} or {data}}.');
         }

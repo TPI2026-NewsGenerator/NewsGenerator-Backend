@@ -25,7 +25,7 @@ jest.unstable_mockModule('../../services/utils/mailer.js', () => ({sendMail, mai
 const copies = {save: jest.fn(async () => 11), byToken: jest.fn(async () => null), remove: jest.fn(async () => 1)};
 jest.unstable_mockModule('../../models/sent-mail-model.js', () => ({SentMailModel: copies}));
 const {BriefingService, withOwnTitles, withoutTakenOut} = await import('../../services/briefing-service.js');
-const {briefingMail} = await import('../../services/utils/briefing-mail.js');
+const {briefingMail, LABELS} = await import('../../services/utils/briefing-mail.js');
 
 const card = (storyId, title, changes = {}) => ({
     storyId, title, summary: `Passage of ${title}.\n\nAnother passage.`, topic: 'sport', language: 'en',
@@ -333,6 +333,32 @@ describe('briefingMail', () => {
         for (const wrong of [[0], {1: [0]}, {1: {angles: [-1]}}, {1: {angles: ['0']}}, {1: {passages: [0]}}]) {
             expect(() => withoutTakenOut([two], wrong)).toThrow(/removed/);
         }
+    });
+
+    it("should write all of it in the reader's language: its words, its dates, the names of languages, what is translated", () => {
+        const labels = {...LABELS, contested: 'Contesté', denies: '{by} dément :', 'topic.sport': 'sport', keyPassages: 'Passages clés',
+            readAt: 'Lire l’article sur {source}', toldBy: 'raconté par {count} médias', notConfirmed: 'Non confirmé',
+            unconfirmed: 'non confirmé : « {words} »', writtenIn: 'Écrit en {language}', saidIt: '{party} l’a dit :', picture: 'Image', briefingOf: 'Le briefing de {name}'};
+        const items = [{...briefing.items[0], official: [{party: 'DFB', title: 'DFB-Präsidium entscheidet', translation: 'Le présidium de la DFB décide',
+            url: 'https://www.dfb.de/1', channel: 'site', publishedAt: null}]}, {...briefing.items[1], hedgedTranslation: 'selon nos sources'}];
+        const {html, subject} = briefingMail({...briefing, items}, {profile: 'Roberto', language: 'fr', labels});
+
+        expect(subject).toBe('Le briefing de Roberto · 8 octobre 2026 · 2 stories');
+        for (const part of ['Contesté', '<b>Infantino dément :</b> “Ce n’est pas vrai.”', 'Passages clés', 'Lire l’article sur media.fr',
+            'raconté par 3 médias', 'Image — sport1.de', 'title="Écrit en allemand"', 'Non confirmé', 'non confirmé : « selon nos sources »',
+            '<b>DFB</b> l’a dit : <a href="https://www.dfb.de/1"', '>Le présidium de la DFB décide</a>']) {
+            expect(html).toContain(part);
+        }
+        for (const english of ['Contested', 'denies', 'Read the article', 'Picture —', 'October', 'DFB-Präsidium']) expect(html).not.toContain(english);
+        // nothing says what is translated, in the reader's language neither (the user, 16.10.2026)
+        expect(html).not.toMatch(/tradu|translat/i);
+    });
+
+    it('should credit a file the reader joined to who added it, in their language', () => {
+        const added = {...briefing.items[0], thumbnail: 'cid:picture-1@newsgenerator', thumbnailSource: null};
+        expect(briefingMail({...briefing, items: [{...added, addedBy: ''}]}).html).toContain('Picture — added by you');
+        expect(briefingMail({...briefing, items: [{...added, addedBy: 'lecteur'}]}, {language: 'fr', labels: {...LABELS, picture: 'Image', addedBy: 'ajoutée par {name}'}}).html)
+            .toContain('Image — ajoutée par lecteur');
     });
 
     it('should show the official sources of a card in its notes, and leave out the ones taken out', () => {

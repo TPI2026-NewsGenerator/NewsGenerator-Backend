@@ -99,6 +99,12 @@ describe('contestedOf', () => {
             language: 'fr', translation: 'Tehran denied any involvement in this incident.'});
     });
 
+    it("should ask who denies in the reader's language", async () => {
+        chat.mockResolvedValueOnce(json({sentences: []}));
+        await contestedOf('A drone over RAF Fairford', texts, {language: 'fr'});
+        expect(chat.mock.calls[0][0].messages.at(-1).content).toContain('denied_by: who denies, disputes or rejects something, in French,');
+    });
+
     it('should show nothing for a denial of a side point, or someone contesting what another says', async () => {
         chat.mockResolvedValueOnce(json({sentences: [{n: 1, denied_by: 'Iran', self: true, about: 'side', denial: true}]}))
             .mockResolvedValueOnce(json({sentences: [{n: 1, denied_by: 'Iran', self: false, about: 'main', denial: true}]}));

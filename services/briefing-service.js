@@ -40,8 +40,9 @@ import {Filter} from "./utils/filter.js";
 import {UserModel} from "../models/user-model.js";
 import {EMAIL_RULE, isEmail} from "./utils/account-rules.js";
 import {sendMail} from "./utils/mailer.js";
-import {briefingMail, MAIL_FORMATS} from "./utils/briefing-mail.js";
+import {briefingMail, LABELS, MAIL_FORMATS} from "./utils/briefing-mail.js";
 import {storyPictures, withChosenPictures} from "./utils/mail-pictures.js";
+import {labelsFor, withHedgedTranslated} from "./utils/mail-labels.js";
 import {SentMailModel} from "../models/sent-mail-model.js";
 import {EntityService} from "./entity-service.js";
 import {namesOfCards} from "./utils/card-names.js";
@@ -171,12 +172,13 @@ const addressOf = (article) => article.resolved_link ?? article.link;
 // trusted: the media the reader trusts
 const isTrusted = (article, trusted) => trusted.has(mediumOfArticle(article));
 
-// {thumbnail, thumbnailSource} of the first of these articles with a picture: the one its feed gave,
-// else the one its page gives to be shared (og:image, see crawlers.js) when it was read. Only 23 of
-// 82 cards of 3 days had one from the feeds (8.10.2026)
+// {thumbnail, thumbnailSource} of the first of these articles with a picture: the one its page gives
+// to be shared (og:image, see crawlers.js) when it was read, often wider than its feed's (the user,
+// 18.10.2026: the picture of the article first), else the one its feed gave. Only 23 of 82 cards of 3
+// days had one from the feeds (8.10.2026)
 export const pictureOf = (articles, content = new Map()) => {
     for (const article of articles) {
-        const thumbnail = article.thumbnail ?? content.get(article.link)?.thumbnail ?? null;
+        const thumbnail = content.get(article.link)?.thumbnail ?? article.thumbnail ?? null;
         if (thumbnail) return {thumbnail, thumbnailSource: siteOf(article)};
     }
     return {thumbnail: null, thumbnailSource: null};
@@ -1240,8 +1242,13 @@ export const BriefingService = {
         const {items, attachments} = await withChosenPictures(withoutTakenOut(withOwnTitles(ticked, titles), removed), pictures, {sender, known});
         // the AI version asked for a card: sent when the card has one in that way, else the card as published
         const inAi = new Set(ai);
-        const mail = briefingMail({...briefing, items: items.map(item => inAi.has(item.storyId) ? {...item, aiVersion: true} : item)},
-            {profile: profile?.name ?? null, sender, format});
+        // all of it in the reader's language: the words around the cards and the ones of an article saying
+        // it has no confirmation translated as the titles are (the user, 18.10.2026)
+        const language = readerLanguage(profile ?? {});
+        const [labels, told] = await Promise.all([labelsFor(language), withHedgedTranslated(items, language)]);
+        // its words left in English when the AI did not answer: its dates too, not half of it in English
+        const mail = briefingMail({...briefing, items: told.map(item => inAi.has(item.storyId) ? {...item, aiVersion: true} : item)},
+            {profile: profile?.name ?? null, sender, format, language: labels === LABELS ? 'en' : language, labels});
         await sendMail({to: address, replyTo: toOther && user?.email ? user.email : undefined, ...mail, attachments});
         // sent, they are read: their stories are left out of the next briefings (see notShownBefore). The
         // e-mail is gone already, a failure here only lets them come back

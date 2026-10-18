@@ -122,9 +122,12 @@ describe('BriefingService.removeNews', () => {
 describe('BriefingService.email with a news added', () => {
     it('should send the news added with the cards ticked, by its negative id', async () => {
         ofUser.mockResolvedValue({...row, items: [...row.items, {...card(-1, 'https://news.example/strike'), title: 'Added news', imported: true}]});
+        // the words of the e-mail in the reader's language, French here
+        const french = {'{name}’s Briefing': 'Le briefing de {name}', '{count} stories': '{count} nouvelles'};
+        translateTexts.mockImplementationOnce(async (texts) => texts.map(({text}) => french[text] ?? null));
         await BriefingService.email(4, 7, [-1, 1]);
         const mail = sendMail.mock.calls[0][0];
         expect(mail.text.indexOf('01. Added news')).toBeGreaterThan(0);
-        expect(mail.subject).toBe('Roberto’s Briefing · 13 October 2026 · 2 stories');
+        expect(mail.subject).toBe('Le briefing de Roberto · 13 octobre 2026 · 2 nouvelles');
     });
 });
