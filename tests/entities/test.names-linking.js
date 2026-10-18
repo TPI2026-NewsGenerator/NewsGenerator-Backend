@@ -53,8 +53,8 @@ describe('withSurnamesLinked', () => {
     it("should take a family name alone for the person who bears it, as the card writes it, a person whatever the tagger said", () => {
         expect(withSurnamesLinked([[{name: 'Infantino', qid: null, kind: 'organization'}, {name: 'FIFA', qid: null, kind: 'organization'}],
             [{name: 'Trump', qid: null, kind: 'person'}]], rows)).toEqual([
-            [{name: 'Infantino', qid: 'Q124138', kind: 'person'}, {name: 'FIFA', qid: null, kind: 'organization'}],
-            [{name: 'Trump', qid: 'Q22686', kind: 'person'}],
+            [{name: 'Infantino', qid: 'Q124138', kind: 'person', bySurname: 2680}, {name: 'FIFA', qid: null, kind: 'organization'}],
+            [{name: 'Trump', qid: 'Q22686', kind: 'person', bySurname: 3106}],
         ]);
     });
 

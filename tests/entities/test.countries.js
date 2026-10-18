@@ -8,7 +8,7 @@
 import {describe, expect, it, jest} from '@jest/globals';
 
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
-const {cardCountries} = await import('../../services/utils/countries.js');
+const {cardCountries, countryNamed} = await import('../../services/utils/countries.js');
 const {countryNames} = await import('../../services/utils/country-names.js');
 
 const countryOf = new Map([['Q22686', 'US'], ['Q15031', 'CN'], ['Q956', 'CN'], ['Q61', 'US'], ['Q865', 'TW'],
@@ -37,6 +37,18 @@ describe('cardCountries', () => {
     it('should count an item once, and a match of two clubs of one country as that country', () => {
         expect(cardCountries([{qid: 'Q9617', weight: 4}, {qid: 'Q9616', weight: 4}, {qid: 'Q9617', weight: 4}], countryOf)).toEqual(['GB']);
         expect(cardCountries([{qid: 'Q1076', weight: 4}, {qid: 'Q1076', weight: 4}, {qid: 'Q22686', weight: 3}], countryOf)).toEqual(['ZM', 'US']);
+    });
+});
+
+describe('countryNamed', () => {
+    it('should tell the country a name is, in the languages of the news, with its article or short', () => {
+        expect(['Espagne', 'España', 'Spain', 'la France', 'Royaume-Uni', 'UK', 'USA', 'États-Unis', 'Deutschland', 'Ελλάδα', 'Россия',
+            'Turquie', 'Turkey', 'Angleterre'].map(countryNamed)).toEqual(['ES', 'ES', 'ES', 'FR', 'GB', 'GB', 'US', 'US', 'DE', 'GR', 'RU',
+            'TR', 'TR', 'GB']);
+    });
+
+    it('should tell none for a city, a continent or a short word', () => {
+        expect(['Paris', 'Thun', 'Europe', 'Man', 'Nice', 'US', 'FC'].map(countryNamed)).toEqual([null, null, null, null, null, null, null]);
     });
 });
 

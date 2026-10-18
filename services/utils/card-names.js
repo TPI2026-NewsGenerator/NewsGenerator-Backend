@@ -11,9 +11,13 @@
 
 import {MentionModel} from '../../models/mention-model.js';
 import {mentionKey} from './mentions.js';
-import {cardCountries, countriesOfItems} from './countries.js';
+import {cardCountries, countriesOfItems, countryNamed} from './countries.js';
 
 export const NAMES_PER_CARD = 4;
+// a family name alone tells the country of the person it is linked to when that person is named in full
+// by this many news at least: "Trump" is Donald Trump (3 106 news); "Kristal" was not Patrik Kristal, an
+// Estonian footballer named by 16 (18.10.2026)
+const SURNAME_COUNTRY_SEEN = 100;
 // a name of a few of its articles is one named in passing: a quarter of them at least
 const SHARE_OF_CARD = 0.25;
 // the agencies a dispatch credits ("(Reuters) -", "AFP") are named by every news they wrote, as the
@@ -135,8 +139,8 @@ const surnameKey = (name) => {
 };
 // names: the names of each card (see chosenNames); rows: [{word, qid, seen, asPerson, asOther}] (see
 // MentionModel.personsEndingWith), the most met first for each word. The names as the card writes them,
-// with the person's item and kind (the writing most met was "President Trump", "C. Ronaldo"); a card
-// naming that person already keeps it once
+// with the person's item and kind (the writing most met was "President Trump", "C. Ronaldo"), and
+// bySurname the news naming that person in full; a card naming that person already keeps it once
 export const withSurnamesLinked = (names, rows) => {
     const byWord = new Map();
     for (const row of rows) byWord.set(row.word, [...(byWord.get(row.word) ?? []), row]);
@@ -152,7 +156,7 @@ export const withSurnamesLinked = (names, rows) => {
             if (!person) return [name];
             if (shown.has(person.qid)) return [];
             shown.add(person.qid);
-            return [{...name, qid: person.qid, kind: 'person'}];
+            return [{...name, qid: person.qid, kind: 'person', bySurname: person.seen}];
         });
     });
 };
@@ -164,14 +168,18 @@ export const withSurnamesLinked = (names, rows) => {
 export const namesOfCards = async (cards) => new Map((await readNames(cards))
     .map(card => [card.storyId, card.names.map(group => ({name: group.name, qid: group.qid ?? null, kind: group.kind}))]));
 
-// [{storyId, names, places}] of these cards (see namesOfCards): names the groups chosen, with the news of
-// the card naming them (inCard); places the rows of the places of Wikidata a quarter of its news name
+// [{storyId, names, places, countries}] of these cards (see namesOfCards): names the groups chosen, with
+// the news of the card naming them (inCard); places the rows of the places of Wikidata a quarter of its
+// news name; countries [{code, inCard}] the countries it names that Wikidata could not tell apart from
+// their namesakes ("Espagne", "France": 1 country named of 15 linked, 18.10.2026)
 const readNames = async (cards) => {
     const read = await Promise.all(cards.map(async (card) => {
         const rows = await MentionModel.namesOfArticles(card.ids, LEAST_NEWS);
         const least = Math.max(1, Math.ceil(card.ids.length * SHARE_OF_CARD));
         return {storyId: card.storyId, names: chosenNames(rows, card.ids.length, {media: card.media}),
-            places: rows.filter(row => row.kind === 'location' && row.qid && row.inCard >= least)};
+            places: rows.filter(row => row.kind === 'location' && row.qid && row.inCard >= least),
+            countries: rows.filter(row => !row.qid && row.kind !== 'person' && row.inCard >= least)
+                .map(row => ({code: countryNamed(row.name), inCard: row.inCard})).filter(row => row.code)};
     }));
     const words = [...new Set(read.flatMap(card => card.names.map(surnameKey).filter(Boolean)))];
     const persons = await MentionModel.personsEndingWith(words).catch(err => {
@@ -189,14 +197,19 @@ const readNames = async (cards) => {
 // tell them
 export const namesAndCountriesOfCards = async (cards) => {
     const read = await readNames(cards);
-    const items = read.map(card => [...card.names, ...card.places].filter(row => row.qid).map(row => ({qid: row.qid, weight: row.inCard, person: row.kind === 'person'})));
+    const items = read.map(card => [...card.names, ...card.places]
+        .filter(row => row.qid && !(row.bySurname < SURNAME_COUNTRY_SEEN))
+        .map(row => ({qid: row.qid, weight: row.inCard, person: row.kind === 'person'})));
     const countryOf = await countriesOfItems(items.flat().map(item => item.qid)).catch(err => {
         console.error(`Names: the countries of the cards were not read (${err.message})`);
         return new Map();
     });
+    // a country named but not linked to Wikidata: its own code (see countries.js countryNamed)
+    const named = read.map(card => card.countries.map(row => ({qid: `country:${row.code}`, weight: row.inCard})));
+    named.flat().forEach(item => countryOf.set(item.qid, {country: item.qid.slice('country:'.length), international: false}));
     return new Map(read.map((card, i) => [card.storyId, {
         names: card.names.map(group => ({name: group.name, qid: group.qid ?? null, kind: group.kind})),
-        countries: cardCountries(items[i], countryOf),
+        countries: cardCountries([...items[i], ...named[i]], countryOf),
     }]));
 };
 
