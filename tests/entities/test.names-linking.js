@@ -2,14 +2,14 @@
 //  Author: Fabian Rostello
 //  Date: 18.10.2026
 //  File: test.names-linking.js
-//  Description: A famous person among their namesakes of Wikidata, and a family name alone on a card
-//               taken for the person linked who bears it
+//  Description: A famous person or place among their namesakes of Wikidata, and a family name alone on
+//               a card taken for the person linked who bears it
 //
 
 import {describe, expect, it, jest} from '@jest/globals';
 
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
-const {famousHuman} = await import('../../services/utils/wikidata.js');
+const {famousHuman, famousPlace, placeItem} = await import('../../services/utils/wikidata.js');
 const {withSurnamesLinked} = await import('../../services/utils/card-names.js');
 
 const answer = (body) => ({ok: true, status: 200, headers: new Headers(), json: async () => body});
@@ -36,6 +36,56 @@ describe('famousHuman', () => {
         expect(await famousHuman(['Q4'])).toBeNull();
         expect(await famousHuman([])).toBeNull();
         expect(fetch).toHaveBeenCalledTimes(3);
+        fetch.mockRestore();
+    });
+});
+
+// a place: a position on Earth (P625)
+const place = (id, links, human = false) => {
+    const found = item(id, human, links);
+    return {...found, claims: {...found.claims, P625: [{mainsnak: {datavalue: {value: {latitude: 48.8, longitude: 2.3}}}}]}};
+};
+
+describe('placeItem', () => {
+    it('should take a country by its code, never the item called so by the search', async () => {
+        const fetch = jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(answer({query: {search: [{title: 'Q148'}]}}));
+        expect(await placeItem('Chine', 'fr')).toBe('Q148');
+        expect(new URL(fetch.mock.calls[0][0]).searchParams.get('srsearch')).toBe('haswbstatement:P297=CN');
+        // known since: Wikidata is not asked again
+        expect(await placeItem('China', 'en')).toBe('Q148');
+        expect(fetch).toHaveBeenCalledTimes(1);
+        fetch.mockRestore();
+    });
+
+    it('should take a place called so by one of its other names, the famous one of several', async () => {
+        const named = (id, label, aliases = []) => ({id, labels: {en: {value: label}}, aliases: {en: aliases.map(value => ({value}))}});
+        const fetch = jest.spyOn(globalThis, 'fetch')
+            .mockResolvedValueOnce(answer({search: [{id: 'Q830149', label: 'Paris'}, {id: 'Q7', label: 'Paris Hilton'}, {id: 'Q90', label: 'Paris'}]}))
+            .mockResolvedValueOnce(answer({entities: {Q830149: named('Q830149', 'Paris'), Q7: named('Q7', 'Paris Hilton'),
+                Q90: named('Q90', 'City of Paris', ['Paris'])}}))
+            .mockResolvedValueOnce(answer({entities: {Q90: place('Q90', 366), Q830149: place('Q830149', 40)}}));
+        expect(await placeItem('Paris', 'en')).toBe('Q90');
+        expect(new URL(fetch.mock.calls[2][0]).searchParams.get('ids')).toBe('Q830149|Q90');
+        fetch.mockRestore();
+    });
+});
+
+describe('famousPlace', () => {
+    it('should take the place far more known than the other places so called, never a thing nor a human', async () => {
+        const fetch = jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(answer({entities: {
+            Q90: place('Q90', 366), Q830149: place('Q830149', 40), Q1: item('Q1', false, 900), Q2: place('Q2', 500, true),
+        }}));
+        expect(await famousPlace(['Q830149', 'Q1', 'Q90', 'Q2'])).toBe('Q90');
+        fetch.mockRestore();
+    });
+
+    it('should take none when two places so called are both known, or the most known is little known', async () => {
+        const fetch = jest.spyOn(globalThis, 'fetch')
+            .mockResolvedValueOnce(answer({entities: {Q61: place('Q61', 250), Q1223: place('Q1223', 200)}}))
+            .mockResolvedValueOnce(answer({entities: {Q5: place('Q5', 20), Q6: place('Q6', 2)}}));
+        expect(await famousPlace(['Q61', 'Q1223'])).toBeNull();
+        expect(await famousPlace(['Q5', 'Q6'])).toBeNull();
+        expect(await famousPlace([])).toBeNull();
         fetch.mockRestore();
     });
 });

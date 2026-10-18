@@ -48,7 +48,13 @@ what finds the other angles of a card through its rare names.
   is the one item called so; else the AI (gemma4:31b, 5 titles of news naming it, `titlesNaming`) chooses among
   the items called so or whose name starts so (`namedItems`: "Juventus" is "Juventus FC", "Liverpool"
   "Liverpool F.C.", the city coming first), no person among them (`describeItems`), or none; kept when the item
-  is in 10 Wikipedias at least. About 390 tokens a name, counted in the hourly report of the tagger. One name every 7 s (`LINK_PAUSE_MS`); nothing left:
+  is in 10 Wikipedias at least. About 390 tokens a name, counted in the hourly report of the tagger.
+  A place (`placeItem`, since 18.10.2026): a country is the item of its code ISO (`countryNamed`, then a
+  search `haswbstatement:P297=CN`): the search shows the People's Republic as "China PR", the item called
+  "China" is the cultural region. Another place is the one item called so by its name or one of its other
+  names in the language of the news or in English (`labels|aliases` of the 10 found: the search shows one
+  writing per item); of several, the place (a position, P625, no human) in 3 times more Wikipedias than the
+  next one, 30 at least (`famousPlace`): "Paris" is the capital, not Paris in Texas. One name every 7 s (`LINK_PAUSE_MS`); nothing left:
   10 minutes. A 429 or "too busy" pauses every call of the process to Wikidata for `Retry-After` or 30 s.
 - **A family name alone** on a card (`withSurnamesLinked`, `services/utils/card-names.js`, since 18.10.2026):
   "Infantino" is no item of Wikidata (a family name, a village, a page of namesakes). It is the person linked
@@ -80,6 +86,12 @@ what finds the other angles of a card through its rare names.
   chose 50 times, 45 right, 44 out of 46 kept in 10 Wikipedias or more (a PSG omnisport club in 4, the
   women's team of Como 1907 in 6 left out). Live: Juventus, Liverpool, FIFA linked; Roma (AS Roma is no
   candidate), "FC" and Real Madrid (news of its basketball team) none.
+- Places, 18.10.2026: 1,730 of the 9,496 named by 20 news or more were linked. On 50 never linked (the 25
+  most named, 25 at random), `placeItem` linked 22 of the 25 (Paris, France, China the People's Republic,
+  London, Rome, Madrid; Washington and New York the states: Wikidata calls the cities "Washington, D.C." and
+  "New York City", never "Washington" nor "New York") and 13 of the 25, none wrong ("Colonia" in Italian is
+  Cologne); Cork, Kabul and Fairfax, a city and a county or province both known, stay unlinked. The 10,585
+  places looked for before were looked for again.
 - Wikidata without an account let 9 or 10 searches through then answered 429 for 12 to 25 s; one every 6.5 s
   went through 30 times in a row (13.10.2026): one every 7 s, about 12,000 names a day, for about 150,000
   waiting.

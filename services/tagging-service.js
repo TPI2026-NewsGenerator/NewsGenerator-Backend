@@ -14,7 +14,7 @@ import {RETENTION_DAYS} from "./feed-service.js";
 import {taggerDevice, taggerUrls, tagTexts} from "./utils/tagger.js";
 import {cleanMentions, mentionKey} from "./utils/mentions.js";
 import {languageOf} from "./utils/language.js";
-import {exactItems, famousHuman} from "./utils/wikidata.js";
+import {exactItems, famousHuman, placeItem} from "./utils/wikidata.js";
 import {countriesOfItems} from "./utils/countries.js";
 import {organizationItem} from "./utils/organization-items.js";
 import {newUsage} from "./utils/ollama.js";
@@ -143,6 +143,7 @@ const link = async () => {
             try {
                 let qid = null;
                 if (row.kind === 'organization') qid = await organizationItem(row, linkUsage);
+                else if (row.kind === 'location') qid = await placeItem(row.name, row.lang ?? 'en');
                 else {
                     const qids = await exactItems(row.name, row.lang ?? 'en');
                     // a full name only: "Russell" alone, the F1 driver, became Bertrand Russell (18.10.2026); a

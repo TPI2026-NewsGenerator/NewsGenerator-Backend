@@ -12,6 +12,7 @@
 import {isQid, kindOf, namesOf} from './wikidata-names.js';
 import process from 'node:process';
 import {mentionKey} from './mentions.js';
+import {countryNamed} from './country-names.js';
 
 export {isQid};
 
@@ -163,6 +164,58 @@ export const famousHuman = async (qids) => {
         .sort((a, b) => b.links - a.links);
     const [first, second] = humans;
     return first && first.links >= MIN_SITELINKS && first.links >= SITELINKS_AHEAD * (second?.links ?? 0) ? first.qid : null;
+};
+
+// A place named as several items are, as famousHuman: the one of them that is a place (it has a
+// position on Earth, P625, and is no human) and is in far more Wikipedias than any other place so
+// called. "Paris" is the capital, not Paris in Texas; null when none stands out
+export const famousPlace = async (qids) => {
+    const asked = [...new Set(qids.filter(isQid))].slice(0, EXACT_FOUND);
+    if (asked.length === 0) return null;
+    const params = new URLSearchParams({action: 'wbgetentities', ids: asked.join('|'), props: 'claims|sitelinks', format: 'json'});
+    const entities = (await ask(`${API}?${params}`)).entities ?? {};
+    const places = asked.map(qid => entities[qid])
+        .filter(item => item && item.missing === undefined && (item.claims?.P625 ?? []).length > 0
+            && !(item.claims?.P31 ?? []).some(claim => claim.mainsnak?.datavalue?.value?.id === 'Q5'))
+        .map(item => ({qid: item.id, links: Object.keys(item.sitelinks ?? {}).length}))
+        .sort((a, b) => b.links - a.links);
+    const [first, second] = places;
+    return first && first.links >= MIN_SITELINKS && first.links >= SITELINKS_AHEAD * (second?.links ?? 0) ? first.qid : null;
+};
+
+// the item of each country, by its code ISO 3166-1 (P297), kept for as long as the process lives
+const countryItems = new Map();
+const countryItem = async (code) => {
+    if (countryItems.has(code)) return countryItems.get(code);
+    const answer = await ask(`${API}?${new URLSearchParams({action: 'query', list: 'search', srsearch: `haswbstatement:P297=${code}`,
+        srnamespace: '0', srlimit: '2', format: 'json'})}`);
+    const found = (answer.query?.search ?? []).map(page => page.title).filter(isQid);
+    countryItems.set(code, found.length === 1 ? found[0] : null);
+    return countryItems.get(code);
+};
+
+// The item a place a news names is (18.10.2026: 1,730 of 9,496 places named by 20 news or more were
+// linked, none of Paris, London, France, China). A country is the item of its code ("France", "la
+// France", "Chine": see countryNamed): the search shows the People's Republic as "China PR", the item
+// called "China" is the cultural region. Another place is the one item called so, by its name or one of
+// its other names in the language of the news or in English ("Washington" is the city too, not only the
+// state the search shows first); of several, the famous one (famousPlace), else null
+export const placeItem = async (name, language = 'en') => {
+    const code = countryNamed(name);
+    if (code) return countryItem(code);
+    const key = mentionKey(name);
+    if (key.length < 2) return null;
+    const found = (await searchNamed(name, language)).map(item => item.id);
+    if (found.length === 0) return null;
+    const params = new URLSearchParams({action: 'wbgetentities', ids: found.join('|'), props: 'labels|aliases',
+        languages: [...new Set([language, 'en'])].join('|'), format: 'json'});
+    const entities = (await ask(`${API}?${params}`)).entities ?? {};
+    const called = found.filter(qid => {
+        const item = entities[qid];
+        const names = [...Object.values(item?.labels ?? {}), ...Object.values(item?.aliases ?? {}).flat()];
+        return names.some(other => mentionKey(other.value) === key);
+    });
+    return called.length === 1 ? called[0] : called.length > 1 ? famousPlace(called) : null;
 };
 
 // The channels an item publishes on, as Wikidata gives them: its website and its accounts

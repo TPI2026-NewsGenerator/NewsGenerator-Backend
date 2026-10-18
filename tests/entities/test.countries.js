@@ -8,8 +8,8 @@
 import {describe, expect, it, jest} from '@jest/globals';
 
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
-const {cardCountries, countryNamed} = await import('../../services/utils/countries.js');
-const {countryNames} = await import('../../services/utils/country-names.js');
+const {cardCountries} = await import('../../services/utils/countries.js');
+const {countryNamed, countryNames} = await import('../../services/utils/country-names.js');
 
 const countryOf = new Map([['Q22686', 'US'], ['Q15031', 'CN'], ['Q956', 'CN'], ['Q61', 'US'], ['Q865', 'TW'],
     ['Q1076', 'ZM'], ['Q3881', 'ZM'], ['Q9617', 'GB'], ['Q9616', 'GB'], ['Q124138', 'CH'], ['Q1201', 'FR']]
@@ -48,7 +48,8 @@ describe('countryNamed', () => {
     });
 
     it('should tell none for a city, a continent or a short word', () => {
-        expect(['Paris', 'Thun', 'Europe', 'Man', 'Nice', 'US', 'FC'].map(countryNamed)).toEqual([null, null, null, null, null, null, null]);
+        expect(['Paris', 'Thun', 'Europe', 'Man', 'Nice', 'FC'].map(countryNamed)).toEqual([null, null, null, null, null, null]);
+        expect(['US', 'U.S.', 'EE.UU.'].map(countryNamed)).toEqual(['US', 'US', 'US']);
     });
 });
 

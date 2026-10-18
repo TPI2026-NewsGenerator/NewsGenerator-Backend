@@ -2,8 +2,8 @@
 
 Each card of a briefing shows who it is about: the people and organisations most of its articles name, 4 at
 most, each a link to its page (the page of its Wikidata item when the tagger linked it to one, else the page of
-the name as written). The same names, the rare ones, also find the other stances of the same actor for the other
-angles of the card.
+the name as written), and the countries they are of. The same names, the rare ones, also find the other
+stances of the same actor for the other angles of the card.
 
 ## Where
 
@@ -41,6 +41,38 @@ angles of the card.
   closest stories the AI judges (see [Briefing > Other angles](../../briefing/other-angles/README.md)).
 - **The reader.** A click on a name opens `/following/:qid` or `/following/name/:name`; the names met on
   several cards are suggested on `/following` (see [Names and words](../names-and-words/README.md)).
+
+## The countries of a card
+
+Since 18.10.2026 (an idea of a friend of the user): "Hichilema dismisses his minister" tells nothing to a reader
+who does not know he is the president of Zambia. Each card says which countries it is about, under its topic
+on the page ("Zambia", "United States · China") and next to its topic in the e-mail, in the reader's language.
+
+- **Where.** `namesAndCountriesOfCards` (`card-names.js`) instead of `namesOfCards` in `write`:
+  `items[].countries`, codes ISO 3166-1 ("ZM"), the main first, absent from the briefings before. Client:
+  `countryNames` of `client/src/features/briefing/countries.js`; e-mail: `country-names.js` in `briefing-mail.js`.
+- **Who votes.** The names of the card with an item (a family name alone only when that person is named in
+  full by 100 news at least, `SURNAME_COUNTRY_SEEN`: "Kristal" was an Estonian namesake), the places with an
+  item named by a quarter of its articles, and the countries named by their name (`countryNamed`,
+  `country-names.js`: "Espagne", "la France", "España", "Ελλάδα" in 37 languages from `Intl.DisplayNames`, plus
+  England, Scotland, Wales -> GB). Each weighs the articles of the card naming it.
+- **The country of an item.** `readCountries` (`wikidata.js`): a country its own code (P297); a person the
+  country it plays for (P1532), else its first citizenship (P27); anything else its country (P17), a part of
+  a country (England) the country it is part of. None for an international body (international or
+  intergovernmental organisation, supranational union, alliance, regional organisation, international sport
+  body, an operating area of the world or a continent, or a part of one: the FIFA Council): FIFA has the
+  country of its seat, Switzerland. A card naming one leaves out the countries of its people: Infantino of
+  FIFA is no Swiss news, Motsepe of the CAF no South African one.
+- **Which are shown.** `cardCountries` (`countries.js`): every country weighing half the first at least, 3 at
+  most; none when the title names them all already ("La Zambie limoge...", "le président zambien...").
+- **Read once.** `item_countries` (`db/add_item_countries.sql`) keeps the country of each item. A card asks
+  Wikidata for the ones never read, 40 at a time, waiting up to 30 s for a pause it asks for; the tagging
+  service reads the others ahead, 40 a minute, the most named first (`locate`), with `maxlag=5` (work no
+  reader waits for).
+
+Measured 18.10.2026: on 85 cards of 9 briefings, countries on 40 (right ones: Porto and Betis "Portugal ·
+Spain", AEK and Shakhtar "Greece · Ukraine", Netflix and the World Cup rights "United States · Spain ·
+Andorra"); live briefing 167, 10 cards of 17, none of the FIFA ones.
 
 ## Measured
 
