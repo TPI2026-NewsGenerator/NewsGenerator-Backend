@@ -11,6 +11,7 @@
 
 import {MentionModel} from '../../models/mention-model.js';
 import {mentionKey} from './mentions.js';
+import {cardCountries, countriesOfItems} from './countries.js';
 
 export const NAMES_PER_CARD = 4;
 // a name of a few of its articles is one named in passing: a quarter of them at least
@@ -160,18 +161,43 @@ export const withSurnamesLinked = (names, rows) => {
 // shown that Wikidata was never asked for are asked for first (see MentionModel.want): one that is an
 // item opens its page, with its links, instead of the page of the name. A family name alone is the
 // person it is the name of (see withSurnamesLinked)
-export const namesOfCards = async (cards) => {
-    const chosen = await Promise.all(cards.map(async (card) =>
-        [card.storyId, chosenNames(await MentionModel.namesOfArticles(card.ids, LEAST_NEWS), card.ids.length, {media: card.media})]));
-    const words = [...new Set(chosen.flatMap(([, names]) => names.map(surnameKey).filter(Boolean)))];
+export const namesOfCards = async (cards) => new Map((await readNames(cards))
+    .map(card => [card.storyId, card.names.map(group => ({name: group.name, qid: group.qid ?? null, kind: group.kind}))]));
+
+// [{storyId, names, places}] of these cards (see namesOfCards): names the groups chosen, with the news of
+// the card naming them (inCard); places the rows of the places of Wikidata a quarter of its news name
+const readNames = async (cards) => {
+    const read = await Promise.all(cards.map(async (card) => {
+        const rows = await MentionModel.namesOfArticles(card.ids, LEAST_NEWS);
+        const least = Math.max(1, Math.ceil(card.ids.length * SHARE_OF_CARD));
+        return {storyId: card.storyId, names: chosenNames(rows, card.ids.length, {media: card.media}),
+            places: rows.filter(row => row.kind === 'location' && row.qid && row.inCard >= least)};
+    }));
+    const words = [...new Set(read.flatMap(card => card.names.map(surnameKey).filter(Boolean)))];
     const persons = await MentionModel.personsEndingWith(words).catch(err => {
         console.error(`Names: the family names were not read (${err.message})`);
         return [];
     });
-    const linked = withSurnamesLinked(chosen.map(([, names]) => names), persons);
+    const linked = withSurnamesLinked(read.map(card => card.names), persons);
     const ids = linked.flatMap(names => names.filter(name => !name.qid && name.id).map(name => name.id));
     if (ids.length > 0) await MentionModel.want({ids}).catch(err => console.error(`Names: not asked first in Wikidata (${err.message})`));
-    return new Map(chosen.map(([storyId], i) => [storyId, linked[i].map(group => ({name: group.name, qid: group.qid ?? null, kind: group.kind}))]));
+    return read.map((card, i) => ({...card, names: linked[i]}));
+};
+
+// {storyId -> {names, countries}} of these cards (see namesOfCards): countries the codes ISO 3166-1 of
+// the countries of who and where it names, the main first (see countries.js), none when Wikidata does not
+// tell them
+export const namesAndCountriesOfCards = async (cards) => {
+    const read = await readNames(cards);
+    const items = read.map(card => [...card.names, ...card.places].filter(row => row.qid).map(row => ({qid: row.qid, weight: row.inCard, person: row.kind === 'person'})));
+    const countryOf = await countriesOfItems(items.flat().map(item => item.qid)).catch(err => {
+        console.error(`Names: the countries of the cards were not read (${err.message})`);
+        return new Map();
+    });
+    return new Map(read.map((card, i) => [card.storyId, {
+        names: card.names.map(group => ({name: group.name, qid: group.qid ?? null, kind: group.kind})),
+        countries: cardCountries(items[i], countryOf),
+    }]));
 };
 
 // The names met on several cards a reader was shown that they follow neither as an item of Wikidata nor

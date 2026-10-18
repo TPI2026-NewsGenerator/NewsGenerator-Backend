@@ -13,6 +13,7 @@
 "use strict"
 
 import {languageName} from './language.js';
+import {countryNames} from './country-names.js';
 import {TOPICS} from './topics.js';
 
 // The colours and fonts of the page (client styles/index.css). Mail apps keep inline styles and simple
@@ -253,6 +254,10 @@ const notesHtml = (card, t = ENGLISH) => !card.hedged ? '' : `
 
 // the title shown: the one the reader wrote for the e-mail (ownTitle), else the translated one
 const titleOf = (card) => card.ownTitle ?? card.titleTranslation ?? card.title;
+// the countries of who it names, in the reader's language; none when its title names them (see country-names.js)
+const countriesOf = (card, t = ENGLISH) => countryNames(card.countries ?? [], {
+    titles: [card.ownTitle, card.titleTranslation, card.title], languages: [card.language], locale: t.language,
+});
 
 // personal: the why of the card, written to the reader ("that you follow"), left out of an e-mail to
 // another; format: the way its sentences are shown (see wayOf)
@@ -283,6 +288,7 @@ const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH) =>
     <td valign="bottom" style="padding-right:14px"><p class="ng-mute" style="margin:0;font:400 46px/1 ${DISPLAY};color:${LIGHT.mute}">${String(i + 1).padStart(2, '0')}</p></td>
     <td valign="bottom" style="padding-bottom:4px"><p class="ng-mute" style="${CAPTION};font-weight:500">${[
         card.topic ? `<span class="ng-ink" style="${KICKER};color:${LIGHT.ink}">${escape(t.labels[`topic.${card.topic}`] ?? card.topic)}</span>` : '',
+        escape(countriesOf(card, t).join(' · ')),
         card.publishedAt ? escape(when(card.publishedAt, t)) : '',
         card.language ? languageMark(card.language, t).trim() : '',
     ].filter(Boolean).join(' · ')}</p></td>
@@ -341,7 +347,7 @@ ${cards.map((card, i) => cardHtml(card, i, !sender, format, t)).join('')}
         ...cards.map((card, i) => {
             const lead = card.lead ?? card.articles?.[0];
             return [
-                `${String(i + 1).padStart(2, '0')}. ${titleOf(card)}`,
+                `${String(i + 1).padStart(2, '0')}. ${titleOf(card)}${countriesOf(card, t).length > 0 ? ` (${countriesOf(card, t).join(', ')})` : ''}`,
                 sender ? '' : card.why ?? '',
                 '',
                 wayText(wayOf(card, format, t)),

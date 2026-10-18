@@ -10,14 +10,26 @@
 "use strict"
 
 import {isQid, kindOf, namesOf} from './wikidata-names.js';
+import process from 'node:process';
 import {mentionKey} from './mentions.js';
 
 export {isQid};
 
 const API = 'https://www.wikidata.org/w/api.php';
 const SPARQL = 'https://query.wikidata.org/sparql';
-// Wikimedia asks every client to name itself
-const HEADERS = {'User-Agent': 'NewsGenerator/1.0 (self-hosted news reader)', Accept: 'application/json'};
+// Wikimedia asks every client to name itself with a way to reach whoever runs it (its User-Agent policy:
+// a client without contact is refused sooner), and to accept compressed answers (its robot policy, both
+// sent to the user 18.10.2026). WIKIDATA_CONTACT: an address or an e-mail, the public site by default
+const HEADERS = () => ({
+    'User-Agent': `NewsGenerator/1.0 (${process.env.WIKIDATA_CONTACT || 'https://news.fabianrostello.com'}; self-hosted news reader)`,
+    Accept: 'application/json',
+    'Accept-Encoding': 'gzip, deflate',
+});
+// work done in background (background: true) asks the API to answer "maxlag" instead of working when
+// its databases lag more than this many seconds behind (API:Etiquette, for what no one waits for): it
+// waits as asked, as for a refusal. Not what a reader waits for: the lag was over 5 s for long (6.2 s,
+// 18.10.2026)
+const MAX_LAG_S = 5;
 const TIMEOUT_MS = 15000;
 const MAX_FOUND = 8;
 const MAX_LINKS = 80;
@@ -30,15 +42,24 @@ const LANGUAGES = ['en', 'fr', 'de', 'es', 'it', 'pt', 'nl'];
 const PAUSE_MS = 30e3;
 let pausedUntil = 0;
 
-const ask = async (url) => {
-    if (Date.now() < pausedUntil) throw Object.assign(new Error('Wikidata asked to wait.'), {status: 502, paused: true});
-    const res = await fetch(url, {headers: HEADERS, signal: AbortSignal.timeout(TIMEOUT_MS)});
+// retryIn: the milliseconds left of the pause
+const paused = () => Object.assign(new Error('Wikidata asked to wait.'), {status: 502, paused: true, retryIn: Math.max(0, pausedUntil - Date.now())});
+const ask = async (url, {background = false} = {}) => {
+    if (Date.now() < pausedUntil) throw paused();
+    const asked = background && url.startsWith(API) ? `${url}&maxlag=${MAX_LAG_S}` : url;
+    const res = await fetch(asked, {headers: HEADERS(), signal: AbortSignal.timeout(TIMEOUT_MS)});
+    const retryAfter = Number(res.headers.get('retry-after')) * 1000;
     if (res.status === 429) {
-        pausedUntil = Date.now() + (Number(res.headers.get('retry-after')) * 1000 || PAUSE_MS);
-        throw Object.assign(new Error('Wikidata asked to wait.'), {status: 502, paused: true});
+        pausedUntil = Date.now() + (retryAfter || PAUSE_MS);
+        throw paused();
     }
     if (!res.ok) throw Object.assign(new Error(`Wikidata answered ${res.status}.`), {status: 502});
-    return res.json();
+    const answer = await res.json();
+    // only the background is told to wait: a reader's call goes on
+    if (answer.error?.code === 'maxlag') {
+        throw Object.assign(new Error('Wikidata lags behind.'), {status: 502, paused: true, retryIn: retryAfter || MAX_LAG_S * 1000});
+    }
+    return answer;
 };
 
 const languagesOf = (language) => [...new Set([language, ...LANGUAGES].filter(Boolean))];
@@ -184,6 +205,93 @@ export const readPictures = async (qids) => {
         }
     }
     return found;
+};
+
+// the values of a property, the preferred ones when it has some ("Paris": France preferred, the Kingdom of
+// France and the others of its past normal), never the deprecated ones
+const bestValues = (claims, property) => {
+    const kept = (claims?.[property] ?? []).filter(claim => claim.rank !== 'deprecated');
+    const preferred = kept.filter(claim => claim.rank === 'preferred');
+    return (preferred.length > 0 ? preferred : kept).map(claim => claim.mainsnak?.datavalue?.value)
+        .map(value => value?.id ?? value).filter(value => typeof value === 'string');
+};
+// an international body: the country Wikidata gives it is the one of its seat (FIFA, UEFA and the IOC
+// Switzerland, the UN the United States, NATO Belgium), not the one it is of. International organisation,
+// intergovernmental organisation, supranational union, military alliance, regional organisation,
+// international sport governing body
+const INTERNATIONAL = new Set(['Q484652', 'Q245065', 'Q1335818', 'Q1127126', 'Q4120211', 'Q11422536']);
+// operating areas (P2541) wider than a country: the world (Google, Microsoft), the continents, the Americas
+const WIDE_AREAS = new Set(['Q13780930', 'Q46', 'Q15', 'Q48', 'Q49', 'Q18', 'Q538', 'Q828', 'Q51']);
+const COUNTRY_CODE = /^[A-Z]{2}$/;
+
+// The country an item is of: {code} for a country itself (P297, ISO 3166-1), {qid} for the rest, null
+// for none; international for a body of several countries or of the world, without country. A person:
+// the country it plays for (P1532: Messi is of Argentina, Spain and Italy, plays for Argentina), else its
+// first citizenship (P27); anything else its country (P17: Paris, Real Madrid, the Premier League)
+const countryOfClaims = (claims) => {
+    const kinds = (claims?.P31 ?? []).filter(claim => claim.rank !== 'deprecated').map(claim => claim.mainsnak?.datavalue?.value?.id);
+    if (kinds.some(kind => INTERNATIONAL.has(kind)) || bestValues(claims, 'P2541').some(area => WIDE_AREAS.has(area))) {
+        return {international: true};
+    }
+    const code = bestValues(claims, 'P297').find(value => COUNTRY_CODE.test(value));
+    if (code) return {code};
+    const qid = kinds.includes('Q5') ? bestValues(claims, 'P1532')[0] ?? bestValues(claims, 'P27')[0] : bestValues(claims, 'P17')[0];
+    return qid ? {qid} : null;
+};
+
+// the claims of these items: Map qid -> claims, the ones Wikidata does not have left out
+const claimsOf = async (qids, options = {}) => {
+    const found = new Map();
+    for (let i = 0; i < qids.length; i += ITEMS_PER_CALL) {
+        const params = new URLSearchParams({action: 'wbgetentities', ids: qids.slice(i, i + ITEMS_PER_CALL).join('|'),
+            props: 'claims', format: 'json'});
+        for (const [qid, item] of Object.entries((await ask(`${API}?${params}`, options)).entities ?? {})) {
+            if (item.missing === undefined) found.set(qid, item.claims ?? {});
+        }
+    }
+    return found;
+};
+
+// the code of each country met, kept for as long as the process lives: about 200 of them; and whether
+// the bodies items are part of are international
+const codes = new Map();
+const international = new Map();
+
+// Map qid -> {country, international} of each item: country the code ISO 3166-1 alpha-2 of its country
+// ("ZM"), null when none; international for a body of several countries (see countryOfClaims). A country
+// with no code of its own is part of one (England, Scotland: the United Kingdom): the code of that one.
+// Every item is answered, Wikidata asked a few times a card at most. background: see MAX_LAG_S
+export const readCountries = async (qids, {background = false} = {}) => {
+    const asked = [...new Set(qids.filter(isQid))];
+    const claims = await claimsOf(asked, {background});
+    const of = new Map(asked.map(qid => [qid, claims.has(qid) ? countryOfClaims(claims.get(qid)) : null]));
+    // a body part of an international one (P361, P749) is one too: the FIFA Council has the country of
+    // FIFA's seat
+    const parentsOf = (qid) => of.get(qid)?.qid && !(claims.get(qid)?.P31 ?? []).some(claim => claim.mainsnak?.datavalue?.value?.id === 'Q5')
+        ? [...bestValues(claims.get(qid), 'P361'), ...bestValues(claims.get(qid), 'P749')] : [];
+    const parents = [...new Set(asked.flatMap(parentsOf))].filter(qid => !international.has(qid));
+    if (parents.length > 0) {
+        const read = await claimsOf(parents, {background});
+        parents.forEach(qid => international.set(qid, Boolean(read.has(qid) && countryOfClaims(read.get(qid))?.international)));
+    }
+    for (const qid of asked) if (parentsOf(qid).some(parent => international.get(parent))) of.set(qid, {international: true});
+    // the countries named, then the countries they are part of
+    for (let round = 0; round < 2; round++) {
+        const unknown = [...new Set([...of.values()].filter(country => country?.qid && !codes.has(country.qid)).map(country => country.qid))];
+        if (unknown.length === 0) break;
+        const read = await claimsOf(unknown, {background});
+        for (const qid of unknown) {
+            const code = bestValues(read.get(qid), 'P297').find(value => COUNTRY_CODE.test(value));
+            const part = round === 0 && !code ? bestValues(read.get(qid), 'P17')[0] : null;
+            if (part && part !== qid) {
+                for (const [item, country] of of) if (country?.qid === qid) of.set(item, {qid: part});
+            } else codes.set(qid, code ?? null);
+        }
+    }
+    return new Map([...of].map(([qid, country]) => [qid, {
+        country: country?.code ?? (country?.qid ? codes.get(country.qid) ?? null : null),
+        international: Boolean(country?.international),
+    }]));
 };
 
 // what an item says of others and others of it, still true (no end date). [relation, property]

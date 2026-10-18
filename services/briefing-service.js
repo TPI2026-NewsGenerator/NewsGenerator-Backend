@@ -46,7 +46,7 @@ import {labelsFor, withHedgedTranslated} from "./utils/mail-labels.js";
 import {illustrationsOf} from "./utils/illustrations.js";
 import {SentMailModel} from "../models/sent-mail-model.js";
 import {EntityService} from "./entity-service.js";
-import {namesOfCards} from "./utils/card-names.js";
+import {namesAndCountriesOfCards} from "./utils/card-names.js";
 import {wholeTitle} from "./utils/titles.js";
 
 // Measured on four profiles and 249 stories judged by hand:
@@ -742,7 +742,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     // the AI version of their points and summary, and the news of what the profile follows beside them.
     // The briefing never waits on any of them failing
     await step('angles');
-    const [angles, official, watched, names, ais] = await Promise.all([
+    const [angles, official, watched, named, ais] = await Promise.all([
         anglesOf(stories, leads.map(lead => lead.title), {language, feedUrls, hours, trusted, usage: usage.angles}).catch(err => {
             console.error(`Briefing: no other angle looked for (${err.message})`);
             return new Map();
@@ -767,7 +767,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             console.error(`Briefing: the news of what the profile follows were not looked for (${err.message})`);
             return null;
         }),
-        namesOfCards(stories.map(story => ({storyId: story.storyId, ids: story.members.map(article => article.id),
+        namesAndCountriesOfCards(stories.map(story => ({storyId: story.storyId, ids: story.members.map(article => article.id),
             media: [...new Set(story.members.map(mediumOfArticle))]}))).catch(err => {
             console.error(`Briefing: the names of the cards were not read (${err.message})`);
             return new Map();
@@ -779,6 +779,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             : null),
     ]);
     if (briefingId && watched) await BriefingModel.watched(briefingId, watched);
+    const names = new Map([...named].map(([storyId, card]) => [storyId, card.names]));
     // the picture Wikimedia Commons has of who most of its articles name, for a card none of its articles
     // gives one to, and as a choice in the e-mail (see illustrations.js). The briefing never waits on it
     // failing
@@ -851,6 +852,9 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             // card-names.js): [{name, qid, kind}], qid null for a name Wikidata does not have as one item.
             // Absent from the briefings made before 13.10.2026
             names: names.get(story.storyId) ?? [],
+            // the countries of who and where it names, the main first (see countries.js): codes ISO 3166-1
+            // ("ZM"), for a reader who does not know them. Absent from the briefings made before 18.10.2026
+            countries: named.get(story.storyId)?.countries ?? [],
             // the picture of its lead article when it has one, else of its newest article with one;
             // and the site it is of, shown under it. None: its illustration, credited to its author
             ...withIllustration(pictureOf([lead, ...members], content), illustrations.get(story.storyId)),

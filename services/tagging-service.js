@@ -15,6 +15,7 @@ import {taggerDevice, taggerUrls, tagTexts} from "./utils/tagger.js";
 import {cleanMentions, mentionKey} from "./utils/mentions.js";
 import {languageOf} from "./utils/language.js";
 import {exactItems, famousHuman} from "./utils/wikidata.js";
+import {countriesOfItems} from "./utils/countries.js";
 import {organizationItem} from "./utils/organization-items.js";
 import {newUsage} from "./utils/ollama.js";
 
@@ -39,6 +40,13 @@ export const LINK_LEAST = 3;
 const LINK_BATCH = 20;
 const LINK_PAUSE_MS = 7000;
 const LINK_IDLE_MS = 10 * 60e3;
+
+// The countries of the items linked (see countries.js), read ahead so a briefing finds them known: a
+// card asking Wikidata for its own was refused, the names being linked at the same time (18.10.2026).
+// LOCATE_BATCH items a call, one call every LOCATE_PAUSE_MS: the 16 000 items linked before were read
+// in about 7 hours
+const LOCATE_BATCH = 40;
+const LOCATE_PAUSE_MS = 60e3;
 
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms).unref?.());
 
@@ -152,6 +160,22 @@ const link = async () => {
     }
 };
 
+const locate = async () => {
+    for (;;) {
+        try {
+            const qids = await MentionModel.toLocate(LOCATE_BATCH);
+            if (qids.length === 0) {
+                await wait(LINK_IDLE_MS);
+                continue;
+            }
+            await countriesOfItems(qids, {background: true});
+        } catch (err) {
+            console.error(`Tagger: no country read (${err.message})`);
+        }
+        await wait(LOCATE_PAUSE_MS);
+    }
+};
+
 // once an hour: what each tagger did, and what is left
 const report = async () => {
     for (;;) {
@@ -191,6 +215,7 @@ export const TaggingService = {
         console.log(`Taggers: ${urls.join(', ')}`);
         urls.forEach(url => work(url));
         link();
+        locate();
         report();
         housekeeping();
     },
