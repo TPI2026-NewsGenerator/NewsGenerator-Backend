@@ -108,6 +108,23 @@ export const readChannels = async (qids) => {
     return found;
 };
 
+// Map qid -> the name of the file of its picture on Wikimedia Commons (P18, "image"): the preferred
+// one, else the first; the items without one left out
+export const readPictures = async (qids) => {
+    const found = new Map();
+    const asked = [...new Set(qids.filter(isQid))];
+    for (let i = 0; i < asked.length; i += ITEMS_PER_CALL) {
+        const params = new URLSearchParams({action: 'wbgetentities', ids: asked.slice(i, i + ITEMS_PER_CALL).join('|'),
+            props: 'claims', format: 'json'});
+        for (const [qid, item] of Object.entries((await ask(`${API}?${params}`)).entities ?? {})) {
+            const claims = (item.claims?.P18 ?? []).filter(claim => claim.rank !== 'deprecated');
+            const file = (claims.find(claim => claim.rank === 'preferred') ?? claims[0])?.mainsnak?.datavalue?.value;
+            if (typeof file === 'string' && file) found.set(qid, file);
+        }
+    }
+    return found;
+};
+
 // what an item says of others and others of it, still true (no end date). [relation, property]
 const OUTGOING = [
     ['coach', 'P286'], ['league', 'P118'], ['chair', 'P488'], ['owner', 'P127'], ['venue', 'P115'],

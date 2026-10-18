@@ -68,7 +68,8 @@ export const withChosenPictures = async (items, pictures, {sender = null, known 
 };
 
 // the pictures of a story the reader can choose among: the one of its card first, then the ones the
-// feeds gave its articles. rows: [{link, thumbnail}] of its articles
+// feeds gave its articles, its illustration last (see illustrations.js), marked as one: the e-mail takes
+// it only when none of its articles has a sharp one. rows: [{link, thumbnail}] of its articles
 export const storyPictures = (item, rows) => {
     const sources = new Map([item.lead, ...(item.articles ?? [])].filter(Boolean).map(article => [article.url, article.source]));
     const pictures = [];
@@ -78,7 +79,12 @@ export const storyPictures = (item, rows) => {
         seen.add(url);
         pictures.push({url, source: source ?? hostOf(url)});
     };
-    add(item.thumbnail, item.thumbnailSource);
+    const illustration = item.illustration?.url ?? null;
+    if (item.thumbnail !== illustration) add(item.thumbnail, item.thumbnailSource);
     for (const row of rows) add(row.thumbnail, sources.get(row.link) ?? hostOf(row.link));
+    if (illustration && /^https:\/\//i.test(illustration) && !seen.has(illustration)) {
+        seen.add(illustration);
+        pictures.push({url: illustration, source: item.illustration.credit ?? 'Wikimedia Commons', illustration: true});
+    }
     return pictures;
 };

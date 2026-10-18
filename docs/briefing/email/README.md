@@ -58,6 +58,13 @@ The cards sent count as read: their stories are left out of the next briefings f
 - The picture of a card (`pictureOf`): the one its article's page gives to be shared (`og:image`) first,
   the one its feed gave after (since 18.10.2026); a site's picture for pages without one ("default",
   "placeholder", "logo" in its address) is never taken (`crawlers.js` `pageImage`).
+- The illustration of a card (`services/utils/illustrations.js`, since 18.10.2026): the picture Wikimedia
+  Commons has (Wikidata P18, `readPictures`) of the person most of its articles name (`item.names`), else
+  of the organisation, 560 px wide at least, a photograph (no `.svg`), asked at 1280 px. It is the
+  card's picture only when none of its articles gives one, last in the pictures of the story
+  (`storyPictures`, `illustration: true`), and taken by the e-mail (`bestPicture`, client) only when no
+  picture of its articles is sharp. Captioned "Illustration — Wikimedia Commons · author, licence";
+  a standing one is at most 420 px high in the e-mail (narrower).
 - `sendMail` (nodemailer, Gmail by default): no account 503, refused by the SMTP server 502 (its answer
   in the logs). Then `BriefingModel.markSent` writes `sentAt` on each card sent; the next briefings leave
   their stories out for 48 hours (`repeats.js`); a failure there is only logged.
@@ -72,6 +79,9 @@ The cards sent count as read: their stories are left out of the next briefings f
 - 18.10.2026, 142 cards of 12 briefings: the `og:image` of the lead's page is its picture already for 69,
   wider than its feed's for 35, narrower for 17 (both sharp); with it first, 116 cards have one of 560 px or
   more instead of 98. Of 122 cards, 8 had no sharp picture in the gallery: 6 have one in a page's `og:image`.
+- 18.10.2026, 200 cards of 12 briefings: 102 name someone Wikidata knows, 92 have a picture there, 86 one of
+  560 px or more. A person is the one of the news (Infantino, Wenger, Motsepe), an organisation its
+  building (the seat of UEFA, the Googleplex). Live on 47 cards: 26 illustrations in 1.6 s, all loading.
 - The account of the server is a Gmail one, which Gmail limits to 500 e-mails a day (comment of
   `routes/briefing-router.js`): hence 10 an hour and 30 a day.
 

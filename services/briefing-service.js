@@ -43,6 +43,7 @@ import {sendMail} from "./utils/mailer.js";
 import {briefingMail, LABELS, MAIL_FORMATS} from "./utils/briefing-mail.js";
 import {storyPictures, withChosenPictures} from "./utils/mail-pictures.js";
 import {labelsFor, withHedgedTranslated} from "./utils/mail-labels.js";
+import {illustrationsOf} from "./utils/illustrations.js";
 import {SentMailModel} from "../models/sent-mail-model.js";
 import {EntityService} from "./entity-service.js";
 import {namesOfCards} from "./utils/card-names.js";
@@ -183,6 +184,11 @@ export const pictureOf = (articles, content = new Map()) => {
     }
     return {thumbnail: null, thumbnailSource: null};
 };
+
+// a card without a picture of its articles takes its illustration, credited to its author
+export const withIllustration = (picture, illustration) => picture.thumbnail || !illustration
+    ? picture
+    : {thumbnail: illustration.url, thumbnailSource: illustration.credit};
 
 const toArticle = (article, trusted = new Set()) => ({
     title: article.title,
@@ -773,6 +779,13 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             : null),
     ]);
     if (briefingId && watched) await BriefingModel.watched(briefingId, watched);
+    // the picture Wikimedia Commons has of who most of its articles name, for a card none of its articles
+    // gives one to, and as a choice in the e-mail (see illustrations.js). The briefing never waits on it
+    // failing
+    const illustrations = await illustrationsOf(names).catch(err => {
+        console.error(`Briefing: no illustration looked for (${err.message})`);
+        return new Map();
+    });
     await step(null);
     console.log(`Briefing ${briefingId}: tokens ${JSON.stringify(usage)}, seconds ${JSON.stringify(seconds)}`);
 
@@ -839,8 +852,11 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             // Absent from the briefings made before 13.10.2026
             names: names.get(story.storyId) ?? [],
             // the picture of its lead article when it has one, else of its newest article with one;
-            // and the site it is of, shown under it
-            ...pictureOf([lead, ...members], content),
+            // and the site it is of, shown under it. None: its illustration, credited to its author
+            ...withIllustration(pictureOf([lead, ...members], content), illustrations.get(story.storyId)),
+            // the picture of Wikimedia Commons of who it names (see illustrations.js): {url, width,
+            // height, page, credit, name}, null without one. Absent from the briefings made before 18.10.2026
+            illustration: illustrations.get(story.storyId) ?? null,
             publishedAt: members[0].at?.toISOString?.() ?? null,
             corroboration: {
                 ...corroborationOf(story.members.map(article => ({

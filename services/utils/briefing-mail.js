@@ -36,6 +36,7 @@ export const LABELS = {
     keyPassages: 'Key passages',
     writtenIn: 'Written in {language}',
     picture: 'Picture',
+    illustration: 'Illustration',
     addedByYou: 'added by you',
     addedBy: 'added by {name}',
     officialSources: 'Official sources',
@@ -259,9 +260,19 @@ const titleOf = (card) => card.ownTitle ?? card.titleTranslation ?? card.title;
 const creditOf = (card, t = ENGLISH) => card.addedBy !== undefined
     ? card.addedBy ? fillText(t.labels.addedBy, {name: card.addedBy}) : t.labels.addedByYou
     : card.thumbnailSource;
+// A standing picture of known size (an illustration, see illustrations.js) narrower, so that it is no
+// higher than MAX_PICTURE_HEIGHT: a portrait of Commons (2:3) would fill a phone's screen at 560 px wide
+const MAX_PICTURE_HEIGHT = 420;
+const pictureWidth = (card) => {
+    const {width, height} = card.thumbnail && card.thumbnail === card.illustration?.url ? card.illustration : {};
+    return width > 0 && height > width ? Math.min(560, Math.round(MAX_PICTURE_HEIGHT * width / height)) : 560;
+};
 const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH) => {
     const sentences = wayOf(card, format, t);
     const credit = creditOf(card, t);
+    // the picture of Wikimedia Commons of who it names, not of the news: said so
+    const illustration = Boolean(card.thumbnail) && card.thumbnail === card.illustration?.url;
+    const width = pictureWidth(card);
     // or a file of the reader joined to the e-mail (see mail-pictures.js)
     const picture = webUrl(card.thumbnail) ?? (/^cid:[\w.@-]+$/.test(card.thumbnail ?? '') ? card.thumbnail : null);
     return `
@@ -278,8 +289,8 @@ const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH) =>
   </tr></table>
   <h2 class="ng-ink" style="margin:0;font:460 27px/1.12 ${DISPLAY};letter-spacing:-.005em;color:${LIGHT.ink}">${escape(titleOf(card))}</h2>
   ${personal && card.why ? `<p class="ng-mute" style="margin:12px 0 0;font:italic 19px/1.4 ${TEXT};color:${LIGHT.mute}">${escape(card.why)}</p>` : ''}
-  ${picture ? `<img src="${escape(picture)}" alt="" width="560" style="display:block;width:100%;max-width:560px;height:auto;margin-top:20px;border:0;background:${LIGHT.secondary}">
-  ${credit ? `<p class="ng-mute" style="${CAPTION};margin-top:6px">${escape(t.labels.picture)} — ${escape(credit)}</p>` : ''}` : ''}
+  ${picture ? `<img src="${escape(picture)}" alt="" width="${width}" style="display:block;width:100%;max-width:${width}px;height:auto;margin-top:20px;border:0;background:${LIGHT.secondary}">
+  ${credit ? `<p class="ng-mute" style="${CAPTION};margin-top:6px">${escape(illustration ? t.labels.illustration : t.labels.picture)} — ${escape(credit)}</p>` : ''}` : ''}
   ${sentences.paragraphs.length > 0 ? `
   <div style="margin-top:24px">${kicker(sentences.title)}</div>
   <div style="margin-top:12px;overflow:hidden">${WAYS_HTML[sentences.way](sentences.paragraphs, i === 0)}</div>` : ''}
