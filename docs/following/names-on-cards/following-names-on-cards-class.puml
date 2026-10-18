@@ -1,11 +1,15 @@
 @startuml following-names-on-cards-class
 !include ../../_style/class.iuml
 left to right direction
-title Following > Names on cards — who a card is about, and the rare names that find its affair
+title Following > Names on cards — who a card is about, its countries, and the rare names that find its affair
 
 package "Client (React)" {
     class BriefingCard <<other feature>> {
         "Who it is about": item.names
+        under its topic: item.countries
+    }
+    class "countries.js" as countriesJs {
+        + countryNames(codes, {titles, languages})
     }
     class EntityApi {
         + pageOf({name, qid})
@@ -26,6 +30,8 @@ package "Business" {
 package "utils" {
     class cardNames {
         + namesOfCards(cards)
+        + namesAndCountriesOfCards(cards)
+        + withSurnamesLinked(names, rows)
         + cardNames(rows, articles, {media})
         + writtenAsName(name)
         + shortName(label, names)
@@ -43,8 +49,26 @@ package "utils" {
     }
     class wikidata {
         + exactItems(name, language)
+        + readCountries(qids)
     }
+    class countries {
+        + cardCountries(items, of)
+        + countriesOfItems(qids)
+    }
+    class countryNames {
+        + countryNamed(name)
+        + countryNames(codes, options)
+    }
+    class briefingMail <<other feature>>
 }
+note bottom of countries
+    who and where the card names vote, by its
+    articles naming them: a person by the country
+    it plays for or its citizenship, a body or place
+    by its country, a country by its name; none for
+    an international body, nor its people (FIFA,
+    Infantino). Half the first at least, 3 at most
+end note
 note bottom of cardNames
     4 names a card at most, no place: named by a
     quarter of its articles at least, by 3 news or 2
@@ -65,6 +89,8 @@ package "Data" {
         + want({ids})
         + setLink(id, qid)
         + storiesNaming(options)
+        + countriesOf(qids)
+        + saveCountries(countries)
     }
     class "mentions" as mentionsTable <<table>> {
         name, kind, qid, linked_at, wanted_at
@@ -72,13 +98,23 @@ package "Data" {
     class "article_mentions" as am <<table>>
     class "briefings" as briefings <<table>> {
         items[].names [{name, qid, kind}]
+        items[].countries ["ZM", ...]
+    }
+    class "item_countries" as itemCountries <<table>> {
+        qid, country, international
     }
 }
 
 class "Wikidata API" as WikidataApi <<external>>
 
 BriefingCard --> EntityApi
-briefingService --> cardNames : namesOfCards()
+BriefingCard --> countriesJs
+briefingService --> cardNames : namesAndCountriesOfCards()
+briefingMail --> countryNames
+cardNames --> countries
+cardNames --> countryNames
+countries --> wikidata
+countries --> mentionModel
 briefingService --> affairNames : storiesOfSameNames()
 briefingService --> briefings
 cardNames --> mentions
@@ -89,4 +125,5 @@ affairNames --> mentionModel
 wikidata --> WikidataApi
 mentionModel --> mentionsTable
 mentionModel --> am
+mentionModel --> itemCountries
 @enduml

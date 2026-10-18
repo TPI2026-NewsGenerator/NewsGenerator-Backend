@@ -391,7 +391,10 @@ and checks the versions of `docs/tools.md`, `docs-site/requirements.txt` pins it
 | `../client/docs/` | the use cases, and the client's pages and components by feature |
 
 Every diagram is there as source (`.puml`) and as PNG. Render a folder again, from `server/`, with
-`java -jar plantuml.jar -charset UTF-8 "docs/briefing/summary/summary-ia/*.puml"`.
+`java -jar plantuml.jar -charset UTF-8 "docs/briefing/summary/summary-ia/*.puml"`; the class diagrams need
+Graphviz (`dot`) for the layout they have. Without either, the official image has both: from `server/docs`,
+`docker run --rm -u "$(id -u):$(id -g)" -v "$PWD":/data plantuml/plantuml -charset UTF-8 ingestion/names/*.puml`
+(run on the Ubuntu server on 18.10.2026, PlantUML 1.2026.9, the files copied there and the PNG back).
 
 ### How a search works
 

@@ -52,7 +52,7 @@ loop link()
         Tagging -> Tagging : wait 10 min
     else
         loop each name
-            Tagging -> Wiki : exactItems(name, lang), or for an organisation\norganizationItem: namedItems, describeItems,\nthe AI choosing from 5 titles (titlesNaming)
+            Tagging -> Wiki : exactItems(name, lang), or for an organisation\norganizationItem: namedItems, describeItems,\nthe AI choosing from 5 titles (titlesNaming),\nor for a place placeItem (below)
             Wiki -> WikiApi : wbsearchentities in its language\n(then in English), 10 found at most
             alt 429 or too busy
                 Wiki --> Tagging : paused: nobody of the process asks\nfor Retry-After or 30 s
@@ -62,12 +62,39 @@ loop link()
                     Tagging -> Wiki : famousHuman(qids): wbgetentities claims, sitelinks
                     Wiki --> Tagging : the human in 3 times more Wikipedias\nthan the next one (30 at least), else null
                 end
-                Tagging -> Model : setLink(id, the qid when one only or the\nfamous human, else null)
+                opt a place
+                    alt a name of a country (countryNamed)
+                        Wiki -> WikiApi : search haswbstatement:P297=<code>
+                        note right : "China" is the People's Republic,\nnot the cultural region
+                    else
+                        Wiki -> WikiApi : wbgetentities labels, aliases of the 10 found\n(its language and English)
+                        Wiki -> Wiki : the ones called so by any of their names;\nof several, famousPlace: a position (P625),\n3 times more Wikipedias (30 at least)
+                    end
+                end
+                Tagging -> Model : setLink(id, the qid when one only or the\nfamous human or place, else null)
                 Model -> DB : UPDATE mentions SET qid, linked_at
             end
             Tagging -> Tagging : wait 7 s
         end
     end
+end
+
+== one loop for the countries of the items ==
+loop locate()
+    Tagging -> Model : toLocate(40): items linked, country never read,\nthe most named first
+    alt none
+        Tagging -> Tagging : wait 10 min
+    else
+        Tagging -> Wiki : readCountries(qids, background): wbgetentities claims,\nmaxlag=5
+        alt lagging or refused
+            Wiki --> Tagging : wait as asked (30 s at most), else the next minute
+        else
+            Wiki --> Tagging : {country, international}: P297, P1532, P27 or P17;\nnone for an international body or a part of one
+            Tagging -> Model : saveCountries
+            Model -> DB : INSERT item_countries ON CONFLICT (qid) DO UPDATE
+        end
+    end
+    Tagging -> Tagging : wait 60 s
 end
 
 == and next to them ==

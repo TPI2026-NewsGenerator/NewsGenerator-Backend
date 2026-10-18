@@ -1,12 +1,13 @@
 @startuml following-names-on-cards-sequence
 !include ../../_style/sequence.iuml
-title Following > Names on cards — the names written on the cards of a briefing
+title Following > Names on cards — the names and countries written on the cards of a briefing
 
 actor Reader
 participant "BriefingPage\nBriefingCard" as Client
 participant briefingService as Briefing
 participant cardNames as CardNames
 participant affairNames as Affair
+participant countries as Countries
 participant wikidata as Wiki
 participant mentionModel as Model
 database "PostgreSQL" as DB
@@ -31,27 +32,37 @@ par the other angles
     Affair --> Briefing : Map storyId -> stories naming them
     note right of Briefing : added to the closest stories, judged by\nthe AI (see Briefing > Other angles)
 else the names of the cards
-    Briefing -> CardNames : namesOfCards([{storyId, ids, media}])
+    Briefing -> CardNames : namesAndCountriesOfCards([{storyId, ids, media}])
     loop each card
         CardNames -> Model : namesOfArticles(ids, 3)
         Model -> DB : article_mentions of its news: inCard,\nand the news naming each (up to 3)
         CardNames -> CardNames : chosenNames: no place; qid, or 3 news,\nor 2 of the card; writtenAsName; no agency,\nno medium of the card
         CardNames -> CardNames : asOne: one writing per name\n("Infantino" = "Gianni Infantino", "PSG")
         CardNames -> CardNames : a quarter of its articles at least, 4 at most
+        CardNames -> CardNames : its places with an item, and the countries\nnamed by their name (countryNamed)
     end
     CardNames -> Model : want({ids of the names without a qid})
     Model -> DB : mentions.wanted_at = now():\nfirst in the queue of Wikidata
-    CardNames --> Briefing : Map storyId -> [{name, qid, kind}]
+    CardNames -> Countries : countriesOfItems(qids of its names and places;\na family name alone only for someone in 100 news)
+    Countries -> Model : countriesOf(qids)
+    Model -> DB : item_countries
+    opt never read
+        Countries -> Wiki : readCountries(40 at a time)
+        note right : a pause asked: waited for, 30 s at most;\nthen the ones read so far
+        Countries -> Model : saveCountries
+    end
+    CardNames -> Countries : cardCountries: weighed by its articles,\nhalf the first at least, 3 at most; no people's\ncountry when it names an international body
+    CardNames --> Briefing : Map storyId -> {names: [{name, qid, kind}], countries}
 end
 alt failed
     Briefing -> Briefing : logged, the cards without names
 end
-Briefing -> DB : briefings.items[].names
+Briefing -> DB : briefings.items[].names, items[].countries
 
 == read ==
 Client -> Briefing : GET /api/briefing
 Briefing --> Client : the cards with their names
-Client --> Reader : "Who it is about", each name a link (pageOf)
+Client --> Reader : "Who it is about", each name a link (pageOf);\nits countries under its topic, none when the title names them
 Reader -> Client : clicks a name
 alt it has a qid
     Client -> Client : /following/:qid (see Wikidata items)

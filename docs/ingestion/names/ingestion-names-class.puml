@@ -19,6 +19,7 @@ package "Business" {
         + textOf(row)
         - work(url)
         - link()
+        - locate()
         - report()
         - housekeeping()
     }
@@ -28,8 +29,9 @@ note top of taggingService
     processor, 128 on a graphics card, the newest of 30
     days first, none taken by another; idle or down:
     asked again after 60 s. One loop links the names met
-    in 3 news or more, one every 7 s. A report every hour,
-    the unused names deleted once a day
+    in 3 news or more, one every 7 s; one reads the country
+    of the items linked, 40 a minute (maxlag 5). A report
+    every hour, the unused names deleted once a day
 end note
 
 package "utils" {
@@ -49,8 +51,17 @@ package "utils" {
     class wikidata {
         + exactItems(name, language)
         + famousHuman(qids)
+        + placeItem(name, language)
+        + famousPlace(qids)
         + namedItems(name, language)
         + describeItems(qids)
+        + readCountries(qids, {background})
+    }
+    class countryNames {
+        + countryNamed(name)
+    }
+    class countries {
+        + countriesOfItems(qids, {background})
     }
     class organizationItems {
         + organizationItem(mention, usage)
@@ -66,7 +77,16 @@ note bottom of wikidata
     A 429, or "too busy": nothing asked by
     the process for Retry-After or 30 s.
     famousHuman: the human of several items
-    far more known (sitelinks) than the others
+    far more known (sitelinks) than the others.
+    placeItem: a country the item of its code
+    (haswbstatement:P297); else the items called
+    so by any name or alias, of several the place
+    (P625) far more known (famousPlace)
+end note
+note bottom of countryNames
+    "Espagne", "la France", "España", "US":
+    the code of the country, in 37 languages
+    (Intl.DisplayNames)
 end note
 note bottom of organizationItems
     The one item called so, else the one the AI
@@ -84,6 +104,9 @@ package "Data" {
         + setLink(id, qid)
         + personsEndingWith(words)
         + titlesNaming(id, limit)
+        + toLocate(limit)
+        + countriesOf(qids)
+        + saveCountries(countries)
         + deleteUnused()
     }
     class "articles" as articlesTable <<table>> {
@@ -95,6 +118,9 @@ package "Data" {
     }
     class "article_mentions" as amTable <<table>> {
         id_mention, id_article
+    }
+    class "item_countries" as countriesTable <<table>> {
+        qid, country, international, looked_at
     }
 }
 note bottom of mentionModel
@@ -119,7 +145,7 @@ note right of Ner
     threshold 0.5; 1000 characters a text,
     256 texts a request at most
 end note
-class "Wikidata API\n(wbsearchentities)" as WikidataApi <<external>>
+class "Wikidata API\n(wbsearchentities, wbgetentities,\nsearch haswbstatement)" as WikidataApi <<external>>
 
 serverStart --> taggingService
 taggingService --> tagger
@@ -127,6 +153,10 @@ taggingService --> mentions
 taggingService --> language
 taggingService --> wikidata
 taggingService --> organizationItems
+taggingService --> countries
+countries --> wikidata
+countries --> mentionModel
+wikidata --> countryNames
 organizationItems --> wikidata
 organizationItems --> mentionModel
 taggingService --> mentionModel
@@ -135,6 +165,7 @@ wikidata --> WikidataApi
 mentionModel --> articlesTable
 mentionModel --> mentionsTable
 mentionModel --> amTable
+mentionModel --> countriesTable
 entityService ..> mentionModel
 cardNames ..> mentionModel
 affairNames ..> mentionModel
