@@ -15,6 +15,8 @@ import {taggerDevice, taggerUrls, tagTexts} from "./utils/tagger.js";
 import {cleanMentions} from "./utils/mentions.js";
 import {languageOf} from "./utils/language.js";
 import {exactItems, famousHuman} from "./utils/wikidata.js";
+import {organizationItem} from "./utils/organization-items.js";
+import {newUsage} from "./utils/ollama.js";
 
 // Each tagger of NER_URL works on its own, the newest news first, none taken by another: the
 // processor of the server (2.2 news a second on 3 cores, 13.10.2026) keeps up with the news of the
@@ -108,11 +110,15 @@ const work = async (url) => {
     }
 };
 
+// the tokens the AI took to tell organisations apart since the last report
+let linkUsage = newUsage();
+
 // The names looked for in Wikidata, one at a time, the ones a reader saw first (on a card, the page of
 // a name: see MentionModel.want), then the most met: linked when one item only is called so, or, for a
 // person, when one of the humans called so is far more known than the others (see famousHuman: one item
 // only left 1 186 of 2 130 persons met 100 times or more unlinked, Donald Trump and Messi among them,
-// 18.10.2026)
+// 18.10.2026). An organisation is the one item called so, else the one the AI chooses among the items
+// called so or whose name starts so (see organization-items.js)
 const link = async () => {
     for (;;) {
         let rows = [];
@@ -127,9 +133,12 @@ const link = async () => {
         }
         for (const row of rows) {
             try {
-                const qids = await exactItems(row.name, row.lang ?? 'en');
-                const qid = qids.length === 1 ? qids[0]
-                    : qids.length > 1 && row.kind === 'person' ? await famousHuman(qids) : null;
+                let qid = null;
+                if (row.kind === 'organization') qid = await organizationItem(row, linkUsage);
+                else {
+                    const qids = await exactItems(row.name, row.lang ?? 'en');
+                    qid = qids.length === 1 ? qids[0] : qids.length > 1 && row.kind === 'person' ? await famousHuman(qids) : null;
+                }
                 await MentionModel.setLink(row.id, qid);
             } catch (err) {
                 // refused (429): wikidata.js waits the time asked before the next one
@@ -147,8 +156,10 @@ const report = async () => {
         try {
             const waiting = await MentionModel.untaggedCount(new Date(Date.now() - TAG_DAYS * 24 * 3600e3));
             const done = [...taggers].map(([url, state]) => `${url} ${state.tagged}`).join(', ');
-            console.log(`Tagger: in ${REPORT_MINUTES} min tagged ${done}; ${waiting} news of the last ${TAG_DAYS} days left`);
+            console.log(`Tagger: in ${REPORT_MINUTES} min tagged ${done}; ${waiting} news of the last ${TAG_DAYS} days left`
+                + `; organisations told apart by the AI: ${linkUsage.calls} calls, ${linkUsage.input + linkUsage.output} tokens`);
             taggers.forEach(state => { state.tagged = 0; });
+            linkUsage = newUsage();
         } catch (err) {
             console.error(`Tagger: nothing reported (${err.message})`);
         }

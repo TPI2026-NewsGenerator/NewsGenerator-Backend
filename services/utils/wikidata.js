@@ -65,6 +65,48 @@ const EXACT_FOUND = 10;
 export const exactItems = async (name, language = 'en') => {
     const key = mentionKey(name);
     if (key.length < 2) return [];
+    return [...new Set((await searchNamed(name, language))
+        .filter(item => mentionKey(item.match?.text ?? item.label) === key)
+        .map(item => item.id))];
+};
+
+// The items an organisation may be ("Juventus" is "Juventus FC", "Liverpool" "Liverpool F.C."): the ones
+// Wikidata finds called so or whose name starts so, in its order, [{qid, exact}], exact when called so.
+// The famous club comes first under a longer name, the city before it (18.10.2026)
+export const namedItems = async (name, language = 'en') => {
+    const key = mentionKey(name);
+    if (key.length < 2) return [];
+    const startsSo = (text) => {
+        const other = mentionKey(text);
+        return other === key || other.startsWith(`${key} `);
+    };
+    const found = new Map();
+    for (const item of await searchNamed(name, language)) {
+        if (found.has(item.id) || !(startsSo(item.match?.text ?? item.label) || startsSo(item.label ?? ''))) continue;
+        found.set(item.id, {qid: item.id, exact: mentionKey(item.match?.text ?? item.label) === key || mentionKey(item.label ?? '') === key});
+    }
+    return [...found.values()];
+};
+
+// [{qid, label, description, links, human}] of these items, in English: links the Wikipedias it is in,
+// human when it is one (P31 Q5); the ones Wikidata does not have left out
+export const describeItems = async (qids) => {
+    const asked = [...new Set(qids.filter(isQid))].slice(0, EXACT_FOUND);
+    if (asked.length === 0) return [];
+    const params = new URLSearchParams({action: 'wbgetentities', ids: asked.join('|'), props: 'labels|descriptions|claims|sitelinks',
+        languages: 'en', format: 'json'});
+    const entities = (await ask(`${API}?${params}`)).entities ?? {};
+    return asked.map(qid => entities[qid]).filter(item => item && item.missing === undefined).map(item => ({
+        qid: item.id,
+        label: item.labels?.en?.value ?? item.id,
+        description: item.descriptions?.en?.value ?? '',
+        links: Object.keys(item.sitelinks ?? {}).length,
+        human: (item.claims?.P31 ?? []).some(claim => claim.mainsnak?.datavalue?.value?.id === 'Q5'),
+    }));
+};
+
+// the items Wikidata finds for a name, pages of Wikimedia, of a family or given name aside, in its order
+const searchNamed = async (name, language) => {
     // searched in its language, described in English: NOT_NAMED reads English ("Čeferin", a news in
     // Slovenian, was linked to the family name, described "priimek", 13.10.2026)
     const search = async (code) => ask(`${API}?${new URLSearchParams({action: 'wbsearchentities', search: String(name).slice(0, 100),
@@ -77,10 +119,7 @@ export const exactItems = async (name, language = 'en') => {
         throw Object.assign(new Error('Wikidata asked to wait.'), {status: 502, paused: true});
     }
     if (answer.error) throw Object.assign(new Error(`Wikidata refused the search (${answer.error.code}).`), {status: 502});
-    return [...new Set((answer.search ?? [])
-        .filter(item => isQid(item.id) && !NOT_NAMED.test(item.description ?? '')
-            && mentionKey(item.match?.text ?? item.label) === key)
-        .map(item => item.id))];
+    return (answer.search ?? []).filter(item => isQid(item.id) && !NOT_NAMED.test(item.description ?? ''));
 };
 
 // A person named as several items are: the one of them who is a human (P31 Q5) and is in far more

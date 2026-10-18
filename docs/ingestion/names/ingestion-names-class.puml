@@ -49,6 +49,11 @@ package "utils" {
     class wikidata {
         + exactItems(name, language)
         + famousHuman(qids)
+        + namedItems(name, language)
+        + describeItems(qids)
+    }
+    class organizationItems {
+        + organizationItem(mention, usage)
     }
 }
 note bottom of mentions
@@ -63,6 +68,12 @@ note bottom of wikidata
     famousHuman: the human of several items
     far more known (sitelinks) than the others
 end note
+note bottom of organizationItems
+    The one item called so, else the one the AI
+    chooses from 5 titles of its news among the
+    items called so or starting so, no person,
+    in 10 Wikipedias at least
+end note
 
 package "Data" {
     class mentionModel {
@@ -72,6 +83,7 @@ package "Data" {
         + toLink({least, limit})
         + setLink(id, qid)
         + personsEndingWith(words)
+        + titlesNaming(id, limit)
         + deleteUnused()
     }
     class "articles" as articlesTable <<table>> {
@@ -114,6 +126,9 @@ taggingService --> tagger
 taggingService --> mentions
 taggingService --> language
 taggingService --> wikidata
+taggingService --> organizationItems
+organizationItems --> wikidata
+organizationItems --> mentionModel
 taggingService --> mentionModel
 tagger --> Ner
 wikidata --> WikidataApi

@@ -52,7 +52,7 @@ loop link()
         Tagging -> Tagging : wait 10 min
     else
         loop each name
-            Tagging -> Wiki : exactItems(name, lang)
+            Tagging -> Wiki : exactItems(name, lang), or for an organisation\norganizationItem: namedItems, describeItems,\nthe AI choosing from 5 titles (titlesNaming)
             Wiki -> WikiApi : wbsearchentities in its language\n(then in English), 10 found at most
             alt 429 or too busy
                 Wiki --> Tagging : paused: nobody of the process asks\nfor Retry-After or 30 s

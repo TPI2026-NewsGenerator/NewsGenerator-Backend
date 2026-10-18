@@ -105,6 +105,14 @@ export const MentionModel = {
         GROUP BY w.word, m.qid
         ORDER BY w.word, seen DESC`, words),
 
+    // [title]: the titles of the newest news naming this name, each title once, 'limit' at most: what the
+    // AI reads to tell which item an organisation is (see organization-items.js)
+    titlesNaming: async (id, limit) => (await prisma.$queryRawUnsafe(`
+        SELECT title FROM (
+            SELECT DISTINCT ON (a.title) a.title, a.id FROM article_mentions am JOIN articles a ON a.id = am.id_article
+            WHERE am.id_mention = $1 AND a.title IS NOT NULL ORDER BY a.title, a.id DESC LIMIT 200
+        ) t ORDER BY id DESC LIMIT $2`, id, limit)).map(row => row.title),
+
     // the item of Wikidata a name is, null when none or several are called so: looked for now
     setLink: async (id, qid) => prisma.$executeRawUnsafe(`
         UPDATE mentions SET qid = $2, linked_at = now() WHERE id = $1`, id, qid),

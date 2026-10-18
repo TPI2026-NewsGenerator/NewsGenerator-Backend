@@ -42,7 +42,11 @@ what finds the other angles of a card through its rare names.
   when none or several ("LFF" of Latvia and of Lithuania). Since 18.10.2026 a person named as several items are
   is the human among them (P31 Q5) in far more Wikipedias than the others (`famousHuman`: 30 at least, 3 times
   the next one; with 10, the byline "Mohammed Ibrahim" became Mo Ibrahim, a businessman in 20): "Donald Trump" is no song, "David Beckham" no Canadian candidate; "Michael Oliver", the
-  referee among 9, stays unlinked. One name every 7 s (`LINK_PAUSE_MS`); nothing left:
+  referee among 9, stays unlinked. An organisation (`organizationItem`, `services/utils/organization-items.js`)
+  is the one item called so; else the AI (gemma4:31b, 5 titles of news naming it, `titlesNaming`) chooses among
+  the items called so or whose name starts so (`namedItems`: "Juventus" is "Juventus FC", "Liverpool"
+  "Liverpool F.C.", the city coming first), no person among them (`describeItems`), or none; kept when the item
+  is in 10 Wikipedias at least. About 390 tokens a name, counted in the hourly report of the tagger. One name every 7 s (`LINK_PAUSE_MS`); nothing left:
   10 minutes. A 429 or "too busy" pauses every call of the process to Wikidata for `Retry-After` or 30 s.
 - **A family name alone** on a card (`withSurnamesLinked`, `services/utils/card-names.js`, since 18.10.2026):
   "Infantino" is no item of Wikidata (a family name, a village, a page of namesakes). It is the person linked
@@ -70,7 +74,10 @@ what finds the other angles of a card through its rare names.
   called so left out the famous ones, who have the most namesakes (FIFA: an album and a song of Angélique
   Kidjo; Manchester City: its women's team). On 40 of them never linked, the persons told apart by
   `famousHuman` were 4 out of 4 right; the organisations by their Wikipedias only 9 out of 14 (Liverpool and
-  Roma the cities, Juventus a basketball team): not used for them.
+  Roma the cities, Juventus a basketball team), by their description against their news 7 out of 16: the AI
+  chose 50 times, 45 right, 44 out of 46 kept in 10 Wikipedias or more (a PSG omnisport club in 4, the
+  women's team of Como 1907 in 6 left out). Live: Juventus, Liverpool, FIFA linked; Roma (AS Roma is no
+  candidate), "FC" and Real Madrid (news of its basketball team) none.
 - Wikidata without an account let 9 or 10 searches through then answered 429 for 12 to 25 s; one every 6.5 s
   went through 30 times in a row (13.10.2026): one every 7 s, about 12,000 names a day, for about 150,000
   waiting.
