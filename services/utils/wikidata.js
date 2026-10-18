@@ -87,8 +87,10 @@ export const exactItems = async (name, language = 'en') => {
 // Wikipedias than any other (sitelinks), the famous one. A famous name has the most namesakes: "David
 // Beckham" a Canadian candidate, "Donald Trump" songs. On 40 names often met and never linked (18.10.2026)
 // the persons were all told right (Trump 334 against 6, Messi 226 against 0, Lula 150 against 13), and
-// "Michael Oliver" (the referee among 9) left alone. null when none stands out
-export const MIN_SITELINKS = 10;
+// "Michael Oliver" (the referee among 9) left alone. In 30 Wikipedias at least: in 10, the byline
+// "Mohammed Ibrahim" of a sports site became Mo Ibrahim, a businessman in 20 (18.10.2026). null when none
+// stands out
+export const MIN_SITELINKS = 30;
 export const SITELINKS_AHEAD = 3;
 export const famousHuman = async (qids) => {
     const asked = [...new Set(qids.filter(isQid))].slice(0, EXACT_FOUND);

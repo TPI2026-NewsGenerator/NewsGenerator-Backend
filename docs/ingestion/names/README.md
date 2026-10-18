@@ -40,8 +40,8 @@ what finds the other angles of a card through its rare names.
   `wbsearchentities` in the language of the name, then in English, and keeps the items called exactly so,
   pages of a family or given name aside. `setLink` stores the qid when one item only is called so, `null`
   when none or several ("LFF" of Latvia and of Lithuania). Since 18.10.2026 a person named as several items are
-  is the human among them (P31 Q5) in far more Wikipedias than the others (`famousHuman`: 10 at least, 3 times
-  the next one): "Donald Trump" is no song, "David Beckham" no Canadian candidate; "Michael Oliver", the
+  is the human among them (P31 Q5) in far more Wikipedias than the others (`famousHuman`: 30 at least, 3 times
+  the next one; with 10, the byline "Mohammed Ibrahim" became Mo Ibrahim, a businessman in 20): "Donald Trump" is no song, "David Beckham" no Canadian candidate; "Michael Oliver", the
   referee among 9, stays unlinked. One name every 7 s (`LINK_PAUSE_MS`); nothing left:
   10 minutes. A 429 or "too busy" pauses every call of the process to Wikidata for `Retry-After` or 30 s.
 - **A family name alone** on a card (`withSurnamesLinked`, `services/utils/card-names.js`, since 18.10.2026):

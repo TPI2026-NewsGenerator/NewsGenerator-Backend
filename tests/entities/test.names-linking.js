@@ -29,10 +29,10 @@ describe('famousHuman', () => {
     it('should take none when no human stands out, or the most known is little known', async () => {
         const fetch = jest.spyOn(globalThis, 'fetch')
             .mockResolvedValueOnce(answer({entities: {Q4333767: item('Q4333767', true, 20), Q2720825: item('Q2720825', true, 12)}}))
-            .mockResolvedValueOnce(answer({entities: {Q3: item('Q3', true, 5)}}))
+            .mockResolvedValueOnce(answer({entities: {Q1374752: item('Q1374752', true, 20), Q3: item('Q3', true, 2)}}))
             .mockResolvedValueOnce(answer({entities: {Q4: item('Q4', false, 200)}}));
         expect(await famousHuman(['Q4333767', 'Q2720825'])).toBeNull();
-        expect(await famousHuman(['Q3'])).toBeNull();
+        expect(await famousHuman(['Q1374752', 'Q3'])).toBeNull();
         expect(await famousHuman(['Q4'])).toBeNull();
         expect(await famousHuman([])).toBeNull();
         expect(fetch).toHaveBeenCalledTimes(3);
