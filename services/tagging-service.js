@@ -12,7 +12,7 @@
 import {MentionModel} from "../models/mention-model.js";
 import {RETENTION_DAYS} from "./feed-service.js";
 import {taggerDevice, taggerUrls, tagTexts} from "./utils/tagger.js";
-import {cleanMentions} from "./utils/mentions.js";
+import {cleanMentions, mentionKey} from "./utils/mentions.js";
 import {languageOf} from "./utils/language.js";
 import {exactItems, famousHuman} from "./utils/wikidata.js";
 import {organizationItem} from "./utils/organization-items.js";
@@ -137,7 +137,10 @@ const link = async () => {
                 if (row.kind === 'organization') qid = await organizationItem(row, linkUsage);
                 else {
                     const qids = await exactItems(row.name, row.lang ?? 'en');
-                    qid = qids.length === 1 ? qids[0] : qids.length > 1 && row.kind === 'person' ? await famousHuman(qids) : null;
+                    // a full name only: "Russell" alone, the F1 driver, became Bertrand Russell (18.10.2026); a
+                    // family name alone is told on its card (see withSurnamesLinked)
+                    const fullName = mentionKey(row.name).includes(' ');
+                    qid = qids.length === 1 ? qids[0] : qids.length > 1 && row.kind === 'person' && fullName ? await famousHuman(qids) : null;
                 }
                 await MentionModel.setLink(row.id, qid);
             } catch (err) {

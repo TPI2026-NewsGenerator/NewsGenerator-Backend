@@ -41,8 +41,10 @@ what finds the other angles of a card through its rare names.
   pages of a family or given name aside. `setLink` stores the qid when one item only is called so, `null`
   when none or several ("LFF" of Latvia and of Lithuania). Since 18.10.2026 a person named as several items are
   is the human among them (P31 Q5) in far more Wikipedias than the others (`famousHuman`: 30 at least, 3 times
-  the next one; with 10, the byline "Mohammed Ibrahim" became Mo Ibrahim, a businessman in 20): "Donald Trump" is no song, "David Beckham" no Canadian candidate; "Michael Oliver", the
-  referee among 9, stays unlinked. An organisation (`organizationItem`, `services/utils/organization-items.js`)
+  the next one; with 10, the byline "Mohammed Ibrahim" became Mo Ibrahim, a businessman in 20), for a full
+  name only ("Russell" alone, the F1 driver, became Bertrand Russell: a family name alone is told on its
+  card): "Donald Trump" is no song, "David Beckham" no Canadian candidate; "Michael Oliver", the referee
+  among 9, stays unlinked. An organisation (`organizationItem`, `services/utils/organization-items.js`)
   is the one item called so; else the AI (gemma4:31b, 5 titles of news naming it, `titlesNaming`) chooses among
   the items called so or whose name starts so (`namedItems`: "Juventus" is "Juventus FC", "Liverpool"
   "Liverpool F.C.", the city coming first), no person among them (`describeItems`), or none; kept when the item
