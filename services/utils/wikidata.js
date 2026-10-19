@@ -317,23 +317,38 @@ const claimsOf = async (qids, options = {}) => {
     return found;
 };
 
+// the bodies a person works for or sits in, still (no end date): their employer (P108), what they are a
+// member of (P463), the body of a position they hold (P39, written with it: the body it directs, P2389,
+// or an employer, membership, affiliation). Infantino works for FIFA, Ceferin is president of UEFA,
+// Motsepe chairperson of the CAF
+const BODY_QUALIFIERS = ['P2389', 'P642', 'P108', 'P463', 'P1416'];
+const bodiesOfClaims = (claims) => {
+    const current = (property) => (claims?.[property] ?? []).filter(claim => claim.rank !== 'deprecated' && !claim.qualifiers?.P582);
+    return [...new Set([...current('P108'), ...current('P463')].map(claim => claim.mainsnak?.datavalue?.value?.id)
+        .concat(current('P39').flatMap(claim => BODY_QUALIFIERS.flatMap(qualifier => (claim.qualifiers?.[qualifier] ?? [])
+            .map(value => value.datavalue?.value?.id))))
+        .filter(isQid))];
+};
+const isHuman = (claims) => (claims?.P31 ?? []).some(claim => claim.mainsnak?.datavalue?.value?.id === 'Q5');
+
 // the code of each country met, kept for as long as the process lives: about 200 of them; and whether
 // the bodies items are part of are international
 const codes = new Map();
 const international = new Map();
 
-// Map qid -> {country, international} of each item: country the code ISO 3166-1 alpha-2 of its country
-// ("ZM"), null when none; international for a body of several countries (see countryOfClaims). A country
+// Map qid -> {country, international, bodies} of each item: country the code ISO 3166-1 alpha-2 of its
+// country ("ZM"), null when none; international for a body of several countries (see countryOfClaims);
+// bodies the qids of the bodies a person is of (see bodiesOfClaims), none for anything else. A country
 // with no code of its own is part of one (England, Scotland: the United Kingdom): the code of that one.
 // Every item is answered, Wikidata asked a few times a card at most. background: see MAX_LAG_S
 export const readCountries = async (qids, {background = false} = {}) => {
     const asked = [...new Set(qids.filter(isQid))];
     const claims = await claimsOf(asked, {background});
     const of = new Map(asked.map(qid => [qid, claims.has(qid) ? countryOfClaims(claims.get(qid)) : null]));
-    // a body part of an international one (P361, P749) is one too: the FIFA Council has the country of
-    // FIFA's seat
-    const parentsOf = (qid) => of.get(qid)?.qid && !(claims.get(qid)?.P31 ?? []).some(claim => claim.mainsnak?.datavalue?.value?.id === 'Q5')
-        ? [...bestValues(claims.get(qid), 'P361'), ...bestValues(claims.get(qid), 'P749')] : [];
+    // a body part of an international one (P361) is one too: the FIFA Council has the country of FIFA's
+    // seat. Not one whose parent organisation (P749) it is: the French, Italian, Spanish federations
+    // are UEFA's, and French, Italian, Spanish (17 of 17 national federations on 173 cards, 19.10.2026)
+    const parentsOf = (qid) => of.get(qid)?.qid && !isHuman(claims.get(qid)) ? bestValues(claims.get(qid), 'P361') : [];
     const parents = [...new Set(asked.flatMap(parentsOf))].filter(qid => !international.has(qid));
     if (parents.length > 0) {
         const read = await claimsOf(parents, {background});
@@ -356,6 +371,7 @@ export const readCountries = async (qids, {background = false} = {}) => {
     return new Map([...of].map(([qid, country]) => [qid, {
         country: country?.code ?? (country?.qid ? codes.get(country.qid) ?? null : null),
         international: Boolean(country?.international),
+        bodies: isHuman(claims.get(qid)) ? bodiesOfClaims(claims.get(qid)) : [],
     }]));
 };
 

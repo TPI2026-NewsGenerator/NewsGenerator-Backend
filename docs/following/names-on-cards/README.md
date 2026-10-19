@@ -60,12 +60,18 @@ on the page ("Zambia", "United States · China") and next to its topic in the e-
   country it plays for (P1532), else its first citizenship (P27); anything else its country (P17), a part of
   a country (England) the country it is part of. None for an international body (international or
   intergovernmental organisation, supranational union, alliance, regional organisation, international sport
-  body, an operating area of the world or a continent, or a part of one: the FIFA Council): FIFA has the
-  country of its seat, Switzerland. A card naming one leaves out the countries of its people: Infantino of
-  FIFA is no Swiss news, Motsepe of the CAF no South African one.
+  body, an operating area of the world or a continent, or a part of one (P361): the FIFA Council): FIFA has
+  the country of its seat, Switzerland. A body whose parent organisation (P749) is one is not: the French
+  federation is UEFA's, and French. A person also has its **bodies** (`bodiesOfClaims`): employer (P108),
+  member of (P463), the body of a position held (P39 with P2389, or an employer, membership, affiliation
+  written with it), the ones without an end date only.
+- **The people of an international body.** A card naming one leaves out the countries of the people of
+  that body only: Infantino of FIFA is no Swiss news, Motsepe of the CAF no South African one; the Romanian
+  referee of a card naming UEFA, Wenger or Beckham running against Infantino keep theirs.
 - **Which are shown.** `cardCountries` (`countries.js`): every country weighing half the first at least, 3 at
   most; none when the title names them all already ("La Zambie limoge...", "le président zambien...").
-- **Read once.** `item_countries` (`db/add_item_countries.sql`) keeps the country of each item. A card asks
+- **Read once.** `item_countries` (`db/add_item_countries.sql`, `bodies` by `db/add_item_bodies.sql`: the
+  rows read before it have none and are read again) keeps the country of each item. A card asks
   Wikidata for the ones never read, 40 at a time, waiting up to 30 s for a pause it asks for; the tagging
   service reads the others ahead, 40 a minute, the most named first (`locate`), with `maxlag=5` (work no
   reader waits for).
@@ -73,6 +79,15 @@ on the page ("Zambia", "United States · China") and next to its topic in the e-
 Measured 18.10.2026: on 85 cards of 9 briefings, countries on 40 (right ones: Porto and Betis "Portugal ·
 Spain", AEK and Shakhtar "Greece · Ukraine", Netflix and the World Cup rights "United States · Spain ·
 Andorra"); live briefing 167, 10 cards of 17, none of the FIFA ones.
+
+Measured 19.10.2026 (`bench/international-people`: `bench.mjs`, `truth.json` judged by hand, `score.mjs`):
+173 cards of 14 days of briefings name an international body, 84 where the rules tell other countries.
+Every person left out (before): 46 right, 38 wrong (the Romanian referee "Italy", Wenger's cards "United
+Kingdom" or none, the FIGC, the DFB, the Ghanaian federation without their country). People of a body of
+the card only: 63 / 21; with the federations national: **79 / 5** (built). Its links ended or not, or to
+any international body (not only the card's): the same or one worse (Malagò, ex-IOC member, lost Italy).
+The 5 left are links of names (a Croatian referee taken for a Filipino, "FMF" for Moldova, The New York
+Times "United States") and a French journalist quoted on a CAF card.
 
 ## Measured
 

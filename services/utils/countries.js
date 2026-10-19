@@ -19,20 +19,24 @@ const SHARE_OF_FIRST = 0.5;
 
 // The codes ISO 3166-1 of the countries of a card ("ZM"), the main first. items: [{qid, weight, person}],
 // who and where it names, weight the news of the card naming them; of: Map qid -> {country,
-// international}. Each item counts once, with its weight; a country is shown when it weighs half the
-// first at least: a card on Trump and Xi is of the United States and China, a card on Hichilema in Lusaka
-// of Zambia only. A card naming an international body is not of the country of its people: Infantino of
-// FIFA, Motsepe of the CAF are no Swiss nor South African news (their clubs, federations and places count)
+// international, bodies}. Each item counts once, with its weight; a country is shown when it weighs half
+// the first at least: a card on Trump and Xi is of the United States and China, a card on Hichilema in
+// Lusaka of Zambia only. The people of an international body the card names are not of their country:
+// Infantino of FIFA, Motsepe of the CAF are no Swiss nor South African news. The other people are: the
+// Romanian referee of a UEFA match, Wenger running against Infantino (measured 19.10.2026 on 173 cards
+// naming such a body, bench/international-people: 79 right of 84 where it changes something, 46 when
+// every person of these cards was left out)
 export const cardCountries = (items, of) => {
     const weights = new Map();
     for (const {qid, weight, person} of items) {
         if (qid) weights.set(qid, {weight: Math.max(weights.get(qid)?.weight ?? 0, weight), person: Boolean(person)});
     }
-    const international = [...weights.keys()].some(qid => of.get(qid)?.international);
+    const international = new Set([...weights.keys()].filter(qid => of.get(qid)?.international));
+    const ofBody = (qid) => (of.get(qid)?.bodies ?? []).some(body => international.has(body));
     const scores = new Map();
     for (const [qid, {weight, person}] of weights) {
         const code = of.get(qid)?.country;
-        if (code && !(person && international)) scores.set(code, (scores.get(code) ?? 0) + weight);
+        if (code && !(person && ofBody(qid))) scores.set(code, (scores.get(code) ?? 0) + weight);
     }
     const ranked = [...scores].sort((a, b) => b[1] - a[1]);
     return ranked.filter(([, score]) => score >= ranked[0][1] * SHARE_OF_FIRST).slice(0, MAX_COUNTRIES).map(([code]) => code);
@@ -45,13 +49,16 @@ const ITEMS_AT_ONCE = 40;
 const MAX_WAIT_MS = 30e3;
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Map qid -> {country, international} of these items (see readCountries): the ones read before from the database, the others from
-// Wikidata now, kept. Wikidata refusing for longer, or failing: the ones read so far only. background:
-// read ahead, no reader waiting (see wikidata.js MAX_LAG_S)
+// Map qid -> {country, international, bodies} of these items (see readCountries): the ones read before
+// from the database, the others from Wikidata now, kept. The ones read before their bodies were
+// (19.10.2026) are read again, kept as they were until then. Wikidata refusing for longer, or failing:
+// the ones read so far only. background: read ahead, no reader waiting (see wikidata.js MAX_LAG_S)
 export const countriesOfItems = async (qids, {background = false} = {}) => {
     const asked = [...new Set(qids.filter(Boolean))];
-    const known = new Map((await MentionModel.countriesOf(asked)).map(row => [row.qid, {country: row.country, international: row.international}]));
-    const missing = asked.filter(qid => !known.has(qid));
+    const rows = await MentionModel.countriesOf(asked);
+    const known = new Map(rows.map(row => [row.qid, {country: row.country, international: row.international, bodies: row.bodies ?? []}]));
+    const current = new Set(rows.filter(row => row.bodies).map(row => row.qid));
+    const missing = asked.filter(qid => !current.has(qid));
     let waited = 0;
     for (let i = 0; i < missing.length;) {
         const part = missing.slice(i, i + ITEMS_AT_ONCE);

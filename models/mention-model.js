@@ -186,20 +186,23 @@ export const MentionModel = {
     // [{qid, country, international}]: the countries of these items already read
     // (db/add_item_countries.sql), country null for an item that has none
     countriesOf: async (qids) => qids.length === 0 ? [] : prisma.$queryRawUnsafe(`
-        SELECT qid, country, international FROM item_countries WHERE qid = ANY($1::text[])`, qids),
+        SELECT qid, country, international, bodies FROM item_countries WHERE qid = ANY($1::text[])`, qids),
 
-    // [qid]: the items names were linked to whose country was never read, of the most met names first
+    // [qid]: the items names were linked to whose country was never read, or before their bodies were
+    // (db/add_item_bodies.sql), of the most met names first
     toLocate: async (limit) => (await prisma.$queryRawUnsafe(`
         SELECT m.qid FROM mentions m
-        WHERE m.qid IS NOT NULL AND NOT EXISTS (SELECT 1 FROM item_countries c WHERE c.qid = m.qid)
+        WHERE m.qid IS NOT NULL AND NOT EXISTS (SELECT 1 FROM item_countries c WHERE c.qid = m.qid AND c.bodies IS NOT NULL)
         GROUP BY m.qid ORDER BY max(m.seen) DESC LIMIT $1`, limit)).map(row => row.qid),
 
-    // countries: [{qid, country, international}] read from Wikidata, kept
+    // countries: [{qid, country, international, bodies}] read from Wikidata, kept
     saveCountries: async (countries) => countries.length === 0 ? 0 : prisma.$executeRawUnsafe(`
-        INSERT INTO item_countries (qid, country, international)
-        SELECT * FROM unnest($1::text[], $2::text[], $3::boolean[])
-        ON CONFLICT (qid) DO UPDATE SET country = EXCLUDED.country, international = EXCLUDED.international, looked_at = now()`,
-        countries.map(row => row.qid), countries.map(row => row.country), countries.map(row => row.international)),
+        INSERT INTO item_countries (qid, country, international, bodies)
+        SELECT qid, country, international, COALESCE(bodies, '{}')
+        FROM jsonb_to_recordset($1::jsonb) AS x(qid text, country text, international boolean, bodies text[])
+        ON CONFLICT (qid) DO UPDATE SET country = EXCLUDED.country, international = EXCLUDED.international,
+            bodies = EXCLUDED.bodies, looked_at = now()`,
+        JSON.stringify(countries.map(({qid, country, international, bodies}) => ({qid, country, international, bodies})))),
 
     // the names no news names any more, never looked for in Wikidata: the item of the others is kept on
     // purpose (the user, 17.10.2026), so a name that comes back is not looked for again in Wikidata,
