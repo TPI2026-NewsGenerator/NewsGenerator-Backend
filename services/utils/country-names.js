@@ -102,3 +102,36 @@ export const countryNamed = (name) => {
     const key = mentionKey(name);
     return namesOfCountries().get(key) ?? namesOfCountries().get(key.replace(ARTICLE, '')) ?? null;
 };
+
+// the domains of two letters that are no country's sites: .co, .io, .tv, .me, .fm are for anyone
+const OPEN_DOMAINS = new Set(['co', 'io', 'tv', 'me', 'ai', 'fm', 'ly', 'gg', 'to', 'cc', 'ws', 'la', 'eu', 'su', 'am', 'nu', 'is']);
+// The country of a site by its domain: "prosport.ro" is "RO", "bbc.co.uk" "GB"; null for a ".com"
+export const countryOfSite = (site) => {
+    const domain = String(site ?? '').toLowerCase().replace(/\.$/, '').split('.').at(-1);
+    if (domain === 'uk') return 'GB';
+    return /^[a-z]{2}$/.test(domain) && !OPEN_DOMAINS.has(domain) ? domain.toUpperCase() : null;
+};
+
+// a byline: one site writes this share of the news naming it at least; the country of the media: the one
+// of this share of the sites of a country naming it, of MIN_COUNTRY_NEWS of them at least
+const BYLINE_SHARE = 0.8;
+const COUNTRY_SHARE = 0.5;
+const MIN_COUNTRY_NEWS = 3;
+// What the sites naming a person tell of them (sites: [{site, news}], see MentionModel.sitesNaming):
+// byline, when one site writes most of their news ("Mohammed Ibrahim" 94% of ysscores.com), and country,
+// the one of most of the sites of a country naming them ("Istvan Kovacs": prosport.ro, gsp.ro), null when
+// none stands out (José Mourinho in 52 countries) (19.10.2026, see wikidata.js famousHuman)
+export const mediaOf = (sites = []) => {
+    const total = sites.reduce((sum, row) => sum + row.news, 0);
+    const byCountry = new Map();
+    for (const row of sites) {
+        const code = countryOfSite(row.site);
+        if (code) byCountry.set(code, (byCountry.get(code) ?? 0) + row.news);
+    }
+    const inCountries = [...byCountry.values()].reduce((sum, news) => sum + news, 0);
+    const [top] = [...byCountry].sort((a, b) => b[1] - a[1]);
+    return {
+        byline: total > 0 && Math.max(...sites.map(row => row.news)) >= BYLINE_SHARE * total,
+        country: top && inCountries >= MIN_COUNTRY_NEWS && top[1] >= COUNTRY_SHARE * inCountries ? top[0] : null,
+    };
+};

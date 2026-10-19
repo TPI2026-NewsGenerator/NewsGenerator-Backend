@@ -2,14 +2,16 @@
 //  Author: Fabian Rostello
 //  Date: 18.10.2026
 //  File: test.names-linking.js
-//  Description: A famous person or place among their namesakes of Wikidata, and a family name alone on
-//               a card taken for the person linked who bears it
+//  Description: A famous person or place among their namesakes of Wikidata, a person of the country of
+//               the media naming them, and a family name alone on a card taken for the person linked
+//               who bears it
 //
 
 import {describe, expect, it, jest} from '@jest/globals';
 
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
-const {famousHuman, famousPlace, placeItem} = await import('../../services/utils/wikidata.js');
+const {BYLINE_SITELINKS, famousHuman, famousPlace, placeItem} = await import('../../services/utils/wikidata.js');
+const {countryOfSite, mediaOf} = await import('../../services/utils/country-names.js');
 const {withSurnamesLinked} = await import('../../services/utils/card-names.js');
 
 const answer = (body) => ({ok: true, status: 200, headers: new Headers(), json: async () => body});
@@ -29,14 +31,59 @@ describe('famousHuman', () => {
     it('should take none when no human stands out, or the most known is little known', async () => {
         const fetch = jest.spyOn(globalThis, 'fetch')
             .mockResolvedValueOnce(answer({entities: {Q4333767: item('Q4333767', true, 20), Q2720825: item('Q2720825', true, 12)}}))
-            .mockResolvedValueOnce(answer({entities: {Q1374752: item('Q1374752', true, 20), Q3: item('Q3', true, 2)}}))
+            .mockResolvedValueOnce(answer({entities: {Q6: item('Q6', true, 8), Q3: item('Q3', true, 2)}}))
             .mockResolvedValueOnce(answer({entities: {Q4: item('Q4', false, 200)}}));
         expect(await famousHuman(['Q4333767', 'Q2720825'])).toBeNull();
-        expect(await famousHuman(['Q1374752', 'Q3'])).toBeNull();
+        expect(await famousHuman(['Q6', 'Q3'])).toBeNull();
         expect(await famousHuman(['Q4'])).toBeNull();
         expect(await famousHuman([])).toBeNull();
         expect(fetch).toHaveBeenCalledTimes(3);
         fetch.mockRestore();
+    });
+
+    it('should take a person known in 10 Wikipedias, a byline only when far better known', async () => {
+        const fetch = jest.spyOn(globalThis, 'fetch')
+            .mockResolvedValueOnce(answer({entities: {Q30729111: item('Q30729111', true, 16), Q3219418: item('Q3219418', true, 1)}}))
+            .mockResolvedValueOnce(answer({entities: {Q1374752: item('Q1374752', true, 20), Q3: item('Q3', true, 2)}}));
+        expect(await famousHuman(['Q30729111', 'Q3219418'])).toBe('Q30729111');
+        // "Mohammed Ibrahim", the byline of a sports site, is not Mo Ibrahim
+        expect(await famousHuman(['Q1374752', 'Q3'], {least: BYLINE_SITELINKS})).toBeNull();
+        fetch.mockRestore();
+    });
+
+    it('should take the one of the country of the media standing out among the humans of that country', async () => {
+        const citizen = (id, links, country) => ({...item(id, true, links), claims: {...item(id, true, links).claims,
+            P27: [{rank: 'normal', mainsnak: {datavalue: {value: {id: country}}}}]}});
+        const nation = (id, code) => ({id, claims: {P297: [{rank: 'normal', mainsnak: {datavalue: {value: code}}}]}});
+        const people = {Q12731153: citizen('Q12731153', 31, 'Q218'), Q225271: citizen('Q225271', 22, 'Q28'), Q12349485: citizen('Q12349485', 2, 'Q218')};
+        const fetch = jest.spyOn(globalThis, 'fetch')
+            .mockResolvedValueOnce(answer({entities: people}))
+            .mockResolvedValueOnce(answer({entities: people}))
+            .mockResolvedValueOnce(answer({entities: {Q218: nation('Q218', 'RO'), Q28: nation('Q28', 'HU')}}));
+        // "Istvan Kovacs" of prosport.ro: the Romanian referee, not the Hungarian boxer
+        expect(await famousHuman(['Q12731153', 'Q225271', 'Q12349485'], {country: 'RO'})).toBe('Q12731153');
+        expect(fetch).toHaveBeenCalledTimes(3);
+        fetch.mockRestore();
+    });
+});
+
+describe('mediaOf', () => {
+    it('should tell the country of a site by its domain, none for an open one', () => {
+        expect(countryOfSite('prosport.ro')).toBe('RO');
+        expect(countryOfSite('bbc.co.uk')).toBe('GB');
+        expect(countryOfSite('lequipe.fr')).toBe('FR');
+        expect(countryOfSite('espn.com')).toBeNull();
+        expect(countryOfSite('sport.tv')).toBeNull();
+    });
+
+    it('should tell a byline and the country of most of the sites of a country naming someone', () => {
+        expect(mediaOf([{site: 'prosport.ro', news: 18}, {site: 'gsp.ro', news: 8}, {site: 'espn.com', news: 2}]))
+            .toEqual({byline: false, country: 'RO'});
+        expect(mediaOf([{site: 'ysscores.com', news: 84}, {site: 'goal.com', news: 5}])).toEqual({byline: true, country: null});
+        expect(mediaOf([{site: 'lequipe.fr', news: 5}, {site: 'marca.es', news: 5}, {site: 'bild.de', news: 4}]))
+            .toEqual({byline: false, country: null});
+        expect(mediaOf([{site: 'prosport.ro', news: 1}, {site: 'gsp.ro', news: 1}, {site: 'a.com', news: 1}])).toEqual({byline: false, country: null});
+        expect(mediaOf([])).toEqual({byline: false, country: null});
     });
 });
 

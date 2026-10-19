@@ -105,6 +105,13 @@ export const MentionModel = {
         GROUP BY w.word, m.qid
         ORDER BY w.word, seen DESC`, words),
 
+    // [{site, news}]: the sites of the news naming this name ("prosport.ro"), how many each: a byline is
+    // of one site, a person of the media of their country (see country-names.js mediaOf)
+    sitesNaming: async (id) => prisma.$queryRawUnsafe(`
+        SELECT regexp_replace(lower(split_part(a.link, '/', 3)), '^www\\.', '') AS site, count(*)::int AS news
+        FROM article_mentions am JOIN articles a ON a.id = am.id_article
+        WHERE am.id_mention = $1 GROUP BY 1`, id),
+
     // [title]: the titles of the newest news naming this name, each title once, 'limit' at most: what the
     // AI reads to tell which item an organisation is (see organization-items.js)
     titlesNaming: async (id, limit) => (await prisma.$queryRawUnsafe(`

@@ -14,7 +14,8 @@ import {RETENTION_DAYS} from "./feed-service.js";
 import {taggerDevice, taggerUrls, tagTexts} from "./utils/tagger.js";
 import {cleanMentions, mentionKey} from "./utils/mentions.js";
 import {languageOf} from "./utils/language.js";
-import {exactItems, famousHuman, placeItem} from "./utils/wikidata.js";
+import {BYLINE_SITELINKS, exactItems, famousHuman, placeItem, PERSON_SITELINKS} from "./utils/wikidata.js";
+import {mediaOf} from "./utils/country-names.js";
 import {countriesOfItems} from "./utils/countries.js";
 import {organizationItem} from "./utils/organization-items.js";
 import {newUsage} from "./utils/ollama.js";
@@ -125,8 +126,9 @@ let linkUsage = newUsage();
 // a name: see MentionModel.want), then the most met: linked when one item only is called so, or, for a
 // person, when one of the humans called so is far more known than the others (see famousHuman: one item
 // only left 1 186 of 2 130 persons met 100 times or more unlinked, Donald Trump and Messi among them,
-// 18.10.2026). An organisation is the one item called so, else the one the AI chooses among the items
-// called so or whose name starts so (see organization-items.js)
+// 18.10.2026), or than the others of the country of the media naming them. An organisation is the one
+// item called so, else the one the AI chooses among the items called so or whose name starts so (see
+// organization-items.js)
 const link = async () => {
     for (;;) {
         let rows = [];
@@ -149,7 +151,12 @@ const link = async () => {
                     // a full name only: "Russell" alone, the F1 driver, became Bertrand Russell (18.10.2026); a
                     // family name alone is told on its card (see withSurnamesLinked)
                     const fullName = mentionKey(row.name).includes(' ');
-                    qid = qids.length === 1 ? qids[0] : qids.length > 1 && row.kind === 'person' && fullName ? await famousHuman(qids) : null;
+                    if (qids.length === 1) qid = qids[0];
+                    else if (qids.length > 1 && row.kind === 'person' && fullName) {
+                        // a byline needs a person far better known; the country of its media tells the local one
+                        const media = mediaOf(await MentionModel.sitesNaming(row.id));
+                        qid = await famousHuman(qids, {least: media.byline ? BYLINE_SITELINKS : PERSON_SITELINKS, country: media.country});
+                    }
                 }
                 await MentionModel.setLink(row.id, qid);
             } catch (err) {

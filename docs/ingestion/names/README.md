@@ -40,9 +40,13 @@ what finds the other angles of a card through its rare names.
   `wbsearchentities` in the language of the name, then in English, and keeps the items called exactly so,
   pages of a family or given name aside. `setLink` stores the qid when one item only is called so, `null`
   when none or several ("LFF" of Latvia and of Lithuania). Since 18.10.2026 a person named as several items are
-  is the human among them (P31 Q5) in far more Wikipedias than the others (`famousHuman`: 30 at least, 3 times
-  the next one; with 10, the byline "Mohammed Ibrahim" became Mo Ibrahim, a businessman in 20), for a full
-  name only ("Russell" alone, the F1 driver, became Bertrand Russell: a family name alone is told on its
+  is the human among them (P31 Q5) in far more Wikipedias than the others (`famousHuman`: 3 times the next
+  one, 10 at least since 19.10.2026, 30 for a byline: a name one site writes 80% of the news of, as the
+  byline "Mohammed Ibrahim" of a sports site, which became Mo Ibrahim, a businessman in 20; `mediaOf` in
+  `services/utils/country-names.js`, the sites from `sitesNaming`). None standing out, the one standing out
+  among the humans of the country of the media naming the person, by the domains of their sites (half of the
+  news of sites of a country at least): "Istvan Kovacs" of prosport.ro and gsp.ro is the Romanian referee
+  (31 Wikipedias), not the Hungarian boxer (22). For a full name only ("Russell" alone, the F1 driver, became Bertrand Russell: a family name alone is told on its
   card): "Donald Trump" is no song, "David Beckham" no Canadian candidate; "Michael Oliver", the referee
   among 9, stays unlinked. An organisation (`organizationItem`, `services/utils/organization-items.js`)
   is the one item called so; else the AI (gemma4:31b, 5 titles of news naming it, `titlesNaming`) chooses among
@@ -86,6 +90,14 @@ what finds the other angles of a card through its rare names.
   chose 50 times, 45 right, 44 out of 46 kept in 10 Wikipedias or more (a PSG omnisport club in 4, the
   women's team of Como 1907 in 6 left out). Live: Juventus, Liverpool, FIFA linked; Roma (AS Roma is no
   candidate), "FC" and Real Madrid (news of its basketball team) none.
+- Persons, 19.10.2026 (`bench/homonyms`): 67 full names never linked (the 70 most named, 70 at random of 5
+  to 200 news, the ones with namesakes judged by hand) with "Istvan Kovacs" and "Mohammed Ibrahim". In 30
+  Wikipedias for every name: 5 right, none wrong, 54 missed; in 10: 33 right, 1 wrong (the byline); in 10
+  with the threshold of 30 for a byline: 32 right, none wrong; with the country of the media too: 35 right,
+  none wrong (Pedro Sánchez, Daniel Dubois, Istvan Kovacs). In 5: 40 right, none wrong, kept out: the
+  threshold of the bylines is close ("Matthew Robertson", 79% of one site). Twice the next one instead of 3
+  times linked Ben Johnson, the coach of the Bears, to the actor. Missed: the famous with famous namesakes
+  (José Mourinho 110 against 71, Carlos Alcaraz, George Russell, Pep Guardiola, Charles Leclerc).
 - Places, 18.10.2026: 1,730 of the 9,496 named by 20 news or more were linked. On 50 never linked (the 25
   most named, 25 at random), `placeItem` linked 22 of the 25 (Paris, France, China the People's Republic,
   London, Rome, Madrid; Washington and New York the states: Wikidata calls the cities "Washington, D.C." and

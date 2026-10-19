@@ -148,22 +148,36 @@ const searchNamed = async (name, language) => {
 // Wikipedias than any other (sitelinks), the famous one. A famous name has the most namesakes: "David
 // Beckham" a Canadian candidate, "Donald Trump" songs. On 40 names often met and never linked (18.10.2026)
 // the persons were all told right (Trump 334 against 6, Messi 226 against 0, Lula 150 against 13), and
-// "Michael Oliver" (the referee among 9) left alone. In 30 Wikipedias at least: in 10, the byline
-// "Mohammed Ibrahim" of a sports site became Mo Ibrahim, a businessman in 20 (18.10.2026). null when none
-// stands out
+// "Michael Oliver" (the referee among 9) left alone. In 'least' Wikipedias at least: PERSON_SITELINKS,
+// BYLINE_SITELINKS for a name most of its news of one site write, a byline as often: "Mohammed Ibrahim" of
+// a sports site became Mo Ibrahim, a businessman in 20 (18.10.2026). None standing out, the one of the
+// humans of 'country' who does, the country of the media naming them (see country-names.js mediaOf):
+// "Istvan Kovacs" of prosport.ro and gsp.ro is the Romanian referee in 31, the Hungarian boxer is in 22.
+// On 67 persons never linked judged by hand (19.10.2026): 35 right, none wrong, against 5 in 30 Wikipedias
+// for every name; in 5, 40 right, but the threshold of the bylines is close (one site writing 79% of
+// "Matthew Robertson"); twice the next one instead of 3 times linked Ben Johnson to the actor. null when
+// none stands out
 export const MIN_SITELINKS = 30;
+export const PERSON_SITELINKS = 10;
+export const BYLINE_SITELINKS = MIN_SITELINKS;
 export const SITELINKS_AHEAD = 3;
-export const famousHuman = async (qids) => {
+const standingOut = (found, least) => {
+    const [first, second] = [...found].sort((a, b) => b.links - a.links);
+    return first && first.links >= least && first.links >= SITELINKS_AHEAD * (second?.links ?? 0) ? first.qid : null;
+};
+export const famousHuman = async (qids, {least = PERSON_SITELINKS, country = null, background = false} = {}) => {
     const asked = [...new Set(qids.filter(isQid))].slice(0, EXACT_FOUND);
     if (asked.length === 0) return null;
     const params = new URLSearchParams({action: 'wbgetentities', ids: asked.join('|'), props: 'claims|sitelinks', format: 'json'});
-    const entities = (await ask(`${API}?${params}`)).entities ?? {};
+    const entities = (await ask(`${API}?${params}`, {background})).entities ?? {};
     const humans = asked.map(qid => entities[qid])
         .filter(item => item && item.missing === undefined && (item.claims?.P31 ?? []).some(claim => claim.mainsnak?.datavalue?.value?.id === 'Q5'))
-        .map(item => ({qid: item.id, links: Object.keys(item.sitelinks ?? {}).length}))
-        .sort((a, b) => b.links - a.links);
-    const [first, second] = humans;
-    return first && first.links >= MIN_SITELINKS && first.links >= SITELINKS_AHEAD * (second?.links ?? 0) ? first.qid : null;
+        .map(item => ({qid: item.id, links: Object.keys(item.sitelinks ?? {}).length}));
+    const famous = standingOut(humans, least);
+    if (famous || !country || humans.length === 0) return famous;
+    const countries = await readCountries(humans.map(human => human.qid), {background});
+    const local = humans.filter(human => countries.get(human.qid)?.country === country);
+    return local.length === 1 ? (local[0].links >= least ? local[0].qid : null) : standingOut(local, least);
 };
 
 // A place named as several items are, as famousHuman: the one of them that is a place (it has a
@@ -177,10 +191,8 @@ export const famousPlace = async (qids) => {
     const places = asked.map(qid => entities[qid])
         .filter(item => item && item.missing === undefined && (item.claims?.P625 ?? []).length > 0
             && !(item.claims?.P31 ?? []).some(claim => claim.mainsnak?.datavalue?.value?.id === 'Q5'))
-        .map(item => ({qid: item.id, links: Object.keys(item.sitelinks ?? {}).length}))
-        .sort((a, b) => b.links - a.links);
-    const [first, second] = places;
-    return first && first.links >= MIN_SITELINKS && first.links >= SITELINKS_AHEAD * (second?.links ?? 0) ? first.qid : null;
+        .map(item => ({qid: item.id, links: Object.keys(item.sitelinks ?? {}).length}));
+    return standingOut(places, MIN_SITELINKS);
 };
 
 // the item of each country, by its code ISO 3166-1 (P297), kept for as long as the process lives
