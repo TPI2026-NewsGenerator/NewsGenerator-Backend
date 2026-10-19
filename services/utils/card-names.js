@@ -169,17 +169,22 @@ export const withSurnamesLinked = (names, rows) => {
 export const namesOfCards = async (cards) => new Map((await readNames(cards))
     .map(card => [card.storyId, card.names.map(group => ({name: group.name, qid: group.qid ?? null, kind: group.kind}))]));
 
-// [{storyId, names, places, countries}] of these cards (see namesOfCards): names the groups chosen, with
-// the news of the card naming them (inCard); places the rows of the places of Wikidata a quarter of its
-// news name; countries [{code, inCard}] the countries it names, by their names: Wikidata could not tell
-// them apart from their namesakes ("Espagne", "France": 1 country named of 15 linked, 18.10.2026), or
-// had them as another item ("China" the cultural region), so their items are left out
+// [{storyId, names, places, toLink, countries}] of these cards (see namesOfCards): names the groups chosen,
+// with the news of the card naming them (inCard); places the rows of the places of Wikidata a quarter of
+// its news name, toLink the ids of the ones never looked for; countries [{code, inCard}] the countries it
+// names, by their names: Wikidata could not tell them apart from their namesakes ("Espagne", "France": 1
+// country named of 15 linked, 18.10.2026), or had them as another item ("China" the cultural region), so
+// their items are left out
 const readNames = async (cards) => {
     const read = await Promise.all(cards.map(async (card) => {
         const rows = await MentionModel.namesOfArticles(card.ids, LEAST_NEWS);
         const least = Math.max(1, Math.ceil(card.ids.length * SHARE_OF_CARD));
+        const places = rows.filter(row => row.kind === 'location' && row.inCard >= least && !countryNamed(row.name));
         return {storyId: card.storyId, names: chosenNames(rows, card.ids.length, {media: card.media}),
-            places: rows.filter(row => row.kind === 'location' && row.qid && row.inCard >= least && !countryNamed(row.name)),
+            places: places.filter(row => row.qid),
+            // the places never looked for in Wikidata, asked for first: "Carei", the town of a referee
+            // named by 4 news, waited behind the most met names and its card had no country (19.10.2026)
+            toLink: places.filter(row => !row.qid && !row.linkedAt && writtenAsName(row.name)).map(row => row.id),
             countries: rows.filter(row => row.kind !== 'person' && row.inCard >= least)
                 .map(row => ({code: countryNamed(row.name), inCard: row.inCard})).filter(row => row.code)};
     }));
@@ -189,7 +194,8 @@ const readNames = async (cards) => {
         return [];
     });
     const linked = withSurnamesLinked(read.map(card => card.names), persons);
-    const ids = linked.flatMap(names => names.filter(name => !name.qid && name.id).map(name => name.id));
+    const ids = [...linked.flatMap(names => names.filter(name => !name.qid && name.id).map(name => name.id)),
+        ...read.flatMap(card => card.toLink)];
     if (ids.length > 0) await MentionModel.want({ids}).catch(err => console.error(`Names: not asked first in Wikidata (${err.message})`));
     return read.map((card, i) => ({...card, names: linked[i]}));
 };
