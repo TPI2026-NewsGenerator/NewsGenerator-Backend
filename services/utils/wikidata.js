@@ -111,13 +111,13 @@ export const namedItems = async (name, language = 'en') => {
 };
 
 // [{qid, label, description, links, human}] of these items, in English: links the Wikipedias it is in,
-// human when it is one (P31 Q5); the ones Wikidata does not have left out
-export const describeItems = async (qids) => {
+// human when it is one (P31 Q5); the ones Wikidata does not have left out. background: as famousHuman
+export const describeItems = async (qids, {background = false} = {}) => {
     const asked = [...new Set(qids.filter(isQid))].slice(0, EXACT_FOUND);
     if (asked.length === 0) return [];
     const params = new URLSearchParams({action: 'wbgetentities', ids: asked.join('|'), props: 'labels|descriptions|claims|sitelinks',
         languages: 'en', format: 'json'});
-    const entities = (await ask(`${API}?${params}`)).entities ?? {};
+    const entities = (await ask(`${API}?${params}`, {background})).entities ?? {};
     return asked.map(qid => entities[qid]).filter(item => item && item.missing === undefined).map(item => ({
         qid: item.id,
         label: item.labels?.en?.value ?? item.id,

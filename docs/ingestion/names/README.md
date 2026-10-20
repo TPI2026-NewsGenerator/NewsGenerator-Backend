@@ -48,7 +48,12 @@ what finds the other angles of a card through its rare names.
   news of sites of a country at least): "Istvan Kovacs" of prosport.ro and gsp.ro is the Romanian referee
   (31 Wikipedias), not the Hungarian boxer (22). For a full name only ("Russell" alone, the F1 driver, became Bertrand Russell: a family name alone is told on its
   card): "Donald Trump" is no song, "David Beckham" no Canadian candidate; "Michael Oliver", the referee
-  among 9, stays unlinked. An organisation (`organizationItem`, `services/utils/organization-items.js`)
+  among 9, stays unlinked. The one item called so of a person (`personItem`, `services/utils/person-items.js`,
+  since 20.10.2026) only when it is a human (P31 Q5: "one person" was a reasoning agent, Kim Jong Un a song)
+  in a Wikipedia at least (`describeItems`); in none, or for a family name after a particle ("De Roon", a
+  botanist; `familyName`), when the AI (gemma4:31b, 5 titles, the description and country of the item) says
+  the news fit it: "Eduardo Varela", a Uruguayan referee, is no Mexican journalist in no Wikipedia. About 270
+  tokens a name. An organisation (`organizationItem`, `services/utils/organization-items.js`)
   is the one item called so; else the AI (gemma4:31b, 5 titles of news naming it, `titlesNaming`) chooses among
   the items called so or whose name starts so (`namedItems`: "Juventus" is "Juventus FC", "Liverpool"
   "Liverpool F.C.", the city coming first), no person among them (`describeItems`), or none; kept when the item
@@ -98,6 +103,21 @@ what finds the other angles of a card through its rare names.
   threshold of the bylines is close ("Matthew Robertson", 79% of one site). Twice the next one instead of 3
   times linked Ben Johnson, the coach of the Bears, to the actor. Missed: the famous with famous namesakes
   (José Mourinho 110 against 71, Carlos Alcaraz, George Russell, Pep Guardiola, Charles Leclerc).
+- Persons linked to the one item called so, 20.10.2026 (`bench/lone-items`: `items.mjs` read the Wikipedias of
+  the 7,968 items full names were linked to, 2,856 in 0 to 9, 255 in none; `bench.mjs`, `ai.mjs`, `truth.json`
+  by hand, `score.mjs`). In 0 to 9 Wikipedias (famousHuman links none of them): of the 60 most met 3 wrong, of
+  60 at random 8, of 40 at random in no Wikipedia 23 (footballers "researchers", Zverev a Russian priest,
+  bylines poets and physicists): 123 right, 38 wrong. A human only: no loss, 17 wrong out ("Le conducteur",
+  "business leaders" paintings, films, episodes). In 1 Wikipedia at least: 105 right, 2 wrong (De Roon, De
+  Luca), 17 lost, all in none. 2 at least: 10 more lost (Mike Norvell, Ian Rapoport), none wrong left of
+  these; 5 or 10 lose half or all. The country of the item against the one of the media: most news are of a .com,
+  the American players of sports.yahoo.com "Canadian": 18 right lost. The AI for every item: 118 right, 3
+  wrong (bylines), 4 lost (Edouard Geffray, a stale description, the vandalised one of Horatiu Fesnic). Built:
+  a human in 1 Wikipedia, the AI for one in none and for a family name after a particle: 116 right, none
+  wrong, 6 lost (items with no description, Christine Villemin); of 5 more family names (Van Hecke, a Flemish
+  painter in 9, Di Battista a musician in 9), the 4 wrong refused, La Joaqui kept.
+  Not built: famous family names after a particle linked in many Wikipedias ("Van Dijk" a Baroque painter in
+  84, "De Wever" a climate activist, "De Laurentiis" Dino), nor the 1,254 persons of one word linked.
 - Places, 18.10.2026: 1,730 of the 9,496 named by 20 news or more were linked. On 50 never linked (the 25
   most named, 25 at random), `placeItem` linked 22 of the 25 (Paris, France, China the People's Republic,
   London, Rome, Madrid; Washington and New York the states: Wikidata calls the cities "Washington, D.C." and
