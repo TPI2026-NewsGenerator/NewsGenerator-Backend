@@ -54,10 +54,16 @@ what finds the other angles of a card through its rare names.
   botanist; `familyName`), when the AI (gemma4:31b, 5 titles, the description and country of the item) says
   the news fit it: "Eduardo Varela", a Uruguayan referee, is no Mexican journalist in no Wikipedia. About 270
   tokens a name. An organisation (`organizationItem`, `services/utils/organization-items.js`)
-  is the one item called so; else the AI (gemma4:31b, 5 titles of news naming it, `titlesNaming`) chooses among
+  is the one item called so when it may be a body (since 20.10.2026): no human, no place, no work, in 2
+  Wikipedias at least (`describeItems`: a place has a population, P1082, or a position, P625, and nothing of a
+  body, no seat, league, sport, industry..., or is a bare human settlement, Q486972; a country, with a code
+  ISO, is none; a work has a date of publication, P577). "Al-Hazm", the Saudi club, was a settlement in Oman,
+  "EU" the commune of Eu. Else the AI (gemma4:31b, 5 titles of news naming it, `titlesNaming`) chooses among
   the items called so or whose name starts so (`namedItems`: "Juventus" is "Juventus FC", "Liverpool"
-  "Liverpool F.C.", the city coming first), no person among them (`describeItems`), or none; kept when the item
-  is in 10 Wikipedias at least. About 390 tokens a name, counted in the hourly report of the tagger.
+  "Liverpool F.C.", the city coming first), no person among them, or none; kept when the item is in 10
+  Wikipedias at least, 1 when one item only was called so (the AI agrees it is the one: Instagram, a work,
+  ChatGPT, the European Union, a population). About 390 tokens a name, counted in the hourly report of the
+  tagger.
   A place (`placeItem`, since 18.10.2026): a country is the item of its code ISO (`countryNamed`, then a
   search `haswbstatement:P297=CN`): the search shows the People's Republic as "China PR", the item called
   "China" is the cultural region. Another place is the one item called so by its name or one of its other
@@ -118,6 +124,26 @@ what finds the other angles of a card through its rare names.
   painter in 9, Di Battista a musician in 9), the 4 wrong refused, La Joaqui kept.
   Not built: famous family names after a particle linked in many Wikipedias ("Van Dijk" a Baroque painter in
   84, "De Wever" a climate activist, "De Laurentiis" Dino), nor the 1,254 persons of one word linked.
+- Organisations linked to the one item called so, 20.10.2026 (`bench/lone-organizations`: `items.mjs` read the
+  8,486 items 10,921 organisations were linked to, their classes and properties; `bench.mjs` searched again what
+  is called so, 190 organisations, the 20 most met, 100 at random, 70 at random of the items a human, a place,
+  a work or in 0 to 2 Wikipedias, and what the AI chose instead; `truth.json` by hand, `score.mjs`). 123 were
+  linked to the one item called so (3 of the 20 most met: the others the AI chose among several). Judged 122:
+  93 right, 6 of the right country only (Tottenham the town, Sarnese the village of the club, the credit union
+  TDECU), 23 wrong (Al-Hazm, "EU" the commune of Eu in 57 Wikipedias, "NI" Lower Saxony, "Jambos" a genus of
+  plants, "Fivers" an album, "Pogacar" an article of an encyclopedia, "EE. UU" a Wikinews article). Asking the
+  AI as among several (kept from 10 Wikipedias): no human 22 wrong left; a position on Earth 12 wrong, 3 lost
+  (LAWMA, the FIFA Council); 1+ Wikipedias 15 wrong; 3+ 8 wrong, 21 lost. Its choice kept from 1 Wikipedia when
+  one item only was called so (it agrees with the news): no human, place, work, 2+ Wikipedias, 96 right, 3 of the
+  country, 1 wrong (ENC, the École des chartes, in 44), 6 lost (PFL Chicago, Verifactu, the Nigerian students'
+  union: the AI says none; gut bacteria; Lamine Yamal, a human tagged a body); 1+ Wikipedias 3 wrong (Pogacar,
+  Scarlet Knights comic book characters), 3+ one more lost. The AI for every one: none wrong but 12 lost
+  (Shakhtar Donetsk: "only when you are sure") and 5 times the calls; with the rule 1 lone item in 5 goes to it.
+  Al-Hazm's settlement has no position nor population, only its class: a bare human settlement is a place too
+  (one item of the 8,486). Live: Al-Hazm the club Al Hazem SC, Tottenham Hotspur, ES Troyes AC for "ESTAC",
+  Samsung the group (a brand in 1 Wikipedia), the Cincinnati Bengals (a team of 1937); Instagram, TikTok,
+  ChatGPT, the European Union given back by the AI; Lang & Schwarz lost. 1,594 organisations (1,198 seen 20
+  times or more) to look for again: `bench/lone-organizations/relink.sql`, to run after the deploy.
 - Places, 18.10.2026: 1,730 of the 9,496 named by 20 news or more were linked. On 50 never linked (the 25
   most named, 25 at random), `placeItem` linked 22 of the 25 (Paris, France, China the People's Republic,
   London, Rome, Madrid; Washington and New York the states: Wikidata calls the cities "Washington, D.C." and

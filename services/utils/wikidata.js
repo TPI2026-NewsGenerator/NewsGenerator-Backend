@@ -110,8 +110,24 @@ export const namedItems = async (name, language = 'en') => {
     return [...found.values()];
 };
 
-// [{qid, label, description, links, human}] of these items, in English: links the Wikipedias it is in,
-// human when it is one (P31 Q5); the ones Wikidata does not have left out. background: as famousHuman
+// What a body has and a place has not: a seat, a league, a sport, an industry, a founder, a legal form, a
+// parent, a chair, a chief executive, employees, a stock exchange, an owner, a part of its own. A
+// position on Earth (P625) alone tells nothing: universities, courts, the Lisbon Metro, Hydro-Québec have
+// one (bench/lone-organizations, 20.10.2026)
+const BODY_PROPERTIES = ['P159', 'P118', 'P641', 'P452', 'P112', 'P1454', 'P749', 'P488', 'P169', 'P1128', 'P414', 'P127', 'P355'];
+// a place: a population (P1082, a town, a region), a position and nothing of a body (a heliport, a roller
+// coaster, a language), or a human settlement (Q486972) Wikidata knows nothing more of ("Al-Hazm" in Oman:
+// its country, its district only); a country (a code ISO, P297) is not one of them: a country named as a
+// body is the country (its team, its government)
+const SETTLEMENT = 'Q486972';
+const isPlace = (claims) => !claims.P297 && (Boolean(claims.P1082)
+    || (Boolean(claims.P625) && !BODY_PROPERTIES.some(property => claims[property]))
+    || (claims.P31 ?? []).some(claim => claim.mainsnak?.datavalue?.value?.id === SETTLEMENT));
+
+// [{qid, label, description, links, human, place, work}] of these items, in English: links the
+// Wikipedias it is in, human when it is one (P31 Q5), place when it is a place (isPlace), work when it was
+// published (P577: an album, a film, a game); the ones Wikidata does not have left out. background: as
+// famousHuman
 export const describeItems = async (qids, {background = false} = {}) => {
     const asked = [...new Set(qids.filter(isQid))].slice(0, EXACT_FOUND);
     if (asked.length === 0) return [];
@@ -124,6 +140,8 @@ export const describeItems = async (qids, {background = false} = {}) => {
         description: item.descriptions?.en?.value ?? '',
         links: Object.keys(item.sitelinks ?? {}).length,
         human: (item.claims?.P31 ?? []).some(claim => claim.mainsnak?.datavalue?.value?.id === 'Q5'),
+        place: isPlace(item.claims ?? {}),
+        work: Boolean(item.claims?.P577),
     }));
 };
 

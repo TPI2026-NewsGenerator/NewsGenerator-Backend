@@ -3,8 +3,8 @@
 //  Date: 18.10.2026
 //  File: organization-items.js
 //  Description: The item of Wikidata an organisation the news name is: the one called so when it is the
-//               only one, else the one the AI chooses among the items called so or whose name starts so,
-//               from the titles of news naming it
+//               only one and may be a body, else the one the AI chooses among the items called so or
+//               whose name starts so, from the titles of news naming it
 //
 
 "use strict"
@@ -20,6 +20,18 @@ import {MentionModel} from '../../models/mention-model.js';
 // least, 44 of 46 (a PSG omnisport club in 4, the women's team of Como 1907 in 6 left out), about 390
 // tokens a name
 export const MIN_SITELINKS = 10;
+// The one item called so, whatever it was, measured on 122 organisations linked to it, judged by hand
+// (bench/lone-organizations, 20.10.2026): 93 right, 6 of the right country only (the town of a club:
+// Tottenham), 23 wrong ("Al-Hazm", the Saudi club, a settlement in Oman; "EU" the commune of Eu, in 57
+// Wikipedias; "Jambos", Hearts, a genus of plants; "Fivers" an album). Taken only when it is no human, no
+// place, no work and in LONE_SITELINKS Wikipedias at least, else the AI chooses as among several, and the
+// item it chooses is kept from 1 Wikipedia (it agrees with the news): 96 right, 3 of the country, 1 wrong
+// (ENC, the École des chartes), 6 lost (the AI says none for PFL Chicago, Verifactu, the Nigerian students'
+// union, gut bacteria; Lamine Yamal is a human). A Wikipedia at least, 3 wrong (Pogacar an article of an
+// encyclopedia, Scarlet Knights comic book characters); 3, one more lost. The AI asked for every one: none wrong, but 12 lost (Shakhtar Donetsk,
+// the FIFA Council: "only when you are sure") and 5 times the calls; with this rule 1 lone item in 5 is
+// asked to it
+export const LONE_SITELINKS = 2;
 const TITLES = 5;
 
 export const organizationPrompt = (name, titles, items) => `A name in the news: "${name}".
@@ -35,17 +47,22 @@ league, a body these news are about. 0 when none of them is, when you cannot tel
 only a part of many names ("FC", "Club", "United").
 Answer in JSON only: {"n": 0}`;
 
+// whether the one item called so may be the organisation without asking the AI
+const mayBeBody = (item) => item && !item.human && !item.place && !item.work && item.links >= LONE_SITELINKS;
+
 // the qid of an organisation ({id, name, lang} of mentions), null when none can be told; usage: the
 // tokens the AI took, counted in it
 export const organizationItem = async ({id, name, lang}, usage = null) => {
     const found = await namedItems(name, lang ?? 'en');
-    const exact = found.filter(item => item.exact);
-    if (exact.length === 1) return exact[0].qid;
     if (found.length === 0) return null;
-    const items = (await describeItems(found.map(item => item.qid))).filter(item => !item.human);
+    const exact = found.filter(item => item.exact);
+    const described = await describeItems(found.map(item => item.qid));
+    const lone = exact.length === 1 ? described.find(item => item.qid === exact[0].qid) : null;
+    if (mayBeBody(lone)) return lone.qid;
+    const items = described.filter(item => !item.human);
     const titles = items.length === 0 ? [] : await MentionModel.titlesNaming(id, TITLES);
     if (titles.length === 0) return null;
     const answer = await ollamaJson(organizationPrompt(name, titles, items), usage);
     const chosen = items[Number(answer?.n) - 1];
-    return chosen && chosen.links >= MIN_SITELINKS ? chosen.qid : null;
+    return chosen && chosen.links >= (exact.length === 1 ? 1 : MIN_SITELINKS) ? chosen.qid : null;
 };
