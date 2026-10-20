@@ -95,8 +95,10 @@ const WAYS = {
 // {paragraphs, title, way}: the sentences of the card in the way asked, their translation
 // when the article is written in another language than the reader's. A card the reader sends in its AI
 // version (aiVersion, see ai-ways.js) has the points or the summary the AI wrote in the reader's
-// language, without saying so (the user, 15.10.2026), when it has one in that way
+// language, without saying so (the user, 15.10.2026), when it has one in that way. The sentences the
+// reader wrote for the e-mail (ownText, see withOwnTexts) are sent instead of both, in the way asked
 const wayOf = (card, format, t = ENGLISH) => {
+    if (card.ownText?.length && WAYS[format]) return {paragraphs: card.ownText, title: t.labels[WAYS[format].title], way: format};
     if (card.aiVersion && format === 'points' && card.ai?.points?.length) {
         return {paragraphs: card.ai.points, title: t.labels[WAYS.points.title], way: 'points'};
     }

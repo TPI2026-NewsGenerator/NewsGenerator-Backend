@@ -3,7 +3,8 @@
 An administrator sends cards of a briefing by e-mail, to their own address or to another one. In a bar
 at the foot of the page they tick and order the cards, choose how their sentences are read (key passages,
 key points or the summary), the AI version of a card's points or summary, the picture of each card,
-their own title, and take out the lines they do not want (a denial, an angle, an official source, a line
+their own title, the text of its key passages, points or summary as they write it (since 20.10.2026),
+and take out the lines they do not want (a denial, an angle, an official source, a line
 of the AI analysis). The e-mail lays out what the briefing wrote, as the page shows it, all of it in the
 reader's language: only its own words are translated when it is sent, once per language.
 The cards sent count as read: their stories are left out of the next briefings for 48 hours.
@@ -13,7 +14,9 @@ The cards sent count as read: their stories are left out of the next briefings f
 - `client/src/pages/Briefing.jsx`: the box "Add to the e-mail" on each card (`BriefingCard.jsx`
   `onSelect`) and "tick them all", shown when `GET /api/briefing` answers `mail: true`.
 - `client/src/features/briefing/components/MailBar.jsx`: the bar of the cards ticked, their order, the
-  way of the sentences, the AI version, the address (the account's written in); `MailAside.jsx`: the
+  way of the sentences, the AI version, the sentences as the reader changes them (a point a line, a
+  blank line between two paragraphs of a summary or of key passages; ticking the AI version starts again
+  from it), the address (the account's written in); `MailAside.jsx`: the
   analysis lines, denials, angles and official sources kept or taken out; `MailPicture.jsx` and
   `mailPictures.js`: the picture of a card, measured by the browser.
 - API: `GET /api/briefing/:id/stories/:storyId/pictures`, `POST /api/briefing/:id/email` (204), both
@@ -29,14 +32,16 @@ The cards sent count as read: their stories are left out of the next briefings f
   30 at most). The browser measures them (`mailPictures.js`): one under 560 px wide (`MIN_PICTURE_WIDTH`,
   the width of the picture in the e-mail) is put aside, a card whose own is too small gets the best other
   of its story, else none.
-- `POST /api/briefing/:id/email {storyIds, to, pictures, titles, removed, format, ai}`: 10 an hour per
+- `POST /api/briefing/:id/email {storyIds, to, pictures, titles, removed, format, ai, texts}`: 10 an hour per
   IP address and 30 a day per account (`rateLimit`); the body up to 9 MB (`app.js`), for the reader's files in
   base64.
 - `BriefingService.email`: `storyIds` one at least, `format` one of `MAIL_FORMATS` (`points`, `digest`,
   `passages`, the key passages when not given), `ai` the cards sent in their AI version, `to` an address
   (`isEmail`) or the account's; 400 otherwise. A ready briefing of this reader, else 404.
 - Each card with its AI analysis when it is ready (`briefings.analysis`), in the order given, once each;
-  `withOwnTitles` (300 characters at most), `withoutTakenOut` (`removed: {storyId: {contested, angles,
+  `withOwnTitles` (300 characters at most), `withOwnTexts` (`texts: {storyId: [paragraph]}`, 20
+  paragraphs of 2,000 characters at most, sent instead of the article's sentences and of the AI version
+  in the way chosen; left empty, the card's own), `withoutTakenOut` (`removed: {storyId: {contested, angles,
   official, why, next, timeline: [index]}}`; an analysis left empty is not sent), `withChosenPictures`
   (taken out, an address of the web checked by `assertPublicUrl`, or a JPEG, PNG, GIF or WebP file told by
   its first bytes, 2 MB each, 6 MB per e-mail, joined as `cid:`).

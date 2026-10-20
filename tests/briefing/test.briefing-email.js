@@ -24,7 +24,7 @@ jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: 
 jest.unstable_mockModule('../../services/utils/mailer.js', () => ({sendMail, mailEnabled: () => true}));
 const copies = {save: jest.fn(async () => 11), byToken: jest.fn(async () => null), remove: jest.fn(async () => 1)};
 jest.unstable_mockModule('../../models/sent-mail-model.js', () => ({SentMailModel: copies}));
-const {BriefingService, withOwnTitles, withoutTakenOut} = await import('../../services/briefing-service.js');
+const {BriefingService, withOwnTexts, withOwnTitles, withoutTakenOut} = await import('../../services/briefing-service.js');
 const {briefingMail, LABELS} = await import('../../services/utils/briefing-mail.js');
 
 const card = (storyId, title, changes = {}) => ({
@@ -525,5 +525,45 @@ describe('BriefingService.email with the AI version of some cards', () => {
         await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'points');
         expect(sent().html).toContain('Published point.');
         await expect(BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'points', ['1'])).rejects.toMatchObject({status: 400});
+    });
+});
+
+describe('BriefingService.email with the sentences the reader wrote', () => {
+    const ai = {points: ['The SBB strike on Monday.'], summary: 'The SBB strike on Monday.', model: 'deepseek-v4-pro:0813'};
+    const sent = () => sendMail.mock.calls.at(-1)[0];
+    beforeEach(() => ofUser.mockResolvedValue({...row, items: [card(1, 'First story', {points: 'Published point.', digest: 'Published digest.', ai}),
+        card(2, 'Second story', {points: 'Other published point.', digest: 'Other digest.'})]}));
+
+    it('should send the points, the summary or the key passages the reader wrote instead of the ones of the card, the others as published', async () => {
+        await BriefingService.email(4, 7, [1, 2], undefined, undefined, undefined, undefined, 'points', [], {1: ['My first point.', '  My   second point. ']});
+        expect(sent().html).toContain('My first point.');
+        expect(sent().text).toContain('• My second point.');
+        expect(sent().html).not.toContain('Published point.');
+        expect(sent().html).toContain('Other published point.');
+
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'digest', [], {1: ['My summary.', 'Its end.']});
+        expect(sent().text).toContain('My summary. […] Its end.');
+
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'passages', [], {1: ['My passage.']});
+        expect(sent().html).toContain('y passage.');
+        expect(sent().html).not.toContain('assage of First story.');
+    });
+
+    it('should send what the reader wrote rather than the AI version, and the ones of the card for a text left empty', async () => {
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'points', [1], {1: ['Written by the reader.']});
+        expect(sent().html).toContain('Written by the reader.');
+        expect(sent().html).not.toContain('The SBB strike');
+
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'points', [], {1: ['', '   ']});
+        expect(sent().html).toContain('Published point.');
+    });
+
+    it('should refuse texts that are not lists of paragraphs, or too long, before sending', async () => {
+        sendMail.mockClear();
+        for (const texts of [['a'], {1: 'a point'}, {1: [3]}, {1: Array(21).fill('a')}, {1: ['a'.repeat(2001)]}]) {
+            await expect(BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'points', [], texts)).rejects.toMatchObject({status: 400});
+        }
+        expect(sendMail).not.toHaveBeenCalled();
+        expect(withOwnTexts([{storyId: 1}], undefined)).toEqual([{storyId: 1}]);
     });
 });

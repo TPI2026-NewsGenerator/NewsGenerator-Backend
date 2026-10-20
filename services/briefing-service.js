@@ -1123,6 +1123,26 @@ export const withOwnTitles = (items, titles) => {
     });
 };
 
+// the cards with the sentences the reader wrote for the e-mail in the way it is sent, {storyId:
+// [paragraph]}: a point, or a paragraph of the summary or of the key passages, each; one left empty keeps
+// its own. They replace the article's sentences and the AI version alike
+const MAX_OWN_PARAGRAPHS = 20;
+const MAX_OWN_PARAGRAPH = 2000;
+export const withOwnTexts = (items, texts) => {
+    if (texts === undefined || texts === null) return items;
+    if (typeof texts !== 'object' || Array.isArray(texts)
+        || !Object.values(texts).every(paragraphs => Array.isArray(paragraphs) && paragraphs.every(paragraph => typeof paragraph === 'string'))) {
+        throw Object.assign(new Error('texts: {storyId: [paragraph]}.'), {status: 400});
+    }
+    return items.map(item => {
+        const own = (texts[String(item.storyId)] ?? []).map(paragraph => paragraph.replace(/\s+/g, ' ').trim()).filter(Boolean);
+        if (own.length > MAX_OWN_PARAGRAPHS || own.some(paragraph => paragraph.length > MAX_OWN_PARAGRAPH)) {
+            throw Object.assign(new Error(`A text has ${MAX_OWN_PARAGRAPHS} paragraphs of ${MAX_OWN_PARAGRAPH} characters at most.`), {status: 400});
+        }
+        return own.length > 0 ? {...item, ownText: own} : item;
+    });
+};
+
 // the cards without the denials, the other angles, the official sources and the lines of their AI
 // analysis the reader took out of the e-mail, {storyId: {contested: [index], angles: [index], official:
 // [index], why: [index], next: [index], timeline: [index]}}, their places in the card (the last three in
@@ -1231,8 +1251,9 @@ export const BriefingService = {
     // angles, the official sources and the lines of the AI analysis they took out (see withoutTakenOut); format: the way the
     // sentences of the cards are shown, one of MAIL_FORMATS, the key passages when not given; ai: the
     // storyIds of the cards sent in their AI version of that way (item.ai, see ai-ways.js), the others as
-    // published. No copy is kept any more: the e-mail has no link to one (the user, 13.10.2026)
-    email: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = []) => {
+    // published; texts: {storyId: [paragraph]}, the sentences the reader wrote instead (see withOwnTexts).
+    // No copy is kept any more: the e-mail has no link to one (the user, 13.10.2026)
+    email: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = [], texts = undefined) => {
         if (!Array.isArray(storyIds) || storyIds.length === 0 || !storyIds.every(storyId => Number.isInteger(storyId) && storyId !== 0)) {
             throw Object.assign(new Error('storyIds: the cards ticked, one at least.'), {status: 400});
         }
@@ -1259,7 +1280,7 @@ export const BriefingService = {
         // a picture of the story chosen is credited to its medium
         const changed = ticked.filter(item => pictures && typeof pictures === 'object' && typeof pictures[String(item.storyId)]?.url === 'string');
         const known = new Map((await Promise.all(changed.map(picturesOfItem))).flat().map(picture => [picture.url, picture.source]));
-        const {items, attachments} = await withChosenPictures(withoutTakenOut(withOwnTitles(ticked, titles), removed), pictures, {sender, known});
+        const {items, attachments} = await withChosenPictures(withOwnTexts(withoutTakenOut(withOwnTitles(ticked, titles), removed), texts), pictures, {sender, known});
         // the AI version asked for a card: sent when the card has one in that way, else the card as published
         const inAi = new Set(ai);
         // all of it in the reader's language: the words around the cards and the ones of an article saying
