@@ -48,7 +48,7 @@ loop each feed
         Feeds -> Model : updateFeed(last_error, failures + 1)
     else read (304 included)
         Feeds -> Model : updateFeed(etag, last_modified,\nlast_success_at, failures 0)
-        Feeds -> Feeds : keep the items with a link and a title,\npublished within the 30 days (toDate)
+        Feeds -> Feeds : keep the items with a link (2000 bytes at most) and a title,\npublished within the 30 days (toDate)
     end
 end
 Feeds -> Model : withoutRepeats(articles)
@@ -58,7 +58,7 @@ Model -> DB : INSERT articles, 1000 rows a statement,\na link once per feed (ski
 opt purge (once an hour)
     Feeds -> Model : deleteArticlesOlderThan(30 days)
 end
-Feeds --> Ingest : {feeds, notModified, failed, skipped, inserted, archived, deleted}
+Feeds --> Ingest : {feeds, notModified, failed, skipped, inserted, archived, longLinks, deleted}
 Ingest -> Ingest : the vectors and the groups (see Vectors,\nStories and threads)
 Ingest -> DB : pg_advisory_unlock
 Ingest --> Timer : {feeds, inserted, embedded, grouped, ...}

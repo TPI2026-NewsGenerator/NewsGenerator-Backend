@@ -8,6 +8,7 @@
 "use strict"
 
 import process from 'node:process'
+import {Buffer} from 'node:buffer'
 import {FeedModel} from "../models/feed-model.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {toDate} from "./utils/dates.js";
@@ -15,6 +16,10 @@ import Links, {DEFAULT_LANGUAGE} from "./utils/links.js";
 import {isGoogleNewsUrl, readSearches} from "./utils/google-news.js";
 
 export const RETENTION_DAYS = Number(process.env.FEED_RETENTION_DAYS) || 30;
+// The longest link saved, in bytes: the unique index (id_feed, link) of the articles takes 2704 at most,
+// and one link of 3600 bytes made the whole INSERT of a run fail, every news of its feeds with it
+// (20.10.2026). No real article page needs that much, it is a tracking link
+const MAX_LINK_BYTES = 2000;
 
 // refreshes in progress, by group of feeds, so the same feeds are never fetched twice at the same time
 const running = new Map();
@@ -49,6 +54,7 @@ const doRefresh = async (urls, {purge = false} = {}) => {
     let failed = 0;
     let skipped = 0;
     let archived = 0;
+    let longLinks = 0;
 
     for (let i = 0; i < feeds.length; i++) {
         const feed = feeds[i];
@@ -78,6 +84,10 @@ const doRefresh = async (urls, {purge = false} = {}) => {
         for (let news of result.items) {
             if (!news.link) continue;   // podcasts episodes without article page
             if (!news.title) continue;  // neither title nor description (see withTitle in parser.js): nothing to show
+            if (Buffer.byteLength(news.link) > MAX_LINK_BYTES) {
+                longLinks++;
+                continue;
+            }
             const published = toDate(news.pubDate);
             if (published && published < oldest) {
                 archived++;
@@ -105,7 +115,7 @@ const doRefresh = async (urls, {purge = false} = {}) => {
         ? await FeedModel.deleteArticlesOlderThan(new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000))
         : 0;
 
-    const stats = { feeds: feeds.length, notModified, failed, skipped, inserted, archived, deleted, ms: Date.now() - start };
+    const stats = { feeds: feeds.length, notModified, failed, skipped, inserted, archived, longLinks, deleted, ms: Date.now() - start };
     console.log(`Feeds refreshed: ${JSON.stringify(stats)}`);
     return stats;
 };
