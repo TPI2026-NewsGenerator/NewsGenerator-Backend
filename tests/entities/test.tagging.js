@@ -145,6 +145,15 @@ describe('readItem', () => {
 });
 
 describe('exactItems', () => {
+    it('should keep an item whose label is the name when the text found is a longer name of it', async () => {
+        const fetch = jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(answer({search: [
+            {id: 'Q9011300', label: 'Javier Tebas', match: {type: 'label', language: 'es', text: 'Javier Tebas Medrano'}},
+            {id: 'Q3', label: 'Javier Tebas Medrano Foundation', match: {text: 'Javier Tebas Medrano Foundation'}},
+        ]}));
+        expect(await exactItems('Javier Tebas', 'es')).toEqual(['Q9011300']);
+        fetch.mockRestore();
+    });
+
     it('should keep the items called exactly so, no page of Wikimedia, then wait the time asked after a refusal', async () => {
         const fetch = jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(answer({search: [
             {id: 'Q630231', label: 'Latvian Football Federation', match: {text: 'Latvian Football Federation'}},

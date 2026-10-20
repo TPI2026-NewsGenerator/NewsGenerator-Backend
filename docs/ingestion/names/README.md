@@ -38,7 +38,9 @@ what finds the other angles of a card through its rare names.
   saw (`wanted_at`, set by a card or the page of a name, `db/add_mentions_wanted.sql`), then the ones named by
   3 news or more (`LINK_LEAST`), the most named first. `exactItems` (`services/utils/wikidata.js`) searches
   `wbsearchentities` in the language of the name, then in English, and keeps the items called exactly so,
-  pages of a family or given name aside. `setLink` stores the qid when one item only is called so, `null`
+  pages of a family or given name aside: the text found, or since 20.10.2026 the label too (Wikidata gives
+  the longest name starting so, "Javier Tebas Medrano" of the Spanish label for "Javier Tebas", met 668
+  times and never linked; `bench/label-items/relink.mjs` found the persons to look for again). `setLink` stores the qid when one item only is called so, `null`
   when none or several ("LFF" of Latvia and of Lithuania). Since 18.10.2026 a person named as several items are
   is the human among them (P31 Q5) in far more Wikipedias than the others (`famousHuman`: 3 times the next
   one, 10 at least since 19.10.2026, 30 for a byline: a name one site writes 80% of the news of, as the

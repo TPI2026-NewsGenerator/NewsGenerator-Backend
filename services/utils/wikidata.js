@@ -83,12 +83,14 @@ const NOT_NAMED = /^(Wikimedia |family name|surname|given name|male given name|f
 const EXACT_FOUND = 10;
 
 // [qid]: the items called exactly this name (a label or an alias, whatever the case and accents) in
-// this language, in the order of Wikidata. A language Wikidata does not know is searched in English
+// this language, in the order of Wikidata. A language Wikidata does not know is searched in English. Its
+// label counts too: the text found is the longest name starting so, "Javier Tebas Medrano" of the
+// Spanish label for "Javier Tebas" (met 668 times, never linked), "Claudia Sheinbaum-Pardo" (20.10.2026)
 export const exactItems = async (name, language = 'en') => {
     const key = mentionKey(name);
     if (key.length < 2) return [];
     return [...new Set((await searchNamed(name, language))
-        .filter(item => mentionKey(item.match?.text ?? item.label) === key)
+        .filter(item => mentionKey(item.match?.text ?? item.label) === key || mentionKey(item.label ?? '') === key)
         .map(item => item.id))];
 };
 
