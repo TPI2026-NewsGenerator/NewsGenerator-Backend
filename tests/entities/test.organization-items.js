@@ -12,12 +12,15 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 const namedItems = jest.fn();
 const describeItems = jest.fn();
 const ollamaJson = jest.fn();
+const sitesNaming = jest.fn(async () => []);
+const countriesOfItems = jest.fn(async () => new Map());
 const titlesNaming = jest.fn(async () => ['Woltemade mit Juventus gegen Lazio', 'Juventus, Tudor: "Siamo in crescita"']);
 const wikidata = await import('../../services/utils/wikidata.js');
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 jest.unstable_mockModule('../../services/utils/wikidata.js', () => ({...wikidata, namedItems, describeItems}));
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson, newUsage: () => ({calls: 0, input: 0, output: 0})}));
-jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel: {titlesNaming}}));
+jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel: {titlesNaming, sitesNaming}}));
+jest.unstable_mockModule('../../services/utils/countries.js', () => ({countriesOfItems}));
 const {LONE_SITELINKS, organizationItem, organizationPrompt} = await import('../../services/utils/organization-items.js');
 
 const row = {id: 7, name: 'Juventus', lang: 'it'};
@@ -35,6 +38,10 @@ beforeEach(() => {
     describeItems.mockReset();
     ollamaJson.mockReset();
     titlesNaming.mockClear();
+    sitesNaming.mockReset();
+    sitesNaming.mockResolvedValue([]);
+    countriesOfItems.mockReset();
+    countriesOfItems.mockResolvedValue(new Map());
 });
 
 describe('organizationItem', () => {
@@ -46,6 +53,41 @@ describe('organizationItem', () => {
         ]);
         expect(await organizationItem({id: 1, name: 'Reuters', lang: 'en'})).toBe('Q130879');
         expect(describeItems).toHaveBeenCalledWith(['Q130879', 'Q9']);
+        expect(ollamaJson).not.toHaveBeenCalled();
+    });
+
+    it('should ask the AI when the sites naming the one item called so are of another country than the item', async () => {
+        const OPEN_LIBRARY = {qid: 'Q1201876', label: 'Open Library', description: 'online project for book data', links: 41, human: false, place: false, work: false};
+        namedItems.mockResolvedValue([{qid: 'Q1201876', exact: true}]);
+        describeItems.mockResolvedValue([OPEN_LIBRARY]);
+        countriesOfItems.mockResolvedValue(new Map([['Q1201876', {country: 'US', international: false}]]));
+        sitesNaming.mockResolvedValue([{site: 'lequipe.fr', news: 80}, {site: 'olympiquelyonnais.fr', news: 20}, {site: 'archive.org', news: 5}]);
+        ollamaJson.mockResolvedValueOnce({n: 0});
+        expect(await organizationItem({id: 11, name: 'OL', lang: 'fr'})).toBeNull();
+        expect(ollamaJson).toHaveBeenCalledTimes(1);
+
+        // the AI agrees with the item: kept
+        ollamaJson.mockResolvedValueOnce({n: 1});
+        expect(await organizationItem({id: 11, name: 'OL', lang: 'fr'})).toBe('Q1201876');
+    });
+
+    it('should not ask the AI for an item of the country of its sites, of the United States, an international body, or too few news', async () => {
+        const ITEM = {qid: 'Q5', label: 'Shopee', description: 'e-commerce company', links: 21, human: false, place: false, work: false};
+        namedItems.mockResolvedValue([{qid: 'Q5', exact: true}]);
+        describeItems.mockResolvedValue([ITEM]);
+        const cases = [
+            [{country: 'SG', international: false}, [{site: 'shopee.sg', news: 30}, {site: 'lemonde.fr', news: 10}]],
+            // no site of the United States has a domain of its own
+            [{country: 'US', international: false}, [{site: 'lemonde.fr', news: 25}, {site: 'elpais.es', news: 15}]],
+            [{country: 'CH', international: true}, [{site: 'lemonde.fr', news: 40}]],
+            [{country: 'SG', international: false}, [{site: 'lemonde.fr', news: 19}]],
+            [{country: null, international: false}, [{site: 'lemonde.fr', news: 40}]],
+        ];
+        for (const [country, sites] of cases) {
+            countriesOfItems.mockResolvedValue(new Map([['Q5', country]]));
+            sitesNaming.mockResolvedValue(sites);
+            expect(await organizationItem({id: 12, name: 'Shopee', lang: 'en'})).toBe('Q5');
+        }
         expect(ollamaJson).not.toHaveBeenCalled();
     });
 

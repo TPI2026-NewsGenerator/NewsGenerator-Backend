@@ -59,8 +59,13 @@ what finds the other angles of a card through its rare names.
   is the one item called so when it may be a body (since 20.10.2026): no human, no place, no work, in 2
   Wikipedias at least (`describeItems`: a place has a population, P1082, or a position, P625, and nothing of a
   body, no seat, league, sport, industry..., or is a bare human settlement, Q486972; a country, with a code
-  ISO, is none; a work has a date of publication, P577). "Al-Hazm", the Saudi club, was a settlement in Oman,
-  "EU" the commune of Eu. Else the AI (gemma4:31b, 5 titles of news naming it, `titlesNaming`) chooses among
+  ISO, is none; a work has a date of publication, P577), and since 21.10.2026 the sites naming it are not of
+  another country (`ofOtherCountry` in `country-names.js`: sites with a country write 20 news of it at least
+  and one other country 70% of them, or none is of its country, the United States excepted, having no domain
+  of its own): "OL" of French sites is Lyon, not Open Library, the French "Assemblée nationale" not Senegal's,
+  "Primera División" of Spanish-speaking sites not the Maltese league (`bench/org-country`: 9 of 75 asked to
+  the AI, which kept the 5 right and said none for the 3 wrong). "Al-Hazm", the Saudi club, was a settlement
+  in Oman, "EU" the commune of Eu. Else the AI (gemma4:31b, 5 titles of news naming it, `titlesNaming`) chooses among
   the items called so or whose name starts so (`namedItems`: "Juventus" is "Juventus FC", "Liverpool"
   "Liverpool F.C.", the city coming first), no person among them, or none; kept when the item is in 10
   Wikipedias at least, 1 when one item only was called so (the AI agrees it is the one: Instagram, a work,

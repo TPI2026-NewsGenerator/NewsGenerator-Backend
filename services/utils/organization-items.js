@@ -12,6 +12,8 @@
 import {describeItems, namedItems} from './wikidata.js';
 import {ollamaJson} from './ollama.js';
 import {MentionModel} from '../../models/mention-model.js';
+import {countriesOfItems} from './countries.js';
+import {ofOtherCountry} from './country-names.js';
 
 // Measured on 60 organisations often met and never linked (18.10.2026): one item called so left FIFA (an
 // album, a song of the same name), Juventus ("Juventus FC"), Liverpool (the city first) unlinked. Told
@@ -50,6 +52,13 @@ Answer in JSON only: {"n": 0}`;
 // whether the one item called so may be the organisation without asking the AI
 const mayBeBody = (item) => item && !item.human && !item.place && !item.work && item.links >= LONE_SITELINKS;
 
+// whether the sites naming the name are of another country than the item (see country-names.js
+// ofOtherCountry): then the AI reads the titles. Not read from Wikidata, or an international body: no
+const elsewhere = async (id, qid) => {
+    const country = (await countriesOfItems([qid], {background: true})).get(qid);
+    return Boolean(country?.country) && !country.international && ofOtherCountry(await MentionModel.sitesNaming(id), country.country);
+};
+
 // the qid of an organisation ({id, name, lang} of mentions), null when none can be told; usage: the
 // tokens the AI took, counted in it
 export const organizationItem = async ({id, name, lang}, usage = null) => {
@@ -58,7 +67,7 @@ export const organizationItem = async ({id, name, lang}, usage = null) => {
     const exact = found.filter(item => item.exact);
     const described = await describeItems(found.map(item => item.qid));
     const lone = exact.length === 1 ? described.find(item => item.qid === exact[0].qid) : null;
-    if (mayBeBody(lone)) return lone.qid;
+    if (mayBeBody(lone) && !(await elsewhere(id, lone.qid))) return lone.qid;
     const items = described.filter(item => !item.human);
     const titles = items.length === 0 ? [] : await MentionModel.titlesNaming(id, TITLES);
     if (titles.length === 0) return null;

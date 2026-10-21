@@ -112,6 +112,29 @@ export const countryOfSite = (site) => {
     return /^[a-z]{2}$/.test(domain) && !OPEN_DOMAINS.has(domain) ? domain.toUpperCase() : null;
 };
 
+// Whether the sites naming a body (sites: [{site, news}], see MentionModel.sitesNaming) say it is not of
+// this country: the sites with a country write 20 news of them at least, and one other country writes 70% of
+// them ("OL" of French sites is Lyon, not Open Library of the United States; the "Assemblée nationale" of
+// French sites is not Senegal's), or none is of this country, unless it is the United States, whose sites
+// have no domain of its own ("Primera División" of Spanish-speaking sites is not the Maltese league).
+// Measured on 75 organisations linked to the one item called so, judged by hand (bench/org-country,
+// 21.10.2026): 9 of the 75 asked to the AI, 3 of the 4 wrong ones, 1 of the country only and 5 right ones;
+// the AI said none for the 3 wrong and kept the 5 right
+const ELSEWHERE_SHARE = 0.7;
+const ELSEWHERE_MIN_NEWS = 20;
+export const ofOtherCountry = (sites = [], country = null) => {
+    if (!country) return false;
+    const byCountry = new Map();
+    for (const row of sites) {
+        const code = countryOfSite(row.site);
+        if (code) byCountry.set(code, (byCountry.get(code) ?? 0) + row.news);
+    }
+    const total = [...byCountry.values()].reduce((sum, news) => sum + news, 0);
+    if (total < ELSEWHERE_MIN_NEWS) return false;
+    const [top, news] = [...byCountry].sort((a, b) => b[1] - a[1])[0];
+    return (top !== country && news >= ELSEWHERE_SHARE * total) || (country !== 'US' && !byCountry.has(country));
+};
+
 // a byline: one site writes this share of the news naming it at least; the country of the media: the one
 // of this share of the sites of a country naming it, of MIN_COUNTRY_NEWS of them at least
 const BYLINE_SHARE = 0.8;
