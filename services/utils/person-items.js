@@ -22,6 +22,15 @@ import {MentionModel} from '../../models/mention-model.js';
 // a Flemish painter) is no full name: the AI said no to 6 of 6, yes to La Joaqui. All: 116 right, none
 // wrong, 6 lost (items with no description: Christine Villemin). The country of the media told nothing:
 // most news are of a .com, the American players of sports.yahoo.com "Canadian" (18 right lost)
+// A word alone ("Evenepoel", "Esposito", "Pedri") is a family name or a mononym. Its one item called so was
+// wrong 87 times of 174 judged by hand on their news (bench/single-words, 21.10.2026): a botanist for Feijóo,
+// a painter for Evenepoel, the actor Giancarlo Esposito for the footballers. The card tells a family name by
+// the person linked in full that ends with it (card-names.js withSurnamesLinked), only when the word has no
+// link of its own: the wrong one stopped it. So the word keeps its item only when the item is called so (its
+// label) and is in WORD_SITELINKS Wikipedias at least (Pedri, Deco, Sheamus): 107 right, 7 wrong, 60 with
+// none (the card told most of them), against 87 right and 87 wrong, and 96 right, 6 wrong, 72 none with no
+// link at all. The 5 more right ones lost 40 Wikipedias at least, 11 more wrong at 10
+export const WORD_SITELINKS = 20;
 const TITLES = 5;
 const PARTICLES = new Set(['de', 'di', 'da', 'du', 'del', 'della', 'dos', 'das', 'van', 'von', 'der', 'den', 'ten', 'ter', 'le', 'la']);
 
@@ -50,6 +59,7 @@ export const personItem = async ({id, name}, qid, usage = null) => {
     // 3 hours (20.10.2026), the person would wait at the head of the queue meanwhile
     const [item] = await describeItems([qid]);
     if (!item?.human) return null;
+    if (!mentionKey(name).includes(' ')) return mentionKey(item.label ?? '') === mentionKey(name) && item.links >= WORD_SITELINKS ? qid : null;
     if (item.links >= PERSON_SITELINKS || (item.links >= 1 && !familyName(name))) return qid;
     const titles = await MentionModel.titlesNaming(id, TITLES);
     if (titles.length === 0) return null;

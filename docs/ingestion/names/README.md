@@ -55,7 +55,12 @@ what finds the other angles of a card through its rare names.
   in a Wikipedia at least (`describeItems`); in none, or for a family name after a particle ("De Roon", a
   botanist; `familyName`), when the AI (gemma4:31b, 5 titles, the description and country of the item) says
   the news fit it: "Eduardo Varela", a Uruguayan referee, is no Mexican journalist in no Wikipedia. About 270
-  tokens a name. An organisation (`organizationItem`, `services/utils/organization-items.js`)
+  tokens a name. A word alone (since 21.10.2026) keeps its item only when the item is a human called exactly so
+  and in 20 Wikipedias at least (Pedri, Deco, Sheamus); else it has no link of its own and its card tells it, by
+  the person linked in full whose name ends with it (`withSurnamesLinked`, which acts on a word with no link
+  only): the one item called so was wrong 87 times of 174 judged on the titles of their news (a botanist for
+  Feijóo, a painter for Evenepoel, the actor Giancarlo Esposito for the footballers) and stopped the card from
+  telling it. 107 right and 7 wrong against 87 and 87 (`bench/single-words`). An organisation (`organizationItem`, `services/utils/organization-items.js`)
   is the one item called so when it may be a body (since 20.10.2026): no human, no place, no work, in 2
   Wikipedias at least (`describeItems`: a place has a population, P1082, or a position, P625, and nothing of a
   body, no seat, league, sport, industry..., or is a bare human settlement, Q486972; a country, with a code

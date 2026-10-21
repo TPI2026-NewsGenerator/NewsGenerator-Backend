@@ -17,7 +17,7 @@ jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 jest.unstable_mockModule('../../services/utils/wikidata.js', () => ({...wikidata, describeItems, readCountries}));
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson, newUsage: () => ({calls: 0, input: 0, output: 0})}));
 jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel: {titlesNaming}}));
-const {familyName, personItem} = await import('../../services/utils/person-items.js');
+const {WORD_SITELINKS, familyName, personItem} = await import('../../services/utils/person-items.js');
 
 const VARELA = {qid: 'Q16238998', label: 'Eduardo Varela', description: 'Mexican journalist', links: 0, human: true};
 
@@ -42,6 +42,23 @@ describe('personItem', () => {
         expect(await personItem({id: 2, name: 'Kim Jong Un'}, 'Q131541644')).toBeNull();
         expect(await personItem({id: 3, name: 'one person'}, 'Q140403752')).toBeNull();
         expect(ollamaJson).not.toHaveBeenCalled();
+    });
+
+    it('should keep the item of a word alone only when it is called so and well known, without asking the AI', async () => {
+        const PEDRI = {qid: 'Q1', label: 'Pedri', description: 'Spanish association football player', links: 70, human: true};
+        describeItems.mockResolvedValueOnce([PEDRI]);
+        expect(await personItem({id: 5, name: 'Pedri'}, 'Q1')).toBe('Q1');
+        // the name written without its accent or case is the label too
+        describeItems.mockResolvedValueOnce([{...PEDRI, label: 'Cañizares'}]);
+        expect(await personItem({id: 5, name: 'canizares'}, 'Q1')).toBe('Q1');
+        // a family name alone: the item has the whole name, "Evenepoel" the painter, "Feijóo" a botanist
+        describeItems.mockResolvedValueOnce([{qid: 'Q2', label: 'Henri Evenepoel', description: 'artist (1872-1899)', links: 13, human: true}]);
+        expect(await personItem({id: 6, name: 'Evenepoel'}, 'Q2')).toBeNull();
+        // called so, but in few Wikipedias: the card tells it
+        describeItems.mockResolvedValueOnce([{...PEDRI, links: WORD_SITELINKS - 1}]);
+        expect(await personItem({id: 5, name: 'Pedri'}, 'Q1')).toBeNull();
+        expect(ollamaJson).not.toHaveBeenCalled();
+        expect(titlesNaming).not.toHaveBeenCalled();
     });
 
     it('should ask the AI for an item in no Wikipedia, and keep it only when it says yes', async () => {
