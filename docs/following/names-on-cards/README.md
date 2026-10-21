@@ -39,6 +39,15 @@ stances of the same actor for the other angles of the card.
   `MentionModel.storiesNaming` then finds the stories of the last 30 days (`AFFAIR_DAYS`) naming them or a name
   of the same item, at least 0.45 close to the card by their centroids, 13 per card at most; they join the
   closest stories the AI judges (see [Briefing > Other angles](../../briefing/other-angles/README.md)).
+- **Checked against the card.** A name is linked once for all its news, by its text, so its item may be
+  another than the card means ("Primera División" of a Spanish referee the Maltese league, the FMF of a
+  Malagasy card Moldova's federation). When the briefing is written (`namesAndCountriesOfCards`),
+  `withNamesChecked` (`services/utils/name-check.js`) asks the AI, for each name whose item is in 60
+  Wikipedias or fewer (`CHECK_MAX_LINKS`, 39% of the names), whether the titles of the card and the countries
+  of the sites that published them fit the item: "no" leaves the link out of the card and of its countries,
+  "yes", "unsure", an error or Wikidata not answering leave it. Measured on 242 names of 207 cards judged by
+  hand (`bench/card-check`): the 14 wrong ones sent and caught, 2 of 218 right ones left out, about 1 500
+  tokens a briefing (`naming` in the report of tokens). The names of the countries are given, not their codes.
 - **The reader.** A click on a name opens `/following/:qid` or `/following/name/:name`; the names met on
   several cards are suggested on `/following` (see [Names and words](../names-and-words/README.md)).
 

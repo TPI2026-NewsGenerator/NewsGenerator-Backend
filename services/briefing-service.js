@@ -580,7 +580,7 @@ ${projects.map(project => `- « ${project.name} » : ${project.text.replace(/\s+
 export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) => {
     // the stories ranked and given to the AI grow with the cards wanted
     const scale = size / MAX_BRIEFING;
-    const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage()};
+    const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage()};
     // the interests of the profile and of the projects it runs: each gets its share of the cards
     const [profile, interests, projects] = await Promise.all([ProfileModel.get(profileId), ProfileModel.briefingInterests(profileId),
         ProfileModel.projects(profileId)]);
@@ -768,7 +768,9 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             return null;
         }),
         namesAndCountriesOfCards(stories.map(story => ({storyId: story.storyId, ids: story.members.map(article => article.id),
-            media: [...new Set(story.members.map(mediumOfArticle))]}))).catch(err => {
+            media: [...new Set(story.members.map(mediumOfArticle))],
+            titles: [...new Set(story.members.map(article => article.title).filter(Boolean))],
+            sites: story.members.map(article => siteOf(article))})), {usage: usage.naming}).catch(err => {
             console.error(`Briefing: the names of the cards were not read (${err.message})`);
             return new Map();
         }),

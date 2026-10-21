@@ -42,7 +42,7 @@ const readItem = jest.fn();
 const searchItems = jest.fn();
 jest.unstable_mockModule('../../services/utils/wikidata.js', async () => ({
     ...await import('../../services/utils/wikidata-names.js'),
-    readItem, searchItems, readCountries: async () => new Map(), isQid: (value) => /^Q\d+$/.test(value ?? ''),
+    readItem, searchItems, readCountries: async () => new Map(), describeItems: async () => [], isQid: (value) => /^Q\d+$/.test(value ?? ''),
 }));
 
 const {EntityService, mergeNews, namesFor} = await import('../../services/entity-service.js');
