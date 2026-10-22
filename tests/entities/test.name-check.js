@@ -86,6 +86,19 @@ describe('withNamesChecked', () => {
         expect(ollamaJson.mock.calls[0][0]).toContain('Countries of the sites that published them: Spain (1)');
     });
 
+    it('should tell the AI what the card is about and the other names on it', async () => {
+        describeItems.mockResolvedValue([MALTA]);
+        ollamaJson.mockResolvedValueOnce({same: 'yes'});
+        const card = {storyId: 1, names: [{name: 'Primera División', qid: 'Q58305', kind: 'organization'}, {name: 'Hernandez Hernandez', qid: null, kind: 'person'}, {name: 'UEFA', qid: null, kind: 'organization'}], places: []};
+        await withNamesChecked([card], [{...cards[0], topic: 'sport'}]);
+        const prompt = ollamaJson.mock.calls[0][0];
+        expect(prompt).toContain('The card is about: sport.');
+        expect(prompt).toContain('Other names on the card: Hernandez Hernandez, UEFA.');
+        expect(prompt).not.toContain('Other names on the card: Primera División');
+        // nothing said when the card tells nothing
+        expect(checkPrompt({name: 'X', kind: 'person', titles: ['t'], label: 'X', description: '', links: 1})).not.toContain('The card is about');
+    });
+
     it('should write the prompt with the country of the item when it has one', () => {
         expect(checkPrompt({name: 'OL', kind: 'organization', titles: ['t'], label: 'Open Library', description: 'online project', links: 41, country: 'US'}))
             .toContain('Open Library: online project (41 Wikipedias, country United States)');

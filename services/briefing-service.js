@@ -767,8 +767,8 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             console.error(`Briefing: the news of what the profile follows were not looked for (${err.message})`);
             return null;
         }),
-        namesAndCountriesOfCards(stories.map(story => ({storyId: story.storyId, ids: story.members.map(article => article.id),
-            media: [...new Set(story.members.map(mediumOfArticle))],
+        namesAndCountriesOfCards(stories.map((story, i) => ({storyId: story.storyId, ids: story.members.map(article => article.id),
+            media: [...new Set(story.members.map(mediumOfArticle))], topic: summaryOf(i)?.topic ?? null,
             titles: [...new Set(story.members.map(article => article.title).filter(Boolean))],
             sites: story.members.map(article => siteOf(article))})), {usage: usage.naming}).catch(err => {
             console.error(`Briefing: the names of the cards were not read (${err.message})`);

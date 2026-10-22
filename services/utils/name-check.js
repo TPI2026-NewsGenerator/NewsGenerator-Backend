@@ -45,16 +45,21 @@ export const countriesOfSites = (sites = []) => {
     return Object.entries(count).sort((a, b) => b[1] - a[1]).map(([code, news]) => `${countryName(code)} (${news})`).join(', ');
 };
 
-export const checkPrompt = ({name, kind, titles, countries = '', label, description, links, country}) => `A name in the news of one card: "${name}" (${kind}).
+// what else the card says helps tell a name: its topic and the other names on it ("Napoli" on a card of sport and
+// Serie A is the club, not the city; "Primera División" with Spanish referees the Spanish league)
+const context = ({topic, others = []}) => `${topic ? `The card is about: ${topic}.\n` : ''}${others.length > 0 ? `Other names on the card: ${others.join(', ')}.\n` : ''}`;
+
+export const checkPrompt = ({name, kind, titles, countries = '', topic = null, others = [], label, description, links, country}) => `A name in the news of one card: "${name}" (${kind}).
 
 Titles of the news of the card:
 ${titles.map(title => `- ${title}`).join('\n')}
-${countries ? `Countries of the sites that published them: ${countries}\n` : ''}
+${countries ? `Countries of the sites that published them: ${countries}\n` : ''}${context({topic, others})}
 Its link to Wikidata: ${label}: ${description || '(no description)'} (${links} Wikipedias${country ? `, country ${countryName(country)}` : ''}).
 
 Is the "${name}" of this card this item? "yes" when the titles fit what the item says (their field, their role,
 their country). "no" when the card means another thing (another person, a place, a work, a body of another
-country, a common word). "unsure" when the titles say too little to tell.
+country, a common word). "unsure" when the titles say too little to tell. Use what the card is about and the
+other names on it: a name on a sports card is the club, not the city of the same name.
 Answer in JSON only: {"same": "yes"}`;
 
 // the items described, kept while the server runs: UEFA and FIFA are named by every other card
@@ -67,13 +72,14 @@ const describe = async (qids) => {
     }
 };
 
-// read: [{storyId, names, places}] (see card-names.js readNames), cards: [{storyId, titles, sites}] (the
-// domains of the sites of its news); the same cards
+// read: [{storyId, names, places}] (see card-names.js readNames), cards: [{storyId, titles, sites, topic}] (the
+// domains of the sites of its news, what it is about); the same cards
 // with the qid of a name the AI says is another thing left out (names: qid null, places: left out). Whatever
 // fails (Wikidata, the AI) leaves the name as it was
 export const withNamesChecked = async (read, cards, {usage = null} = {}) => {
     const titlesOf = new Map(cards.map(card => [card.storyId, (card.titles ?? []).slice(0, TITLES)]));
     const countriesOf = new Map(cards.map(card => [card.storyId, countriesOfSites(card.sites)]));
+    const topicOf = new Map(cards.map(card => [card.storyId, card.topic ?? null]));
     const rows = read.flatMap(card => [...card.names.map(row => ({card, row, list: 'names'})), ...(card.places ?? []).map(row => ({card, row, list: 'places'}))])
         .filter(({card, row}) => row.qid && (titlesOf.get(card.storyId) ?? []).length > 0);
     if (rows.length === 0) return read;
@@ -92,7 +98,8 @@ export const withNamesChecked = async (read, cards, {usage = null} = {}) => {
     const answers = await mapWithConcurrency(asked, CHECK_CONCURRENCY, async ({card, row}) => {
         const item = described.get(row.qid);
         const answer = await ollamaJson(checkPrompt({name: row.name, kind: row.kind ?? 'organization', titles: titlesOf.get(card.storyId),
-            countries: countriesOf.get(card.storyId), ...item, country: countries.get(row.qid)?.country ?? null}), usage);
+            countries: countriesOf.get(card.storyId), topic: topicOf.get(card.storyId),
+            others: card.names.filter(other => other !== row && other.name !== row.name).map(other => other.name), ...item, country: countries.get(row.qid)?.country ?? null}), usage);
         return answer?.same === 'no';
     });
     let dropped = 0;
