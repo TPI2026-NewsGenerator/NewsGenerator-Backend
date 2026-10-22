@@ -1,0 +1,6 @@
+transformers>=4.40
+# the dynamic quantization of torch.ao.quantization (int8) leaves PyTorch in 2.10
+torch>=2.2,<2.10
+# the sentencepiece file of the tokenizer of mBART, read through protobuf
+sentencepiece>=0.2
+protobuf>=4
