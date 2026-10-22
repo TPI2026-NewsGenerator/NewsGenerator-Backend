@@ -34,9 +34,17 @@ what finds the other angles of a card through its rare names.
   names go in `mentions` (`UNIQUE (key, kind)`, `seen` counted up), in the order of their key so that two
   taggers wait for each other instead of locking each other; each news says which it names in
   `article_mentions` (`db/add_named_entities.sql`, index `i_articles_untagged` in `db/add_untagged_index.sql`).
-- **Linked to Wikidata.** One loop (`link`): `toLink` takes 20 names never looked for, first the ones a reader
+- **Linked to Wikidata.** One loop (`link`): `toLink` takes 50 names never looked for, first the ones a reader
   saw (`wanted_at`, set by a card or the page of a name, `db/add_mentions_wanted.sql`), then the ones named by
-  3 news or more (`LINK_LEAST`), the most named first. `exactItems` (`services/utils/wikidata.js`) searches
+  3 news or more (`LINK_LEAST`), the most named first, the persons of one word last. Since 22.10.2026 the
+  persons in full and the places among them are first linked at once by the title of an article of the
+  Wikipedia of their language (`linkedByTitle`, `services/utils/title-links.js`: `action=query&redirects=1`,
+  50 titles a call, English for the ones not found, without the pause, Wikidata being searched name by name only
+  for the others): kept when it is no page of homonyms, the item a human (a person) or a place (a place), called
+  no common noun, and a person not a byline. 41% of 300 names of the queue, 90% right (`bench/title-batch`):
+  the queue of 285 000 names, at the 12 000 a day Wikidata lets through, would otherwise take weeks. The
+  organisations stay with the AI (3 of 16 wrong by title: "Napoli" the city). Reported hourly (`names linked by
+  the title of their article`). `exactItems` (`services/utils/wikidata.js`) searches
   `wbsearchentities` in the language of the name, then in English, and keeps the items called exactly so,
   pages of a family or given name aside: the text found, or since 20.10.2026 the label too (Wikidata gives
   the longest name starting so, "Javier Tebas Medrano" of the Spanish label for "Javier Tebas", met 668

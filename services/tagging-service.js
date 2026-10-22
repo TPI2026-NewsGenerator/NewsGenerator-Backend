@@ -19,6 +19,7 @@ import {mediaOf} from "./utils/country-names.js";
 import {countriesOfItems} from "./utils/countries.js";
 import {organizationItem} from "./utils/organization-items.js";
 import {personItem} from "./utils/person-items.js";
+import {linkedByTitle} from "./utils/title-links.js";
 import {newUsage} from "./utils/ollama.js";
 
 // Each tagger of NER_URL works on its own, the newest news first, none taken by another: the
@@ -39,7 +40,7 @@ const HOUSEKEEPING_HOURS = 24;
 // row (13.10.2026, without an account): one every LINK_PAUSE_MS, about 12 000 names a day, and the
 // pause it asks for after a refusal (see wikidata.js)
 export const LINK_LEAST = 3;
-const LINK_BATCH = 20;
+const LINK_BATCH = 50;
 const LINK_PAUSE_MS = 7000;
 const LINK_IDLE_MS = 10 * 60e3;
 
@@ -122,6 +123,7 @@ const work = async (url) => {
 
 // the tokens the AI took to tell organisations and persons apart since the last report
 let linkUsage = newUsage();
+let titleLinked = 0;
 
 // The names looked for in Wikidata, one at a time, the ones a reader saw first (on a card, the page of
 // a name: see MentionModel.want), then the most met: linked when one item only is called so, or, for a
@@ -144,7 +146,22 @@ const link = async () => {
             await wait(LINK_IDLE_MS);
             continue;
         }
+        // the persons in full and the places named as an article of their Wikipedia are linked at once, 50 names
+        // a call (see title-links.js), without the pause: Wikidata is searched name by name for the others
+        const byTitle = await linkedByTitle(rows).catch(err => {
+            console.error(`Tagger: names not linked by title (${err.message})`);
+            return new Map();
+        });
         for (const row of rows) {
+            if (byTitle.has(row.id)) {
+                try {
+                    await MentionModel.setLink(row.id, byTitle.get(row.id));
+                    titleLinked++;
+                } catch (err) {
+                    console.error(`Tagger: "${row.name}" not linked by title (${err.message})`);
+                }
+                continue;
+            }
             try {
                 let qid = null;
                 if (row.kind === 'organization') qid = await organizationItem(row, linkUsage);
@@ -196,9 +213,11 @@ const report = async () => {
             const waiting = await MentionModel.untaggedCount(new Date(Date.now() - TAG_DAYS * 24 * 3600e3));
             const done = [...taggers].map(([url, state]) => `${url} ${state.tagged}`).join(', ');
             console.log(`Tagger: in ${REPORT_MINUTES} min tagged ${done}; ${waiting} news of the last ${TAG_DAYS} days left`
-                + `; names told apart by the AI: ${linkUsage.calls} calls, ${linkUsage.input + linkUsage.output} tokens`);
+                + `; names told apart by the AI: ${linkUsage.calls} calls, ${linkUsage.input + linkUsage.output} tokens`
+                + `; names linked by the title of their article: ${titleLinked}`);
             taggers.forEach(state => { state.tagged = 0; });
             linkUsage = newUsage();
+            titleLinked = 0;
         } catch (err) {
             console.error(`Tagger: nothing reported (${err.message})`);
         }

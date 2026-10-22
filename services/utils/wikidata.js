@@ -26,6 +26,8 @@ const HEADERS = () => ({
     Accept: 'application/json',
     'Accept-Encoding': 'gzip, deflate',
 });
+// the headers of a client of Wikimedia, for the Wikipedias too (see title-links.js)
+export const wikimediaHeaders = () => HEADERS();
 // work done in background (background: true) asks the API to answer "maxlag" instead of working when
 // its databases lag more than this many seconds behind (API:Etiquette, for what no one waits for): it
 // waits as asked, as for a refusal. Not what a reader waits for: the lag was over 5 s for long (6.2 s,
@@ -129,9 +131,9 @@ const isPlace = (claims) => !claims.P297 && (Boolean(claims.P1082)
 // [{qid, label, description, links, human, place, work}] of these items, in English: links the
 // Wikipedias it is in, human when it is one (P31 Q5), place when it is a place (isPlace), work when it was
 // published (P577: an album, a film, a game); the ones Wikidata does not have left out. background: as
-// famousHuman
-export const describeItems = async (qids, {background = false} = {}) => {
-    const asked = [...new Set(qids.filter(isQid))].slice(0, EXACT_FOUND);
+// famousHuman; batch: the items a call, 10 for the candidates of a name, up to 50 for a list (title-links.js)
+export const describeItems = async (qids, {background = false, batch = EXACT_FOUND} = {}) => {
+    const asked = [...new Set(qids.filter(isQid))].slice(0, batch);
     if (asked.length === 0) return [];
     const params = new URLSearchParams({action: 'wbgetentities', ids: asked.join('|'), props: 'labels|descriptions|claims|sitelinks',
         languages: 'en', format: 'json'});
