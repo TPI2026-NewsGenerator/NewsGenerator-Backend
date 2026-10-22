@@ -69,16 +69,23 @@ export const MentionModel = {
 
     // [{id, name, lang, seen}]: the names never looked for in Wikidata a reader saw first (wanted, see
     // want), the first seen first, whatever their news; then the ones named by 'least' news at least, the
-    // most named first
+    // most named first, the persons of one word last: Wikidata lets about 12 000 names a day through, and
+    // the item called so of a word alone is told on its card (see person-items.js), 26 000 of the 110 000
+    // persons waiting (21.10.2026); they come when no other name waits
     toLink: async ({least, limit}) => prisma.$queryRawUnsafe(`
         WITH wanted AS (
             SELECT id FROM mentions WHERE linked_at IS NULL AND wanted_at IS NOT NULL ORDER BY wanted_at LIMIT $2
         ), often AS (
-            SELECT id FROM mentions WHERE linked_at IS NULL AND seen >= $1 ORDER BY seen DESC LIMIT $2
+            SELECT id FROM mentions WHERE linked_at IS NULL AND seen >= $1 AND NOT (kind = 'person' AND key NOT LIKE '% %')
+            ORDER BY seen DESC LIMIT $2
+        ), words AS (
+            SELECT id FROM mentions WHERE linked_at IS NULL AND seen >= $1 AND kind = 'person' AND key NOT LIKE '% %'
+            ORDER BY seen DESC LIMIT $2
         )
         SELECT m.id, m.name, m.kind, m.lang, m.seen FROM mentions m
-        WHERE m.id IN (SELECT id FROM wanted UNION SELECT id FROM often)
-        ORDER BY m.wanted_at NULLS LAST, m.seen DESC LIMIT $2`, least, limit),
+        WHERE m.id IN (SELECT id FROM wanted UNION SELECT id FROM often
+                       UNION SELECT id FROM words WHERE (SELECT count(*) FROM often) < $2)
+        ORDER BY m.wanted_at NULLS LAST, (m.kind = 'person' AND m.key NOT LIKE '% %'), m.seen DESC LIMIT $2`, least, limit),
 
     // these names (ids) or the names written so (key) looked for in Wikidata before the others: shown to
     // a reader. The ones looked for already are not looked for again
