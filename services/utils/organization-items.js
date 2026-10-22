@@ -60,9 +60,11 @@ const elsewhere = async (id, qid) => {
 };
 
 // the qid of an organisation ({id, name, lang} of mentions), null when none can be told; usage: the
-// tokens the AI took, counted in it
-export const organizationItem = async ({id, name, lang}, usage = null) => {
+// tokens the AI took, counted in it; candidates: an array the qids found are added to (kept by the link loop when
+// there is no answer, for a card to choose among them)
+export const organizationItem = async ({id, name, lang}, usage = null, candidates = null) => {
     const found = await namedItems(name, lang ?? 'en');
+    candidates?.push(...found.map(item => item.qid));
     if (found.length === 0) return null;
     const exact = found.filter(item => item.exact);
     const described = await describeItems(found.map(item => item.qid));

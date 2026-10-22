@@ -12,12 +12,14 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 const describeItems = jest.fn();
 const countriesOfItems = jest.fn(async () => new Map());
 const ollamaJson = jest.fn();
+const candidatesOf = jest.fn(async () => new Map());
 const wikidata = await import('../../services/utils/wikidata.js');
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 jest.unstable_mockModule('../../services/utils/wikidata.js', () => ({...wikidata, describeItems}));
 jest.unstable_mockModule('../../services/utils/countries.js', () => ({countriesOfItems}));
+jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel: {candidatesOf}}));
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson, newUsage: () => ({calls: 0, input: 0, output: 0})}));
-const {CHECK_MAX_LINKS, checkPrompt, countriesOfSites, withNamesChecked} = await import('../../services/utils/name-check.js');
+const {CHECK_MAX_LINKS, PERSON_LEAST, checkPrompt, countriesOfSites, linkPrompt, withNamesChecked, withNamesLinked} = await import('../../services/utils/name-check.js');
 
 const cards = [{storyId: 1, titles: ['Hernández Hernández, árbitro de Primera división: "El arbitraje es aprender a resetear"']}];
 const MALTA = {qid: 'Q58305', label: 'Maltese First Division', description: 'sports league', links: 14, human: false};
@@ -29,6 +31,8 @@ beforeEach(() => {
     describeItems.mockReset();
     ollamaJson.mockReset();
     countriesOfItems.mockClear();
+    candidatesOf.mockReset();
+    candidatesOf.mockResolvedValue(new Map());
     jest.spyOn(console, 'log').mockImplementation(() => {});
     jest.spyOn(console, 'error').mockImplementation(() => {});
 });
@@ -102,5 +106,59 @@ describe('withNamesChecked', () => {
     it('should write the prompt with the country of the item when it has one', () => {
         expect(checkPrompt({name: 'OL', kind: 'organization', titles: ['t'], label: 'Open Library', description: 'online project', links: 41, country: 'US'}))
             .toContain('Open Library: online project (41 Wikipedias, country United States)');
+    });
+});
+
+describe('withNamesLinked', () => {
+    const NAPOLI = {qid: 'Q61', label: 'SSC Napoli', description: 'Italian professional football club', links: 118, human: false};
+    const CITY = {qid: 'Q62', label: 'Naples', description: 'capital city of Campania, Italy', links: 207, human: false};
+    const NAMESAKE = {qid: 'Q63', label: 'Osvaldo Di Carlo', description: 'Argentine sports leader', links: 1, human: true};
+    const KNOWN = {qid: 'Q64', label: 'Michael Oliver', description: 'English football referee', links: 36, human: true};
+    const sports = {storyId: 1, titles: ["Champions, scelti gli arbitri per Roma e Napoli"], sites: ['gazzetta.it', 'corriere.it'], topic: 'sport'};
+    const names = () => [{name: 'Napoli', id: 10, qid: null, kind: 'organization'}, {name: 'Di Carlo', id: 11, qid: null, kind: 'person'},
+        {name: 'Michael Oliver', id: 12, qid: null, kind: 'person'}, {name: 'Pedri', id: 13, qid: null, kind: 'person'},
+        {name: 'UEFA', id: 14, qid: 'Q35572', kind: 'organization'}, {name: 'Schärer', id: 15, qid: null, kind: 'person'}];
+
+    it('should link a name with no item to the candidate the card chooses, a person in 2 Wikipedias at least', async () => {
+        candidatesOf.mockResolvedValue(new Map([[10, ['Q62', 'Q61']], [11, ['Q63']], [12, ['Q64']], [13, ['Q69']]]));
+        describeItems.mockImplementation(async (qids) => [NAPOLI, CITY, NAMESAKE, KNOWN].filter(item => qids.includes(item.qid)));
+        ollamaJson.mockResolvedValueOnce({n: 2}).mockResolvedValueOnce({n: 1}).mockResolvedValueOnce({n: 1});
+        const [card] = await withNamesLinked([{storyId: 1, names: names(), places: []}], [sports]);
+        const qids = Object.fromEntries(card.names.map(name => [name.name, name.qid]));
+        expect(qids).toEqual({Napoli: 'Q61', 'Di Carlo': null, 'Michael Oliver': 'Q64', Pedri: null, UEFA: 'Q35572', Schärer: null});
+        // asked for the three that have candidates and are no word alone: not Pedri, not UEFA (linked), not Schärer (none kept)
+        expect(ollamaJson).toHaveBeenCalledTimes(3);
+        const prompt = ollamaJson.mock.calls[0][0];
+        expect(prompt).toContain('The card these news make is about: sport.');
+        expect(prompt).toContain('Other names on the card: Di Carlo, Michael Oliver, Pedri, UEFA, Schärer.');
+        expect(prompt).toContain('Countries of the sites that published the news: Italy (2).');
+        expect(prompt).toContain('[1] Naples: capital city of Campania, Italy (207 Wikipedias)');
+        expect(prompt).toContain('[2] SSC Napoli: Italian professional football club (118 Wikipedias)');
+        expect(PERSON_LEAST).toBe(2);
+    });
+
+    it('should leave the names as they are when the AI answers none or badly, or fails, and when nothing is kept', async () => {
+        candidatesOf.mockResolvedValue(new Map([[10, ['Q61']]]));
+        describeItems.mockResolvedValue([NAPOLI]);
+        const card = () => [{storyId: 1, names: [{name: 'Napoli', id: 10, qid: null, kind: 'organization'}], places: []}];
+        for (const answer of [{n: 0}, {n: 5}, {n: 'x'}, null]) {
+            ollamaJson.mockResolvedValueOnce(answer);
+            expect((await withNamesLinked(card(), [sports]))[0].names[0].qid).toBeNull();
+        }
+        ollamaJson.mockRejectedValueOnce(new Error('no answer'));
+        expect((await withNamesLinked(card(), [sports]))[0].names[0].qid).toBeNull();
+        candidatesOf.mockRejectedValue(new Error('database down'));
+        expect((await withNamesLinked(card(), [sports]))[0].names[0].qid).toBeNull();
+        candidatesOf.mockResolvedValue(new Map());
+        ollamaJson.mockClear();
+        await withNamesLinked(card(), [sports]);
+        expect(ollamaJson).not.toHaveBeenCalled();
+    });
+
+    it('should write the prompt without what the card does not tell', () => {
+        const prompt = linkPrompt({name: 'OL', kind: 'organization', titles: ['t'], candidates: [{label: 'Open Library', description: '', links: 41}]});
+        expect(prompt).toContain('The card these news make is about: unknown.');
+        expect(prompt).toContain('Other names on the card: none.');
+        expect(prompt).toContain('[1] Open Library: (no description) (41 Wikipedias)');
     });
 });

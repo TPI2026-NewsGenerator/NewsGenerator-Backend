@@ -43,7 +43,7 @@ what finds the other angles of a card through its rare names.
   for the others): kept when it is no page of homonyms, the item a human (a person) or a place (a place), called
   no common noun, and a person not a byline. 41% of 300 names of the queue, 90% right (`bench/title-batch`):
   the queue of 285 000 names, at the 12 000 a day Wikidata lets through, would otherwise take weeks. The
-  organisations stay with the AI (3 of 16 wrong by title: "Napoli" the city). Reported hourly (`names linked by
+  organisations stay with the AI (3 of 16 wrong by title: "Napoli" the city). A name the loop leaves with no item keeps its candidates (`mentions.candidates`, `[]` when it found none) for the cards to choose among them (see [Names on cards](../../following/names-on-cards/README.md)), and a name shown on a card with none kept is put back in the queue at once (`want`). Reported hourly (`names linked by
   the title of their article`). `exactItems` (`services/utils/wikidata.js`) searches
   `wbsearchentities` in the language of the name, then in English, and keeps the items called exactly so,
   pages of a family or given name aside: the text found, or since 20.10.2026 the label too (Wikidata gives

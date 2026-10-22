@@ -41,6 +41,7 @@ const HOUSEKEEPING_HOURS = 24;
 // pause it asks for after a refusal (see wikidata.js)
 export const LINK_LEAST = 3;
 const LINK_BATCH = 50;
+const MAX_CANDIDATES = 10;
 const LINK_PAUSE_MS = 7000;
 const LINK_IDLE_MS = 10 * 60e3;
 
@@ -164,10 +165,13 @@ const link = async () => {
             }
             try {
                 let qid = null;
-                if (row.kind === 'organization') qid = await organizationItem(row, linkUsage);
+                // the items the name may be, kept when it is left with none (see MentionModel.setCandidates)
+                const candidates = [];
+                if (row.kind === 'organization') qid = await organizationItem(row, linkUsage, candidates);
                 else if (row.kind === 'location') qid = await placeItem(row.name, row.lang ?? 'en');
                 else {
                     const qids = await exactItems(row.name, row.lang ?? 'en');
+                    candidates.push(...qids);
                     // a full name only: "Russell" alone, the F1 driver, became Bertrand Russell (18.10.2026); a
                     // family name alone is told on its card (see withSurnamesLinked)
                     const fullName = mentionKey(row.name).includes(' ');
@@ -180,6 +184,7 @@ const link = async () => {
                     }
                 }
                 await MentionModel.setLink(row.id, qid);
+                if (qid === null && row.kind !== 'location') await MentionModel.setCandidates(row.id, [...new Set(candidates)].slice(0, MAX_CANDIDATES));
             } catch (err) {
                 // refused (429): wikidata.js waits the time asked before the next one
                 if (!err.paused) console.error(`Tagger: "${row.name}" not looked for in Wikidata (${err.message})`);

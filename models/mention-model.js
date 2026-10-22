@@ -88,10 +88,29 @@ export const MentionModel = {
         ORDER BY m.wanted_at NULLS LAST, (m.kind = 'person' AND m.key NOT LIKE '% %'), m.seen DESC LIMIT $2`, least, limit),
 
     // these names (ids) or the names written so (key) looked for in Wikidata before the others: shown to
-    // a reader. The ones looked for already are not looked for again
-    want: async ({ids = [], key = null}) => ids.length === 0 && !key ? 0 : prisma.$executeRawUnsafe(`
-        UPDATE mentions SET wanted_at = now()
-        WHERE (id = ANY($1::int[]) OR key = $2) AND linked_at IS NULL AND wanted_at IS NULL`, ids, key),
+    // a reader. The ones looked for already are not looked for again, but for the persons in full and the
+    // organisations left with no item and no candidates kept (looked for before the candidates were kept):
+    // once more, so that the next card choosing among their candidates finds them (see setCandidates)
+    want: async ({ids = [], key = null}) => {
+        if (ids.length === 0 && !key) return 0;
+        const first = await prisma.$executeRawUnsafe(`
+            UPDATE mentions SET wanted_at = now()
+            WHERE (id = ANY($1::int[]) OR key = $2) AND linked_at IS NULL AND wanted_at IS NULL`, ids, key);
+        const again = ids.length === 0 ? 0 : await prisma.$executeRawUnsafe(`
+            UPDATE mentions SET linked_at = NULL, wanted_at = now()
+            WHERE id = ANY($1::int[]) AND qid IS NULL AND candidates IS NULL AND linked_at IS NOT NULL
+              AND kind IN ('person', 'organization') AND NOT (kind = 'person' AND key NOT LIKE '% %')`, ids);
+        return first + again;
+    },
+
+    // the items (qids) a name may be, kept when the link loop left it with none: [] when it found nothing
+    setCandidates: async (id, qids) => prisma.$executeRawUnsafe(`
+        UPDATE mentions SET candidates = $2::jsonb WHERE id = $1`, id, JSON.stringify(qids)),
+
+    // Map id -> [qid] of these names that have candidates kept (see setCandidates)
+    candidatesOf: async (ids) => ids.length === 0 ? new Map() : new Map((await prisma.$queryRawUnsafe(`
+        SELECT id, candidates FROM mentions WHERE id = ANY($1::int[]) AND candidates IS NOT NULL`, ids))
+        .map(row => [row.id, row.candidates])),
 
     // [{word, qid, seen, asPerson, asOther}]: for each of these words (keys of one word: "infantino"),
     // the persons linked to an item whose name ends with it ("gianni infantino"), each item once with how

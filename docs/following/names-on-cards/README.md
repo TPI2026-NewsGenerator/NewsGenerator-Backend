@@ -48,6 +48,17 @@ stances of the same actor for the other angles of the card.
   "yes", "unsure", an error or Wikidata not answering leave it. Measured on 242 names of 207 cards judged by
   hand (`bench/card-check`): the 14 wrong ones sent and caught, 2 of 218 right ones left out, about 1 500
   tokens a briefing (`naming` in the report of tokens). The names of the countries are given, not their codes.
+- **A name with no item chooses on its card.** The link loop keeps, for a person in full or an organisation it
+  left with no item, the items it found for the name (`mentions.candidates`, `db/add_mention_candidates.sql`).
+  When the briefing is written `withNamesLinked` (`services/utils/name-check.js`) gives the AI, for each
+  such name of a card, the titles of the card, its topic, the other names on it and the countries of its sites
+  (`linkPrompt`), and the candidates: the one it chooses is the item of the name on this card (a person only in
+  2 Wikipedias at least, `PERSON_LEAST`), "0" leaves it with none. At most 60 names a briefing, about 390 tokens
+  a name. Measured on the blind bench (`bench/blind`: 240 names drawn at random from 210 cards, judged before
+  any system ran): of the 133 names the cards showed with no link 64 right, 4 wrong (namesakes of persons), 65 left
+  alone; the whole bench 93% right with the topic, the other names and the countries, 89% with the titles alone.
+  A name shown with no candidates kept is looked for again at once (`MentionModel.want`), so the next briefing
+  has them.
 - **The reader.** A click on a name opens `/following/:qid` or `/following/name/:name`; the names met on
   several cards are suggested on `/following` (see [Names and words](../names-and-words/README.md)).
 

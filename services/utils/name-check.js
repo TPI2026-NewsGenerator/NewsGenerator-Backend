@@ -2,9 +2,10 @@
 //  Author: Fabian Rostello
 //  Date: 21.10.2026
 //  File: name-check.js
-//  Description: The check of the names a card shows against the card itself: the item of Wikidata a name
-//               is linked to is kept when the titles of the card fit it, left out when the card means
-//               another thing ("Primera División" of a Spanish referee was the Maltese league)
+//  Description: The names a card shows against the card itself: the item of Wikidata a name is linked to is
+//               kept when the titles of the card fit it, left out when the card means another thing
+//               ("Primera División" of a Spanish referee was the Maltese league); a name with no item
+//               chooses among the candidates kept for it with what the card says
 //
 
 "use strict"
@@ -14,6 +15,8 @@ import {countriesOfItems} from './countries.js';
 import {ollamaJson} from './ollama.js';
 import {mapWithConcurrency} from './concurrency.js';
 import {countryOfSite} from './country-names.js';
+import {mentionKey} from './mentions.js';
+import {MentionModel} from '../../models/mention-model.js';
 
 // A name is linked once for all its news, by its text: its context is not the card's. Of 242 names shown on
 // 207 cards, judged by hand (bench/card-check, 21.10.2026), 14 were wrong (Primera División the Maltese league,
@@ -67,8 +70,8 @@ const described = new Map();
 
 const describe = async (qids) => {
     const missing = [...new Set(qids)].filter(qid => !described.has(qid));
-    for (let i = 0; i < missing.length; i += 10) {
-        for (const item of await describeItems(missing.slice(i, i + 10))) described.set(item.qid, item);
+    for (let i = 0; i < missing.length; i += 50) {
+        for (const item of await describeItems(missing.slice(i, i + 50), {batch: 50})) described.set(item.qid, item);
     }
 };
 
@@ -110,5 +113,78 @@ export const withNamesChecked = async (read, cards, {usage = null} = {}) => {
         else card.places = card.places.filter(place => place !== row);
     });
     console.log(`Briefing: ${asked.length} names of ${rows.length} checked on their card, ${dropped} left without their link`);
+    return read;
+};
+
+// A name the link loop left with no item, whatever it was told in its news (a namesake, an acronym, a city and a
+// club of one name): the card chooses among the items the loop found for it (the qids kept by
+// MentionModel.setCandidates) with what it says: its titles, its topic, the other names on it and the countries
+// of its sites. Measured on the blind bench (bench/blind, 22.10.2026: 240 names drawn at random from 210 cards,
+// judged before any system ran) on the 133 names the cards showed with no link: 64 right, 4 wrong (all
+// persons: namesakes, 3 of them in under 2 Wikipedias: a person is taken in 2 Wikipedias at least, PERSON_LEAST),
+// 65 left alone; the organisations 47 right of 47. About 390 tokens a name. A sentence asking for no namesake did
+// no better (223 right of 240 against 224), the countries given by their names, the cards' own wording kept
+const MAX_CARD_LINKS = 60;
+const CARD_CANDIDATES = 10;
+export const PERSON_LEAST = 2;
+
+export const linkPrompt = ({name, kind, titles, countries = '', topic = null, others = [], candidates}) => `A name in the news: "${name}" (${kind}).
+
+Titles of news naming it:
+${titles.map(title => `- ${title}`).join('\n')}
+
+The card these news make is about: ${topic ?? 'unknown'}.
+Other names on the card: ${others.join(', ') || 'none'}.
+Countries of the sites that published the news: ${countries || 'unknown'}.
+
+Items of Wikidata called so or near:
+${candidates.map((item, i) => `[${i + 1}] ${item.label}: ${item.description || '(no description)'} (${item.links} Wikipedias)`).join('\n')}
+
+Which item is the "${name}" these news name? Use what the card is about and the other names: a name on a sports card is the club, not the city of the same name. Only when you are sure from the titles: a person, a club, a league, a body these news are about. 0 when none of them is, when you cannot tell, or when the name is only a part of many names ("FC", "Club", "United").
+Answer in JSON only: {"n": 0}`;
+
+// read: [{storyId, names}], cards: [{storyId, titles, sites, topic}]: the same cards, the persons in full and the
+// organisations shown with no qid that have candidates kept given the one the AI chooses (a person in PERSON_LEAST
+// Wikipedias at least). A word alone is left to its card (see card-names.js withSurnamesLinked). Whatever fails
+// (the database, Wikidata, the AI) leaves the name as it was
+export const withNamesLinked = async (read, cards, {usage = null} = {}) => {
+    const cardOf = new Map(cards.map(card => [card.storyId, card]));
+    const rows = read.flatMap(card => card.names
+        .filter(row => !row.qid && row.id && (row.kind === 'organization' || (row.kind === 'person' && mentionKey(row.name).includes(' '))))
+        .map(row => ({card, row})))
+        .filter(({card}) => (cardOf.get(card.storyId)?.titles ?? []).length > 0);
+    if (rows.length === 0) return read;
+    let stored;
+    try {
+        stored = await MentionModel.candidatesOf([...new Set(rows.map(({row}) => row.id))]);
+    } catch (err) {
+        console.error(`Names: the candidates of the names of the cards were not read (${err.message})`);
+        return read;
+    }
+    const asked = rows.filter(({row}) => (stored.get(row.id) ?? []).length > 0).slice(0, MAX_CARD_LINKS);
+    if (asked.length === 0) return read;
+    try {
+        await describe(asked.flatMap(({row}) => stored.get(row.id).slice(0, CARD_CANDIDATES)));
+    } catch (err) {
+        console.error(`Names: the candidates of the cards were not described, none chosen (${err.message})`);
+        return read;
+    }
+    const answers = await mapWithConcurrency(asked, CHECK_CONCURRENCY, async ({card, row}) => {
+        const candidates = stored.get(row.id).slice(0, CARD_CANDIDATES).map(qid => described.get(qid)).filter(Boolean);
+        if (candidates.length === 0) return null;
+        const meta = cardOf.get(card.storyId);
+        const answer = await ollamaJson(linkPrompt({name: row.name, kind: row.kind, titles: (meta.titles ?? []).slice(0, TITLES),
+            countries: countriesOfSites(meta.sites), topic: meta.topic ?? null,
+            others: card.names.filter(other => other !== row).map(other => other.name), candidates}), usage);
+        const chosen = candidates[Number(answer?.n) - 1];
+        return chosen && (row.kind !== 'person' || chosen.links >= PERSON_LEAST) ? chosen.qid : null;
+    });
+    let linked = 0;
+    asked.forEach(({row}, i) => {
+        if (answers[i].status !== 'fulfilled' || !answers[i].value) return;
+        row.qid = answers[i].value;
+        linked++;
+    });
+    console.log(`Briefing: ${asked.length} names with no item chosen among their candidates on their card, ${linked} linked`);
     return read;
 };

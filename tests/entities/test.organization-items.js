@@ -56,6 +56,20 @@ describe('organizationItem', () => {
         expect(ollamaJson).not.toHaveBeenCalled();
     });
 
+    it('should hand back the items found for the name in the array given, whatever it answers', async () => {
+        namedItems.mockResolvedValue([{qid: 'Q1', exact: false}, {qid: 'Q2', exact: true}]);
+        describeItems.mockResolvedValueOnce([{qid: 'Q1', label: 'A', description: '', links: 5, human: false, place: false, work: false},
+            {qid: 'Q2', label: 'B', description: '', links: 1, human: false, place: false, work: false}]);
+        ollamaJson.mockResolvedValueOnce({n: 0});
+        const candidates = [];
+        expect(await organizationItem({id: 21, name: 'FMF', lang: 'fr'}, null, candidates)).toBeNull();
+        expect(candidates).toEqual(['Q1', 'Q2']);
+        namedItems.mockResolvedValueOnce([]);
+        const none = [];
+        await organizationItem({id: 22, name: 'Nothing', lang: 'en'}, null, none);
+        expect(none).toEqual([]);
+    });
+
     it('should ask the AI when the sites naming the one item called so are of another country than the item', async () => {
         const OPEN_LIBRARY = {qid: 'Q1201876', label: 'Open Library', description: 'online project for book data', links: 41, human: false, place: false, work: false};
         namedItems.mockResolvedValue([{qid: 'Q1201876', exact: true}]);

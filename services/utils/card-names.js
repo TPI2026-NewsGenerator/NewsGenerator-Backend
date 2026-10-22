@@ -13,7 +13,7 @@ import {MentionModel} from '../../models/mention-model.js';
 import {mentionKey} from './mentions.js';
 import {cardCountries, countriesOfItems} from './countries.js';
 import {countryNamed} from './country-names.js';
-import {withNamesChecked} from './name-check.js';
+import {withNamesChecked, withNamesLinked} from './name-check.js';
 
 export const NAMES_PER_CARD = 4;
 // a family name alone tells the country of the person it is linked to when that person is named in full
@@ -205,8 +205,9 @@ const readNames = async (cards) => {
 // the countries of who and where it names, the main first (see countries.js), none when Wikidata does not
 // tell them
 export const namesAndCountriesOfCards = async (cards, {usage = null} = {}) => {
-    // a name is linked by its text for all its news: the card tells whether the item is the one it means
-    const read = await withNamesChecked(await readNames(cards), cards, {usage});
+    // a name is linked by its text for all its news: the card tells whether the item is the one it means, and
+    // which of its candidates when it has none
+    const read = await withNamesLinked(await withNamesChecked(await readNames(cards), cards, {usage}), cards, {usage});
     const items = read.map(card => [...card.names, ...card.places]
         .filter(row => row.qid && !(row.bySurname < SURNAME_COUNTRY_SEEN) && !countryNamed(row.name))
         .map(row => ({qid: row.qid, weight: row.inCard, person: row.kind === 'person'})));
