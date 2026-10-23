@@ -64,7 +64,7 @@ never as an interest. The reader can correct an interest, make it secondary or r
   (`bench/split-real.mjs`, 9.10.2026), hence 500.
 - Asking again when an interest is too long (`bench/split-long.mjs`, 3 runs, 13.10.2026): the news of
   48 h a split by hand finds went from 47–52% to 62–64% (Roberto, 2366 characters) and 48–51% to 64–66%
-  (Enzo), no interest cut.
+  (a football profile), no interest cut.
 
 ## Diagrams
 

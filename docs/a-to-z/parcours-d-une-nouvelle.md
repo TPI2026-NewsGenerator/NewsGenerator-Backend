@@ -2,11 +2,11 @@ NewsGenerator · parcours d'une nouvelle
 
 # Du texte d'une nouvelle à la carte du lecteur
 
-Une seule nouvelle, suivie du début à la fin. Le flux de tribuna.com la publie le 16 octobre à 22 h 34. Le serveur la lit, relève ses noms, bge-m3 en fait deux vecteurs, et PostgreSQL la range avec les 37 autres médias anglophones qui racontent le même fait. Le lendemain, Enzo demande son briefing : la base la classe parmi 68 101 histoires, l'IA la choisit, vérifie ses articles et lui joint ses versions en quatre autres langues, choisit les phrases montrées, écrit sa version IA, cherche ses autres angles et sa source officielle, puis, la carte déjà montrée, son analyse. Elle devient la quatrième carte du briefing.
+Une seule nouvelle, suivie du début à la fin. Le flux de tribuna.com la publie le 16 octobre à 22 h 34. Le serveur la lit, relève ses noms, bge-m3 en fait deux vecteurs, et PostgreSQL la range avec les 37 autres médias anglophones qui racontent le même fait. Le lendemain, le profil foot demande son briefing : la base la classe parmi 68 101 histoires, l'IA la choisit, vérifie ses articles et lui joint ses versions en quatre autres langues, choisit les phrases montrées, écrit sa version IA, cherche ses autres angles et sa source officielle, puis, la carte déjà montrée, son analyse. Elle devient la quatrième carte du briefing.
 
-Mesuré le **17 octobre 2026** sur la base du serveur Ubuntu · Lecteur : **Enzo**, profil « Enzo » (lit en anglais, 2 intérêts) · Scripts : **server/bench/news-journey.mjs** + **news-journey-story.mjs**, **-grouping.mjs**, **-rank.mjs**
+Mesuré le **17 octobre 2026** sur la base du serveur Ubuntu · Lecteur : **profil « Foot »** (lit en anglais, 2 intérêts) · Scripts : **server/bench/news-journey.mjs** + **news-journey-story.mjs**, **-grouping.mjs**, **-rank.mjs**
 
-Le profil d'Enzo lit maintenant en anglais : la carte et les réponses de l'IA sont en anglais, le reste de la page en français. Ce parcours remplace celui du 7 octobre (Foot Mercato, les plaintes de la Norvège contre Infantino), mesuré avant les points, le résumé, les versions IA, l'analyse et la source officielle. « Parcours NewsGenerator » décrit l'ensemble du serveur avec des mesures du 7 octobre : ses nombres sont d'un autre moment.
+Le profil foot lit maintenant en anglais : la carte et les réponses de l'IA sont en anglais, le reste de la page en français. Ce parcours remplace celui du 7 octobre (Foot Mercato, les plaintes de la Norvège contre Infantino), mesuré avant les points, le résumé, les versions IA, l'analyse et la source officielle. « Parcours NewsGenerator » décrit l'ensemble du serveur avec des mesures du 7 octobre : ses nombres sont d'un autre moment.
 
 ## Vue d'ensemble : six étapes, de la page du média à la carte
 
@@ -21,7 +21,7 @@ Les trois premières tournent sur le serveur dès que la nouvelle arrive, pour t
 | 22:40:36 | le serveur lit le flux | +6 min 36 s |
 | 22:41:28 | ses noms sont relevés | +52 s |
 | 22:41:34 | les deux vecteurs sont prêts, puis l'histoire 798086 | +6 s |
-| 17 oct. 15:21 | Enzo demande un briefing de 48 h |  |
+| 17 oct. 15:21 | Le profil foot demande un briefing de 48 h |  |
 | +2 min 34 s | la carte est prête, avec 9 autres |  |
 | +1 min 43 s | son analyse est écrite |  |
 
@@ -157,15 +157,15 @@ Le fil, créé le 17 octobre à 5 h 51, relie l'annonce à la suspension de Balo
 
 *Technologies :* PostgreSQL 18 · pgvector 0.8 (halfvec, sparsevec, <#>) · assign_stories (PL/pgSQL) · assign_threads (PL/pgSQL)
 
-## Au briefing · pour un lecteur : la choisir pour Enzo et la montrer
+## Au briefing · pour un lecteur : la choisir pour le profil foot et la montrer
 
-Le 17 octobre à 15 h 21, Enzo demande un briefing de 48 h, 10 cartes. Rien n'est relu sur le web avant que l'IA ait choisi : la base classe ce que le serveur a déjà préparé.
+Le 17 octobre à 15 h 21, le profil foot demande un briefing de 48 h, 10 cartes. Rien n'est relu sur le web avant que l'IA ait choisi : la base classe ce que le serveur a déjà préparé.
 
 ### 4 · Le classement pour le lecteur (`rank_profile_stories`)
 
 Une seule requête SQL prend toutes les nouvelles de ses 1 152 flux sur 48 h, dans toutes les langues. Chaque nouvelle est notée contre chacun des intérêts du profil (et de ses projets en cours, il n'en a pas) : **poids × (dense + 0,5 × creux)**, sur le texte complet. Chaque intérêt a ses propres vecteurs, calculés une fois à partir de son texte. Une nouvelle garde son meilleur intérêt, une histoire sa meilleure nouvelle.
 
-| Intérêt d'Enzo | Dense | Creux | Note |
+| Intérêt du profil foot | Dense | Creux | Note |
 |---|---|---|---|
 | Gouvernance du football (l’UEFA et ses 55 associations, la FIFA, élections, crises…) | 0,525 | 0,058 | **0,554** |
 | Arbitrage (VAR, Lois du Jeu de l’IFAB, désignations, sanctions et controverses…) | 0,576 | 0,052 | **0,601** |
@@ -189,12 +189,12 @@ Une seule requête SQL prend toutes les nouvelles de ses 1 152 flux sur 48 h, da
 
 - Les 600 meilleures histoires sont gardées, puis 150 partagées entre les intérêts : 88 pour « Gouvernance », 62 pour « Arbitrage ». Notes : de 0,802 (1re) à 0,561 (150e).
 - Juste devant elle dans son intérêt : « Real : Tebas provoque la colère du club ! » (0,611). Juste derrière : « Moment nemaivăzut în fotbal! Arbitrul a arătat cartonașul roșu pe telefon » (0,610), un carton rouge montré sur un téléphone. Les vecteurs notent presque pareil une décision de la FIFA, une colère de club et une curiosité d'arbitrage : c'est à l'IA de trier.
-- **Déjà envoyée, mais l'affaire a bougé.** Les histoires des affaires envoyées à Enzo par e-mail dans les 48 dernières heures sont écartées : 28 cette fois ; 9 autres restent, parce qu'elles disent du neuf. Celle-ci en est : sa carte « FIFA amends red card rules in connection with Trump's controversy. » est partie le 16 octobre à 11 h 52. Un appel de l'IA (gemma4:31b, 2 768 jetons lus, 729 écrits, 2,2 s) lit les nouvelles publiées depuis et répond « Reports indicate Gianni Infantino personally intervened in the Balogun red card case. », `evolved: true`. La carte revient comme une suite de celle envoyée.
+- **Déjà envoyée, mais l'affaire a bougé.** Les histoires des affaires envoyées au profil foot par e-mail dans les 48 dernières heures sont écartées : 28 cette fois ; 9 autres restent, parce qu'elles disent du neuf. Celle-ci en est : sa carte « FIFA amends red card rules in connection with Trump's controversy. » est partie le 16 octobre à 11 h 52. Un appel de l'IA (gemma4:31b, 2 768 jetons lus, 729 écrits, 2,2 s) lit les nouvelles publiées depuis et répond « Reports indicate Gianni Infantino personally intervened in the Balogun red card case. », `evolved: true`. La carte revient comme une suite de celle envoyée.
 - Candidates : les 40 meilleures venues de flux, partagées entre les intérêts, et 7 de plus, connues seulement par Google News ou racontées par une source de confiance.
 
 *Technologies :* rank_profile_stories (SQL) · pgvector · shareOut · repeats (gemma4:31b) · pickCandidates
 
-*Enzo, 48 h :* Dans ses sources : 107 545 nouvelles (68 101 histoires, 38 langues, 1 152 flux ; 32 856 nouvelles en anglais) · Rang de la nouvelle : 45e (12e de son intérêt, note 0,611) · Candidates pour l'IA : 47 · Durée : 5,9 s (le SQL des 600 ; 33 s pour l'étape entière, avec le tri des sources du profil et les suites)
+*Profil foot, 48 h :* Dans ses sources : 107 545 nouvelles (68 101 histoires, 38 langues, 1 152 flux ; 32 856 nouvelles en anglais) · Rang de la nouvelle : 45e (12e de son intérêt, note 0,611) · Candidates pour l'IA : 47 · Durée : 5,9 s (le SQL des 600 ; 33 s pour l'étape entière, avec le tri des sources du profil et les suites)
 
 ### 5 · L'IA : choisir, vérifier, choisir les phrases, relire, version IA, angles, analyse
 
@@ -202,7 +202,7 @@ Deux modèles, sur Ollama cloud, avec une réponse en JSON. **gemma4:31b**, à u
 
 **5a · Choisir (`selectStories`) · gemma4:31b, 5 806 jetons lus, 563 écrits, 3,1 s**
 
-L'IA reçoit le profil d'Enzo dans ses mots, ses 2 intérêts, puis une ligne par candidate, menée par la meilleure nouvelle de l'histoire (ici celle de RTÉ). Celle de l'exemple :
+L'IA reçoit le profil foot dans ses mots, ses 2 intérêts, puis une ligne par candidate, menée par la meilleure nouvelle de l'histoire (ici celle de RTÉ). Celle de l'exemple :
 
 ```
 [798086] FIFA to amend disciplinary rule over Balogun case fallout — FIFA will amend its disciplinary regulations after controversy over its decision to suspend US forward Folarin Balogun's automatic World Cup ban, the Belgian Football Association (RBFA) said on Thursd (aussi : FIFA to amend Article 27 after controversy surrounding Balogun case / Gianni Infantino reportedly intervened in Folarin Balogun’s red card case / FIFA will amend Article 27 of its disciplinary rules following the Balogun incident.)
@@ -287,16 +287,16 @@ SENTENCES:
 ```
 
 - Les numéros viennent dans l'ordre d'importance : 7, puis 1, puis 8. Les mêmes phrases donnent les trois façons de lire la carte, toutes publiées telles quelles : **passages clés** dans l'ordre de l'article (1, puis 7 et 8 qui se suivent : le lecteur voit le saut) ; **points**, une phrase chacun, la plus importante d'abord (7, 1, 8) ; **résumé**, les plus importantes tant qu'elles tiennent en 65 mots (1 et 7, 48 mots : la 8 n'y entre plus).
-- `sourcing: named` : l'article nomme sa source, la RBFA. L'article est en anglais, la langue d'Enzo : rien à traduire.
+- `sourcing: named` : l'article nomme sa source, la RBFA. L'article est en anglais, la langue du profil foot : rien à traduire.
 - Corroboration, sans IA : 5 pages lues, de 5 médias, 5 textes différents. Deux textes qui partagent la moitié de leurs suites de 8 mots seraient une même dépêche d'agence ; il n'y en a pas parmi les 5 lues. Aucun verbe de démenti dans les pages lues : pas d'appel « contesté ».
 
 **5e · Relire avant de montrer (`reviewCards`) · 2 356 jetons lus, 424 écrits, 1,7 s**
 
-L'IA relit les cartes avec leurs passages, les intérêts d'Enzo et ce qu'il refuse (« les résultats purement sportifs, les transferts de joueurs ou l'actualité sportive quotidienne »). Elle donne le sujet de chacune : « FIFA disciplinary process amendment », `refused: false`. Aucune carte n'est retirée.
+L'IA relit les cartes avec leurs passages, les intérêts du profil foot et ce qu'il refuse (« les résultats purement sportifs, les transferts de joueurs ou l'actualité sportive quotidienne »). Elle donne le sujet de chacune : « FIFA disciplinary process amendment », `refused: false`. Aucune carte n'est retirée.
 
 **5f · La version IA (`aiWaysOf`) · deepseek-v4-pro sans raisonnement, deux appels en même temps : 747 + 727 jetons lus, 148 + 102 écrits, 6,4 et 6,1 s**
 
-Une fois les cartes gardées et relues, au début de l'étape « angles », deepseek-v4-pro écrit avec les mêmes phrases numérotées 3 ou 4 points et un résumé de 65 mots au plus, dans la langue d'Enzo, sous dix règles : seulement les faits de l'article, qui a dit quoi, aucun lien de cause qu'il ne donne pas, sa certitude gardée, les chiffres exacts.
+Une fois les cartes gardées et relues, au début de l'étape « angles », deepseek-v4-pro écrit avec les mêmes phrases numérotées 3 ou 4 points et un résumé de 65 mots au plus, dans la langue du profil foot, sous dix règles : seulement les faits de l'article, qui a dit quoi, aucun lien de cause qu'il ne donne pas, sa certitude gardée, les chiffres exacts.
 
 ```
 {"points": [
@@ -371,7 +371,7 @@ D'abord, deepseek-v4-pro sans raisonnement (2 133 jetons lus, 184 écrits, 1,7 s
 >
 > 14 Oct · FIFA wants to change the rules. All because of Donald Trump's intervention *(przegladsportowy.onet.pl, PL)* 16 Oct · Infantino under pressure: FIFA intervened so that Balogun could play against Belgium after a red card *(bljesak.info, BS)* 15 Oct · “One phone call, and the matter was settled” – Fifa insider confirms suspicion against Infantino *(welt.de, DE)* 6 Oct · No eligibility to play? FIFA confronted with possible scandal *(laola1.at, DE)*
 
-C'est la 4e des 10 cartes du briefing, menée par l'article de tribuna.com. Parmi ses 21 médias : Reuters, El País, Marca, RTÉ, Goal, De Telegraaf, A Bola, Arab News. La carte se lit en passages clés (ci-dessus), en 3 points ou en résumé, au choix d'Enzo ; sous les points ou le résumé, « Show AI version » montre ceux de deepseek-v4-pro (5e). Elle montre aussi son image (celle de tribuna.com), le code de langue de chaque article, et elle est marquée comme la suite de la carte envoyée le 16 octobre.
+C'est la 4e des 10 cartes du briefing, menée par l'article de tribuna.com. Parmi ses 21 médias : Reuters, El País, Marca, RTÉ, Goal, De Telegraaf, A Bola, Arab News. La carte se lit en passages clés (ci-dessus), en 3 points ou en résumé, au choix du profil foot ; sous les points ou le résumé, « Show AI version » montre ceux de deepseek-v4-pro (5e). Elle montre aussi son image (celle de tribuna.com), le code de langue de chaque article, et elle est marquée comme la suite de la carte envoyée le 16 octobre.
 
 *Ce qu'elle a coûté :* Briefing entier : 153,7 s (classement 33 s, choix 3 s, vérification 7 s, lecture 7 s, phrases et relecture 33 s, versions IA, angles et sources officielles 69 s ; puis l'analyse, la carte déjà montrée : 102,7 s) · Jetons de l'IA, briefing et analyse : 134 552 (90 appels : gemma4:31b 63 appels, 65 960 jetons ; deepseek-v4-pro 27 appels, 68 592 jetons, dont 42 544 pour les analyses) · Pour cette nouvelle seule : ≈ 16 000 jetons (phrases 850, version IA 1 724, source officielle 2 240, angles 1 362, analyse 9 781 ; plus une ligne dans le choix, la vérification, la fusion, la relecture et le choix des analyses) · Ses vecteurs et ses noms : une fois (à la lecture, pour tous les lecteurs)
 
@@ -379,11 +379,11 @@ C'est la 4e des 10 cartes du briefing, menée par l'article de tribuna.com. Parm
 
 ### Les vecteurs trouvent, l'IA trie
 
-Le creux relie la nouvelle à l'intérêt « Arbitrage » par le jeton « FA », de RBFA dans l'une et d'IFAB dans l'autre : deux instances différentes. Et dans son intérêt, une colère de club et un carton rouge sur un téléphone sont notés presque aussi haut. Les vecteurs trouvent des candidats ; c'est l'IA qui dit ce qui est pour Enzo.
+Le creux relie la nouvelle à l'intérêt « Arbitrage » par le jeton « FA », de RBFA dans l'une et d'IFAB dans l'autre : deux instances différentes. Et dans son intérêt, une colère de club et un carton rouge sur un téléphone sont notés presque aussi haut. Les vecteurs trouvent des candidats ; c'est l'IA qui dit ce qui est pour le profil foot.
 
 ### Un fait, cinq langues, une carte
 
-Le regroupement travaille langue par langue : l'annonce fait cinq histoires, en anglais (38 médias), espagnol (21), italien (13), portugais (6) et néerlandais (4). La vérification les réunit sur une carte, leurs centres étant à 0,92–0,95 du sien : Enzo lit une carte de 21 médias au lieu de cinq cartes du même fait.
+Le regroupement travaille langue par langue : l'annonce fait cinq histoires, en anglais (38 médias), espagnol (21), italien (13), portugais (6) et néerlandais (4). La vérification les réunit sur une carte, leurs centres étant à 0,92–0,95 du sien : Profil foot lit une carte de 21 médias au lieu de cinq cartes du même fait.
 
 ### Une carte envoyée revient quand l'affaire bouge
 
@@ -393,10 +393,8 @@ La carte de la veille, envoyée par e-mail, aurait dû rester de côté 48 h. El
 
 Reuters est lu par son plan du site d'actualités (*news sitemap*), un seul flux pour toutes ses langues. La ligne « FIFA to amend Article 27 of disciplinary code after Balogun case », un titre anglais sans description, y est enregistrée en espagnol. Son titre fait 0,951 avec celui de tribuna.com, mais la langue l'envoie dans l'histoire espagnole 792389 : elle arrive sur la carte seulement parce que la vérification y joint la version espagnole, et elle y est marquée ES. À regarder : la langue que ce flux donne à ses lignes, quand le titre dit autre chose.
 
-Corrigé le 17 octobre 2026 : un flux dont les nouvelles sont en plusieurs langues n'en donne plus aucune, chacune est lue à ses propres mots ([Ingestion > Vecteurs](../ingestion/vectors/README.md)). Sur 14 jours, 40,8 % des 4 506 nouvelles de Reuters avaient la langue de leur adresse ; lues ainsi, 84,1 %. Les lignes déjà enregistrées gardent leur langue.
-
 ---
 
-Mesuré le 17 octobre 2026 à 15 h 21 (heure suisse) sur la base du serveur Ubuntu, le PC de jeu éteint. Le briefing de 48 h du profil « Enzo » a été écrit en entier avec le code du jour, analyse comprise, sans rien enregistrer : ses écritures (étape, nouvelles suivies, analyse) ont été interceptées par le script. Chaque appel à l'IA a été gardé avec son modèle, son prompt, sa réponse et sa durée (server/bench/news-journey.mjs). Les vecteurs, les proximités et le fil viennent de la base (news-journey-story.mjs) ; les scores du regroupement ont été recalculés avec les membres que chaque histoire avait quand la nouvelle a reçu ses vecteurs (news-journey-grouping.mjs) ; la place dans le classement partagé, avec la même fonction que le briefing (news-journey-rank.mjs). Les jetons ont été traduits en mots par le tokenizer de bge-m3.
+Mesuré le 17 octobre 2026 à 15 h 21 (heure suisse) sur la base du serveur Ubuntu, le PC de jeu éteint. Le briefing de 48 h du profil « Foot » a été écrit en entier avec le code du jour, analyse comprise, sans rien enregistrer : ses écritures (étape, nouvelles suivies, analyse) ont été interceptées par le script. Chaque appel à l'IA a été gardé avec son modèle, son prompt, sa réponse et sa durée (server/bench/news-journey.mjs). Les vecteurs, les proximités et le fil viennent de la base (news-journey-story.mjs) ; les scores du regroupement ont été recalculés avec les membres que chaque histoire avait quand la nouvelle a reçu ses vecteurs (news-journey-grouping.mjs) ; la place dans le classement partagé, avec la même fonction que le briefing (news-journey-rank.mjs). Les jetons ont été traduits en mots par le tokenizer de bge-m3.
 
-Le briefing n'a rien montré à Enzo. Comme tout briefing, il a rempli les caches partagés (l'adresse réelle d'une nouvelle de Google News, les fiches Wikidata des sources officielles) et a retiré 2 flux de son profil qui n'apportaient plus rien (turkishminute.com, thescore.com). Les pourcentages de qualité (96 %, 82 %) et les vitesses de l'embedder viennent des mesures précédentes du projet.
+Le briefing n'a rien montré au profil foot. Comme tout briefing, il a rempli les caches partagés (l'adresse réelle d'une nouvelle de Google News, les fiches Wikidata des sources officielles) et a retiré 2 flux de son profil qui n'apportaient plus rien (turkishminute.com, thescore.com). Les pourcentages de qualité (96 %, 82 %) et les vitesses de l'embedder viennent des mesures précédentes du projet.

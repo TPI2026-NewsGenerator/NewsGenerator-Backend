@@ -6,6 +6,8 @@ actor Reader
 participant "BriefingPage\nBriefingCard" as Client
 participant briefingService as Briefing
 participant cardNames as CardNames
+participant nameCheck as Check
+participant "Ollama\n(gemma4:31b)" as AI
 participant affairNames as Affair
 participant countries as Countries
 participant wikidata as Wiki
@@ -32,7 +34,7 @@ par the other angles
     Affair --> Briefing : Map storyId -> stories naming them
     note right of Briefing : added to the closest stories, judged by\nthe AI (see Briefing > Other angles)
 else the names of the cards
-    Briefing -> CardNames : namesAndCountriesOfCards([{storyId, ids, media}])
+    Briefing -> CardNames : namesAndCountriesOfCards([{storyId, ids, media, titles, sites, topic}])
     loop each card
         CardNames -> Model : namesOfArticles(ids, 3)
         Model -> DB : article_mentions of its news: inCard,\nand the news naming each (up to 3)
@@ -41,6 +43,21 @@ else the names of the cards
         CardNames -> CardNames : a quarter of its articles at least, 4 at most
         CardNames -> CardNames : its places with an item, and the countries\nnamed by their name (countryNamed)
     end
+    CardNames -> Check : withNamesChecked(read, cards)
+    Check -> Wiki : describeItems(qids): the items in 60 Wikipedias or fewer
+    loop each of them, 4 at once
+        Check -> AI : checkPrompt: titles of the card, its topic, its other names,\ncountries of its sites, the item (label, description, country)
+        AI --> Check : same: yes, no or unsure
+    end
+    note right of Check : "no": the link is left out of the card\nand of its countries; an error leaves it
+    CardNames -> Check : withNamesLinked(read, cards)
+    Check -> Model : candidatesOf(ids of the persons in full and\norganisations shown with no qid)
+    Check -> Wiki : describeItems(their candidates, 10 at most)
+    loop each name, 60 a briefing at most
+        Check -> AI : linkPrompt: titles, topic, other names, countries\nof its sites, the candidates
+        AI --> Check : n: the item of the name on this card, 0 for none
+    end
+    note right of Check : a person only in 2 Wikipedias at least\n(PERSON_LEAST); an error leaves it as it was
     CardNames -> Model : want({ids of the names without a qid})
     Model -> DB : mentions.wanted_at = now():\nfirst in the queue of Wikidata
     CardNames -> Countries : countriesOfItems(qids of its names and places;\na family name alone only for someone in 100 news)

@@ -36,7 +36,10 @@ saved.
   answers 304. The same group of feeds is never read twice at the same time (the `running` map).
 - **What is saved.** Each feed gets `last_error` and `failures + 1`, or its new `etag`, `last_success_at`
   and `failures = 0`. An item without link or title is skipped, one published before the retention
-  (`FEED_RETENTION_DAYS`, 30) too: some feeds give their whole archive. `FeedModel.withoutRepeats` drops a news
+  (`FEED_RETENTION_DAYS`, 30) too: some feeds give their whole archive. So is a link over 2000 bytes (counted
+  in bytes, an accented link is longer than it looks): the unique index `(id_feed, link)` of the articles takes
+  2704 bytes at most, and a tracking link of 3600 made the whole `createMany` of a run fail on 20.10.2026, the
+  news of every feed read with it lost. The ones skipped are counted in the stats of the refresh (`longLinks`). `FeedModel.withoutRepeats` drops a news
   its feed gave already under another link (same feed, title and date of publication, index
   `i_articles_feed_published`, `db/add_article_repeats.sql`), then `insertArticles` inserts 1000 rows a
   statement, a link once per feed. The news of Google News keep their publisher in `source_url`.

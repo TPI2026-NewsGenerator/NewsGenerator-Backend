@@ -1,5 +1,5 @@
 @startuml 30-database
-' The MLD of mld.md (next to it) as a diagram: the 24 tables of a fresh install (16.10.2026).
+' The MLD of mld.md (next to it) as a diagram: the 25 tables of a fresh install (22.10.2026).
 ' * marks NOT NULL; PK and FK are the keys. A dotted line is a link by value, without a foreign key.
 skinparam shadowing false
 skinparam defaultFontSize 12
@@ -22,7 +22,7 @@ skinparam class<<shared>> {
 hide circle
 hide methods
 hide stereotype
-title Database — the 24 tables (PostgreSQL 18 + pgvector)
+title Database — the 25 tables (PostgreSQL 18 + pgvector)
 
 package "Accounts and saved searches" {
     entity roles {
@@ -257,12 +257,21 @@ package "Shared cache of the news" {
         qid : text
         linked_at : timestamptz
         wanted_at : timestamptz
+        candidates : jsonb
         * seen : integer
         * created_at : timestamptz
     }
     entity article_mentions <<shared>> {
         * id_mention : integer <<PK, FK>>
         * id_article : integer <<PK, FK>>
+    }
+    entity item_countries <<shared>> {
+        * qid : text <<PK>>
+        --
+        country : text
+        * international : boolean
+        bodies : text[]
+        * looked_at : timestamptz
     }
 }
 
@@ -321,6 +330,7 @@ articles ||--o{ article_mentions
 mentions ||--o{ article_mentions
 
 mentions }o..o| entities : qid
+mentions }o..o| item_countries : qid
 party_names }o..o| entities : qid
 user_feeds }o..o| feeds : url
 

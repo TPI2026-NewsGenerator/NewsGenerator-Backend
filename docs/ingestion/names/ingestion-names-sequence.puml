@@ -8,8 +8,10 @@ participant "tagger" as TaggerJs
 participant "ner/server.py\n(each of NER_URL)" as Ner
 participant mentions as Mentions
 participant mentionModel as Model
+participant titleLinks as TitleLinks
 participant wikidata as Wiki
 participant "Wikidata API" as WikiApi
+participant "Wikipedia API\n(action=query)" as WikipediaApi
 database "PostgreSQL" as DB
 
 Start -> Tagging : schedule()
@@ -46,35 +48,51 @@ end
 
 == one loop for Wikidata ==
 loop link()
-    Tagging -> Model : toLink({least: 3, limit: 20})
-    Model -> DB : never looked for: the ones a reader saw first\n(wanted_at), then the most named (seen >= 3)
+    Tagging -> Model : toLink({least: 3, limit: 50})
+    Model -> DB : never looked for: the ones a reader saw first\n(wanted_at), then the most named (seen >= 3),\nthe persons of one word last
     alt none
         Tagging -> Tagging : wait 10 min
     else
+        Tagging -> TitleLinks : linkedByTitle(the 50 names)
+        TitleLinks -> WikipediaApi : titles of the persons in full and the places,\n50 a call, redirects resolved (English if not found)
+        TitleLinks -> Wiki : describeItems(qids)
+        TitleLinks --> Tagging : Map id -> qid: no page of homonyms, a human (person)\nor a place, called no common noun, no byline
         loop each name
-            Tagging -> Wiki : exactItems(name, lang), or for an organisation\norganizationItem: namedItems, describeItems,\nthe AI choosing from 5 titles (titlesNaming),\nor for a place placeItem (below)
-            Wiki -> WikiApi : wbsearchentities in its language\n(then in English), 10 found at most
-            alt 429 or too busy
-                Wiki --> Tagging : paused: nobody of the process asks\nfor Retry-After or 30 s
-            else
-                Wiki --> Tagging : [qid]: called exactly so, no page of a\nfamily or given name
-                opt several, and a person
-                    Tagging -> Wiki : famousHuman(qids): wbgetentities claims, sitelinks
-                    Wiki --> Tagging : the human in 3 times more Wikipedias\nthan the next one (30 at least), else null
-                end
-                opt a place
-                    alt a name of a country (countryNamed)
-                        Wiki -> WikiApi : search haswbstatement:P297=<code>
-                        note right : "China" is the People's Republic,\nnot the cultural region
-                    else
-                        Wiki -> WikiApi : wbgetentities labels, aliases of the 10 found\n(its language and English)
-                        Wiki -> Wiki : the ones called so by any of their names;\nof several, famousPlace: a position (P625),\n3 times more Wikipedias (30 at least)
+            alt linked by its title
+                Tagging -> Model : setLink(id, qid)
+                note right : no pause: 41% of the queue
+            else searched in Wikidata
+                Tagging -> Wiki : exactItems(name, lang) (the text found or the label),\nor for an organisation organizationItem: namedItems,\ndescribeItems, ofOtherCountry, the AI choosing from 5\ntitles (titlesNaming), or for a place placeItem (below)
+                Wiki -> WikiApi : wbsearchentities in its language\n(then in English), 10 found at most
+                alt 429 or too busy
+                    Wiki --> Tagging : paused: nobody of the process asks\nfor Retry-After or 30 s
+                else
+                    Wiki --> Tagging : [qid]: called exactly so, no page of a\nfamily or given name
+                    opt one, and a person
+                        Tagging -> Wiki : personItem: describeItems, a human in a Wikipedia\n(20 for a word alone), else the AI (5 titles)
+                    end
+                    opt several, and a person in full
+                        Tagging -> Wiki : famousHuman(qids): wbgetentities claims, sitelinks
+                        Wiki --> Tagging : the human in 3 times more Wikipedias than the next one\n(10 at least, 30 for a byline), else the one of the\ncountry of the media naming it (mediaOf), else null
+                    end
+                    opt a place
+                        alt a name of a country (countryNamed)
+                            Wiki -> WikiApi : search haswbstatement:P297=<code>
+                            note right : "China" is the People's Republic,\nnot the cultural region
+                        else
+                            Wiki -> WikiApi : wbgetentities labels, aliases of the 10 found\n(its language and English)
+                            Wiki -> Wiki : the ones called so by any of their names;\nof several, famousPlace: a position (P625),\n3 times more Wikipedias (30 at least)
+                        end
+                    end
+                    Tagging -> Model : setLink(id, the qid when one only or the\nfamous human or place, else null)
+                    Model -> DB : UPDATE mentions SET qid, linked_at
+                    opt no item, and a person or an organisation
+                        Tagging -> Model : setCandidates(id, the qids found, 10 at most)
+                        Model -> DB : UPDATE mentions SET candidates\n(chosen on a card, see Names on cards)
                     end
                 end
-                Tagging -> Model : setLink(id, the qid when one only or the\nfamous human or place, else null)
-                Model -> DB : UPDATE mentions SET qid, linked_at
+                Tagging -> Tagging : wait 7 s
             end
-            Tagging -> Tagging : wait 7 s
         end
     end
 end
@@ -89,7 +107,7 @@ loop locate()
         alt lagging or refused
             Wiki --> Tagging : wait as asked (30 s at most), else the next minute
         else
-            Wiki --> Tagging : {country, international}: P297, P1532, P27 or P17;\nnone for an international body or a part of one
+            Wiki --> Tagging : {country, international, bodies}: P297, P1532, P27 or P17;\nnone for an international body or a part of one;\nthe bodies of a person (employer, member of, position)
             Tagging -> Model : saveCountries
             Model -> DB : INSERT item_countries ON CONFLICT (qid) DO UPDATE
         end

@@ -218,6 +218,11 @@ second. The `.env` of the server lists the taggers in `NER_URL`, separated by co
     profile follows** below)
 34. Do the same with "add_mentions_wanted.sql" (the names a reader sees looked for in Wikidata first)
 35. Do the same with "add_briefing_analysis.sql" (the AI analysis of the cards of a briefing)
+36. Do the same with "add_item_countries.sql" (the country of each item a card names, see **The names of
+    the news** below), then "add_item_bodies.sql" (the bodies of a person: the people of an international
+    body a card names lose their country, the others do not)
+37. Do the same with "add_mention_candidates.sql" (the items a name may be, kept for a card to choose
+    among them)
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.
@@ -386,7 +391,7 @@ and checks the versions of `docs/tools.md`, `docs-site/requirements.txt` pins it
 | `docs/README.md` | where to start, and the list of every feature and of its parts |
 | `docs/a-to-z/` | how the whole system works, from A to Z: `parcours-newsgenerator.md` (`.html`, in French), the walk of a reader from the account to the reading of a card, every step with its mechanism and its technology; `parcours-d-une-nouvelle.md` (`.html`, in French), one news followed from the page of its medium to the card of a reader; `32-a-to-z` the same as one diagram, `00-overview` the features and what links them, `31-deployment` the machines |
 | `docs/<feature>/` | one folder per feature: Accounts, Profile, Sources, Ingestion, Search, Briefing, Following. Its `README.md`, its overview class and sequence diagrams, and a folder per part of it (`briefing/summary/summary-ia/`, `search/key-passages/`...), each with a `README.md` (what it does and how: its routes, modules, tables, AI calls, limits and measures), a class diagram and a sequence diagram from the click of the reader to the database |
-| `docs/database/` | `mld.md`, the twenty-four tables, their columns, their keys and the SQL functions (checked against the database in service, 16.10.2026), and `30-database`, the same as a diagram |
+| `docs/database/` | `mld.md`, the twenty-five tables, their columns, their keys and the SQL functions (checked against the database in service, 16.10.2026, `item_countries` and the columns added since from their scripts), and `30-database`, the same as a diagram |
 | `docs/archive/` | the MCD, MLD and class diagrams of sprints 1 to 3, kept as they were |
 | `../client/docs/` | the use cases, and the client's pages and components by feature |
 
@@ -1407,9 +1412,20 @@ with it. A name is stored once per kind (`mentions`), compared without case, acc
 names met in 3 news at least are looked for in Wikidata in background, the most met first, one every 7 s (it refused more than about 10
 searches a minute without an account; a 429 pauses it as long as Wikidata asks): a name is the item when only one item is called exactly so
 ("Latvian Football Federation"), none when several are ("LFF", of Latvia and of Lithuania; "Paris").
-About 150 000 names wait for it (13.10.2026, 12 000 a day): the ones a reader sees, on a card or as the
+About 150 000 names waited for it (13.10.2026, 12 000 a day), 285 000 on 22.10.2026: the ones a reader sees, on a card or as the
 page of a name, are looked for first, whatever their news (`mentions.wanted_at`), so a name of a card
-opens the page of its item within minutes.
+opens the page of its item within minutes. Since 22.10.2026 the persons in full and the places of each
+batch of 50 are first read in the Wikipedia of their language, 50 titles a call, and linked at once when
+the article is no page of homonyms and its item the kind of the name (41% of 300 names of the queue, 90%
+right); the persons of one word come last, and a word alone keeps its item only when it is a human called so
+in 20 Wikipedias. The persons and organisations left with no item keep the items found (`mentions.candidates`).
+
+When the briefing is written, the AI checks the names of each card against it: a name is linked once for all
+its news, so its item may not be the card's ("Primera División" of a Spanish referee, the Maltese league), and a
+name with no item chooses among its candidates with the titles, the topic, the other names and the countries
+of the sites of its card (blind bench of 240 names: 93% right with them, 89% with the titles alone). The cards
+also say which countries they are about (`item_countries`, 18.10.2026). All of it is in
+[Ingestion > Names](docs/ingestion/names/README.md) and [Following > Names on cards](docs/following/names-on-cards/README.md).
 
 They serve three times (the third: the names shown on the cards, see **What a profile follows**):
 
@@ -1498,12 +1514,12 @@ on, with the database, in Docker (`deploy/compose.yml`):
 | `newsgenerator-db` | PostgreSQL 18 + pgvector, 2 GB of `shared_buffers` | the address of the machine, port 5433 |
 | `newsgenerator-api` | this server and its background work (`Dockerfile`) | the address of the machine, port 3001 |
 | `newsgenerator-web` | Caddy: the client built by `deploy.sh` and `/api` sent to the API, on one address (`deploy/Caddyfile`) | the address of the machine, port 8080, and the tunnel |
-| `newsgenerator-tunnel` | the tunnel of Cloudflare to `news.fabianrostello.com`, started when `tunnel.env` is there | nothing: it goes out to Cloudflare |
+| `newsgenerator-tunnel` | the tunnel of Cloudflare to the public hostname, started when `tunnel.env` is there | nothing: it goes out to Cloudflare |
 | `newsgenerator-rss-bridge` | RSS-Bridge | the API only (`http://rss-bridge`) |
 | `newsgenerator-embedder` | the embedder on the processor (`embedder/Dockerfile`), started apart | the address of the machine, port 8020 |
 
 Nothing listens on the internet: the tunnel goes out to Cloudflare, which ends the https and sends
-`news.fabianrostello.com` to `http://web:80` (a public hostname of the tunnel, set on the dashboard
+the public hostname to `http://web:80` (a public hostname of the tunnel, set on the dashboard
 of Cloudflare). The page and its API being on one address, the session is a cookie of the site:
 `HttpOnly` (no script of the page reads it), `SameSite=Strict` (never sent with a request another
 site starts), `Secure` when the reader came through https, valid 7 days and renewed once a day while

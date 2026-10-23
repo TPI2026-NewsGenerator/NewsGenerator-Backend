@@ -13,7 +13,7 @@ without knowing its feature, or to read all the diagrams of one kind.
 | [00-overview](a-to-z/00-overview.png) | Backend — the features and what links them (16.10.2026) |
 | [31-deployment](a-to-z/31-deployment.png) | Deployment — the machines, the containers and the services outside |
 | [32-a-to-z](a-to-z/32-a-to-z.png) | NewsGenerator from A to Z — the background work, then one reader |
-| [30-database](database/30-database.png) | Database — the 24 tables (PostgreSQL 18 + pgvector) |
+| [30-database](database/30-database.png) | Database — the 25 tables (PostgreSQL 18 + pgvector) |
 
 ## The features
 

@@ -39,6 +39,13 @@ package "utils" {
         - asOne(items, weight)
         - sameName(longer, shorter)
     }
+    class nameCheck {
+        + withNamesChecked(read, cards, {usage})
+        + withNamesLinked(read, cards, {usage})
+        + checkPrompt(options)
+        + linkPrompt(options)
+        + countriesOfSites(sites)
+    }
     class affairNames {
         + storiesOfSameNames(stories, options)
         - linkNow(rows, budget)
@@ -76,6 +83,16 @@ note bottom of cardNames
     name, one writing per name, never an agency
     nor the medium itself
 end note
+note bottom of nameCheck
+    A name is linked once for all its news, so its
+    item may not be the card's. Checked: the AI
+    reads the titles, the topic, the other names and
+    the countries of the sites, for each item in 60
+    Wikipedias or fewer; "no" leaves the link out.
+    Chosen: a name with no item picks among the
+    candidates kept for it (a person in 2 Wikipedias
+    at least), 60 names a briefing at most
+end note
 note bottom of affairNames
     4 rare names a card: a person or body named
     by 400 news a month at most, beyond the card;
@@ -87,6 +104,7 @@ package "Data" {
     class mentionModel {
         + namesOfArticles(articleIds, upTo)
         + want({ids})
+        + candidatesOf(ids)
         + setLink(id, qid)
         + storiesNaming(options)
         + countriesOf(qids)
@@ -94,6 +112,7 @@ package "Data" {
     }
     class "mentions" as mentionsTable <<table>> {
         name, kind, qid, linked_at, wanted_at
+        candidates
     }
     class "article_mentions" as am <<table>>
     class "briefings" as briefings <<table>> {
@@ -101,17 +120,22 @@ package "Data" {
         items[].countries ["ZM", ...]
     }
     class "item_countries" as itemCountries <<table>> {
-        qid, country, international
+        qid, country, international, bodies
     }
 }
 
 class "Wikidata API" as WikidataApi <<external>>
+class "Ollama (gemma4:31b)" as Ollama <<external>>
 
 BriefingCard --> EntityApi
 BriefingCard --> countriesJs
 briefingService --> cardNames : namesAndCountriesOfCards()
 briefingMail --> countryNames
 cardNames --> countries
+cardNames --> nameCheck
+nameCheck --> wikidata
+nameCheck --> mentionModel
+nameCheck --> Ollama
 cardNames --> countryNames
 countries --> wikidata
 countries --> mentionModel

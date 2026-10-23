@@ -29,7 +29,9 @@ note top of taggingService
     processor, 128 on a graphics card, the newest of 30
     days first, none taken by another; idle or down:
     asked again after 60 s. One loop links the names met
-    in 3 news or more, one every 7 s; one reads the country
+    in 3 news or more, 50 a batch (the persons in full and
+    the places by the title of their article, at once; the
+    others one every 7 s, the persons of one word last); one reads the country
     of the items linked, 40 a minute (maxlag 5). A report
     every hour, the unused names deleted once a day
 end note
@@ -59,12 +61,22 @@ package "utils" {
     }
     class countryNames {
         + countryNamed(name)
+        + mediaOf(sites)
+        + ofOtherCountry(sites, country)
     }
     class countries {
         + countriesOfItems(qids, {background})
     }
     class organizationItems {
-        + organizationItem(mention, usage)
+        + organizationItem(mention, usage, candidates)
+    }
+    class personItems {
+        + personItem(mention, qid, usage)
+        + familyName(name)
+    }
+    class titleLinks {
+        + linkedByTitle(rows)
+        + articlesOf(rows)
     }
 }
 note bottom of mentions
@@ -89,10 +101,24 @@ note bottom of countryNames
     (Intl.DisplayNames)
 end note
 note bottom of organizationItems
-    The one item called so, else the one the AI
-    chooses from 5 titles of its news among the
-    items called so or starting so, no person,
-    in 10 Wikipedias at least
+    The one item called so when it may be a body
+    (no human, place nor work, 2 Wikipedias) and
+    the sites naming it are not of another country,
+    else the one the AI chooses from 5 titles of its
+    news among the items called so or starting so,
+    no person, in 10 Wikipedias at least. The items
+    found are kept for a name left with none
+end note
+note bottom of personItems
+    The one item called so: a human in a Wikipedia
+    at least, else the AI tells if the news fit it; a
+    word alone only a human in 20 Wikipedias
+end note
+note bottom of titleLinks
+    The persons in full and the places, 50 a call, by
+    the title of an article of the Wikipedia of their
+    language (redirects resolved): no page of
+    homonyms, a human or a place, no common noun
 end note
 
 package "Data" {
@@ -102,6 +128,9 @@ package "Data" {
         + save(tagged)
         + toLink({least, limit})
         + setLink(id, qid)
+        + setCandidates(id, qids)
+        + candidatesOf(ids)
+        + sitesNaming(id)
         + personsEndingWith(words)
         + titlesNaming(id, limit)
         + toLocate(limit)
@@ -115,12 +144,14 @@ package "Data" {
     class "mentions" as mentionsTable <<table>> {
         key, kind, name, lang, seen
         qid, linked_at, wanted_at
+        candidates
     }
     class "article_mentions" as amTable <<table>> {
         id_mention, id_article
     }
     class "item_countries" as countriesTable <<table>> {
-        qid, country, international, looked_at
+        qid, country, international
+        bodies, looked_at
     }
 }
 note bottom of mentionModel
@@ -146,6 +177,7 @@ note right of Ner
     256 texts a request at most
 end note
 class "Wikidata API\n(wbsearchentities, wbgetentities,\nsearch haswbstatement)" as WikidataApi <<external>>
+class "Wikipedia API\n(action=query, redirects)" as WikipediaApi <<external>>
 
 serverStart --> taggingService
 taggingService --> tagger
@@ -153,6 +185,11 @@ taggingService --> mentions
 taggingService --> language
 taggingService --> wikidata
 taggingService --> organizationItems
+taggingService --> personItems
+taggingService --> titleLinks
+titleLinks --> wikidata
+titleLinks --> mentionModel
+personItems --> wikidata
 taggingService --> countries
 countries --> wikidata
 countries --> mentionModel
@@ -162,6 +199,7 @@ organizationItems --> mentionModel
 taggingService --> mentionModel
 tagger --> Ner
 wikidata --> WikidataApi
+titleLinks --> WikipediaApi
 mentionModel --> articlesTable
 mentionModel --> mentionsTable
 mentionModel --> amTable

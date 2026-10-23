@@ -136,11 +136,11 @@ code { font-family: var(--mono); font-size: 0.86em; }
   <p class="lede">Deux chaînes tournent en parallèle. Le serveur lit, comprend et regroupe toutes les nouvelles en continu, sans attendre personne. Le lecteur, lui, s'inscrit une fois, puis demande un briefing : l'application cherche alors dans ce qui est déjà prêt, et l'IA n'intervient que sur les quelques nouvelles qui seront montrées.</p>
   <div class="meta">
     <span>Mesuré le <b>17 octobre 2026</b> sur le serveur Ubuntu</span>
-    <span>Lecteur d'exemple : <b>Enzo</b> (arbitrage, UEFA, lit en anglais)</span>
+    <span>Lecteur d'exemple : <b>Profil foot</b> (arbitrage, UEFA, lit en anglais)</span>
     <span>Scripts : <b>server/bench/funnel-now.mjs</b>, <b>news-journey.mjs</b></span>
     <span>Texte mis à jour le <b>17 octobre 2026</b></span>
   </div>
-  <p class="note">Le fonctionnement décrit est celui du 17 octobre 2026. Les chiffres viennent de la mesure du 17 octobre entre 15 h 15 et 15 h 50, sauf quand une autre date est donnée. Les étapes du briefing après la vérification (lecture, passages, angles, analyse, durées, jetons) viennent du briefing complet d'Enzo écrit à 15 h 21, celui que suit « Parcours d'une nouvelle » : 107 545 nouvelles dans ses sources à ce moment, contre 106 673 une demi-heure plus tard pour l'entonnoir rejoué.</p>
+  <p class="note">Le fonctionnement décrit est celui du 17 octobre 2026. Les chiffres viennent de la mesure du 17 octobre entre 15 h 15 et 15 h 50, sauf quand une autre date est donnée. Les étapes du briefing après la vérification (lecture, passages, angles, analyse, durées, jetons) viennent du briefing complet du profil foot écrit à 15 h 21, celui que suit « Parcours d'une nouvelle » : 107 545 nouvelles dans ses sources à ce moment, contre 106 673 une demi-heure plus tard pour l'entonnoir rejoué.</p>
 </header>
 
 <section>
@@ -275,7 +275,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
     <p>Échelle logarithmique : chaque graduation multiplie par dix. Une barre deux fois plus courte veut dire beaucoup moins que la moitié. En rouge, ce qui a été retiré et pourquoi.</p>
   </div>
   <div class="funnel" id="funnel"></div>
-  <p class="note">Les trois groupes ne se suivent pas un à un : le serveur traite tout ce qui arrive, le briefing ne regarde que la période choisie (ici 48 heures) dans les sources du lecteur, toutes langues comprises, la recherche les 7 derniers jours de toutes les sources. Les étapes du briefing jusqu'à la vérification ont été rejouées avec le code du 17 octobre à 15 h 49, sans rien enregistrer ; la dernière ligne vient du briefing de 48 heures d'Enzo écrit en entier à 15 h 21 (13 histoires choisies, 10 cartes sur 10 avec passages, une carte illisible remplacée par la réserve).</p>
+  <p class="note">Les trois groupes ne se suivent pas un à un : le serveur traite tout ce qui arrive, le briefing ne regarde que la période choisie (ici 48 heures) dans les sources du lecteur, toutes langues comprises, la recherche les 7 derniers jours de toutes les sources. Les étapes du briefing jusqu'à la vérification ont été rejouées avec le code du 17 octobre à 15 h 49, sans rien enregistrer ; la dernière ligne vient du briefing de 48 heures du profil foot écrit en entier à 15 h 21 (13 histoires choisies, 10 cartes sur 10 avec passages, une carte illisible remplacée par la réserve).</p>
 </section>
 
 <section>
@@ -314,7 +314,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <p class="label">Chiffres</p>
         <dl>
           <div><dt>Compte + intérêts prêts</dt><dd>≈ 5 s</dd></div>
-          <div><dt>Profil d'Enzo</dt><dd>1 085 caractères<small>lit en anglais</small></dd></div>
+          <div><dt>Profil foot</dt><dd>1 085 caractères<small>lit en anglais</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -338,7 +338,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
       <aside class="figures">
         <p class="label">Chiffres</p>
         <dl>
-          <div><dt>Enzo</dt><dd>2 intérêts<small>gouvernance du football (l'UEFA et ses 55 associations, la FIFA) ; arbitrage</small></dd></div>
+          <div><dt>Profil foot</dt><dd>2 intérêts<small>gouvernance du football (l'UEFA et ses 55 associations, la FIFA) ; arbitrage</small></dd></div>
           <div><dt>Refus</dt><dd>3</dd></div>
           <div><dt>Recherches Google News</dt><dd>16<small>langues choisies par l'IA pour chaque intérêt</small></dd></div>
         </dl>
@@ -369,7 +369,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <dl>
           <div><dt>Premières sources (Google News)</dt><dd>7 à 18 min<small>sur processeur, profils pris comme à l'inscription (6 octobre) ; ≈ 2 min avec la carte graphique (25 septembre)</small></dd></div>
           <div><dt>Fin, avec la presse</dt><dd>14 à 43 min<small>avant : aucune source avant la fin</small></dd></div>
-          <div><dt>Flux trouvés pour Enzo</dt><dd>46<small>+ 600 ajoutés à la main</small></dd></div>
+          <div><dt>Flux trouvés pour le profil foot</dt><dd>46<small>+ 600 ajoutés à la main</small></dd></div>
           <div><dt>Sources lues pour lui</dt><dd>1 150 flux<small>386 partagés (toutes langues) + les 759 de tous les lecteurs, les siens compris + 16 recherches, moins les doublons</small></dd></div>
         </dl>
       </aside>
@@ -397,7 +397,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
           <li>Titres manquants : un flux qui met son titre dans la description (uol.com.br) ou laisse la variable de son modèle (« Vidéo. $content.TitleNoTags ») reçoit la description comme titre.</li>
           <li>Une même nouvelle redonnée sous un nouveau lien (même flux, même titre, même date) n'est pas enregistrée : agenzianova.com redonnait 1 088 nouvelles 7 fois par jour.</li>
           <li>Un flux qui donne plus de 500 nouvelles par jour est un déluge : ses nouvelles reçoivent leurs vecteurs après celles des autres, et le lecteur qui l'a ajouté le voit dans sa liste.</li>
-          <li>Les archives ne sont plus enregistrées (9 octobre) : une nouvelle publiée avant les 30 jours gardés est sautée. La liste importée d'Enzo avait apporté des flux qui redonnaient leurs nouvelles depuis 2006 et 2012.</li>
+          <li>Les archives ne sont plus enregistrées (9 octobre) : une nouvelle publiée avant les 30 jours gardés est sautée. La liste importée du profil foot avait apporté des flux qui redonnaient leurs nouvelles depuis 2006 et 2012.</li>
           <li>L'image de la nouvelle est gardée quand le flux en donne une : la sienne, une pièce jointe image, ou la première image de la description.</li>
         </ul>
         <div class="chips"><span class="chip">fetch Node 24</span><span class="chip">fast-xml-parser</span><span class="chip">RSS-Bridge</span><span class="chip">franc</span><span class="chip">Docker</span></div>
@@ -525,6 +525,9 @@ code { font-family: var(--mono); font-size: 0.86em; }
           <li>16 nouvelles à la fois sur le processeur du serveur, 128 sur la carte graphique du PC de jeu quand il est allumé ; chaque étiqueteur travaille de son côté, aucune nouvelle n'est lue deux fois.</li>
           <li>Un nom est gardé une fois par sorte, comparé sans majuscules, accents ni article (« La Fédération lettone de football »). Une nouvelle que le regroupement tient est reprise plus tard : l'étiquetage ne fait jamais attendre les passes.</li>
           <li>Wikidata : un nom cité par 3 nouvelles au moins, un toutes les 7 s. Il devient une fiche seulement quand une seule fiche porte exactement ce nom (« LFF » en a deux, la Lettonie et la Lituanie). Les noms qu'un lecteur voit (sur une carte, sur la page d'un nom) passent en premier.</li>
+          <li>Depuis le 22 octobre, les personnes en entier et les lieux de chaque lot de 50 sont d'abord lus par le titre d'un article de la Wikipédia de leur langue, 50 titres par appel : liés tout de suite quand ce n'est pas une page d'homonymes et que la fiche est un humain ou un lieu. 41 % de 300 noms de la file le sont, 90 % justes ; Wikidata n'en laisse passer que 12 000 par jour pour 285 000 en attente.</li>
+          <li>Entre plusieurs fiches, une personne prend l'humain nettement plus connu (10 Wikipédias au moins, 30 pour une signature), sinon celui du pays des médias qui la citent (« Istvan Kovacs », l'arbitre roumain). Un mot seul (« Evenepoel ») ne garde sa fiche que s'il est un humain connu dans 20 Wikipédias, et les personnes d'un seul mot passent en dernier.</li>
+          <li>Une organisation ne prend la seule fiche portant son nom que si ce n'est ni un humain, ni un lieu, ni une œuvre, et que les sites qui la citent ne sont pas d'un autre pays (« OL » des sites français n'est pas Open Library) ; sinon l'IA choisit sur 5 titres. Un nom resté sans fiche garde les fiches trouvées (les « candidats »), pour que sa carte choisisse (C7).</li>
           <li>Ils servent trois fois : la page d'une fiche suivie trouve ses nouvelles par eux (D3), les autres angles d'une carte cherchent les histoires qui nomment ses noms rares (C7), et chaque carte montre ses noms (D1).</li>
         </ul>
         <div class="chips"><span class="chip">GLiNER (Python)</span><span class="chip">mentions · article_mentions</span><span class="chip">Wikidata</span><span class="chip">FOR UPDATE SKIP LOCKED</span></div>
@@ -534,6 +537,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <dl>
           <div><dt>Vitesse</dt><dd>2,2 nouvelles/s<small>294 nouvelles de 26 langues, 3 cœurs du serveur ; le titre seul trouvait 44 % des noms</small></dd></div>
           <div><dt>Noms en attente de Wikidata</dt><dd>≈ 150 000<small>12 000 nouveaux par jour</small></dd></div>
+          <div><dt>Noms en attente, 22 octobre</dt><dd>285 000<small>11 000 liés et 3 000 nouveaux par jour ; liés par le titre de leur article : 41 % de 300 noms</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -565,7 +569,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <div class="chips"><span class="chip">rank_profile_stories (SQL)</span><span class="chip">pgvector</span><span class="chip">fils (threads)</span></div>
       </div>
       <aside class="figures">
-        <p class="label">Enzo</p>
+        <p class="label">Profil foot</p>
         <dl>
           <div><dt>Nouvelles des 48 h dans ses sources</dt><dd>106 673<small>38 langues ; 32 496 en anglais</small></dd></div>
           <div><dt>Histoires notées</dt><dd>67 500 → 600 → 150<small>600 gardées en 6,2 s (notes de 0,802 à 0,524), puis 75 par intérêt (0,552 et plus) ; 17 à 20 s le 7 octobre, serveur plus chargé</small></dd></div>
@@ -591,7 +595,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <div class="chips"><span class="chip">gemma4:31b</span><span class="chip">JSON</span></div>
       </div>
       <aside class="figures">
-        <p class="label">Enzo</p>
+        <p class="label">Profil foot</p>
         <dl>
           <div><dt>Choisies par l'IA</dt><dd>47 → 12<small>13 dans le briefing complet de 15 h 21</small></dd></div>
           <div><dt>Après équilibre</dt><dd>10 + 2 en réserve<small>3 en anglais, 6 langues</small></dd></div>
@@ -617,7 +621,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <div class="chips"><span class="chip">checkStories</span><span class="chip">mergeStories</span><span class="chip">centroïdes</span></div>
       </div>
       <aside class="figures">
-        <p class="label">Enzo</p>
+        <p class="label">Profil foot</p>
         <dl>
           <div><dt>Articles vérifiés</dt><dd>48 → 34<small>14 retirés, cartes et réserve (aucun sur 31 le 7 octobre)</small></dd></div>
           <div><dt>Cartes</dt><dd>12 → 12<small>aucune fusion ; dans le briefing complet, 9 versions d'autres langues et 1 en anglais rejoignent leur carte</small></dd></div>
@@ -642,7 +646,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <div class="chips"><span class="chip">fetch + @mozilla/readability</span><span class="chip">Crawlee (Cheerio) en secours</span><span class="chip">linkedom</span></div>
       </div>
       <aside class="figures">
-        <p class="label">Briefing d'Enzo, 15 h 21</p>
+        <p class="label">Briefing du profil foot, 15 h 21</p>
         <dl>
           <div><dt>Durée</dt><dd>7 s<small>2 à 7 s le 2 octobre</small></dd></div>
           <div><dt>Articles par carte</dt><dd>7,4 en moyenne<small>de 1 à 27 ; 7 à 10 les 2 et 3 octobre</small></dd></div>
@@ -669,7 +673,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <div class="chips"><span class="chip">extractArticle</span><span class="chip">gemma4:31b</span><span class="chip">aiWaysOf (deepseek-v4-pro)</span><span class="chip">corroboration (shingles)</span><span class="chip">contested</span></div>
       </div>
       <aside class="figures">
-        <p class="label">Briefing d'Enzo, 15 h 21</p>
+        <p class="label">Briefing du profil foot, 15 h 21</p>
         <dl>
           <div><dt>Durée</dt><dd>33 s<small>passages et relecture, 5 histoires à la fois ; ≈ 25 s le 6 octobre</small></dd></div>
           <div><dt>Jetons</dt><dd>17 680<small>21 appels : passages 17 (14 116 lus, 1 302 écrits), démentis 4 ; 1 carte contestée</small></dd></div>
@@ -691,7 +695,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <div class="chips"><span class="chip">reviewCards</span><span class="chip">translateTexts</span></div>
       </div>
       <aside class="figures">
-        <p class="label">Briefing d'Enzo, 15 h 21</p>
+        <p class="label">Briefing du profil foot, 15 h 21</p>
         <dl>
           <div><dt>Retirées</dt><dd>0<small>2 appels, 3 508 jetons lus, 492 écrits</small></dd></div>
           <div><dt>Total du briefing</dt><dd>154 s (48 h)<small>classement 33 s (le retrait des sources inutiles compris), choix 3, vérification 7, lecture 7, passages 33, angles 69 ; ≈ 34 s le 6 octobre, sans angles, source officielle ni version de l'IA</small></dd></div>
@@ -710,14 +714,16 @@ code { font-family: var(--mono); font-size: 0.86em; }
           <li>Le même fait avec un détail de plus n'est pas un autre angle : sans cette règle, une candidature racontée dans 16 langues revenait en angles d'elle-même.</li>
           <li>Source officielle (12 octobre) : l'IA nomme les parties de la nouvelle (un club, une instance, une entreprise), trois cartes à la fois ; chacune est cherchée dans Wikidata, avec ses propres canaux (son site, X, Bluesky…), et ses publications des derniers jours, lues par nos flux de son site ou par son propre flux, sont jugées par l'IA : 2 au plus. Les déclarations d'une partie que les articles rapportent sont montrées aussi.</li>
           <li>Ce que le profil suit : toutes les nouvelles de la période qui nomment une fiche suivie ou un mot du profil, de toutes ses sources, sans pertinence ni IA.</li>
-          <li>Noms de chaque carte : les personnes et organisations qu'un quart de ses articles au moins nomment, 4 au plus.</li>
+          <li>Noms de chaque carte : les personnes et organisations qu'un quart de ses articles au moins nomment, 4 au plus. Sous son sujet, elle dit aussi de quels pays elle parle (18 octobre) : « Zambie » pour « Hichilema limoge son ministre » ; les gens d'un organisme international que la carte nomme n'y comptent pas (Infantino, de la FIFA, n'est pas une nouvelle suisse).</li>
+          <li>Les noms sont vérifiés sur la carte (21 octobre) : un nom est lié une fois pour toutes ses nouvelles, donc sa fiche peut ne pas être celle de la carte (« Primera División » d'un arbitre espagnol, la ligue maltaise). L'IA lit les titres de la carte, son sujet, les autres noms et les pays des sites, et un « non » retire le lien de la carte et de ses pays : 14 liens faux sur 14 retrouvés, 2 justes retirés sur 218 (242 noms jugés à la main).</li>
+          <li>Un nom sans fiche choisit sur sa carte (22 octobre) parmi ses candidats, avec les mêmes éléments : sur 240 noms tirés au hasard de 210 cartes, jugés avant tout système, 93 % justes avec le sujet, les autres noms et les pays, 89 % avec les titres seuls.</li>
           <li>Au plus 6 appels à Ollama en même temps pour tout le serveur (14 octobre) : Ollama cloud refuse le septième, et une carte avait perdu ses angles.</li>
           <li>Le briefing n'attend jamais l'une ou l'autre : en cas d'échec, il paraît sans elles.</li>
         </ul>
         <div class="chips"><span class="chip">closeStories (SQL)</span><span class="chip">other-angles (gemma4:31b)</span><span class="chip">official-sources</span><span class="chip">card-names</span><span class="chip">watchedNews</span></div>
       </div>
       <aside class="figures">
-        <p class="label">Briefing d'Enzo, 15 h 21</p>
+        <p class="label">Briefing du profil foot, 15 h 21</p>
         <dl>
           <div><dt>Durée</dt><dd>69 s<small>versions de l'IA comprises ; source officielle : parties 44 s, déclarations 17 s</small></dd></div>
           <div><dt>Angles</dt><dd>10 cartes sur 10<small>25 en tout, 11 appels ; 83 % justes et 17 cartes sur 30 le 8 octobre</small></dd></div>
@@ -744,7 +750,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
           <div><dt>Cartes jugées</dt><dd>139<small>10 briefings de 7 profils, chaque ligne jugée à l'aveugle</small></dd></div>
           <div><dt>Ligne trompeuse</dt><dd>4 à 5 cartes sur 74<small>20 sans raisonnement, 29 avec gemma4:31b</small></dd></div>
           <div><dt>Durée</dt><dd>71 s par carte<small>jusqu'à 161 s ; le choix des cartes ≈ 5 s</small></dd></div>
-          <div><dt>Briefing d'Enzo, 17 octobre</dt><dd>6 cartes sur 10<small>écrites en 103 s, 8 appels, 22 385 jetons lus, 20 159 écrits ; aucune ligne retirée</small></dd></div>
+          <div><dt>Briefing du profil foot, 17 octobre</dt><dd>6 cartes sur 10<small>écrites en 103 s, 8 appels, 22 385 jetons lus, 20 159 écrits ; aucune ligne retirée</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -775,7 +781,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <div class="chips"><span class="chip">React 19</span><span class="chip">Tailwind 4</span><span class="chip">shadcn / Radix</span><span class="chip">Fraunces + Source Serif 4</span></div>
       </div>
       <aside class="figures">
-        <p class="label">Briefing d'Enzo, 15 h 21</p>
+        <p class="label">Briefing du profil foot, 15 h 21</p>
         <dl>
           <div><dt>Cartes</dt><dd>10<small>en 5 langues : 5 en anglais, 2 en français, 1 en italien, en allemand, en espagnol</small></dd></div>
           <div><dt>Médias par carte</dt><dd>6,6 en moyenne<small>de 1 à 21 ; 5,7 à 8,1 les 2 et 3 octobre</small></dd></div>
@@ -799,7 +805,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <div class="chips"><span class="chip">closestArticles (SQL)</span><span class="chip">sortByMeaning</span><span class="chip">joinFacts</span><span class="chip">IntersectionObserver</span></div>
       </div>
       <aside class="figures">
-        <p class="label">Mesuré le 17 octobre, compte d'Enzo</p>
+        <p class="label">Mesuré le 17 octobre, compte du profil foot</p>
         <dl>
           <div><dt>Phrase</dt><dd style="font-family: var(--text); font-size: 0.92rem">« les décisions d'arbitrage contestées en Ligue des champions », 7 jours</dd></div>
           <div><dt>Candidates</dt><dd>211 articles<small>8 langues ; 106 lignes envoyées à l'IA</small></dd></div>
@@ -827,9 +833,9 @@ code { font-family: var(--mono); font-size: 0.86em; }
         <p class="label">Mesuré</p>
         <dl>
           <div><dt>« VAR », 7 jours</dt><dd>264 histoires<small>8 octobre ; 7 s pour deux termes</small></dd></div>
-          <div><dt>PSG, 48 h</dt><dd>144 histoires<small>sources de fab ; Parc des Princes 53, Dembélé 27, Luis Enrique 25 (8 octobre)</small></dd></div>
+          <div><dt>PSG, 48 h</dt><dd>144 histoires<small>sources d'un profil foot ; Parc des Princes 53, Dembélé 27, Luis Enrique 25 (8 octobre)</small></dd></div>
           <div><dt>Recherche d'une fiche</dt><dd>11 s sur 48 h<small>30 s sur 7 jours, gardée 10 minutes</small></dd></div>
-          <div><dt>UEFA, 48 h</dt><dd>« UEFA » : 152 histoires<small>sources d'Enzo, 12 octobre ; 16 de ses 18 noms n'en trouvent aucune</small></dd></div>
+          <div><dt>UEFA, 48 h</dt><dd>« UEFA » : 152 histoires<small>sources du profil foot, 12 octobre ; 16 de ses 18 noms n'en trouvent aucune</small></dd></div>
         </dl>
       </aside>
     </article>
@@ -860,7 +866,7 @@ code { font-family: var(--mono); font-size: 0.86em; }
   </div>
   <div class="machines">
     <div class="machine">
-      <p class="kicker">Serveur Ubuntu · 192.168.1.135</p>
+      <p class="kicker">Serveur Ubuntu</p>
       <h3>Tout le travail de fond</h3>
       <p>Docker Compose : API Node/Express avec l'ingestion, PostgreSQL 18 + pgvector, RSS-Bridge, Caddy (le site) et un tunnel Cloudflare vers internet. À part, un embedder bge-m3 sur processeur (ONNX Runtime) et l'étiqueteur des noms (GLiNER, 3 cœurs), en priorité basse. Redémarrage automatique.</p>
     </div>
@@ -883,8 +889,8 @@ code { font-family: var(--mono); font-size: 0.86em; }
 </section>
 
 <footer>
-  <p>Chiffres mesurés le 17 octobre 2026 entre 15 h 15 et 15 h 50 (heure suisse) sur la base du serveur, le PC de jeu éteint : l'embedder tournait sur le processeur de l'Ubuntu (charge moyenne de 8 à 10 pour 12 cœurs logiques). Ingestion : 24 dernières heures de la base (server/bench/funnel-now.mjs, 15 h 49) ; lectures de flux et durée des passes tirées des 14 passes du journal depuis le redémarrage de l'API à 15 h 15. Briefing : rejoué avec le code du 17 octobre sur le profil d'Enzo jusqu'à la vérification et la fusion, sans rien enregistrer (sans le retrait des sources inutiles ni les versions dans les autres langues), sur 48 heures et 7 jours ; lecture, passages, version de l'IA, angles, source officielle, analyse, durées et jetons tirés de son briefing de 48 h écrit en entier à 15 h 21 sans être enregistré (server/bench/news-journey.mjs), celui que suit « Parcours d'une nouvelle ». Recherche par phrase : même phrase que le 7 octobre, sans Google News, dans la langue du profil (l'anglais). Non remesurés, avec leur date : la découverte des sources (server/bench/discovery-phases.mjs, 6 octobre : elle interroge Google News et Media Cloud, partagés avec le serveur en marche), les vitesses des embedders, les durées par lot de regroupement et par appel des fils (7 octobre), l'étiqueteur des noms (13 octobre), les termes suivis (8 et 12 octobre) et la qualité de l'analyse (15 octobre). Les pourcentages de qualité (88 %, 95 %, 96 %, 85 %, 93 %) viennent des mesures précédentes du projet, jugées à la main.</p>
-  <p>Depuis le 7 octobre, la base a triplé (691 147 → 2 099 425 nouvelles), surtout par l'annuaire qui s'agrandit seul (1 382 → 2 369 flux) et les sources des lecteurs, lues pour tous depuis le 8 octobre : Enzo lit 1 150 flux au lieu de 765. Le classement des 48 heures reste à 6 s ; celui des 7 jours, 30 s.</p>
+  <p>Chiffres mesurés le 17 octobre 2026 entre 15 h 15 et 15 h 50 (heure suisse) sur la base du serveur, le PC de jeu éteint : l'embedder tournait sur le processeur de l'Ubuntu (charge moyenne de 8 à 10 pour 12 cœurs logiques). Ingestion : 24 dernières heures de la base (server/bench/funnel-now.mjs, 15 h 49) ; lectures de flux et durée des passes tirées des 14 passes du journal depuis le redémarrage de l'API à 15 h 15. Briefing : rejoué avec le code du 17 octobre sur le profil foot jusqu'à la vérification et la fusion, sans rien enregistrer (sans le retrait des sources inutiles ni les versions dans les autres langues), sur 48 heures et 7 jours ; lecture, passages, version de l'IA, angles, source officielle, analyse, durées et jetons tirés de son briefing de 48 h écrit en entier à 15 h 21 sans être enregistré (server/bench/news-journey.mjs), celui que suit « Parcours d'une nouvelle ». Recherche par phrase : même phrase que le 7 octobre, sans Google News, dans la langue du profil (l'anglais). Non remesurés, avec leur date : la découverte des sources (server/bench/discovery-phases.mjs, 6 octobre : elle interroge Google News et Media Cloud, partagés avec le serveur en marche), les vitesses des embedders, les durées par lot de regroupement et par appel des fils (7 octobre), l'étiqueteur des noms (13 octobre), les termes suivis (8 et 12 octobre) et la qualité de l'analyse (15 octobre). Les pourcentages de qualité (88 %, 95 %, 96 %, 85 %, 93 %) viennent des mesures précédentes du projet, jugées à la main.</p>
+  <p>Depuis le 7 octobre, la base a triplé (691 147 → 2 099 425 nouvelles), surtout par l'annuaire qui s'agrandit seul (1 382 → 2 369 flux) et les sources des lecteurs, lues pour tous depuis le 8 octobre  : le profil foot lit 1 150 flux au lieu de 765. Le classement des 48 heures reste à 6 s ; celui des 7 jours, 30 s.</p>
   <p>Le 3 octobre, environ 90 histoires mélangées avant la règle des affiches ont été découpées après coup (plus de 400 nouvelles déplacées, sauvegardes dans server/bench/data/matchups).</p>
   <p>Remesuré en entier le 17 octobre 2026. Mis à jour le même jour : la version de l'IA des seules cartes gardées, une analyse en échec seulement sans carte finie depuis 12 minutes, une source retirée plus lue pour son profil, la connexion quelle que soit la casse du nom. Texte mis à jour le 16 octobre 2026 : briefings de 1 à 7 jours, projets, cartes envoyées écartées 48 h, points et résumé, version de l'IA, analyse des cartes, source officielle, noms relevés dans chaque nouvelle et noms des cartes, une seule liste de ce que le profil suit, e-mail aux formats choisis, 6 appels à Ollama au plus. Mis à jour le 12 octobre 2026 avec ce qui a changé depuis la mesure : création de compte par les questions de l'IA et fermée par défaut, mot de passe du site retiré, plusieurs profils, compte modifiable depuis le profil, part de chaque intérêt, briefings de 10, 20 ou 30 cartes, réserve plus grande, versions dans les autres langues, lecture des pages sans Crawlee d'abord, relecture par les refus, autres angles, termes suivis et page Following, envoi par e-mail, sources de chaque lecteur lues pour tous, archives sautées, embedders ensemble et tri de l'annuaire. Ces changements ont été remesurés le 17 octobre.</p>
 </footer>
@@ -901,7 +907,7 @@ const GROUPS = [
     {what: 'Histoires', n: 63985, why: 'les nouvelles d’un même fait regroupées (1,8 par histoire)'},
     {what: 'Histoires de 2 médias ou plus', n: 11230, why: '45 851 histoires restent d’une seule nouvelle'},
   ]},
-  {lane: 'reader', title: 'Briefing d’Enzo', scope: 'ses 1 150 flux · 48 h · toutes langues', rows: [
+  {lane: 'reader', title: 'Briefing du profil foot', scope: 'ses 1 150 flux · 48 h · toutes langues', rows: [
     {what: 'Nouvelles dans ses sources', n: 106673, why: '38 langues, dont 32 496 en anglais : aucune n’est écartée pour sa langue'},
     {what: 'Histoires', n: 67500, why: 'une note par histoire, la meilleure de ses nouvelles'},
     {what: 'Gardées par le SQL', n: 600, cut: 66900, why: 'moins proches de ses intérêts (note sous 0,524)'},

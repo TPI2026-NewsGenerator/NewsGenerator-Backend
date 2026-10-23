@@ -2,16 +2,18 @@
 
 What to reproduce in the diagram tool. Taken from `prisma/schema.prisma`, the scripts of `db/`, which
 are what a fresh install creates, and checked against the database in service (its `information_schema`)
-on 16.10.2026. Drawn as a diagram in `30-database.puml` (and `.png`), next to this file.
+on 16.10.2026; what was added after that day (`item_countries` on 18.10, its column `bodies` on
+19.10, `mentions.candidates` on 22.10) is taken from its script of `db/`. Drawn as a diagram in
+`30-database.puml` (and `.png`), next to this file.
 
 Some tables are not in `prisma/schema.prisma`: `entities`, `entity_links`, `profile_entities`,
-`mentions`, `article_mentions`, `party_names` and `sent_mails` are read and written in SQL only
-(`$queryRawUnsafe`), by `models/entity-model.js`, `mention-model.js`, `official-model.js` and
+`mentions`, `article_mentions`, `item_countries`, `party_names` and `sent_mails` are read and written in SQL
+only (`$queryRawUnsafe`), by `models/entity-model.js`, `mention-model.js`, `official-model.js` and
 `sent-mail-model.js`.
 
 ## What changed since the sprint 3 diagram
 
-**Nineteen tables to add**:
+**Twenty tables to add**:
 
 | Table | Why it exists |
 |---|---|
@@ -30,8 +32,9 @@ Some tables are not in `prisma/schema.prisma`: `entities`, `entity_links`, `prof
 | `entities` | an item of Wikidata a profile follows or meets (a club, a person, a body): its names, its kind, its own channels |
 | `entity_links` | what an item says of another: the players of a club, its coach, its league |
 | `profile_entities` | the items a profile follows, the names its reader added or took out, and whether their news go to the briefing |
-| `mentions` | a name as the news write it (person, organization, location), found by the tagger, and the item of Wikidata it is when only one is called so |
+| `mentions` | a name as the news write it (person, organization, location), found by the tagger, and the item of Wikidata it is when only one is called so; the items it may be when it has none, for a card to choose |
 | `article_mentions` | the names of each news |
+| `item_countries` | the country of each item of Wikidata a card names, and the bodies of a person, read once: a card shows the countries of who it is about |
 | `party_names` | the item of Wikidata a party of a card is, as the AI named it ("CONI"), searched once |
 | `sent_mails` | the copies of the e-mails of a briefing sent before 13.10.2026, read by their link |
 
@@ -40,7 +43,7 @@ applied" feature, which no longer exists. No code references them, no script in 
 and they are not in `prisma/schema.prisma`. They are still present (empty) in the database in service
 as leftovers of an older `create_insert_NewsGenerator.sql` — but a fresh install has neither.
 
-## The twenty-four tables
+## The twenty-five tables
 
 Types are the PostgreSQL ones. `id` is always `integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY` (`BY
 DEFAULT` for `user_profiles` and `profile_projects`), and `timestamptz` is `timestamp with time zone`.
@@ -228,6 +231,7 @@ Index `i_threads_lang_updated` on `(lang, updated_at)`. Filled by the SQL functi
 | linked_at | timestamptz | null — when it was looked for in Wikidata |
 | seen | integer | NOT NULL, default 0 — the news naming it: the most named are looked for first |
 | wanted_at | timestamptz | null — a reader saw it (on a card, the page of a name): looked for before the others (`db/add_mentions_wanted.sql`) |
+| candidates | jsonb | null — the qids the link loop found when it left the name with no item (10 at most), `[]` when it found none, null while it was not looked for since: a card chooses among them (`db/add_mention_candidates.sql`, `services/utils/name-check.js`) |
 | created_at | timestamptz | NOT NULL, default `now()` |
 
 UNIQUE (key, kind). Indexes `i_mentions_qid` on `qid` WHERE not null, `i_mentions_to_link` on
@@ -241,6 +245,19 @@ UNIQUE (key, kind). Indexes `i_mentions_qid` on `qid` WHERE not null, `i_mention
 
 Index `i_article_mentions_article` on `id_article`. Filled by `services/tagging-service.js` with what the
 tagger (`ner/server.py`, GLiNER) reads in the title and the start of each news.
+
+#### item_countries
+| Column | Type | |
+|---|---|---|
+| qid | text | PK — the item of Wikidata (a person, an organisation, a place), no foreign key |
+| country | text | null — its code ISO 3166-1 alpha-2 ("ZM"); null for an international body, a continent, a person without citizenship in Wikidata |
+| international | boolean | NOT NULL, default false — a body of several countries or of the world (FIFA, the UN, Google): the people of a card naming one are not of its country |
+| bodies | text[] | null — the qids of the bodies a person works for, is a member of or holds a position of, still (`db/add_item_bodies.sql`); empty for anything else, null for a row read before 19.10.2026, read again |
+| looked_at | timestamptz | NOT NULL, default `now()` |
+
+Filled by `services/utils/countries.js` (a card asks for the ones never read, 40 at a time) and by the tagging
+service ahead of the cards (`locate`, 40 a minute); read by `MentionModel.countriesOf`. See
+[Names on cards](../following/names-on-cards/README.md).
 
 ### Readers, profiles and what they follow
 
@@ -462,6 +479,7 @@ stories        1 ──< N  articles          (0 or 1 story per article)
 threads        1 ──< N  stories           (0 or 1 thread per story)
 articles       1 ──< N  article_mentions  N >── 1  mentions
 mentions       N ··· 1  entities          by qid, no foreign key
+mentions       N ··· 1  item_countries    by qid, no foreign key
 party_names    N ··· 1  entities          by qid, no foreign key
 user_feeds     N ··· 1  feeds             by url, no foreign key
 ```

@@ -31,9 +31,9 @@ actor Reader
 node "Browser of the reader\n(phone, laptop)" as Browser {
     rectangle "Client React\n(client-dist, built by deploy.sh)" as Client
 }
-cloud "Cloudflare\nnews.fabianrostello.com\n(ends the https)" as Cloudflare
+cloud "Cloudflare\n(public hostname, ends the https)" as Cloudflare
 
-node "Ubuntu server 192.168.1.135 — stays on (Docker, compose project newsgenerator)" as Ubuntu {
+node "Ubuntu server — stays on (Docker, compose project newsgenerator)" as Ubuntu {
     rectangle "newsgenerator-tunnel\ncloudflared (profile tunnel)" as Tunnel
     rectangle "newsgenerator-web\nCaddy :8080 → :80\n/srv = the client, /api → api:3001" as Web
     rectangle "newsgenerator-api\nNode 22 + Express :3001\nroutes + background work\n(ingestion every minute, tagging,\ndirectory every 20 min)" as Api
@@ -43,14 +43,14 @@ node "Ubuntu server 192.168.1.135 — stays on (Docker, compose project newsgene
     rectangle "newsgenerator-ner\nGLiNER on 3 cores\n:8021 (started apart)" as NerCpu
 }
 
-node "Gaming PC 192.168.1.22 — RTX 4070 Ti, when on" as Gaming {
+node "Gaming PC — RTX 4070 Ti, when on" as Gaming {
     rectangle "embedder/server.py\nbge-m3, PyTorch on CUDA :8020" as EmbedGpu
     rectangle "ner/server.py\nGLiNER on CUDA :8021" as NerGpu
 }
 
 node "Windows laptop — the code" as Laptop {
     rectangle "server run by hand\nINGEST_IN_SERVER=false" as DevServer
-    rectangle "Vite dev server :5173\n/api → 192.168.1.135:3001" as DevClient
+    rectangle "Vite dev server :5173\n/api → the Ubuntu server :3001" as DevClient
 }
 
 cloud "Services outside" as Outside {
@@ -82,12 +82,11 @@ Api --> Directories
 Api --> Smtp
 Api --> Media
 Bridge --> Media
-DevServer --> Db : 192.168.1.135:5433
+DevServer --> Db : the Ubuntu server :5433
 DevClient --> Api : LAN
 
 note right of Api
-    Secrets beside the code in ~~/newsgenerator
-    (db.env, api.env, tunnel.env), readable by
+    Secrets kept beside the code, readable by
     their owner only. Code sent by
     bash deploy/deploy.sh (tar over ssh, then
     docker compose up -d --build); db/*.sql
