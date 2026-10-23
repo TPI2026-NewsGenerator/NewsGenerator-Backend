@@ -31,6 +31,17 @@
 		reverse_proxy api:3001
 	}
 
+	# The documentation (pnpm run docs:build, sent by deploy.sh to ~/newsgenerator/docs-dist), static
+	# and public, on /docs. Mounted as /srv-docs/docs so that no prefix is stripped: the redirects of a
+	# folder to its slash keep /docs. Asked again each time (its files keep their names from a build to
+	# the next)
+	@docs path /docs /docs/*
+	handle @docs {
+		root * /srv-docs
+		header Cache-Control "no-cache"
+		file_server
+	}
+
 	# The files of a build are named by their content: kept a year, by the browser and by Cloudflare;
 	# the page itself asked each time. Only a file sent (2xx): the 401 of the password of the site was
 	# kept a year by Cloudflare for a font, whose name never changes, and asked the password of every

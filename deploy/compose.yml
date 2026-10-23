@@ -53,6 +53,7 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ../../client-dist:/srv:ro
+      - ../../docs-dist:/srv-docs/docs:ro
       - web-data:/data
     ports:
       - "${HOST_IP:-192.168.1.135}:8080:80"

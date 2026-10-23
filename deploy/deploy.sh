@@ -28,6 +28,25 @@ ssh "$HOST" "set -e
     if [ -d ~/newsgenerator/client-dist ]; then mv ~/newsgenerator/client-dist ~/newsgenerator/client-dist.old; fi
     mv ~/newsgenerator/client-dist.new ~/newsgenerator/client-dist"
 
+# the documentation built on this machine (pnpm run docs:build) is served on /docs (see deploy/Caddyfile):
+# public, so nothing is sent that names a private address or the hostname; none built, /docs stays as it is
+if [ -d site ]; then
+    if grep -rIqE '192\.168\.|fabianrostello' site; then
+        echo 'The site of the docs names a private address or the hostname, nothing deployed.' >&2
+        exit 1
+    fi
+    tar -c -C site . |
+    ssh "$HOST" "set -e
+        rm -rf ~/newsgenerator/docs-dist.new && mkdir -p ~/newsgenerator/docs-dist.new
+        tar -x -C ~/newsgenerator/docs-dist.new
+        rm -rf ~/newsgenerator/docs-dist.old
+        if [ -d ~/newsgenerator/docs-dist ]; then mv ~/newsgenerator/docs-dist ~/newsgenerator/docs-dist.old; fi
+        mv ~/newsgenerator/docs-dist.new ~/newsgenerator/docs-dist"
+else
+    echo 'No site of the docs built (pnpm run docs:build): /docs left as it is.'
+    ssh "$HOST" 'mkdir -p ~/newsgenerator/docs-dist'
+fi
+
 # the docs stay on the machine that builds them (pnpm run docs): neither their venv nor the site built
 tar -c --exclude=./node_modules --exclude=./generated --exclude=./bench --exclude=./.env \
     --exclude=./.venv-docs --exclude=./site \
