@@ -298,6 +298,14 @@ const TRUSTED_MARK = ' (source de confiance du lecteur)';
 // that mattered. The prompt of a briefing of one or two days stays the one measured
 const mediaMark = (media) => ` (${media} ${media === 1 ? 'média' : 'médias'})`;
 
+// The "why" is written from a title and a description, before the article is read: an acronym they do not spell
+// out was spelled out by the AI from what it knows (the FMF of a Malagasy card, "Mexican Football Federation (FMF)"; a
+// Moldovan one "Madagascar Football Federation"). Of the 16 stories whose why did it in the last 30 days (1 357
+// cards, 23 spellings out, bench/why-acronym), 5 runs of the prompt: 34 whys of 50 spelled an acronym out, 19 of them
+// without their sources doing it; with this sentence 5 of 50, all 5 of a "CTA" the committee of referees
+const ACRONYM_RULE = `Ne développe pas un sigle ou une abréviation (FMF, FPF, EFC...) que ce titre et cette description ne développent pas : garde-le tel quel.
+`;
+
 // The words of a briefing of several days: the ones measured on 7, said the same for the 3 the reader
 // can choose since 14.10.2026
 const daysWords = (days) => days === 7
@@ -325,7 +333,7 @@ S'il y en a moins de ${chosenFor(size)} qui conviennent, n'en rends que celles-l
 ${candidates.some(c => c.trusted) ? `Les histoires marquées « source de confiance du lecteur » sont racontées par un média qu'il a mis en favori : à pertinence égale, préfère-les. Ne choisis jamais pour cela une histoire qui ne correspond pas à ce qu'il demande.\n` : ''}Varie : pas deux histoires sur la même personne, la même organisation ou le même événement, sauf si ce sont deux nouvelles importantes et différentes.
 ${week ? `C'est ${words.summary} : préfère les nouvelles qui ont compté, racontées par plusieurs médias ou qui ont fait avancer une affaire, à un fait mineur raconté par un seul. Ne choisis jamais pour cela une histoire qui ne correspond pas à ce qu'il demande.\n` : ''}Préfère les faits ${week ? words.facts : 'du jour'} (décisions, annonces, résultats, déclarations) aux pronostics, conseils et guides, sauf si le lecteur les demande. Ne choisis jamais une page qui n'apporte aucun fait nouveau : présentation générale d'un sujet, guide pratique, billetterie, classement, calendrier, direct, compilation.
 Pour chacune, "why" est une phrase courte qui dit au lecteur pourquoi elle est pour lui, ${language ? `en ${frenchName(language)}` : 'dans la langue de son profil'}, tirée seulement de ce que disent son titre et sa description : si le lien avec le profil n'y est pas, ne la choisis pas.
-Réponds uniquement en JSON : {"selected": [{"id": "...", "why": "une phrase courte"}]}`;
+${ACRONYM_RULE}Réponds uniquement en JSON : {"selected": [{"id": "...", "why": "une phrase courte"}]}`;
 };
 
 // the stories chosen, only among the ones given, each once, at most chosenFor(size)

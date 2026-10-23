@@ -11,6 +11,7 @@ participant "Ollama\n(gemma4:31b)" as AI
 participant affairNames as Affair
 participant countries as Countries
 participant wikidata as Wiki
+participant "Wikipedia API\n(search)" as WikipediaApi
 participant mentionModel as Model
 database "PostgreSQL" as DB
 
@@ -52,6 +53,12 @@ else the names of the cards
     note right of Check : "no": the link is left out of the card\nand of its countries; an error leaves it
     CardNames -> Check : withNamesLinked(read, cards)
     Check -> Model : candidatesOf(ids of the persons in full and\norganisations shown with no qid)
+    opt a name the check sent away, 10 a briefing at most
+        Check -> Check : expansionOf(name, text of the card):\n"Fédération malgache de football (FMF)"
+        Check -> Wiki : exactItems(that name, language of the lead)
+        Check -> WikipediaApi : searchedItems("FMF Madagascar"):\nthe name and the main country of the sites
+        note right of Check : candidates: these items, the stored ones,\nnever the item the check refused
+    end
     Check -> Wiki : describeItems(their candidates, 10 at most)
     loop each name, 60 a briefing at most
         Check -> AI : linkPrompt: titles, topic, other names, countries\nof its sites, the candidates

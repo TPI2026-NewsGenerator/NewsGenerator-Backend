@@ -48,6 +48,21 @@ stances of the same actor for the other angles of the card.
   "yes", "unsure", an error or Wikidata not answering leave it. Measured on 242 names of 207 cards judged by
   hand (`bench/card-check`): the 14 wrong ones sent and caught, 2 of 218 right ones left out, about 1 500
   tokens a briefing (`naming` in the report of tokens). The names of the countries are given, not their codes.
+- **A name the check sent away is searched again on its card.** "No" leaves the name with no link and no country:
+  the FMF of a Malagasy card showed Moldova, then nothing. Its exact search in Wikidata finds nothing for it (the 16
+  names of the bench, 0 right; for "FMF" a disease, a gene and the Mexican federation), so `withNamesLinked` takes
+  its candidates from the card (`candidatesAfterNo`, `MAX_RELINK` = 10 names a briefing): **A** what the text of the
+  card says the name stands for (`expansionOf`: "Fédération malgache de football (FMF)", the words before the
+  parenthesis whose initials spell it, that name searched in Wikidata in the language of the lead), **B** the
+  Wikipedia search of the name with the country most of its sites are of (`searchedItems`, `wikipedia-search.js`:
+  "FMF Madagascar"). The item the check refused is no candidate. The AI then chooses among them as below, with the
+  titles, the topic, the other names and the countries of the sites: the card says "Madagascar". Measured on the 12
+  wrong links of the bench (`bench/relink-after-no`): 5 right (the Malagasy federation, ACF Fiorentina for "La
+  Fiorentina", Feyenoord Rotterdam twice, the Greek Super League), none wrong, 7 with no link (no candidate, no
+  country, or the AI saying none); on the 6 right links the check sends away too (UEFA, AFCON, Europe...) none
+  replaced by a wrong one. Kept as a candidate the refused item restored 1 of the 6 and gave 1 wrong ("Lega Pro" for
+  the Italian league): left out. A name of a card with no country of its sites and no definition in its text gets
+  nothing more. A search and a call a name, about 390 tokens.
 - **A name with no item chooses on its card.** The link loop keeps, for a person in full or an organisation it
   left with no item, the items it found for the name (`mentions.candidates`, `db/add_mention_candidates.sql`).
   When the briefing is written `withNamesLinked` (`services/utils/name-check.js`) gives the AI, for each

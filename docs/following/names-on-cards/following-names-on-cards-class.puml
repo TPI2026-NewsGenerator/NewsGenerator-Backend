@@ -45,6 +45,12 @@ package "utils" {
         + checkPrompt(options)
         + linkPrompt(options)
         + countriesOfSites(sites)
+        + mainCountryOfSites(sites)
+        + expansionOf(name, text)
+        - candidatesAfterNo(row, card)
+    }
+    class wikipediaSearch {
+        + searchedItems(text, host)
     }
     class affairNames {
         + storiesOfSameNames(stories, options)
@@ -91,7 +97,10 @@ note bottom of nameCheck
     Wikipedias or fewer; "no" leaves the link out.
     Chosen: a name with no item picks among the
     candidates kept for it (a person in 2 Wikipedias
-    at least), 60 names a briefing at most
+    at least), 60 names a briefing at most. A name
+    the check sent away is searched again on its
+    card: what its text spells out, the Wikipedia
+    search with the country of its sites
 end note
 note bottom of affairNames
     4 rare names a card: a person or body named
@@ -126,6 +135,7 @@ package "Data" {
 
 class "Wikidata API" as WikidataApi <<external>>
 class "Ollama (gemma4:31b)" as Ollama <<external>>
+class "Wikipedia API (search)" as WikipediaApi <<external>>
 
 BriefingCard --> EntityApi
 BriefingCard --> countriesJs
@@ -133,6 +143,8 @@ briefingService --> cardNames : namesAndCountriesOfCards()
 briefingMail --> countryNames
 cardNames --> countries
 cardNames --> nameCheck
+nameCheck --> wikipediaSearch
+wikipediaSearch --> WikipediaApi
 nameCheck --> wikidata
 nameCheck --> mentionModel
 nameCheck --> Ollama

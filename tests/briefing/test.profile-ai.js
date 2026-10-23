@@ -213,6 +213,12 @@ describe('the share of each interest in a briefing', () => {
         expect(selectionPrompt('Le tennis.', candidates, undefined, ['Tennis : circuit ATP'])).not.toContain('Ses intérêts');
     });
 
+    it('should tell the AI to keep an acronym as written unless the title and the description spell it out, before the answer', () => {
+        const prompt = selectionPrompt('Le football.', [{id: '1', title: 'Les dirigeants de la FMF', others: []}]);
+        expect(prompt).toContain('Ne développe pas un sigle ou une abréviation (FMF, FPF, EFC...) que ce titre et cette description ne développent pas : garde-le tel quel.');
+        expect(prompt.indexOf('garde-le tel quel')).toBeLessThan(prompt.indexOf('Réponds uniquement en JSON'));
+    });
+
     it('should mark the stories of a medium the reader trusts, and say so only when there are some', () => {
         const candidates = [{id: '1', title: 'Arthur Fils dans le Top 10', others: [], trusted: true}, {id: '2', title: 'Sinner gagne', others: []}];
         const prompt = selectionPrompt('Le tennis.', candidates);

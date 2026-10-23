@@ -20,7 +20,13 @@ saved in `briefings.step` and shown on the page while it runs:
 2. **choosing**: the AI (`selectStories`, gemma4:31b) reads the candidates against the whole profile and its
    projects, with the thumbs as examples, and chooses more stories than cards (`chosenFor`: 20 for 10 cards, 30
    for 20, 45 for 30); each interest gets its share
-   (`balanceSelection`), the rest waits as a reserve.
+   (`balanceSelection`), the rest waits as a reserve. The sentence a card shows under its title (`why`) is written
+   here, from the title and the description only, before the article is read: it keeps an acronym as written unless
+   they spell it out (since 23.10.2026, `ACRONYM_RULE` in `services/utils/profile-ai.js`). The AI spelled "FMF" out
+   from what it knew ("Mexican Football Federation (FMF)" for a Malagasy federation, "Madagascar Football
+   Federation" for a Moldovan one): of 16 stories whose why had spelled one out in 30 days (23 times in 1 357
+   cards), 5 runs of the prompt spelled one out in 34 whys of 50, 19 of them without their sources doing it, and
+   in 5 of 50 with the rule (`bench/why-acronym`).
 3. **checking**: two calls together, the articles of each story that tell its news (`checkStories`) and the cards
    of one news joined (`mergeStories`), with the versions of a card in the reader's language (from 0.75) and in
    other languages (from 0.78). The AI failing, the stories stay as the vectors grouped them.

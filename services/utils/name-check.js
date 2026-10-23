@@ -4,13 +4,14 @@
 //  File: name-check.js
 //  Description: The names a card shows against the card itself: the item of Wikidata a name is linked to is
 //               kept when the titles of the card fit it, left out when the card means another thing
-//               ("Primera División" of a Spanish referee was the Maltese league); a name with no item
-//               chooses among the candidates kept for it with what the card says
+//               ("Primera División" of a Spanish referee was the Maltese league); a name with no item,
+//               or one the check sent away, chooses among its candidates with what the card says
 //
 
 "use strict"
 
-import {describeItems} from './wikidata.js';
+import {describeItems, exactItems} from './wikidata.js';
+import {searchedItems} from './wikipedia-search.js';
 import {countriesOfItems} from './countries.js';
 import {ollamaJson} from './ollama.js';
 import {mapWithConcurrency} from './concurrency.js';
@@ -39,13 +40,19 @@ const regions = new Intl.DisplayNames(['en'], {type: 'region'});
 export const countryName = (code) => {
     try { return regions.of(code) ?? code; } catch { return code; }
 };
-export const countriesOfSites = (sites = []) => {
+const countsOfSites = (sites) => {
     const count = {};
     for (const site of sites) {
         const code = countryOfSite(site);
         if (code) count[code] = (count[code] ?? 0) + 1;
     }
-    return Object.entries(count).sort((a, b) => b[1] - a[1]).map(([code, news]) => `${countryName(code)} (${news})`).join(', ');
+    return Object.entries(count).sort((a, b) => b[1] - a[1]);
+};
+export const countriesOfSites = (sites = []) => countsOfSites(sites).map(([code, news]) => `${countryName(code)} (${news})`).join(', ');
+// the name of the country most of these sites are of, null when none has one
+export const mainCountryOfSites = (sites = []) => {
+    const [first] = countsOfSites(sites);
+    return first ? countryName(first[0]) : null;
 };
 
 // what else the card says helps tell a name: its topic and the other names on it ("Napoli" on a card of sport and
@@ -109,8 +116,11 @@ export const withNamesChecked = async (read, cards, {usage = null} = {}) => {
     asked.forEach(({row, list, card}, i) => {
         if (answers[i].status !== 'fulfilled' || !answers[i].value) return;
         dropped++;
-        if (list === 'names') row.qid = null;
-        else card.places = card.places.filter(place => place !== row);
+        if (list === 'names') {
+            // the item refused is no candidate for the name on this card (see withNamesLinked)
+            row.refused = row.qid;
+            row.qid = null;
+        } else card.places = card.places.filter(place => place !== row);
     });
     console.log(`Briefing: ${asked.length} names of ${rows.length} checked on their card, ${dropped} left without their link`);
     return read;
@@ -128,6 +138,47 @@ const MAX_CARD_LINKS = 60;
 const CARD_CANDIDATES = 10;
 export const PERSON_LEAST = 2;
 
+// A name the check sent away ("no") is left with no link, so no country: the FMF of a Malagasy card showed Moldova,
+// then nothing. Its exact search in Wikidata does not help (the 14 wrong links of bench/card-check, 16 cases with
+// the 2 of the right country only: 0 right; "FMF" found a disease, a gene and the Mexican federation, not the
+// Malagasy one), so the candidates come from the card (bench/relink-after-no, 22 cases with the 6 right links the
+// check sends away too): A what its text says the name stands for ("Fédération malgache de football (FMF)", that
+// name searched in Wikidata), B the Wikipedia search of the name with the country most of its sites are of ("FMF
+// Madagascar"). The AI chooses among them as among the candidates kept for a name: the FMF Malagasy, Fiorentina for
+// "La Fiorentina", Feyenoord Rotterdam, the Greek Super League; 5 right of 12, none wrong, none restored from the 6
+// right links (the refused item left out: kept as a candidate it restored 1 and gave 1 wrong, "Lega Pro" for the
+// Italian league). Only the names the check sent away, MAX_RELINK a briefing: a search and a call each
+const MAX_RELINK = 10;
+const SMALL_WORDS = new Set(['de', 'du', 'des', 'la', 'le', 'les', 'of', 'the', 'y', 'e', 'da', 'do', 'di', 'del', 'della', 'and', 'et', 'und', 'van', 'von', 'el', 'al', 'd', 'l', 'a', 'o', 'dos', 'das']);
+const spelling = (words) => words.filter(word => !SMALL_WORDS.has(word.toLowerCase().replace(/['’]$/, ''))).map(word => word[0]).join('');
+
+// "Fédération malgache de football" of "(FMF)" in this text: the words before the name between parentheses
+// whose initials spell it (2 to 8 of them), null when it is not defined there
+export const expansionOf = (name, text) => {
+    const key = mentionKey(name).replace(/[^a-z]/g, '');
+    if (key.length < 2 || key.length > 8 || !text) return null;
+    const escaped = String(name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    for (const match of text.matchAll(new RegExp(`\\(\\s*${escaped}\\s*\\)`, 'g'))) {
+        const words = text.slice(Math.max(0, match.index - 120), match.index).trim().split(/\s+/).map(word => word.replace(/^[«"“(]+/, '')).filter(Boolean);
+        for (let size = 2; size <= 8 && size <= words.length; size++) {
+            const tail = words.slice(-size);
+            if (mentionKey(spelling(tail)).replace(/[^a-z]/g, '') === key) return tail.join(' ');
+        }
+    }
+    return null;
+};
+
+// [qid] of the items this card points to for this name, except the one the check refused; whatever fails
+// (Wikidata asking to wait, Wikipedia) leaves the others
+const candidatesAfterNo = async (row, card) => {
+    const found = [];
+    const expansion = expansionOf(row.name, card?.text ?? '');
+    if (expansion) found.push(...await exactItems(expansion, card.language ?? 'en').catch(() => []));
+    const country = mainCountryOfSites(card?.sites);
+    if (country) found.push(...await searchedItems(`${row.name} ${country}`));
+    return [...new Set(found)].filter(qid => qid !== row.refused).slice(0, CARD_CANDIDATES);
+};
+
 export const linkPrompt = ({name, kind, titles, countries = '', topic = null, others = [], candidates}) => `A name in the news: "${name}" (${kind}).
 
 Titles of news naming it:
@@ -143,10 +194,12 @@ ${candidates.map((item, i) => `[${i + 1}] ${item.label}: ${item.description || '
 Which item is the "${name}" these news name? Use what the card is about and the other names: a name on a sports card is the club, not the city of the same name. Only when you are sure from the titles: a person, a club, a league, a body these news are about. 0 when none of them is, when you cannot tell, or when the name is only a part of many names ("FC", "Club", "United").
 Answer in JSON only: {"n": 0}`;
 
-// read: [{storyId, names}], cards: [{storyId, titles, sites, topic}]: the same cards, the persons in full and the
-// organisations shown with no qid that have candidates kept given the one the AI chooses (a person in PERSON_LEAST
-// Wikipedias at least). A word alone is left to its card (see card-names.js withSurnamesLinked). Whatever fails
-// (the database, Wikidata, the AI) leaves the name as it was
+// read: [{storyId, names}], cards: [{storyId, titles, sites, topic, text, language}] (text: what the card says, for
+// the names it spells out): the same cards, the persons in full and the organisations shown with no qid that have
+// candidates given the one the AI chooses (a person in PERSON_LEAST Wikipedias at least). The candidates are the ones
+// kept for the name (see MentionModel.setCandidates) and, for a name the check sent away on this card, the ones the
+// card points to (candidatesAfterNo). A word alone is left to its card (see card-names.js withSurnamesLinked).
+// Whatever fails (the database, Wikidata, the AI) leaves the name as it was
 export const withNamesLinked = async (read, cards, {usage = null} = {}) => {
     const cardOf = new Map(cards.map(card => [card.storyId, card]));
     const rows = read.flatMap(card => card.names
@@ -154,23 +207,29 @@ export const withNamesLinked = async (read, cards, {usage = null} = {}) => {
         .map(row => ({card, row})))
         .filter(({card}) => (cardOf.get(card.storyId)?.titles ?? []).length > 0);
     if (rows.length === 0) return read;
-    let stored;
+    let stored = new Map();
     try {
         stored = await MentionModel.candidatesOf([...new Set(rows.map(({row}) => row.id))]);
     } catch (err) {
         console.error(`Names: the candidates of the names of the cards were not read (${err.message})`);
-        return read;
     }
-    const asked = rows.filter(({row}) => (stored.get(row.id) ?? []).length > 0).slice(0, MAX_CARD_LINKS);
+    // the candidates of a name on a card: the ones kept for the name, without the item the check refused for it
+    const candidatesOf = new Map(rows.map(({row}) => [row, (stored.get(row.id) ?? []).filter(qid => qid !== row.refused)]));
+    const sentAway = rows.filter(({row}) => row.refused).slice(0, MAX_RELINK);
+    for (const {card, row} of sentAway) {
+        const fresh = await candidatesAfterNo(row, cardOf.get(card.storyId)).catch(() => []);
+        candidatesOf.set(row, [...new Set([...fresh, ...candidatesOf.get(row)])]);
+    }
+    const asked = rows.filter(({row}) => candidatesOf.get(row).length > 0).slice(0, MAX_CARD_LINKS);
     if (asked.length === 0) return read;
     try {
-        await describe(asked.flatMap(({row}) => stored.get(row.id).slice(0, CARD_CANDIDATES)));
+        await describe(asked.flatMap(({row}) => candidatesOf.get(row).slice(0, CARD_CANDIDATES)));
     } catch (err) {
         console.error(`Names: the candidates of the cards were not described, none chosen (${err.message})`);
         return read;
     }
     const answers = await mapWithConcurrency(asked, CHECK_CONCURRENCY, async ({card, row}) => {
-        const candidates = stored.get(row.id).slice(0, CARD_CANDIDATES).map(qid => described.get(qid)).filter(Boolean);
+        const candidates = candidatesOf.get(row).slice(0, CARD_CANDIDATES).map(qid => described.get(qid)).filter(Boolean);
         if (candidates.length === 0) return null;
         const meta = cardOf.get(card.storyId);
         const answer = await ollamaJson(linkPrompt({name: row.name, kind: row.kind, titles: (meta.titles ?? []).slice(0, TITLES),
@@ -185,6 +244,6 @@ export const withNamesLinked = async (read, cards, {usage = null} = {}) => {
         row.qid = answers[i].value;
         linked++;
     });
-    console.log(`Briefing: ${asked.length} names with no item chosen among their candidates on their card, ${linked} linked`);
+    console.log(`Briefing: ${asked.length} names with no item chosen among their candidates on their card (${sentAway.length} sent away by the check, searched again), ${linked} linked`);
     return read;
 };

@@ -10,16 +10,19 @@
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const describeItems = jest.fn();
+const exactItems = jest.fn(async () => []);
+const searchedItems = jest.fn(async () => []);
 const countriesOfItems = jest.fn(async () => new Map());
 const ollamaJson = jest.fn();
 const candidatesOf = jest.fn(async () => new Map());
 const wikidata = await import('../../services/utils/wikidata.js');
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
-jest.unstable_mockModule('../../services/utils/wikidata.js', () => ({...wikidata, describeItems}));
+jest.unstable_mockModule('../../services/utils/wikidata.js', () => ({...wikidata, describeItems, exactItems}));
+jest.unstable_mockModule('../../services/utils/wikipedia-search.js', () => ({searchedItems}));
 jest.unstable_mockModule('../../services/utils/countries.js', () => ({countriesOfItems}));
 jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel: {candidatesOf}}));
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson, newUsage: () => ({calls: 0, input: 0, output: 0})}));
-const {CHECK_MAX_LINKS, PERSON_LEAST, checkPrompt, countriesOfSites, linkPrompt, withNamesChecked, withNamesLinked} = await import('../../services/utils/name-check.js');
+const {CHECK_MAX_LINKS, PERSON_LEAST, checkPrompt, countriesOfSites, expansionOf, linkPrompt, mainCountryOfSites, withNamesChecked, withNamesLinked} = await import('../../services/utils/name-check.js');
 
 const cards = [{storyId: 1, titles: ['Hernández Hernández, árbitro de Primera división: "El arbitraje es aprender a resetear"']}];
 const MALTA = {qid: 'Q58305', label: 'Maltese First Division', description: 'sports league', links: 14, human: false};
@@ -33,6 +36,10 @@ beforeEach(() => {
     countriesOfItems.mockClear();
     candidatesOf.mockReset();
     candidatesOf.mockResolvedValue(new Map());
+    exactItems.mockReset();
+    exactItems.mockResolvedValue([]);
+    searchedItems.mockReset();
+    searchedItems.mockResolvedValue([]);
     jest.spyOn(console, 'log').mockImplementation(() => {});
     jest.spyOn(console, 'error').mockImplementation(() => {});
 });
@@ -160,5 +167,74 @@ describe('withNamesLinked', () => {
         expect(prompt).toContain('The card these news make is about: unknown.');
         expect(prompt).toContain('Other names on the card: none.');
         expect(prompt).toContain('[1] Open Library: (no description) (41 Wikipedias)');
+    });
+});
+
+describe('a name the check sent away', () => {
+    const MALAGASY = {qid: 'Q900', label: 'Malagasy Football Federation', description: 'governing body of association football in Madagascar', links: 22, human: false};
+    const MOLDOVAN = {qid: 'Q738074', label: 'Football Association of Moldova', description: 'association football governing body of Moldova', links: 25, human: false};
+    const MEXICAN = {qid: 'Q901', label: 'Mexican Football Federation', description: 'governing body of association football in Mexico', links: 33, human: false};
+    const malagasy = {storyId: 1, titles: ['FOOTBALL – Des représentants de clubs intègrent le collège électoral pour élire les dirigeants de la FMF'], sites: ['2424.mg'], topic: 'sport', language: 'fr',
+        text: 'Les changements ont été adoptés lors de l’Assemblée générale ordinaire de la Fédération malgache de football (FMF), tenue samedi à Carion.'};
+    const fmf = () => [{storyId: 1, names: [{name: 'FMF', id: 20, qid: 'Q738074', kind: 'organization'}], places: []}];
+
+    it('should find the name a text spells out, and the acronym only', () => {
+        expect(expansionOf('FMF', malagasy.text)).toBe('Fédération malgache de football');
+        expect(expansionOf('FMF', 'La Fédération Mexicaine de Football (FMF) a annoncé')).toBe('Fédération Mexicaine de Football');
+        expect(expansionOf('UEFA', 'Union of European Football Associations (UEFA)')).toBe('Union of European Football Associations');
+        // not defined there, or defined as another name
+        expect(expansionOf('FMF', 'Le président de la FMF a parlé')).toBeNull();
+        expect(expansionOf('FMF', 'la Fédération royale marocaine (FMF)')).toBeNull();
+        expect(expansionOf('X', 'a b (X)')).toBeNull();
+        expect(expansionOf('FMF', '')).toBeNull();
+        expect(mainCountryOfSites(['2424.mg', 'newsmada.mg', 'lemonde.fr'])).toBe('Madagascar');
+        expect(mainCountryOfSites(['bbc.com'])).toBeNull();
+    });
+
+    it('should keep out the item it refused for the name, and link the one its card points to', async () => {
+        describeItems.mockImplementation(async (qids) => [MOLDOVAN, MALAGASY, MEXICAN].filter(item => qids.includes(item.qid)));
+        // the check says no; the text spells the name out; the search with the country finds the Mexican one too
+        ollamaJson.mockResolvedValueOnce({same: 'no'}).mockResolvedValueOnce({n: 1});
+        exactItems.mockResolvedValue(['Q900']);
+        searchedItems.mockResolvedValue(['Q901', 'Q738074', 'Q900']);
+        candidatesOf.mockResolvedValue(new Map([[20, ['Q738074']]]));
+        const [card] = await withNamesLinked(await withNamesChecked(fmf(), [malagasy]), [malagasy]);
+        expect(card.names[0].qid).toBe('Q900');
+        expect(exactItems).toHaveBeenCalledWith('Fédération malgache de football', 'fr');
+        expect(searchedItems).toHaveBeenCalledWith('FMF Madagascar');
+        // the candidates: the spelled-out name first, then the search, the refused item (the Moldovan federation) in none
+        const prompt = ollamaJson.mock.calls[1][0];
+        expect(prompt).toContain('[1] Malagasy Football Federation');
+        expect(prompt).toContain('[2] Mexican Football Federation');
+        expect(prompt).not.toContain('Football Association of Moldova');
+        expect(prompt).toContain('Countries of the sites that published the news: Madagascar (1).');
+    });
+
+    it('should leave the name with no link when the card points to nothing, and when what it searches fails', async () => {
+        describeItems.mockImplementation(async (qids) => [MOLDOVAN].filter(item => qids.includes(item.qid)));
+        ollamaJson.mockResolvedValueOnce({same: 'no'});
+        // no country, nothing spelled out: nothing searched, nothing to choose from
+        const bare = {storyId: 1, titles: ['FMF elects its leaders'], sites: ['bbc.com'], text: ''};
+        const [card] = await withNamesLinked(await withNamesChecked(fmf(), [bare]), [bare]);
+        expect(card.names[0].qid).toBeNull();
+        expect(exactItems).not.toHaveBeenCalled();
+        expect(searchedItems).not.toHaveBeenCalled();
+        expect(ollamaJson).toHaveBeenCalledTimes(1);
+        // Wikidata asks to wait, Wikipedia answers nothing: the name stays as the check left it
+        describeItems.mockImplementation(async (qids) => [MOLDOVAN, MALAGASY].filter(item => qids.includes(item.qid)));
+        ollamaJson.mockResolvedValueOnce({same: 'no'});
+        exactItems.mockRejectedValue(Object.assign(new Error('Wikidata asked to wait.'), {paused: true}));
+        const [again] = await withNamesLinked(await withNamesChecked(fmf(), [malagasy]), [malagasy]);
+        expect(again.names[0].qid).toBeNull();
+    });
+
+    it('should search again only for the names the check sent away, MAX_RELINK a briefing', async () => {
+        describeItems.mockImplementation(async (qids) => [MOLDOVAN, MALAGASY].filter(item => qids.includes(item.qid)));
+        const bare = {...malagasy, text: ''};
+        const many = [{storyId: 1, names: Array.from({length: 13}, (_, i) => ({name: `FM${String.fromCharCode(65 + i)}`, id: 30 + i, qid: 'Q738074', kind: 'organization'})), places: []}];
+        ollamaJson.mockResolvedValue({same: 'no'});
+        searchedItems.mockResolvedValue(['Q900']);
+        await withNamesLinked(await withNamesChecked(many, [bare]), [bare]);
+        expect(searchedItems).toHaveBeenCalledTimes(10);
     });
 });
