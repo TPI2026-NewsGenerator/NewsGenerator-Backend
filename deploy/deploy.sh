@@ -28,8 +28,9 @@ ssh "$HOST" "set -e
     if [ -d ~/newsgenerator/client-dist ]; then mv ~/newsgenerator/client-dist ~/newsgenerator/client-dist.old; fi
     mv ~/newsgenerator/client-dist.new ~/newsgenerator/client-dist"
 
-# the documentation built on this machine (pnpm run docs:build) is served on /docs (see deploy/Caddyfile):
-# public, so nothing is sent that names a private address or the hostname; none built, /docs stays as it is
+# the documentation built on this machine (pnpm run docs:build) is served on /docs (see deploy/Caddyfile), for
+# the readers signed in only; nothing is sent that names a private address or the hostname all the same; none
+# built, /docs stays as it is
 if [ -d site ]; then
     if grep -rIqE '192\.168\.|fabianrostello' site; then
         echo 'The site of the docs names a private address or the hostname, nothing deployed.' >&2

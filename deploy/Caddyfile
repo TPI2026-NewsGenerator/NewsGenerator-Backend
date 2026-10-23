@@ -31,14 +31,23 @@
 		reverse_proxy api:3001
 	}
 
-	# The documentation (pnpm run docs:build, sent by deploy.sh to ~/newsgenerator/docs-dist), static
-	# and public, on /docs. Mounted as /srv-docs/docs so that no prefix is stripped: the redirects of a
-	# folder to its slash keep /docs. Asked again each time (its files keep their names from a build to
-	# the next)
+	# The documentation (pnpm run docs:build, sent by deploy.sh to ~/newsgenerator/docs-dist), static, on
+	# /docs, for the readers signed in only: the API tells whether the session cookie is one (GET
+	# /api/session, the same check as every route of the app: a password changed ends it), else the
+	# reader goes to the login page. Mounted as /srv-docs/docs so that no prefix is stripped: the
+	# redirects of a folder to its slash keep /docs. Never kept by a shared cache (Cloudflare), asked again
+	# each time
 	@docs path /docs /docs/*
 	handle @docs {
+		forward_auth api:3001 {
+			uri /api/session
+			@refused status 4xx
+			handle_response @refused {
+				redir * /login 302
+			}
+		}
 		root * /srv-docs
-		header Cache-Control "no-cache"
+		header Cache-Control "private, no-cache"
 		file_server
 	}
 
