@@ -53,7 +53,7 @@ searched by its words instead (see [Keywords](../keywords/README.md)).
 
 ## Measured
 
-From the code comments and `server/README.md`:
+From the code comments and [the former README](../../archive/readme-features-2026-10-24.md):
 
 - 13 sentences in French and English (`bench/meaning.mjs`, `meaning-ai.mjs`): the vectors alone rank a
   broad subject well but not a sentence naming someone, a place or an aspect; asked for one list, the AI

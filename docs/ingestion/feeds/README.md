@@ -53,7 +53,7 @@ saved.
 
 - All the feeds read every 20 minutes, a news waited 19 minutes in the median to be read and 28 to have its
   vectors; every feed read every minute would be 24 requests a second. With the rhythms: 220 requests a
-  minute (77 before), the 200 feeds giving two thirds of the news read every 2 minutes (server/README.md).
+  minute (77 before), the 200 feeds giving two thirds of the news read every 2 minutes ([the former README](../../archive/readme-features-2026-10-24.md)).
 - Repeats: 7,734 news given again under another link in one day in 297 feeds (agenzianova.com: 1,088 news
   a day stored 7,440 times), 5.10.2026 (`models/feed-model.js`).
 - Archives: americansoccernow.com since 2012, irishfa.com since 2006, 12,400 news stored at their first read

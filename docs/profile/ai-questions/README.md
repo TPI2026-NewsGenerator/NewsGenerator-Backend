@@ -50,7 +50,7 @@ page, the reader reads it, changes it, and saves it like a profile written by ha
 - With the AI playing 5 real readers who answer only what is asked (`bench/profile-funnel.mjs`,
   9.10.2026), the interests of the profile written find this share of the news of 48 hours the interests
   of the reader's own text find: UEFA referee 57% (the start alone 11%), tennis 32% (0%), astronomy 34%
-  (1%), Pokémon cards 33% (34%), computer scientist 29% (10%) — `server/README.md`, "The briefing".
+  (1%), Pokémon cards 33% (34%), computer scientist 29% (10%) — [the former README](../../archive/readme-features-2026-10-24.md), "The briefing".
   6 to 8 questions, 1 to 4 s each call.
 - The question "which subjects do you follow from afar" (`bench/profile-importance.mjs`, 3 runs each):
   9 of 9 subjects followed from afar got the weight 0.85, 0 of 6 before; no false one.

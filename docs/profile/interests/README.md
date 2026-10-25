@@ -54,7 +54,7 @@ never as an interest. The reader can correct an interest, make it secondary or r
 ## Measured
 
 - One vector per interest, not one for the profile (four profiles, 249 stories judged by hand, comment of
-  `services/briefing-service.js` and `server/README.md`): 88% relevant cards with one vector per interest,
+  `services/briefing-service.js` and [the former README](../../archive/readme-features-2026-10-24.md)): 88% relevant cards with one vector per interest,
   95% once the AI chose among the 40 best, 38% with one vector for the whole profile. The average of rugby
   and fashion is football.
 - Interests without the reader's sentences and refusals (`bench/split-clean.mjs`): a tennis/AI/Swiss

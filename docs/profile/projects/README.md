@@ -44,7 +44,7 @@ and from the Google News searches of its interests while it runs.
 ## Measured
 
 Nothing yet: the prompts of the projects reuse the rules of the profile's and were not measured on a bench
-(comment of `profile-funnel.js` and `server/README.md`, 13.10.2026).
+(comment of `profile-funnel.js` and [the former README](../../archive/readme-features-2026-10-24.md), 13.10.2026).
 
 ## Diagrams
 

@@ -130,7 +130,7 @@ Times "United States") and a French journalist quoted on a CAF card.
   away when "Čeferin runs again" in 15 languages was 0.80-0.89. Of the 21 stories naming the LFF, the same fact
   was at 0.91, the stances on Infantino's candidacy at 0.64-0.65, the Lithuanian ones (the other LFF) at
   0.37-0.58: hence the stories naming a rare name taken from 0.45, the closest first (`affair-names.js`).
-- Suggested on 13.10.2026: FIFA, UEFA, CAF, Gianni Infantino for the profile of the referees (server/README.md).
+- Suggested on 13.10.2026: FIFA, UEFA, CAF, Gianni Infantino for the profile of the referees ([the former README](../../archive/readme-features-2026-10-24.md)).
 
 ## Diagrams
 

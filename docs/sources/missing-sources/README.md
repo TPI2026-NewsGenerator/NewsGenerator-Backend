@@ -58,7 +58,7 @@ found can be added in one click. The sources grow from what the searches really 
   left out.
 - The judge makes the search wait on the embedder: about 20 s, 13 minutes once while its GPU was busy with
   something else. The client says about a minute (40 to 70 s measured, comment of `SourceSuggestions.jsx`).
-  (`server/README.md`, "Missing sources")
+  ([the former README](../../archive/readme-features-2026-10-24.md), "Missing sources")
 
 ## Diagrams
 

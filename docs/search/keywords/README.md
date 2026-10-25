@@ -49,7 +49,7 @@ and offered, never done on its own.
 
 ## Measured
 
-From the code comments and `server/README.md`:
+From the code comments and [the former README](../../archive/readme-features-2026-10-24.md):
 
 - Accents (`bench/accent-patterns.mjs`): 8 to 100 ms a term with the trigram index still used; "Zürich"
   found 52 news of 30 days, 218 with "Zurich". With Latin Extended-A too, up to 330 ms; every Latin

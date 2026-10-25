@@ -55,7 +55,7 @@ the news are stored anyway and get their vectors at a next run.
 ## Measured
 
 - 512 texts of news: 57 a second on an RTX 4070 Ti, 2.6 on the 6 cores of an i5-12400T, the same vectors
-  (cosine 1.000000) (server/README.md).
+  (cosine 1.000000) ([the former README](../../archive/readme-features-2026-10-24.md)).
 - ONNX Runtime on the processor: cosine 0.99997 with PyTorch, no likeness moved across a threshold of the
   grouping, 2.9 texts a second instead of 1.75 while the server ingests (`bench/int8`, 3.10.2026). bge-m3 in
   int8 was 3 to 6 times faster but changed 10 to 15% of the closest news of a search or an interest: not used.

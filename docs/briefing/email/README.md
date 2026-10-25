@@ -81,7 +81,7 @@ The cards sent count as read: their stories are left out of the next briefings f
 ## Measured
 
 - 49 of the 289 pictures of 6 briefings were narrower than 560 px, some 72 px (`bench/picture-sizes.mjs`,
-  server/README.md "The e-mail"); hence the measure in the browser.
+  [the former README](../../archive/readme-features-2026-10-24.md) "The e-mail"); hence the measure in the browser.
 - 18.10.2026, 142 cards of 12 briefings: the `og:image` of the lead's page is its picture already for 69,
   wider than its feed's for 35, narrower for 17 (both sharp); with it first, 116 cards have one of 560 px or
   more instead of 98. Of 122 cards, 8 had no sharp picture in the gallery: 6 have one in a page's `og:image`.

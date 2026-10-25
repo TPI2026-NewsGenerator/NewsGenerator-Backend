@@ -54,7 +54,7 @@ and the code drops a line whose figure or name those sources do not give.
 ## Measured
 
 On the 139 cards of 10 briefings of 7 profiles (`bench/card-analysis-*.mjs`, 15.10.2026), every line
-judged blind, then read again (comments of `card-analysis.js`, server/README.md "The briefing"):
+judged blind, then read again (comments of `card-analysis.js`, [the former README](../../archive/readme-features-2026-10-24.md) "The briefing"):
 
 - Triage, deepseek-v4-pro without reasoning: 1 to 4 plain news picked of about 50, 7-8 of 51 that merit
   one missed; about 5 s. gemma4:31b picked 7 plain news.

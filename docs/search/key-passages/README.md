@@ -54,7 +54,7 @@ others, and quotes a named person who denies the news. The cards are shown as in
 
 ## Measured
 
-From the code comments, `server/README.md` and the decision log:
+From the code comments, [the former README](../../archive/readme-features-2026-10-24.md) and the decision log:
 
 - Summaries written by the AI changed what the article says in 4 of 30 articles, 3 of them again in a
   second run; hence sentences shown word for word, never written by the AI (28.09.2026).

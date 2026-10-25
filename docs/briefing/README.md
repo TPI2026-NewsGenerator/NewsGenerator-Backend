@@ -84,6 +84,7 @@ What a card adds:
 - [Analysis (IA)](analysis-ia/README.md): why it matters, what could come next and the story so far, for the
   cards that merit one, written after the briefing
 - [Official source](official-source/README.md): where a party of the news said it itself
+- [Corroboration](corroboration/README.md): how widely a news is carried and how its article credits its sources, shown on the card
 - [Other angles](other-angles/README.md): news of the same affair that tell something the card does not
 - [Denials](denials/README.md): "Contested", someone named who denies the news, quoted
 
@@ -97,4 +98,4 @@ What the reader does with it:
 - [Profile](../profile/README.md): the interests the briefing ranks on
 - [Ingestion](../ingestion/README.md): the stories it reads, built in background
 - [Following](../following/README.md): the news of what the profile follows, beside the cards
-- `server/README.md`, "The briefing" and "Key passages"
+- [the former README](../archive/readme-features-2026-10-24.md), "The briefing" and "Key passages"

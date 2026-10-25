@@ -82,6 +82,9 @@ markdown_extensions:
 
 nav:
   - Home: README.md
+  - Setup:
+      - Installation and configuration: setup.md
+      - Deployment: deployment.md
   - A to Z:
       - The walk of a reader (FR): a-to-z/parcours-newsgenerator.md
       - The walk of a news (FR): a-to-z/parcours-d-une-nouvelle.md
@@ -132,6 +135,7 @@ nav:
           - Analysis (IA): briefing/analysis-ia/README.md
           - Official source: briefing/official-source/README.md
           - Other angles: briefing/other-angles/README.md
+          - Corroboration: briefing/corroboration/README.md
           - Denials: briefing/denials/README.md
       - What the reader does:
           - Thumbs: briefing/thumbs/README.md
@@ -143,3 +147,5 @@ nav:
       - Names and words: following/names-and-words/README.md
       - Names on cards: following/names-on-cards/README.md
   - Client: client/README.md
+  - Archive:
+      - The former README (24.10.2026): archive/readme-features-2026-10-24.md

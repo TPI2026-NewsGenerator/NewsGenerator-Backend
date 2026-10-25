@@ -53,7 +53,7 @@ tab of what the profile follows, unless the reader unticks it.
 - Looking for the names of a club and its people in the texts: 45 names took 387 s with the patterns of the
   terms followed, 11 s as plain texts the trigram index answers (`bench/entity-explain.mjs`, 48 hours).
 - Counting by the tagger's names: the page said 101 stories for the UEFA where its name alone had 152, 100
-  news having been kept per name, then counted (server/README.md).
+  news having been kept per name, then counted ([the former README](../../archive/readme-features-2026-10-24.md)).
 - Wikidata lets about 10 searches a minute through without an account (13.10.2026).
 
 ## Diagrams
