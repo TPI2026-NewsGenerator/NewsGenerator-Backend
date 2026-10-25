@@ -208,6 +208,10 @@ describe('a name the check sent away', () => {
         expect(prompt).toContain('[2] Mexican Football Federation');
         expect(prompt).not.toContain('Football Association of Moldova');
         expect(prompt).toContain('Countries of the sites that published the news: Madagascar (1).');
+        // what the AI decided is in the log, by name
+        const logged = console.log.mock.calls.map(call => call[0]);
+        expect(logged).toContain('Briefing: 1 names of 1 checked on their card, 1 left without their link: FMF (Football Association of Moldova)');
+        expect(logged.some(line => line.endsWith('1 linked: FMF -> Malagasy Football Federation (not Football Association of Moldova)'))).toBe(true);
     });
 
     it('should leave the name with no link when the card points to nothing, and when what it searches fails', async () => {

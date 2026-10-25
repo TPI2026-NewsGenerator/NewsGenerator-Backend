@@ -75,6 +75,10 @@ Answer in JSON only: {"same": "yes"}`;
 // the items described, kept while the server runs: UEFA and FIFA are named by every other card
 const described = new Map();
 
+// ": a, b, c" of the first names, for the log: what the AI decided, to be read afterwards
+const LOGGED_NAMES = 12;
+const listOf = (names) => names.length === 0 ? '' : `: ${names.slice(0, LOGGED_NAMES).join('; ')}${names.length > LOGGED_NAMES ? `; and ${names.length - LOGGED_NAMES} more` : ''}`;
+
 const describe = async (qids) => {
     const missing = [...new Set(qids)].filter(qid => !described.has(qid));
     for (let i = 0; i < missing.length; i += 50) {
@@ -113,16 +117,18 @@ export const withNamesChecked = async (read, cards, {usage = null} = {}) => {
         return answer?.same === 'no';
     });
     let dropped = 0;
+    const droppedNames = [];
     asked.forEach(({row, list, card}, i) => {
         if (answers[i].status !== 'fulfilled' || !answers[i].value) return;
         dropped++;
+        droppedNames.push(`${row.name} (${described.get(row.qid)?.label ?? row.qid})`);
         if (list === 'names') {
             // the item refused is no candidate for the name on this card (see withNamesLinked)
             row.refused = row.qid;
             row.qid = null;
         } else card.places = card.places.filter(place => place !== row);
     });
-    console.log(`Briefing: ${asked.length} names of ${rows.length} checked on their card, ${dropped} left without their link`);
+    console.log(`Briefing: ${asked.length} names of ${rows.length} checked on their card, ${dropped} left without their link${listOf(droppedNames)}`);
     return read;
 };
 
@@ -239,11 +245,13 @@ export const withNamesLinked = async (read, cards, {usage = null} = {}) => {
         return chosen && (row.kind !== 'person' || chosen.links >= PERSON_LEAST) ? chosen.qid : null;
     });
     let linked = 0;
+    const linkedNames = [];
     asked.forEach(({row}, i) => {
         if (answers[i].status !== 'fulfilled' || !answers[i].value) return;
         row.qid = answers[i].value;
+        linkedNames.push(`${row.name} -> ${described.get(row.qid)?.label ?? row.qid}${row.refused ? ` (not ${described.get(row.refused)?.label ?? row.refused})` : ''}`);
         linked++;
     });
-    console.log(`Briefing: ${asked.length} names with no item chosen among their candidates on their card (${sentAway.length} sent away by the check, searched again), ${linked} linked`);
+    console.log(`Briefing: ${asked.length} names with no item chosen among their candidates on their card (${sentAway.length} sent away by the check, searched again), ${linked} linked${listOf(linkedNames)}`);
     return read;
 };
