@@ -77,8 +77,8 @@ note left of taggingService
     In background, with the server: each tagger
     of NER_URL takes the newest news not tagged
     (16 a batch on a processor, 128 on a graphics
-    card); one name every 7 s looked for in
-    Wikidata, the ones a reader saw first
+    card); names looked for in Wikidata (150
+    calls a minute), the ones a reader saw first
 end note
 package "Wikidata" as WikidataPkg {
     class wikidata {

@@ -27,7 +27,7 @@ loop each tagger of NER_URL, for as long as the server lives
     Tagging -> MentionModel : save(news and their names)
     MentionModel -> DB : articles.entities_at, mentions (seen + 1),\narticle_mentions
 end
-loop the names, one every 7 s
+loop the names, 150 calls a minute
     Tagging -> MentionModel : toLink: the ones a reader saw first (wanted_at),\nthen the ones of 3 news at least, the most met first
     Tagging -> Wiki : exactItems(name, lang)
     Wiki -> WikiApi : wbsearchentities

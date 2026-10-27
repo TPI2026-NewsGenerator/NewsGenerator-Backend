@@ -89,7 +89,7 @@ what finds the other angles of a card through its rare names.
   "China" is the cultural region. Another place is the one item called so by its name or one of its other
   names in the language of the news or in English (`labels|aliases` of the 10 found: the search shows one
   writing per item); of several, the place (a position, P625, no human) in 3 times more Wikipedias than the
-  next one, 30 at least (`famousPlace`): "Paris" is the capital, not Paris in Texas. One name every 7 s (`LINK_PAUSE_MS`); nothing left:
+  next one, 30 at least (`famousPlace`): "Paris" is the capital, not Paris in Texas. The calls to the API of Wikidata are spaced by 400 ms (`MIN_GAP_MS`, 150 a minute, 2 to 4 a name); nothing left:
   10 minutes. A 429 or "too busy" pauses every call of the process to Wikidata for `Retry-After` or 30 s.
 - **A family name alone** on a card (`withSurnamesLinked`, `services/utils/card-names.js`, since 18.10.2026):
   "Infantino" is no item of Wikidata (a family name, a village, a page of namesakes). It is the person linked
@@ -170,9 +170,14 @@ what finds the other angles of a card through its rare names.
   "New York City", never "Washington" nor "New York") and 13 of the 25, none wrong ("Colonia" in Italian is
   Cologne); Cork, Kabul and Fairfax, a city and a county or province both known, stay unlinked. The 10,585
   places looked for before were looked for again.
-- Wikidata without an account let 9 or 10 searches through then answered 429 for 12 to 25 s; one every 6.5 s
-  went through 30 times in a row (13.10.2026): one every 7 s, about 12,000 names a day, for about 150,000
-  waiting.
+- Wikidata let 9 or 10 searches through then answered 429 for 12 to 25 s; one every 6.5 s went through 30 times
+  in a row (13.10.2026): one name every 7 s, about 12,000 names a day, for about 283,000 waiting on 26.10.2026
+  (the list did not shrink: 8 names looked for a minute, 29 new ones). Wikimedia's limit is 200 calls a minute for
+  a client with a User-Agent naming it (Wikimedia APIs/Rate limits), which `wikidata.js` has sent since 18.10.2026;
+  on 27.10.2026 86 searches went through in a minute at one every 500 ms, no refusal. Hence 150 calls a minute
+  (`MIN_GAP_MS` = 400) instead of a pause per name, and `MAX_LAG_S` 10: `maxlag=5` also counts the lag of the SPARQL
+  query service (7.6 s that day) and refused the calls of `locate`. An account brings nothing under 200 a minute
+  (new accounts have 200 too); not yet measured: the rate of names looked for since.
 
 ## Diagrams
 

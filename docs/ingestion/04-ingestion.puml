@@ -69,7 +69,7 @@ note top of taggingService
     NER_URL takes the newest news not tagged (16 at a
     time on a processor, 128 on a graphics card); the
     names met in 3 news or more are looked for in
-    Wikidata, one every 7 s
+    Wikidata, 150 calls a minute
 end note
 
 package "Data" {

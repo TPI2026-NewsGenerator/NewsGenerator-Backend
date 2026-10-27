@@ -108,7 +108,7 @@ on the page ("Zambia", "United States · China") and next to its topic in the e-
 - **Read once.** `item_countries` (`db/add_item_countries.sql`, `bodies` by `db/add_item_bodies.sql`: the
   rows read before it have none and are read again) keeps the country of each item. A card asks
   Wikidata for the ones never read, 40 at a time, waiting up to 30 s for a pause it asks for; the tagging
-  service reads the others ahead, 40 a minute, the most named first (`locate`), with `maxlag=5` (work no
+  service reads the others ahead, 40 a minute, the most named first (`locate`), with `maxlag=10` (work no
   reader waits for).
 
 Measured 18.10.2026: on 85 cards of 9 briefings, countries on 40 (right ones: Porto and Betis "Portugal ·

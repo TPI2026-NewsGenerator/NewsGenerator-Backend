@@ -37,12 +37,13 @@ const HOUSEKEEPING_HOURS = 24;
 // Wikidata is asked which item a name is, the most met names first, once named by LINK_LEAST news (a
 // name met once is often a slip of the tagger). Wikidata let 9 or 10 searches through, then answered
 // 429 for 12 to 25 s, at one a second as at one every 3 s; one every 6.5 s went through 30 times in a
-// row (13.10.2026, without an account): one every LINK_PAUSE_MS, about 12 000 names a day, and the
-// pause it asks for after a refusal (see wikidata.js)
+// row (13.10.2026, without a User-Agent naming its client). Since it names one the limit is 200 a minute:
+// the calls are spaced by wikidata.js (150 a minute, 2 to 4 a name), the pause it asks for after a refusal
+// is waited here (LINK_PAUSED_MS when it does not say)
 export const LINK_LEAST = 3;
 const LINK_BATCH = 50;
 const MAX_CANDIDATES = 10;
-const LINK_PAUSE_MS = 7000;
+const LINK_PAUSED_MS = 30e3;
 const LINK_IDLE_MS = 10 * 60e3;
 
 // The countries of the items linked (see countries.js), read ahead so a briefing finds them known: a
@@ -186,10 +187,10 @@ const link = async () => {
                 await MentionModel.setLink(row.id, qid);
                 if (qid === null && row.kind !== 'location') await MentionModel.setCandidates(row.id, [...new Set(candidates)].slice(0, MAX_CANDIDATES));
             } catch (err) {
-                // refused (429): wikidata.js waits the time asked before the next one
-                if (!err.paused) console.error(`Tagger: "${row.name}" not looked for in Wikidata (${err.message})`);
+                // refused (429): the time asked is waited before the next one
+                if (err.paused) await wait(err.retryIn || LINK_PAUSED_MS);
+                else console.error(`Tagger: "${row.name}" not looked for in Wikidata (${err.message})`);
             }
-            await wait(LINK_PAUSE_MS);
         }
     }
 };

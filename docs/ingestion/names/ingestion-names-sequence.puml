@@ -103,7 +103,7 @@ loop locate()
     alt none
         Tagging -> Tagging : wait 10 min
     else
-        Tagging -> Wiki : readCountries(qids, background): wbgetentities claims,\nmaxlag=5
+        Tagging -> Wiki : readCountries(qids, background): wbgetentities claims,\nmaxlag=10
         alt lagging or refused
             Wiki --> Tagging : wait as asked (30 s at most), else the next minute
         else

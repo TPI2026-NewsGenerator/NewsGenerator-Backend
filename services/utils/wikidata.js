@@ -31,8 +31,9 @@ export const wikimediaHeaders = () => HEADERS();
 // work done in background (background: true) asks the API to answer "maxlag" instead of working when
 // its databases lag more than this many seconds behind (API:Etiquette, for what no one waits for): it
 // waits as asked, as for a refusal. Not what a reader waits for: the lag was over 5 s for long (6.2 s,
-// 18.10.2026)
-const MAX_LAG_S = 5;
+// 18.10.2026). It counts the lag of the SPARQL query service too, which a search does not use: 7.6 s
+// refused every call at 5 while the databases lagged 0.1 s (27.10.2026)
+const MAX_LAG_S = 10;
 const TIMEOUT_MS = 15000;
 const MAX_FOUND = 8;
 const MAX_LINKS = 80;
@@ -40,14 +41,25 @@ const MAX_LINKS = 80;
 const LANGUAGES = ['en', 'fr', 'de', 'es', 'it', 'pt', 'nl'];
 
 // Refused (429), Wikidata says how long to wait: nothing is asked meanwhile, by anyone of this process
-// (the names linked in background, a page, the official sources). Without an account it lets about 10
-// searches a minute through (13.10.2026)
+// (the names linked in background, a page, the official sources). Without a User-Agent naming its client it
+// let about 10 searches a minute through (13.10.2026); with one, Wikimedia's limit is 200 a minute
+// (Wikimedia APIs/Rate limits) and 86 went through in a minute with no refusal (27.10.2026, one every
+// 500 ms). One call at most every MIN_GAP_MS to the API, whoever asks: 150 a minute, the rest of the 200
+// left to the readers and to the Wikipedias
+const MIN_GAP_MS = 400;
 const PAUSE_MS = 30e3;
 let pausedUntil = 0;
+let nextCallAt = 0;
+const turn = async () => {
+    const at = Math.max(Date.now(), nextCallAt);
+    nextCallAt = at + MIN_GAP_MS;
+    if (at > Date.now()) await new Promise(resolve => setTimeout(resolve, at - Date.now()));
+};
 
 // retryIn: the milliseconds left of the pause
 const paused = () => Object.assign(new Error('Wikidata asked to wait.'), {status: 502, paused: true, retryIn: Math.max(0, pausedUntil - Date.now())});
 const ask = async (url, {background = false} = {}) => {
+    if (url.startsWith(API)) await turn();
     if (Date.now() < pausedUntil) throw paused();
     const asked = background && url.startsWith(API) ? `${url}&maxlag=${MAX_LAG_S}` : url;
     const res = await fetch(asked, {headers: HEADERS(), signal: AbortSignal.timeout(TIMEOUT_MS)});

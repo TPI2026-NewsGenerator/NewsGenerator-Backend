@@ -114,7 +114,7 @@ loop each tagger of NER_URL, for as long as the server lives
         Tagging -> Tagging : wait 60 s
     end
 end
-loop the names in Wikidata, one every 7 s
+loop the names in Wikidata, 150 calls a minute
     Tagging -> DB : MentionModel.toLink: the names a reader saw first,\nthen the ones named by 3 news or more
     Tagging -> Ner : exactItems(name, lang)
     Tagging -> DB : MentionModel.setLink(qid when one item only)

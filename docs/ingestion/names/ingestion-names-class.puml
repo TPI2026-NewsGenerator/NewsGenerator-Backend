@@ -31,8 +31,8 @@ note top of taggingService
     asked again after 60 s. One loop links the names met
     in 3 news or more, 50 a batch (the persons in full and
     the places by the title of their article, at once; the
-    others one every 7 s, the persons of one word last); one reads the country
-    of the items linked, 40 a minute (maxlag 5). A report
+    others at 150 calls a minute, the persons of one word last); one reads the country
+    of the items linked, 40 a minute (maxlag 10). A report
     every hour, the unused names deleted once a day
 end note
 

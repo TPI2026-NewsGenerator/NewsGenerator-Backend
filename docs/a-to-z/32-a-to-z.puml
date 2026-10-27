@@ -47,7 +47,7 @@ partition "A · Fill the shared cache (04-ingestion, 24-ingestion-sequence)" {
         :Tagger (GLiNER): the people, organisations
         and places each news names;
         :Wikidata: the item each name is,
-        one every 7 s;
+        150 calls a minute;
     end fork
     :Every 20 min the directory adds media,
     once a day it takes out what serves nobody,

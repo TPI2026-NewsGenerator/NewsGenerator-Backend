@@ -54,7 +54,8 @@ tab of what the profile follows, unless the reader unticks it.
   terms followed, 11 s as plain texts the trigram index answers (`bench/entity-explain.mjs`, 48 hours).
 - Counting by the tagger's names: the page said 101 stories for the UEFA where its name alone had 152, 100
   news having been kept per name, then counted ([the former README](../../archive/readme-features-2026-10-24.md)).
-- Wikidata lets about 10 searches a minute through without an account (13.10.2026).
+- Wikidata let about 10 searches a minute through on 13.10.2026; with a User-Agent naming the client the limit is 200
+  a minute (86 went through in a minute, 27.10.2026): see [Ingestion > Names](../../ingestion/names/README.md).
 
 ## Diagrams
 
