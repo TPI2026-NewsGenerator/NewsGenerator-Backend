@@ -36,6 +36,10 @@ name and "it can get a fact wrong. The article's sentences above are the referen
 - **Figures check** (`figuresFrom`): every figure of every point must be among the figures of the title and the
   sentences (`figuresOf`). One point with another figure and all the points are left out (`points: null`, a line
   logged): the card keeps its published points.
+- **Asked again once** (`ATTEMPTS` = 2, 28.10.2026): the points and the summary are each asked a second time when
+  the call failed (no JSON, a timeout, an error), gave nothing usable or failed the figures check. Before, 9 of 162
+  cards of 4 days of briefings had no points or no summary (3 neither); the second call costs only for those.
+  Not measured since how many it brings back.
 - No Gemini after this model (it would answer with gemma); Ollama busy (429), the call waits 2, 5, 10, 20, then
   30 s (`OWN_MODEL_WAITS_MS`) and fails after: no AI version.
 - Saved in the card, `briefings.items[].ai.points`, with `model`. Briefings written before 15.10.2026 have none.

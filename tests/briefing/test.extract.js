@@ -25,6 +25,11 @@ describe('splitSentences', () => {
             .toHaveLength(1);
     });
 
+    it('should leave a dash or a bullet left of a dateline out of the sentence (28.10.2026)', () => {
+        expect(splitSentences("Zurich, 27 October 2026.\n—- The IFAB's panels held an online meeting chaired by its Secretary General."))
+            .toEqual(['Zurich, 27 October 2026.', "The IFAB's panels held an online meeting chaired by its Secretary General."]);
+    });
+
     it('should cut two sentences a page glued together', () => {
         expect(splitSentences("Les Bleus ont gagné hier soir.Toute l'actualité du sport est ici."))
             .toEqual(['Les Bleus ont gagné hier soir.', "Toute l'actualité du sport est ici."]);

@@ -42,7 +42,8 @@ const cut = (text) => {
     const spaced = (text ?? '').replace(/([\p{Ll}\d)»"”’])([.!?])(?=[\p{Lu}«"“])/gu, '$1$2 ');
     const sentences = [];
     for (const {segment} of segmenter.segment(spaced)) {
-        const sentence = segment.replace(/\s+/g, ' ').trim();
+        // a dash or a bullet left of a dateline ("Zurich, 27 October 2026 —- The IFAB's...") is no part of it
+        const sentence = segment.replace(/\s+/g, ' ').trim().replace(/^[\p{Pd}−•·*\s]+/u, '');
         if (!sentence) continue;
         const previous = sentences.at(-1);
         // a closing quote, a lower case start or a figure closing a parenthesis ("8972), but") continue

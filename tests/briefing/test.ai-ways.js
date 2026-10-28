@@ -55,6 +55,34 @@ describe('the AI version of a card', () => {
         expect(ways.summary).toBe('The SBB strike for 24 hours on Monday: 1,200 trains will not run.');
     });
 
+    it('should ask again once a call failed or gave a figure the article does not have (28.10.2026)', async () => {
+        const calls = {points: 0, summary: 0};
+        chat.mockImplementation(async ({messages}) => {
+            const kind = messages[0].content.startsWith('You write the key points') ? 'points' : 'summary';
+            calls[kind]++;
+            if (kind === 'points') {
+                if (calls.points === 1) throw Object.assign(new Error('timeout'), {status_code: 500});
+                return answer({points: [{text: 'A strike of 24 hours on Monday.'}]});
+            }
+            return answer({summary: calls.summary === 1 ? 'A strike of 48 hours.' : 'A strike of 24 hours on Monday.'});
+        });
+
+        const ways = await aiWaysOf('SBB strike on Monday', page, {language: 'en'});
+
+        expect(ways).toEqual({points: ['A strike of 24 hours on Monday.'], summary: 'A strike of 24 hours on Monday.', model: WRITE_MODEL});
+        expect(calls).toEqual({points: 2, summary: 2});
+    });
+
+    it('should not ask a third time, nor again when the first answer is right', async () => {
+        answering({points: {points: [{text: 'A strike of 48 hours on Monday.'}]}, summary: {summary: 'A strike of 24 hours on Monday.'}});
+
+        const ways = await aiWaysOf('SBB strike on Monday', page, {language: 'en'});
+
+        expect(ways.points).toBeNull();
+        expect(ways.summary).toBe('A strike of 24 hours on Monday.');
+        expect(chat).toHaveBeenCalledTimes(3);
+    });
+
     it('should give nothing when its model fails, Gemini never asked for it', async () => {
         chat.mockRejectedValue(Object.assign(new Error('down'), {status_code: 503}));
 

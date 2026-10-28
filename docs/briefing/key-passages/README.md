@@ -26,7 +26,8 @@ reader's, a machine translation is shown, marked as such, with the original one 
   captions never shown, a sentence of a quote marked `quote`), or from its flat text when the blocks hold less
   than half of it. Limits: the first 12 000 characters (`MAX_CONTENT_CHARS`), 80 sentences (`MAX_SENTENCES`),
   4 to 90 words a sentence (`MIN_SENTENCE_WORDS`, `MAX_SENTENCE_WORDS`). Glued sentences ("…les Bleus.Toute")
-  are split, abbreviations ("M.", "U.S.") are not an end.
+  are split, abbreviations ("M.", "U.S.") are not an end. A dash or a bullet opening a sentence is left out: the
+  dateline "Zurich, 27 October 2026 —- The IFAB's..." showed as a point "—- The IFAB's..." (28.10.2026).
 - One call of the AI (`extractPrompt`, `ollamaJson` of `services/utils/ollama.js`): gemma4:31b on Ollama cloud,
   no thinking flag, Gemini (`gemma-4-31b-it`) when Ollama fails. It answers in JSON the numbers of 2 to 5
   sentences, the most important first, the `topic` and the `sourcing` (named, anonymous, none) shown beside the

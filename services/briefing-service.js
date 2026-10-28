@@ -24,7 +24,7 @@ import {languageOf} from "./utils/language.js";
 import {BRIEFING_SIZES, MAX_BRIEFING, balanceSelection, checkStories, mergeStories, reviewCards, selectStories, shareOut} from "./utils/profile-ai.js";
 import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
-import {contestedOf} from "./utils/contested.js";
+import {contestedOf, withoutDenied} from "./utils/contested.js";
 import {nearCardsOf, otherAnglesOf, placeAngles, sameFactsOut} from "./utils/other-angles.js";
 import {AFFAIR_DAYS, storiesOfSameNames} from "./utils/affair-names.js";
 import {officialSourcesOf} from "./utils/official-sources.js";
@@ -851,8 +851,9 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             // the posts where a party of the news said it itself, on its website or an open account of
             // its own (see official-sources.js): [{party, title, url, channel, publishedAt}]; then its
             // statements one of the card's articles reports (channel 'reported': title the sentence,
-            // translation, language, source the medium). Absent from the briefings made before 12.10.2026
-            official: official.get(story.storyId) ?? [],
+            // translation, language, source the medium). Absent from the briefings made before 12.10.2026.
+            // A statement the denials of the card quote already is left out (see withoutDenied)
+            official: withoutDenied(official.get(story.storyId) ?? [], summary?.contested),
             // the people and organisations most of its articles name, each opening its page (see
             // card-names.js): [{name, qid, kind}], qid null for a name Wikidata does not have as one item.
             // Absent from the briefings made before 13.10.2026

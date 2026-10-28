@@ -22,6 +22,7 @@ import {ollamaJson} from './ollama.js';
 export const WRITE_MODEL = process.env.OLLAMA_WRITE_MODEL || 'deepseek-v4-pro:0813';
 const SUMMARY_WORDS = 65;
 const MAX_POINTS = 4;
+const ATTEMPTS = 2;
 
 // the four rules of the faithfulness bench (28.09.2026: 4/30 meanings changed without them, 0/30 with)
 // and the ones of 12.10, the prompts of bench/formats-prompts.mjs as measured
@@ -78,7 +79,8 @@ const figuresFrom = (text, source) => figuresOf(text).every(figure => source.has
 
 // The points and the summary written by the AI in the reader's language (a code), from the same sentences
 // as the key passages: {points: ['...'], summary: '...', model}, either null when its call failed, gave
-// nothing usable or a figure the article does not have. null when there is nothing to write from
+// nothing usable or a figure the article does not have, twice (ATTEMPTS). null when there is nothing to
+// write from
 export const aiWaysOf = async (title, page, {language = 'en', usage = null} = {}) => {
     const sentences = page ? sentencesOf(page) : [];
     const reader = writtenIn(language);
@@ -88,16 +90,26 @@ export const aiWaysOf = async (title, page, {language = 'en', usage = null} = {}
         console.error(`AI version: ${WRITE_MODEL} did not answer (${err.message})`);
         return null;
     });
-    const [pointsAnswer, summaryAnswer] = await Promise.all([ask(pointsPrompt(title, sentences, reader)), ask(summaryPrompt(title, sentences, reader))]);
-
-    const written = (Array.isArray(pointsAnswer?.points) ? pointsAnswer.points : [])
-        .map(point => unnumbered(typeof point === 'string' ? point : point?.text ?? ''))
-        .filter(Boolean).slice(0, MAX_POINTS);
-    const points = written.length > 0 && written.every(point => figuresFrom(point, source)) ? written : null;
-    const text = typeof summaryAnswer?.summary === 'string' ? unnumbered(summaryAnswer.summary) : '';
-    const summary = text && figuresFrom(text, source) ? text : null;
-    if ((written.length > 0 && !points) || (text && !summary)) {
+    // Each text is asked up to ATTEMPTS times: a call that failed, an answer that is no JSON or one with a
+    // figure the article does not give is a slip of the model, not a fact of the article. 5 % of the cards of
+    // 4 days had no points or no summary (28.10.2026)
+    const written = async (prompt, textsOf) => {
+        let rejected = false;
+        for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
+            const texts = textsOf(await ask(prompt));
+            if (texts.length > 0 && texts.every(text => figuresFrom(text, source))) return {texts, rejected};
+            rejected ||= texts.length > 0;
+        }
+        return {texts: [], rejected};
+    };
+    const [points, summary] = await Promise.all([
+        written(pointsPrompt(title, sentences, reader), answered => (Array.isArray(answered?.points) ? answered.points : [])
+            .map(point => unnumbered(typeof point === 'string' ? point : point?.text ?? '')).filter(Boolean).slice(0, MAX_POINTS)),
+        written(summaryPrompt(title, sentences, reader), answered => typeof answered?.summary === 'string' && unnumbered(answered.summary) ? [unnumbered(answered.summary)] : []),
+    ]);
+    if ((points.rejected && points.texts.length === 0) || (summary.rejected && summary.texts.length === 0)) {
         console.log(`AI version: a text of "${title.slice(0, 60)}" left out, a figure the article does not give`);
     }
-    return points || summary ? {points, summary, model: WRITE_MODEL} : null;
+    const ways = {points: points.texts.length > 0 ? points.texts : null, summary: summary.texts[0] ?? null};
+    return ways.points || ways.summary ? {...ways, model: WRITE_MODEL} : null;
 };

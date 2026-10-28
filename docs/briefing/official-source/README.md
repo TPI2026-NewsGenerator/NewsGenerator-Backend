@@ -59,6 +59,9 @@ From the comments of `official-sources.js` and `statements.js`:
   right official post, none a wrong one, 5 of them debatable. YouTube: its 2 "confirms" both wrong.
   Denials: 5 found over three runs, all wrong. One answer of the AI was not stable (the same posts
   "confirms" then "denies"), hence the two answers.
+- A statement reported by an article that a denial of the card quotes too (the same sentence of the same
+  article, "AFC denies" and "Asian Football Confederation said it") is shown once, in "Contested"
+  (`withoutDenied`, `contested.js`, 28.10.2026, an idea of the user). Only for the briefings written since.
 - The statements reported by the articles (`bench/official-embeds.mjs`): 24 cards, 20 right, 17 of them
   without an official post. The posts the media embed were none the parties' own (27 posts on 15 cards).
   Leaving out the lead retelling its news (`bench/official-statements.mjs`): 19 cards with a statement

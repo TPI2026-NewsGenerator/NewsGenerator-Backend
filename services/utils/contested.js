@@ -47,6 +47,14 @@ const ANY_DENIAL = new RegExp(Object.values(WORDS).flat().join('|'), 'iu');
 export const hasDenial = (sentence, language = null) =>
     (language ? DENIALS[language] ?? DENIALS.en : ANY_DENIAL).test(sentence);
 
+// A statement of a party that one of the card's articles reports (channel 'reported', see statements.js) is
+// the denial the card shows already when it is the same sentence of the same article: shown once, as the
+// denial (the user, 28.10.2026). posts: the official sources, denials: the ones of contestedOf
+const plain = (text) => String(text ?? '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+export const withoutDenied = (posts, denials) => (posts ?? []).filter(post => post.channel !== 'reported'
+    || !(denials ?? []).some(denial => denial.url === post.url && plain(denial.sentence).length > 0
+        && (plain(post.title).includes(plain(denial.sentence)) || plain(denial.sentence).includes(plain(post.title)))));
+
 // reader: the name in English of the reader's language, the one "denied_by" is written in (the user,
 // 18.10.2026: all of the e-mail in the reader's language)
 const prompt = (title, candidates, reader = 'English') => `A news card: "${title}"

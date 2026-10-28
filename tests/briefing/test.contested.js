@@ -10,7 +10,7 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const chat = jest.fn();
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
-const {contestedOf, hasDenial} = await import('../../services/utils/contested.js');
+const {contestedOf, hasDenial, withoutDenied} = await import('../../services/utils/contested.js');
 const {newUsage} = await import('../../services/utils/ollama.js');
 
 const json = (value) => ({message: {content: JSON.stringify(value)}, prompt_eval_count: 10, eval_count: 5});
@@ -110,5 +110,24 @@ describe('contestedOf', () => {
             .mockResolvedValueOnce(json({sentences: [{n: 1, denied_by: 'Iran', self: false, about: 'main', denial: true}]}));
         expect(await contestedOf('A drone over RAF Fairford', texts)).toEqual([]);
         expect(await contestedOf('A drone over RAF Fairford', texts)).toEqual([]);
+    });
+});
+
+describe('withoutDenied', () => {
+    const sentence = 'In its statement, the AFC affirmed: "The AFC firmly rejects the allegations made by the President of the Jordan Football Association."';
+    const denials = [{by: 'AFC', sentence, url: 'https://vietnam.vn/a'}];
+
+    it('should leave out a reported statement that is the sentence of a denial of the same article', () => {
+        const reported = {party: 'Asian Football Confederation', channel: 'reported', url: 'https://vietnam.vn/a', title: `${sentence} `};
+        const other = {party: 'AFC', channel: 'reported', url: 'https://vietnam.vn/a', title: 'The AFC will meet its judicial bodies next week.'};
+        const site = {party: 'AFC', channel: 'site', url: 'https://vietnam.vn/a', title: sentence};
+        expect(withoutDenied([reported, other, site], denials)).toEqual([other, site]);
+    });
+
+    it('should keep a statement of another article, and all of them when the card has no denial', () => {
+        const reported = {party: 'AFC', channel: 'reported', url: 'https://other.com/b', title: sentence};
+        expect(withoutDenied([reported], denials)).toEqual([reported]);
+        expect(withoutDenied([reported], [])).toEqual([reported]);
+        expect(withoutDenied(undefined, denials)).toEqual([]);
     });
 });
