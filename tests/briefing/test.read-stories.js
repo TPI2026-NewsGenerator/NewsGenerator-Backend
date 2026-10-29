@@ -11,7 +11,7 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 jest.unstable_mockModule('../../services/utils/crawlers.js', () => ({Crawlers: {Html: jest.fn()}}));
 jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {saveResolvedLinks: jest.fn(async () => {})}}));
-jest.unstable_mockModule('../../services/utils/contested.js', () => ({contestedOf: jest.fn(async () => [])}));
+jest.unstable_mockModule('../../services/utils/contested.js', () => ({contestedOf: jest.fn(async () => []), withoutDenied: jest.fn(posts => posts)}));
 const aiWaysOf = jest.fn(async () => null);
 jest.unstable_mockModule('../../services/utils/ai-ways.js', () => ({aiWaysOf}));
 const extract = await import('../../services/utils/extract.js');

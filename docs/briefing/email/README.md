@@ -28,8 +28,9 @@ The cards sent count as read: their stories are left out of the next briefings f
 - `BriefingController.latest` answers `mail: mailEnabled() && isAdmin(user)`: the server has an SMTP
   account (`SMTP_USER`, `SMTP_PASS`, `services/utils/mailer.js`) and the reader the role `Admin`.
 - The pictures of a card (`BriefingService.pictures`, `services/utils/mail-pictures.js` `storyPictures`):
-  the card's own first, then the thumbnails the feeds gave its story's articles (`BriefingModel.articlePictures`,
-  30 at most). The browser measures them (`mailPictures.js`): one under 560 px wide (`MIN_PICTURE_WIDTH`,
+  the card's own first, then the ones measured when it was written (`item.pictures`, since 29.10.2026: the
+  page and feed pictures of all its articles that load), then the thumbnails the feeds gave its story's articles
+  (`BriefingModel.articlePictures`, 30 at most). The browser measures them (`mailPictures.js`): one under 560 px wide (`MIN_PICTURE_WIDTH`,
   the width of the picture in the e-mail) is put aside, a card whose own is too small gets the best other
   of its story, else none.
 - `POST /api/briefing/:id/email {storyIds, to, pictures, titles, removed, format, ai, texts}`: 10 an hour per
@@ -61,8 +62,9 @@ The cards sent count as read: their stories are left out of the next briefings f
   translates the words of an article saying it has no confirmation ("selon nos informations"). Dates
   and names of languages in that language (`Intl`). Written by the briefing since 18.10.2026: who denies
   in that language (`contested.js`), the titles of the official posts translated (`official-sources.js`).
-- The picture of a card (`pictureOf`): the one its article's page gives to be shared (`og:image`) first,
-  the one its feed gave after (since 18.10.2026); a site's picture for pages without one ("default",
+- The picture of a card (`pictureOf`): the first sharp one of its articles' pictures (since 29.10.2026, see
+  [Briefing](../README.md)), the one its article's page gives to be shared (`og:image`) before the one its feed
+  gave (since 18.10.2026); a site's picture for pages without one ("default",
   "placeholder", "logo" in its address) is never taken (`crawlers.js` `pageImage`).
 - The illustration of a card (`services/utils/illustrations.js`, since 18.10.2026): the picture Wikimedia
   Commons has (Wikidata P18, `readPictures`) of the person most of its articles name (`item.names`), else

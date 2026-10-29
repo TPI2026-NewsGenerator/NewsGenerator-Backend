@@ -48,7 +48,11 @@ saved in `briefings.step` and shown on the page while it runs:
 
 The picture of a card (`pictureOf`) is the one its article's page gives to be shared (`og:image`) first, the one
 its feed gave after (since 18.10.2026: often a thumbnail); a site's picture for pages without one is never taken.
-Without either, its illustration, captioned "Illustration" and credited to its author and licence (see
+Since 29.10.2026 the sizes of the pictures of all its articles are read (`sizesOf`, `picture-sizes.js`: the first
+bytes of each file, 8 at a time, 25 s at most for the briefing) and the card takes the first sharp one (560 px wide
+or more) in the order of its articles, lead first; a picture that does not load is left out, one on http comes
+last (the page is on https, its browser blocks it), and when none is sharp the widest is taken. The card keeps
+all that load (`pictures`) for the e-mail. Without any, its illustration, captioned "Illustration" and credited to its author and licence (see
 [e-mail](email/README.md)).
 
 Then the cards are saved (`briefings.items`, status `ready`), and the [analysis](analysis-ia/README.md) starts,

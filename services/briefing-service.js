@@ -44,6 +44,7 @@ import {briefingMail, LABELS, MAIL_FORMATS} from "./utils/briefing-mail.js";
 import {storyPictures, withChosenPictures} from "./utils/mail-pictures.js";
 import {labelsFor, withHedgedTranslated} from "./utils/mail-labels.js";
 import {illustrationsOf} from "./utils/illustrations.js";
+import {sizesOf} from "./utils/picture-sizes.js";
 import {SentMailModel} from "../models/sent-mail-model.js";
 import {EntityService} from "./entity-service.js";
 import {namesAndCountriesOfCards} from "./utils/card-names.js";
@@ -173,16 +174,38 @@ const addressOf = (article) => article.resolved_link ?? article.link;
 // trusted: the media the reader trusts
 const isTrusted = (article, trusted) => trusted.has(mediumOfArticle(article));
 
-// {thumbnail, thumbnailSource} of the first of these articles with a picture: the one its page gives
-// to be shared (og:image, see crawlers.js) when it was read, often wider than its feed's (the user,
-// 18.10.2026: the picture of the article first), else the one its feed gave. Only 23 of 82 cards of 3
-// days had one from the feeds (8.10.2026)
-export const pictureOf = (articles, content = new Map()) => {
-    for (const article of articles) {
-        const thumbnail = content.get(article.link)?.thumbnail ?? article.thumbnail ?? null;
-        if (thumbnail) return {thumbnail, thumbnailSource: siteOf(article)};
-    }
-    return {thumbnail: null, thumbnailSource: null};
+// Wide enough for the card and the e-mail, which shows 560 px (see briefing-mail.js)
+const SHARP_WIDTH = 560;
+const MAX_PICTURES = 10;
+
+// [{thumbnail, thumbnailSource}]: the pictures of these articles, each once, in their order: for each the
+// one its page gives to be shared (og:image, see crawlers.js) when it was read, often wider than its
+// feed's (the user, 18.10.2026: the picture of the article first), then the one its feed gave. Only 23
+// of 82 cards of 3 days had one from the feeds (8.10.2026)
+export const candidatePictures = (articles, content = new Map()) => {
+    const seen = new Set();
+    return articles.flatMap(article => [content.get(article.link)?.thumbnail, article.thumbnail]
+        .filter(thumbnail => thumbnail && !seen.has(thumbnail) && seen.add(thumbnail))
+        .map(thumbnail => ({thumbnail, thumbnailSource: siteOf(article)}))).slice(0, MAX_PICTURES);
+};
+
+// {thumbnail, thumbnailSource} of the best picture of these articles, none when none loads. sizes: url ->
+// {width, height} | null (does not load) | undefined (not known), see picture-sizes.js. The order of the
+// articles, the lead first, among the ones sharp enough; then the ones not measured; then the widest of
+// the ones too small. An address on http last: the page is on https and its browser blocks it, so the
+// card showed none while another article of its news had one (the user, 29.10.2026: maxifoot.fr, no
+// https, 6 of the 160 cards of 10 briefings)
+export const pictureOf = (articles, content = new Map(), sizes = new Map()) => {
+    const rank = ({thumbnail}) => {
+        const size = sizes.get(thumbnail);
+        const tier = size === undefined ? 1 : size.width >= SHARP_WIDTH ? 0 : 2;
+        return (/^http:/i.test(thumbnail) ? 3 : 0) + tier;
+    };
+    const widthOf = ({thumbnail}) => sizes.get(thumbnail)?.width ?? 0;
+    const [best] = candidatePictures(articles, content)
+        .filter(picture => sizes.get(picture.thumbnail) !== null)
+        .sort((a, b) => rank(a) - rank(b) || (rank(a) % 3 === 2 ? widthOf(b) - widthOf(a) : 0));
+    return best ?? {thumbnail: null, thumbnailSource: null};
 };
 
 // a card without a picture of its articles takes its illustration, credited to its author
@@ -792,6 +815,14 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
         console.error(`Briefing: no illustration looked for (${err.message})`);
         return new Map();
     });
+    // the size of the pictures of every card's articles: the card shows the sharpest, the e-mail offers them
+    // all (see pictureOf). Never fails the briefing: without sizes a card keeps the order of its articles
+    const cardPictures = new Map(stories.map((story, i) => [story.storyId,
+        candidatePictures([leads[i], ...[...story.members].sort((a, b) => b.at - a.at)], content)]));
+    const pictureSizes = await sizesOf([...cardPictures.values()].flat().map(picture => picture.thumbnail)).catch(err => {
+        console.error(`Briefing: the pictures were not measured (${err.message})`);
+        return new Map();
+    });
     await step(null);
     console.log(`Briefing ${briefingId}: tokens ${JSON.stringify(usage)}, seconds ${JSON.stringify(seconds)}`);
 
@@ -863,7 +894,12 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             countries: named.get(story.storyId)?.countries ?? [],
             // the picture of its lead article when it has one, else of its newest article with one;
             // and the site it is of, shown under it. None: its illustration, credited to its author
-            ...withIllustration(pictureOf([lead, ...members], content), illustrations.get(story.storyId)),
+            ...withIllustration(pictureOf([lead, ...members], content, pictureSizes), illustrations.get(story.storyId)),
+            // every picture of its articles that loads, with its size when known: [{url, source, width, height}],
+            // the ones the reader can choose among for the e-mail (see storyPictures). Absent from the
+            // briefings made before 29.10.2026
+            pictures: cardPictures.get(story.storyId).filter(picture => pictureSizes.get(picture.thumbnail) !== null)
+                .map(picture => ({url: picture.thumbnail, source: picture.thumbnailSource, ...pictureSizes.get(picture.thumbnail)})),
             // the picture of Wikimedia Commons of who it names (see illustrations.js): {url, width,
             // height, page, credit, name}, null without one. Absent from the briefings made before 18.10.2026
             illustration: illustrations.get(story.storyId) ?? null,
