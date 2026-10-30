@@ -6,13 +6,19 @@ comes last in the briefing, marked "Added by you" and ticked for the e-mail. It 
 the other cards. It has no other media, no angle, no denial nor official source, and no thumb. It can be
 taken out again.
 
+A link of a news that **another briefing of the same reader** has (a profile of theirs, written in the last 7
+days) is not read again: its card is copied as that briefing shows it, with its other angles, denials,
+official sources, countries, names, pictures, AI version and the analysis lines written for it ("What
+changed", "Why this matters", "What breaks next"). The reader pastes the link of a card they saw on another
+profile (30.10.2026: copied by its link, the card came without its angles, sources and analysis).
+
 ## Where
 
 - `client/src/features/briefing/components/AddNews.jsx`: "Add a news by its link", in the column of the
   page `client/src/pages/Briefing.jsx`, shown only when `GET /api/briefing` answers `mail: true` (the
   server has an SMTP account and the reader is an administrator). `addNews()` appends the card and ticks
   it; `BriefingCard.jsx` shows "Added by you" and "Take it out" (`onRemove`).
-- API: `POST /api/briefing/:id/news {url}` (201 `{item}`), `DELETE /api/briefing/:id/news/:storyId`
+- API: `POST /api/briefing/:id/news {url}` (201 `{item, analysis}`), `DELETE /api/briefing/:id/news/:storyId`
   (204), both after `authenticateToken` and `adminOnly(MAIL_REFUSED)` (403 for the others); the POST 30
   an hour per reader (`rateLimit`, 429).
 
@@ -21,9 +27,24 @@ taken out again.
 - `BriefingService.importNews` (`services/briefing-service.js`): the address 2000 characters at most
   (`MAX_URL`) and public (`assertPublicUrl`, `services/utils/public-url.js`: http(s), every IP of the name
   public; else 400); a ready briefing of this reader (`readyBriefing`, else 404).
-- Refused: a link already the lead or an article of a card (409), and an 11th news (`MAX_IMPORTED` = 10
+- Refused: a link already the lead or an article of a card (409; for a card copied from another briefing, any
+  of its articles), and an 11th news (`MAX_IMPORTED` = 10
   per briefing, 400); checked before the page is read, and again by the statement that adds it (see
   `addItem` below).
+- Before the page is read, `cardElsewhere` asks `BriefingModel.cardOfLinks` for a card of another ready briefing
+  of this reader (`id_user`, the last `TRANSFER_DAYS` = 7 days, the address with or without its last slash, as
+  lead or article; a card of a story before one added, then the newest briefing). It is used when the profile
+  that briefing was written for reads in the same language as this one (`readerLanguage`: its translations are
+  of that language), else the page is read as below. `transferredCard` keeps the card and leaves out what was
+  for the other profile only: its `storyId`, why chosen, interest, project, follow-up, thumb, the mark of an
+  e-mail sent, the feeds; it is `imported` and `transferred` (the page says "Copied from another of your
+  briefings"). No call of the AI.
+- Its analysis lines (`briefings.analysis.cards[storyId]`, `{why, next, timeline}`) go with it:
+  `BriefingModel.addAnalysisLines` saves them under its new id, in one statement, only when this briefing's
+  analysis is `ready` (a running one is saved whole again by the server writing it, and would lose them: the
+  card comes without them then). The answer is `{item, analysis}`, `analysis` the lines or `null`; the page
+  puts them with the others. `BriefingModel.removeItem` takes them out with the card (the next news added
+  gets the same negative id).
 - The page is read by `Crawlers.Pages` (`services/utils/crawlers.js`): a plain fetch of a public address,
   20 s, 5 redirects, then Readability; no headless browser. No text, or under 60 words (`canSummarize`):
   422 "This page could not be read: no article in it, a paywall or a protected site."

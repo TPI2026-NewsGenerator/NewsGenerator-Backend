@@ -64,15 +64,44 @@ export const BriefingModel = {
     addItem: async (userId, briefingId, item, {max, links}) => (await prisma.$queryRawUnsafe(ADD_ITEM,
         briefingId, userId, JSON.stringify(item), max, links))[0]?.storyId ?? null,
 
-    // a card added by the reader taken out again (a negative id): 0 when there is none
+    // a card added by the reader taken out again (a negative id), with the analysis lines it came with
+    // (the next one added gets the same id): 0 when there is none
     removeItem: async (userId, briefingId, storyId) => prisma.$executeRawUnsafe(`
         UPDATE briefings
         SET items = (SELECT COALESCE(jsonb_agg(card ORDER BY position), '[]'::jsonb)
                      FROM jsonb_array_elements(items) WITH ORDINALITY AS cards(card, position)
-                     WHERE (card->>'storyId')::int <> $3)
-        WHERE id = $1 AND id_user = $2 AND status = 'ready' AND $3 < 0
-          AND EXISTS (SELECT 1 FROM jsonb_array_elements(items) AS card WHERE (card->>'storyId')::int = $3)`,
+                     WHERE (card->>'storyId')::int <> $3::int),
+            analysis = CASE WHEN jsonb_typeof(analysis->'cards') = 'object'
+                            THEN jsonb_set(analysis, '{cards}', (analysis->'cards') - ($3::int)::text) ELSE analysis END
+        WHERE id = $1 AND id_user = $2 AND status = 'ready' AND $3::int < 0
+          AND EXISTS (SELECT 1 FROM jsonb_array_elements(items) AS card WHERE (card->>'storyId')::int = $3::int)`,
         briefingId, userId, storyId),
+
+    // The card of a news in another ready briefing of this user written in the last 'days' (one of their
+    // profiles found it), by its links (as lead or article of the card): a card of a story first, then the
+    // newest briefing. {briefingId, idProfile, card, lines}, lines the analysis written for it
+    // ({why, next, timeline}) when that briefing has its analysis ready, else null; null when none has it
+    cardOfLinks: async (userId, exceptId, links, days) => (await prisma.$queryRawUnsafe(`
+        SELECT b.id AS "briefingId", b.id_profile AS "idProfile", card,
+               CASE WHEN b.analysis->>'status' = 'ready' THEN b.analysis->'cards'->(card->>'storyId') END AS lines
+        FROM briefings b,
+             jsonb_array_elements(CASE WHEN jsonb_typeof(b.items) = 'array' THEN b.items ELSE '[]'::jsonb END) AS card
+        WHERE b.id_user = $1::int AND b.id <> $2::int AND b.status = 'ready' AND b.created_at > now() - make_interval(days => $4::int)
+          AND EXISTS (SELECT 1 FROM jsonb_array_elements(jsonb_build_array(card->'lead')
+                  || CASE WHEN jsonb_typeof(card->'articles') = 'array' THEN card->'articles' ELSE '[]'::jsonb END) AS article
+              WHERE article->>'url' = ANY($3::text[]))
+        ORDER BY ((card->>'storyId')::int > 0) DESC, b.created_at DESC
+        LIMIT 1`, userId, exceptId, links, days))[0] ?? null,
+
+    // The analysis lines ({why, next, timeline}) of a card added to a ready briefing of this user, saved with
+    // its analysis: only when that analysis is written (a running one is saved whole again by the server
+    // writing it, and would lose them). 0 when it is not
+    addAnalysisLines: async (userId, briefingId, storyId, lines) => prisma.$executeRawUnsafe(`
+        UPDATE briefings
+        SET analysis = jsonb_set(analysis, ARRAY['cards', ($3::int)::text], $4::jsonb)
+        WHERE id = $1::int AND id_user = $2::int AND status = 'ready' AND analysis->>'status' = 'ready'
+          AND jsonb_typeof(analysis->'cards') = 'object'`,
+        briefingId, userId, storyId, JSON.stringify(lines)),
 
     // a briefing of this user, null when it is not theirs
     ofUser: async (userId, id) => prisma.briefings.findFirst({where: {id, id_user: userId}}),

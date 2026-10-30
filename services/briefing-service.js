@@ -17,7 +17,7 @@ import {FeedbackService} from "./feedback-service.js";
 import {DiscoveryService} from "./discovery-service.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {newUsage} from "./utils/ollama.js";
-import {canSummarize, extractArticle, passagesText, sentencesOf, splitSentences, translateTexts} from "./utils/extract.js";
+import {canSummarize, extractArticle, passagesText, sentencesOf, splitSentences, translateTexts, withoutOriginalMarks} from "./utils/extract.js";
 import {aiWaysOf} from "./utils/ai-ways.js";
 import {ANALYSIS_MODEL, TIMELINE_MAX, analysesOf, fittedArticles} from "./utils/card-analysis.js";
 import {languageOf} from "./utils/language.js";
@@ -539,7 +539,7 @@ export const readStories = async (chosen, {trusted = new Set(), language = null,
         const texts = reads[i].filter(article => content.has(article.link))
             .map(article => ({...toArticle(article), page: content.get(article.link)}));
         const [{passages, translation, points, pointsTranslation, digest, digestTranslation, topic, sourcing}, contested] = await Promise.all([
-            extractArticle(lead.title, content.get(lead.link), {language, usage: usage.summarizing}),
+            extractArticle(lead.title, content.get(lead.link), {language, usage: usage.summarizing, marked: true}),
             contestedOf(lead.title, texts, {language, usage: usage.contesting}).catch(err => {
                 console.error(`Briefing: the denials of story ${story.storyId} were not read (${err.message})`);
                 return [];
@@ -1038,7 +1038,7 @@ export const cardAnalyses = async (items, articles, language, {usage = null, onP
     }
     const cards = shown.map((item, i) => ({
         n: i + 1, storyId: item.storyId, title: item.title, titleTranslation: item.titleTranslation ?? null,
-        medium: item.lead?.source ?? null, summary: item.summary, translation: item.translation ?? null,
+        medium: item.lead?.source ?? null, summary: item.summary, translation: withoutOriginalMarks(item.translation) ?? null,
         articles: articles.get(item.storyId), timeline: timelines.get(item.storyId),
         angles: item.angles ?? [], contested: item.contested ?? [], official: item.official ?? [],
     }));
@@ -1177,7 +1177,7 @@ export const withOwnTexts = (items, texts) => {
         throw Object.assign(new Error('texts: {storyId: [paragraph]}.'), {status: 400});
     }
     return items.map(item => {
-        const own = (texts[String(item.storyId)] ?? []).map(paragraph => paragraph.replace(/\s+/g, ' ').trim()).filter(Boolean);
+        const own = (texts[String(item.storyId)] ?? []).map(paragraph => withoutOriginalMarks(paragraph).replace(/\s+/g, ' ').trim()).filter(Boolean);
         if (own.length > MAX_OWN_PARAGRAPHS || own.some(paragraph => paragraph.length > MAX_OWN_PARAGRAPH)) {
             throw Object.assign(new Error(`A text has ${MAX_OWN_PARAGRAPHS} paragraphs of ${MAX_OWN_PARAGRAPH} characters at most.`), {status: 400});
         }
@@ -1229,7 +1229,7 @@ const dateOf = (value) => {
 // translated as theirs; no story, no why, no other media, no angle nor official source
 export const importedCard = async (address, page, {language, usage}) => {
     const title = (page.title || page.description || address).replace(/\s+/g, ' ').trim();
-    const extract = await extractArticle(title, page, {language, usage});
+    const extract = await extractArticle(title, page, {language, usage, marked: true});
     if (extract.passages.length === 0) {
         throw Object.assign(new Error('No passage of a news could be read in this page.'), {status: 422});
     }
@@ -1272,6 +1272,34 @@ export const importedCard = async (address, page, {language, usage}) => {
         publishedAt: lead.publishedAt,
         articles: [lead],
     };
+};
+
+// The card of a news the reader copied from another of their briefings (a link they pasted from a profile of
+// theirs): the card as that briefing shows it, with its angles, denials, official sources and the rest of its
+// analysis, as a card added by the reader. What was for the other profile only (why chosen, the interest,
+// its follow-up, the thumb, the mark of an e-mail sent) is left out, the places of the terms are marked
+// again for this one
+export const transferredCard = (card) => {
+    const {storyId, sentAt, vote, ownTitle, ownText, marks, found, analysis, ...kept} = card;
+    return {...kept, imported: true, transferred: true, mergedStoryIds: [], followUp: null, vote: null, feedUrls: [],
+        why: null, interest: null, project: null};
+};
+
+// the briefings of the last days are searched for a news the reader pastes: older ones are not the news
+// anymore (their angles and sources are of the day)
+const TRANSFER_DAYS = 7;
+
+// The card of that news in another ready briefing of this reader, found by one of its links, with the
+// analysis written for it: {briefingId, card, lines}, lines null without one. null when no briefing of the last days has
+// it, or when it was written for a reader of another language (its translations would be of that one)
+const cardElsewhere = async (userId, briefingId, links, language) => {
+    const found = await BriefingModel.cardOfLinks(userId, briefingId, links, TRANSFER_DAYS).catch(err => {
+        console.error(`Briefing ${briefingId}: no card of this news looked for in the other briefings (${err.message})`);
+        return null;
+    });
+    if (!found) return null;
+    const source = found.idProfile ? await ProfileModel.get(found.idProfile) : null;
+    return readerLanguage(source ?? {}) === language ? {briefingId: found.briefingId, card: found.card, lines: found.lines ?? null} : null;
 };
 
 const picturesOfItem = async (item) => storyPictures(item,
@@ -1339,40 +1367,66 @@ export const BriefingService = {
             console.error(`Briefing ${briefingId}: the cards sent were not marked (${err.message})`));
     },
 
-    // A news the reader adds by its link to a ready briefing, to send it by e-mail with its cards: its page
-    // read (a plain fetch, only of a public address), its key passages chosen by the AI and translated,
-    // as a card at the end of the briefing marked as added (see importedCard). Its id is negative: it
-    // is of no story. Answers the card, the terms the profile follows marked in it
+    // A news the reader adds by its link to a ready briefing, to send it by e-mail with its cards. When
+    // another briefing of theirs (a profile of theirs, the last days) has that news, its card is copied
+    // as it is there, with its angles, official sources and analysis (see transferredCard): the reader
+    // pastes the link of a card they saw on another profile. Else its page is read (a plain fetch, only of a
+    // public address), its key passages chosen by the AI and translated, as a card at the end of the
+    // briefing marked as added (see importedCard). Its id is negative: it is of no story. Answers {item,
+    // analysis}: the card, the terms the profile follows marked in it, and the analysis lines written for
+    // it ({why, next, timeline}) when it came with them and this briefing's analysis is written, else null
     importNews: async (userId, briefingId, url) => {
         const asked = typeof url === 'string' ? url.trim() : '';
         if (!asked || asked.length > MAX_URL) throw Object.assign(new Error('url: the address of the news.'), {status: 400});
         const address = (await assertPublicUrl(asked)).href;
         const {row, briefing} = await readyBriefing(userId, briefingId);
-        const links = [...new Set([address, asked])];
         // checked before the page is read, and again by the statement that adds it: two news added at
         // the same time are read together
-        const refused = (items) => items.some(item => [item.lead, ...(item.articles ?? [])].some(article => links.includes(article?.url)))
+        const refused = (items, links) => items.some(item => [item.lead, ...(item.articles ?? [])].some(article => links.includes(article?.url)))
             ? Object.assign(new Error('This news is already in the briefing.'), {status: 409})
             : items.filter(item => item.imported).length >= MAX_IMPORTED
                 ? Object.assign(new Error(`At most ${MAX_IMPORTED} news added to a briefing.`), {status: 400})
                 : null;
-        const early = refused(briefing.items);
+        let links = [...new Set([address, asked])];
+        const early = refused(briefing.items, links);
         if (early) throw early;
-        const [page] = await Crawlers.Pages([address]);
-        if (!page?.content || !canSummarize(page.content)) {
-            throw Object.assign(new Error('This page could not be read: no article in it, a paywall or a protected site.'), {status: 422});
-        }
         const profile = row.id_profile ? await ProfileModel.get(row.id_profile) : null;
+        const language = readerLanguage(profile ?? {});
+        // the address with or without its last slash is the same page
+        const elsewhere = await cardElsewhere(userId, row.id, [...links, ...links.map(link => link.endsWith('/') ? link.slice(0, -1) : `${link}/`)], language);
+        let card;
+        let lines = null;
         const usage = newUsage();
-        const card = await importedCard(address, page, {language: readerLanguage(profile ?? {}), usage});
+        if (elsewhere) {
+            card = transferredCard(elsewhere.card);
+            lines = elsewhere.lines;
+            // all its articles: one of them already on a card of this briefing is this news there
+            links = [...new Set([...links, ...[card.lead, ...(card.articles ?? [])].map(article => article?.url).filter(Boolean)])];
+            const known = refused(briefing.items, links);
+            if (known) throw known;
+        } else {
+            const [page] = await Crawlers.Pages([address]);
+            if (!page?.content || !canSummarize(page.content)) {
+                throw Object.assign(new Error('This page could not be read: no article in it, a paywall or a protected site.'), {status: 422});
+            }
+            card = await importedCard(address, page, {language, usage});
+        }
         const storyId = await BriefingModel.addItem(userId, row.id, card, {max: MAX_IMPORTED, links});
         if (storyId === null) {
             // another news added meanwhile filled it or was this one, else the briefing is gone
             const now = await BriefingModel.ofUser(userId, row.id);
-            throw (now?.status === 'ready' && refused(toBriefing(now).items)) || Object.assign(new Error('Unknown briefing.'), {status: 404});
+            throw (now?.status === 'ready' && refused(toBriefing(now).items, links)) || Object.assign(new Error('Unknown briefing.'), {status: 404});
         }
-        console.log(`Briefing ${row.id}: news added by its link, tokens ${JSON.stringify(usage)}`);
-        return withMarks({items: [{...card, storyId}]}, await EntityService.followTerms(row.id_profile ?? null, profile?.watch_terms)).items[0];
+        // its analysis goes with it when this briefing's is written; a failure only leaves the card without it
+        const analysed = lines && await BriefingModel.addAnalysisLines(userId, row.id, storyId, lines).catch(err => {
+            console.error(`Briefing ${row.id}: the analysis of the news copied was not saved (${err.message})`);
+            return 0;
+        });
+        console.log(elsewhere
+            ? `Briefing ${row.id}: news copied by its link from the card of the briefing ${elsewhere.briefingId}${analysed ? ', with its analysis' : ''}`
+            : `Briefing ${row.id}: news added by its link, tokens ${JSON.stringify(usage)}`);
+        const [item] = withMarks({items: [{...card, storyId}]}, await EntityService.followTerms(row.id_profile ?? null, profile?.watch_terms)).items;
+        return {item, analysis: analysed ? lines : null};
     },
 
     // a news the reader added taken out of the briefing
