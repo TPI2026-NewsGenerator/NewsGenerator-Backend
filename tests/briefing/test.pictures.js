@@ -36,6 +36,31 @@ describe('pageImage', () => {
     });
 });
 
+describe('pageImage and the structured data of a page', () => {
+    const ld = (data) => `<script type="application/ld+json">${JSON.stringify(data)}</script>`;
+    const livescore = '<meta property="og:image" content="https://storage.lsmedia1.com/images/web/medium/news_article_default_image_3.jpg">';
+
+    it("should take the photo of the news in its JSON-LD when the page gives a generic one to be shared (30.10.2026)", () => {
+        const photo = 'https://assets.goal.com/images/v3/getty-2291494033/crop/AAA/GettyImages-2291494033.jpg';
+        expect(pageImage(page(livescore + ld({'@context': 'https://schema.org', '@type': 'NewsArticle', headline: 'H', image: photo})), 'https://www.livescore.com/a')).toBe(photo);
+    });
+
+    it('should read an image that is a list, an object, or in a graph, of an article only', () => {
+        expect(pageImage(page(ld({'@type': 'NewsArticle', image: [{'@type': 'ImageObject', url: 'https://cdn.example/1.jpg'}]})), 'https://www.example/a')).toBe('https://cdn.example/1.jpg');
+        expect(pageImage(page(ld({'@graph': [{'@type': 'Organization', logo: 'https://cdn.example/x.png', image: 'https://cdn.example/org.jpg'},
+            {'@type': ['WebPage', 'Article'], image: '/photos/2.jpg'}]})), 'https://www.example/news/a')).toBe('https://www.example/photos/2.jpg');
+        // not an article: none
+        expect(pageImage(page(ld({'@type': 'Organization', image: 'https://cdn.example/org.jpg'})), 'https://www.example/a')).toBeNull();
+    });
+
+    it('should keep the picture to be shared when it is of the news, and survive data that is not JSON', () => {
+        expect(pageImage(page('<meta property="og:image" content="https://cdn.example/og.jpg">' + ld({'@type': 'NewsArticle', image: 'https://cdn.example/ld.jpg'})), 'https://www.example/a'))
+            .toBe('https://cdn.example/og.jpg');
+        expect(pageImage(page('<script type="application/ld+json">{ not json</script>'), 'https://www.example/a')).toBeNull();
+        expect(pageImage(page(ld({'@type': 'NewsArticle', image: 'https://cdn.example/default-news.jpg'})), 'https://www.example/a')).toBeNull();
+    });
+});
+
 describe('pictureOf', () => {
     const lead = {link: 'https://lead.example/a', thumbnail: null};
     const other = {link: 'https://other.example/b', thumbnail: 'https://other.example/b.jpg'};

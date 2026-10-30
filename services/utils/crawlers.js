@@ -79,9 +79,34 @@ const PAGE_IMAGE = 'meta[property="og:image:secure_url"], meta[property="og:imag
 // the picture a site gives a page without one of its own ("news_article_default_image_4.jpg" of
 // livescore), never the picture of the news
 const DEFAULT_IMAGE = /(?:^|[/_.-])(?:default|placeholder|fallback|logo)(?:[/_.-]|$)/i;
+// The picture the structured data of a page (JSON-LD) gives to its article, "image" a link, an object with
+// its url or a list of them: the news of livescore has a generic picture in og:image and its photo here
+// (30.10.2026, the card without a picture of the Al-Ahli clasico)
+const articleImages = (document) => {
+    const found = [];
+    const take = (image) => {
+        if (typeof image === 'string') found.push(image);
+        else if (Array.isArray(image)) image.forEach(take);
+        else if (image && typeof image === 'object') take(image.url ?? image.contentUrl);
+    };
+    const visit = (node) => {
+        if (Array.isArray(node)) return node.forEach(visit);
+        if (!node || typeof node !== 'object') return;
+        if ([].concat(node['@type'] ?? []).some(type => /Article|Posting|Report/i.test(String(type)))) take(node.image);
+        visit(node['@graph']);
+    };
+    for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
+        try {
+            visit(JSON.parse(script.textContent));
+        } catch {
+            // not JSON: the next one
+        }
+    }
+    return found;
+};
 export const pageImage = (document, url) => {
-    for (const element of document.querySelectorAll(PAGE_IMAGE)) {
-        const address = (element.getAttribute('content') ?? element.getAttribute('href') ?? '').trim();
+    const addresses = [...document.querySelectorAll(PAGE_IMAGE)].map(element => element.getAttribute('content') ?? element.getAttribute('href') ?? '');
+    for (const address of [...addresses, ...articleImages(document)].map(address => address.trim())) {
         try {
             const image = new URL(address, url);
             if (address && /^https?:$/.test(image.protocol) && !DEFAULT_IMAGE.test(image.pathname)) return image.href;
