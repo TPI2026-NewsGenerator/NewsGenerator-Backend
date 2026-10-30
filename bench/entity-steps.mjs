@@ -1,0 +1,23 @@
+// the steps of the news of an entity page, timed (profile 7, 48 h, the names of the UEFA)
+import {MentionModel} from '../models/mention-model.js';
+import {FeedModel} from '../models/feed-model.js';
+import {feedsOf} from '../services/briefing-service.js';
+import {Filter} from '../services/utils/filter.js';
+import {mentionKey} from '../services/utils/mentions.js';
+import {prisma} from '../config/db.js';
+const names = ['UEFA', 'Union of European Football Associations', 'Union des associations européennes de football', 'Union européenne de football'];
+const since = new Date(Date.now() - 48 * 3600e3);
+let t = Date.now();
+const feedUrls = await feedsOf(7);
+console.log(`feeds ${feedUrls.length} in ${Date.now() - t} ms`); t = Date.now();
+const tagged = await MentionModel.articlesNamed({keys: names.map(mentionKey), qids: ['Q35572'], feedUrls, since});
+console.log(`tagged ${tagged.length} in ${Date.now() - t} ms`); t = Date.now();
+const count = await MentionModel.untaggedCount(since);
+console.log(`untagged count ${count} in ${Date.now() - t} ms`); t = Date.now();
+const texts = [...new Set(names.flatMap(name => [name, Filter.withoutAccents(name)]))];
+const untagged = await FeedModel.articlesHolding({feedUrls, texts, since, untagged: true});
+console.log(`untagged by text ${untagged.length} in ${Date.now() - t} ms`); t = Date.now();
+const all = await FeedModel.articlesHolding({feedUrls, texts, since});
+console.log(`all by text ${all.length} in ${Date.now() - t} ms`);
+await prisma.$disconnect();
+process.exit(0);

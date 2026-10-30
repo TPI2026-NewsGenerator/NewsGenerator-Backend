@@ -1,0 +1,19 @@
+briefing 16: 0 of 10 left out, 790 ms
+briefing 17: 0 of 10 left out, 750 ms
+briefing 18: 0 of 10 left out, 691 ms
+briefing 19: 1 of 10 left out, 1146 ms
+   [8234] L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Win -> Équipe nationale de football suisse, sport refusé explicitement
+file:///C:/Users/roste/Documents/CPNV24/TPI/prog/NewsGenerator/server/services/utils/ollama.js:145
+        throw Object.assign(new Error('The AI did not answer in JSON.'), {status: 502});
+                            ^
+
+Error: The AI did not answer in JSON.
+    at ollamaJson (file:///C:/Users/roste/Documents/CPNV24/TPI/prog/NewsGenerator/server/services/utils/ollama.js:145:29)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async reviewCards (file:///C:/Users/roste/Documents/CPNV24/TPI/prog/NewsGenerator/server/services/utils/profile-ai.js:281:54)
+    at async file:///C:/Users/roste/Documents/CPNV24/TPI/prog/NewsGenerator/server/bench/review.mjs:17:21 {
+  status: 502
+}
+
+Node.js v24.21.0
+seconds 44

@@ -1,0 +1,13 @@
+candidates 50: Football franç 33, Gastronomie 17
+run 0: 10 chosen, Football franç 6, Gastronomie 4, kept 10: Football franç 6, Gastronomie 4  (4560+430 tokens)
+   K Football franç | L’OM peut craindre le pire pour Amine Gouiri !
+   K Football franç | Torres fires PSG to first win of Ligue 1 season
+   K Football franç | Football : les Bleus offrent une première victoire à Zidane
+   K Football franç | Équipe de France : les mots très inquiétants de Maxence Lacroix sur la blessure de Kylian Mbappé
+   K Football franç | PSG : Paris, Massy, Poissy… Les dates à garder en tête pour le projet de stade
+   K Gastronomie | Bordeaux : 14 chefs et sept étoiles Michelin pour un dîner caritatif au profit de la Banque alimenta
+   K Gastronomie | Les restaurants gastronomiques de Paris, nos bonnes adresses
+   K Gastronomie | Où manger à Paris en septembre 2026 ? Les nouveaux restaurants aux décors et concepts les plus fous
+   K Gastronomie | Dit zijn de 12 goedkoopste Michelinsterrenrestaurants in Parijs
+   K Football franç | Le maire de Marseille annonce une mauvaise nouvelle à l’OM
+seconds 14

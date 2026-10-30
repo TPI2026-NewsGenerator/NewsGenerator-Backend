@@ -1,0 +1,37 @@
+{
+  "uefa_arbitrage": {
+    "text": "Je m'intéresse surtout à tout ce qui touche l'UEFA : la Ligue des champions, la Ligue Europa, la Ligue Conférence, l'Euro et la Ligue des nations, les décisions, sanctions et enquêtes de l'UEFA, sa gouvernance et ses élections, le fair-play financier. Je suis aussi l'arbitrage du football : décisions arbitrales et VAR, polémiques, nominations et sanctions des arbitres, changements des règles du jeu.",
+    "languages": [
+      "en",
+      "fr"
+    ]
+  },
+  "rugby_mode": {
+    "text": "Je suis passionné de rugby : je suis le Top 14, le Tournoi des Six Nations, la Champions Cup, les équipes nationales, les transferts et les résultats. J'adore aussi les vêtements et la mode : nouvelles collections, marques, défilés, tendances vestimentaires.",
+    "languages": [
+      "fr",
+      "en"
+    ]
+  },
+  "ia_technique": {
+    "text": "Je suis informaticien. Je veux les nouvelles de l'intelligence artificielle côté technique : nouveaux modèles, leurs capacités, benchmarks, architectures, modèles open source, recherche, outils pour développeurs. Je ne m'intéresse pas aux entreprises de l'IA : levées de fonds, valorisations, bourse, rachats, procès, querelles entre patrons.",
+    "languages": [
+      "fr",
+      "en"
+    ]
+  },
+  "chef_prive": {
+    "text": "Je suis chef cuisinier privé. Je m'intéresse aux nouvelles des chefs en tant que personnes : leurs parcours, nominations, récompenses et étoiles, ouvertures et fermetures de leurs restaurants, interviews, polémiques, décès. Les recettes et les plats ne m'intéressent pas.",
+    "languages": [
+      "fr",
+      "en"
+    ]
+  },
+  "chien_sante": {
+    "text": "J'ai un chien et je veux surtout des nouvelles sur la santé des chiens : maladies, vaccins, parasites, alimentation, rappels de croquettes, conseils vétérinaires, dangers comme la chaleur ou les plantes toxiques. Les autres nouvelles sur les chiens m'intéressent un peu moins.",
+    "languages": [
+      "fr",
+      "en"
+    ]
+  }
+}

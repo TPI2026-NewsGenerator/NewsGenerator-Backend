@@ -1,0 +1,68 @@
+
+==== fab
+-- today ×1: 5 interests
+      UEFA : la Ligue des champions, la Ligue Europa, la Ligue Conférence, l'Euro et la Ligue des nations
+      décisions, sanctions et enquêtes de l'UEFA
+      sa gouvernance et ses élections
+      le fair-play financier
+      l'arbitrage du football : décisions arbitrales et VAR, polémiques, nominations et sanctions des arbitres, changements des règles du jeu
+-- today ×1: 2 interests
+      UEFA : Ligue des champions, Ligue Europa, Ligue Conférence, Euro, Ligue des nations, décisions, sanctions et enquêtes de l'UEFA, sa gouvernance et ses élections, fair-play financier
+      arbitrage du football : décisions arbitrales et VAR, polémiques, nominations et sanctions des arbitres, changements des règles du jeu
+
+==== lecteur-test
+-- today ×2: 2 interests
+      football français : la Ligue 1, le PSG, l'OM et l'équipe de France, surtout les résultats, les blessures et les transferts
+      gastronomie : les restaurants étoilés, les chefs, le guide Michelin et les nouvelles tables à Paris et Lyon
+
+==== lecteur-difficile
+-- today ×2: 3 interests
+      Tennis : le circuit ATP, les Grands Chelems et les jeunes joueurs suisses
+      Intelligence artificielle : les nouveaux modèles, la recherche et la régulation en Europe
+      Politique suisse : les votations fédérales et les décisions du Conseil fédéral
+
+==== mots-clés
+-- today ×1: 6 interests, missing: sécurité, circuits
+      F1 : nouvelles courses, résultats des Grands Prix, classements des pilotes
+      MotoGP : nouvelles courses, résultats des Grands Prix, classements des pilotes
+      Verstappen : actualités du pilote, performances en course, déclarations, transfert éventuel
+      Ducati : actualités de l'écurie, motos développées, résultats en MotoGP, transferts de pilotes
+      règlement technique 2027 : changements techniques en F1 et MotoGP, nouvelles normes, impact sur les monoplaces et motos
+      transferts de pilotes : mouvements entre écuries en F1 et MotoGP, contrats signés, rumeurs de transfert, mercato des pilotes
+-- today ×1: 6 interests, missing: sécurité, circuits
+      F1 : nouvelles courses, résultats des Grands Prix, classements des pilotes
+      MotoGP : nouvelles courses, résultats des Grands Prix, classements des pilotes
+      Verstappen : performances en course, interviews, réactions après Grand Prix, actualités personnelles liées à la F1
+      Ducati : performances en MotoGP, résultats des pilotes Ducati, actualités techniques de la moto, annonces liées à l'équipe
+      règlement technique 2027 : changements réglementaires en F1 et MotoGP, impact sur les voitures et motos, nouvelles normes techniques
+      transferts de pilotes : mouvements entre écuries F1 et MotoGP, contrats signés, rumeurs de transfert, annonces officielles
+
+==== english
+-- today ×1: 6 interests
+      climate science: new IPCC reports
+      energy policy: carbon capture research
+      energy policy: EU emissions trading
+      energy policy: heat pump subsidies
+      astronomy: JWST discoveries
+      astronomy: exoplanets
+-- today ×1: 3 interests
+      climate science: new IPCC reports, carbon capture research
+      energy policy: EU emissions trading and heat pump subsidies
+      astronomy: JWST discoveries, exoplanets
+
+==== familier
+-- today ×1: 4 interests
+      cuisine japonaise ramen
+      nouveaux restos Genève
+      jeux vidéo Nintendo
+      sorties jeux indé
+-- today ×1: 3 interests
+      cuisine japonaise ramen
+      nouveaux restos Genève
+      jeux vidéo Nintendo sorties indé
+
+==== secondaire
+-- today ×2: 2 interests
+      la santé de mon chien : vaccins, alimentation, maladies des bergers allemands, nouvelles lois sur les chiens en Suisse
+      la randonnée en Valais et les cabanes du CAS
+seconds 108

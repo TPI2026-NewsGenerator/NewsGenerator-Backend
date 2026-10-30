@@ -1,0 +1,860 @@
+# 1 [most] UEFA (en, 11771)
+  I: Q35572 Union of European Football Associations | 127 wikis | international sport governing body, association football federation, nonprofit organization | P159 P641 | international governing body for association football in Europe
+  AI: Q35572 Union of European Football Associations (127): international governing body for association football in Europe  [of 9]
+  T: 🚨[3J-C1] Barcelone doit changer de maillot pour le choc face au PSG à cause d’un détail clé
+  T: 42 pytania. UEFA żąda wyjaśnień od Infantino
+  T: Ajax Amsterdam / Atalanta Bergame - Football Ligue Conférence 2026-2027
+
+# 2 [most] WWE (en, 9142)
+  I: Q35339 WWE | 91 wikis | professional wrestling promotion, business, public company | P159 P641 P452 | American professional wrestling and entertainment company
+  AI: Q35339 WWE (91): American professional wrestling and entertainment company  [of 10]
+  T: 3 Reasons why Sami Zayn refused to rejoin The Bloodline on WWE RAW
+  T: 3 Directions for Bron Breakker after suffering a major loss on WWE RAW
+  T: 3 Reasons why WWE took Oba Femi off TV
+
+# 3 [most] EU (en, 7586)
+  I: Q211593 Eu | 57 wikis | commune of France | P625 | commune in Seine-Maritime, France
+  AI: none
+  T: Abkehr vom Verbrenner-Aus: Unterhändler im Europaparlament finden Kompromiss
+  T: AI training for employees: what actually works
+  T: Alkohol-Wegfahrsperre fürs Auto: Das gilt für jeden Neuwagen seit Juli 2026
+
+# 4 [random] Medzinárodná futbalová federácia (sk, 15)
+  I: Q253414 FIFA | 164 wikis | metaorganization, association football federation, international sport governing body, nonprofit organization | P159 P641 | international governing body of association football
+  AI: Q253414 FIFA (164): international governing body of association football
+  T: FIFA mesiace po skončení MS vo futbale potrestala trénera, funkcionára a hráča Egypta
+  T: Nad ich správaním krútil hlavou aj Yamal: Španielsko pyká za fanúšikov, FIFA zverejnila trest
+  T: Kto neskáče, ten je moslim. Yamala sa to dotklo, Španielsko dostalo trest od FIFA
+
+# 5 [random] EH Bildu (es, 189)
+  I: Q1029761 Euskal Herria Bildu | 24 wikis | Basque political party, coalition, major party | P159 | Spanish political party from the Basque and Navarre regions
+  AI: Q1029761 Euskal Herria Bildu (24): Spanish political party from the Basque and Navarre regions  [of 3]
+  T: El Ayuntamiento sí condena los disturbios en Pamplona y los discursos de odio de Vito Quiles
+  T: Vitoria subirá el precio del agua 28 euros en dos años
+  T: Naiara Gutiérrez liderará el proyecto de EH Bildu en Santurtzi
+
+# 6 [random] Shopee (en, 36)
+  I: Q54863641 Shopee | 21 wikis | online marketplace, online shop, mobile app | P159 P452 | Singaporean e-commerce company
+  AI: Q54863641 Shopee (21): Singaporean e-commerce company  [of 6]
+  T: TikTok Shop tops Shopee in Thailand Q2 GMV share: report
+  T: Singapore haze: Be careful when buying masks or air purifiers on secondary market, CASE warns
+  T: Shopee e Ampara Animal fazem mutirões gratuitos de saúde pet
+
+# 7 [random] small business (en, 59)
+  I: Q1109680 small business | 26 wikis | ethnological term, economic term |  | private business with relatively small number of employees, capital, or revenue
+  AI: Q1109680 small business (26): private business with relatively small number of employees, capital, or revenue  [of 9]
+  T: I analyzed a small business payroll with AI and found $492K a year of potential savings
+  T: AI receptionists for small business: are they worth it?
+  T: Smart Billing Lite Festive Offer: AI Billing + Thermal Printer at ₹6,500
+
+# 8 [random] MaxPreps (en, 25)
+  I: Q39052332 MaxPreps | 1 wikis | website |  | American website that specializes in coverage of American high school sports
+  AI: Q39052332 MaxPreps (1): American website that specializes in coverage of American high school sports  [of 2]
+  T: No. 1 Orangewood, Winter Park make volleyball Open Division; DeLand doesn’t
+  T: MaxPreps Top 25 high school football scores: Prattville upsets No. 12 Thompson 28-27 on blocked field goal in Alabama
+  T: This San Antonio school is a football power. Here are its top recruits
+
+# 9 [random] Adelaide 36ers (fr, 26)
+  I: Q2756400 Adelaide 36ers | 13 wikis | basketball team | P159 P118 P641 | Australian basketball team
+  AI: Q2756400 Adelaide 36ers (13): Australian basketball team
+  T: Adelaide 36ers star Isaac Humphries announces retirement at just 28
+  T: Adelaide 36ers Set to Sign Mangok Mathiang Amid Injury Concerns
+  T: Bulls guard Josh Giddey is preparing himself for the upcoming air show
+
+# 10 [random] Bayern Münih (en, 29)
+  I: Q15789 FC Bayern Munich | 125 wikis | sports club, association football club | P159 P118 P641 P452 | association football club in Munich, Germany
+  AI: Q15789 FC Bayern Munich (125): association football club in Munich, Germany  [of 2]
+  T: Jerome Boateng, Trabzonspor-Beşiktaş maçını tribünden izledi
+  T: Bayern Münih'te Sacha Boey kararı değişmedi!
+  T: Bayern Münih farklı kazandı!
+
+# 11 [random] Zenith Bank (en, 20)
+  I: Q5978240 Zenith Bank | 16 wikis | business, public company | P159 P452 | Nigerian commercial financial services company
+  AI: Q5978240 Zenith Bank (16): Nigerian commercial financial services company  [of 5]
+  T: Zenith Bank has 53 percent more equity than two years ago
+  T: Zenith Bank deepens commitment to girl-child development, empowers 300 school girls
+  T: Music, distinction, financial excellence take centre stage at BusinessDay BAFI Awards 2026
+
+# 12 [random] Telecom (en, 32)
+  I: Q96734544 Telecom | 0 wikis | scientific journal, open-access journal |  | (no description)
+  AI: none  [of 4]
+  T: Movistar transfiere 6 millones de clientes a Tuenti por condiciones regulatorias
+  T: Si recibís este SMS en el celular, vas a pasar a ser cliente de una nueva empresa de telefonía: qué tenés que saber
+  T: El Merval cambia este lunes: qué se sabe sobre el nuevo índice de MSCI
+
+# 13 [random] Fivers (de, 15)
+  I: Q19725719 Fivers | 2 wikis | album | P577 | album by Five Minutes
+  AI: Q877694 Handballclub Fivers Margareten (7): sports club  [of 5]
+  T: European Handball - Fivers und Ferlach kassieren Hinspielpleiten
+  T: Fivers im Europacup - Hexenkessel Besiktas! „Nur dann haben wir Chancen“
+  T: Handball Liga Austria: - Fivers schlagen Hard, Schwaz verliert erneut
+
+# 14 [random] Sarnese (it, 18)
+  I: Q18487407 Sarnese | 4 wikis | frazione | P625 | human settlement in Italy
+  AI: none
+  T: Serie D, Girone G: Sarnese in fuga, Viterbese aggancia Monastir, Venafro batte Paganese
+  T: Serie D Girone G: Bene Sarnese e Gelbison, perde la Paganese
+  T: [Live-Serie D]: gli aggiornamenti da tutti i campi.
+
+# 15 [random] Zeekr (en, 40)
+  I: Q106621124 Zeekr | 26 wikis | car brand, automobile manufacturer | P159 P452 | Chinese high-end EV brand
+  AI: Q106621124 Zeekr (26): Chinese high-end EV brand  [of 9]
+  T: Carro do Ano 2027 Mercedes, Geely, Zeekr e Ebro entram na corrida
+  T: Les 13 voitures les plus impressionnantes du Mondial de l'Auto 2026 : Alpine, Audi, DS, Renault, Zeekr…
+  T: Η Zeekr κέρδισε τις εντυπώσεις στην Auto Athina 2026
+
+# 16 [random] OVHCloud (fr, 62)
+  I: Q568183 OVHcloud | 19 wikis | internet hosting service, infrastructure as a service, domain name registrar | P159 P452 | cloud infrastructure provider
+  AI: Q568183 OVHcloud (19): cloud infrastructure provider  [of 2]
+  T: OVHcloud : 1h34 pour infecter des milliers de développeurs
+  T: OVHCloud prépare un LLM open source pour fin novembre
+  T: Piratage OVH : pourquoi votre PME doit agir maintenant
+
+# 17 [random] Schulleiter (de, 26)
+  I: Q1056391 head teacher | 32 wikis | corporate title, position, occupation |  | most senior teacher at a school
+  AI: Q1056391 head teacher (32): most senior teacher at a school  [of 2]
+  T: Motiv noch unklar - 14-Jähriger schiesst in Frankreich auf Schulleiter und Lehrerin
+  T: Schüsse in französischer Schule in keinem Zusammenhang mit Schulprotesten
+  T: Gewehr in Gitarrenkoffer versteckt: 14-Jähriger schießt in Frankreich auf Schulleiter und Lehrerin
+
+# 18 [random] consorcio (es, 20)
+  I: Q194166 consortium | 48 wikis | type of organization, legal form |  | association of two or more individuals, companies, organizations or governments (or any combination of these entities)
+  AI: none  [of 10]
+  T: El veto a los patinetes en el metro y los buses de Madrid cumple tres años y se revisará en 2027
+  T: El veto a los patinetes eléctricos en el metro y los buses de Madrid cumple tres años a la espera de ser revisado en 2027
+  T: El presupuesto regional incluye partidas para la borrasca, el consorcio y el festival de Robe
+
+# 19 [random] Monopoly GO (fr, 51)
+  I: Q124179369 Monopoly Go! | 5 wikis | video game | P577 | 2023 video game developed by Scopely
+  AI: Q124179369 Monopoly Go! (5): 2023 video game developed by Scopely
+  T: Dés (dice) gratuits Monopoly GO 20 octobre 2026
+  T: Liens de lancers de dés gratuits Monopoly GO du 20 Octobre 2026
+  T: Dés (dice) gratuits Monopoly GO 19 octobre 2026
+
+# 20 [random] Department for Work and Pensions (en, 56)
+  I: Q1191394 Department for Work and Pensions | 12 wikis | department of the United Kingdom Government, government agency | P159 | United Kingdom government ministerial department
+  AI: Q1191394 Department for Work and Pensions (12): United Kingdom government ministerial department  [of 3]
+  T: DWP CMS child maintenance update on 'major' change with new 2 per cent charge
+  T: Woman, 53, accused of falsely claiming Universal Credit by declaring no assets
+  T: Department for Transport confirms free bus pass age increase for 5 groups of passengers
+
+# 21 [random] Fédération burkinabè de football (fr, 18)
+  I: Q852148 Burkinabe Football Federation | 25 wikis | association football federation | P625 P159 P641 | governing body of football in Burkina Faso
+  AI: Q852148 Burkinabe Football Federation (25): governing body of football in Burkina Faso
+  T: Mondial 2030. Oumarou Sawadogo, président de la Fédération burkinabè de football: «Une finale au Maroc serait une vitrine pour l’Afrique tou
+  T: Mondial 2030. Oumarou Sawadogo, président de la Fédération burkinabè de football: «Une finale au Maroc serait une vitrine pour l’Afrique tou
+  T: Burkina Faso U17 receive Oumarou Sawadogo backing before UFOA-B opener
+
+# 22 [random] CNN-News18 (en, 203)
+  I: Q1023924 CNN-News18 | 16 wikis | specialty channel, news website | P159 P452 | Indian English-language news television channel
+  AI: Q1023924 CNN-News18 (16): Indian English-language news television channel  [of 2]
+  T: Kirit Somaiya Demands Cancellation of Imran Khan’s OCI Card After Mumbai Protests | News18
+  T: BK Hari Prasad Defends Congress Protests, Accuses BJP of Targeting Democracy | News18
+  T: Maharashtra CM Devendra Fadnavis Hits Back at Uddhav Thackeray's Over Remarks | Shiv Sena | News18
+
+# 23 [random] New Azerbaijan Party (en, 27)
+  I: Q876402 New Azerbaijan Party | 37 wikis | political party | P159 | political party
+  AI: Q876402 New Azerbaijan Party (37): political party
+  T: New Azerbaijan Party removes Ramiz Mehdiyev from its ranks
+  T: Azerbaijan’s ruling party accuses Erdoğan’s AKP of sowing division over school headscarf ban
+  T: New Azerbaijan Party responds to Erdoğan aide’s remarks on hijab
+
+# 24 [random] Hydro-Québec (fr, 29)
+  I: Q167840 Hydro-Quebec | 27 wikis | Crown corporation, public utility, transmission system operator for electricity, distribution network operator for electricity | P625 P159 P452 | hydroelectric utility
+  AI: Q167840 Hydro-Quebec (27): hydroelectric utility  [of 9]
+  T: Panne d’électricité | Le courant est revenu pour 17 000 abonnés
+  T: Panne d’électricité | Plus de 17 000 Montréalais dans le noir
+  T: Walmart Québec recrée la vidéo iconique de la « dinde noère » et c'est hilarant
+
+# 25 [random] Russian (en, 43)
+  I: Q7737 Russian | 320 wikis | language, modern language, natural language | P625 | East Slavic language
+  AI: Q159 Russia (421): country in Eastern Europe and Northern Asia, the largest in the world by area  [of 9]
+  T: Russian Strikes Leave 600,000 Ukrainians Without Power as 30 Energy Facilities Are Damaged
+  T: Russian ballistic missile attack on Kyiv kills one, injures two
+  T: Russian strikes on Zaporizhzhia and Poltava — two people killed, six injured
+
+# 26 [random] Deportes Antofagasta (es, 45)
+  I: Q2076979 Club Deportes Antofagasta | 17 wikis | association football club | P159 P118 P641 | Chilean football club
+  AI: Q2076979 Club Deportes Antofagasta (17): Chilean football club
+  T: La alarma con el partido de U de Chile contra Antofagasta por la Copa Chile: ¿Se suspende?
+  T: “Generar una situación de alto riesgo”: la advertencia que complica a Colo-Colo y la U
+  T: U de Chile puede salir del Estadio Nacional hasta el mes de diciembre
+
+# 27 [random] Zoho (en, 47)
+  I: Q126084789 Zoho | 0 wikis | software |  | Zoho provides a drag-and-drop interface for creating database-driven applications, such as forms
+  AI: Q8063247 Zoho Corporation (23): Indian software development company  [of 3]
+  T: Zoho’s Sridhar Vembu calls SaaS layoffs ‘normal’, bets on reinvention by 2030
+  T: ‘What we have refused to do’: Zoho’s Sridhar Vembu responds to rival’s layoffs
+  T: Zoho founder Sridhar Vembu responds to layoff post from top exec of rival software company BendingSpoons;
+
+# 28 [random] iRobot (de, 19)
+  I: Q285161 iRobot | 26 wikis | business, enterprise, public company | P159 P452 | American technology company that produces consumer and military robots
+  AI: Q285161 iRobot (26): American technology company that produces consumer and military robots  [of 10]
+  T: Roomba Plus 675 Combo : iRobot s’attaque aux taches avant de laver
+  T: Roomba Max 775 Combo review: iRobot finally catches up with the best
+  T: iRobot Roomba j9+ Saugroboter - 60 Tage automatische Entleerung
+
+# 29 [random] Asamblea Nacional de Venezuela (es, 19)
+  I: Q1585014 National Assembly  of Venezuela | 32 wikis | unicameral legislature | P625 | parliament of Venezuela
+  AI: Q1585014 National Assembly  of Venezuela (32): parliament of Venezuela
+  T: ¡Le levantan las sanciones! Hermano de Delcy Rodríguez sale de la lista de sancionados de Estados Unidos
+  T: EE.UU retira de la lista OFAC a Jorge Rodríguez, presidente de la Asamblea Nacional de Venezuela, y hermano de Delcy Rodríguez
+  T: Estados Unidos elimina sanciones contra Jorge Rodríguez, presidente de la Asamblea Nacional de Venezuela
+
+# 30 [random] Internacional de Bogotá (es, 32)
+  I: Q137324985 Internacional de Bogotá | 6 wikis | association football club | P118 P641 | association football team in Colombia
+  AI: Q137324985 Internacional de Bogotá (6): association football team in Colombia  [of 2]
+  T: Internacional de Bogotá vs Fortaleza FC: Duelo crucial en la Liga BetPlay II 2026 por la Fecha 15
+  T: Internacional de Bogotá vs. Fortaleza FC, EN VIVO: dónde ver por TV y ONLINE
+  T: Antisèche FOOT pour vos pronos – PLUS de 0.5 but après la 80ème minute 20-10-2026
+
+# 31 [random] Leidos (en, 26)
+  I: Q502132 Leidos | 13 wikis | business, enterprise, public company | P159 P452 | defense, aviation, information technology, and biomedical research company based in Reston, Virginia, United States
+  AI: Q502132 Leidos (13): defense, aviation, information technology, and biomedical research company based in Reston, Virginia, United States  [of 3]
+  T: DISA faces another protest over Enclave contract expansion
+  T: Leidos extends UK defence logistics contract through June 2029
+  T: McBride’s Late Goal Seals Men’s Soccer’s High-Scoring Win in Army-Navy Cup XV
+
+# 32 [random] Région wallonne (fr, 32)
+  I: Q231 Wallonia | 118 wikis | region of Belgium | P625 | federal region of Belgium
+  AI: Q231 Wallonia (118): federal region of Belgium
+  T: Keng Exceptioun fir d’Groussregioun: Lëtzebuerg wëll ofwaarden, ob belsch Vignette konform ass zum EU-Recht
+  T: Seneffe : Après huit ans de bataille judiciaire, la justice débloque enfin le RAVeL entre Nivelles et Seneffe
+  T: Braine-le-Comte : Le dossier de l’aire de motorhomes victime d’une épidémie de congés maladie à la Région wallonne
+
+# 33 [random] MacRumors (en, 16)
+  I: Q6722109 MacRumors | 8 wikis | website |  | website focused on news relating to Apple, Inc.
+  AI: none
+  T: Apple : rendez-vous le 28 octobre pour de nouveaux Mac et un iPad mini
+  T: iOS 27.2 : Siri AI parle français, mais reste bloqué sur iPhone en France
+  T: Withings now charges $100 per year to sync your data to other apps
+
+# 34 [random] L'Est républicain (fr, 38)
+  I: Q3052319 L'Est Républicain | 13 wikis | daily newspaper |  | Newspaper based in Nancy, France
+  AI: Q3052319 L'Est Républicain (13): Newspaper based in Nancy, France
+  T: Belfort. Piégée dans son lit médicalisé, une septuagénaire meurt brûlée à cause d'une cigarette
+  T: Sport et santé. Intolérance au gluten et sport : « C’est contraignant mais tout est possible »
+  T: Photos. Les mariés du week-end dans la région bisontine et le Haut-Doubs
+
+# 35 [random] Eramet (fr, 47)
+  I: Q1347990 Eramet | 14 wikis | organization | P159 P452 | French multinational mining and metallurgy company producing non-ferrous metals and derivatives, nickel alloys and superalloys
+  AI: Q1347990 Eramet (14): French multinational mining and metallurgy company producing non-ferrous metals and derivatives, nickel alloys and superalloys  [of 6]
+  T: Detrás de la mega inversión de Eramet en el litio salteño, el estado francés avanza sobre el control de la minera
+  T: Eramet, BRGM et Lithosquare s’allient pour accélérer l’exploration minière
+  T: L'État au chevet du minier Eramet, sans aller jusqu'à la nationalisation
+
+# 36 [random] Wolters Kluwer (it, 30)
+  I: Q249798 Wolters Kluwer | 28 wikis | book publisher, open-access publisher, public company, academic publisher, software company | P159 P452 | global information services company
+  AI: Q249798 Wolters Kluwer (28): global information services company  [of 10]
+  T: LIVE | Beleggers starten optimistisch, AEX in de plus
+  T: Wolters Kluwer introduce l'intelligenza artificiale conversazionale e la riconciliazione automatica degli estratti conto bancari nella suite
+  T: LIVE | AEX houdt winst na rustige start Wall Street
+
+# 37 [random] Missouri Valley Football Conference (en, 21)
+  I: Q1310058 Missouri Valley Football Conference | 5 wikis | athletic conference | P159 P641 | U.S. college football conference
+  AI: Q1310058 Missouri Valley Football Conference (5): U.S. college football conference
+  T: SDSU-USD rivalry game picked for afternoon kickoff, airing on ESPNU in Halloween matchup
+  T: Modrzewski throws for 3 TDs, runs for 1 score, South Dakota beats Murray State 48-20
+  T: Pellant has TD run and pass in 28-point 2nd quarter as Illinois State tops Southern Illinois 35-14
+
+# 38 [random] The Lego Group (en, 28)
+  I: Q1063455 The Lego Group | 52 wikis | privately held company | P159 P452 | Danish toy manufacturer best known for interlocking-brick construction toys
+  AI: Q1063455 The Lego Group (52): Danish toy manufacturer best known for interlocking-brick construction toys
+  T: The LEGO Group invites fans to mash-up STAR WARS™ and MARVEL universes for the first time ever in LEGO Ideas® challenge
+  T: LEGO® Harry Potter™ Collection
+  T: Alison McCue Brujic joins LEGO Group to lead leadership and team development
+
+# 39 [random] AIUDF (en, 34)
+  I: Q2542705 All India United Democratic Front | 11 wikis | political party |  | political party in India
+  AI: Q2542705 All India United Democratic Front (11): political party in India
+  T: Assam: BJP’s Devasish Sharma wins Nagaon LS bypoll by 1,42,224 votes
+  T: Assam: BJP's Devasish Sharma wins Nagaon LS bypoll by 1,42,224 votes
+  T: BJP's decisive victory in Nagaon bypoll due to development work under PM's leadership: Himanta
+
+# 40 [random] Krafton (fr, 24)
+  I: Q4035237 Krafton | 26 wikis | video game developer, holding company | P159 P452 | South Korean video game developer and publisher
+  AI: Q4035237 Krafton (26): South Korean video game developer and publisher  [of 2]
+  T: KRAFTON Unveils 5-Game Lineup for G-STAR 2026
+  T: KRAFTON Unveils Battlin, India’s First Unified Esports Tournament Platform for BGMI
+  T: Krafton Surpasses 10 Million Pre-Registrations for 'BGMI Air' in India
+
+# 41 [random] AINRC (en, 31)
+  I: Q1166149 All India N.R. Congress | 11 wikis | political party |  | political party
+  AI: Q1166149 All India N.R. Congress (11): political party
+  T: Tamil Nadu bypolls: AIADMK leads in Dharapuram, TVK in Madurantakam
+  T: BJP ally wins Puducherry bypoll
+  T: India News | AINRC's Ashok Anand Wins Thattanchavady AC by 8,482 Votes, TVK Leads in Madurantakam, Dharapuram Bypolls
+
+# 42 [random] Cornish Pirates (en, 21)
+  I: Q1134198 Cornish Pirates | 7 wikis | rugby union club | P159 P118 P641 | rugby union club of England
+  AI: Q1134198 Cornish Pirates (7): rugby union club of England
+  T: Cornish Pirates sign Scotland Under-19s hooker Neill
+  T: Cornish Pirates beat Chinnor to stay perfect at home
+  T: Cornish Pirates convince again in home victory over Chinnor
+
+# 43 [random] Islamic Republic of Iran (en, 37)
+  I: Q794 Iran | 376 wikis | sovereign state, country, successor state | P625 | country in Western Asia
+  AI: Q794 Iran (376): country in Western Asia  [of 10]
+  T: Trump endorses Israel's Netanyahu for reelection
+  T: Trump endorses embattled Israeli Prime Minister Benjamin Netanyahu for reelection
+  T: Iran denies Saudi accusation of involvement in Houthi attacks
+
+# 44 [random] Confederation of African Football (en, 266)
+  I: Q168360 Confederation of African Football | 80 wikis | international sport governing body, association football federation, nonprofit organization | P159 P641 | governing body of association football in Africa
+  AI: Q168360 Confederation of African Football (80): governing body of association football in Africa
+  T: CAS to rule on AFCON final case next month
+  T: CAF Womenâs Champions League Egypt 2026 draw format confirmed
+  T: CAF Confirms key arrangements for Sundowns, USM Alger super cup final
+
+# 45 [random] Zendesk (en, 21)
+  I: Q15401349 Zendesk | 15 wikis | business, software company, technology company, public company | P159 P452 | CRM company that builds customer support and sales software which aims for quick implementation and adaptation at scale
+  AI: Q15401349 Zendesk (15): CRM company that builds customer support and sales software which aims for quick implementation and adaptation at scale  [of 6]
+  T: Zendesk launches AI tools to automate employee support
+  T: Can AI Resolve Zendesk Tickets? Workflows and Guardrails
+  T: How to Structure an AI Agent Usage Cap Before Customers Blow Through It
+
+# 46 [random] Mississippi State (en, 697)
+  I: Q15253671 Mississippi State | 11 wikis | census-designated place in the United States | P625 | census-designated place centered on Mississippi State University
+  AI: Q2927993 Mississippi State Bulldogs (7): intercollegiate sports teams of Mississippi State University  [of 10]
+  T: Game MVP: LSU vs. Mississippi State
+  T: Game time set for No. 19 Texas vs. Mississippi State
+  T: Exhibition #2: NC State 77 – Mississippi State 73
+
+# 47 [random] Regione Lazio (it, 133)
+  I: Q1282 Lazio | 156 wikis | region of Italy | P625 | region of Italy
+  AI: Q1282 Lazio (156): region of Italy  [of 2]
+  T: Calcio: Rocca ironico "Lazio primi per caso", poi attacca Lotito "chieda scusa ai tifosi"
+  T: Carceri: Bonafoni (Pd), da domani Regione Lazio e' senza Garante persone detenute
+  T: Gli appuntamenti di oggi a Roma e nel Lazio (2)
+
+# 48 [random] Sarmiento de Junín (es, 53)
+  I: Q519966 Club Atlético Sarmiento | 21 wikis | sports club | P159 P118 P641 P452 | Argentine sports club
+  AI: Q519966 Club Atlético Sarmiento (21): Argentine sports club  [of 2]
+  T: Sarmiento juega sin público ante Barracas en un duelo clave por el Clausura
+  T: Sin sus hinchas, Sarmiento enfrenta a Barracas Central por un lugar en los playoffs
+  T: River vs. Belgrano: a qué hora juegan, TV y transmisión gratis minuto a minuto por el Clausura
+
+# 49 [random] Portugal Resident (en, 85)
+  I: Q141303877 Portugal Resident | 1 wikis |  |  | english-language newspaper in Portugal
+  AI: Q141303877 Portugal Resident (1): english-language newspaper in Portugal
+  T: Olhão exhibition shows city’s past and present
+  T: More than half of Portuguese say purchasing power has fallen
+  T: Fundraiser launched for family of three men who died in Algarve work accident
+
+# 50 [random] Φενέρ (el, 118)
+  I: Q3708586 Fenner | 19 wikis | town in the United States, town of New York | P625 | human settlement in Madison County, New York, United States of America
+  AI: none
+  T: Ολυμπιακός: Το ρίσκο με τα τρίποντα απέναντι στη Φενέρ
+  T: Κυκλοφόρησαν τα εισιτήρια για τον αγώνα του Ολυμπιακού με τη Φενέρ
+  T: Ολυμπιακός: Κυκλοφόρησαν τα εισιτήρια για τον αγώνα τη Φενέρ
+
+# 51 [random] Auburn football (en, 58)
+  I: Q4819311 Auburn Tigers football | 2 wikis | American football team, college sports team | P118 P641 | NCAA Division I FBS football program
+  AI: Q4819311 Auburn Tigers football (2): NCAA Division I FBS football program
+  T: Auburn football dismisses All-American LB Xavier Atkins | Reports
+  T: Alex Golesh feeling 'guarded' after Auburn football's Georgia upset
+  T: Auburn football vs Ole Miss gets kickoff time, TV channel for Week 9
+
+# 52 [random] Cornell University (en, 615)
+  I: Q49115 Cornell University | 97 wikis | private university, land-grant university, sun grant institution, research university, private not-for-profit educational institution | P625 P159 P452 | private and statutory land-grant research university in Ithaca, New York, USA
+  AI: Q49115 Cornell University (97): private and statutory land-grant research university in Ithaca, New York, USA  [of 9]
+  T: Cornell sexual assault case has some prospective students rethinking plans, consultants say
+  T: Cornell Rape Allegations Push Other Universities to Self-Reflect
+  T: Alpha Phi Alpha chapter awards $25K to local scholars at gala
+
+# 53 [random] U.S. Air Force (en, 1184)
+  I: Q11223 United States Air Force | 88 wikis | air force, United States federal agency | P159 | air service branch of the United States Armed Forces
+  AI: Q11223 United States Air Force (88): air service branch of the United States Armed Forces  [of 10]
+  T: 2026 Fire Prevention Week
+  T: 446th Airlift Wing JBLM ESGR BOSS LIFT
+  T: 55th CPTS finance ops
+
+# 54 [random] NI (null, 411)
+  I: Q1197 Lower Saxony | 167 wikis | federated state of Germany | P625 | federated state of Germany
+  AI: none
+  T: ‘It has been a pleasure’: Retired caretaker given lifetime achievement award after 27 years at NI primary school
+  T: £67m public subsidy bid revealed as NI fights rivals for £400m Ryanair hub with 600 new jobs
+  T: Lynch open to meeting McClean to discuss men’s mental health views
+
+# 55 [random] Sporting (pt, 2603)
+  I: Q20925298 Sporting CP (cycling) | 3 wikis | professional cycling team | P641 | cycling team
+  AI: Q75729 Sporting CP (82): sports club based in Lisbon, Portugal  [of 10]
+  T: Abel Ferreira deixou aviso sobre reforço do Sporting: "Jogador de seleção"
+  T: Barcelona olha com interesse para 2 jogadores do Sporting e Como 1907 mira Geny Catamo
+  T: Barcelona vem a Alvalade ver dois jogadores do Sporting, mas não estará sozinho
+
+# 56 [random] NRLW (en, 71)
+  I: Q48803169 NRL Women's Premiership | 3 wikis | sports competition | P641 | Australasian rugby league football competition
+  AI: none
+  T: Jillaroos expect England fight after 90-4 Vegas bloodbath; Teen released after avoiding jail — NRLW Daily
+  T: Star’s shock defection reveal after stunning Australian debut
+  T: Women’s Rugby League World Cup shapes as tighest yet as gap closes on hosts Australia | Megan Maurice
+
+# 57 [random] Eurogruppo (it, 16)
+  I: Q149964 Eurogroup | 36 wikis | committee, corporate body of the European Union |  | informal body of the Council of the EU, made up of the ministers of the member states of the eurozone
+  AI: Q149964 Eurogroup (36): informal body of the Council of the EU, made up of the ministers of the member states of the eurozone
+  T: Dalle Camere arriva il sì allo scostamento. Giorgetti: “Serve prudenza, nuvole in vista”
+  T: Fonti Chigi, 'sul Cdm mero errore materiale'. Verso la manovra a novembre
+  T: RAINEWS * ULTIM’ORA: «DOMBROVSKIS: NON PER SEMPRE FLESSIBILITÀ»
+
+# 58 [random] Tourism sector (en, 19)
+  I: Q9323634 tourism industry | 7 wikis | type of industry, economic activity |  | economic sector related to tourism
+  AI: Q9323634 tourism industry (7): economic sector related to tourism  [of 3]
+  T: Over 7,000 connections were made, expanding cooperation in the tourism sector.
+  T: BOPP hosts meeting on Blue Prosperity Plan
+  T: Construction of Bailey bridge at Betrawati raises hope for tourism resurgence in Rasuwa
+
+# 59 [random] Eurofighter (de, 24)
+  I: Q18354212 Eurofighter | 2 wikis | steel roller coaster | P625 | roller coaster at Zoosafari
+  AI: Q151384 Eurofighter Typhoon (67): European multi-role combat aircraft family by Eurofighter GmbH  [of 10]
+  T: Due caccia Eurofighter italiani decollano d'urgenza per un drone nello spazio aereo lituano
+  T: Nürnberger Flughafen wegen Luftnotlage zeitweise gesperrt – Eurofighter aus Neuburg im Einsatz
+  T: Aufregung um falschen Notruf: Fluggäste filmen Eurofighter-Eskorte nach Nürnberg
+
+# 60 [random] Ligue contre le cancer (fr, 93)
+  I: Q3210061 National League Against Cancer | 2 wikis | nonprofit organization | P159 P452 | French anti-cancer association
+  AI: Q3210061 National League Against Cancer (2): French anti-cancer association  [of 2]
+  T: GRAU-DU-ROI Octobre Rose : le Seaquarium se mobilise pour le dépistage du cancer du sein
+  T: Ces agriculteurs de Vendée vous invitent à leur spectacle caritatif
+  T: Tabac, alcool, alimentation… La Ligue contre le cancer propose 12 mesures aux candidats à la présidentielle 2027
+
+# 61 [random] World Meteorological Organization (en, 24)
+  I: Q170424 World Meteorological Organization | 83 wikis | specialized agency of the United Nations, international organization | P159 | specialized agency of the United Nations for meteorology
+  AI: Q170424 World Meteorological Organization (83): specialized agency of the United Nations for meteorology  [of 7]
+  T: UK Beast from the East snow update as weather experts warn El Nino is 'strengthening'
+  T: 'Prepare for El Nino' Householders warned do 10 things as phenomenon 'strengthening rapidly'
+  T: World meteorology leaders to gather in Lagos Tuesday for three-day Hydromet Annual Meeting
+
+# 62 [random] Rospotrebnadzor (es, 77)
+  I: Q4736878 Federal Service for the Oversight of Consumer Protection and Welfare | 20 wikis | government agency, Federal service (Russian Federation), national public health institute |  | Russian government agency
+  AI: Q4736878 Federal Service for the Oversight of Consumer Protection and Welfare (20): Russian government agency
+  T: Rusia descarta cualquier riesgo epidémico por contagio de peste neumónica
+  T: Russia Temporarily Bans Georgian Drinks Including Coca-Cola
+  T: Russia bans imports of Georgia's Nabeglavi mineral water and Coca-Cola
+
+# 63 [random] Χούθι (el, 75)
+  I: Q3042087 Houthis | 85 wikis | political movement, political organization, armed organization | P159 | Yemeni Islamist organization
+  AI: Q3042087 Houthis (85): Yemeni Islamist organization
+  T: Υεμένη: Τουλάχιστον 53 νεκροί μετά από επίθεση των Χούθι – Συναγερμός στα νοσοκομεία
+  T: Υεμένη: 30 νεκροί από βαλλιστικούς πυραύλους σε στρατόπεδο
+  T: Μοχάμεντ μπιν Σαλμάν: Το «Οραμα 2030» και οι Χούθι
+
+# 64 [random] IG Group (en, 15)
+  I: Q481356 IG Group | 16 wikis | business, enterprise, public company | P159 P452 | Online trading company
+  AI: Q481356 IG Group (16): Online trading company
+  T: Forward launches AI tool to test network changes first
+  T: FTSE 100 Today: Index Recovers After Sharp Fall; BT Group, IG Group and Other Stocks in Focus – Check Top Gainers, Losers and Key Factors
+  T: IG Group shares slump after revenue targets cut
+
+# 65 [random] Αρμάνι (en, 27)
+  I: Q635484 Giorgio Armani | 52 wikis | fashion house | P159 P452 | Italy-based international luxury fashion house
+  AI: Q36362 Olimpia Milano (33): Lega Basket Italian professional basketball team.  [of 2]
+  T: Παναθηναϊκός: Τα εισιτήρια με Μπασκόνια, Αρμάνι και στο βάθος... Ολυμπιακός
+  T: Παναθηναϊκός AKTOR: Κυκλοφόρησαν τα εισιτήρια για Μπασκόνια και Αρμάνι - Τι ισχύει με την προτεραιότητα για το ματς με τον Ολυμπιακό
+  T: Παναθηναϊκός: Στην κυκλοφορία τα εισιτήρια για το ματς με τη Μπασκόνια
+
+# 66 [random] Liga Americana (es, 108)
+  I: Q465469 American League | 31 wikis | sports league | P641 | baseball league, part of Major League Baseball
+  AI: Q465469 American League (31): baseball league, part of Major League Baseball  [of 5]
+  T: MLB: Rays de Tampa Bay son una franquicia histórica de la década
+  T: Habrá nuevo campeón en las Grandes Ligas
+  T: Habrá campeón inédito en Serie Mundial: Rays o Brewers
+
+# 67 [random] Nemci (sr, 31)
+  I: Q2439429 Nemci | 13 wikis | human settlement | P625 | place in Slovenian Littoral, Slovenia
+  AI: none  [of 6]
+  T: Rukometni Mundijal na staklu? Nemci razmatraju spektakl za završnicu prvenstva
+  T: Naslovi u Hrvatskoj: Kreteni iz Torcide! Ako je ovo ljubav prema Hajduku...
+  T: NEMCI PLAČU ZA ALBERTOM RIJEROM! Auuuu - kakav preokret... Napravili su jednu fatalnu grešku i sada plaćaju skupu cenu!
+
+# 68 [random] Shakhtar Donetsk (it, 302)
+  I: Q172969 FC Shakhtar Donetsk | 72 wikis | association football club | P159 P118 P641 | professional football club based in Donetsk, Ukraine
+  AI: none  [of 9]
+  T: Chivu fa mea culpa per le due sconfitte in Champions: “Io il responsabile, devo trovare la chiave giusta”
+  T: Alineaciones de Man City y AEK Athens por la Champions League: formaciones probables
+  T: Chivu: "We have to be ourselves: we want to win tomorrow"
+
+# 69 [random] Arkansas Department of Health (en, 20)
+  I: Q28368926 Arkansas Department of Health | 1 wikis | ministry of health | P159 | Government agency
+  AI: Q28368926 Arkansas Department of Health (1): Government agency
+  T: Arkansas Department of Health confirms first flu-related death of 2026-27 season
+  T: Saline County restaurant inspections: Store selling food without a permit; adhesive remover stored above soda bag
+  T: Pulaski County restaurant inspections: Bathrooms demolished and blocked off; Moldy strawberries in walk-in cooler
+
+# 70 [random] LAWMA (en, 23)
+  I: Q39087202 Lagos State Waste Management Authority | 5 wikis | government agency | P625 P159 P452 | Management of Waste and refuse disposal
+  AI: Q39087202 Lagos State Waste Management Authority (5): Management of Waste and refuse disposal
+  T: Sanwo-Olu asks LAWMA boss to resign over waste crisis – Report
+  T: Lagos governor orders LAWMA boss to resign, details emerge
+  T: Sanwo-Olu asks LAWMA MD Gbadegesin to resign over Lagos waste crisis
+
+# 71 [random] ENC (hr, 24)
+  I: Q273570 École des chartes | 44 wikis | grande école, grand établissement | P625 P159 P452 | grande école in Paris specialised in history
+  AI: none
+  T: ENC counties see uptick in early voter turnout compared to 2022 primaries
+  T: ENC H.S. Football Game of the Week - Jacksonville at D.H. Conley
+  T: Novi ENC donosi pravilo koje mnogi vozači ne očekuju: Dug od 120 eura može završiti i ovrhom
+
+# 72 [random] Telstra (en, 16)
+  I: Q721162 Telstra | 24 wikis | telephone company, public company, media company, mobile network operator, nonprofit organization | P159 P452 | Australian telecommunications company
+  AI: Q721162 Telstra (24): Australian telecommunications company  [of 9]
+  T: Telstra expands Aura fibre network as AI infrastructure demand grows
+  T: Telstra execs face shareholder grilling over outage
+  T: Telecom stocks in Australia, NZ slide after SpaceX spectrum deal
+
+# 73 [random] Albertsons (null, 50)
+  I: Q2831861 Albertsons | 12 wikis | business, enterprise, supermarket chain, public company | P159 P452 | American grocery chain
+  AI: Q2831861 Albertsons (12): American grocery chain  [of 10]
+  T: Albertsons and Kroger to Call Ex-CEOs to Testify Over Failed Deal - Mon, 19 Oct 2026 PST
+  T: Albertsons is seeking more than $9.3 billion from Kroger in trial set for Monday
+  T: Albertsons entame son procès contre Kroger, d'un montant de 8 milliards de dollars, suite à l'échec de leur fu
+
+# 74 [random] LSEG (null, 72)
+  I: Q5573225 London Stock Exchange Group | 17 wikis | business, enterprise, public company | P159 P452 | British multinational stock exchange and financial information company located in City of London, United Kingdom
+  AI: Q5573225 London Stock Exchange Group (17): British multinational stock exchange and financial information company located in City of London, United Kingdom
+  T: Netflix faces engagement questions ahead of Q3 results
+  T: London Stock Exchange Group fails to shake off £131m fraud lawsuit
+  T: TSMC posts a sixth straight record profit but turns cautious on 2027
+
+# 75 [random] Route du Rhum (fr, 101)
+  I: Q833088 Route du Rhum | 11 wikis | transatlantic race | P641 | Solo Transatlantic Ocean Race
+  AI: Q833088 Route du Rhum (11): Solo Transatlantic Ocean Race  [of 10]
+  T: Une tempête annoncée en Bretagne : le village de la Route du Rhum pourra-t-il rester ouvert à Saint-Malo ?
+  T: Route du Rhum : c’est le grand jour à Saint-Malo avec l’ouverture du village, suivez notre direct ce mardi 20 octobre
+  T: COMMENTAIRE. En 48 ans d’histoire, la Route du Rhum a sacrément rétréci l’Atlantique !
+
+# 76 [suspect] Argan (fr, 16)
+  I: Q63492312 Argan | 0 wikis | theatrical character |  | theatrical character in the play "The Imaginary Invalid"
+  AI: none
+  T: ARGAN : Mise à disposition du rapport du commissaire à la fusion
+  T: Argan, 20 novembre 2026 : 11 euros par action avant la fusion avec WDP, ce que l’associé vote vraiment
+  T: Argan et WDP, 8 octobre 2026 : 11 euros par action avant la fusion, ce que vote l’associé le 20 novembre
+
+# 77 [suspect] Michigan State University (en, 28)
+  I: Q270222 Michigan State University | 50 wikis | public research university, land-grant university, public educational institution of the United States, university | P625 P159 | public research university in East Lansing, Michigan, United States
+  AI: Q270222 Michigan State University (50): public research university in East Lansing, Michigan, United States  [of 10]
+  T: USDA awards $16.2M for Michigan State University Greenhouse Complex modernisation
+  T: MSU partners with East Lansing to host Data Week
+  T: Benjamin Nketsiah: PRESEC NSMQ 2020 champion receives top honour at Michigan State University
+
+# 78 [suspect] TDECU (en, 29)
+  I: Q39055673 Texas Dow Employees Credit Union | 1 wikis | federally insured, state-chartered credit union | P159 P452 | credit union based in Lake Jackson, Texas, United States
+  AI: Q14711138 TDECU Stadium (6): football stadium at the University of Houston  [of 2]
+  T: Weigman Leads #20/18 Football to Big 12 Win vs. Oklahoma State
+  T: Explosive second-half not enough as Cowboy Football falls at No. 20 Houston, 35-32
+  T: Houston Outlasts Oklahoma State in Top 20 Thriller as Conner Weigman Throws Five Touchdowns
+
+# 79 [suspect] VG13 (en, 20)
+  I: Q61725628 White Stone heliport | 0 wikis | heliport | P625 | heliport in Virginia, United States
+  AI: none
+  T: OGLASILI SE TALIJANI Arhitekti poručili: ‘To nije konačno rješenje za stadion na Maksimiru’
+  T: Talijanski arhitekti oglasili se nakon objave novih slika Maksimira: 'Nisu bile namijenjene javnosti'
+  T: Objavili nove spektakularne fotke ‘novog Maksimira‘ pa sve objasnili: ‘Nisu bile namijenjene objavi...‘
+
+# 80 [suspect] JOSE (en, 39)
+  I: Q14950421 Jose | 2 wikis | human |  | Indian actor
+  AI: none
+  T: HACE SABER: A los HEREDEROS CONOCIDOS Y DESCONOCIDOS del causante JOSE MARCIAL PUERTA (difunto), quien era venezolano,C.I. N°V-2.533.605. Fe
+  T: ‘It’s a bit surreal’: Video shows small plane nosediving into San Jose street; 3 hospitalized, expected to be OK
+  T: Preston Judd’s second-half goal earns Earthquakes 1-1 draw with Nashville and a playoff berth
+
+# 81 [suspect] CIMG (en, 21)
+  I: Q16733405 Chartered Institute of Marketing Ghana | 1 wikis | organization, award, institution, educational institution | P159 | organization in Accra, Ghana
+  AI: Q16733405 Chartered Institute of Marketing Ghana (1): organization in Accra, Ghana
+  T: Quality and integrity must define Ghanaian brands – Prof. Stephen Adei
+  T: Adansi Travels earns CIMG Hall of Fame status after fourth consecutive win
+  T: Wilmar Africa Limited wins two prestigious awards at 37th CIMG Marketing Performance Awards
+
+# 82 [suspect] DIY SOS (en, 26)
+  I: Q5205175 DIY SOS | 1 wikis | television series |  | television series
+  AI: Q5205175 DIY SOS (1): television series
+  T: Nick Knowles breaks silence over DIY SOS cuts as fans brand BBC move ‘a very bad decision’
+  T: Nick Knowles speaks out after DIY SOS future confirmed by the BBC after 27 years
+  T: Nick Knowles ‘disappointed’ as he breaks silence on future of DIY SOS
+
+# 83 [suspect] التحالف (ar, 33)
+  I: Q20304899 At Tahalif | 2 wikis | human settlement | P625 | village in Yemen
+  AI: none  [of 10]
+  T: التحالف: اعتراض صاروخ باليستي أطلق باتجاه الرياض
+  T: التحالف: سقوط وتحطم طائرة عمودية استطلاعية بمنطقة نجران واستشهاد طاقمها
+  T: المتحدث باسم التحالف: اعتراض وتدمير طائرة مسيرة بمنطقة الرياض
+
+# 84 [suspect] PFL Chicago (en, 32)
+  I: Q137217518 PFL Chicago | 1 wikis | mixed martial arts event | P641 | professional Fighters League MMA event in 2026
+  AI: none
+  T: MMA Junkie Radio #3712: Guest Jordan Burroughs, UFC Edmonton, PFL Chicago recaps
+  T: Viral PFL Chicago wardrobe malfunction leads to overnight surge in Onlyfans subscriptions for popular female fighter
+  T: Spinning Back Clique: UFC Edmonton and PFL Chicago reaction, UFC 333 preview, more
+
+# 85 [suspect] Irlanda do Norte (pt, 39)
+  I: Q26 Northern Ireland | 230 wikis | constituent country of the United Kingdom, integral overseas territory, stateless nation, country | P625 | part of the United Kingdom situated on the island of Ireland
+  AI: Q26 Northern Ireland (230): part of the United Kingdom situated on the island of Ireland  [of 3]
+  T: Portugal cai para 24.º no ranking feminino da FIFA
+  T: Portugal desce dois lugares no ranking feminino da FIFA
+  T: Goleada abre caminho a Portugal para o segundo play-off
+
+# 86 [suspect] Région bruxelloise (fr, 40)
+  I: Q240 Brussels-Capital Region | 132 wikis | region of Belgium | P625 | federal region of Belgium including the City of Brussels
+  AI: Q240 Brussels-Capital Region (132): federal region of Belgium including the City of Brussels
+  T: Bruxelles perd des entreprises au profit de la Flandre et de la Wallonie
+  T: Boris Dilliès assure qu’aucune autre majorité ne reviendra sur le coût du minerval : « N’y croyez pas une seconde »
+  T: Quatre nuits de perturbations sur l'E411 en raison de travaux à Overijse et Hoeilaart : voici les perturbations prévues
+
+# 87 [suspect] Boston University (en, 27)
+  I: Q49110 Boston University | 70 wikis | research university, private not-for-profit educational institution, open-access publisher | P625 P159 P452 | private research university in Boston, Massachusetts, United States
+  AI: Q49110 Boston University (70): private research university in Boston, Massachusetts, United States  [of 10]
+  T: Abdul El-Sayed Trashed Flint, Michigan, Residents in 2016 Clip
+  T: 5 common myths about autism spectrum disorder that need to be debunked
+  T: Five Different Crimson Score as No. 5 Field Hockey Defeats Boston University
+
+# 88 [suspect] Evropska unija (sr, 68)
+  I: Q458 European Union | 292 wikis | regional organization, political economic union, supranational union, confederation | P625 P159 P452 | political and economic union of 27 European states
+  AI: Q458 European Union (292): political and economic union of 27 European states  [of 5]
+  T: EU zavisna od uvoza kineskih solara i vetroturbina: Prošle godine čak 98 odsto uvoza solarnih panela stiglo iz Kine
+  T: Evropska unija pred savršenom olujom: Protesti potresaju Evropu, četiri najveće sile u političkoj krizi, a Brisel nema rešenje za Ukrajinu
+  T: DA LI SE RUSKI GAS VRAĆA U EVROPU? Evropska unija donela odluku o predlogu Donalda Trampa! Hitno se oglasili iz Brisela
+
+# 89 [suspect] Die Höhle der Löwen (de, 15)
+  I: Q20827221 Die Höhle der Löwen | 2 wikis | television program |  | German TV show aired since 2014
+  AI: Q20827221 Die Höhle der Löwen (2): German TV show aired since 2014
+  T: Airfryer-Pizza aus Erkelenz begeistert die „Höhle der Löwen“-Investoren: „Wow“
+  T: „Höhle der Löwen“-Investor erkennt Steffen Baumgart nicht - und ärgert sich dann über Pitch: „Nicht okay“
+  T: Carsten Maschmeyers Lippenkritik trifft „Höhle der Löwen“-Gründerin hart
+
+# 90 [suspect] ambulanciers (fr, 16)
+  I: Q108290428 ambulance workers | 0 wikis | occupation group according to ISCO-08 |  | (no description)
+  AI: Q108290428 ambulance workers (0): 
+  T: Menacés à la machette, des ambulanciers échappent au pire à Pornic face à un patient en crise
+  T: Pas de stagiaires depuis un an | Les étudiants victimes du conflit de travail qui s’éternise chez les paramédicaux
+  T: Pas de stagiaires depuis un an | Les étudiants victimes du conflit de travail chez les paramédicaux qui s’éternise
+
+# 91 [suspect] Tribunal Penal Internacional (pt, 36)
+  I: Q47488 International Criminal Court | 115 wikis | international court, intergovernmental organization | P625 P159 | intergovernmental organization and international tribunal
+  AI: Q47488 International Criminal Court (115): intergovernmental organization and international tribunal  [of 5]
+  T: TPI, opositor da Tanzânia e duas irmãs iranianas finalistas ao prémio Sakharov
+  T: Los líderes de la UE lamentan las sanciones de EE.UU. al TPI y advierten “medidas” para proteger al tribunal
+  T: O Prêmio Nobel da Paz de 2026 foi concedido à sul-africana Navanethem Pillay
+
+# 92 [suspect] global investors (en, 32)
+  I: Q132044459 null | 0 wikis | organization | P159 P452 | (no description)
+  AI: none  [of 2]
+  T: Stability of Ghana's economy is attracting strong interest from global investors - Mahama
+  T: Norway data centre firm hunts for partner on Canada-Europe fibre link
+  T: Global investors against use of judicial anti-avoidance rule by tax officials
+
+# 93 [suspect] Latvian Television (en, 16)
+  I: Q945592 Latvijas Televīzija | 34 wikis | public broadcaster, state-owned enterprise | P625 P159 P452 | Latvian public television broadcaster
+  AI: Q945592 Latvijas Televīzija (34): Latvian public television broadcaster  [of 2]
+  T: Saeima to review Latvian citizenship grant to Indian scientist
+  T: Latvian Television's morning newscast had technical issues Friday
+  T: VID: There will be no Russian diesel going through Latvia's ports
+
+# 94 [suspect] Scarlet Knights (en, 36)
+  I: Q7430437 Scarlet Knights | 1 wikis | group of fictional characters |  | fictional comic book family
+  AI: Q923819 Rutgers Scarlet Knights (8): intercollegiate sports teams of Rutgers University  [of 3]
+  T: Field-Best 271 Lifts Men’s Golf to 6th-Place Finish at Quail Valley
+  T: Can Rutgers Football End FBS Longest Streak?
+  T: Volleyball Steals the Second From #11 Oregon 32-30, but Hits .068 in a Four-Set Loss
+
+# 95 [suspect] Ho Chi Minh City Party Committee (en, 21)
+  I: Q10825624 Ho Chi Minh City Party Committee | 1 wikis |  |  | (no description)
+  AI: Q10825624 Ho Chi Minh City Party Committee (1): 
+  T: Comrade Bui Thanh Nhan holds the position of Head of the Propaganda Department of the Ho Chi Minh City Party Committee.
+  T: Mr. Bui Thanh Nhan holds the position of Head of the Propaganda Department of the Ho Chi Minh City Party Committee.
+  T: The Ho Chi Minh City Party Committee has appointed, transferred, and assigned many officials.
+
+# 96 [suspect] Cour suprême américaine (fr, 16)
+  I: Q11201 Supreme Court of the United States | 88 wikis | supreme court, United States article III court, Wikimedia portal | P625 P159 | highest court of jurisdiction in the United States of America
+  AI: Q11201 Supreme Court of the United States (88): highest court of jurisdiction in the United States of America
+  T: La Cour suprême américaine rejette le recours du cerveau présumé des attentats du 11-Septembre
+  T: 11-Septembre : la Cour suprême américaine rejette le recours du cerveau présumé des attentats
+  T: Fed: la gouverneure Cook repousse la convocation de Trump, invoque un agenda chargé
+
+# 97 [suspect] Coreia do Norte (pt, 25)
+  I: Q423 North Korea | 312 wikis | sovereign state, country, people's republic, hermit kingdom, pariah state | P625 | sovereign state in East Asia
+  AI: Q423 North Korea (312): sovereign state in East Asia  [of 10]
+  T: Seul promete “punição severa” após Coreia do Norte ameaçar adotar novas medidas na fronteira
+  T: Coreia do Norte considera enviar armas táticas para a fronteira com Sul
+  T: Coreia do Norte exibe arsenal militar em novo museu
+
+# 98 [suspect] Houthi (it, 1385)
+  I: Q112660832 Houthi | 0 wikis | locality |  | (no description)
+  AI: Q255997 Houthi insurgency (27): 2004–2014 Houthi rebellion, escalating into the Yemen Civil War  [of 6]
+  T: Britse straaljagers naar Saudi-Arabië vanwege strijd tegen Houthi's
+  T: Britain says it will carry out defensive air missions over Saudi Arabia
+  T: Death toll from Houthi attack on Yemen training camp rises to 73
+
+# 99 [suspect] Verifactu (ca, 14)
+  I: Q136723009 null | 1 wikis |  |  | (no description)
+  AI: none
+  T: Los empresarios extremeños reciben con los brazos abiertos el aplazamiento de Verifactu
+  T: Marisa Polo, de AS Consultores y Asesores, ve margen para prepararse ante VeriFactu pero critica la falta de planificación de la Administrac
+  T: Un guipuzcoano lanza Ninded, el ERP "made in Spain" con IA que factura y presenta impuestos desde una app
+
+# 100 [suspect] Lamine Yamal (es, 144)
+  I: Q113704154 Lamine Yamal | 98 wikis | human | P641 | Spanish association football player (born 2007)
+  AI: none
+  T: PSG vs. FC Barcelona: Willian Pacho ante Lamine Yamal por la Champions League
+  T: Laporta blinda Lamine Yamal: "Fiducia nelle nostre forze, il Barcellona paga bene"
+  T: Pedri pede que Lamine Yamal construa própria carreira sem comparações com Messi
+
+# 101 [suspect] National Association of Nigerian Students (en, 19)
+  I: Q17025279 National Association of Nigerian Students | 2 wikis | students' union | P625 | proscribed Nigerian Student Union
+  AI: none
+  T: NANS denies planned protest, demands independent probe into Aro hospital student death
+  T: NANS Gives Neuro-Psychiatric Hospital Abeokuta 24 Hours to Explain Student’s Death
+  T: 2027: NANS charges members on voter sensitisation
+
+# 102 [suspect] Ehpad (fr, 150)
+  I: Q30114662 accommodation facility for dependent elderly people | 2 wikis |  |  | in France, is the most widespread institution for the elderly
+  AI: Q30114662 accommodation facility for dependent elderly people (2): in France, is the most widespread institution for the elderly  [of 10]
+  T: À Dieppe, les travaux de l’unité de soins de longue durée sont à mi-route à la Résidence du Château
+  T: Cazères : un spectacle dansant pour soutenir les actions des Amis de Jeanne
+  T: Un infirmier en Ehpad soupçonné d’avoir commis une erreur fatale de médicaments
+
+# 103 [suspect] Boyu Capital (en, 14)
+  I: Q120328128 Boyu Capital | 2 wikis |  |  | Chinese private equity firm
+  AI: none
+  T: AI agent developer Manus raises $500M+ at reported $4B valuation
+  T: Butterfly Effect says Manus raised more than $500 million
+  T: Manus Raises $500 Million After China Blocks Meta’s Multibillion-Dollar AI Deal
+
+# 104 [suspect] Shelly Group (de, 14)
+  I: Q134520240 null | 1 wikis | enterprise | P159 P452 | (no description)
+  AI: Q134520240 Q134520240 (1): 
+  T: Die vor einer Übernahme stehende Shelly Group BG1100003166 hat ihren Umsatz in den ersten neun Monaten um rund 30 Prozent auf 112,8 Millione
+  T: Shelly Group SE / BG1100003166
+  T: Shelly Group veröffentlicht vorläufige Konzernumsätze für den Neunmonatszeitraum 2026 EQS-Ad-hoc: Shelly Group SE / Schlagwort(e): Geschäfts
+
+# 105 [suspect] Metro de Lisboa (es, 27)
+  I: Q746032 Lisbon Metro | 44 wikis | rapid transit | P625 | rapid transit railway in Lisbon, Portugal
+  AI: Q746032 Lisbon Metro (44): rapid transit railway in Lisbon, Portugal  [of 2]
+  T: Trabalhadores do Metro de Lisboa marcam greves parciais para 28 e 30 de outubro
+  T: Vêm aí duas greves no Metro de Lisboa
+  T: Prepare-se: Metro de Lisboa vai ter mais duas greves até ao final do mês
+
+# 106 [suspect] VTM NIEUWS (nl, 27)
+  I: Q5264348 VTM Nieuws | 4 wikis | television program | P577 | Belgian news program
+  AI: Q5264348 VTM Nieuws (4): Belgian news program
+  T: Theo Francken over ‘rijkswacht 2.0’: “Bij extreme agressie moet je die harde hand durven bovenhalen”
+  T: Opvallend: 82 procent wil rijkswacht terug, blijkt uit ‘De Vraag van Vandaag’
+  T: Heeft u een vraag voor minister Francken over zijn idee van ‘rijkswacht 2.0’? Stel ze hier
+
+# 107 [suspect] Pogacar (fr, 47)
+  I: Q23867241 null | 1 wikis | encyclopedia article |  | article in Otto's encyclopedia
+  AI: none  [of 2]
+  T: Doble fichaje para el Decathlon y Seixas: regresa O’Connor y llega Sivakov
+  T: Pogacar já definiu os principais objetivos em 2027
+  T: «Muss ich irgendwann abhaken» - Nach Sturz: Pogacar will 2027 zurück zur Vuelta
+
+# 108 [suspect] Éditions Solar (fr, 15)
+  I: Q16684420 Solar | 1 wikis | publishing house | P159 | French publisher
+  AI: Q16684420 Solar (1): French publisher
+  T: Nîmes: Hugo Zeldine dévoile ses 60 recettes gourmandes dans un premier livre de pâtisserie
+  T: Psychologie. Trouble borderline à l’adolescence : où s’arrête la crise d’ado ?
+  T: Présentation de « La cuisine des Arméniens » le 14 octobre à la MCA de Paris
+
+# 109 [suspect] Parkdean Resorts (en, 30)
+  I: Q7138226 Parkdean Resorts | 2 wikis | business | P159 P452 | Holiday park operator in the United Kingdom
+  AI: Q7138226 Parkdean Resorts (2): Holiday park operator in the United Kingdom
+  T: JLS, East 17 and D:Ream on lineup for 80s, 90s and 00s weekenders from £60 a night
+  T: We've found a few half-term beach breaks starting from just £99 - but they're running out
+  T: Parkdean Resorts has November breaks from £159 with Vernon Kay and 90s pop acts
+
+# 110 [suspect] Asia Times (en, 74)
+  I: Q4806481 Asia Times | 2 wikis | newspaper |  | newspaper
+  AI: Q727162 Asia Times Online (21): news website  [of 3]
+  T: Why Starshield’s slowdown really hurts Ukraine
+  T: Calls mount for a true accounting of Trump’s Iran war
+  T: Dhaka’s silence on Saudi executions puts remittances over lives
+
+# 111 [suspect] ESTAC (fr, 188)
+  I: Q11920747 Estac | 3 wikis | single entity of population, Catalan historical locality | P625 | innhabited place in Soriguera, Spain
+  AI: Q501693 ES Troyes AC (46): association football club in Troyes, France  [of 2]
+  T: Alain Perrin, ancien coach de l’Atac puis de l’Estac, après la disparition de Daniel Zorzetto : « Il aurait pu être numéro 1 ailleurs »
+  T: Football L1 : Estac - Lens: 1-3, 5ème défaite d'afiilée
+  T: Figure incontournable du football aubois sur cinq décennies, Daniel Zorzetto nous a quittés
+
+# 112 [suspect] Department of Sport, Arts and Culture (en, 4)
+  I: Q98140210 Department of Sports, Arts and Culture | 2 wikis | department of the South African government, sport ministry, ministry of culture, art ministry |  | department of the South African government
+  AI: Q98140210 Department of Sports, Arts and Culture (2): department of the South African government
+  T: SAFA says R20m VAR funding remains untouched as project faces further checks
+  T: EXPLAINED: Where is the R20m transferred to SAFA for VAR?
+  T: McKenzie hands VAR responsibility back to SAFA after R20m payment
+
+# 113 [suspect] De la Espriella (es, 31)
+  I: Q137204778 Abelardo de la Espriella | 39 wikis | human |  | 43ᵗʰ President of Colombia since 2026
+  AI: Q140940758 Presidency of Abelardo de la Espriella (2): 35th and current presidential administration of Colombia, inaugurated in 2026
+  T: Matador le cobró a Vicky Dávila sus antiguas palabras contra De la Espriella y la tildó de “arrodillada”
+  T: Gustavo Petro advierte sobre cifras antidroga del Gobierno De la Espriella
+  T: Carlos Suárez, el estratega que llevó a De la Espriella a la Presidencia, reveló las claves de la comunicación y la IA en Effix 2026
+
+# 114 [suspect] Тоттенхэм (ru, 42)
+  I: Q503375 Tottenham | 45 wikis | town, area of London | P625 | town in the London Borough of Haringey
+  AI: Q18741 Tottenham Hotspur F.C. (102): association football club in London, England  [of 5]
+  T: «Тоттенхэм» впервые с мая победил в АПЛ, Мичков оформил дубль в НХЛ. Главное к утру
+  T: "Новый Филипп Лам" из "Барселоны" привлёк внимание двух грандов АПЛ
+  T: "Тоттенхэм" одержал первую победу в АПЛ и покинул зону вылета
+
+# 115 [suspect] Rebel Wolves (fr, 18)
+  I: Q121590517 Rebel Wolves | 1 wikis | video game developer | P159 P452 | Polish video game developer
+  AI: Q121590517 Rebel Wolves (1): Polish video game developer
+  T: The Blood of Dawnwalker Update 1.1 Arrives Next Week With Skill Respec and New Difficulty
+  T: The Blood of Dawnwalker sembra un altro gioco con l'enorme Update 1.1
+  T: The Blood of Dawnwalker : la mise à jour majeure 1.1 arrive bientôt, voici tout ce qui change
+
+# 116 [suspect] Consejo de la FIFA (es, 14)
+  I: Q1388490 FIFA Council | 16 wikis | organization | P625 P159 P641 | institution
+  AI: none
+  T: Miembros UEFA de Consejo de FIFA exigen datos inmediatos de pagos a Infantino y sus gastos
+  T: Los miembros europeos del Consejo de la FIFA exigen datos inmediatos de pagos a Infantino y sus gastos
+  T: Miembros UEFA del Consejo de la FIFA exigen datos inmediatos de pagos a Infantino y sus gastos
+
+# 117 [suspect] UNAF (fr, 35)
+  I: Q3550343 Union Nationale des Associations Familiales | 1 wikis | association under the French law of 1901 | P159 | (no description)
+  AI: none  [of 3]
+  T: Allocation de rentrée scolaire en France : l’Unaf dénonce 600 M€ de coupes pour 2027
+  T: UNAF U20: les Lionceaux de l’Atlas s’inclinent face à la Libye
+  T: UNAF U20 : le Maroc domine l’Égypte 2-0
+
+# 118 [suspect] UC Davis (en, 64)
+  I: Q129421 University of California, Davis | 49 wikis | university, census-designated place in the United States, land-grant university, public educational institution of the United States, open-access publisher | P625 | public university in the Davis, California area; part of the University of California system
+  AI: Q129421 University of California, Davis (49): public university in the Davis, California area; part of the University of California system  [of 10]
+  T: Hawaii Beat: Wahine soccer, sailing
+  T: Burns, Chalk leave marks in Southern Utah's 38-17 win over UC Davis
+  T: Burns, Chalk leave marks in Southern Utah’s 38-17 win over UC Davis
+
+# 119 [suspect] BIO (null, 18)
+  I: Q1332822 Bio | 36 wikis | commune of France | P625 | commune in Lot, France
+  AI: none
+  T: Diese Frau aus Gondelingen ackert für Getreide, Vieh und Gleichberechtigung
+  T: Schluss mit Fantasie-Labeln: Das bringen die neuen Regeln für Öko-Siegel
+  T: Gard : une exploitation bio de Marguerittes récompensée pour son modèle agricole
+
+# 120 [suspect] gjykata (sq, 19)
+  I: Q122170656 null | 0 wikis | version, edition or translation | P577 | (no description)
+  AI: none  [of 10]
+  T: Rama: Gjykata i ka cilësuar të ligjshme arrestimet, do shohim mundësinë e uljes së moshës për dënimin penal
+  T: U arrestuan në ditën e parë të protestës në Durrës, gjykata i lë në arrest shtëpie 4 protestues, detyrim paraqitje për 18 të tjerë
+  T: Korçë, gjykata liron dy të rinjtë e arrestuar për protestën, do hetohen me detyrim paraqitjeje
+
+# 121 [suspect] gut bacteria (en, 16)
+  I: Q105846474 gut bacteria | 0 wikis |  |  | bacteria living in animals' intestines
+  AI: Q105846474 gut bacteria (0): bacteria living in animals' intestines  [of 2]
+  T: Gut bacteria thrive on plant fiber, but an unlikely neighbor helps them succeed
+  T: Gut bacteria influence how much calories the body absorbs.
+  T: How E. coli eavesdrops on the metabolic activity of other gut bacteria
+
+# 122 [suspect] Jambos (en, 79)
+  I: Q87289773 Jambos | 0 wikis | taxon |  | genus of plants
+  AI: none
+  T: Hearts fired ominous warning by Trabzonspor as Mo Salah and Co warm up for Conference League showdown in style
+  T: Hearts-daft BBC broadcaster Martin Geissler calls out the Jambos’ vile songbook at Celtic Park – it’s a pity none of the Ibrox-facing broadc
+  T: Magnificent seven Celtic send a clear title message to rivals
+
+# 123 [suspect] EE. UU (es, 25)
+  I: Q18622742 null | 1 wikis | Wikinews article | P577 | Wikinews article
+  AI: none
+  T: ¡17-0! EE. UU. logra la mayor goleada en la historia de los Mundiales
+  T: Cuba acusa a EE. UU. de instrumentalizar la ONU antes de la votación sobre el embargo
+  T: México exige a EE. UU. investigar la muerte de un connacional bajo custodia migratoria en Texas

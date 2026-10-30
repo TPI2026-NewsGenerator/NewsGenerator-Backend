@@ -1,0 +1,18 @@
+candidates 50: Tennis 14, Intelligence a 18, Politique suis 18
+run 0: 15 chosen, Tennis 1, Intelligence a 5, Politique suis 9, kept 10: Tennis 1, Intelligence a 3, Politique suis 6  (5667+639 tokens)
+   K Politique suis | Votations fédérales: retrouvez les résultats via nos cartes et nos graphiques
+   K Politique suis | Voici tous les résultats des votations de ce dimanche
+   K Politique suis | Tous les résultats en un clin d'œil
+   K Politique suis | Ce qu’il faut savoir avant les votations de dimanche
+   K Intelligence a | Le point de vue. Intelligence artificielle : « La machine est en marche, on ne l'arrêtera pas mais..
+   K Intelligence a | De nouveaux matériaux aux diagnostics, la nouvelle odyssée de l’intelligence artificielle
+   K Politique suis | Votations fédérale et cantonale du 27 septembre 2026 | État de Vaud
+   K Intelligence a | Intelligence artificielle: comment l’IA peut soutenir une croissance durable
+   K Politique suis | In Switzerland, voters are voting for stricter neutrality: the result could force the country to lif
+   K Tennis | Tennis : Kyrian Jacquet se qualifie pour sa première demi-finale sur le grand circuit
+     Intelligence a | « Révolution de l’intelligence artificielle : un goût de déjà-vu ? »
+     Intelligence a | Advances in AI — September 2026
+     Politique suis | «La Suisse est du bon côté de l'histoire» ++ Rejet net des 2 initiatives
+     Politique suis | Swiss voters decide on NATO cooperation and neutrality
+     Politique suis | Neutralité suisse: une claque, un plébiscite et une clarification qui tombe à point
+seconds 10

@@ -1,0 +1,13 @@
+{
+ "note": "Judged by hand on the titles of the news (review.txt, 23.10.2026), by the position [n] in sample.json. W = the item the production path (Wikidata) linked; P1..P3 = the 1st..3rd page of the Wikipedia search of the name in its language, Q = the same with the name between quotes, E = on the English Wikipedia; none = no item is meant (a descriptor, a common noun, no article); missing = an item exists but no way found it; unsure = left out of the scores",
+ "1": "W", "2": "none", "3": "none", "4": "none", "5": "P2", "6": "E2", "7": "none", "8": "none", "9": "none", "10": "none",
+ "11": "P1", "12": "none", "13": "none", "14": "none", "15": "P2", "16": "W", "17": "none", "18": "missing", "19": "unsure", "20": "P1",
+ "21": "none", "22": "none", "23": "P1", "24": "none", "25": "P1", "26": "P3", "27": "none", "28": "P2", "29": "none", "30": "none",
+ "31": "W", "32": "none", "33": "none", "34": "none", "35": "none", "36": "P1", "37": "W", "38": "none", "39": "missing", "40": "none",
+ "41": "missing", "42": "Q2", "43": "unsure", "44": "none", "45": "P2", "46": "none", "47": "P1", "48": "unsure", "49": "P1", "50": "P1",
+ "51": "Q1", "52": "missing", "53": "none", "54": "W", "55": "W", "56": "W", "57": "unsure", "58": "W", "59": "none", "60": "P1",
+ "61": "none", "62": "P1", "63": "P1", "64": "none", "65": "W", "66": "W", "67": "none", "68": "none", "69": "W", "70": "none",
+ "71": "missing", "72": "W", "73": "W", "74": "W", "75": "P1", "76": "W", "77": "unsure", "78": "W", "79": "W", "80": "P1",
+ "81": "W", "82": "W", "83": "W", "84": "W", "85": "W", "86": "P1", "87": "W", "88": "W", "89": "E1", "90": "P1",
+ "91": "none", "92": "W", "93": "W", "94": "W", "95": "P1", "96": "W", "97": "none", "98": "none", "99": "none", "100": "W"
+}

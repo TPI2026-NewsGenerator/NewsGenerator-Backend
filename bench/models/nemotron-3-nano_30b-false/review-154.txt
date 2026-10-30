@@ -1,0 +1,39 @@
+briefing 16: 0 of 10 left out, 1012 ms
+briefing 17: 0 of 10 left out, 1028 ms
+briefing 18: 3 of 10 left out, 1012 ms
+   [13301] Tennis : Kyrian Jacquet se qualifie pour sa première demi-finale sur l -> tennis
+   [12101] ATP roundup: Seeded players fall in Chengdu, Hangzhou -> tennis
+   [12148] “The US Open and Davis Cup took a toll”: Ben Shelton forced out of ano -> football
+briefing 19: 1 of 10 left out, 601 ms
+   [8234] L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Win -> football
+briefing 20: 1 of 10 left out, 684 ms
+   [8234] L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Win -> football
+briefing 21: 2 of 10 left out, 773 ms
+   [12307] Le Conseil fédéral alloue 334,5 millions pour l'intégration des étrang -> football
+   [12304] "Il ne va pas s'arrêter là" : le tennisman Arthur Fils va intégrer le  -> football
+briefing 22: 2 of 10 left out, 711 ms
+   [8234] L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Win -> football
+   [12103] “It doesn't matter”: Alexander Zverev responds to huge No.1 opportunit -> football
+briefing 23: 2 of 9 left out, 793 ms
+   [12464] Le Conseil fédéral propose sa solution contre les loyers abusifs, l'As -> mentionne l'initiative de l'Asloca sur les loyers abusifs, qui relève de la politique cantonale
+   [12307] Berne alloue des millions pour l'intégration des étrangers -> parle de l'intégration des étrangers, sujet de politique cantonale
+briefing 24: 6 of 8 left out, 1167 ms
+   [12124] New Top-10 player forced to play Tokyo qualifying for unusual reason -> tennis
+   [12451] EU begins enforcing AI Act transparency rules - Industry Report: Europ -> IA marketing
+   [12397] La pression sur la Suisse est immense: comment le sommet mondial de l’ -> IA marketing
+   [7940] ‘Our industry sees the risks and is concerned’: European tech leaders  -> IA marketing
+   [14083] Les dirigeants d’OpenAI et d’Anthropic convoqués dans le cadre d’une e -> IA marketing
+   [12307] Berne alloue des millions pour l'intégration des étrangers -> football
+briefing 25: 7 of 7 left out, 1220 ms
+   [12307] Berne alloue des millions pour l'intégration des étrangers -> politique suisse cantonale
+   [15723] L'évaluation d'un deuxième système de défense antiaérienne est terminé -> achat matériel militaire
+   [12451] EU begins enforcing AI Act transparency rules - Industry Report: Europ -> IA et cryptomonnaies
+   [7940] ‘Our industry sees the risks and is concerned’: European tech leaders  -> IA et cryptomonnaies
+   [12397] La pression sur la Suisse est immense: comment le sommet mondial de l’ -> IA et cryptomonnaies
+   [12103] “It doesn't matter”: Alexander Zverev responds to huge No.1 opportunit -> tennis professionnel
+   [12304] "Il ne va pas s'arrêter là" : le tennisman Arthur Fils va intégrer le  -> tennis professionnel
+briefing 26: 2 of 8 left out, 636 ms
+   [12103] “It doesn't matter”: Alexander Zverev responds to huge No.1 opportunit -> mentionne le tennis
+   [12148] “The US Open and Davis Cup took a toll”: Ben Shelton forced out of ano -> parle du tennis
+102 cards, tokens {"calls":11,"input":27482,"output":1056}
+seconds 10

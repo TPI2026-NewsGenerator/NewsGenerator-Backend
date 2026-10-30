@@ -1,0 +1,40 @@
+1 runs: joined to its fact 15% (6/41), joined to another fact 2% (2, 0 of them into a shown card: hidden)
+tokens per call: 3957 read, 1065 written, 34.2 s
+  ×1 apart   monde: Le peuple suisse rejette l'initiative pour la neutralité par 70,2% des
+  ×1 apart   monde: Berne alloue des millions pour l'intégration des étrangers
+  ×1 apart   monde: Swiss voters crush neutrality initiative that would have ended sanctio
+  ×1 apart   monde: La Maison-Blanche écarte CNN du déplacement de Trump
+  ×1 apart   monde: Rain eases in Bangkok but persistent flooding forces thousands to leav
+  ×1 apart   monde: "Nos conditions sont claires" : l'Iran maintient ses exigences pour ro
+  ×1 apart   monde: Press pool dispute escalates as White House cuts CNN from Air Force On
+  ×1 apart   monde: „Wasser steht bis zur Hüfte“ – Bangkok ruft wegen Überschwemmungen Kat
+  ×1 apart   monde: Des manifestants protestent contre la crise du logement à Madrid
+  ×1 apart   ia: After Dozens of Incidents at OpenAI and Anthropic, OpenAI Pauses Model
+  ×1 apart   ia: China and the US Say They've Agreed to Start Talks About AI
+  ×1 apart   ia: Apple hit with $5.7 billion in damages over haptic patents
+  ×1 apart   ia: Les Etats-Unis et la Chine ouvrent «un canal de communication» sur l’i
+  ×1 apart   ia: KI mit Kontrollverlust: OpenAI stoppt Training seiner Top-Modelle
+  ×1 apart   ia: TikTok évite un procès aux États-Unis sur la protection des mineurs en
+  ×1 apart   ia: Intelligence artificielle : OpenAI reconnaît la mise en ligne par erre
+  ×1 apart   ia: Australie : enquête après intrusion d’un agent d’OpenAI
+  ×1 apart   ia: Trump tries to rebrand AI. Is it really that super?
+  ×1 apart   affaires: El presidente del Manchester City rompe su silencio: “Confiamos en dem
+  ×1 apart   affaires: Europe’s leading leagues demand major FIFA reforms over governance con
+  ×1 apart   sport: Äthiopierin Assefa verpasst neuen Weltrekord knapp
+  ×1 apart   sport: Kylian Mbappé, forfait pour la suite du rassemblement, ne sera pas rem
+  ×1 apart   sport: Französische Nationalmannschaft: Mbappés Verletzung trübt Zidanes Eins
+  ×1 apart   sport: George Russell wins Azerbaijan Grand Prix by ONE tenth of a second: Me
+  ×1 apart   sport: Formel 1 in Baku: George Russell zittert sich vor Max Verstappen zum S
+  ×1 apart   sport: Cramps derail Tigst Assefa's world record as Guye Adola wins Berlin Ma
+  ×1 apart   sport: Knieverletzung: Mbappé fehlt Frankreich für drei Spiele
+  ×1 apart   sport: Spain expose England's shortcomings in breathtaking Wembley comeback
+  ×1 apart   sport: Ligue des nations - L'Espagne championne du monde bat l'Angleterre à W
+  ×1 joined  societe: L'Allemagne choisit Munich pour postuler à l'organisation des Jeux oly
+             into Bei Militärbasis – Fünf Männer wegen mutmaßlicher Anschlagsvorbereitun
+  ×1 apart   societe: Frankreich-Besuch: Papst Leo XIV. trifft sich mit Missbrauchsopfern in
+  ×1 joined  societe: Munich picked for Germany's bid to host the Summer Olympics in 2036, 2
+             into Bei Militärbasis – Fünf Männer wegen mutmaßlicher Anschlagsvorbereitun
+  ×1 apart   societe: Visite du pape en France : Léon XIV appelle à "la paix" et "au dialogu
+  ×1 apart   societe: Detenidos varios hombres por delitos con explosivos cerca de la base m
+  ×1 apart   societe: SPD will Pläne von Gesundheitsminister Linnemann für die Pflegereform 
+seconds 62

@@ -1,0 +1,3415 @@
+{
+ "checked": 900,
+ "classes": {
+  "TYPE": [
+   {
+    "kind": "person",
+    "name": "researchers",
+    "lang": "en",
+    "seen": 2605,
+    "qid": "Q1650915",
+    "label": "researcher",
+    "description": "person who engages in research, professionally or otherwise. If a more specific occupation is known, use that instead",
+    "links": 40,
+    "human": false,
+    "place": false,
+    "work": false
+   },
+   {
+    "kind": "person",
+    "name": "Flávio",
+    "lang": "pt",
+    "seen": 2162,
+    "qid": "Q32979165",
+    "label": "Flavius",
+    "description": "ancient Roman nomen",
+    "links": 1,
+    "human": false,
+    "place": false,
+    "work": false
+   },
+   {
+    "kind": "person",
+    "name": "customers",
+    "lang": "en",
+    "seen": 1153,
+    "qid": "Q2979031",
+    "label": "clientele",
+    "description": "set of all customers of a service",
+    "links": 2,
+    "human": false,
+    "place": false,
+    "work": false
+   },
+   {
+    "kind": "person",
+    "name": "Zverev",
+    "lang": "en",
+    "seen": 1125,
+    "qid": "Q729821",
+    "label": "Q729821",
+    "description": "asteroid",
+    "links": 31,
+    "human": false,
+    "place": false,
+    "work": false
+   },
+   {
+    "kind": "person",
+    "name": "Experts",
+    "lang": "en",
+    "seen": 1098,
+    "qid": "Q381160",
+    "label": "expert",
+    "description": "person with broad and profound competence in a particular field",
+    "links": 65,
+    "human": false,
+    "place": false,
+    "work": false
+   },
+   {
+    "kind": "person",
+    "name": "scientists",
+    "lang": "en",
+    "seen": 746,
+    "qid": "Q18611977",
+    "label": "Scientists",
+    "description": "36th strip of the webcomic xkcd",
+    "links": 0,
+    "human": false,
+    "place": false,
+    "work": true
+   },
+   {
+    "kind": "person",
+    "name": "Dybala",
+    "lang": "es",
+    "seen": 666,
+    "qid": "Q96476970",
+    "label": "Dybala",
+    "description": "",
+    "links": 1,
+    "human": false,
+    "place": false,
+    "work": false
+   },
+   {
+    "kind": "person",
+    "name": "He",
+    "lang": "en",
+    "seen": 644,
+    "qid": "Q15926381",
+    "label": "He",
+    "description": "Chinese surname (贺 / 賀)",
+    "links": 6,
+    "human": false,
+    "place": false,
+    "work": false
+   },
+   {
+    "kind": "person",
+    "name": "Puigdemont",
+    "lang": "es",
+    "seen": 579,
+    "qid": "Q107091352",
+    "label": "Puigdemont",
+    "description": "building in Olot, Garrotxa, Girona, Catalonia, Spain",
+    "links": 0,
+    "human": false,
+    "place": true,
+    "work": false
+   },
+   {
+    "kind": "person",
+    "name": "buyers",
+    "lang": "en",
+    "seen": 519,
+    "qid": "Q1308239",
+    "label": "buyer",
+    "description": "person acquiring a benefit in exchange for money",
+    "links": 16,
+    "human": false,
+    "place": false,
+    "work": false
+   },
+   {
+    "kind": "person",
+    "name": "Menschen",
+    "lang": "de",
+    "seen": 480,
+    "qid": "Q5",
+    "label": "human",
+    "description": "any single member of Homo sapiens, unique extant species of the genus Homo",
+    "links": 278,
+    "human": false,
+    "place": false,
+    "work": false
+   },
+   {
+    "kind": "person",
+    "name": "Lamine",
+    "lang": "es",
+    "seen": 434,
+    "qid": "Q2961318",
+    "label": "Lamine",
+    "description": "section of Remicourt, Belgium",
+    "links": 4,
+    "human": false,
+    "place": true,
+    "work": false
+   },
+   {
+    "kind": "organization",
+    "name": "Ue",
+    "lang": "it",
+    "seen": 4711,
+    "qid": "Q458",
+    "label": "European Union",
+    "description": "political and economic union of 27 European states",
+    "links": 292,
+    "human": false,
+    "place": true,
+    "work": false
+   },
+   {
+    "kind": "organization",
+    "name": "AEW",
+    "lang": "en",
+    "seen": 3387,
+    "qid": "Q60324825",
+    "label": "All Elite Wrestling",
+    "description": "American professional wrestling promotion",
+    "links": 35,
+    "human": false,
+    "place": false,
+    "work": true
+   },
+   {
+    "kind": "organization",
+    "name": "ChatGPT",
+    "lang": "en",
+    "seen": 2176,
+    "qid": "Q115564437",
+    "label": "ChatGPT",
+    "description": "artificial intelligence chatbot developed by OpenAI",
+    "links": 140,
+    "human": false,
+    "place": false,
+    "work": true
+   },
+   {
+    "kind": "organization",
+    "name": "Instagram",
+    "lang": "en",
+    "seen": 1800,
+    "qid": "Q209330",
+    "label": "Q209330",
+    "description": "photo and video sharing social network owned by Meta Platforms",
+    "links": 167,
+    "human": false,
+    "place": false,
+    "work": true
+   },
+   {
+    "kind": "organization",
+    "name": "TikTok",
+    "lang": "es",
+    "seen": 1797,
+    "qid": "Q48938223",
+    "label": "TikTok",
+    "description": "video-focused social media platform",
+    "links": 138,
+    "human": false,
+    "place": false,
+    "work": true
+   },
+   {
+    "kind": "organization",
+    "name": "Houthi",
+    "lang": "it",
+    "seen": 1425,
+    "qid": "Q255997",
+    "label": "Houthi insurgency",
+    "description": "2004–2014 Houthi rebellion, escalating into the Yemen Civil War",
+    "links": 27,
+    "human": false,
+    "place": true,
+    "work": false
+   },
+   {
+    "kind": "organization",
+    "name": "European Union",
+    "lang": "en",
+    "seen": 1352,
+    "qid": "Q458",
+    "label": "European Union",
+    "description": "political and economic union of 27 European states",
+    "links": 292,
+    "human": false,
+    "place": true,
+    "work": false
+   },
+   {
+    "kind": "organization",
+    "name": "Union européenne",
+    "lang": "fr",
+    "seen": 1140,
+    "qid": "Q458",
+    "label": "European Union",
+    "description": "political and economic union of 27 European states",
+    "links": 292,
+    "human": false,
+    "place": true,
+    "work": false
+   }
+  ],
+  "ALIAS": [
+   {
+    "kind": "person",
+    "name": "Max Verstappen",
+    "lang": "en",
+    "seen": 3194,
+    "qid": "Q2239218",
+    "label": "Q2239218",
+    "description": "Dutch and Belgian racing driver",
+    "links": 105
+   },
+   {
+    "kind": "person",
+    "name": "Gianni Infantino",
+    "lang": "fr",
+    "seen": 2966,
+    "qid": "Q124138",
+    "label": "Q124138",
+    "description": "Swiss-Italian-Lebanese football administrator",
+    "links": 83
+   },
+   {
+    "kind": "person",
+    "name": "Emmanuel Macron",
+    "lang": "es",
+    "seen": 2361,
+    "qid": "Q3052772",
+    "label": "Q3052772",
+    "description": "President of France and Co-Prince of Andorra since 2017",
+    "links": 200
+   },
+   {
+    "kind": "person",
+    "name": "Zelensky",
+    "lang": "en",
+    "seen": 2189,
+    "qid": "Q3874799",
+    "label": "Volodymyr Zelenskyy",
+    "description": "President of Ukraine since 2019",
+    "links": 214
+   },
+   {
+    "kind": "person",
+    "name": "Novak Djokovic",
+    "lang": "ro",
+    "seen": 2100,
+    "qid": "Q5812",
+    "label": "Q5812",
+    "description": "Serbian tennis player (born 1987)",
+    "links": 153
+   },
+   {
+    "kind": "person",
+    "name": "Alexander Zverev",
+    "lang": "de",
+    "seen": 2030,
+    "qid": "Q13990552",
+    "label": "Q13990552",
+    "description": "German tennis player (born 1997)",
+    "links": 51
+   },
+   {
+    "kind": "person",
+    "name": "Jordan Bardella",
+    "lang": "fr",
+    "seen": 1005,
+    "qid": "Q40655898",
+    "label": "Q40655898",
+    "description": "French politician (born 1995)",
+    "links": 47
+   },
+   {
+    "kind": "person",
+    "name": "Rahul Gandhi",
+    "lang": "en",
+    "seen": 980,
+    "qid": "Q10218",
+    "label": "Q10218",
+    "description": "Indian politician (1970-present)",
+    "links": 64
+   },
+   {
+    "kind": "person",
+    "name": "Nana Patekar",
+    "lang": "en",
+    "seen": 932,
+    "qid": "Q2475741",
+    "label": "Q2475741",
+    "description": "Indian philanthropist, writer, film actor, and filmmaker (1951–2026)",
+    "links": 46
+   },
+   {
+    "kind": "person",
+    "name": "Jean-Luc Mélenchon",
+    "lang": "fr",
+    "seen": 740,
+    "qid": "Q5829",
+    "label": "Q5829",
+    "description": "French left-wing populist politician (born 1951)",
+    "links": 70
+   },
+   {
+    "kind": "person",
+    "name": "Russell Brand",
+    "lang": "en",
+    "seen": 632,
+    "qid": "Q296609",
+    "label": "Q296609",
+    "description": "English comedian, actor, and podcaster (born 1975)",
+    "links": 49
+   },
+   {
+    "kind": "person",
+    "name": "Τραμπ",
+    "lang": "el",
+    "seen": 568,
+    "qid": "Q22686",
+    "label": "Donald Trump",
+    "description": "President of the United States (2017–2021; since 2025)",
+    "links": 334
+   },
+   {
+    "kind": "person",
+    "name": "Claudia Sheinbaum",
+    "lang": "es",
+    "seen": 531,
+    "qid": "Q5771800",
+    "label": "Q5771800",
+    "description": "president of Mexico since 2024",
+    "links": 100
+   },
+   {
+    "kind": "person",
+    "name": "Volodimir Zelenski",
+    "lang": "es",
+    "seen": 496,
+    "qid": "Q3874799",
+    "label": "Volodymyr Zelenskyy",
+    "description": "President of Ukraine since 2019",
+    "links": 214
+   },
+   {
+    "kind": "person",
+    "name": "Ζέλικο Ομπράντοβιτς",
+    "lang": "el",
+    "seen": 494,
+    "qid": "Q393705",
+    "label": "Željko Obradović",
+    "description": "Serbian basketball player and coach",
+    "links": 30
+   },
+   {
+    "kind": "person",
+    "name": "Nigel Farage",
+    "lang": "en",
+    "seen": 484,
+    "qid": "Q318471",
+    "label": "Q318471",
+    "description": "British politician",
+    "links": 81
+   },
+   {
+    "kind": "person",
+    "name": "Smit Machchhar",
+    "lang": "en",
+    "seen": 449,
+    "qid": "Q141610089",
+    "label": "Q141610089",
+    "description": "Indian airline captain (born 1987/88)",
+    "links": 10
+   },
+   {
+    "kind": "person",
+    "name": "Abhijeet Dipke",
+    "lang": "en",
+    "seen": 445,
+    "qid": "Q139881668",
+    "label": "Q139881668",
+    "description": "Indian political activist (born 1995)",
+    "links": 13
+   },
+   {
+    "kind": "person",
+    "name": "Jaylen Brown",
+    "lang": "en",
+    "seen": 443,
+    "qid": "Q19664817",
+    "label": "Q19664817",
+    "description": "American basketball player (born 1996)",
+    "links": 36
+   },
+   {
+    "kind": "person",
+    "name": "Schlein",
+    "lang": "it",
+    "seen": 420,
+    "qid": "Q113804048",
+    "label": "Yehoshua Shiloni",
+    "description": "Yiddish-Israeli journalist, writer and translator (1894–1965)",
+    "links": 0
+   },
+   {
+    "kind": "organization",
+    "name": "NFL",
+    "lang": "en",
+    "seen": 16088,
+    "qid": "Q1215884",
+    "label": "National Football League",
+    "description": "professional American football league",
+    "links": 81
+   },
+   {
+    "kind": "organization",
+    "name": "US",
+    "lang": "en",
+    "seen": 13805,
+    "qid": "Q30",
+    "label": "United States",
+    "description": "country located primarily in North America",
+    "links": 427
+   },
+   {
+    "kind": "organization",
+    "name": "UEFA",
+    "lang": "en",
+    "seen": 12599,
+    "qid": "Q35572",
+    "label": "Union of European Football Associations",
+    "description": "international governing body for association football in Europe",
+    "links": 127
+   },
+   {
+    "kind": "organization",
+    "name": "NBA",
+    "lang": "fr",
+    "seen": 8638,
+    "qid": "Q155223",
+    "label": "National Basketball Association",
+    "description": "North American professional basketball league",
+    "links": 114
+   },
+   {
+    "kind": "organization",
+    "name": "AI",
+    "lang": "it",
+    "seen": 8071,
+    "qid": "Q11660",
+    "label": "artificial intelligence",
+    "description": "field that develops and studies software enabling machines to exhibit intelligent behavior",
+    "links": 214
+   },
+   {
+    "kind": "organization",
+    "name": "صدى البلد",
+    "lang": "ar",
+    "seen": 7381,
+    "qid": "Q63121712",
+    "label": "Sada El Balad",
+    "description": "Egyptian news website and satellite television channel",
+    "links": 3
+   },
+   {
+    "kind": "organization",
+    "name": "ATP",
+    "lang": "fr",
+    "seen": 6420,
+    "qid": "Q744089",
+    "label": "Association of Tennis Professionals",
+    "description": "men's professional tennis governing body",
+    "links": 58
+   },
+   {
+    "kind": "organization",
+    "name": "Barça",
+    "lang": "fr",
+    "seen": 6223,
+    "qid": "Q7156",
+    "label": "FC Barcelona",
+    "description": "football club in Barcelona, Catalonia, Spain",
+    "links": 155
+   },
+   {
+    "kind": "organization",
+    "name": "Serie A",
+    "lang": "fr",
+    "seen": 5928,
+    "qid": "Q15804",
+    "label": "Q15804",
+    "description": "professional league competition for football clubs located at the top of the Italian football league system",
+    "links": 107
+   },
+   {
+    "kind": "organization",
+    "name": "TV",
+    "lang": "lv",
+    "seen": 5540,
+    "qid": "Q289",
+    "label": "television",
+    "description": "telecommunication medium for transmitting and receiving moving images",
+    "links": 269
+   },
+   {
+    "kind": "organization",
+    "name": "Gobierno",
+    "lang": "es",
+    "seen": 5073,
+    "qid": "Q1194749",
+    "label": "Government of Spain",
+    "description": "Executive authority of Spain",
+    "links": 29
+   },
+   {
+    "kind": "organization",
+    "name": "OM",
+    "lang": "fr",
+    "seen": 5056,
+    "qid": "Q132885",
+    "label": "Olympique de Marseille",
+    "description": "association football club in Marseille, France",
+    "links": 85
+   },
+   {
+    "kind": "organization",
+    "name": "UFC",
+    "lang": "ru",
+    "seen": 5027,
+    "qid": "Q186471",
+    "label": "Ultimate Fighting Championship",
+    "description": "American mixed martial arts (MMA) promotion company",
+    "links": 63
+   },
+   {
+    "kind": "organization",
+    "name": "Polizei",
+    "lang": "de",
+    "seen": 4401,
+    "qid": "Q35535",
+    "label": "police",
+    "description": "law enforcement body",
+    "links": 170
+   },
+   {
+    "kind": "organization",
+    "name": "PP",
+    "lang": "en",
+    "seen": 4230,
+    "qid": "Q185088",
+    "label": "People's Party",
+    "description": "political party in Spain",
+    "links": 63
+   },
+   {
+    "kind": "organization",
+    "name": "BBC",
+    "lang": "en",
+    "seen": 4174,
+    "qid": "Q9531",
+    "label": "British Broadcasting Corporation",
+    "description": "British public service broadcaster",
+    "links": 149
+   },
+   {
+    "kind": "organization",
+    "name": "gouvernement",
+    "lang": "fr",
+    "seen": 4122,
+    "qid": "Q1450662",
+    "label": "Government of the French Republic",
+    "description": "body exerting the executive power in France",
+    "links": 38
+   },
+   {
+    "kind": "organization",
+    "name": "UK",
+    "lang": "en",
+    "seen": 4074,
+    "qid": "Q145",
+    "label": "United Kingdom",
+    "description": "island country in north-west Europe",
+    "links": 396
+   },
+   {
+    "kind": "organization",
+    "name": "MLB",
+    "lang": "es",
+    "seen": 3832,
+    "qid": "Q1163715",
+    "label": "Major League Baseball",
+    "description": "North American professional baseball league",
+    "links": 69
+   },
+   {
+    "kind": "organization",
+    "name": "NHL",
+    "lang": "lv",
+    "seen": 3727,
+    "qid": "Q1215892",
+    "label": "Q1215892",
+    "description": "North American professional ice hockey league",
+    "links": 81
+   },
+   {
+    "kind": "organization",
+    "name": "AFP",
+    "lang": "fr",
+    "seen": 3384,
+    "qid": "Q40464",
+    "label": "Agence France-Presse",
+    "description": "international news agency headquartered in Paris",
+    "links": 59
+   },
+   {
+    "kind": "organization",
+    "name": "WNBA",
+    "lang": "en",
+    "seen": 3362,
+    "qid": "Q2593221",
+    "label": "Women's National Basketball Association",
+    "description": "professional women's basketball league in the United States",
+    "links": 48
+   },
+   {
+    "kind": "organization",
+    "name": "WTA",
+    "lang": "lv",
+    "seen": 3357,
+    "qid": "Q948442",
+    "label": "Women's Tennis Association",
+    "description": "international association of professional women tennis players",
+    "links": 57
+   },
+   {
+    "kind": "organization",
+    "name": "Παναθηναϊκός",
+    "lang": null,
+    "seen": 3352,
+    "qid": "Q4122219",
+    "label": "Panathinaikos F.C.",
+    "description": "association football team in Greece",
+    "links": 70
+   },
+   {
+    "kind": "organization",
+    "name": "ΑΕΚ",
+    "lang": null,
+    "seen": 3342,
+    "qid": "Q2819143",
+    "label": "A.E.K.",
+    "description": "multi-sports club in Greece",
+    "links": 12
+   },
+   {
+    "kind": "organization",
+    "name": "PSOE",
+    "lang": "es",
+    "seen": 3275,
+    "qid": "Q138198",
+    "label": "Spanish Socialist Workers' Party",
+    "description": "Spanish political party",
+    "links": 62
+   },
+   {
+    "kind": "organization",
+    "name": "Man Utd",
+    "lang": "en",
+    "seen": 3082,
+    "qid": "Q18656",
+    "label": "Manchester United F.C.",
+    "description": "association football club in Manchester, England",
+    "links": 148
+   },
+   {
+    "kind": "organization",
+    "name": "SPD",
+    "lang": "de",
+    "seen": 2964,
+    "qid": "Q49768",
+    "label": "Social Democratic Party of Germany",
+    "description": "centre-left political party in Germany",
+    "links": 101
+   },
+   {
+    "kind": "organization",
+    "name": "Ολυμπιακός",
+    "lang": "el",
+    "seen": 2783,
+    "qid": "Q19628",
+    "label": "Olympiacos F.C.",
+    "description": "professional association football club based in Piraeus, Greece. Part of the major multi-sport club Olympiacos SFP",
+    "links": 69
+   },
+   {
+    "kind": "organization",
+    "name": "policia",
+    "lang": "sq",
+    "seen": 2726,
+    "qid": "Q35535",
+    "label": "police",
+    "description": "law enforcement body",
+    "links": 170
+   },
+   {
+    "kind": "organization",
+    "name": "NASA",
+    "lang": "en",
+    "seen": 2707,
+    "qid": "Q23548",
+    "label": "National Aeronautics and Space Administration",
+    "description": "American space and aeronautics agency",
+    "links": 184
+   },
+   {
+    "kind": "organization",
+    "name": "LaLiga",
+    "lang": "en",
+    "seen": 2641,
+    "qid": "Q4453842",
+    "label": "Liga Nacional de Fútbol Profesional",
+    "description": "Spanish national association football organization",
+    "links": 24
+   },
+   {
+    "kind": "organization",
+    "name": "OL",
+    "lang": "fr",
+    "seen": 2628,
+    "qid": "Q1201876",
+    "label": "Open Library",
+    "description": "online project for book data by the Internet Archive",
+    "links": 41
+   },
+   {
+    "kind": "organization",
+    "name": "F1",
+    "lang": "es",
+    "seen": 2551,
+    "qid": "Q1968",
+    "label": "Formula One",
+    "description": "motorsport championship held worldwide",
+    "links": 146
+   },
+   {
+    "kind": "organization",
+    "name": "ICE",
+    "lang": "en",
+    "seen": 2530,
+    "qid": "Q943091",
+    "label": "United States Immigration and Customs Enforcement",
+    "description": "United States federal law enforcement agency",
+    "links": 42
+   },
+   {
+    "kind": "organization",
+    "name": "ONU",
+    "lang": "fr",
+    "seen": 2512,
+    "qid": "Q1065",
+    "label": "United Nations",
+    "description": "global international and intergovernmental organization",
+    "links": 337
+   },
+   {
+    "kind": "organization",
+    "name": "IA",
+    "lang": "fr",
+    "seen": 2437,
+    "qid": "Q11660",
+    "label": "artificial intelligence",
+    "description": "field that develops and studies software enabling machines to exhibit intelligent behavior",
+    "links": 214
+   },
+   {
+    "kind": "organization",
+    "name": "governo",
+    "lang": "es",
+    "seen": 2388,
+    "qid": "Q7188",
+    "label": "government",
+    "description": "system or group of people governing an organized community, often a state. traditionally all three branches, legislature, executive and judiciary. in modern englisch often the executive branch.",
+    "links": 209
+   },
+   {
+    "kind": "organization",
+    "name": "Bundesliga",
+    "lang": "en",
+    "seen": 2353,
+    "qid": "Q82595",
+    "label": "Q82595",
+    "description": "German men's association football top league",
+    "links": 100
+   },
+   {
+    "kind": "organization",
+    "name": "AfD",
+    "lang": "en",
+    "seen": 2141,
+    "qid": "Q6721203",
+    "label": "Alternative for Germany",
+    "description": "political party in Germany",
+    "links": 89
+   },
+   {
+    "kind": "organization",
+    "name": "BVB",
+    "lang": "fr",
+    "seen": 2127,
+    "qid": "Q41420",
+    "label": "Borussia Dortmund",
+    "description": "German professional sports club based in Dortmund",
+    "links": 99
+   },
+   {
+    "kind": "organization",
+    "name": "Starlink",
+    "lang": "en",
+    "seen": 2102,
+    "qid": "Q19867977",
+    "label": "Q19867977",
+    "description": "satellite constellation; space-based internet communication system",
+    "links": 72
+   },
+   {
+    "kind": "organization",
+    "name": "DFB",
+    "lang": "de",
+    "seen": 2093,
+    "qid": "Q154191",
+    "label": "German Football Association",
+    "description": "governing body of association football in Germany",
+    "links": 64
+   },
+   {
+    "kind": "organization",
+    "name": "PM",
+    "lang": "en",
+    "seen": 1973,
+    "qid": "Q14212",
+    "label": "prime minister",
+    "description": "most senior minister of cabinet in the executive branch of government in a parliamentary system",
+    "links": 132
+   },
+   {
+    "kind": "organization",
+    "name": "CAF",
+    "lang": "en",
+    "seen": 1941,
+    "qid": "Q168360",
+    "label": "Confederation of African Football",
+    "description": "governing body of association football in Africa",
+    "links": 80
+   },
+   {
+    "kind": "organization",
+    "name": "CDU",
+    "lang": "de",
+    "seen": 1906,
+    "qid": "Q49762",
+    "label": "Christian Democratic Union",
+    "description": "German centre-right political party",
+    "links": 99
+   },
+   {
+    "kind": "organization",
+    "name": "FBI",
+    "lang": "en",
+    "seen": 1841,
+    "qid": "Q8333",
+    "label": "Federal Bureau of Investigation",
+    "description": "U.S. federal law enforcement agency",
+    "links": 115
+   },
+   {
+    "kind": "organization",
+    "name": "Red Bull",
+    "lang": "en",
+    "seen": 1796,
+    "qid": "Q173663",
+    "label": "Q173663",
+    "description": "Formula One racing team based in Milton Keynes, England",
+    "links": 65
+   },
+   {
+    "kind": "organization",
+    "name": "IMF",
+    "lang": "hu",
+    "seen": 1747,
+    "qid": "Q7804",
+    "label": "International Monetary Fund",
+    "description": "international financial institution",
+    "links": 160
+   },
+   {
+    "kind": "organization",
+    "name": "MLS",
+    "lang": "fr",
+    "seen": 1715,
+    "qid": "Q18543",
+    "label": "Major League Soccer",
+    "description": "professional soccer league in the USA and Canada",
+    "links": 71
+   },
+   {
+    "kind": "organization",
+    "name": "Republicans",
+    "lang": "en",
+    "seen": 1653,
+    "qid": "Q29468",
+    "label": "Republican Party",
+    "description": "American political party",
+    "links": 143
+   },
+   {
+    "kind": "organization",
+    "name": "Senado",
+    "lang": "es",
+    "seen": 1597,
+    "qid": "Q2570643",
+    "label": "senate",
+    "description": "type of legislative body, often the upper house or chamber of a bicameral legislature",
+    "links": 71
+   },
+   {
+    "kind": "organization",
+    "name": "RN",
+    "lang": "vi",
+    "seen": 1576,
+    "qid": "Q205150",
+    "label": "National Rally",
+    "description": "Far-right French political party",
+    "links": 70
+   },
+   {
+    "kind": "organization",
+    "name": "Democrats",
+    "lang": "en",
+    "seen": 1569,
+    "qid": "Q29552",
+    "label": "Democratic Party",
+    "description": "American political party",
+    "links": 140
+   },
+   {
+    "kind": "organization",
+    "name": "ASSE",
+    "lang": "fr",
+    "seen": 1543,
+    "qid": "Q19521",
+    "label": "AS Saint-Étienne",
+    "description": "association football club in Saint-Étienne, France",
+    "links": 67
+   },
+   {
+    "kind": "organization",
+    "name": "Ravens",
+    "lang": "en",
+    "seen": 1540,
+    "qid": "Q8335",
+    "label": "raven",
+    "description": "common name of several of the larger birds of the genus Corvus",
+    "links": 20
+   },
+   {
+    "kind": "organization",
+    "name": "FMI",
+    "lang": "es",
+    "seen": 1459,
+    "qid": "Q7804",
+    "label": "International Monetary Fund",
+    "description": "international financial institution",
+    "links": 160
+   },
+   {
+    "kind": "organization",
+    "name": "PS",
+    "lang": "de",
+    "seen": 1450,
+    "qid": "Q170972",
+    "label": "Socialist Party",
+    "description": "French political party (1969–present)",
+    "links": 70
+   },
+   {
+    "kind": "organization",
+    "name": "Fiscalía",
+    "lang": "es",
+    "seen": 1441,
+    "qid": "Q1092499",
+    "label": "public prosecutor's office",
+    "description": "authority responsible for law enforcement and prosecution service",
+    "links": 30
+   },
+   {
+    "kind": "organization",
+    "name": "LSU",
+    "lang": "en",
+    "seen": 1437,
+    "qid": "Q1521725",
+    "label": "Louisiana State University",
+    "description": "public university in Baton Rouge, Louisiana, United States",
+    "links": 38
+   },
+   {
+    "kind": "organization",
+    "name": "BJP",
+    "lang": "en",
+    "seen": 1398,
+    "qid": "Q10230",
+    "label": "Bharatiya Janata Party",
+    "description": "right-wing political party in India",
+    "links": 86
+   },
+   {
+    "kind": "organization",
+    "name": "PL",
+    "lang": "gl",
+    "seen": 1356,
+    "qid": "Q2731720",
+    "label": "Liberal Party",
+    "description": "conservative political party in Brazil",
+    "links": 21
+   },
+   {
+    "kind": "organization",
+    "name": "S&P",
+    "lang": "en",
+    "seen": 1317,
+    "qid": "Q242345",
+    "label": "S&P 500",
+    "description": "American stock market index",
+    "links": 56
+   },
+   {
+    "kind": "organization",
+    "name": "businesses",
+    "lang": "en",
+    "seen": 1282,
+    "qid": "Q4830453",
+    "label": "business",
+    "description": "organization undertaking commercial, industrial, or professional activity",
+    "links": 140
+   },
+   {
+    "kind": "organization",
+    "name": "USC",
+    "lang": "en",
+    "seen": 1274,
+    "qid": "Q4614",
+    "label": "University of Southern California",
+    "description": "private university in Los Angeles, California, United States",
+    "links": 67
+   },
+   {
+    "kind": "organization",
+    "name": "Pd",
+    "lang": "it",
+    "seen": 1249,
+    "qid": "Q47729",
+    "label": "Democratic Party",
+    "description": "Italian social-democratic political party",
+    "links": 60
+   },
+   {
+    "kind": "organization",
+    "name": "Congreso",
+    "lang": "es",
+    "seen": 1242,
+    "qid": "Q35749",
+    "label": "parliament",
+    "description": "legislative body of government",
+    "links": 140
+   },
+   {
+    "kind": "organization",
+    "name": "Cardinals",
+    "lang": "en",
+    "seen": 1237,
+    "qid": "Q756433",
+    "label": "State Farm Stadium",
+    "description": "stadium in Glendale, Arizona, USA",
+    "links": 31
+   },
+   {
+    "kind": "organization",
+    "name": "Lyon",
+    "lang": "fr",
+    "seen": 1202,
+    "qid": "Q704",
+    "label": "Olympique Lyonnais",
+    "description": "association football club in Lyon, France",
+    "links": 81
+   },
+   {
+    "kind": "organization",
+    "name": "CJP",
+    "lang": "en",
+    "seen": 1197,
+    "qid": "Q139857349",
+    "label": "Cockroach Janta Party",
+    "description": "Indian satirical political movement",
+    "links": 36
+   },
+   {
+    "kind": "organization",
+    "name": "EA",
+    "lang": "de",
+    "seen": 1195,
+    "qid": "Q173941",
+    "label": "Electronic Arts",
+    "description": "American video game company",
+    "links": 71
+   },
+   {
+    "kind": "organization",
+    "name": "BYU",
+    "lang": "en",
+    "seen": 1188,
+    "qid": "Q332498",
+    "label": "Brigham Young University",
+    "description": "private research university in Provo, Utah, United States",
+    "links": 44
+   },
+   {
+    "kind": "organization",
+    "name": "LFI",
+    "lang": "fr",
+    "seen": 1184,
+    "qid": "Q27978402",
+    "label": "La France insoumise",
+    "description": "French left-wing political party",
+    "links": 43
+   },
+   {
+    "kind": "organization",
+    "name": "Assemblée nationale",
+    "lang": "fr",
+    "seen": 1180,
+    "qid": "Q1853640",
+    "label": "National Assembly",
+    "description": "unicameral legislature of Senegal",
+    "links": 18
+   },
+   {
+    "kind": "organization",
+    "name": "Researchers",
+    "lang": "en",
+    "seen": 1178,
+    "qid": "Q1650915",
+    "label": "researcher",
+    "description": "person who engages in research, professionally or otherwise. If a more specific occupation is known, use that instead",
+    "links": 40
+   },
+   {
+    "kind": "organization",
+    "name": "AEK",
+    "lang": "el",
+    "seen": 1149,
+    "qid": "Q2819143",
+    "label": "A.E.K.",
+    "description": "multi-sports club in Greece",
+    "links": 12
+   },
+   {
+    "kind": "organization",
+    "name": "LOSC",
+    "lang": "fr",
+    "seen": 1143,
+    "qid": "Q19516",
+    "label": "Lille OSC",
+    "description": "association football club in Lille, France",
+    "links": 73
+   },
+   {
+    "kind": "organization",
+    "name": "Nazionale",
+    "lang": "fr",
+    "seen": 1134,
+    "qid": "Q1194951",
+    "label": "national sports team",
+    "description": "team that represents a nation in a sport",
+    "links": 27
+   },
+   {
+    "kind": "organization",
+    "name": "Walmart",
+    "lang": "en",
+    "seen": 1119,
+    "qid": "Q483551",
+    "label": "Q483551",
+    "description": "U.S. discount retailer based in Arkansas",
+    "links": 84
+   },
+   {
+    "kind": "organization",
+    "name": "Italia",
+    "lang": "it",
+    "seen": 1114,
+    "qid": "Q38",
+    "label": "Italy",
+    "description": "country in southern Europe",
+    "links": 409
+   },
+   {
+    "kind": "location",
+    "name": "UK",
+    "lang": "en",
+    "seen": 8955,
+    "qid": "Q145",
+    "label": "United Kingdom",
+    "description": "island country in north-west Europe",
+    "links": 396
+   },
+   {
+    "kind": "location",
+    "name": "US",
+    "lang": "en",
+    "seen": 8777,
+    "qid": "Q30",
+    "label": "United States",
+    "description": "country located primarily in North America",
+    "links": 427
+   },
+   {
+    "kind": "location",
+    "name": "U.S",
+    "lang": "en",
+    "seen": 8692,
+    "qid": "Q30",
+    "label": "United States",
+    "description": "country located primarily in North America",
+    "links": 427
+   },
+   {
+    "kind": "location",
+    "name": "España",
+    "lang": "es",
+    "seen": 7625,
+    "qid": "Q29",
+    "label": "Spain",
+    "description": "country in southwestern Europe with territories in Africa",
+    "links": 396
+   },
+   {
+    "kind": "location",
+    "name": "ROMA",
+    "lang": "it",
+    "seen": 7397,
+    "qid": "Q220",
+    "label": "Rome",
+    "description": "capital and largest city of Italy",
+    "links": 344
+   },
+   {
+    "kind": "location",
+    "name": "Italia",
+    "lang": "it",
+    "seen": 6311,
+    "qid": "Q38",
+    "label": "Italy",
+    "description": "country in southern Europe",
+    "links": 409
+   },
+   {
+    "kind": "location",
+    "name": "Brasil",
+    "lang": "es",
+    "seen": 4782,
+    "qid": "Q155",
+    "label": "Brazil",
+    "description": "country in South America",
+    "links": 387
+   },
+   {
+    "kind": "location",
+    "name": "USA",
+    "lang": "de",
+    "seen": 4605,
+    "qid": "Q30",
+    "label": "United States",
+    "description": "country located primarily in North America",
+    "links": 427
+   },
+   {
+    "kind": "location",
+    "name": "Estados Unidos",
+    "lang": "es",
+    "seen": 4452,
+    "qid": "Q30",
+    "label": "United States",
+    "description": "country located primarily in North America",
+    "links": 427
+   },
+   {
+    "kind": "location",
+    "name": "England",
+    "lang": "en",
+    "seen": 4193,
+    "qid": "Q145",
+    "label": "United Kingdom",
+    "description": "island country in north-west Europe",
+    "links": 396
+   },
+   {
+    "kind": "location",
+    "name": "États-Unis",
+    "lang": "fr",
+    "seen": 4181,
+    "qid": "Q30",
+    "label": "United States",
+    "description": "country located primarily in North America",
+    "links": 427
+   },
+   {
+    "kind": "location",
+    "name": "Francia",
+    "lang": "it",
+    "seen": 4114,
+    "qid": "Q142",
+    "label": "France",
+    "description": "country in Western Europe and other continents (through its overseas territories in America, Africa and Oceania)",
+    "links": 428
+   },
+   {
+    "kind": "location",
+    "name": "Deutschland",
+    "lang": "de",
+    "seen": 3803,
+    "qid": "Q183",
+    "label": "Germany",
+    "description": "country in Central Europe",
+    "links": 405
+   },
+   {
+    "kind": "location",
+    "name": "Milano",
+    "lang": "it",
+    "seen": 3755,
+    "qid": "Q490",
+    "label": "Milan",
+    "description": "Italian commune and capital city of Lombardy",
+    "links": 226
+   },
+   {
+    "kind": "location",
+    "name": "Bruxelles",
+    "lang": "fr",
+    "seen": 3366,
+    "qid": "Q239",
+    "label": "Brussels",
+    "description": "municipality in the Brussels-Capital Region and capital of Belgium",
+    "links": 240
+   },
+   {
+    "kind": "location",
+    "name": "Northern Ireland",
+    "lang": null,
+    "seen": 3182,
+    "qid": "Q145",
+    "label": "United Kingdom",
+    "description": "island country in north-west Europe",
+    "links": 396
+   },
+   {
+    "kind": "location",
+    "name": "Napoli",
+    "lang": "it",
+    "seen": 2674,
+    "qid": "Q2634",
+    "label": "Naples",
+    "description": "capital city of Campania, Italy",
+    "links": 207
+   },
+   {
+    "kind": "location",
+    "name": "Belgique",
+    "lang": "fr",
+    "seen": 2442,
+    "qid": "Q31",
+    "label": "Belgium",
+    "description": "country in western Europe",
+    "links": 383
+   },
+   {
+    "kind": "location",
+    "name": "America",
+    "lang": "en",
+    "seen": 2399,
+    "qid": "Q828",
+    "label": "Americas",
+    "description": "North America and South America taken together as a single continent or landmass",
+    "links": 267
+   },
+   {
+    "kind": "location",
+    "name": "Ucrania",
+    "lang": "es",
+    "seen": 2393,
+    "qid": "Q212",
+    "label": "Ukraine",
+    "description": "country in Eastern Europe",
+    "links": 389
+   },
+   {
+    "kind": "location",
+    "name": "Ucraina",
+    "lang": "ro",
+    "seen": 1991,
+    "qid": "Q212",
+    "label": "Ukraine",
+    "description": "country in Eastern Europe",
+    "links": 389
+   },
+   {
+    "kind": "location",
+    "name": "Rusia",
+    "lang": "es",
+    "seen": 1969,
+    "qid": "Q159",
+    "label": "Russia",
+    "description": "country in Eastern Europe and Northern Asia, the largest in the world by area",
+    "links": 421
+   },
+   {
+    "kind": "location",
+    "name": "Türkiye",
+    "lang": "en",
+    "seen": 1941,
+    "qid": "Q43",
+    "label": "Turkey",
+    "description": "country in West Asia and Southeast Europe",
+    "links": 427
+   },
+   {
+    "kind": "location",
+    "name": "Espagne",
+    "lang": "fr",
+    "seen": 1865,
+    "qid": "Q29",
+    "label": "Spain",
+    "description": "country in southwestern Europe with territories in Africa",
+    "links": 396
+   },
+   {
+    "kind": "location",
+    "name": "Sevilla",
+    "lang": "es",
+    "seen": 1816,
+    "qid": "Q8717",
+    "label": "Seville",
+    "description": "municipality of Andalusia, Spain",
+    "links": 180
+   },
+   {
+    "kind": "location",
+    "name": "Italie",
+    "lang": "fr",
+    "seen": 1765,
+    "qid": "Q38",
+    "label": "Italy",
+    "description": "country in southern Europe",
+    "links": 409
+   },
+   {
+    "kind": "location",
+    "name": "Londres",
+    "lang": "fr",
+    "seen": 1737,
+    "qid": "Q84",
+    "label": "London",
+    "description": "capital and largest city of England and the United Kingdom",
+    "links": 358
+   },
+   {
+    "kind": "location",
+    "name": "Pékin",
+    "lang": "fr",
+    "seen": 1725,
+    "qid": "Q956",
+    "label": "Beijing",
+    "description": "capital city of China",
+    "links": 305
+   },
+   {
+    "kind": "location",
+    "name": "Scotland",
+    "lang": "en",
+    "seen": 1661,
+    "qid": "Q145",
+    "label": "United Kingdom",
+    "description": "island country in north-west Europe",
+    "links": 396
+   },
+   {
+    "kind": "location",
+    "name": "Frankreich",
+    "lang": "de",
+    "seen": 1622,
+    "qid": "Q142",
+    "label": "France",
+    "description": "country in Western Europe and other continents (through its overseas territories in America, Africa and Oceania)",
+    "links": 428
+   },
+   {
+    "kind": "location",
+    "name": "Russie",
+    "lang": "fr",
+    "seen": 1591,
+    "qid": "Q159",
+    "label": "Russia",
+    "description": "country in Eastern Europe and Northern Asia, the largest in the world by area",
+    "links": 421
+   },
+   {
+    "kind": "location",
+    "name": "Maroc",
+    "lang": "fr",
+    "seen": 1566,
+    "qid": "Q1028",
+    "label": "Morocco",
+    "description": "sovereign state in North Africa",
+    "links": 334
+   },
+   {
+    "kind": "location",
+    "name": "Chine",
+    "lang": "fr",
+    "seen": 1545,
+    "qid": "Q148",
+    "label": "People's Republic of China",
+    "description": "country in East Asia",
+    "links": 400
+   },
+   {
+    "kind": "location",
+    "name": "Russland",
+    "lang": "de",
+    "seen": 1518,
+    "qid": "Q159",
+    "label": "Russia",
+    "description": "country in Eastern Europe and Northern Asia, the largest in the world by area",
+    "links": 421
+   },
+   {
+    "kind": "location",
+    "name": "Ελλάδα",
+    "lang": "el",
+    "seen": 1502,
+    "qid": "Q41",
+    "label": "Greece",
+    "description": "country in Southeast Europe",
+    "links": 378
+   },
+   {
+    "kind": "location",
+    "name": "Allemagne",
+    "lang": "fr",
+    "seen": 1486,
+    "qid": "Q183",
+    "label": "Germany",
+    "description": "country in Central Europe",
+    "links": 405
+   },
+   {
+    "kind": "location",
+    "name": "Torino",
+    "lang": "it",
+    "seen": 1477,
+    "qid": "Q495",
+    "label": "Turin",
+    "description": "city and commune in Italy",
+    "links": 180
+   },
+   {
+    "kind": "location",
+    "name": "EEUU",
+    "lang": "es",
+    "seen": 1327,
+    "qid": "Q30",
+    "label": "United States",
+    "description": "country located primarily in North America",
+    "links": 427
+   },
+   {
+    "kind": "location",
+    "name": "EUA",
+    "lang": "pt",
+    "seen": 1287,
+    "qid": "Q30",
+    "label": "United States",
+    "description": "country located primarily in North America",
+    "links": 427
+   },
+   {
+    "kind": "location",
+    "name": "Suisse",
+    "lang": "fr",
+    "seen": 1273,
+    "qid": "Q39",
+    "label": "Switzerland",
+    "description": "country in Central Europe",
+    "links": 387
+   },
+   {
+    "kind": "location",
+    "name": "Singapur",
+    "lang": "sk",
+    "seen": 1262,
+    "qid": "Q334",
+    "label": "Singapore",
+    "description": "sovereign island country and city-state in maritime Southeast Asia",
+    "links": 333
+   },
+   {
+    "kind": "location",
+    "name": "CDMX",
+    "lang": "es",
+    "seen": 1225,
+    "qid": "Q18295428",
+    "label": "Dmbx1",
+    "description": "protein-coding gene in the species Mus musculus",
+    "links": 0
+   },
+   {
+    "kind": "location",
+    "name": "Wales",
+    "lang": "en",
+    "seen": 1180,
+    "qid": "Q145",
+    "label": "United Kingdom",
+    "description": "island country in north-west Europe",
+    "links": 396
+   },
+   {
+    "kind": "location",
+    "name": "Lisboa",
+    "lang": "pt",
+    "seen": 1180,
+    "qid": "Q597",
+    "label": "Lisbon",
+    "description": "municipality and capital city of Portugal",
+    "links": 267
+   },
+   {
+    "kind": "location",
+    "name": "Riad",
+    "lang": "it",
+    "seen": 1132,
+    "qid": "Q3692",
+    "label": "Riyadh",
+    "description": "capital and largest city of Saudi Arabia",
+    "links": 195
+   },
+   {
+    "kind": "location",
+    "name": "Αθήνα",
+    "lang": "el",
+    "seen": 1130,
+    "qid": "Q1524",
+    "label": "Athens",
+    "description": "capital and largest city of Greece",
+    "links": 289
+   },
+   {
+    "kind": "location",
+    "name": "Japon",
+    "lang": "fr",
+    "seen": 1123,
+    "qid": "Q17",
+    "label": "Japan",
+    "description": "island country in East Asia",
+    "links": 419
+   },
+   {
+    "kind": "location",
+    "name": "Arabie saoudite",
+    "lang": "fr",
+    "seen": 1104,
+    "qid": "Q851",
+    "label": "Saudi Arabia",
+    "description": "country in West Asia",
+    "links": 350
+   },
+   {
+    "kind": "location",
+    "name": "München",
+    "lang": "nl",
+    "seen": 1084,
+    "qid": "Q1726",
+    "label": "Munich",
+    "description": "capital and most populous city of Bavaria, Germany",
+    "links": 241
+   },
+   {
+    "kind": "location",
+    "name": "EE.UU",
+    "lang": "es",
+    "seen": 1071,
+    "qid": "Q30",
+    "label": "United States",
+    "description": "country located primarily in North America",
+    "links": 427
+   },
+   {
+    "kind": "location",
+    "name": "Γαλλία",
+    "lang": "el",
+    "seen": 1055,
+    "qid": "Q142",
+    "label": "France",
+    "description": "country in Western Europe and other continents (through its overseas territories in America, Africa and Oceania)",
+    "links": 428
+   },
+   {
+    "kind": "location",
+    "name": "Китай",
+    "lang": "ru",
+    "seen": 1032,
+    "qid": "Q148",
+    "label": "People's Republic of China",
+    "description": "country in East Asia",
+    "links": 400
+   },
+   {
+    "kind": "location",
+    "name": "Bayern",
+    "lang": "de",
+    "seen": 1018,
+    "qid": "Q980",
+    "label": "Bavaria",
+    "description": "federated state in the south of Germany",
+    "links": 206
+   },
+   {
+    "kind": "location",
+    "name": "Spagna",
+    "lang": "it",
+    "seen": 996,
+    "qid": "Q29",
+    "label": "Spain",
+    "description": "country in southwestern Europe with territories in Africa",
+    "links": 396
+   },
+   {
+    "kind": "location",
+    "name": "Venezia",
+    "lang": "it",
+    "seen": 982,
+    "qid": "Q641",
+    "label": "Venice",
+    "description": "capital city of Veneto, Italy",
+    "links": 231
+   },
+   {
+    "kind": "location",
+    "name": "SP",
+    "lang": "pt",
+    "seen": 978,
+    "qid": "Q174",
+    "label": "São Paulo",
+    "description": "largest city of Brazil, and capital of the State of São Paulo",
+    "links": 256
+   },
+   {
+    "kind": "location",
+    "name": "França",
+    "lang": "pt",
+    "seen": 972,
+    "qid": "Q142",
+    "label": "France",
+    "description": "country in Western Europe and other continents (through its overseas territories in America, Africa and Oceania)",
+    "links": 428
+   },
+   {
+    "kind": "location",
+    "name": "Turquie",
+    "lang": "fr",
+    "seen": 971,
+    "qid": "Q43",
+    "label": "Turkey",
+    "description": "country in West Asia and Southeast Europe",
+    "links": 427
+   },
+   {
+    "kind": "location",
+    "name": "LA",
+    "lang": "en",
+    "seen": 963,
+    "qid": "Q819",
+    "label": "Laos",
+    "description": "country in Southeast Asia",
+    "links": 316
+   },
+   {
+    "kind": "location",
+    "name": "capitale",
+    "lang": "fr",
+    "seen": 960,
+    "qid": "Q5119",
+    "label": "capital city",
+    "description": "primary governing city of a top-level (country) or first-level and second-level subdivision (country, state, province, regency, etc) political entity",
+    "links": 238
+   },
+   {
+    "kind": "location",
+    "name": "Cina",
+    "lang": "it",
+    "seen": 946,
+    "qid": "Q148",
+    "label": "People's Republic of China",
+    "description": "country in East Asia",
+    "links": 400
+   },
+   {
+    "kind": "location",
+    "name": "Θεσσαλονίκη",
+    "lang": "el",
+    "seen": 930,
+    "qid": "Q17151",
+    "label": "Thessaloniki",
+    "description": "city in Macedonia, Greece",
+    "links": 159
+   },
+   {
+    "kind": "location",
+    "name": "България",
+    "lang": "bg",
+    "seen": 919,
+    "qid": "Q219",
+    "label": "Bulgaria",
+    "description": "country in southeast Europe",
+    "links": 361
+   },
+   {
+    "kind": "location",
+    "name": "مصر",
+    "lang": "ar",
+    "seen": 915,
+    "qid": "Q79",
+    "label": "Egypt",
+    "description": "country in Northeast Africa and Southwest Asia",
+    "links": 392
+   },
+   {
+    "kind": "location",
+    "name": "Marruecos",
+    "lang": "es",
+    "seen": 907,
+    "qid": "Q1028",
+    "label": "Morocco",
+    "description": "sovereign state in North Africa",
+    "links": 334
+   },
+   {
+    "kind": "location",
+    "name": "Genova",
+    "lang": "it",
+    "seen": 881,
+    "qid": "Q1449",
+    "label": "Genoa",
+    "description": "Italian city",
+    "links": 179
+   },
+   {
+    "kind": "location",
+    "name": "Granada",
+    "lang": "es",
+    "seen": 878,
+    "qid": "Q769",
+    "label": "Grenada",
+    "description": "island sovereign state in the Caribbean Sea",
+    "links": 251
+   },
+   {
+    "kind": "location",
+    "name": "Brésil",
+    "lang": "fr",
+    "seen": 871,
+    "qid": "Q155",
+    "label": "Brazil",
+    "description": "country in South America",
+    "links": 387
+   },
+   {
+    "kind": "location",
+    "name": "Cataluña",
+    "lang": "es",
+    "seen": 868,
+    "qid": "Q5705",
+    "label": "Catalonia",
+    "description": "nationality and autonomous community of Spain",
+    "links": 218
+   },
+   {
+    "kind": "location",
+    "name": "Tunisie",
+    "lang": "fr",
+    "seen": 866,
+    "qid": "Q948",
+    "label": "Tunisia",
+    "description": "country in North Africa",
+    "links": 328
+   },
+   {
+    "kind": "location",
+    "name": "Srbije",
+    "lang": "bs",
+    "seen": 845,
+    "qid": "Q838261",
+    "label": "Federal Republic of Yugoslavia",
+    "description": "former Balkan republic (1992–2003)",
+    "links": 46
+   },
+   {
+    "kind": "location",
+    "name": "Royaume-Uni",
+    "lang": "fr",
+    "seen": 825,
+    "qid": "Q145",
+    "label": "United Kingdom",
+    "description": "island country in north-west Europe",
+    "links": 396
+   },
+   {
+    "kind": "location",
+    "name": "Köln",
+    "lang": "de",
+    "seen": 820,
+    "qid": "Q365",
+    "label": "Cologne",
+    "description": "most populous city in North Rhine-Westphalia, Germany",
+    "links": 190
+   },
+   {
+    "kind": "location",
+    "name": "Wien",
+    "lang": "de",
+    "seen": 820,
+    "qid": "Q1741",
+    "label": "Vienna",
+    "description": "capital of and state in Austria",
+    "links": 294
+   },
+   {
+    "kind": "location",
+    "name": "B.C",
+    "lang": "en",
+    "seen": 815,
+    "qid": "Q59639",
+    "label": "B.C.",
+    "description": "comic strip created by Johnny Hart",
+    "links": 9
+   },
+   {
+    "kind": "location",
+    "name": "Moyen-Orient",
+    "lang": "fr",
+    "seen": 805,
+    "qid": "Q7204",
+    "label": "Middle East",
+    "description": "geopolitical region encompassing Egypt and most of Western Asia, including Iran",
+    "links": 225
+   },
+   {
+    "kind": "location",
+    "name": "Angleterre",
+    "lang": "fr",
+    "seen": 799,
+    "qid": "Q145",
+    "label": "United Kingdom",
+    "description": "island country in north-west Europe",
+    "links": 396
+   },
+   {
+    "kind": "location",
+    "name": "Sardegna",
+    "lang": "it",
+    "seen": 790,
+    "qid": "Q1462",
+    "label": "Sardinia",
+    "description": "island and autonomous region of Italy",
+    "links": 188
+   },
+   {
+    "kind": "location",
+    "name": "Alemania",
+    "lang": "es",
+    "seen": 782,
+    "qid": "Q183",
+    "label": "Germany",
+    "description": "country in Central Europe",
+    "links": 405
+   },
+   {
+    "kind": "location",
+    "name": "Inglaterra",
+    "lang": "es",
+    "seen": 779,
+    "qid": "Q145",
+    "label": "United Kingdom",
+    "description": "island country in north-west Europe",
+    "links": 396
+   },
+   {
+    "kind": "location",
+    "name": "Parigi",
+    "lang": "it",
+    "seen": 769,
+    "qid": "Q90",
+    "label": "Paris",
+    "description": "capital and most populous city in France",
+    "links": 366
+   },
+   {
+    "kind": "location",
+    "name": "Germania",
+    "lang": "it",
+    "seen": 767,
+    "qid": "Q183",
+    "label": "Germany",
+    "description": "country in Central Europe",
+    "links": 405
+   },
+   {
+    "kind": "location",
+    "name": "Oekraïne",
+    "lang": "nl",
+    "seen": 765,
+    "qid": "Q212",
+    "label": "Ukraine",
+    "description": "country in Eastern Europe",
+    "links": 389
+   }
+  ],
+  "MEDIA": [
+   {
+    "kind": "organization",
+    "name": "Medium",
+    "lang": "en",
+    "seen": 7709,
+    "qid": "Q16186120",
+    "label": "Medium",
+    "description": "online publishing platform",
+    "links": 29,
+    "itemCountry": "US",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "organization",
+    "name": "Barça",
+    "lang": "fr",
+    "seen": 6223,
+    "qid": "Q7156",
+    "label": "FC Barcelona",
+    "description": "football club in Barcelona, Catalonia, Spain",
+    "links": 155,
+    "itemCountry": "ES",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "organization",
+    "name": "FC Barcelone",
+    "lang": "fr",
+    "seen": 3011,
+    "qid": "Q7156",
+    "label": "FC Barcelona",
+    "description": "football club in Barcelona, Catalonia, Spain",
+    "links": 155,
+    "itemCountry": "ES",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "organization",
+    "name": "OL",
+    "lang": "fr",
+    "seen": 2628,
+    "qid": "Q1201876",
+    "label": "Open Library",
+    "description": "online project for book data by the Internet Archive",
+    "links": 41,
+    "itemCountry": "US",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "organization",
+    "name": "DAZN",
+    "lang": "es",
+    "seen": 2216,
+    "qid": "Q30133334",
+    "label": "DAZN",
+    "description": "global over-the-top sports (OTT) subscription video streaming service",
+    "links": 23,
+    "itemCountry": "GB",
+    "mediaCountry": "IT"
+   },
+   {
+    "kind": "organization",
+    "name": "Los Angeles Dodgers",
+    "lang": "es",
+    "seen": 2086,
+    "qid": "Q334634",
+    "label": "Los Angeles Dodgers",
+    "description": "Major League Baseball franchise in Los Angeles, California",
+    "links": 46,
+    "itemCountry": "US",
+    "mediaCountry": "CA"
+   },
+   {
+    "kind": "organization",
+    "name": "Yankees",
+    "lang": "en",
+    "seen": 1976,
+    "qid": "Q213417",
+    "label": "New York Yankees",
+    "description": "baseball team and Major League Baseball franchise in the Bronx, New York, United States",
+    "links": 61,
+    "itemCountry": "US",
+    "mediaCountry": "CA"
+   },
+   {
+    "kind": "organization",
+    "name": "Guardians",
+    "lang": "en",
+    "seen": 1781,
+    "qid": "Q642553",
+    "label": "Cleveland Guardians",
+    "description": "baseball team and Major League Baseball franchise in Cleveland, Ohio",
+    "links": 34,
+    "itemCountry": "US",
+    "mediaCountry": "CA"
+   },
+   {
+    "kind": "organization",
+    "name": "Tampa Bay Rays",
+    "lang": "en",
+    "seen": 1630,
+    "qid": "Q650865",
+    "label": "Tampa Bay Rays",
+    "description": "baseball team and Major League Baseball franchise in St. Petersburg, Florida, United States",
+    "links": 36,
+    "itemCountry": "US",
+    "mediaCountry": "CA"
+   },
+   {
+    "kind": "organization",
+    "name": "Jets",
+    "lang": "lv",
+    "seen": 1503,
+    "qid": "Q219602",
+    "label": "New York Jets",
+    "description": "National Football League franchise in East Rutherford, New Jersey, USA",
+    "links": 42,
+    "itemCountry": "US",
+    "mediaCountry": "CA"
+   },
+   {
+    "kind": "organization",
+    "name": "LSU",
+    "lang": "en",
+    "seen": 1437,
+    "qid": "Q1521725",
+    "label": "Louisiana State University",
+    "description": "public university in Baton Rouge, Louisiana, United States",
+    "links": 38,
+    "itemCountry": "US",
+    "mediaCountry": "LT"
+   },
+   {
+    "kind": "organization",
+    "name": "New York Yankees",
+    "lang": "en",
+    "seen": 1367,
+    "qid": "Q213417",
+    "label": "New York Yankees",
+    "description": "baseball team and Major League Baseball franchise in the Bronx, New York, United States",
+    "links": 61,
+    "itemCountry": "US",
+    "mediaCountry": "CA"
+   },
+   {
+    "kind": "organization",
+    "name": "Notre Dame",
+    "lang": "en",
+    "seen": 1305,
+    "qid": "Q178848",
+    "label": "University of Notre Dame",
+    "description": "Catholic university located in Notre Dame, Indiana, United States",
+    "links": 58,
+    "itemCountry": "US",
+    "mediaCountry": "GB"
+   },
+   {
+    "kind": "organization",
+    "name": "Atlanta Braves",
+    "lang": "en",
+    "seen": 1282,
+    "qid": "Q461595",
+    "label": "Atlanta Braves",
+    "description": "Major League Baseball team in Cumberland, Georgia",
+    "links": 41,
+    "itemCountry": "US",
+    "mediaCountry": "CA"
+   },
+   {
+    "kind": "organization",
+    "name": "Vasco da Gama",
+    "lang": "es",
+    "seen": 1241,
+    "qid": "Q5014111",
+    "label": "CR Vasco da Gama",
+    "description": "sports club based in Rio de Janeiro, Brazil",
+    "links": 52,
+    "itemCountry": "BR",
+    "mediaCountry": "AR"
+   },
+   {
+    "kind": "organization",
+    "name": "BYU",
+    "lang": "en",
+    "seen": 1188,
+    "qid": "Q332498",
+    "label": "Brigham Young University",
+    "description": "private research university in Provo, Utah, United States",
+    "links": 44,
+    "itemCountry": "US",
+    "mediaCountry": "AU"
+   },
+   {
+    "kind": "organization",
+    "name": "Assemblée nationale",
+    "lang": "fr",
+    "seen": 1180,
+    "qid": "Q1853640",
+    "label": "National Assembly",
+    "description": "unicameral legislature of Senegal",
+    "links": 18,
+    "itemCountry": "SN",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "organization",
+    "name": "U.S. Army",
+    "lang": "en",
+    "seen": 1135,
+    "qid": "Q9212",
+    "label": "United States Army",
+    "description": "land service branch of the United States Armed Forces",
+    "links": 82,
+    "itemCountry": "US",
+    "mediaCountry": "CA"
+   },
+   {
+    "kind": "location",
+    "name": "États-Unis",
+    "lang": "fr",
+    "seen": 4181,
+    "qid": "Q30",
+    "label": "United States",
+    "description": "country located primarily in North America",
+    "links": 427,
+    "itemCountry": "US",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "location",
+    "name": "Arizona",
+    "lang": "en",
+    "seen": 2180,
+    "qid": "Q816",
+    "label": "Arizona",
+    "description": "state of the United States of America",
+    "links": 245,
+    "itemCountry": "US",
+    "mediaCountry": "BE"
+   },
+   {
+    "kind": "location",
+    "name": "Ucraina",
+    "lang": "ro",
+    "seen": 1991,
+    "qid": "Q212",
+    "label": "Ukraine",
+    "description": "country in Eastern Europe",
+    "links": 389,
+    "itemCountry": "UA",
+    "mediaCountry": "IT"
+   },
+   {
+    "kind": "location",
+    "name": "Türkiye",
+    "lang": "en",
+    "seen": 1941,
+    "qid": "Q43",
+    "label": "Turkey",
+    "description": "country in West Asia and Southeast Europe",
+    "links": 427,
+    "itemCountry": "TR",
+    "mediaCountry": "AZ"
+   },
+   {
+    "kind": "location",
+    "name": "Espagne",
+    "lang": "fr",
+    "seen": 1865,
+    "qid": "Q29",
+    "label": "Spain",
+    "description": "country in southwestern Europe with territories in Africa",
+    "links": 396,
+    "itemCountry": "ES",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "location",
+    "name": "Italie",
+    "lang": "fr",
+    "seen": 1765,
+    "qid": "Q38",
+    "label": "Italy",
+    "description": "country in southern Europe",
+    "links": 409,
+    "itemCountry": "IT",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "location",
+    "name": "Frankreich",
+    "lang": "de",
+    "seen": 1622,
+    "qid": "Q142",
+    "label": "France",
+    "description": "country in Western Europe and other continents (through its overseas territories in America, Africa and Oceania)",
+    "links": 428,
+    "itemCountry": "FR",
+    "mediaCountry": "DE"
+   },
+   {
+    "kind": "location",
+    "name": "Russie",
+    "lang": "fr",
+    "seen": 1591,
+    "qid": "Q159",
+    "label": "Russia",
+    "description": "country in Eastern Europe and Northern Asia, the largest in the world by area",
+    "links": 421,
+    "itemCountry": "RU",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "location",
+    "name": "Chine",
+    "lang": "fr",
+    "seen": 1545,
+    "qid": "Q148",
+    "label": "People's Republic of China",
+    "description": "country in East Asia",
+    "links": 400,
+    "itemCountry": "CN",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "location",
+    "name": "Russland",
+    "lang": "de",
+    "seen": 1518,
+    "qid": "Q159",
+    "label": "Russia",
+    "description": "country in Eastern Europe and Northern Asia, the largest in the world by area",
+    "links": 421,
+    "itemCountry": "RU",
+    "mediaCountry": "DE"
+   },
+   {
+    "kind": "location",
+    "name": "Allemagne",
+    "lang": "fr",
+    "seen": 1486,
+    "qid": "Q183",
+    "label": "Germany",
+    "description": "country in Central Europe",
+    "links": 405,
+    "itemCountry": "DE",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "location",
+    "name": "Wuhan",
+    "lang": "en",
+    "seen": 1474,
+    "qid": "Q11746",
+    "label": "Wuhan",
+    "description": "capital city of Hubei Province, China",
+    "links": 180,
+    "itemCountry": "CN",
+    "mediaCountry": "PL"
+   },
+   {
+    "kind": "location",
+    "name": "EEUU",
+    "lang": "es",
+    "seen": 1327,
+    "qid": "Q30",
+    "label": "United States",
+    "description": "country located primarily in North America",
+    "links": 427,
+    "itemCountry": "US",
+    "mediaCountry": "ES"
+   },
+   {
+    "kind": "location",
+    "name": "EUA",
+    "lang": "pt",
+    "seen": 1287,
+    "qid": "Q30",
+    "label": "United States",
+    "description": "country located primarily in North America",
+    "links": 427,
+    "itemCountry": "US",
+    "mediaCountry": "BR"
+   },
+   {
+    "kind": "location",
+    "name": "Japon",
+    "lang": "fr",
+    "seen": 1123,
+    "qid": "Q17",
+    "label": "Japan",
+    "description": "island country in East Asia",
+    "links": 419,
+    "itemCountry": "JP",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "location",
+    "name": "Kazakhstan",
+    "lang": "en",
+    "seen": 1118,
+    "qid": "Q232",
+    "label": "Kazakhstan",
+    "description": "sovereign state in Eastern Europe and Central Asia",
+    "links": 350,
+    "itemCountry": "KZ",
+    "mediaCountry": "AZ"
+   },
+   {
+    "kind": "location",
+    "name": "Arabie saoudite",
+    "lang": "fr",
+    "seen": 1104,
+    "qid": "Q851",
+    "label": "Saudi Arabia",
+    "description": "country in West Asia",
+    "links": 350,
+    "itemCountry": "SA",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "location",
+    "name": "Γαλλία",
+    "lang": "el",
+    "seen": 1055,
+    "qid": "Q142",
+    "label": "France",
+    "description": "country in Western Europe and other continents (through its overseas territories in America, Africa and Oceania)",
+    "links": 428,
+    "itemCountry": "FR",
+    "mediaCountry": "GR"
+   },
+   {
+    "kind": "location",
+    "name": "Китай",
+    "lang": "ru",
+    "seen": 1032,
+    "qid": "Q148",
+    "label": "People's Republic of China",
+    "description": "country in East Asia",
+    "links": 400,
+    "itemCountry": "CN",
+    "mediaCountry": "KZ"
+   },
+   {
+    "kind": "location",
+    "name": "Spagna",
+    "lang": "it",
+    "seen": 996,
+    "qid": "Q29",
+    "label": "Spain",
+    "description": "country in southwestern Europe with territories in Africa",
+    "links": 396,
+    "itemCountry": "ES",
+    "mediaCountry": "IT"
+   },
+   {
+    "kind": "location",
+    "name": "França",
+    "lang": "pt",
+    "seen": 972,
+    "qid": "Q142",
+    "label": "France",
+    "description": "country in Western Europe and other continents (through its overseas territories in America, Africa and Oceania)",
+    "links": 428,
+    "itemCountry": "FR",
+    "mediaCountry": "PT"
+   },
+   {
+    "kind": "location",
+    "name": "Turquie",
+    "lang": "fr",
+    "seen": 971,
+    "qid": "Q43",
+    "label": "Turkey",
+    "description": "country in West Asia and Southeast Europe",
+    "links": 427,
+    "itemCountry": "TR",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "location",
+    "name": "Cina",
+    "lang": "it",
+    "seen": 946,
+    "qid": "Q148",
+    "label": "People's Republic of China",
+    "description": "country in East Asia",
+    "links": 400,
+    "itemCountry": "CN",
+    "mediaCountry": "IT"
+   },
+   {
+    "kind": "location",
+    "name": "مصر",
+    "lang": "ar",
+    "seen": 915,
+    "qid": "Q79",
+    "label": "Egypt",
+    "description": "country in Northeast Africa and Southwest Asia",
+    "links": 392,
+    "itemCountry": "EG",
+    "mediaCountry": "MA"
+   },
+   {
+    "kind": "location",
+    "name": "Hawaii",
+    "lang": "en",
+    "seen": 908,
+    "qid": "Q782",
+    "label": "Hawaii",
+    "description": "state of the United States of America",
+    "links": 269,
+    "itemCountry": "US",
+    "mediaCountry": "DE"
+   },
+   {
+    "kind": "location",
+    "name": "Marruecos",
+    "lang": "es",
+    "seen": 907,
+    "qid": "Q1028",
+    "label": "Morocco",
+    "description": "sovereign state in North Africa",
+    "links": 334,
+    "itemCountry": "MA",
+    "mediaCountry": "ES"
+   },
+   {
+    "kind": "location",
+    "name": "Granada",
+    "lang": "es",
+    "seen": 878,
+    "qid": "Q769",
+    "label": "Grenada",
+    "description": "island sovereign state in the Caribbean Sea",
+    "links": 251,
+    "itemCountry": "GD",
+    "mediaCountry": "ES"
+   },
+   {
+    "kind": "location",
+    "name": "Brésil",
+    "lang": "fr",
+    "seen": 871,
+    "qid": "Q155",
+    "label": "Brazil",
+    "description": "country in South America",
+    "links": 387,
+    "itemCountry": "BR",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "location",
+    "name": "Royaume-Uni",
+    "lang": "fr",
+    "seen": 825,
+    "qid": "Q145",
+    "label": "United Kingdom",
+    "description": "island country in north-west Europe",
+    "links": 396,
+    "itemCountry": "GB",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "location",
+    "name": "Uzbekistan",
+    "lang": "en",
+    "seen": 809,
+    "qid": "Q265",
+    "label": "Uzbekistan",
+    "description": "sovereign state in Central Asia",
+    "links": 310,
+    "itemCountry": "UZ",
+    "mediaCountry": "AZ"
+   },
+   {
+    "kind": "location",
+    "name": "Moyen-Orient",
+    "lang": "fr",
+    "seen": 805,
+    "qid": "Q7204",
+    "label": "Middle East",
+    "description": "geopolitical region encompassing Egypt and most of Western Asia, including Iran",
+    "links": 225,
+    "itemCountry": "IR",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "location",
+    "name": "Angleterre",
+    "lang": "fr",
+    "seen": 799,
+    "qid": "Q145",
+    "label": "United Kingdom",
+    "description": "island country in north-west Europe",
+    "links": 396,
+    "itemCountry": "GB",
+    "mediaCountry": "FR"
+   },
+   {
+    "kind": "location",
+    "name": "Alemania",
+    "lang": "es",
+    "seen": 782,
+    "qid": "Q183",
+    "label": "Germany",
+    "description": "country in Central Europe",
+    "links": 405,
+    "itemCountry": "DE",
+    "mediaCountry": "ES"
+   },
+   {
+    "kind": "location",
+    "name": "Parigi",
+    "lang": "it",
+    "seen": 769,
+    "qid": "Q90",
+    "label": "Paris",
+    "description": "capital and most populous city in France",
+    "links": 366,
+    "itemCountry": "FR",
+    "mediaCountry": "IT"
+   },
+   {
+    "kind": "location",
+    "name": "Germania",
+    "lang": "it",
+    "seen": 767,
+    "qid": "Q183",
+    "label": "Germany",
+    "description": "country in Central Europe",
+    "links": 405,
+    "itemCountry": "DE",
+    "mediaCountry": "IT"
+   },
+   {
+    "kind": "location",
+    "name": "Oekraïne",
+    "lang": "nl",
+    "seen": 765,
+    "qid": "Q212",
+    "label": "Ukraine",
+    "description": "country in Eastern Europe",
+    "links": 389,
+    "itemCountry": "UA",
+    "mediaCountry": "NL"
+   }
+  ],
+  "LOW": [
+   {
+    "kind": "person",
+    "name": "Flávio",
+    "lang": "pt",
+    "seen": 2162,
+    "qid": "Q32979165",
+    "label": "Flavius",
+    "description": "ancient Roman nomen",
+    "links": 1
+   },
+   {
+    "kind": "person",
+    "name": "Feijóo",
+    "lang": "es",
+    "seen": 1254,
+    "qid": "Q36544921",
+    "label": "E.J. Feijoo",
+    "description": "botanist",
+    "links": 0
+   },
+   {
+    "kind": "person",
+    "name": "scientists",
+    "lang": "en",
+    "seen": 746,
+    "qid": "Q18611977",
+    "label": "Scientists",
+    "description": "36th strip of the webcomic xkcd",
+    "links": 0
+   },
+   {
+    "kind": "person",
+    "name": "Dybala",
+    "lang": "es",
+    "seen": 666,
+    "qid": "Q96476970",
+    "label": "Dybala",
+    "description": "",
+    "links": 1
+   },
+   {
+    "kind": "person",
+    "name": "Puigdemont",
+    "lang": "es",
+    "seen": 579,
+    "qid": "Q107091352",
+    "label": "Puigdemont",
+    "description": "building in Olot, Garrotxa, Girona, Catalonia, Spain",
+    "links": 0
+   },
+   {
+    "kind": "person",
+    "name": "Harry",
+    "lang": "fr",
+    "seen": 475,
+    "qid": "Q11222273",
+    "label": "HARRY",
+    "description": "Japanese singer",
+    "links": 1
+   },
+   {
+    "kind": "person",
+    "name": "Schlein",
+    "lang": "it",
+    "seen": 420,
+    "qid": "Q113804048",
+    "label": "Yehoshua Shiloni",
+    "description": "Yiddish-Israeli journalist, writer and translator (1894–1965)",
+    "links": 0
+   },
+   {
+    "kind": "organization",
+    "name": "LaPresse",
+    "lang": "it",
+    "seen": 2334,
+    "qid": "Q85864722",
+    "label": "LaPresse",
+    "description": "Italian press agency",
+    "links": 1
+   },
+   {
+    "kind": "organization",
+    "name": "ITALPRESS",
+    "lang": "it",
+    "seen": 1327,
+    "qid": "Q3804469",
+    "label": "Italpress",
+    "description": "Italian news agency",
+    "links": 1
+   },
+   {
+    "kind": "location",
+    "name": "CDMX",
+    "lang": "es",
+    "seen": 1225,
+    "qid": "Q18295428",
+    "label": "Dmbx1",
+    "description": "protein-coding gene in the species Mus musculus",
+    "links": 0
+   }
+  ],
+  "GENERIC": [
+   {
+    "kind": "person",
+    "name": "researchers",
+    "lang": "en",
+    "seen": 2605,
+    "qid": "Q1650915",
+    "label": "researcher",
+    "description": "person who engages in research, professionally or otherwise. If a more specific occupation is known, use that instead",
+    "links": 40
+   },
+   {
+    "kind": "person",
+    "name": "customers",
+    "lang": "en",
+    "seen": 1153,
+    "qid": "Q2979031",
+    "label": "clientele",
+    "description": "set of all customers of a service",
+    "links": 2
+   },
+   {
+    "kind": "person",
+    "name": "scientists",
+    "lang": "en",
+    "seen": 746,
+    "qid": "Q18611977",
+    "label": "Scientists",
+    "description": "36th strip of the webcomic xkcd",
+    "links": 0
+   },
+   {
+    "kind": "person",
+    "name": "buyers",
+    "lang": "en",
+    "seen": 519,
+    "qid": "Q1308239",
+    "label": "buyer",
+    "description": "person acquiring a benefit in exchange for money",
+    "links": 16
+   },
+   {
+    "kind": "organization",
+    "name": "government",
+    "lang": "en",
+    "seen": 4738,
+    "qid": "Q7188",
+    "label": "government",
+    "description": "system or group of people governing an organized community, often a state. traditionally all three branches, legislature, executive and judiciary. in modern englisch often the executive branch.",
+    "links": 209
+   },
+   {
+    "kind": "organization",
+    "name": "gouvernement",
+    "lang": "fr",
+    "seen": 4122,
+    "qid": "Q1450662",
+    "label": "Government of the French Republic",
+    "description": "body exerting the executive power in France",
+    "links": 38
+   },
+   {
+    "kind": "organization",
+    "name": "flydubai",
+    "lang": "en",
+    "seen": 2939,
+    "qid": "Q1048495",
+    "label": "flydubai",
+    "description": "Emirati government-owned low-cost airline based in Dubai, United Arab Emirates",
+    "links": 46
+   },
+   {
+    "kind": "organization",
+    "name": "policia",
+    "lang": "sq",
+    "seen": 2726,
+    "qid": "Q35535",
+    "label": "police",
+    "description": "law enforcement body",
+    "links": 170
+   },
+   {
+    "kind": "organization",
+    "name": "governo",
+    "lang": "es",
+    "seen": 2388,
+    "qid": "Q7188",
+    "label": "government",
+    "description": "system or group of people governing an organized community, often a state. traditionally all three branches, legislature, executive and judiciary. in modern englisch often the executive branch.",
+    "links": 209
+   },
+   {
+    "kind": "organization",
+    "name": "raiders",
+    "lang": "en",
+    "seen": 1678,
+    "qid": "Q324523",
+    "label": "Las Vegas Raiders",
+    "description": "National Football League franchise in Las Vegas, Nevada",
+    "links": 45
+   },
+   {
+    "kind": "organization",
+    "name": "businesses",
+    "lang": "en",
+    "seen": 1282,
+    "qid": "Q4830453",
+    "label": "business",
+    "description": "organization undertaking commercial, industrial, or professional activity",
+    "links": 140
+   },
+   {
+    "kind": "location",
+    "name": "moscow",
+    "lang": "en",
+    "seen": 2138,
+    "qid": "Q649",
+    "label": "Moscow",
+    "description": "capital and most populous city of Russia",
+    "links": 337
+   },
+   {
+    "kind": "location",
+    "name": "capitale",
+    "lang": "fr",
+    "seen": 960,
+    "qid": "Q5119",
+    "label": "capital city",
+    "description": "primary governing city of a top-level (country) or first-level and second-level subdivision (country, state, province, regency, etc) political entity",
+    "links": 238
+   },
+   {
+    "kind": "location",
+    "name": "internet",
+    "lang": "fr",
+    "seen": 754,
+    "qid": "Q75",
+    "label": "Internet",
+    "description": "global system of connected computer networks based on IP addressing and routing protocols",
+    "links": 299
+   }
+  ]
+ },
+ "missing": [
+  {
+   "id": 9179,
+   "kind": "organization",
+   "name": "FC",
+   "lang": "fr",
+   "seen": 27834
+  },
+  {
+   "id": 139,
+   "kind": "person",
+   "name": "Trump",
+   "lang": "en",
+   "seen": 22697
+  },
+  {
+   "id": 1780,
+   "kind": "organization",
+   "name": "Agenzia Nova",
+   "lang": "it",
+   "seen": 20297
+  },
+  {
+   "id": 1202,
+   "kind": "organization",
+   "name": "Real Madrid",
+   "lang": "fr",
+   "seen": 19985
+  },
+  {
+   "id": 92,
+   "kind": "organization",
+   "name": "PSG",
+   "lang": "de",
+   "seen": 17427
+  },
+  {
+   "id": 1928,
+   "kind": "organization",
+   "name": "AP",
+   "lang": "en",
+   "seen": 11374
+  },
+  {
+   "id": 351,
+   "kind": "organization",
+   "name": "EU",
+   "lang": "en",
+   "seen": 8104
+  },
+  {
+   "id": 7677,
+   "kind": "person",
+   "name": "Man",
+   "lang": "en",
+   "seen": 7201
+  },
+  {
+   "id": 6216,
+   "kind": "organization",
+   "name": "Roma",
+   "lang": "lv",
+   "seen": 6963
+  },
+  {
+   "id": 1393018,
+   "kind": "organization",
+   "name": "Lang & Schwarz",
+   "lang": "en",
+   "seen": 6360
+  },
+  {
+   "id": 9119,
+   "kind": "person",
+   "name": "Lula",
+   "lang": "fr",
+   "seen": 6022
+  },
+  {
+   "id": 3622,
+   "kind": "organization",
+   "name": "Cedarnews",
+   "lang": "sv",
+   "seen": 5738
+  },
+  {
+   "id": 4958,
+   "kind": "person",
+   "name": "Messi",
+   "lang": "es",
+   "seen": 4975
+  },
+  {
+   "id": 11549,
+   "kind": "person",
+   "name": "Ronaldo",
+   "lang": "pt",
+   "seen": 4731
+  },
+  {
+   "id": 12624,
+   "kind": "person",
+   "name": "Maître Reda Kohen",
+   "lang": "fr",
+   "seen": 4282
+  },
+  {
+   "id": 460,
+   "kind": "organization",
+   "name": "AS",
+   "lang": "lv",
+   "seen": 4133
+  },
+  {
+   "id": 1565,
+   "kind": "person",
+   "name": "putin",
+   "lang": "en",
+   "seen": 3929
+  },
+  {
+   "id": 12540,
+   "kind": "person",
+   "name": "woman",
+   "lang": "en",
+   "seen": 3911
+  },
+  {
+   "id": 12261,
+   "kind": "organization",
+   "name": "INDIA",
+   "lang": "en",
+   "seen": 3850
+  },
+  {
+   "id": 9279,
+   "kind": "person",
+   "name": "Allegri",
+   "lang": "it",
+   "seen": 3745
+  },
+  {
+   "id": 1386,
+   "kind": "person",
+   "name": "José Mourinho",
+   "lang": "fr",
+   "seen": 3638
+  },
+  {
+   "id": 10678,
+   "kind": "organization",
+   "name": "SC",
+   "lang": "pt",
+   "seen": 3603
+  },
+  {
+   "id": 14191,
+   "kind": "person",
+   "name": "Mourinho",
+   "lang": "it",
+   "seen": 3547
+  },
+  {
+   "id": 31,
+   "kind": "organization",
+   "name": "Rams",
+   "lang": "en",
+   "seen": 3173
+  },
+  {
+   "id": 7631,
+   "kind": "person",
+   "name": "Sánchez",
+   "lang": "es",
+   "seen": 3140
+  },
+  {
+   "id": 5695,
+   "kind": "person",
+   "name": "you",
+   "lang": "en",
+   "seen": 3025
+  },
+  {
+   "id": 10537,
+   "kind": "organization",
+   "name": "ΠΑΟΚ",
+   "lang": "el",
+   "seen": 3003
+  },
+  {
+   "id": 7283,
+   "kind": "organization",
+   "name": "Authorities",
+   "lang": "en",
+   "seen": 2895
+  },
+  {
+   "id": 4481,
+   "kind": "organization",
+   "name": "England",
+   "lang": "en",
+   "seen": 2822
+  },
+  {
+   "id": 15611,
+   "kind": "organization",
+   "name": "SEC",
+   "lang": "es",
+   "seen": 2699
+  },
+  {
+   "id": 9264,
+   "kind": "organization",
+   "name": "RB",
+   "lang": "en",
+   "seen": 2675
+  },
+  {
+   "id": 6729,
+   "kind": "organization",
+   "name": "UN",
+   "lang": "en",
+   "seen": 2596
+  },
+  {
+   "id": 5091,
+   "kind": "person",
+   "name": "president",
+   "lang": "en",
+   "seen": 2451
+  },
+  {
+   "id": 7431,
+   "kind": "organization",
+   "name": "JUVE",
+   "lang": "it",
+   "seen": 2450
+  },
+  {
+   "id": 20475,
+   "kind": "person",
+   "name": "Carlos Alcaraz",
+   "lang": "en",
+   "seen": 2443
+  },
+  {
+   "id": 9226,
+   "kind": "organization",
+   "name": "AC",
+   "lang": "fr",
+   "seen": 2426
+  },
+  {
+   "id": 1211,
+   "kind": "person",
+   "name": "Vinicius",
+   "lang": "fr",
+   "seen": 2380
+  },
+  {
+   "id": 931,
+   "kind": "person",
+   "name": "people",
+   "lang": "en",
+   "seen": 2298
+  },
+  {
+   "id": 21945,
+   "kind": "organization",
+   "name": "NEW",
+   "lang": "en",
+   "seen": 2281
+  },
+  {
+   "id": 10601,
+   "kind": "organization",
+   "name": "Congress",
+   "lang": "en",
+   "seen": 2235
+  },
+  {
+   "id": 16706,
+   "kind": "organization",
+   "name": "USA",
+   "lang": "de",
+   "seen": 2231
+  },
+  {
+   "id": 1418,
+   "kind": "organization",
+   "name": "Équipe de France",
+   "lang": "fr",
+   "seen": 2213
+  },
+  {
+   "id": 6316,
+   "kind": "person",
+   "name": "Meloni",
+   "lang": "it",
+   "seen": 2209
+  },
+  {
+   "id": 347675,
+   "kind": "organization",
+   "name": "EssentiallySports",
+   "lang": "en",
+   "seen": 2204
+  },
+  {
+   "id": 10287,
+   "kind": "person",
+   "name": "Spalletti",
+   "lang": "fr",
+   "seen": 2194
+  },
+  {
+   "id": 11560,
+   "kind": "organization",
+   "name": "Παναθηναϊκού",
+   "lang": "el",
+   "seen": 2153
+  },
+  {
+   "id": 23623,
+   "kind": "organization",
+   "name": "Field Level Media",
+   "lang": "en",
+   "seen": 2151
+  },
+  {
+   "id": 14087,
+   "kind": "person",
+   "name": "presidente",
+   "lang": null,
+   "seen": 2141
+  },
+  {
+   "id": 85648,
+   "kind": "organization",
+   "name": "Euronews Albania",
+   "lang": "sq",
+   "seen": 2098
+  },
+  {
+   "id": 12340,
+   "kind": "organization",
+   "name": "LA",
+   "lang": "en",
+   "seen": 2079
+  },
+  {
+   "id": 12106,
+   "kind": "person",
+   "name": "students",
+   "lang": "en",
+   "seen": 2050
+  },
+  {
+   "id": 9951,
+   "kind": "organization",
+   "name": "Com",
+   "lang": "it",
+   "seen": 2045
+  },
+  {
+   "id": 9679,
+   "kind": "organization",
+   "name": "Παναθηναϊκό",
+   "lang": null,
+   "seen": 2035
+  },
+  {
+   "id": 9121,
+   "kind": "person",
+   "name": "Mbappé",
+   "lang": "fr",
+   "seen": 2031
+  },
+  {
+   "id": 9177,
+   "kind": "organization",
+   "name": "FA",
+   "lang": "en",
+   "seen": 1975
+  },
+  {
+   "id": 10293,
+   "kind": "organization",
+   "name": "Trump administration",
+   "lang": "en",
+   "seen": 1960
+  },
+  {
+   "id": 15883,
+   "kind": "person",
+   "name": "Claude",
+   "lang": "en",
+   "seen": 1870
+  },
+  {
+   "id": 8,
+   "kind": "organization",
+   "name": "Bills",
+   "lang": "en",
+   "seen": 1849
+  },
+  {
+   "id": 20708,
+   "kind": "organization",
+   "name": "AFC",
+   "lang": "fr",
+   "seen": 1828
+  },
+  {
+   "id": 9182,
+   "kind": "organization",
+   "name": "GLOBE",
+   "lang": "en",
+   "seen": 1828
+  }
+ ]
+}

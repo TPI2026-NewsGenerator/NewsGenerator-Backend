@@ -1,0 +1,31 @@
+candidates 50: UEFA 37, Arbitrage du f 13
+run 0: 13 chosen, UEFA 8, Arbitrage du f 5, kept 10: UEFA 5, Arbitrage du f 5  (4928+598 tokens)
+   K UEFA | Ceferin: ‘Political interference’ in Italian football could ‘undermine UEFA trust’ ahead of Euro 203
+   K UEFA | LdC : Lens et Feyenoord condamnés par l’UEFA
+   K UEFA | David De Gea chambre Manchester City
+   K UEFA | Spain has submitted a bid to host the Nations League Final Four - reports
+   K UEFA | Pourquoi les tribunes étaient-elles vides lors du match de la Géorgie contre l’Irlande du Nord en Li
+     UEFA | Ligue des Nations : au terme d’un choc spectaculaire, l’Espagne s’offre l’Angleterre
+     UEFA | Ligue des Nations de l'UEFA : Modric offre la victoire à la Croatie, la Suisse démarre fort, la Finl
+     UEFA | Irlande : les joueurs tranchent sur le maintien des matchs face à Israël
+   K Arbitrage du f | New VAR Rules Reopen the Debate Over Technology and Human Judgement
+   K Arbitrage du f | Un match rejoué à cause d’une erreur d’arbitrage - FA Cup - Qualifications
+   K Arbitrage du f | VAR saves referee after Johan Manzambi controversy away from Aston Villa - Expert
+   K Arbitrage du f | Real Madrid : Valverde victime d’une rupture ligamentaire, Mourinho relance la polémique arbitrale
+   K Arbitrage du f | Dani Olmo addresses growing refereeing debate in La Liga: 'It doesn’t surprise me, we speak on pitch
+run 1: 15 chosen, UEFA 10, Arbitrage du f 5, kept 10: UEFA 5, Arbitrage du f 5  (4928+646 tokens)
+   K UEFA | Ceferin: ‘Political interference’ in Italian football could ‘undermine UEFA trust’ ahead of Euro 203
+   K UEFA | LdC : Lens et Feyenoord condamnés par l’UEFA
+   K UEFA | David De Gea chambre Manchester City
+   K Arbitrage du f | New VAR Rules Reopen the Debate Over Technology and Human Judgement
+   K UEFA | Spain has submitted a bid to host the Nations League Final Four - reports
+   K UEFA | Pourquoi les tribunes étaient-elles vides lors du match de la Géorgie contre l’Irlande du Nord en Li
+   K Arbitrage du f | Un match rejoué à cause d’une erreur d’arbitrage - FA Cup - Qualifications
+   K Arbitrage du f | VAR saves referee after Johan Manzambi controversy away from Aston Villa - Expert
+     UEFA | Ligue des Nations : au terme d’un choc spectaculaire, l’Espagne s’offre l’Angleterre
+     UEFA | Ligue des Nations de l'UEFA : Modric offre la victoire à la Croatie, la Suisse démarre fort, la Finl
+     UEFA | Irlande : les joueurs tranchent sur le maintien des matchs face à Israël
+     UEFA | Ligue des Nations : pour les débuts de Mark van Bommel, la Belgique surclasse l’Italie
+     UEFA | Benfica vs Bayern | Infos de base | UEFA Women's Champions League 2026/27
+   K Arbitrage du f | Dani Olmo addresses growing refereeing debate in La Liga: 'It doesn’t surprise me, we speak on pitch
+   K Arbitrage du f | Real Madrid : Valverde victime d’une rupture ligamentaire, Mourinho relance la polémique arbitrale

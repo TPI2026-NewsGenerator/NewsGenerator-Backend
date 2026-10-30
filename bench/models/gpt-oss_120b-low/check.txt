@@ -1,0 +1,61 @@
+2 runs: Y kept 100% (180/180), N dropped 27% (17/64), A kept 96%
+tokens per call: 3906 read, 864 written
+  ×2 kept  pieges/ent1218 P: Why this break has come at the worst time for De Zerbi & Spurs
+        1. Tottenham games Pedro Porro could miss as Roberto De Zerbi dealt major injury blow
+  ×2 kept  grands_titres/en37 P: Meta’s Muse gains ground as personalized AI apps grow
+        1. It’s sinister that Meta’s Muse AI mascot is so cute
+  ×2 kept  grands_titres/en37 P: Meta’s Muse gains ground as personalized AI apps grow
+        2. Meta Introduces Palm-Sized Device to Use Muse AI on the Go
+  ×2 kept  grands_titres/en37 P: Meta’s Muse gains ground as personalized AI apps grow
+        3. Meta’s New AI Device Is This Tamagotchi-Like Muse Charm Keychain
+  ×2 kept  grands_titres/en37 P: Meta’s Muse gains ground as personalized AI apps grow
+        4. Metas new VR glasses: We tried them, plus Muse on Metas AI glasses
+  ×2 kept  grands_titres/en37 P: Meta’s Muse gains ground as personalized AI apps grow
+        5. Meta puts its AI assistant on a keychain
+  ×2 kept  grands_titres/en37 P: Meta’s Muse gains ground as personalized AI apps grow
+        6. Everything new coming to Meta’s AI agent Muse
+  ×2 kept  grands_titres/en37 P: Meta’s Muse gains ground as personalized AI apps grow
+        8. Meta made a Tamagotchi-like wearable for its Muse AI agent
+  ×2 kept  grands_titres/en37 P: Meta’s Muse gains ground as personalized AI apps grow
+        9. Meta to release Muse Charm, a Tamagotchi-like device for the Muse AI agent
+  ×2 kept  grands_titres/en37 P: Meta’s Muse gains ground as personalized AI apps grow
+        10. Meta Debuts Dedicated Muse Charm Gadget for AI Assistant Users
+  ×2 kept  grands_titres/en37 P: Meta’s Muse gains ground as personalized AI apps grow
+        11. So Many New Meta Glasses: Muse AI Everywhere, and Ray-Bans Without a Camera
+  ×2 kept  grands_titres/en37 P: Meta’s Muse gains ground as personalized AI apps grow
+        12. Meta gets metaphysical laying out vision for Muse AI assistant
+  ×2 kept  grands_titres/en47 P: Trump touts ‘great meeting’ with China’s Xi Jinping at White House – l
+        12. Trump Hails "Very Good" Talks with Iran, Xi to Visit Washington
+  ×2 kept  grands_titres/fr143 P: Vers la « superintelligence personnelle » : Meta dévoile ses lunettes 
+        3. Avec Muse, Meta est en train de réussir sa remontada face à OpenAI et Anthropic
+  ×2 kept  grands_titres/fr143 P: Vers la « superintelligence personnelle » : Meta dévoile ses lunettes 
+        4. Meta veut que son IA passe vos appels…quitte à les confier à des inconnus
+  ×2 kept  grands_titres/fr143 P: Vers la « superintelligence personnelle » : Meta dévoile ses lunettes 
+        5. Avec Muse, Meta est en train de réussir sa remontada face à OpenAI et Anthropic
+  ×2 kept  grands_titres/fr143 P: Vers la « superintelligence personnelle » : Meta dévoile ses lunettes 
+        9. L'agent IA de Meta est un petit assistant sympathique, très doué pour dépenser mon argent
+  ×2 kept  au_hasard/fr99 P: Présidentielle 2027 : « Sans être là, Jean-Luc Mélenchon a parasité le
+        2. Édito. Avant même son premier débat, la primaire social-démocrate semble déjà maudite
+  ×1 kept  pieges/ent1769 P: Travis Kelce makes his feelings known as Taylor Swift flaunting weddin
+        2. "WAIT, IT'S HAPPENING?": Caitlin Clark Fans Anticipate Travis Kelce, Taylor Swift's Appear
+  ×1 kept  pieges/ent1769 P: Travis Kelce makes his feelings known as Taylor Swift flaunting weddin
+        3. Real reason Travis Kelce is desperate for Tom Cruise's approval... and what Taylor Swift s
+  ×1 kept  pieges/ent1240 P: Dowman and Bartishvili start with £150m striker as Raya replaced – Mik
+        2. Arsenal handed boost as key player set to follow in Mikel Arteta's footsteps and sign new 
+  ×1 kept  pieges/ent1240 P: Dowman and Bartishvili start with £150m striker as Raya replaced – Mik
+        6. Mikel Arteta faces tough Max Dowman decision after Arsenal reunion request
+  ×1 kept  pieges/ent109 P: "Browns deal Shedeur Sanders before the deadline": Browns analyst drop
+        1. Scandalized QB Deshaun Watson sends message to Browns fans ahead of first home game since 
+  ×1 kept  pieges/ent109 P: "Browns deal Shedeur Sanders before the deadline": Browns analyst drop
+        2. Browns QB Watson 'ready for support' in first home game since boos
+  ×1 kept  pieges/ent109 P: "Browns deal Shedeur Sanders before the deadline": Browns analyst drop
+        3. "Never try to go to war with the fans": Deshaun Watson gets candid about first home game i
+  ×1 kept  pieges/ent2261 P: McDonald’s is testing ads on its drive-thru menus
+        1. McDonald's bets on hand-breaded chicken, AI drive-throughs to fend off Burger King
+  ×1 kept  pieges/ent2261 P: McDonald’s is testing ads on its drive-thru menus
+        2. McDonald's bets on hand-breaded chicken, AI drive-thrus to fend off Burger King
+  ×1 kept  pieges/ent1288 P: Olympiad: India's gold chances get bleaker despite win in open; women 
+        1. Asian Games: In shooting, India’s search for gold continues
+  ×1 kept  pieges/ent1288 P: Olympiad: India's gold chances get bleaker despite win in open; women 
+        2. Asian Games 2026 Day 4: Mirabai Chanu ends Asiad medal wait; India win two skeet bronzes i
+seconds 68

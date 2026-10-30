@@ -1,0 +1,15 @@
+briefing 1: 0 of 10 left out, 1916 ms
+briefing 2: 0 of 8 left out, 2047 ms
+briefing 3: 0 of 10 left out, 1419 ms
+briefing 4: 0 of 7 left out, 2063 ms
+briefing 5: 0 of 5 left out, 1529 ms
+briefing 6: 4 of 4 left out, 3513 ms
+   [3637] Manchester City reconnu coupable de la quasi-totalité des 115 infracti -> Premier League, non‑UEFA
+   [1950] Europe's top leagues demand FIFA reform -> FIFA, non‑UEFA
+   [4908] EdF : Christophe Dugarry rend hommage à Didier Deschamps mais… -> France national team, non‑UEFA
+   [5654] Galliani idea if Malago removed as FIGC President over irregularity -> FIGC, non‑UEFA
+briefing 7: 0 of 2 left out, 1221 ms
+briefing 9: 0 of 1 left out, 1208 ms
+briefing 13: 0 of 5 left out, 1861 ms
+52 cards, tokens {"calls":9,"input":15158,"output":1313}
+seconds 17

@@ -1,0 +1,17 @@
+candidates 50: Tennis 14, Intelligence a 18, Politique suis 18
+run 0: 14 chosen, Tennis 5, Intelligence a 5, Politique suis 4, kept 10: Tennis 3, Intelligence a 4, Politique suis 3  (5667+1197 tokens)
+   K Politique suis | Votations fédérales: retrouvez les résultats via nos cartes et nos graphiques
+   K Politique suis | Voici tous les résultats des votations de ce dimanche
+   K Politique suis | Tous les résultats en un clin d'œil
+   K Intelligence a | Le point de vue. Intelligence artificielle : « La machine est en marche, on ne l'arrêtera pas mais..
+   K Intelligence a | De nouveaux matériaux aux diagnostics, la nouvelle odyssée de l’intelligence artificielle
+   K Tennis | ATP roundup: Seeded players fall in Chengdu, Hangzhou
+   K Intelligence a | L'intelligence artificielle est en train de remodeler le tourisme.
+   K Tennis | Tennis : Kyrian Jacquet se qualifie pour sa première demi-finale sur le grand circuit
+   K Intelligence a | « Révolution de l’intelligence artificielle : un goût de déjà-vu ? »
+     Politique suis | In Switzerland, voters are voting for stricter neutrality: the result could force the country to lif
+   K Tennis | Laver Cup chiefs open up on future plans as tournament eyes expansion beyond North America
+     Tennis | 10 Tennis Stars Who Should Have Won More Grand Slams
+     Intelligence a | Sommet mondial de l’IA à Genève: la nécessité d’avoir des ambitions élevées
+     Tennis | “It doesn't matter”: Alexander Zverev responds to huge No.1 opportunity after Sinner withdrawal
+seconds 7

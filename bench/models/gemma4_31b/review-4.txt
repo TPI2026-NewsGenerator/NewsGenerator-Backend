@@ -1,0 +1,11 @@
+briefing 1: 0 of 10 left out, 751 ms
+briefing 2: 0 of 8 left out, 561 ms
+briefing 3: 0 of 10 left out, 519 ms
+briefing 4: 0 of 7 left out, 516 ms
+briefing 5: 0 of 5 left out, 526 ms
+briefing 6: 0 of 4 left out, 468 ms
+briefing 7: 0 of 2 left out, 427 ms
+briefing 9: 0 of 1 left out, 576 ms
+briefing 13: 0 of 5 left out, 561 ms
+52 cards, tokens {"calls":9,"input":15236,"output":108}
+seconds 6

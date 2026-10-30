@@ -1,0 +1,53 @@
+2 runs: joined to its fact 28% (23/82), joined to another fact 6% (12, 4 of them into a shown card: hidden)
+tokens per call: 1681 read, 927 written, 13.5 s
+  ×2 joined  societe: Pédocriminalité dans l’Eglise : Léon XIV encourage les évêques françai
+             into (shown) Visite du pape en France : les images de la messe de Léon XIV à Lourde
+  ×2 joined  societe: Frankreich-Besuch: Papst Leo XIV. trifft sich mit Missbrauchsopfern in
+             into (shown) Visite du pape en France : les images de la messe de Léon XIV à Lourde
+  ×2 apart   societe: Munich picked for Germany's bid to host the Summer Olympics in 2036, 2
+  ×2 apart   societe: Visite du pape en France : Léon XIV appelle à "la paix" et "au dialogu
+  ×2 apart   societe: Detenidos varios hombres por delitos con explosivos cerca de la base m
+  ×2 apart   societe: 5 Men Arrested on Suspicion of Terrorism Offenses Near RAF Fairford, A
+  ×2 apart   monde: Le peuple suisse rejette l'initiative pour la neutralité par 70,2% des
+  ×2 apart   monde: La Maison-Blanche écarte CNN du déplacement de Trump
+  ×2 apart   monde: Rain eases in Bangkok but persistent flooding forces thousands to leav
+  ×2 apart   monde: "Nos conditions sont claires" : l'Iran maintient ses exigences pour ro
+  ×2 apart   monde: Press pool dispute escalates as White House cuts CNN from Air Force On
+  ×2 apart   ia: After Dozens of Incidents at OpenAI and Anthropic, OpenAI Pauses Model
+  ×2 apart   ia: KI mit Kontrollverlust: OpenAI stoppt Training seiner Top-Modelle
+  ×2 apart   ia: TikTok évite un procès aux États-Unis sur la protection des mineurs en
+  ×2 apart   ia: Australie : enquête après intrusion d’un agent d’OpenAI
+  ×2 apart   ia: Trump tries to rebrand AI. Is it really that super?
+  ×2 apart   affaires: Europe’s leading leagues demand major FIFA reforms over governance con
+  ×2 apart   sport: Spain expose England's shortcomings in breathtaking Wembley comeback
+  ×1 apart   societe: SPD will Pläne von Gesundheitsminister Linnemann für die Pflegereform 
+  ×1 joined  monde: „Wasser steht bis zur Hüfte“ – Bangkok ruft wegen Überschwemmungen Kat
+             into US-Präsident Trump schließt CNN von Reise aus
+  ×1 joined  ia: Nach KI-Vorf�llen: China und USA richten KI-Kommunikationskanal ein
+             into Nvidia (NVDA) Is Central To New Global AI Rules Debate
+  ×1 apart   ia: China and the US Say They've Agreed to Start Talks About AI
+  ×1 apart   ia: Apple hit with $5.7 billion in damages over haptic patents
+  ×1 apart   ia: Les Etats-Unis et la Chine ouvrent «un canal de communication» sur l’i
+  ×1 joined  affaires: El presidente del Manchester City rompe su silencio: “Confiamos en dem
+             into Manchester City versus the Premier League: After the day that shocked 
+  ×1 joined  affaires: Tottenham 'cheated' by Manchester City as new 115 charges punishment v
+             into Tyson Fury vs Anthony Joshua fight on verge of collapse after overnigh
+  ×1 apart   affaires: Un match rejoué à cause d’une erreur d’arbitrage - FA Cup - Qualificat
+  ×1 apart   sport: Äthiopierin Assefa verpasst neuen Weltrekord knapp
+  ×1 apart   sport: Kylian Mbappé, forfait pour la suite du rassemblement, ne sera pas rem
+  ×1 joined  sport: Zidane wins on France coaching debut, but Mbappé injury clouds victory
+             into Kylian Mbappé, forfait pour la suite du rassemblement, ne sera pas rem
+  ×1 joined  sport: Französische Nationalmannschaft: Mbappés Verletzung trübt Zidanes Eins
+             into Kylian Mbappé, forfait pour la suite du rassemblement, ne sera pas rem
+  ×1 apart   sport: George Russell wins Azerbaijan Grand Prix by ONE tenth of a second: Me
+  ×1 apart   sport: Ligue des nations - L'Espagne championne du monde bat l'Angleterre à W
+  ×1 apart   affaires: El presidente del Manchester City rompe su silencio: “Confiamos en dem
+  ×1 apart   monde: Berne alloue des millions pour l'intégration des étrangers
+  ×1 apart   monde: Swiss voters crush neutrality initiative that would have ended sanctio
+  ×1 apart   monde: „Wasser steht bis zur Hüfte“ – Bangkok ruft wegen Überschwemmungen Kat
+  ×1 apart   monde: Des manifestants protestent contre la crise du logement à Madrid
+  ×1 joined  ia: OpenAI et Anthropic font face à des milliers d'incidents d’agents
+             into Nach KI-Vorf�llen: China und USA richten KI-Kommunikationskanal ein
+  ×1 joined  sport: Französische Nationalmannschaft: Mbappés Verletzung trübt Zidanes Eins
+             into Équipe de France: le staff de Zidane a tranché, Mbappé ne sera pas rem
+seconds 43

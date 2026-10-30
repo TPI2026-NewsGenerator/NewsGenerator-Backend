@@ -1,0 +1,61 @@
+
+==== fab
+-- today ×1: 1 interests, missing: football
+      UEFA Ligue des champions Ligue Europa Ligue Conférence Euro Ligue des nations décisions sanctions enquêtes gouvernance élections fair-play financier arbitrage décisions arbitrales VAR polémiques nominations sanctions arbitres changements règles du jeu
+-- today ×1: 2 interests, missing: Ligue, champions, Europa, Conférence, Euro, nations, décisions, sanctions, enquêtes, gouvernance, élections, fair-play, financier, arbitrage, arbitrales, VAR, polémiques, nominations, arbitres, changements, règles
+      UEFA competitions
+      football refereeing
+
+==== lecteur-test
+-- today ×1: 2 interests, missing: gastronomie
+      football français : la Ligue 1, le PSG, l'OM et l'équipe de France, surtout les résultats, les blessures et les transferts
+      restaurants étoilés, les chefs, le guide Michelin et les nouvelles tables à Paris et Lyon
+-- today ×1: 2 interests, missing: gastronomie
+      football français : la Ligue 1, le PSG, l'OM et l'équipe de France, surtout les résultats, les blessures et les transferts
+      restaurants étoilés, chefs, le guide Michelin et les nouvelles tables à Paris et Lyon
+
+==== lecteur-difficile
+-- today ×1: 3 interests, missing: tennis
+      le circuit ATP, les Grands Chelems et les jeunes joueurs suisses
+      l'actualité de l'intelligence artificielle : les nouveaux modèles, la recherche et la régulation en Europe
+      la politique suisse : surtout les votations fédérales et les décisions du Conseil fédéral
+-- today ×1: 3 interests, missing: tennis
+      le circuit ATP, les Grands Chelems et les jeunes joueurs suisses
+      l'actualité de l'intelligence artificielle : les nouveaux modèles, la recherche et la régulation en Europe
+      la politique suisse : les votations fédérales et les décisions du Conseil fédéral
+
+==== mots-clés
+-- today ×2: 1 interests
+      F1, MotoGP, Verstappen, Ducati, règlement technique 2027, transferts de pilotes, sécurité des circuits
+
+==== english
+-- today ×1: 5 interests, missing: IPCC, reports, carbon, capture, research, JWST, discoveries, exoplanets, opinion, pieces, protests
+      climate science
+      energy policy
+      EU emissions trading
+      heat pump subsidies
+      astronomy
+-- today ×1: 6 interests, missing: IPCC, reports, JWST, discoveries, exoplanets, celebrity, crypto, opinion, pieces, protests
+      climate science
+      energy policy
+      carbon capture research
+      EU emissions trading
+      heat pump subsidies
+      astronomy
+
+==== familier
+-- today ×1: 2 interests, missing: esport, rumeurs, consoles
+      cuisine japonaise, ramen, nouveaux restos à Genève
+      jeux vidéo, Nintendo, sorties indé
+-- today ×1: 0 interests, missing: cuisine, japonaise, ramen, nouveaux, restos, Genève, jeux, vidéo, Nintendo, sorties, indé, esport, rumeurs, consoles
+      
+
+==== secondaire
+-- today ×1: 3 interests, missing: vaccins, alimentation, maladies, bergers, allemands, lois, Suisse
+      santé de mon chien
+      randonnée en Valais
+      cabanes du CAS
+-- today ×1: 2 interests, missing: santé
+      vaccins pour chiens, alimentation pour chiens, maladies des bergers allemands, nouvelles lois sur les chiens en Suisse
+      randonnée en Valais, cabanes du CAS
+seconds 454

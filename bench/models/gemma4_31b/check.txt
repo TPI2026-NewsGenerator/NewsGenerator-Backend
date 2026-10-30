@@ -1,0 +1,19 @@
+2 runs: Y kept 96% (173/180), N dropped 91% (58/64), A kept 52%
+tokens per call: 3993 read, 422 written
+  ×2 dropped  au_hasard/en1 P: Infantino 'committed to what is right' for FIFA
+        2. FIFA's Infantino pledges 'culture of dialogue' after uproar over secretive World Cup sell-
+  ×2 kept  au_hasard/fr99 P: Présidentielle 2027 : « Sans être là, Jean-Luc Mélenchon a parasité le
+        2. Édito. Avant même son premier débat, la primaire social-démocrate semble déjà maudite
+  ×2 kept  grands_titres/en37 P: Meta’s Muse gains ground as personalized AI apps grow
+        6. Everything new coming to Meta’s AI agent Muse
+  ×2 kept  grands_titres/en37 P: Meta’s Muse gains ground as personalized AI apps grow
+        12. Meta gets metaphysical laying out vision for Muse AI assistant
+  ×2 dropped  grands_titres/en47 P: Trump touts ‘great meeting’ with China’s Xi Jinping at White House – l
+        2. Trump Struggles to Find Leverage With Xi Over Chinese Exports
+  ×1 dropped  grands_titres/fr38 P: Accusé d'avoir écrit son livre avec une IA, l'écrivain Thélyson Orélie
+        5. Polémique Thélyson Orélien : comment fonctionne le détecteur de textes générés par IA, Pan
+  ×1 dropped  grands_titres/fr38 P: Accusé d'avoir écrit son livre avec une IA, l'écrivain Thélyson Orélie
+        9. Affaire Thélyson Orélien : trois remarques personnelles sur l’usage de l’IA en littérature
+  ×1 dropped  grands_titres/en15 P: Fury vs. Joshua set for Dec. 11 in Cardiff
+        11. Joshua vs Fury is too late – but that’s not the biggest problem behind this fight
+seconds 13

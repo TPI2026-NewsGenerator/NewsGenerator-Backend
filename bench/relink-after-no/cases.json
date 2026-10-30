@@ -1,0 +1,262 @@
+[
+ {
+  "name": "The BookKeeper",
+  "kind": "person",
+  "truth": "W",
+  "refused": "The Bookkeeper (painting by Philip van Dijk, Mauritshuis)",
+  "titles": [
+   "The BookKeeper investigates FIFA's 'Forward' fund: How it's managed and who gets what"
+  ],
+  "sites": {},
+  "eligible": true,
+  "lang": "en",
+  "candidates": []
+ },
+ {
+  "name": "FMF",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Football Association of Moldova (association football governing body of Moldova)",
+  "titles": [
+   "FOOTBALL – Des représentants de clubs et d’autres acteurs intègrent le collège électoral pour élire les futurs dirigeants de la FMF"
+  ],
+  "sites": {
+   "MG": 2
+  },
+  "eligible": true,
+  "lang": "ro",
+  "candidates": [
+   "familial Mediterranean fever: Human disease (26 Wikipedias)",
+   "Moroccan Football Federation: sport governing body (34 Wikipedias)",
+   "Mexican Football Federation: governing body of association football in Mexico (33 Wikipedias)",
+   "Feminist Majority Foundation: American non-profit organisation (11 Wikipedias)",
+   "Fleet Marine Force: operational command within the United States Marine Corps (7 Wikipedias)",
+   "MEFV: protein-coding gene in the species Homo sapiens (7 Wikipedias)",
+   "Mefv: protein-coding gene in the species Mus musculus (0 Wikipedias)",
+   "United States Foreign Military Financing: program of the United States federal government (5 Wikipedias)",
+   "Fetal Medicine Foundation: nonprofit organization in London, United Kingdom (0 Wikipedias)"
+  ],
+  "chosen": null
+ },
+ {
+  "name": "Lega",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Lega Nord (political party in Italy)",
+  "titles": [
+   "Fiorentina fury: letter to Serie A over refereeing errors. Here are the disputed incidents",
+   "Rabbia Fiorentina: Milla-Goncalves, episodio non chiarito. E dalla Lega piovono multe",
+   "La Fiorentina non ci sta: \"Risposte Lega sul VAR non soddisfacenti. Chiarezza su episodi gravi\""
+  ],
+  "sites": {
+   "IT": 4
+  },
+  "eligible": true,
+  "lang": "it",
+  "candidates": [
+   "alloy: mixture or metallic solid solution composed of two or more elements (125 Wikipedias)",
+   "league: unit of length (46 Wikipedias)",
+   "Lega: river of Poland, a right tributary of the Biebrza (13 Wikipedias)"
+  ],
+  "chosen": null
+ },
+ {
+  "name": "Primera División",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Maltese First Division (sports league)",
+  "titles": [
+   "Hernández Hernández, árbitro de Primera división: \"El arbitraje es aprender a resetear\""
+  ],
+  "sites": {},
+  "eligible": true,
+  "lang": "es",
+  "candidates": []
+ },
+ {
+  "name": "Ghana Football",
+  "kind": "organization",
+  "truth": "C",
+  "refused": "football in Ghana (overview of association football in Ghana)",
+  "titles": [
+   "André Ayew prioritises Ghana football reforms over GFA presidency talk"
+  ],
+  "sites": {},
+  "eligible": true,
+  "lang": "en",
+  "candidates": []
+ },
+ {
+  "name": "La Fiorentina",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Vittoria Tesi (Italian opera singer and music teacher (1701-1775))",
+  "titles": [
+   "Fiorentina fury: letter to Serie A over refereeing errors. Here are the disputed incidents",
+   "La Fiorentina protesta: chiesti chiarimenti alla Lega Calcio per gli episodi arbitrali contro il Como",
+   "Fiorentina irritata per l'arbitraggio contro il Como: il club contatta la Serie A"
+  ],
+  "sites": {
+   "IT": 3
+  },
+  "eligible": true,
+  "lang": "it",
+  "candidates": []
+ },
+ {
+  "name": "Feyenoord",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Sparta-Feyenoord (defunct Dutch baseball team)",
+  "titles": [
+   "Competitievervalsing in Eredivisie zorgt voor ophef: 'Sport onrecht aangedaan'"
+  ],
+  "sites": {
+   "NL": 2
+  },
+  "eligible": true,
+  "lang": "es",
+  "candidates": []
+ },
+ {
+  "name": "Eduardo Varela",
+  "kind": "person",
+  "truth": "W",
+  "refused": "Eduardo Varela (Mexican journalist)",
+  "titles": [
+   "Now even RED CARDS go digital! Referee uses a 'smartphone' to dish out his punishments - but fans are not convinced"
+  ],
+  "sites": {},
+  "eligible": true,
+  "lang": "es",
+  "candidates": []
+ },
+ {
+  "name": "Al-Hazm",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Al-Hazm (human settlement in Oman)",
+  "titles": [
+   "Un expert en arbitrage crée la surprise à propos d'Al-Hilal et d'Al-Hazm : un penalty non accordé !",
+   "Refereeing Controversy Erupts After Al-Hilal vs Al-Hazm Match",
+   "A refereeing expert springs a surprise regarding Al-Hilal and Al-Hazm: a penalty that was not awarded!"
+  ],
+  "sites": {},
+  "eligible": true,
+  "lang": "es",
+  "candidates": []
+ },
+ {
+  "name": "Calvarese",
+  "kind": "person",
+  "truth": "W",
+  "refused": "Calvarese (frazione of Comunanza, Italy)",
+  "titles": [
+   "Calvarese: \"L'indirizzo della Uefa è chiaro: arbitro più centrale, meno uso del Var\"",
+   "Calvarese, cambia tutto per gli arbitri in Serie A e in Europa: «Il Var non deve trasformarsi in una seconda direzione arbitrale»"
+  ],
+  "sites": {},
+  "eligible": false,
+  "lang": "it"
+ },
+ {
+  "name": "Super League",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Swiss Super League (Swiss men's association football top division)",
+  "titles": [
+   "Οι goal-line cameras έρχονται στη Super League: Όλα όσα πρέπει να ξέρετε",
+   "Goal Line Cameras και Goal-Line Technology: Ποιες είναι οι διαφορές και τι αλλάζει στη Super League",
+   "Super League: Έρχονται οι Goal-Line Cameras από την 8η αγωνιστική"
+  ],
+  "sites": {
+   "GR": 13
+  },
+  "eligible": true,
+  "lang": "el",
+  "candidates": [
+   "Süper Lig: top tier of association football in Turkey (64 Wikipedias)",
+   "Super League: Indonesian top-flight association football league (32 Wikipedias)",
+   "Super League: professional rugby league (22 Wikipedias)",
+   "Tommy Lasorda Baseball: 1988 video game (3 Wikipedias)",
+   "Super League: Australian rugby league competition active in 1997 (3 Wikipedias)"
+  ],
+  "chosen": null
+ },
+ {
+  "name": "Taylor",
+  "kind": "person",
+  "truth": "W",
+  "refused": "Kamario Taylor (American football player (born 2007))",
+  "titles": [
+   "Kadın semineri"
+  ],
+  "sites": {
+   "TR": 2
+  },
+  "eligible": false,
+  "lang": "it"
+ },
+ {
+  "name": "Feyenoord",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Sparta-Feyenoord (defunct Dutch baseball team)",
+  "titles": [
+   "Penalty Feyenoord en VAR maken veel los: 'Als je gevoetbald hebt...'"
+  ],
+  "sites": {
+   "NL": 2
+  },
+  "eligible": true,
+  "lang": "es",
+  "candidates": []
+ },
+ {
+  "name": "Ghana Football",
+  "kind": "organization",
+  "truth": "C",
+  "refused": "football in Ghana (overview of association football in Ghana)",
+  "titles": [
+   "Kurt Okraku: The man who arrived with promises and hope, but whose leadership faces questions about power and Ghana football’s future"
+  ],
+  "sites": {},
+  "eligible": true,
+  "lang": "en",
+  "candidates": []
+ },
+ {
+  "name": "Wenger",
+  "kind": "person",
+  "truth": "W",
+  "refused": "Wenger (company)",
+  "titles": [
+   "Former Arsenal boss Wenger touted as challenger to Infantino as Fifa boss",
+   "Wenger, Kang and Norwegian FA president tipped as UEFA's candidates for FIFA election",
+   "FIFA : Arsène Wenger veut la place de Gianni Infantino"
+  ],
+  "sites": {
+   "FR": 4,
+   "ZA": 1,
+   "CI": 1,
+   "RO": 1,
+   "VN": 1,
+   "KE": 1
+  },
+  "eligible": false,
+  "lang": "fr"
+ },
+ {
+  "name": "CAN",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Can (German experimental rock band)",
+  "titles": [
+   "CAN tous les 2 ans : deux cadres de la CAF opposés à la réforme ?"
+  ],
+  "sites": {},
+  "eligible": true,
+  "lang": null,
+  "candidates": []
+ }
+]

@@ -1,0 +1,396 @@
+[
+ {
+  "name": "The BookKeeper",
+  "kind": "person",
+  "truth": "W",
+  "refused": "The Bookkeeper (painting by Philip van Dijk, Mauritshuis)",
+  "titles": [
+   "The BookKeeper investigates FIFA's 'Forward' fund: How it's managed and who gets what"
+  ],
+  "countries": [],
+  "hasText": 1780,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 0,
+  "candidates": []
+ },
+ {
+  "name": "Europe",
+  "kind": "organization",
+  "truth": "R-no",
+  "refused": "Europe (terrestrial continent located in north-western Eurasia)",
+  "titles": [
+   "Landmark Royal Antwerp case is another test of EU’s appetite to help football consumers"
+  ],
+  "countries": [],
+  "hasText": 838,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 0,
+  "candidates": []
+ },
+ {
+  "name": "FMF",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Football Association of Moldova (association football governing body of Moldova)",
+  "titles": [
+   "FOOTBALL – Des représentants de clubs et d’autres acteurs intègrent le collège électoral pour élire les futurs dirigeants de la FMF"
+  ],
+  "countries": [
+   "Madagascar (2)"
+  ],
+  "hasText": 2021,
+  "expansion": "Fédération malgache de football",
+  "fromA": 1,
+  "fromB": 5,
+  "candidates": [
+   "A Fédération Malagasy de Football: governing body of association football in Malagasy (22 Wikipedias)",
+   "B Madagascar men's national football team: men's national association football team representing Madagascar (47 Wikipedias)",
+   "B AS Adema 2–0 SO l'Emyrne: association football match (18 Wikipedias)",
+   "B Madagascar women's national football team results: Wikimedia list article (2 Wikipedias)",
+   "B Madagascar women's national futsal team: (no description) (1 Wikipedias)"
+  ],
+  "chosen": "Fédération Malagasy de Football: governing body of association football in Malagasy (22 Wikipedias)"
+ },
+ {
+  "name": "Lega",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Lega Nord (political party in Italy)",
+  "titles": [
+   "Fiorentina fury: letter to Serie A over refereeing errors. Here are the disputed incidents",
+   "Rabbia Fiorentina: Milla-Goncalves, episodio non chiarito. E dalla Lega piovono multe"
+  ],
+  "countries": [
+   "Italy (4)"
+  ],
+  "hasText": 1156,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 5,
+  "candidates": [
+   "B Lega per Salvini Premier: Italian political party (16 Wikipedias)",
+   "B Lega Nord: political party in Italy (58 Wikipedias)",
+   "B list of political parties in Italy: Wikimedia list article (23 Wikipedias)",
+   "B Lega Pro: professional association football organization in Italy (6 Wikipedias)",
+   "B Serie C: third-highest division in the Italian football league system (44 Wikipedias)"
+  ],
+  "chosen": "Lega Pro: professional association football organization in Italy (6 Wikipedias)"
+ },
+ {
+  "name": "Mostafa Zico",
+  "kind": "person",
+  "truth": "R-no",
+  "refused": "Mostafa Ziko (Egyptian association football player)",
+  "titles": [
+   "Egypt coach receives three-match ban for referee criticism after World Cup loss to Argentina",
+   "FIFA Suspends Egypt Coach and Forward After Argentina World Cup Defeat"
+  ],
+  "countries": [
+   "Brazil (3)",
+   "Portugal (2)",
+   "Argentina (2)",
+   "Romania (2)",
+   "Serbia (2)",
+   "Mexico (1)",
+   "Türkiye (1)",
+   "Azerbaijan (1)",
+   "Malaysia (1)"
+  ],
+  "hasText": 1761,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 4,
+  "candidates": [
+   "B Zico: Brazilian association football player and manager (76 Wikipedias)",
+   "B Mostafa Ziko: Egyptian association football player (29 Wikipedias)",
+   "B Jonas Luz: Brazilian snooker player (4 Wikipedias)",
+   "B Al-Gharafa SC: Qatari multi-sports club based in the Al Gharrafa district of Al Rayyan municipality (40 Wikipedias)"
+  ],
+  "chosen": "Mostafa Ziko: Egyptian association football player (29 Wikipedias)"
+ },
+ {
+  "name": "SEVILLA",
+  "kind": "organization",
+  "truth": "R-no",
+  "refused": "Sevilla FC (Spanish professional football club based in Seville)",
+  "titles": [
+   "Refereeing Committee about Güler’s case: “Absent evidence, no intervention is possible”"
+  ],
+  "countries": [],
+  "hasText": 938,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 0,
+  "candidates": []
+ },
+ {
+  "name": "Primera División",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Maltese First Division (sports league)",
+  "titles": [
+   "Hernández Hernández, árbitro de Primera división: \"El arbitraje es aprender a resetear\""
+  ],
+  "countries": [],
+  "hasText": 1252,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 0,
+  "candidates": []
+ },
+ {
+  "name": "Ghana Football",
+  "kind": "organization",
+  "truth": "C",
+  "refused": "football in Ghana (overview of association football in Ghana)",
+  "titles": [
+   "André Ayew prioritises Ghana football reforms over GFA presidency talk"
+  ],
+  "countries": [],
+  "hasText": 1088,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 0,
+  "candidates": []
+ },
+ {
+  "name": "Mostafa Zico",
+  "kind": "person",
+  "truth": "R-no",
+  "refused": "Mostafa Ziko (Egyptian association football player)",
+  "titles": [
+   "Egypt coach receives three-match ban for referee criticism after World Cup loss to Argentina",
+   "La FIFA sancionó a tres integrantes de la delegación de Egipto por sus protestas tras la eliminación ante la Argentina"
+  ],
+  "countries": [
+   "Croatia (4)",
+   "Netherlands (3)",
+   "Argentina (2)",
+   "France (2)",
+   "Bosnia & Herzegovina (1)",
+   "Azerbaijan (1)",
+   "Malaysia (1)"
+  ],
+  "hasText": 1761,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 3,
+  "candidates": [
+   "B Zico: Brazilian association football player and manager (76 Wikipedias)",
+   "B Deaths in May 2025: Wikimedia list article (17 Wikipedias)",
+   "B list of professional sports families: Wikimedia list article (2 Wikipedias)"
+  ],
+  "chosen": null
+ },
+ {
+  "name": "La Fiorentina",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Vittoria Tesi (Italian opera singer and music teacher (1701-1775))",
+  "titles": [
+   "Fiorentina fury: letter to Serie A over refereeing errors. Here are the disputed incidents",
+   "La Fiorentina protesta: chiesti chiarimenti alla Lega Calcio per gli episodi arbitrali contro il Como"
+  ],
+  "countries": [
+   "Italy (3)"
+  ],
+  "hasText": 1156,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 5,
+  "candidates": [
+   "B ACF Fiorentina: association football club in Florence, Italy (96 Wikipedias)",
+   "B ACF Fiorentina Femminile: women's football club based in Florence, Italy (15 Wikipedias)",
+   "B Bistecca alla fiorentina: Italian steak dish (14 Wikipedias)",
+   "B Pietro Comuzzo: Italian footballer (14 Wikipedias)",
+   "B list of ACF Fiorentina seasons: Wikimedia list article (2 Wikipedias)"
+  ],
+  "chosen": "ACF Fiorentina: association football club in Florence, Italy (96 Wikipedias)"
+ },
+ {
+  "name": "Feyenoord",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Sparta-Feyenoord (defunct Dutch baseball team)",
+  "titles": [
+   "Competitievervalsing in Eredivisie zorgt voor ophef: 'Sport onrecht aangedaan'"
+  ],
+  "countries": [
+   "Netherlands (2)"
+  ],
+  "hasText": 1294,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 5,
+  "candidates": [
+   "B Feyenoord Rotterdam: Dutch football club based in Rotterdam (85 Wikipedias)",
+   "B SC Feyenoord: Dutch football club (3 Wikipedias)",
+   "B Feyenoord Rotterdam (women): Dutch women's football club from Rotterdam (9 Wikipedias)",
+   "B Quinten Timber: Dutch footballer (born 2001) (36 Wikipedias)",
+   "B Gjivai Zechiël: Dutch association football player (11 Wikipedias)"
+  ],
+  "chosen": "Feyenoord Rotterdam: Dutch football club based in Rotterdam (85 Wikipedias)"
+ },
+ {
+  "name": "Eduardo Varela",
+  "kind": "person",
+  "truth": "W",
+  "refused": "Eduardo Varela (Mexican journalist)",
+  "titles": [
+   "Now even RED CARDS go digital! Referee uses a 'smartphone' to dish out his punishments - but fans are not convinced"
+  ],
+  "countries": [],
+  "hasText": 1208,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 0,
+  "candidates": []
+ },
+ {
+  "name": "Al-Hazm",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Al-Hazm (human settlement in Oman)",
+  "titles": [
+   "Un expert en arbitrage crée la surprise à propos d'Al-Hilal et d'Al-Hazm : un penalty non accordé !",
+   "Refereeing Controversy Erupts After Al-Hilal vs Al-Hazm Match"
+  ],
+  "countries": [],
+  "hasText": 2039,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 0,
+  "candidates": []
+ },
+ {
+  "name": "Super League",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Swiss Super League (Swiss men's association football top division)",
+  "titles": [
+   "Οι goal-line cameras έρχονται στη Super League: Όλα όσα πρέπει να ξέρετε",
+   "Goal Line Cameras και Goal-Line Technology: Ποιες είναι οι διαφορές και τι αλλάζει στη Super League"
+  ],
+  "countries": [
+   "Greece (13)"
+  ],
+  "hasText": 2201,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 5,
+  "candidates": [
+   "B Super League Greece: first-tier professional men's association football league in Greece (48 Wikipedias)",
+   "B 2026–27 Super League Greece: 91st season of top-tier football league in Greece (9 Wikipedias)",
+   "B Super League Greece 2: second-tier professional men's association football league in Greece (18 Wikipedias)",
+   "B 2025-26 Super League Greece: 90th season of top-tier football league in Greece (11 Wikipedias)",
+   "B 2024–25 Super League Greece: 89th season of top-tier football league in Greece (13 Wikipedias)"
+  ],
+  "chosen": "Super League Greece: first-tier professional men's association football league in Greece (48 Wikipedias)"
+ },
+ {
+  "name": "Feyenoord",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Sparta-Feyenoord (defunct Dutch baseball team)",
+  "titles": [
+   "Penalty Feyenoord en VAR maken veel los: 'Als je gevoetbald hebt...'"
+  ],
+  "countries": [
+   "Netherlands (2)"
+  ],
+  "hasText": 1492,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 5,
+  "candidates": [
+   "B Feyenoord Rotterdam: Dutch football club based in Rotterdam (85 Wikipedias)",
+   "B SC Feyenoord: Dutch football club (3 Wikipedias)",
+   "B Feyenoord Rotterdam (women): Dutch women's football club from Rotterdam (9 Wikipedias)",
+   "B Quinten Timber: Dutch footballer (born 2001) (36 Wikipedias)",
+   "B Gjivai Zechiël: Dutch association football player (11 Wikipedias)"
+  ],
+  "chosen": "Feyenoord Rotterdam: Dutch football club based in Rotterdam (85 Wikipedias)"
+ },
+ {
+  "name": "UEFA",
+  "kind": "organization",
+  "truth": "R-no",
+  "refused": "Union of European Football Associations (international governing body for association football in Europe)",
+  "titles": [
+   "FIFA : Gianni Infantino face à une contestation grandissante",
+   "Fifa : « La confiance en lui est perdue »… Gianni Infantino lâché par des membres du Conseil (mais solide au poste)"
+  ],
+  "countries": [
+   "Netherlands (6)",
+   "Mexico (2)",
+   "Morocco (2)",
+   "France (1)",
+   "Brazil (1)",
+   "Argentina (1)",
+   "Austria (1)",
+   "Germany (1)",
+   "Switzerland (1)",
+   "Belgium (1)"
+  ],
+  "hasText": 1556,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 5,
+  "candidates": [
+   "B Netherlands national association football team: men's national association football team representing the Netherlands (95 Wikipedias)",
+   "B Netherlands at the UEFA European Football Championship: overview of the Netherlands at the UEFA European Championship (4 Wikipedias)",
+   "B UEFA Women's Euro 2017: 2017 edition of the UEFA Women's Championship (37 Wikipedias)",
+   "B Cody Gakpo: Dutch association football player (born 1999) (62 Wikipedias)",
+   "B UEFA European Championship: European championship for national association football teams (108 Wikipedias)"
+  ],
+  "chosen": null
+ },
+ {
+  "name": "Ghana Football",
+  "kind": "organization",
+  "truth": "C",
+  "refused": "football in Ghana (overview of association football in Ghana)",
+  "titles": [
+   "Kurt Okraku: The man who arrived with promises and hope, but whose leadership faces questions about power and Ghana football’s future"
+  ],
+  "countries": [],
+  "hasText": 1452,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 0,
+  "candidates": []
+ },
+ {
+  "name": "AFCON",
+  "kind": "organization",
+  "truth": "R-no",
+  "refused": "Africa Cup of Nations (African association football tournament for men's national teams)",
+  "titles": [
+   "Patrice Motsepe’s Caf presidency under pressure after Afcon U-turn as Eto’o waits in wings",
+   "An African legend and two Arabs: four potential candidates to succeed Motsepe as CAF president"
+  ],
+  "countries": [],
+  "hasText": 2041,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 0,
+  "candidates": []
+ },
+ {
+  "name": "CAN",
+  "kind": "organization",
+  "truth": "W",
+  "refused": "Can (German experimental rock band)",
+  "titles": [
+   "CAN tous les 2 ans : deux cadres de la CAF opposés à la réforme ?"
+  ],
+  "countries": [],
+  "hasText": 1290,
+  "expansion": null,
+  "fromA": 0,
+  "fromB": 0,
+  "candidates": []
+ }
+]

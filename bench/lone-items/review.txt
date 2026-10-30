@@ -1,0 +1,719 @@
+# 1 Joey Porter Jr (en, 758, most met) media CA: sports.yahoo.com 271, heavy.com 156, bvmsports.com 83, si.com 68
+  I: Q111048622 7 wikis US American football player (born 2000)
+  T: Steelers get last laugh in Joey Porter Jr. drama with Cowboys
+  T: Cowboys Make Final Decision on Playing CB Joey Porter Jr. Against Packers
+  T: How Cowboys’ Joey Porter Jr. Week 6 Decision Helps Steelers
+
+# 2 JJ Gabriel (en, 751, most met) media GB: sports.yahoo.com 67, mirror.co.uk 62, manchestereveningnews.co.uk 60, news.google.com 47
+  I: Q135950093 9 wikis IE English footballer
+  T: Real Madrid : une offre pour JJ Gabriel… qui veut un salaire XXL !
+  T: JJ Gabriel transfer update as 'significant offer' made and Man Utd decision imminent
+  T: Man Utd Transfer News Today: Bruno Fernandes wants out as players silenced
+
+# 3 Marvin Harrison Jr (de, 694, most met) media -: sports.yahoo.com 306, si.com 71, sportskeeda.com 38, bleacherreport.com 32
+  I: Q112063616 8 wikis US American football player
+  T: Texans Week 6 snap counts: How much did WR Marvin Harrison Jr. play in his debut vs. Jaguars?
+  T: Marvin Harrison Jr. Confirmed for team debut Sunday
+  T: Chad Ryland’s 6th field goal helps Cardinals shock Rams on final play
+
+# 4 one person (en, 674, most met) media -: hoodline.com 47, ctvnews.ca 25, unn.ua 23, cedarnews.net 22
+  I: Q140403752 0 wikis - NOT HUMAN prototypical agent (PAG) for predicate "make_up.09": reconcile
+  T: One Dead, One Wounded, After Shooting Near Ohio Mosque
+  T: Two men critically wounded in shooting at University Boulevard apartment complex
+  T: House, 2 sheds catch fire in Fort Worth; 1 person treated at scene, officials say
+
+# 5 Arch Manning (en, 628, most met) media -: sports.yahoo.com 233, si.com 50, essentiallysports.com 38, sportskeeda.com 32
+  I: Q99925317 5 wikis US American football player (born 2004)
+  T: Mel Kiper Jr. pinpoints what Texas’ Arch Manning is lacking amid dropping 2027 NFL Draft stock
+  T: Weekly Syllabus: Arch Manning's hot seat, a Big 12 showcase and more
+  T: Arch Manning Reveals Message to Texas' Steve Sarkisian in New Video Amid Benching Buzz
+
+# 6 Edouard Geffray (es, 592, most met) media FR: bfmtv.com 87, franceinfo.fr 35, lemonde.fr 33, ouest-france.fr 26
+  I: Q33138734 8 wikis FR French jurist and official
+  T: Mobilisation des lycéens : les représentants souhaitent s'entretenir avec le Premier ministre, après un troisième rendez-vous avec Édouard G
+  T: Après une troisième réunion stérile avec Édouard Geffray, les organisations lycéennes veulent un rendez-vous à Matignon
+  T: Déçus de leur rencontre avec le ministre, les lycéens annoncent se mobiliser "pendant les vacances et à la rentrée"
+
+# 7 Maricarmen Abascal (es, 586, most met) media -: democrata.es 67, abc.es 28, huffingtonpost.es 17, eldebate.com 16
+  I: Q141564171 7 wikis ES Spanish activist (1938 -2026)
+  T: John McEnroe: “Carlos Alcaraz es lo mejor que le ha pasado al tenis en los últimos 10 años”
+  T: Toi toi mon toit : lettre ouverte d’une locataire aux propriétaires d’Espagne (et d’ailleurs)
+  T: El misterioso final del altar de Maricarmen tras convertirse en símbolo de la lucha por la vivienda
+
+# 8 Luca Franceschi (it, 562, most met) media IT BYLINE: agenziagiornalisticaopinione.it 562
+  I: Q130831722 0 wikis - (no description)
+  T: M5S – MOVIMENTO 5 STELLE * PARLAMENTO: «MUTUI. CROATTI (M5S): MENTRE IL PAESE SOFFOCA IL GOVERNO FESTEGGIA LA LEGGE ELETTORALE: LA POLTRONA 
+  T: LEGA * CAMERA: «IMMIGRAZIONE, ZOFFILI (LEGA) AL MEETING DI ANDORRA: “SUBITO MISSIONE OSCE A CEUTA”»
+  T: FDI – FRATELLI D’ITALIA * CAMERA: «OLIO EVO, ALMICI (FDI): «PIÙ CONTROLLI CONTRO LE FRODI, PIÙ TUTELE PER CHI PRODUCE QUALITÀ»»
+
+# 9 Thélyson Orélien (fr, 528, most met) media FR: news.google.com 71, lemonde.fr 34, actualitte.com 29, nouvelobs.com 26
+  I: Q3526284 6 wikis HT Haitian poet and writer
+  T: «Une machine de guerre s’organise pour produire des centaines de milliers de bons livres à base d’IA» : le cri d’alerte d’Arnaud Nourry, pat
+  T: Quand l’IA écrit, la littérature cherche ses garde-fous
+  T: Après Thélyson Orélien, un autre auteur soupçonné d'avoir utilisé de l'IA dans son roman
+
+# 10 Bo Nix (en, 500, most met) media CA: sports.yahoo.com 162, bvmsports.com 66, sportskeeda.com 39, denverbroncos.com 30
+  I: Q64010450 9 wikis US American football player (born 2000)
+  T: Report suggests Broncos QB Bo Nix is worried about injuring his ankle again
+  T: Broncos' Sean Payton sends clear message about benching Bo Nix
+  T: Broncos’ Sean Payton: No thought to replacing QB Bo Nix
+
+# 11 Tarik Skubal (en, 379, most met) media -: sports.yahoo.com 155, bvmsports.com 38, heavy.com 30, si.com 26
+  I: Q86307967 9 wikis US American professional baseball pitcher for the Los Angeles Dodgers (born 1996)
+  T: Dodgers Should Let Tarik Skubal Walk
+  T: Projecting Tarik Skubal's Historic Deal, Bo Bichette Payday, More MLB Free Agency
+  T: MLB: Tarik Skubal retumba con fuerza para reforzar al equipo más urgido de título de Serie Mundial
+
+# 12 Ian Cathro (fr, 378, most met) media FR: peuple-vert.fr 60, foot-sur7.fr 54, butfootballclub.fr 49, envertetcontretous.fr 39
+  I: Q18205458 7 wikis GB Scottish association football player and manager (born 1986)
+  T: ASSE : Le secret de la progression rapide de Boakye révélé
+  T: ASSE : Ian Cathro a pété les plombs, il remercie les fans
+  T: ASSE : Cathro, Red Star, Nantes… Sainté Night Club fait le point sur les Verts
+
+# 13 Fabio Wardley (en, 373, most met) media GB: sports.yahoo.com 49, independent.co.uk 43, talksport.com 28, bbc.co.uk 27
+  I: Q102218789 8 wikis GB British boxer
+  T: Frank Warren confirms when Daniel Dubois will return after Fabio Wardley stoppage
+  T: Fury: Joshua Will Suffer Wardley’s Fate On December 11
+  T: Boxe : Daniel Dubois conserve son titre mondial WBO des poids lourds
+
+# 14 Nick Sirianni (en, 364, most met) media AU: sports.yahoo.com 128, bvmsports.com 40, sportskeeda.com 32, si.com 20
+  I: Q7027935 9 wikis US American football coach (born 1981)
+  T: Eagles’ Nick Sirianni Does Damage Control After Jalen Hurts Report Emerges
+  T: “Disgusting” “Circus clown”: NFL fans react as Nick Sirianni gets “backed into a corner” with Jalen Hurts health questions
+  T: Nick Sirianni on Eagles allowing Jalen Hurts to play, fly home from London with known blood clot: 'We leave that up to the medical experts'
+
+# 15 Tyson Bagent (en, 326, most met) media CA: sports.yahoo.com 113, bvmsports.com 53, si.com 31, heavy.com 18
+  I: Q114323995 3 wikis US American football player
+  T: Who is Caleb Williams’ backup QB for Week 6 injury return in Bears vs. Falcons?
+  T: Bears' Inactives Confirm Backup QB Decision Between Tyson Bagent, Case Keenum for Week 6
+  T: Tyson Bagent will be the Bears' backup QB vs. Falcons
+
+# 16 Lane Kiffin (en, 312, most met) media -: sports.yahoo.com 90, si.com 46, essentiallysports.com 33, sportskeeda.com 20
+  I: Q3826815 8 wikis US American football coach
+  T: Lane Kiffin thinks Auburn's possible 'relief syndrome' could help LSU
+  T: Lane Kiffin's LSU Rebuild Is Facing Its Most Important Stretch
+  T: Bruce Pearl once told Lane Kiffin Jordan-Hare Stadium was haunted. What the LSU coach thinks
+
+# 17 Steve Sarkisian (en, 302, most met) media -: sports.yahoo.com 90, si.com 35, essentiallysports.com 28, on3.com 20
+  I: Q7613847 6 wikis US American football player and coach
+  T: Steve Sarkisian evaluated 'everything' after Texas football loss. Are changes coming?
+  T: Arch Manning Reveals Message to Texas' Steve Sarkisian in New Video Amid Benching Buzz
+  T: Steve Sarkisian is sticking by Arch Manning, who vows to be better as pressure heats up for Texas
+
+# 18 Gerry Cardinale (it, 302, most met) media IT: milannews.it 102, pianetamilan.it 25, tuttomercatoweb.com 15, agenziagiornalisticaopinione.it 12
+  I: Q117221831 2 wikis US American businessman (born 1967)
+  T: Krosche per preparare il mercato. E se lo richiamassero a gennaio? Rabiot star del centrocampo
+  T: Cardinale e Cristiano Ronaldo soci in affari: alleanza in vista per acquistare l'Al-Nassr
+  T: Al-Nassr indebitato: RedBird pronto a investire oltre 260 milioni per il 70%. Tra gli investitori anche CR7
+
+# 19 Markus Krösche (de, 299, most met) media DE: milannews.it 40, bild.de 11, sport1.de 11, sports.yahoo.com 11
+  I: Q1901640 6 wikis DE German association football player and manager
+  T: Krösche-Milan, novità dalla Germania: c’è una clausola da 5-7 milioni. Contatti in corso, ma chiusura non vicina
+  T: Krosche per preparare il mercato. E se lo richiamassero a gennaio? Rabiot star del centrocampo
+  T: What Markus Krosche can bring to the table as he nears Milan move
+
+# 20 Michael Penix Jr (en, 298, most met) media CA: sports.yahoo.com 100, si.com 20, bvmsports.com 16, heavy.com 14
+  I: Q101503854 8 wikis US American football player (born 2000)
+  T: Falcons sign veteran Andy Dalton as another backup to Michael Penix Jr. and release Cooper Rush
+  T: Reports: Falcons signing Andy Dalton, cutting Cooper Rush
+  T: Falcons sign veteran QB Andy Dalton, cut Cooper Rush: Source
+
+# 21 Jalon Daniels (en, 295, most met) media DE: sports.yahoo.com 110, bvmsports.com 48, si.com 15, sportskeeda.com 12
+  I: Q114055824 2 wikis US American football player
+  T: Buccaneers QB Baker Mayfield (thumb) closing in on return
+  T: Buccaneers’ Baker Mayfield injury update hints at more Jalon Daniels
+  T: Aaron Rodgers realiza un gesto conmovedor tras un momento insólito con un novato de la NFL
+
+# 22 Tyquan Thornton (en, 291, most met) media -: sports.yahoo.com 89, heavy.com 47, bvmsports.com 25, athlonsports.com 13
+  I: Q111085291 4 wikis US American football player
+  T: Andy Reid Delivers Concerning Update on $30 Million Star After Chiefs’ 5th Straight Win
+  T: Chiefs move to 5-0 as Kenneth Walker runs for two TDs in a 22-6 win over Chargers
+  T: 5 Winners and 3 Losers From Kansas City Chiefs’ Week 6 Win: Xavier Worthy steps up in place of Tyquan Thornton, pass rush comes alive
+
+# 23 Adam Schefter (en, 276, most met) media -: sports.yahoo.com 84, bvmsports.com 50, heavy.com 37, espn.com 12
+  I: Q4679729 2 wikis US American sportswriter and reporter (born 1966)
+  T: Commanders’ Stefon Diggs ‘trending’ in right direction for MNF game vs. 49ers
+  T: Bills bring back Tre’Davious White as secondary suffers from injury bug
+  T: Rams kicker Blake Grupe tears ACL in debut with team, other players injured
+
+# 24 Dre Greenlaw (en, 256, most met) media -: sports.yahoo.com 89, bvmsports.com 23, heavy.com 22, sportskeeda.com 10
+  I: Q63352696 5 wikis US American football player (born 1997)
+  T: Why did Dre Greenlaw get suspended by the NFL for Monday night's game?
+  T: NFL trade deadline: Kyle Juszczyk makes pitch for major 49ers reunion
+  T: Sam Darnold hit triggers explosive sideline incident in 49ers-Seahawks clash
+
+# 25 Eric Alper (en, 250, most met) media - BYLINE: thatericalper.com 250
+  I: Q27916325 3 wikis CA Canadian music journalist
+  T: DeeCRACKS Return With 18 Songs Of Punk Rock Fury On New Album ‘True Nothing’
+  T: Papa Roach Announces 30-Date 2027 ‘Rise Of The Roach’ Tour With Ice Nine Kills And Ninth Key
+  T: Grateful Dead’s “Skeleton & Roses” Poster Sells For $98,820 In Record-Breaking Music Auction
+
+# 26 Bryce Underwood (en, 250, most met) media -: sports.yahoo.com 111, si.com 25, essentiallysports.com 17, on3.com 12
+  I: Q126897171 2 wikis US American football quarterback
+  T: Michigan’s Kyle Whittingham won’t ‘tip our hand’ at QB before Indiana clash
+  T: Indiana coach Curt Cignetti is ready for Wolverines to do anything at QB after benching Bryce Underwood
+  T: College Football Transfer Portal: 7 Players Who Could Be Top Targets This Offseason
+
+# 27 Max Eberl (es, 249, most met) media DE: sport.de 19, sports.yahoo.com 17, fcbinside.de 16, goal.com 16
+  I: Q872137 8 wikis DE German football executive
+  T: If Michael Olise takes new deal with Bayern Munich, he’ll be highest-paid player
+  T: Medie: Kompany fraværende til træning før Arsenal-brag
+  T: Real Madrid handed Michael Olise boost as Bayern Munich admit contract talks have not begun
+
+# 28 Cam Jurgens (en, 249, most met) media CA: sports.yahoo.com 111, heavy.com 30, si.com 14, athlonsports.com 11
+  I: Q111395621 8 wikis US American football center (born 1999)
+  T: Cam Jurgens ruled out for Ravens’ game against Browns due to concussion protocol
+  T: Ravens Got Unexpected Ja’Kobi Lane Update 24 Hours Before Browns Showdown
+  T: Ravens rule out QB Lamar Jackson, C Cam Jurgens for Week 6 vs. Browns
+
+# 29 Shai Hope (en, 248, most met) media NZ: timesofindia.indiatimes.com 49, sportskeeda.com 48, sports.yahoo.com 15, india.com 13
+  I: Q19787242 9 wikis - Barbadian cricketer
+  T: "The Indian owners are, anyway, quite generous" - Former RCB player predicts massive bidding war for Shai Hope in IPL 2027 mini auction
+  T: Success doesn't have to be series wins necessarily: WI skipper Hope after 2-2 draw against India
+  T: 'Success doesn't have to be series wins': Hope after rain washes out 5th T20I
+
+# 30 Brian Schottenheimer (en, 238, most met) media CA: sports.yahoo.com 79, heavy.com 23, si.com 23, sportskeeda.com 20
+  I: Q4965234 5 wikis US American football coach
+  T: Brian Schottenheimer's Frustration Boils Over After Cowboys Loss to Packers
+  T: Stephen Jones: Schottenheimer has full support of Cowboys' ownership
+  T: Cowboys’ ownership puts support behind Brian Schottenheimer after two-game skid
+
+# 31 Max Caster (en, 234, most met) media -: sportskeeda.com 24, ewrestlingnews.com 21, ringsidenews.com 17, wrestlezone.com 14
+  I: Q105835710 6 wikis US American professional wrestler
+  T: Max Caster Stepping Away From Professional Wrestling Following TNA Exit
+  T: TNA Blamed For Star’s Controversial Firing
+  T: Controversial Ex-AEW Star Steps Away From Wrestling At 37
+
+# 32 Kalen DeBoer (en, 233, most met) media -: sports.yahoo.com 81, bvmsports.com 37, essentiallysports.com 17, on3.com 16
+  I: Q6352090 4 wikis US American football player and coach
+  T: Does Alabama Have An Offensive Identity?
+  T: What Alabama Needs to Do to Put Keelon Russell in Better Positions for Success
+  T: Kalen DeBoer updates injured Alabama players entering Texas A&M game
+
+# 33 Hyron Andrews (fr, 232, most met) media -: blog-rct.com 17, bbc.co.uk 11, rugbyrama.fr 11, rmcsport.bfmtv.com 9
+  I: Q19975570 4 wikis ZA South African rugby union footballer
+  T: Duhan van der Merwe on track for Edinburgh return along with team-mate who underwent major surgery
+  T: Power Struggle
+  T: Brian Moore: Death of Hyron Andrews brought back painful memories of my late teammate
+
+# 34 Tonda Eckert (en, 231, most met) media -: sports.yahoo.com 21, bbc.co.uk 15, livescore.com 9, skysports.com 9
+  I: Q136700977 8 wikis DE German football manager (born 1993)
+  T: Why Tonda Eckert’s contract extension matters more than any January recruit at Southampton
+  T: Tonda Eckert has another Lewis Dobbin style conundrum to solve at Southampton
+  T: Southampton make big call on Tonda Eckert future
+
+# 35 Jackson Chourio (es, 229, most met) media CA: sports.yahoo.com 75, bvmsports.com 36, meridiano.net 17, si.com 12
+  I: Q113566228 4 wikis VE Venezuelan baseball player (born 2004)
+  T: Milwaukee Brewers Card Market Heats Up Ahead of the World Series
+  T: Locura de precios: un boleto de pie para la Serie Mundial cuesta casi 3.000 dólares
+  T: Evaluating the Milwaukee Brewers Card Market After Sweeping the Dodgers
+
+# 36 Tran Thanh Man (null, 228, most met) media VN: vietnam.vn 117, en.vietnamplus.vn 38, en.nhandan.vn 34, vietnamplus.vn 27
+  I: Q10829474 9 wikis VN Vietnamese politician
+  T: Vietnam, Liechtenstein seek stronger economic, parliamentary ties
+  T: Liechtenstein Prime Minister concludes official visit to Viet Nam
+  T: National Assembly Chairman Tran Thanh Man proposed that Liechtenstein strengthen cooperation in investment and technology.
+
+# 37 Cam Skattebo (en, 225, most met) media CA: sports.yahoo.com 98, bvmsports.com 16, si.com 16, sportskeeda.com 11
+  I: Q123653630 6 wikis US American football player (born 2002)
+  T: ‘There’s Got To Be Something Else’ — Former NFL MVP Questions Giants HC John Harbaugh’s Treatment of Cam Skattebo
+  T: Start, drop or bench? What to do with Cam Skattebo and fantasy football’s biggest disappointments
+  T: Fantasy football stock watch: What's wrong with Cam Skattebo, A.J. Brown?
+
+# 38 Shedeur Sanders (en, 223, most met) media -: sports.yahoo.com 83, profootballnetwork.com 24, heavy.com 20, sportskeeda.com 18
+  I: Q111441081 7 wikis US American football player
+  T: Analyst: Texas ‘would be the best team in the country’ with Shedeur Sanders instead of Arch Manning
+  T: ‘I Know It’s Egregious’ — Former NFL MVP Cam Newton Reasons Against Reason For Shedeur Sanders To Land With 2-4 NFC Heavyweights
+  T: Browns Send Message on Replacing Watson With Shedeur Sanders
+
+# 39 Alfredo Pedullà (it, 222, most met) media IT BYLINE: alfredopedulla.com 193, milannews.it 7, fcinter1908.it 6, areanapoli.it 4
+  I: Q3611471 3 wikis IT Italian journalist and columnist
+  T: Champions League, il programma di oggi
+  T: Cacciamani: “L’interesse della Roma? Sono situazioni nuove, ma per me c’è solo il Torino”
+  T: Abate: “Sono felice per Perri e Simeone. Gli acquisti di fine mercato ci hanno fatto cambiare strada”
+
+# 40 C.J. Gardner-Johnson (en, 220, most met) media -: sports.yahoo.com 67, sportskeeda.com 19, bvmsports.com 10, heavy.com 10
+  I: Q52582990 9 wikis US American football player (born 1997)
+  T: ‘No Team in the League Needs You,’ ‘Quit Being a Punk’ — Ex-NFL HC Gets Brutally Honest About C.J. Gardner-Johnson’s Spitting Incident
+  T: NFL Suspends Bills’ C.J. Gardner Johnson for Spitting on Raiders TE Brock Bowers
+  T: Kyle Juszczyk Trashes Bills DB C.J. Gardner-Johnson After Spitting Incident
+
+# 41 Bedri Hamza (sq, 218, most met) media AL: gazetaexpress.com 132, insajderi.org 42, koha.net 28, euronews.al 12
+  I: Q110608909 4 wikis XK politician from Kosovo
+  T: DPK: Hamza je saopštio da će podneti ostavku i da se neće ponovo kandidovati na novim izborima
+  T: PDK: Hamza ka treguar publikisht se kurdo që hapet procesi i zgjedhjeve të brendshme do të japë dorëheqje e s’do të kandidojë
+  T: PDK thotë se Bedri Hamza jep dorëheqje nga posti i Kryetarit pasi të shpallen zgjedhjet në parti dhe nuk rikandidon
+
+# 42 Drew Rasmussen (en, 217, most met) media CA: sports.yahoo.com 64, bvmsports.com 25, heavy.com 21, si.com 10
+  I: Q30248320 5 wikis US American baseball player (born 1995)
+  T: Freddy Peralta Could Deliver the Biggest Win of Rays 2026 Season
+  T: Playoffs MLB: Un solo bateador de Grandes Ligas creó al As que tiene a Rays a un triunfo de la Serie Mundial
+  T: MLB: Rays supera a Guardianes y acaricia la Serie Mundial
+
+# 43 Keelon Russell (en, 215, most met) media -: bvmsports.com 69, sports.yahoo.com 55, on3.com 19, si.com 14
+  I: Q130394830 1 wikis US American football player
+  T: The change DeBoer feels Alabama has to make for Keelon Russell to be more successful
+  T: What Alabama Needs to Do to Put Keelon Russell in Better Positions for Success
+  T: Jumbo Package: Wounded Tide moves on to Texas A&M
+
+# 44 Julieta Prandi (es, 215, most met) media AR: infobae.com 54, c5n.com 31, lanacion.com.ar 26, elintransigente.com 18
+  I: Q5954889 3 wikis AR Argentinian actor
+  T: Julieta Ortega explicó por qué dejó de seguir a Julieta Prandi en Instagram
+  T: Palito Ortega y Julieta Prandi: qué dijo Nancy Duré sobre el vínculo con Mateyko
+  T: Emanuel Ortega rompió el silencio sobre Julieta Prandi: “Todos los duelos son dolorosos pero yo no elegí estar en esta situación”
+
+# 45 Nyesom Wike (en, 214, most met) media NG: naijanews.com 45, ng.headtopics.com 19, thewhistler.ng 17, tvcnews.tv 17
+  I: Q18354468 8 wikis NG Nigerian lawyer and politician
+  T: Wike’s son dragged to EFCC over alleged $2.1m land deal
+  T: Wike Urges Rivers Supporters to Back Tinubu for 2027, Promises More Federal Appointments
+  T: Court Orders Benue Governor Alia to Disclose Financial Records as PDP Demands Explanation of Wike's N30bn Monthly FAAC Claim
+
+# 46 Kyle Whittingham (en, 213, most met) media -: sports.yahoo.com 82, essentiallysports.com 29, si.com 27, on3.com 17
+  I: Q1795070 5 wikis US American football player and coach (born 1959)
+  T: Michigan’s Kyle Whittingham won’t ‘tip our hand’ at QB before Indiana clash
+  T: One Indiana stat has Michigan coach Kyle Whittingham’s full attention
+  T: Kyle Whittingham Doesn’t Guarantee Bryce Underwood’s Future as QB1 After Backup Wins It Against PSU
+
+# 47 Alaric Jackson (null, 206, most met) media -: sports.yahoo.com 74, si.com 9, sportskeeda.com 9, nytimes.com 8
+  I: Q108053941 3 wikis CA football player (born 1998)
+  T: Rams Sunday Morning Notebook: Alaric Jackson Fallout, Myles Garrett Warning, Fan in Need Gets Special Surprise
+  T: “League loves stealing money” “Most expensive punch”: NFL fans react to Bradley Chubb’s “stupid” $14,329 fine after getting punched by Rams 
+  T: NFL Punishes Bills’ Bradley Chubb for Actions in Alaric Jackson Altercation
+
+# 48 Kirby Smart (en, 206, most met) media -: sports.yahoo.com 58, bvmsports.com 39, si.com 30, essentiallysports.com 17
+  I: Q6414956 5 wikis US American football player and coach
+  T: This Was The Last Thing Georgia Football Fans Wanted To Hear From Kirby Smart
+  T: BREAKING: Georgia Football Flips Top Prospect From Tennessee Vols
+  T: Georgia Alum Flags Bonehead Mistakes That Could Have Cost Kirby Smart’s Bulldogs SEC’s Most Feared Status
+
+# 49 deux hommes (fr, 206, most met) media FR: actu.fr 29, ouest-france.fr 22, dhnet.be 13, ladepeche.fr 8
+  I: Q27216766 0 wikis - NOT HUMAN painting by Quentin Matsys
+  T: Une moto heurte une biche dans les Deux-Sèvres, deux hommes blessés
+  T: Vesoul : condamnations après des abattages nocturnes et carcasses abandonnées en Haute‑Saône
+  T: Explosion dans une entreprise près de Lyon : un blessé grave
+
+# 50 Dante Moore (en, 205, most met) media -: sports.yahoo.com 64, si.com 51, bvmsports.com 8, essentiallysports.com 8
+  I: Q115776374 5 wikis - American football quarterback (born 2005)
+  T: Coach Bret Bielema Divulges How Injuries Reshape Oregon vs. Illinois
+  T: Oregon's National Championship Odds Surge Despite Offensive Woes
+  T: Oregon QB Dylan Raiola’s immediate reaction to sending Nebraska to hell with game-winning TD drive off bench
+
+# 51 Mike Norvell (en, 204, most met) media -: sports.yahoo.com 90, si.com 27, bvmsports.com 11, tomahawknation.com 11
+  I: Q16221480 1 wikis US American football coach
+  T: FSU’s Mike Norvell: Holding penalty on Hail Mary ‘absolute joke’
+  T: FSU's Mike Norvell: Holding penalty on Hail Mary 'absolute joke'
+  T: “Drives Me Insane”: FOX’s Joel Klatt Pins Blame in Furious Rant as Mike Norvell Faces Firing Risk After Miami Loss
+
+# 52 Daniel Riolo (fr, 203, most met) media FR: foot01.com 29, footmercato.net 18, news.google.com 18, footballclubdemarseille.fr 17
+  I: Q3014605 2 wikis FR French-Italian journalist
+  T: OM : Daniel Riolo émet un gros bémol après le carton à Angers
+  T: OM – Daniel Riolo ne voit toujours pas de sérénité à l’OM
+  T: OM : après Angers, Riolo remet Marseille à sa place
+
+# 53 Cam Schlittler (en, 202, most met) media CA: sports.yahoo.com 61, heavy.com 35, bvmsports.com 27, si.com 11
+  I: Q135116160 6 wikis US American baseball player (born 2001)
+  T: New York Yankees’ Cam Schlittler Receives Major Personal News After Elimination
+  T: Schlittler and Rice torment hometown team as Yankees beat rival Red Sox 9-0 in playoff opener
+  T: 2026 Yankees Team MVP: Cam Schlittler
+
+# 54 De Roon (it, 202, most met) media IT: forzaroma.info 30, rivistalaroma.it 29, corrieredellosport.it 15, tuttomercatoweb.com 12
+  I: Q13363720 1 wikis - botanist (1928-2011)
+  T: Le ultimissime sulle probabili formazioni di Roma-Slovan Bratislava
+  T: Roma-Slovan, le probabili formazioni: Mancini titolare, Soulé-Pellegrini dietro Malen
+  T: 'RADIO PENSIERI', TORRI: "La gestione di De Roon non sarà un problema con il rientro di Cristante"
+
+# 55 Case Keenum (en, 202, most met) media GB: sports.yahoo.com 59, bvmsports.com 44, si.com 20, heavy.com 10
+  I: Q5048309 9 wikis US American football player (born 1988)
+  T: After Atlanta, it's clearer than ever Bears' championship aspirations ride on QB Caleb Williams
+  T: Who is Caleb Williams’ backup QB for Week 6 injury return in Bears vs. Falcons?
+  T: Bears' Inactives Confirm Backup QB Decision Between Tyson Bagent, Case Keenum for Week 6
+
+# 56 Kamario Taylor (en, 196, most met) media -: sports.yahoo.com 66, bvmsports.com 53, si.com 20, on3.com 10
+  I: Q136673266 2 wikis US American football player (born 2007)
+  T: Jeff Lebby provides latest on Kamario Taylor injury
+  T: Mississippi State QB Kamario Taylor Cracks Top 10 in Heisman Trophy Rankings
+  T: Jeff Lebby gives Kamario Taylor injury update for Mississippi State vs Oklahoma
+
+# 57 Montse Mínguez (es, 194, most met) media ES: infobae.com 44, elespanol.com 17, elmundo.es 15, 20minutos.es 11
+  I: Q66663464 5 wikis ES Spanish politician
+  T: La dimissió de Montse Mínguez i la gestió urbanística municipal centre el debat de regidors a l'Aquí Lleida
+  T: Entrevista a Carlos Cuerpo en Espejo Público: el ministro de Economía responde este lunes a las preguntas de Susanna Griso
+  T: El marit de Montse Mínguez té diverses inversions a Andorra
+
+# 58 Ian Rapoport (en, 194, most met) media -: sports.yahoo.com 64, bvmsports.com 35, heavy.com 24, espn.com 17
+  I: Q20685256 1 wikis US American sportswriter, pundit, and television analyst
+  T: When Giants’ J.J. McCarthy could start for New York, according to Ian Rapoport
+  T: Vikings get crucial Jordan Mason injury update ahead of Colts clash
+  T: Bills’ CJ Gardner-Johnson suspended 1 game for spitting at Brock Bowers
+
+# 59 Curt Cignetti (en, 190, most met) media -: sports.yahoo.com 69, essentiallysports.com 19, si.com 17, thedailyhoosier.com 16
+  I: Q5195359 4 wikis US American football player and coach
+  T: Indiana coach Curt Cignetti is ready for Wolverines to do anything at QB after benching Bryce Underwood
+  T: Curt Cignetti Says What Everyone Else Is Thinking on Michigan's QB Battle vs. Indiana
+  T: Curt Cignetti Isn’t Waiting for Michigan to Name a Starter
+
+# 60 Jon Sumrall (en, 187, most met) media -: sports.yahoo.com 62, bvmsports.com 28, on3.com 26, si.com 17
+  I: Q109679821 1 wikis - American football coach
+  T: Florida's upset win over Texas validates Easton Royal's flip
+  T: Jon Sumrall’s Blunt Message for Gators Heading into Bye: ‘We Still Suck’
+  T: Carter's Corner: The Cowboy Hat, The Visor And The Message
+
+# 61 Carlalberto Ludi (it, 27) media IT: tuttomercatoweb.com 8, fcinter1908.it 3, football-italia.net 3, sports.yahoo.com 3
+  I: Q3658873 6 wikis IT Italian footballer
+  T: Ludi: "A Como nel 2019 non c'era niente. Fabregas predestinato già quando giocava"
+  T: Ludi: “Non sarei mai tornato da Madrid senza Paz, voleva rimanere. Il Como non è un modello”
+  T: Ludi: "Non sarei mai tornato da Madrid senza Nico Paz. Il Como non è un modello"
+
+# 62 Ajinkya Shinde (en, 26) media -: news.abplive.com 14, mid-day.com 3, livemint.com 2, pragativadi.com 2
+  I: Q141690098 3 wikis IN Cockroach Janta Party worker
+  T: Jantar Mantar protest: CJP leaders sent to Tihar jail for five days
+  T: CJP Leaders Saurav Das, Ashutosh Ranka Lodged In Separate Tihar Jail Cells
+  T: DELHI NEWS: CJP Leaders Saurabh Das, Ashutosh Ranka Sent to Tihar Jail for 5 Days
+
+# 63 Saurabh Bharadwaj (en, 15) media -: latestly.com 4, devdiscourse.com 2, newsbytesapp.com 2, sundayguardianlive.com 2
+  I: Q15410449 4 wikis IN Indian politician
+  T: Delhi protest: AAP chief Saurabh Bharadwaj demands FIR over alleged assaults
+  T: India News | “IAS Officers Who Acted Against Health & Rice Scams Removed": AAP's Saurabh Bharadwaj Says PM Modi’s ‘Na Khaunga, Na Khaane Dun
+  T: India News | AAP Readies Backup Leadership for October 10 Protest; Saurabh Bharadwaj Holds Meeting with Party Office-bearers
+
+# 64 Uba Sani (en, 27) media NG: blueprint.ng 6, premiumtimesng.com 4, punchng.com 4, dailytrust.com 3
+  I: Q62604069 9 wikis NG Nigerian politician
+  T: Uba Sani resolves 10-year land dispute, offers 704 households plots, farmlands, Free Fertiliser
+  T: Uba Sani Gives Land Titles to 704 Houses in Igabi, Settles 10-Year Military Land Dispute
+  T: Kaduna: Uba Sani settles 10-year land dispute, communities get alternative plots, others
+
+# 65 Alexi Koum (fr, 21) media FR: footballclubdemarseille.fr 6, coeurmarseillais.fr 3, news.google.com 3, actucameroun.com 1
+  I: Q131439429 4 wikis - French footballer (born 2006)
+  T: OM – Mercato : le club sécurise un jeune talent défensif et son avenir est désormais scellé jusqu’en 2029!
+  T: Alexi Koum prolonge à l’OM jusqu’en 2029
+  T: Mercato OM : Officiel ! L’OM prolonge un jeune joueur
+
+# 66 Kyle Long (en, 19) media -: bvmsports.com 7, fightful.com 2, essentiallysports.com 1, ewrestling.com 1
+  I: Q6451271 8 wikis US American football player (born 1988)
+  T: Russell Wilson Shares That He & Charlotte Flair Had A Class Together At North Carolina State University
+  T: ‘150% Hike on Income Tax, Guy Loves Ball’ — Ex-Bears Pro Bowler Praises Mike Evans’ Tax-Hit Gamble on 49ers to Chase 2nd Super Bowl Ring
+  T: J.J. Watt’s funny answer about T.J. Watt’s birthday steals the spotlight
+
+# 67 Elmer Cuba (es, 14) media PE: notiperu.com.pe 4, agenzianova.com 3, gestion.pe 2, infobae.com 2
+  I: Q67615428 2 wikis PE Peruvian economist
+  T: Perú.- MEF coordina con dos ministerios para agilizar inversiones minero-energéticas
+  T: Perú.- Fenómeno El Niño: consideran positivo el anuncio del MEF de política fiscal contracíclica
+  T: MEF se va a Estados Unidos: Elmer Cuba buscará inversiones en roadshow en Nueva York
+
+# 68 Le conducteur (fr, 110) media FR: dhnet.be 14, actu.fr 13, sudinfo.be 10, autonews.fr 9
+  I: Q108537946 0 wikis - NOT HUMAN Antoagonist in The Legend of Spyro: A New Beggining
+  T: Un véhicule se coince dans un tunnel de Cherbourg-en-Cotentin, un homme blessé
+  T: Une remorque chargée de panneaux solaires se renverse à Güines
+  T: GARD Accident de la circulation : un décès et un blessé grave
+
+# 69 your child (en, 27) media GB: medium.com 2, bbc.co.uk 1, cleveland.com 1, glasgowworld.com 1
+  I: Q8058759 2 wikis - NOT HUMAN single by Mary J. Blige
+  T: How to Help a Nonverbal Autistic Child Communicate Their Needs
+  T: How to Recognize Emotional Distress in a Nonverbal Autistic Child
+  T: How to Help an Autistic Child Who Struggles With Waiting
+
+# 70 Kurt Okraku (en, 56) media GH: ghanasoccernet.com 28, sportsworldghana.com 8, adomonline.com 7, news.google.com 6
+  I: Q72301782 3 wikis GH Ghanaian football journalist and administrator
+  T: Kurt Okraku: The man who arrived with promises and hope, but whose leadership faces questions about power and Ghana football’s future
+  T: 2026 WC: Kofi Adams justifies payment to Kurt Okraku and Black Stars security officer
+  T: Kurt Okraku’s regime has ‘failed to perform’ – Kudjoe Fianoo demands resignation of GFA Executive Council
+
+# 71 Hammam al-Hammami (en, 62) media -: arabnews.com 8, devdiscourse.com 8, independent.co.uk 6, news18.com 5
+  I: Q125891734 5 wikis SA Saudi Arabian association football player
+  T: Une star du Golfe de 27 ans fait un choix fracassant et douche les espoirs d'Al-Nassr ! | Goal.com Français
+  T: UAE arrests two Maldivian pilots in probe into alleged flydubai hijack attempt
+  T: 10-man Al-Shabab overcome Al-Taawoun to grab first SPL win of the season
+
+# 72 Jaymie Graham (en, 29) media AU: thewest.com.au 11, news.ssbcrack.com 6, smh.com.au 3, watoday.com.au 3
+  I: Q6167845 2 wikis - Australian rules footballer
+  T: AFL draft hopeful Hudson Graham opens up on support from father and new North Melbourne coach Jaymie
+  T: The rapid rise behind Roos’ hopeful saviour... and reason why he was named Clarko’s successor
+  T: Fremantle forward Pat Voss on why Jaymie Graham’s absence will leave a ‘massive hole' at the Dockers
+
+# 73 Damien Thévenot (fr, 21) media FR: programmetv.ouest-france.fr 6, programme-tv.net 5, telestar.fr 4, lesoir.be 2
+  I: Q3012842 1 wikis FR French journalist
+  T: "Je pleurais sur la plage" : Damien Thévenot évoque les messages qu’il a reçus après son départ de Télématin
+  T: Émilien, plus grand champion des « 12 coups de midi », rejoint un célèbre jeu de France Télévisions (photo)
+  T: Damien Thévenot récupère Mot de passe sur France 3 : cette demande très précise qu’il a faite à la production du jeu
+
+# 74 Brenton Strange (en, 22) media -: sports.yahoo.com 8, sportskeeda.com 3, bvmsports.com 2, news.google.com 2
+  I: Q115492004 4 wikis US American football player (born 2000)
+  T: Brenton Strange totals five receptions in Week 6
+  T: "Refs gambling" "actively ruining the sport": NFL fans rip officials after holding on Brenton Strange, disallowing Jags TD vs Texans
+  T: Frustrations Boil Against NFL Officials After Major Refereeing Blunder Costs Jaguars a Touchdown Against Texans
+
+# 75 Temi Nkem (en, 37) media -: tvcnews.tv 11, punchng.com 5, ng.headtopics.com 4, vanguardngr.com 4
+  I: Q141724581 1 wikis - Nigerian reality TV winner
+  T: Temi Nkem: From London-born content creator to BBNaija Season 11 winner, her life, journey & rise to fame
+  T: BBNaija season 11 winner, Temi Nkem receives N90m, new SUV [VIDEO]
+  T: What I’ll do with my ₦90m cash prize — BBNaija season 11 winner Temi Nkem
+
+# 76 David Ornstein (en, 42) media BA: nytimes.com 9, tribuna.com 4, readeverton.com 3, direttacalciomercato.com 2
+  I: Q105568651 0 wikis - Holocaust victim (born 1899)
+  T: Everton news: Friedkin future, January transfers, Hammond and Rohl
+  T: David Ornstein shares what will convince TFG to complete full Everton sale as takeover update emerges
+  T: TFG to sign new striker for Everton in January despite plans to sell - David Ornstein
+
+# 77 Carlos Bolsonaro (es, 26) media BR: poder360.com.br 7, noticias.uol.com.br 5, tribunadosertao.com.br 5, congressoemfoco.com.br 2
+  I: Q9696914 9 wikis BR Brazilian politician and Member of the City Council of Rio de Janeiro (2001–2025)
+  T: Estela Aranha nega remover vídeo de Carlos Bolsonaro contra Lula
+  T: TSE manda Flávio retirar vídeo que liga drogas a ato de Lula
+  T: Gilmar lamenta que senador Esperidião Amin não tenha sido eleito
+
+# 78 Chief constable (en, 39) media GB: belfasttelegraph.co.uk 14, newsletter.co.uk 7, dailymail.com 3, standard.co.uk 3
+  I: Q3242291 7 wikis - NOT HUMAN police officer rank
+  T: Details of intelligence considered by Chief Constable around Drumcree parade outlined during Orangemen’s court challenge
+  T: Thames Valley Commissioner urges Shabana Mahmood to reconsider Piddington decision
+  T: Potential for dissident republican gun attack on Orangeman behind decision to ban Garvaghy Road parade, claims DUP leader
+
+# 79 Adou Thiero (en, 22) media -: sports.yahoo.com 9, heavy.com 4, si.com 3, basketnews.com 2
+  I: Q131144658 8 wikis US American basketball player (born 2004)
+  T: Lakers Get Exciting News if Latest Adou Thiero Prediction Comes True
+  T: Lakers beat writer calls Adou Thiero a 'ceiling raiser'
+  T: Austin Reaves Channeling Former Lakers Champion to Mentor Adou Thiero
+
+# 80 Zdravko Ponoš (sr, 47) media RS: nova.rs 21, danas.rs 20, b92.net 5, streamlinefeed.co.ke 1
+  I: Q8068006 9 wikis RS Serbian general and politician
+  T: Ponoš: Presudan je povratak Srbije na put evropskih integracija, mi znamo kako da to uradimo
+  T: Ponoš (Evropska Srbija): Glas za studentsku listu je samo pola koraka ka EU
+  T: Ponoš: Ako ne dođe do promene vlasti Srbiju čekaju nemaština, inflacija, vize, gušenje interneta
+
+# 81 Hollie Davidson (fr, 7) media GB: rugbyrama.fr 2, walesonline.co.uk 2, blog-rct.com 1, express.co.uk 1
+  I: Q63198188 7 wikis GB Scottish rugby union referee
+  T: Hollie Davidson misses out on top spot as 10 best rugby referees in the world ranked
+  T: Rugby controversy breaks out as referee applauded for unusual red card after 15 minutes
+  T: Investec Champions Cup. Opinion. Hollie Davidson, l'arbitrage "à l'européenne" que l'on réclame encore et encore
+
+# 82 Benedikt Duda (es, 30) media DE: ouest-france.fr 4, ad-hoc-news.de 3, faz.net 2, franceinfo.fr 2
+  I: Q15787642 8 wikis DE German table tennis player
+  T: Tennis de table. Exploit pour le Français Léo De Nodrest, qualifié pour les demi-finales des Championnats d’Europe
+  T: Tennis de table, Championnats d'Europe, Alexis Lebrun et Charlotte Lutz échouent en finale
+  T: Alexis Lebrun et Charlotte Lutz, c’est terminé
+
+# 83 Gervon Dexter (en, 31) media -: sports.yahoo.com 14, bvmsports.com 5, heavy.com 4, si.com 4
+  I: Q113541045 4 wikis US American football player (born 2001)
+  T: Bears Must Fix Coverage To Beat Falcons In Sunday Showdown
+  T: Gervon Dexter Found His Fit in Atlanta. Did the Bears Miss the Signs?
+  T: Bears Have a Chance to Fix Their Gervon Dexter Mistake With One Trade
+
+# 84 Matilde Jorge (es, 14) media PT: sapo.pt 6, ojogo.pt 3, diadejogo.pt 2, record.pt 2
+  I: Q106473625 9 wikis PT Portuguese tennis player
+  T: Ténis: irmãs Jorge eliminadas nas "meias" de pares do WTA Lisboa Belém Open
+  T: Matilde Jorge desperdiça seis 'match points' e deixa singulares do Lisboa Belém Open
+  T: Ténis: Belém Open fica sem portuguesas em singulares
+
+# 85 Lumir Abdixhiku (sq, 24) media -: gazetaexpress.com 12, koha.net 7, insajderi.org 4, euronews.al 1
+  I: Q61079916 7 wikis AL Kosovar Albanian politician
+  T: Abdixhiku: LDK-ja do të jetë pjesë e grupit punues për Apelin e ish-krerëve të UÇK-së
+  T: Abdixhiku e Gjini takohen me senatorët amerikanë, në fokus raportet me SHBA-në
+  T: Reagon kreu i LDK-së, Abdixhiku pas ndryshimit të Ligjit për Specialen: Po, ju kanë mashtruar
+
+# 86 David Gabriel Georges (en, 14) media -: bvmsports.com 6, sports.yahoo.com 2, atozsports.com 1, bleacherreport.com 1
+  I: Q140602117 1 wikis - American football player (born 2008)
+  T: David Gabriel Georges Visiting Tennessee For Alabama Game After Posting Two-Touchdown Showing on Friday
+  T: 5-Star RB David Gabriel Georges Delivers Huge Hit on Video on Baylor's Opening Kickoff Return TD
+  T: 5-star Vols commit David Gabriel Georges goes viral for a play where he never touched the ball, and Tennessee fans are loving it
+
+# 87 major star (en, 17) media - BYLINE: sportskeeda.com 15, cbc.ca 2
+  I: Q6738300 1 wikis - NOT HUMAN episode of Blackadder
+  T: BREAKING: Major Star's WWE In-Ring Debut Announced for RAW Taping
+  T: TNA cuts ties with major star following Bound for Glory controversy - REPORT
+  T: BREAKING: Backstage Name Returns & Wins Major Title Immediately; Last WWE Match 548 Days Ago
+
+# 88 Audrey Crespo-Mara (fr, 25) media FR: tf1info.fr 9, parismatch.be 2, parismatch.com 2, programme-tv.net 2
+  I: Q2870832 4 wikis FR French journalist
+  T: Sept à Huit (TF1) : qui est l’invité du portrait d’Audrey Crespo-Mara ce dimanche 18 octobre 2026 ?
+  T: "C’est irrésistible", Souleïman, le fils de Leïla Bekhti et Tahar Rahim, fait une découverte hallucinante dans les rues de Paris
+  T: "Quand je la regarde, je suis transporté par...": Tahar Rahim se confie sur son couple avec Leïla Bekhti (vidéo)
+
+# 89 Nathan Cleary (en, 74) media AU: smh.com.au 12, abc.net.au 10, dailymail.com 10, zerotackle.com 10
+  I: Q24452242 3 wikis AU Australian rugby league player
+  T: Nathan Cleary Prioritizes Recovery Over Contract Negotiations
+  T: Nathan Cleary’s market value revealed as rivals ready to pounce
+  T: Rugby League World Cup: The star players the Kiwis missed out on
+
+# 90 Éric Olhats (fr, 17) media FR: lequipe.fr 3, news.google.com 2, rmcsport.bfmtv.com 2, actu.fr 1
+  I: Q136303575 2 wikis FR French football scout
+  T: Soumission chimique : cet ancien recruteur basque de football, déjà en prison, de nouveau face à la justice ?
+  T: La députée Colette Capdevielle demande la réouverture d'une enquête sur Éric Olhats pour suspicions de soumission chimique
+  T: Justice : la procureure de Bayonne saisie après des nouvelles révélations sur Éric Olhats, ancien mentor d’Antoine Griezmann
+
+# 91 Lincoln Kienholz (en, 20) media -: sports.yahoo.com 9, on3.com 7, abcnews.com 1, bvmsports.com 1
+  I: Q123486261 1 wikis US American football player
+  T: Lincoln Kienholz accounts for three scores, leading Louisville to 34-26 win over Syracuse
+  T: Five Plays: Florida State Fourth Quarter
+  T: Five Plays: Florida State Third Quarter
+
+# 92 Douglas Ruas (en, 180) media BR: diario.dopovo.com.br 49, cnnbrasil.com.br 36, tribunadosertao.com.br 26, poder360.com.br 19
+  I: Q116266229 6 wikis BR Brazilian politician, President of the Legislative Assembly of the State of Rio de Janeiro and Governor-elect of Rio de Janeiro - (born 1989)
+  T: Douglas Ruas define equipe de transição do governo do Rio
+  T: Após recurso do PSD, Zanin pede ao TSE informações sobre eleição no RJ
+  T: Zanin pede informações ao TSE sobre eleição de Douglas Ruas no RJ
+
+# 93 Daouda Ngom (fr, 30) media -: dakaractu.com 6, senego.com 6, sanslimitesn.com 5, seneweb.com 5
+  I: Q125360794 2 wikis SN Senegalese politician
+  T: Indemnité de logement : les syndicats des PATS des universités décrètent 48 heures de grève
+  T: Sénégal: Programme « un étudiant, un ordinateur » - Daouda Ngom pointe des violations du Code des marchés publics
+  T: Daouda Ngom face aux députés : 21 milliards sans contrat ?
+
+# 94 Philippe Close (fr, 23) media BE: lesoir.be 7, lalibre.be 4, sudinfo.be 4, 7sur7.be 3
+  I: Q3379592 8 wikis BE Belgian politician
+  T: Philippe Close (PS) sur les violences à Bruxelles : « Certains parents sont complètement dépassés »
+  T: Une « gendarmerie 2.0 » pour maintenir l’ordre ? Philippe Close dénonce du « brol » et réclame davantage de moyens dans la justice ! (vidéo)
+  T: Close tacle Francken et son projet d’unité police-armée : "Inventer le 20e brol n'est pas nécessaire"
+
+# 95 Tyler Loop (en, 38) media -: sports.yahoo.com 19, bvmsports.com 3, newsday.com 3, si.com 3
+  I: Q131612484 2 wikis - American football player
+  T: Ravens’ Jesse Minter puts Tyler Loop on notice for critical misses that are ‘almost like turnovers’
+  T: Report: Ravens re-sign K Jake Moody to practice squad
+  T: Ravens Head Coach's Update On Lamar Jackson Seems Alarming
+
+# 96 Ty France (es, 92) media CA: sports.yahoo.com 24, bvmsports.com 19, si.com 9, heavy.com 8
+  I: Q63383008 6 wikis US American professional baseball player
+  T: Padres Linked to Yankees All-Star to Replace Ty France
+  T: Ty France should be one of Padres’ priorities this offseason
+  T: Why Mets Should Pursue Ty France in Free Agency to Fix First Base Issue
+
+# 97 Yann Barthès (fr, 36) media FR: tv-programme.com 22, telestar.fr 5, parismatch.be 2, public.fr 2
+  I: Q2630616 9 wikis FR French journalist and producer
+  T: Quotidien : "Ça va ?", face à Marion Cotillard, Yann Barthès, espiègle, revient sur la séquence gênante entre Léa Salamé et l'actrice dans l
+  T: "C’est très, très long !" : face à Yann Barthès, Marion Cotillard s’impatiente dans Quotidien après la rediffusion d’une vidéo devenue récur
+  T: Marion Cotillard agacée par une question de Yann Barthès dans Quotidien sur son fils qu'elle n'a pas "jeté" dans le milieu du cinéma
+
+# 98 Horatiu Fesnic (it, 14) media RO: gsp.ro 3, digisport.ro 2, milannews.it 2, calciowebpuglia.it 1
+  I: Q42907713 6 wikis RO Angajat cu normă întreagă la stâna lui Becali
+  T: Românul Feșnic și brigada lui, protagoniști pe paginile UEFA: „Ce face un arbitru de Europa League înaintea meciului?”
+  T: Corriere dello Sport i-a schimbat naționalitatea lui Horațiu Feșnic: „Talismanul lituanian al echipelor italiene”
+  T: Brigadă românească la RB Salzburg – AC Milan, în UEFA Europa League
+
+# 99 De Luca (it, 91) media IT: agenzianova.com 13, ilfattoquotidiano.it 8, calciowebpuglia.it 6, lasicilia.it 5
+  I: Q17347676 1 wikis - botanist
+  T: De Luca: “Alemanno ci attacca perché ci teme. Vannacci stampella del Campo largo”
+  T: Calderone: “De Luca si proporrà come salvatore della patria in Sicilia con appoggio di FdI”
+  T: Picerno, De Luca in bilico: Prosperi tra i nomi per la sostituzione
+
+# 100 Samahara Lobatón (es, 29) media PE: infobae.com 8, trome.com 7, apnoticias.pe 4, larepublica.pe 4
+  I: Q138662791 0 wikis PE Peruvian Internet and TV celebrity
+  T: Samahara Lobatón le escribió a 'Samu' tras sus críticas a su relación con Rossini Jr.: "¿Qué más quieren?"
+  T: Samahara Lobatón CUADRA a ‘Samu’ por criticar que Renato Rossini no la oficialice: “¿Estamos bajitos de chisme?”
+  T: Pamela López destruye a Renato Rossini Jr. y Samahara tras quedarse sin trabajo: "Cuando te gana la ira..."
+
+# 101 Aurélie Csillag (en, 15) media CH: news.google.com 6, bluewin.ch 2, sports.yahoo.com 2, laliberte.ch 1
+  I: Q98067517 5 wikis CH Swiss association football player
+  T: Gareth Taylor confirms "severe" Liverpool Women injury blow before Manchester United showdown
+  T: Football. Equipe de Suisse: Aurélie Csillag forfait pour les barrages
+  T: Club Confirms Aurelie Csillag Achilles Injury
+
+# 102 Frederic Kachar (pt, 19) media BR: diario.dopovo.com.br 11, terra.com.br 4, poder360.com.br 3, veja.abril.com.br 1
+  I: Q138610671 0 wikis - (no description)
+  T: Luis Henrique Guimarães assume direção do Grupo Globo
+  T: Luis Henrique Guimarães assume direção de impressos e rádios da Globo
+  T: Frederic Kachar, ex-chefão da Globo, já namorou Monique Alfradique, citada em conversa com Vorcaro
+
+# 103 Shadrack Sibiya (en, 61) media ZA: enca.com 21, iol.co.za 9, briefly.co.za 8, sowetan.co.za 8
+  I: Q136558756 3 wikis - South African policeman
+  T: Madlanga Commission dismisses Cabonge claims as 'false and incoherent'
+  T: State adamant Sibiya shouldn't get bail
+  T: Magistrate rebukes Sibiya’s lawyer over ‘bad’ Woolworths example
+
+# 104 Cédric Meston (fr, 65) media FR: ouest-france.fr 4, actu.fr 3, lalsace.fr 3, lefigaro.fr 3
+  I: Q133100232 1 wikis - (no description)
+  T: Les 10 523 Français qui ont investi 7 millions d’euros dans Duralex, ne reverront jamais leur argent, voici pourquoi
+  T: Duralex repris par Cédric Meston
+  T: La vidéo du jour. Qui est Cédric Meston, le « nouveau Bernard Tapie » qui souhaite sauver Duralex ?
+
+# 105 Blake Corum (en, 17) media -: sports.yahoo.com 9, news.google.com 2, si.com 2, therams.com 2
+  I: Q100795875 4 wikis US American football running back
+  T: Blake Corum handles 11 touches in Week 6 loss
+  T: Blake Corum Visits end zone again in Week 6
+  T: Rams take 9-6 lead with Blake Corum's first receiving touchdown
+
+# 106 Jérémy Stinat (fr, 15) media -: news.google.com 7, foot01.com 3, allezlens.fr 1, lensois.com 1
+  I: Q735879 7 wikis FR French footballer and referee
+  T: OL : Loïs Openda blessé, Lyon dénonce l’arbitrage de Jérémy Stinat
+  T: Openda est gravement blessé, l’OL défonce l’arbitrage
+  T: RC Lens – Olympique Lyonnais : Jérémy Stinat au sifflet, un arbitre « à l’anglaise » qui réussit bien au Racing
+
+# 107 Jayden Maiava (en, 49) media -: si.com 17, sports.yahoo.com 13, latimes.com 3, profootballnetwork.com 3
+  I: Q123575854 2 wikis US American football player
+  T: Big Ten passing yardage leaders after Week 7
+  T: Why USC’s College Football Playoff Hopes Hinge on Quarterback Jayden Maiava
+  T: USC Quarterback Jayden Maiava Sends Honest Pitch to NFL Scouts
+
+# 108 Skip Bayless (en, 100) media -: sports.yahoo.com 40, sportskeeda.com 27, hitc.com 13, awfulannouncing.com 4
+  I: Q7535646 7 wikis US American sports columnist
+  T: "He's so overrated": Skip Bayless labels Dak Prescott as "worst QB in the NFC East" after Cowboys QB's disasterclass vs. Packers
+  T: Skip Bayless Thinks The Giants Got A 'Steal' In J.J. McCarthy
+  T: Skip Bayless shares surprising Dallas Cowboys take in reaction to Jalen Hurts’ health issue
+
+# 109 French mayor (es, 32) media LU: aljazeera.com 3, arynews.tv 3, middleeasteye.net 3, cyprus-mail.com 2
+  I: Q130672968 1 wikis FR (no description)
+  T: US officials visit Palestinian village after settler attacks
+  T: Israeli settlers attack Palestinians, European diplomats in West Bank, Belgium says
+  T: French mayor attacked by settlers during occupied West Bank olive harvest
+
+# 110 Carter Verhaeghe (en, 32) media -: bvmsports.com 6, sports.yahoo.com 4, srnnews.com 2, 933thedrive.com 1
+  I: Q63248066 9 wikis CA Canadian ice hockey player
+  T: Verhaeghe, Bennett each get hat tricks, Panthers roll past Kraken 8-3
+  T: Historischer NHL-Hattrick der Florida Panthers – Auch Draisaitl und Peterka sind erfolgreich
+  T: NHL. Carter Verhaeghe zdobył trzy bramki w rywalizacji z Seattle Kraken. Historyczny wyczyn Florida Panthers
+
+# 111 Jeffrey Buter (en, 18) media NG: completesports.com 4, sports247.ng 4, news.google.com 3, dailypost.ng 2
+  I: Q62752543 0 wikis - researcher
+  T: EuroMatch NPFL: Buter Set for Jos Reunion with Former Colleague as Sporting Lagos Face Plateau United
+  T: Buter praises Samuel and welcomes Okoro return before Plateau United clash
+  T: EuroMatch NPFL: Sporting Lagos Set For Plateau United Test In Jos
+
+# 112 Christian Benford (en, 37) media -: heavy.com 8, si.com 8, sports.yahoo.com 8, bvmsports.com 4
+  I: Q111795671 7 wikis US American football cornerback
+  T: Bills news: Christian Benford on track to return, other news out of One Bills Drive
+  T: Christian Benford returns, but Bills' secondary has tough task against Rams' receivers
+  T: Bills' Week 5 Friday Practice Status for Christian Benford, DJ Moore And More
+
+# 113 Milagros Tolón (es, 21) media ES: infobae.com 10, uruguayaldia.com.uy 3, abc.es 2, eldiario.es 1
+  I: Q20087023 7 wikis ES Spanish politician
+  T: La mayoría de los españoles desconoce a la mitad de los ministros, según el CIS de fin de legislatura
+  T: PSOE ratifica sus cabezas de lista al Congreso en la región
+  T: La ministra Milagros Tolón recorre el estadio Monumental en Buenos Aires
+
+# 114 business leaders (en, 77) media -: dailysabah.com 4, openpr.com 4, techtarget.com 4, ipsos.com 3
+  I: Q56981255 0 wikis - NOT HUMAN article
+  T: How to grow your most valuable asset in the age of AI
+  T: Just One in Four People Trust Business Leaders as AI Adds to Global Trust Gap
+  T: CEOrt urges joint action to curb climate losses
+
+# 115 Vanessa Emde (de, 74) media DE: welt.de 25, spiegel.de 6, t-online.de 6, bild.de 4
+  I: Q141537967 2 wikis DE (no description)
+  T: "Meinung ist absolut legitim": Linke-Chefin Schwerdtner verteidigt Aussagen von Vanessa Emde
+  T: „Rot und Grün scheinen das einfach hinnehmen zu wollen“
+  T: Grüne Jugend hält trotz Antisemitismusdebatte an Bündnis mit der Linkspartei fest
+
+# 116 John Chayka (en, 27) media -: heavy.com 12, sports.yahoo.com 6, bvmsports.com 5, sportsnet.ca 2
+  I: Q24053778 7 wikis CA general manager of the Arizona Coyotes of the National Hockey League (NHL)
+  T: Toronto Maple Leafs reportedly scouring trade market for game-changing defenceman
+  T: Maple Leafs GM John Chayka Completes Trade With Canucks
+  T: Toronto Maple Leafs Trade Pitch Lands Flames Defenseman in Big Move
+
+# 117 Tony Stubblefield (en, 18) media -: sports.yahoo.com 8, on3.com 2, si.com 2, addictedtoquack.com 1
+  I: Q7823501 1 wikis US American basketball player-coach
+  T: Oregon Ducks Podcast: It Never Rains on this Podcast 10-18-26
+  T: Oregon men's basketball struggles in Stubblefield debut
+  T: Oregon Men’s Basketball: Who Is Tony Stubblefield?
+
+# 118 Matej Dodig (en, 27) media HR: jutarnji.hr 8, laola1.at 3, index.hr 2, news.google.com 2
+  I: Q127699862 5 wikis - Croatian tennis player
+  T: Marin Čilić pao za četiri, Dino Prižmić napredovao dva mjesta, Vekić i Marčinko zadržale pozicije
+  T: Francesco Passaro vs Matej Dodig · Semifinal · ATP Challenger Maia, Portugal
+  T: Sjajni Matej Dodig upisao je osmu uzastopnu pobjedu za polufinale turnira u Portugalu
+
+# 119 Santiago Bausili (es, 19) media AR: infobae.com 5, ambito.com 2, elmarplatense.com 2, gentedesalta.com 2
+  I: Q123764093 4 wikis AR Argentine economist (born 1974)
+  T: Ampliaron la denuncia contra Luis Caputo y Santiago Bausili y pidieron allanar el Banco Central
+  T: Denuncian a Caputo y Bausili por el oro y piden allanar el BCRA
+  T: Oro de los argentinos: Pidieron el allanamiento del BCRA y ampliar la denuncia contra Caputo/Bausili
+
+# 120 Jeeno Thitikul (en, 36) media -: sports.yahoo.com 11, inquirer.com 4, abcnews.com 3, newsday.com 3
+  I: Q54611551 7 wikis TH Thai professional golfer
+  T: Jeeno Thitikul Holds Off Ina Yoon to Lift 4th LPGA Trophy of 2026
+  T: Yoon Ina rises to No. 17 in world rankings
+  T: Jeeno Thitikul crosses $20 million in earnings, gives lesson on taxes

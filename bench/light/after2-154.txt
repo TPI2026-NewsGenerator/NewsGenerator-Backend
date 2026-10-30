@@ -1,0 +1,33 @@
+candidates 50: Tennis 14, Intelligence a 19, Politique suis 17
+run 0: 15 chosen, Tennis 5, Intelligence a 7, Politique suis 3, kept 10: Tennis 3, Intelligence a 4, Politique suis 3  (4783+650 tokens)
+   K Politique suis | «La Suisse est du bon côté de l'histoire» ++ Rejet net des 2 initiatives
+   K Politique suis | Berne alloue des millions pour l'intégration des étrangers
+   K Intelligence a | ‘Our industry sees the risks and is concerned’: European tech leaders join calls for AI slowdown
+   K Intelligence a | La pression sur la Suisse est immense: comment le sommet mondial de l’IA à Genève va «tenter de mett
+   K Tennis | L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Winsley Boteli?
+   K Tennis | "Il ne va pas s'arrêter là" : le tennisman Arthur Fils va intégrer le Top 10 mondial, une première d
+   K Intelligence a | Asservissement, régulation, crash écologique : quel avenir nous attend avec l'intelligence artificie
+   K Intelligence a | AI companies investigating possible future of rights, protection for artificial intelligence agents
+     Intelligence a | Les dirigeants d’OpenAI et d’Anthropic convoqués dans le cadre d’une enquête australienne sur l’inte
+   K Tennis | “It doesn't matter”: Alexander Zverev responds to huge No.1 opportunity after Sinner withdrawal
+     Intelligence a | As A.I. Accelerates, Governments Are Increasingly Being Left Behind
+   K Politique suis | Swiss voters decide on NATO cooperation and neutrality
+     Intelligence a | VIDÉO | L’IA peut-elle nous tuer ?
+     Tennis | Laver Cup chiefs open up on future plans as tournament eyes expansion beyond North America
+     Tennis | “The US Open and Davis Cup took a toll”: Ben Shelton forced out of another ATP tournament
+run 1: 15 chosen, Tennis 6, Intelligence a 7, Politique suis 2, kept 10: Tennis 5, Intelligence a 3, Politique suis 2  (4783+647 tokens)
+   K Politique suis | «La Suisse est du bon côté de l'histoire» ++ Rejet net des 2 initiatives
+   K Politique suis | Berne alloue des millions pour l'intégration des étrangers
+   K Intelligence a | ‘Our industry sees the risks and is concerned’: European tech leaders join calls for AI slowdown
+   K Intelligence a | La pression sur la Suisse est immense: comment le sommet mondial de l’IA à Genève va «tenter de mett
+   K Tennis | Tennis : Kyrian Jacquet se qualifie pour sa première demi-finale sur le grand circuit
+   K Tennis | L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Winsley Boteli?
+   K Tennis | "Il ne va pas s'arrêter là" : le tennisman Arthur Fils va intégrer le Top 10 mondial, une première d
+   K Tennis | “It doesn't matter”: Alexander Zverev responds to huge No.1 opportunity after Sinner withdrawal
+   K Tennis | “The US Open and Davis Cup took a toll”: Ben Shelton forced out of another ATP tournament
+   K Intelligence a | Asservissement, régulation, crash écologique : quel avenir nous attend avec l'intelligence artificie
+     Intelligence a | As A.I. Accelerates, Governments Are Increasingly Being Left Behind
+     Intelligence a | Les dirigeants d’OpenAI et d’Anthropic convoqués dans le cadre d’une enquête australienne sur l’inte
+     Intelligence a | Intelligence artificielle: La Chine «respecte» l'idée de parler de «super-intelligence»
+     Intelligence a | AI companies investigating possible future of rights, protection for artificial intelligence agents
+     Tennis | Laver Cup chiefs open up on future plans as tournament eyes expansion beyond North America

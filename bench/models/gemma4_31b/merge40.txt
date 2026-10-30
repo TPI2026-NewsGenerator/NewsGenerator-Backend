@@ -1,0 +1,15 @@
+1 runs: joined to its fact 76% (31/41), joined to another fact 3% (3, 1 of them into a shown card: hidden)
+tokens per call: 4139 read, 1051 written, 9.7 s
+  ×1 apart   monde: Le peuple suisse rejette l'initiative pour la neutralité par 70,2% des
+  ×1 apart   monde: Swiss voters crush neutrality initiative that would have ended sanctio
+  ×1 apart   monde: Rain eases in Bangkok but persistent flooding forces thousands to leav
+  ×1 apart   monde: „Wasser steht bis zur Hüfte“ – Bangkok ruft wegen Überschwemmungen Kat
+  ×1 apart   ia: After Dozens of Incidents at OpenAI and Anthropic, OpenAI Pauses Model
+  ×1 apart   ia: KI mit Kontrollverlust: OpenAI stoppt Training seiner Top-Modelle
+  ×1 joined  affaires: Tottenham 'cheated' by Manchester City as new 115 charges punishment v
+             into Manchetser City Found Guilty Of Premier League Charges, Set To Appeal:
+  ×1 joined  affaires: Tuchel: City charges didn't distract England in loss
+             into Manchetser City Found Guilty Of Premier League Charges, Set To Appeal:
+  ×1 joined  societe: Frankreich-Besuch: Papst Leo XIV. trifft sich mit Missbrauchsopfern in
+             into (shown) Visite du pape en France : les images de la messe de Léon XIV à Lourde
+seconds 17

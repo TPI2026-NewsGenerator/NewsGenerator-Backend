@@ -1,0 +1,22 @@
+{
+ "base": {
+  "whys": 50,
+  "spelled": 34,
+  "unverified": 19,
+  "examples": [
+   "FIGC = Italian Football Federation | Италианската футболна федерация избира своя президент на 14 декември",
+   "CAS = Court of Arbitration for Sport | Sénégal-Maroc : le TAS opte pour une “décision complète”, la bataille ",
+   "FMF = Madagascar Football Federation | Noi delegări UEFA pentru reprezentanții FMF",
+   "CTA = Spanish Refereeing Committee | Refereeing Committee about Güler’s case: “Absent evidence, no interven",
+   "FMF = Malagasy Football Federation | Noi delegări UEFA pentru reprezentanții FMF"
+  ]
+ },
+ "rule": {
+  "whys": 50,
+  "spelled": 5,
+  "unverified": 5,
+  "examples": [
+   "CTA = The Spanish Refereeing Committee | Refereeing Committee about Güler’s case: “Absent evidence, no interven"
+  ]
+ }
+}

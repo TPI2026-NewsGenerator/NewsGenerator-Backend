@@ -1,0 +1,13 @@
+candidates 50: UEFA 38, l'arbitrage du 12
+run 0: 10 chosen, UEFA 9, l'arbitrage du 1, kept 10: UEFA 9, l'arbitrage du 1  (5570+350 tokens)
+   K UEFA | Ceferin: ‘Political interference’ in Italian football could ‘undermine UEFA trust’ ahead of Euro 203
+   K UEFA | LdC : Lens et Feyenoord condamnés par l’UEFA
+   K l'arbitrage du | New VAR Rules Reopen the Debate Over Technology and Human Judgement
+   K UEFA | David De Gea chambre Manchester City
+   K UEFA | Ligue des Nations : au terme d’un choc spectaculaire, l’Espagne s’offre l’Angleterre
+   K UEFA | DIRECT. Ligue des nations: suivez la conférence de presse de Zidane à J-1 de Belgique-France
+   K UEFA | Irlande : les joueurs tranchent sur le maintien des matchs face à Israël
+   K UEFA | LdN : le dernier carré en Espagne ?
+   K UEFA | UEFA Nations League A Meilleurs joueurs : buts, passes décisives, tacles, clean sheets et plus | Goa
+   K UEFA | Spain has submitted a bid to host the Nations League Final Four - reports
+seconds 4

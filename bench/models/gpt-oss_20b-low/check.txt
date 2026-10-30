@@ -1,0 +1,12 @@
+<anonymous_script>:1
+{"stories":[{"id":"ent1218","same":[]},{"id":"ent1769","same":[]},{"id":"ent1240","same":[]},{"id":"ent2285","same":[]},{"id":"ent1572","same":[]},{"id":"ent141","same":[]},{"id":"ent109","same":[]},{"id":"ent2261","same":[]},{"id":"ent1288","same":[]},{"id":"ent1703","same:[]}]}
+
+SyntaxError: Unterminated string in JSON at position 280 (line 1 column 281)
+    at JSON.parse (<anonymous>)
+    at file:///C:/Users/roste/Documents/CPNV24/TPI/prog/NewsGenerator/server/bench/check.mjs:32:45
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Promise.all (index 2)
+    at async file:///C:/Users/roste/Documents/CPNV24/TPI/prog/NewsGenerator/server/bench/check.mjs:28:5
+
+Node.js v24.21.0
+seconds 14

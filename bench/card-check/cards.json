@@ -1,0 +1,7075 @@
+[
+ {
+  "briefing": 207,
+  "storyId": 1108376,
+  "language": "it",
+  "titles": [
+   "FIFA, la UEFA chiede trasparenza: lettera di otto pagine con 42 quesiti",
+   "Mit dieser Liste setzen die Europäer Fifa-Chef Infantino unter Druck",
+   "Uefa exige explicações da Fifa sobre a presidência de Infantino",
+   "Fifa-Machtkampf: Die 42 Fragen, die Infantino das Amt kosten sollen",
+   "UEFA zet Infantino op het blok: deadline voor FIFA",
+   "Ultimátum de UEFA a FIFA: da 2 semanas para responder a 42 preguntas sobre Infantino antes del cierre del plazo electoral"
+  ],
+  "sites": {
+   "DE": 9,
+   "BR": 1,
+   "BE": 3,
+   "IT": 1,
+   "PT": 8,
+   "FR": 1,
+   "MX": 1,
+   "AR": 1,
+   "NL": 3,
+   "AT": 3
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Gianni Infantino"
+  ],
+  "media": 38,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 207,
+  "storyId": 1108376,
+  "language": "it",
+  "titles": [
+   "FIFA, la UEFA chiede trasparenza: lettera di otto pagine con 42 quesiti",
+   "Mit dieser Liste setzen die Europäer Fifa-Chef Infantino unter Druck",
+   "Uefa exige explicações da Fifa sobre a presidência de Infantino",
+   "Fifa-Machtkampf: Die 42 Fragen, die Infantino das Amt kosten sollen",
+   "UEFA zet Infantino op het blok: deadline voor FIFA",
+   "Ultimátum de UEFA a FIFA: da 2 semanas para responder a 42 preguntas sobre Infantino antes del cierre del plazo electoral"
+  ],
+  "sites": {
+   "DE": 9,
+   "BR": 1,
+   "BE": 3,
+   "IT": 1,
+   "PT": 8,
+   "FR": 1,
+   "MX": 1,
+   "AR": 1,
+   "NL": 3,
+   "AT": 3
+  },
+  "topic": "sport",
+  "others": [
+   "UEFA",
+   "Gianni Infantino"
+  ],
+  "media": 38,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 207,
+  "storyId": 1108376,
+  "language": "it",
+  "titles": [
+   "FIFA, la UEFA chiede trasparenza: lettera di otto pagine con 42 quesiti",
+   "Mit dieser Liste setzen die Europäer Fifa-Chef Infantino unter Druck",
+   "Uefa exige explicações da Fifa sobre a presidência de Infantino",
+   "Fifa-Machtkampf: Die 42 Fragen, die Infantino das Amt kosten sollen",
+   "UEFA zet Infantino op het blok: deadline voor FIFA",
+   "Ultimátum de UEFA a FIFA: da 2 semanas para responder a 42 preguntas sobre Infantino antes del cierre del plazo electoral"
+  ],
+  "sites": {
+   "DE": 9,
+   "BR": 1,
+   "BE": 3,
+   "IT": 1,
+   "PT": 8,
+   "FR": 1,
+   "MX": 1,
+   "AR": 1,
+   "NL": 3,
+   "AT": 3
+  },
+  "topic": "sport",
+  "others": [
+   "UEFA",
+   "FIFA"
+  ],
+  "media": 38,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1097486,
+  "language": "de",
+  "titles": [
+   "Wahl zum FIFA-Präsidenten: Wer soll Infantino noch stoppen?"
+  ],
+  "sites": {
+   "AT": 2
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA-Präsidenten",
+   "FIFA"
+  ],
+  "media": 1,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1097486,
+  "language": "de",
+  "titles": [
+   "Wahl zum FIFA-Präsidenten: Wer soll Infantino noch stoppen?"
+  ],
+  "sites": {
+   "AT": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Gianni Infantino",
+   "FIFA-Präsidenten"
+  ],
+  "media": 1,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 207,
+  "storyId": 1116994,
+  "language": "en",
+  "titles": [
+   "The BookKeeper investigates FIFA's 'Forward' fund: How it's managed and who gets what"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "The Athletic",
+   "FIFA"
+  ],
+  "media": 1,
+  "name": "The BookKeeper",
+  "kind": "person",
+  "qid": "Q17275738",
+  "label": "The Bookkeeper",
+  "description": "painting by Philip van Dijk, Mauritshuis",
+  "links": 0,
+  "human": false,
+  "itemCountry": null,
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1116994,
+  "language": "en",
+  "titles": [
+   "The BookKeeper investigates FIFA's 'Forward' fund: How it's managed and who gets what"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "The BookKeeper",
+   "FIFA"
+  ],
+  "media": 1,
+  "name": "The Athletic",
+  "kind": "person",
+  "qid": "Q39087006",
+  "label": "The Athletic",
+  "description": "subscription-based sports news website",
+  "links": 10,
+  "human": false,
+  "itemCountry": "US",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1116994,
+  "language": "en",
+  "titles": [
+   "The BookKeeper investigates FIFA's 'Forward' fund: How it's managed and who gets what"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "The BookKeeper",
+   "The Athletic"
+  ],
+  "media": 1,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 207,
+  "storyId": 1149818,
+  "language": "fr",
+  "titles": [
+   "Football. Javier Tebas réclame une réforme de la gouvernance de la FIFA et de l’UEFA"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "UEFA",
+   "FIFA"
+  ],
+  "media": 1,
+  "name": "Javier Tebas",
+  "kind": "person",
+  "qid": "Q9011300",
+  "label": "Javier Tebas",
+  "description": "Spanish lawyer and football executive",
+  "links": 14,
+  "human": true,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1149818,
+  "language": "fr",
+  "titles": [
+   "Football. Javier Tebas réclame une réforme de la gouvernance de la FIFA et de l’UEFA"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Javier Tebas",
+   "FIFA"
+  ],
+  "media": 1,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 207,
+  "storyId": 1149818,
+  "language": "fr",
+  "titles": [
+   "Football. Javier Tebas réclame une réforme de la gouvernance de la FIFA et de l’UEFA"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Javier Tebas",
+   "UEFA"
+  ],
+  "media": 1,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 207,
+  "storyId": 1132023,
+  "language": "en",
+  "titles": [
+   "Visa, Coca-Cola, Adidas and other Fifa sponsors criticised for silence on crisis"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Coca-Cola",
+   "Adidas",
+   "FIFA"
+  ],
+  "media": 1,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1132023,
+  "language": "en",
+  "titles": [
+   "Visa, Coca-Cola, Adidas and other Fifa sponsors criticised for silence on crisis"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Gianni Infantino",
+   "Adidas",
+   "FIFA"
+  ],
+  "media": 1,
+  "name": "Coca-Cola",
+  "kind": "organization",
+  "qid": "Q3295867",
+  "label": "The Coca-Cola Company",
+  "description": "American multinational beverage corporation",
+  "links": 73,
+  "human": false,
+  "itemCountry": "US",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1132023,
+  "language": "en",
+  "titles": [
+   "Visa, Coca-Cola, Adidas and other Fifa sponsors criticised for silence on crisis"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Gianni Infantino",
+   "Coca-Cola",
+   "FIFA"
+  ],
+  "media": 1,
+  "name": "Adidas",
+  "kind": "organization",
+  "qid": "Q3895",
+  "label": "Adidas AG",
+  "description": "German multinational corporation",
+  "links": 107,
+  "human": false,
+  "itemCountry": "DE",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1132023,
+  "language": "en",
+  "titles": [
+   "Visa, Coca-Cola, Adidas and other Fifa sponsors criticised for silence on crisis"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Gianni Infantino",
+   "Coca-Cola",
+   "Adidas"
+  ],
+  "media": 1,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 207,
+  "storyId": 1082099,
+  "language": "en",
+  "titles": [
+   "Landmark Royal Antwerp case is another test of EU’s appetite to help football consumers"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Europe",
+   "EU"
+  ],
+  "media": 1,
+  "name": "Paris Saint-Germain",
+  "kind": "organization",
+  "qid": "Q483020",
+  "label": "Paris Saint-Germain FC",
+  "description": "association football club in Paris, France having two UCL",
+  "links": 103,
+  "human": false,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1082099,
+  "language": "en",
+  "titles": [
+   "Landmark Royal Antwerp case is another test of EU’s appetite to help football consumers"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Paris Saint-Germain",
+   "EU"
+  ],
+  "media": 1,
+  "name": "Europe",
+  "kind": "organization",
+  "qid": "Q46",
+  "label": "Europe",
+  "description": "terrestrial continent located in north-western Eurasia",
+  "links": 408,
+  "human": false,
+  "itemCountry": null,
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1058823,
+  "language": "fr",
+  "titles": [
+   "FOOTBALL – Des représentants de clubs et d’autres acteurs intègrent le collège électoral pour élire les futurs dirigeants de la FMF"
+  ],
+  "sites": {
+   "MG": 2
+  },
+  "topic": "sport",
+  "others": [],
+  "media": 1,
+  "name": "FMF",
+  "kind": "organization",
+  "qid": "Q738074",
+  "label": "Football Association of Moldova",
+  "description": "association football governing body of Moldova",
+  "links": 40,
+  "human": false,
+  "itemCountry": "MD",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1181287,
+  "language": "en",
+  "titles": [
+   "‘Don’t be surprised’ – Agyemang Badu opens door for GFA presidency race"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Onua TV"
+  ],
+  "media": 1,
+  "name": "Ghana Football Association",
+  "kind": "organization",
+  "qid": "Q923074",
+  "label": "Ghana Football Association",
+  "description": "governing body of association football in Ghana",
+  "links": 31,
+  "human": false,
+  "itemCountry": "GH",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1076027,
+  "language": "nl",
+  "titles": [
+   "Dit zijn de scheidsrechters van Ajax, AZ, NEC en FC Twente in Europa"
+  ],
+  "sites": {
+   "NL": 2
+  },
+  "topic": "sport",
+  "others": [
+   "UEFA",
+   "Ajax",
+   "NEC"
+  ],
+  "media": 1,
+  "name": "FC Twente",
+  "kind": "organization",
+  "qid": "Q19603",
+  "label": "FC Twente",
+  "description": "Dutch professional association football club",
+  "links": 72,
+  "human": false,
+  "itemCountry": "NL",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1076027,
+  "language": "nl",
+  "titles": [
+   "Dit zijn de scheidsrechters van Ajax, AZ, NEC en FC Twente in Europa"
+  ],
+  "sites": {
+   "NL": 2
+  },
+  "topic": "sport",
+  "others": [
+   "FC Twente",
+   "Ajax",
+   "NEC"
+  ],
+  "media": 1,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 207,
+  "storyId": 1076027,
+  "language": "nl",
+  "titles": [
+   "Dit zijn de scheidsrechters van Ajax, AZ, NEC en FC Twente in Europa"
+  ],
+  "sites": {
+   "NL": 2
+  },
+  "topic": "sport",
+  "others": [
+   "FC Twente",
+   "UEFA",
+   "NEC"
+  ],
+  "media": 1,
+  "name": "Ajax",
+  "kind": "organization",
+  "qid": "Q81888",
+  "label": "AFC Ajax",
+  "description": "Dutch association football team",
+  "links": 107,
+  "human": false,
+  "itemCountry": "NL",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1076027,
+  "language": "nl",
+  "titles": [
+   "Dit zijn de scheidsrechters van Ajax, AZ, NEC en FC Twente in Europa"
+  ],
+  "sites": {
+   "NL": 2
+  },
+  "topic": "sport",
+  "others": [
+   "FC Twente",
+   "UEFA",
+   "Ajax"
+  ],
+  "media": 1,
+  "name": "NEC",
+  "kind": "organization",
+  "qid": "Q318348",
+  "label": "N.E.C.",
+  "description": "Dutch association football club from Nijmegen",
+  "links": 47,
+  "human": false,
+  "itemCountry": "NL",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1101949,
+  "language": "es",
+  "titles": [
+   "La UEFA evidencia el declive del arbitraje español: siguen sin pitar los grandes partidos de la Champions League"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "CTA"
+  ],
+  "media": 1,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 207,
+  "storyId": 1098195,
+  "language": "fr",
+  "titles": [
+   "\"25% en moins de sentiment d'insécurité\": la FFF généralise les caméras embarquées sur les arbitres dans le football amateur",
+   "Football. « Nous voulons que les parents puissent envoyer leurs enfants pratiquer en toute quiétude » : la Fédération annonce la généralisation des caméras sur les arbitres amateurs",
+   "Foot amateur : vers une généralisation des caméras embarquées sur les arbitres",
+   "Philippe Diallo annonce la généralisation des caméras embarquées sur les arbitres amateurs",
+   "Philippe Diallo, président de la FFF, annonce la généralisation des caméras embarquées sur les arbitres amateurs",
+   "« Nous voulons un football apaisé » : la FFF annonce la généralisation des caméras embarquées sur les arbitres amateurs"
+  ],
+  "sites": {
+   "FR": 3
+  },
+  "topic": "sport",
+  "others": [
+   "Philippe Diallo"
+  ],
+  "media": 7,
+  "name": "FFF",
+  "kind": "organization",
+  "qid": "Q244750",
+  "label": "French Football Federation",
+  "description": "governing body of association football in France",
+  "links": 51,
+  "human": false,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1098195,
+  "language": "fr",
+  "titles": [
+   "\"25% en moins de sentiment d'insécurité\": la FFF généralise les caméras embarquées sur les arbitres dans le football amateur",
+   "Football. « Nous voulons que les parents puissent envoyer leurs enfants pratiquer en toute quiétude » : la Fédération annonce la généralisation des caméras sur les arbitres amateurs",
+   "Foot amateur : vers une généralisation des caméras embarquées sur les arbitres",
+   "Philippe Diallo annonce la généralisation des caméras embarquées sur les arbitres amateurs",
+   "Philippe Diallo, président de la FFF, annonce la généralisation des caméras embarquées sur les arbitres amateurs",
+   "« Nous voulons un football apaisé » : la FFF annonce la généralisation des caméras embarquées sur les arbitres amateurs"
+  ],
+  "sites": {
+   "FR": 3
+  },
+  "topic": "sport",
+  "others": [
+   "FFF"
+  ],
+  "media": 7,
+  "name": "Philippe Diallo",
+  "kind": "person",
+  "qid": "Q33208412",
+  "label": "Philippe Diallo",
+  "description": "French association football administrator (born 1963)",
+  "links": 3,
+  "human": true,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1151560,
+  "language": "es",
+  "titles": [
+   "Fraude en exámenes médicos deja fuera a 25 árbitros del fútbol colombiano: siguen las preguntas alrededor de la Comisión Arbitral",
+   "Escándalo en el FPC: 25 árbitros habrían adulterado exámenes médicos"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Comisión Arbitral",
+   "FPC"
+  ],
+  "media": 2,
+  "name": "Federación Colombiana de Fútbol",
+  "kind": "organization",
+  "qid": "Q830922",
+  "label": "Colombian Football Federation",
+  "description": "governing body of association football in Colombia",
+  "links": 36,
+  "human": false,
+  "itemCountry": "CO",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1085097,
+  "language": "en",
+  "titles": [
+   "Fiorentina fury: letter to Serie A over refereeing errors. Here are the disputed incidents",
+   "Rabbia Fiorentina: Milla-Goncalves, episodio non chiarito. E dalla Lega piovono multe",
+   "La Fiorentina non ci sta: \"Risposte Lega sul VAR non soddisfacenti. Chiarezza su episodi gravi\"",
+   "Fiorentina insoddisfatta, ma per gli audio VAR con il Como serve la Procura Federale",
+   "La Lega risponde alla Fiorentina: \"Gol Pongracic? Seguite le procedure corrette per problemi tecnici\"",
+   "La Fiorentina non ci sta, lettera alla Lega dopo il caos Como: ecco cosa chiede"
+  ],
+  "sites": {
+   "IT": 4
+  },
+  "topic": "sport",
+  "others": [
+   "Lega",
+   "Como",
+   "Lega Serie A"
+  ],
+  "media": 3,
+  "name": "Fiorentina",
+  "kind": "organization",
+  "qid": "Q2052",
+  "label": "ACF Fiorentina",
+  "description": "association football club in Florence, Italy",
+  "links": 96,
+  "human": false,
+  "itemCountry": "IT",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1085097,
+  "language": "en",
+  "titles": [
+   "Fiorentina fury: letter to Serie A over refereeing errors. Here are the disputed incidents",
+   "Rabbia Fiorentina: Milla-Goncalves, episodio non chiarito. E dalla Lega piovono multe",
+   "La Fiorentina non ci sta: \"Risposte Lega sul VAR non soddisfacenti. Chiarezza su episodi gravi\"",
+   "Fiorentina insoddisfatta, ma per gli audio VAR con il Como serve la Procura Federale",
+   "La Lega risponde alla Fiorentina: \"Gol Pongracic? Seguite le procedure corrette per problemi tecnici\"",
+   "La Fiorentina non ci sta, lettera alla Lega dopo il caos Como: ecco cosa chiede"
+  ],
+  "sites": {
+   "IT": 4
+  },
+  "topic": "sport",
+  "others": [
+   "Fiorentina",
+   "Como",
+   "Lega Serie A"
+  ],
+  "media": 3,
+  "name": "Lega",
+  "kind": "organization",
+  "qid": "Q47750",
+  "label": "Lega Nord",
+  "description": "political party in Italy",
+  "links": 58,
+  "human": false,
+  "itemCountry": "IT",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1085097,
+  "language": "en",
+  "titles": [
+   "Fiorentina fury: letter to Serie A over refereeing errors. Here are the disputed incidents",
+   "Rabbia Fiorentina: Milla-Goncalves, episodio non chiarito. E dalla Lega piovono multe",
+   "La Fiorentina non ci sta: \"Risposte Lega sul VAR non soddisfacenti. Chiarezza su episodi gravi\"",
+   "Fiorentina insoddisfatta, ma per gli audio VAR con il Como serve la Procura Federale",
+   "La Lega risponde alla Fiorentina: \"Gol Pongracic? Seguite le procedure corrette per problemi tecnici\"",
+   "La Fiorentina non ci sta, lettera alla Lega dopo il caos Como: ecco cosa chiede"
+  ],
+  "sites": {
+   "IT": 4
+  },
+  "topic": "sport",
+  "others": [
+   "Fiorentina",
+   "Lega",
+   "Lega Serie A"
+  ],
+  "media": 3,
+  "name": "Como",
+  "kind": "organization",
+  "qid": "Q1120838",
+  "label": "Como 1907",
+  "description": "association football club in Italy",
+  "links": 56,
+  "human": false,
+  "itemCountry": "IT",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1085097,
+  "language": "en",
+  "titles": [
+   "Fiorentina fury: letter to Serie A over refereeing errors. Here are the disputed incidents",
+   "Rabbia Fiorentina: Milla-Goncalves, episodio non chiarito. E dalla Lega piovono multe",
+   "La Fiorentina non ci sta: \"Risposte Lega sul VAR non soddisfacenti. Chiarezza su episodi gravi\"",
+   "Fiorentina insoddisfatta, ma per gli audio VAR con il Como serve la Procura Federale",
+   "La Lega risponde alla Fiorentina: \"Gol Pongracic? Seguite le procedure corrette per problemi tecnici\"",
+   "La Fiorentina non ci sta, lettera alla Lega dopo il caos Como: ecco cosa chiede"
+  ],
+  "sites": {
+   "IT": 4
+  },
+  "topic": "sport",
+  "others": [
+   "Fiorentina",
+   "Lega",
+   "Como"
+  ],
+  "media": 3,
+  "name": "Lega Serie A",
+  "kind": "organization",
+  "qid": "Q2427920",
+  "label": "Lega Serie A",
+  "description": "professional association football organization in Italy",
+  "links": 14,
+  "human": false,
+  "itemCountry": "IT",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1063339,
+  "language": "it",
+  "titles": [
+   "La Repubblica - VAR, manca uniformità e i club non hanno un referente",
+   "VAR e arbitri, situazione surreale in A: \"Un fantasma s'aggira fra i campi della Serie A\"",
+   "« Une confusion aggravée par une situation pour le moins paradoxale » : encore un problème avec l’arbitrage en Serie A !",
+   "Serie A nel caos: colpa del Var e… di Orsato"
+  ],
+  "sites": {
+   "IT": 4,
+   "FR": 1
+  },
+  "topic": "sport",
+  "others": [],
+  "media": 4,
+  "name": "Serie A",
+  "kind": "organization",
+  "qid": "Q15804",
+  "label": "Q15804",
+  "description": "professional league competition for football clubs located at the top of the Italian football league system",
+  "links": 107,
+  "human": false,
+  "itemCountry": "IT",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1051938,
+  "language": "fr",
+  "titles": [
+   "La bataille du VAR reprend : Zamalek assiège la Fédération de football avec des questions embarrassantes",
+   "The VAR battle reignites: Zamalek corners the Football Association with embarrassing questions",
+   "La batalla del VAR se reaviva: el Zamalek acorrala a la Federación de Fútbol con preguntas incómodas",
+   "The VAR battle reignites: Zamalek corner the Football Association with embarrassing questions",
+   "Zamalek SC issues official statement on EFA's respons…"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Zamalek",
+   "Football Association"
+  ],
+  "media": 2,
+  "name": "Al Ahly SC",
+  "kind": "organization",
+  "qid": "Q223566",
+  "label": "Al Ahly SC",
+  "description": "association football club in Cairo, Egypt",
+  "links": 65,
+  "human": false,
+  "itemCountry": "EG",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1087870,
+  "language": "mk",
+  "titles": [
+   "Судискиот одбор со позитивна оценка за судењето во Прва и Втора МФЛ, со правилни одлуки и успешна примена на ВАР протоколот",
+   "Судискиот одбор на ФФМ со позитивна оценка за судењето во 10-то коло во 1МФЛ и во 2МФЛ",
+   "ФФМ со позитивна оценка за судењето во Првата и Втората лига (ВИДЕО)",
+   "Судиски одбор при ФФМ: Правилни одлуки и успешна примена на ВАР протоколот"
+  ],
+  "sites": {
+   "MK": 5
+  },
+  "topic": "sport",
+  "others": [
+   "Фудбалската федерација на Македонија",
+   "Прва и Втора МФЛ"
+  ],
+  "media": 4,
+  "name": "ФФМ",
+  "kind": "organization",
+  "qid": "Q630262",
+  "label": "Football Federation of Macedonia",
+  "description": "sports governing body in North Macedonia",
+  "links": 42,
+  "human": false,
+  "itemCountry": "MK",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1101301,
+  "language": "en",
+  "titles": [
+   "Egypt coach receives three-match ban for referee criticism after World Cup loss to Argentina",
+   "FIFA Suspends Egypt Coach and Forward After Argentina World Cup Defeat",
+   "Selecionador e jogador do Egito castigados por declarações após a derrota com a Argentina no Mundial",
+   "Egypt coach receives three-match ban for referee criticism after World Cup loss to Argentina - The Athletic",
+   "La FIFA sancionó a tres integrantes de la delegación de Egipto por sus protestas tras la eliminación ante la Argentina",
+   "Hossam Hassan, DT de Egipto, recibe sanción de FIFA tras polémicos gestos ante Argentina"
+  ],
+  "sites": {
+   "PT": 2,
+   "AR": 2,
+   "MX": 1,
+   "RO": 2,
+   "RS": 2,
+   "TR": 1,
+   "AZ": 1,
+   "MY": 1,
+   "BR": 3
+  },
+  "topic": "sport",
+  "others": [
+   "Hossam Hassan",
+   "Mostafa Zico"
+  ],
+  "media": 35,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 207,
+  "storyId": 1101301,
+  "language": "en",
+  "titles": [
+   "Egypt coach receives three-match ban for referee criticism after World Cup loss to Argentina",
+   "FIFA Suspends Egypt Coach and Forward After Argentina World Cup Defeat",
+   "Selecionador e jogador do Egito castigados por declarações após a derrota com a Argentina no Mundial",
+   "Egypt coach receives three-match ban for referee criticism after World Cup loss to Argentina - The Athletic",
+   "La FIFA sancionó a tres integrantes de la delegación de Egipto por sus protestas tras la eliminación ante la Argentina",
+   "Hossam Hassan, DT de Egipto, recibe sanción de FIFA tras polémicos gestos ante Argentina"
+  ],
+  "sites": {
+   "PT": 2,
+   "AR": 2,
+   "MX": 1,
+   "RO": 2,
+   "RS": 2,
+   "TR": 1,
+   "AZ": 1,
+   "MY": 1,
+   "BR": 3
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Mostafa Zico"
+  ],
+  "media": 35,
+  "name": "Hossam Hassan",
+  "kind": "person",
+  "qid": "Q448937",
+  "label": "Hossam Hassan",
+  "description": "Egyptian association football player and coach",
+  "links": 36,
+  "human": true,
+  "itemCountry": "EG",
+  "international": false
+ },
+ {
+  "briefing": 207,
+  "storyId": 1101301,
+  "language": "en",
+  "titles": [
+   "Egypt coach receives three-match ban for referee criticism after World Cup loss to Argentina",
+   "FIFA Suspends Egypt Coach and Forward After Argentina World Cup Defeat",
+   "Selecionador e jogador do Egito castigados por declarações após a derrota com a Argentina no Mundial",
+   "Egypt coach receives three-match ban for referee criticism after World Cup loss to Argentina - The Athletic",
+   "La FIFA sancionó a tres integrantes de la delegación de Egipto por sus protestas tras la eliminación ante la Argentina",
+   "Hossam Hassan, DT de Egipto, recibe sanción de FIFA tras polémicos gestos ante Argentina"
+  ],
+  "sites": {
+   "PT": 2,
+   "AR": 2,
+   "MX": 1,
+   "RO": 2,
+   "RS": 2,
+   "TR": 1,
+   "AZ": 1,
+   "MY": 1,
+   "BR": 3
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Hossam Hassan"
+  ],
+  "media": 35,
+  "name": "Mostafa Zico",
+  "kind": "person",
+  "qid": "Q121537482",
+  "label": "Mostafa Ziko",
+  "description": "Egyptian association football player",
+  "links": 29,
+  "human": true,
+  "itemCountry": "EG",
+  "international": false
+ },
+ {
+  "briefing": 206,
+  "storyId": 1163119,
+  "language": "en",
+  "titles": [
+   "Turkish referees take TFF chief to task over alleged slander"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Ibrahim Haciosmanoglu"
+  ],
+  "media": 1,
+  "name": "Turkish Football Federation",
+  "kind": "organization",
+  "qid": "Q726183",
+  "label": "Turkish Football Federation",
+  "description": "governing body of association football in Turkey",
+  "links": 43,
+  "human": false,
+  "itemCountry": "TR",
+  "international": false
+ },
+ {
+  "briefing": 206,
+  "storyId": 1163119,
+  "language": "en",
+  "titles": [
+   "Turkish referees take TFF chief to task over alleged slander"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Turkish Football Federation"
+  ],
+  "media": 1,
+  "name": "Ibrahim Haciosmanoglu",
+  "kind": "person",
+  "qid": "Q17046838",
+  "label": "İbrahim Hacıosmanoğlu",
+  "description": "Turkish businessperson (born 1966)",
+  "links": 3,
+  "human": true,
+  "itemCountry": "TR",
+  "international": false
+ },
+ {
+  "briefing": 206,
+  "storyId": 1161098,
+  "language": "en",
+  "titles": [
+   "Refereeing Committee about Güler’s case: “Absent evidence, no intervention is possible”"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Real Madrid",
+   "SEVILLA",
+   "Marca"
+  ],
+  "media": 1,
+  "name": "Arda Güler",
+  "kind": "person",
+  "qid": "Q108159340",
+  "label": "Αrda Güler",
+  "description": "Turkish association football player (born 2005)",
+  "links": 65,
+  "human": true,
+  "itemCountry": "TR",
+  "international": false
+ },
+ {
+  "briefing": 206,
+  "storyId": 1161098,
+  "language": "en",
+  "titles": [
+   "Refereeing Committee about Güler’s case: “Absent evidence, no intervention is possible”"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Real Madrid",
+   "Arda Güler",
+   "Marca"
+  ],
+  "media": 1,
+  "name": "SEVILLA",
+  "kind": "organization",
+  "qid": "Q10329",
+  "label": "Sevilla FC",
+  "description": "Spanish professional football club based in Seville",
+  "links": 87,
+  "human": false,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 206,
+  "storyId": 1161098,
+  "language": "en",
+  "titles": [
+   "Refereeing Committee about Güler’s case: “Absent evidence, no intervention is possible”"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Real Madrid",
+   "Arda Güler",
+   "SEVILLA"
+  ],
+  "media": 1,
+  "name": "Marca",
+  "kind": "organization",
+  "qid": "Q917580",
+  "label": "Marca",
+  "description": "Spanish sports website",
+  "links": 37,
+  "human": false,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 206,
+  "storyId": 1133639,
+  "language": "es",
+  "titles": [
+   "La reflexión de Enrique Cerezo, presidente del Atlético de Madrid, sobre el arbitraje: \"Tienen que quitar el VAR para que no haya problemas con los árbitros\"",
+   "Presidente de Atlético Madrid pide terminar con el VAR: “Para que no haya problemas con los árbitros”",
+   "Cerezo: “Tienen que quitar el VAR para que no haya problemas con los árbitros”"
+  ],
+  "sites": {
+   "CL": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Enrique Cerezo",
+   "VAR"
+  ],
+  "media": 3,
+  "name": "Atlético de Madrid",
+  "kind": "organization",
+  "qid": "Q8701",
+  "label": "Atlético Madrid",
+  "description": "Spanish professional football club in Madrid",
+  "links": 109,
+  "human": false,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 206,
+  "storyId": 1133639,
+  "language": "es",
+  "titles": [
+   "La reflexión de Enrique Cerezo, presidente del Atlético de Madrid, sobre el arbitraje: \"Tienen que quitar el VAR para que no haya problemas con los árbitros\"",
+   "Presidente de Atlético Madrid pide terminar con el VAR: “Para que no haya problemas con los árbitros”",
+   "Cerezo: “Tienen que quitar el VAR para que no haya problemas con los árbitros”"
+  ],
+  "sites": {
+   "CL": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Atlético de Madrid",
+   "Enrique Cerezo"
+  ],
+  "media": 3,
+  "name": "VAR",
+  "kind": "organization",
+  "qid": "Q28406836",
+  "label": "video assistant referee",
+  "description": "in association football, match official that reviews decisions made by the head referee with the use of video footage",
+  "links": 64,
+  "human": false,
+  "itemCountry": null,
+  "international": false
+ },
+ {
+  "briefing": 206,
+  "storyId": 1139692,
+  "language": "el",
+  "titles": [
+   "ΠΑΟΚ–Ηρακλής ο νέος κανόνας VAR για τον Ρος"
+  ],
+  "sites": {
+   "GR": 2
+  },
+  "topic": "sport",
+  "others": [
+   "ΠΑΟΚ",
+   "Ρος"
+  ],
+  "media": 1,
+  "name": "Ηρακλής",
+  "kind": "organization",
+  "qid": "Q592241",
+  "label": "G.S. Iraklis Thessalonikis (men's association football)",
+  "description": "association football team in Greece",
+  "links": 32,
+  "human": false,
+  "itemCountry": "GR",
+  "international": false
+ },
+ {
+  "briefing": 206,
+  "storyId": 1146055,
+  "language": "es",
+  "titles": [
+   "Qué explicaciones hay a la polémica captada por la Refcam del Betis-Barcelona"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Betis-Barcelona",
+   "De Burgos",
+   "REFCAM"
+  ],
+  "media": 1,
+  "name": "VAR",
+  "kind": "organization",
+  "qid": "Q28406836",
+  "label": "video assistant referee",
+  "description": "in association football, match official that reviews decisions made by the head referee with the use of video footage",
+  "links": 64,
+  "human": false,
+  "itemCountry": null,
+  "international": false
+ },
+ {
+  "briefing": 206,
+  "storyId": 1154115,
+  "language": "fr",
+  "titles": [
+   "Le président de l'Atlético Madrid éteint l'incendie du Clasico après l'incident de Güler : il n'y a pas de guerres dans le footbal...",
+   "El presidente del Atlético, Cerezo, sobre el conflicto entre el Real Madrid y LaLiga por el arbitraje: \"No tiene que haber guerra\"",
+   "Cerezo calls for calm in Real Madrid and LaLiga refereeing row",
+   "Atletico Madrid president Enrique Cerezo urges peace in Real Madrid & LaLiga refereeing conflict",
+   "Enrique Cerezo: \"En el fútbol no tiene que haber guerras y menos entre los dirigentes\"",
+   "Cerezo: \"¿Guerra Madrid-Liga? En el fútbol no tiene que haber guerras, hay que solucionarlo\""
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Real Madrid",
+   "Enrique Cerezo",
+   "Atletico Madrid"
+  ],
+  "media": 6,
+  "name": "LaLiga",
+  "kind": "organization",
+  "qid": "Q4453842",
+  "label": "Liga Nacional de Fútbol Profesional",
+  "description": "Spanish national association football organization",
+  "links": 24,
+  "human": false,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 206,
+  "storyId": 1154115,
+  "language": "fr",
+  "titles": [
+   "Le président de l'Atlético Madrid éteint l'incendie du Clasico après l'incident de Güler : il n'y a pas de guerres dans le footbal...",
+   "El presidente del Atlético, Cerezo, sobre el conflicto entre el Real Madrid y LaLiga por el arbitraje: \"No tiene que haber guerra\"",
+   "Cerezo calls for calm in Real Madrid and LaLiga refereeing row",
+   "Atletico Madrid president Enrique Cerezo urges peace in Real Madrid & LaLiga refereeing conflict",
+   "Enrique Cerezo: \"En el fútbol no tiene que haber guerras y menos entre los dirigentes\"",
+   "Cerezo: \"¿Guerra Madrid-Liga? En el fútbol no tiene que haber guerras, hay que solucionarlo\""
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Real Madrid",
+   "Enrique Cerezo",
+   "LaLiga"
+  ],
+  "media": 6,
+  "name": "Atletico Madrid",
+  "kind": "organization",
+  "qid": "Q8701",
+  "label": "Atlético Madrid",
+  "description": "Spanish professional football club in Madrid",
+  "links": 109,
+  "human": false,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 206,
+  "storyId": 1152409,
+  "language": "es",
+  "titles": [
+   "Hernández Hernández, árbitro de Primera división: \"El arbitraje es aprender a resetear\""
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Hernandez Hernandez"
+  ],
+  "media": 1,
+  "name": "Primera División",
+  "kind": "organization",
+  "qid": "Q58305",
+  "label": "Maltese First Division",
+  "description": "sports league",
+  "links": 14,
+  "human": false,
+  "itemCountry": "MT",
+  "international": false
+ },
+ {
+  "briefing": 206,
+  "storyId": 1087358,
+  "language": "en",
+  "titles": [
+   "Infantino faces fresh storm as UEFA demands accountability",
+   "Uefa pede respostas da Fifa sobre presidência de Infantino",
+   "'Questions require answers now': UEFA demand transparency from FIFA over Infantino",
+   "FIFA promet des réponses à l'UEFA sur Infantino, sans délai fixé",
+   "Fifa responds to Uefa’s demand for answers over Gianni Infantino scandals",
+   "Mit dieser Liste setzen die Europäer Fifa-Chef Infantino unter Druck"
+  ],
+  "sites": {
+   "GB": 1,
+   "DE": 2,
+   "TR": 1,
+   "IE": 1,
+   "BR": 1,
+   "AL": 1,
+   "KE": 1,
+   "BA": 3,
+   "BE": 2,
+   "FR": 3
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Gianni Infantino"
+  ],
+  "media": 33,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 206,
+  "storyId": 1087358,
+  "language": "en",
+  "titles": [
+   "Infantino faces fresh storm as UEFA demands accountability",
+   "Uefa pede respostas da Fifa sobre presidência de Infantino",
+   "'Questions require answers now': UEFA demand transparency from FIFA over Infantino",
+   "FIFA promet des réponses à l'UEFA sur Infantino, sans délai fixé",
+   "Fifa responds to Uefa’s demand for answers over Gianni Infantino scandals",
+   "Mit dieser Liste setzen die Europäer Fifa-Chef Infantino unter Druck"
+  ],
+  "sites": {
+   "GB": 1,
+   "DE": 2,
+   "TR": 1,
+   "IE": 1,
+   "BR": 1,
+   "AL": 1,
+   "KE": 1,
+   "BA": 3,
+   "BE": 2,
+   "FR": 3
+  },
+  "topic": "sport",
+  "others": [
+   "UEFA",
+   "Gianni Infantino"
+  ],
+  "media": 33,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 206,
+  "storyId": 1087358,
+  "language": "en",
+  "titles": [
+   "Infantino faces fresh storm as UEFA demands accountability",
+   "Uefa pede respostas da Fifa sobre presidência de Infantino",
+   "'Questions require answers now': UEFA demand transparency from FIFA over Infantino",
+   "FIFA promet des réponses à l'UEFA sur Infantino, sans délai fixé",
+   "Fifa responds to Uefa’s demand for answers over Gianni Infantino scandals",
+   "Mit dieser Liste setzen die Europäer Fifa-Chef Infantino unter Druck"
+  ],
+  "sites": {
+   "GB": 1,
+   "DE": 2,
+   "TR": 1,
+   "IE": 1,
+   "BR": 1,
+   "AL": 1,
+   "KE": 1,
+   "BA": 3,
+   "BE": 2,
+   "FR": 3
+  },
+  "topic": "sport",
+  "others": [
+   "UEFA",
+   "FIFA"
+  ],
+  "media": 33,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 201,
+  "storyId": 580326,
+  "language": "en",
+  "titles": [
+   "England Legend Touted as UEFA's Infantino Challenger in FIFA Elections",
+   "Arsene Wenger for Fifa president? Why Gianni Infantino must be challenged . . . and the former Arsenal boss might be the only choice",
+   "💣Bombshell at FIFA: Wenger could be Infantino’s challenger",
+   "England Legend Touted as UEFA's 'Secret' Gianni Infantino Challenger in FIFA Elections",
+   "Arsène Wenger potentiel candidat à la présidence de la FIFA : qu’en dites-vous ?"
+  ],
+  "sites": {
+   "IE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Gianni Infantino",
+   "Arsène Wenger",
+   "Arsenal"
+  ],
+  "media": 5,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 201,
+  "storyId": 580326,
+  "language": "en",
+  "titles": [
+   "England Legend Touted as UEFA's Infantino Challenger in FIFA Elections",
+   "Arsene Wenger for Fifa president? Why Gianni Infantino must be challenged . . . and the former Arsenal boss might be the only choice",
+   "💣Bombshell at FIFA: Wenger could be Infantino’s challenger",
+   "England Legend Touted as UEFA's 'Secret' Gianni Infantino Challenger in FIFA Elections",
+   "Arsène Wenger potentiel candidat à la présidence de la FIFA : qu’en dites-vous ?"
+  ],
+  "sites": {
+   "IE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Arsène Wenger",
+   "Arsenal"
+  ],
+  "media": 5,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 201,
+  "storyId": 580326,
+  "language": "en",
+  "titles": [
+   "England Legend Touted as UEFA's Infantino Challenger in FIFA Elections",
+   "Arsene Wenger for Fifa president? Why Gianni Infantino must be challenged . . . and the former Arsenal boss might be the only choice",
+   "💣Bombshell at FIFA: Wenger could be Infantino’s challenger",
+   "England Legend Touted as UEFA's 'Secret' Gianni Infantino Challenger in FIFA Elections",
+   "Arsène Wenger potentiel candidat à la présidence de la FIFA : qu’en dites-vous ?"
+  ],
+  "sites": {
+   "IE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Gianni Infantino",
+   "Arsenal"
+  ],
+  "media": 5,
+  "name": "Arsène Wenger",
+  "kind": "person",
+  "qid": "Q47576",
+  "label": "Arsène Wenger",
+  "description": "French football manager (born 1949)",
+  "links": 93,
+  "human": true,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 201,
+  "storyId": 580326,
+  "language": "en",
+  "titles": [
+   "England Legend Touted as UEFA's Infantino Challenger in FIFA Elections",
+   "Arsene Wenger for Fifa president? Why Gianni Infantino must be challenged . . . and the former Arsenal boss might be the only choice",
+   "💣Bombshell at FIFA: Wenger could be Infantino’s challenger",
+   "England Legend Touted as UEFA's 'Secret' Gianni Infantino Challenger in FIFA Elections",
+   "Arsène Wenger potentiel candidat à la présidence de la FIFA : qu’en dites-vous ?"
+  ],
+  "sites": {
+   "IE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Gianni Infantino",
+   "Arsène Wenger"
+  ],
+  "media": 5,
+  "name": "Arsenal",
+  "kind": "organization",
+  "qid": "Q9617",
+  "label": "Arsenal F.C.",
+  "description": "association football club in London, England",
+  "links": 125,
+  "human": false,
+  "itemCountry": "GB",
+  "international": false
+ },
+ {
+  "briefing": 201,
+  "storyId": 1093886,
+  "language": "en",
+  "titles": [
+   "McKendry meets Čeferin at European headquarters"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "UEFA",
+   "FA"
+  ],
+  "media": 1,
+  "name": "Aleksander Ceferin",
+  "kind": "person",
+  "qid": "Q26819142",
+  "label": "Aleksander Čeferin",
+  "description": "Slovenian football administrator",
+  "links": 46,
+  "human": true,
+  "itemCountry": "SI",
+  "international": false
+ },
+ {
+  "briefing": 201,
+  "storyId": 1093886,
+  "language": "en",
+  "titles": [
+   "McKendry meets Čeferin at European headquarters"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Aleksander Ceferin",
+   "FA"
+  ],
+  "media": 1,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 201,
+  "storyId": 1057330,
+  "language": "hr",
+  "titles": [
+   "Glavni tajnik HNS-a otkriva: 'U HNL-u planiramo profi suce, a ispitujemo i za gol-tehnologiju'",
+   "SuperSport HNL uvodi gol tehnologiju? Glavni tajnik HNS-a otkrio planove"
+  ],
+  "sites": {
+   "HR": 3
+  },
+  "topic": "sport",
+  "others": [
+   "HNS-a",
+   "HNS",
+   "HNL-u"
+  ],
+  "media": 2,
+  "name": "HNL",
+  "kind": "organization",
+  "qid": "Q162604",
+  "label": "Croatian Football League",
+  "description": "association football league in Croatia",
+  "links": 51,
+  "human": false,
+  "itemCountry": "HR",
+  "international": false
+ },
+ {
+  "briefing": 201,
+  "storyId": 1057330,
+  "language": "hr",
+  "titles": [
+   "Glavni tajnik HNS-a otkriva: 'U HNL-u planiramo profi suce, a ispitujemo i za gol-tehnologiju'",
+   "SuperSport HNL uvodi gol tehnologiju? Glavni tajnik HNS-a otkrio planove"
+  ],
+  "sites": {
+   "HR": 3
+  },
+  "topic": "sport",
+  "others": [
+   "HNS-a",
+   "HNL",
+   "HNL-u"
+  ],
+  "media": 2,
+  "name": "HNS",
+  "kind": "organization",
+  "qid": "Q328689",
+  "label": "Croatian Football Federation",
+  "description": "governing body of association football in Croatia",
+  "links": 43,
+  "human": false,
+  "itemCountry": "HR",
+  "international": false
+ },
+ {
+  "briefing": 201,
+  "storyId": 1076309,
+  "language": "en",
+  "titles": [
+   "André Ayew prioritises Ghana football reforms over GFA presidency talk"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Ghana Football",
+   "Andre Ayew"
+  ],
+  "media": 1,
+  "name": "Ghana Football Association",
+  "kind": "organization",
+  "qid": "Q923074",
+  "label": "Ghana Football Association",
+  "description": "governing body of association football in Ghana",
+  "links": 31,
+  "human": false,
+  "itemCountry": "GH",
+  "international": false
+ },
+ {
+  "briefing": 201,
+  "storyId": 1076309,
+  "language": "en",
+  "titles": [
+   "André Ayew prioritises Ghana football reforms over GFA presidency talk"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Ghana Football Association",
+   "Andre Ayew"
+  ],
+  "media": 1,
+  "name": "Ghana Football",
+  "kind": "organization",
+  "qid": "Q1478153",
+  "label": "football in Ghana",
+  "description": "overview of association football in Ghana",
+  "links": 9,
+  "human": false,
+  "itemCountry": "GH",
+  "international": false
+ },
+ {
+  "briefing": 201,
+  "storyId": 1101725,
+  "language": "en",
+  "titles": [
+   "Egypt coach receives three-match ban for referee criticism after World Cup loss to Argentina",
+   "La FIFA sancionó a tres integrantes de la delegación de Egipto por sus protestas tras la eliminación ante la Argentina",
+   "Duras sanciones de la FIFA al DT de Egipto y a un jugador por lo sucedido ante Argentina en el Mundial",
+   "La FIFA sancionó al entrenador de Egipto por sus gestos en el partido con Argentina",
+   "Hossam Hassan réagit par une déclaration marquante à sa suspension infligée par la FIFA",
+   "Egypt set to appeal big punishment from FIFA"
+  ],
+  "sites": {
+   "AR": 2,
+   "BA": 1,
+   "FR": 2,
+   "AZ": 1,
+   "HR": 4,
+   "NL": 3,
+   "MY": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Hossam Hassan",
+   "Mostafa Zico"
+  ],
+  "media": 29,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 201,
+  "storyId": 1101725,
+  "language": "en",
+  "titles": [
+   "Egypt coach receives three-match ban for referee criticism after World Cup loss to Argentina",
+   "La FIFA sancionó a tres integrantes de la delegación de Egipto por sus protestas tras la eliminación ante la Argentina",
+   "Duras sanciones de la FIFA al DT de Egipto y a un jugador por lo sucedido ante Argentina en el Mundial",
+   "La FIFA sancionó al entrenador de Egipto por sus gestos en el partido con Argentina",
+   "Hossam Hassan réagit par une déclaration marquante à sa suspension infligée par la FIFA",
+   "Egypt set to appeal big punishment from FIFA"
+  ],
+  "sites": {
+   "AR": 2,
+   "BA": 1,
+   "FR": 2,
+   "AZ": 1,
+   "HR": 4,
+   "NL": 3,
+   "MY": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Mostafa Zico"
+  ],
+  "media": 29,
+  "name": "Hossam Hassan",
+  "kind": "person",
+  "qid": "Q448937",
+  "label": "Hossam Hassan",
+  "description": "Egyptian association football player and coach",
+  "links": 36,
+  "human": true,
+  "itemCountry": "EG",
+  "international": false
+ },
+ {
+  "briefing": 201,
+  "storyId": 1101725,
+  "language": "en",
+  "titles": [
+   "Egypt coach receives three-match ban for referee criticism after World Cup loss to Argentina",
+   "La FIFA sancionó a tres integrantes de la delegación de Egipto por sus protestas tras la eliminación ante la Argentina",
+   "Duras sanciones de la FIFA al DT de Egipto y a un jugador por lo sucedido ante Argentina en el Mundial",
+   "La FIFA sancionó al entrenador de Egipto por sus gestos en el partido con Argentina",
+   "Hossam Hassan réagit par une déclaration marquante à sa suspension infligée par la FIFA",
+   "Egypt set to appeal big punishment from FIFA"
+  ],
+  "sites": {
+   "AR": 2,
+   "BA": 1,
+   "FR": 2,
+   "AZ": 1,
+   "HR": 4,
+   "NL": 3,
+   "MY": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Hossam Hassan"
+  ],
+  "media": 29,
+  "name": "Mostafa Zico",
+  "kind": "person",
+  "qid": "Q121537482",
+  "label": "Mostafa Ziko",
+  "description": "Egyptian association football player",
+  "links": 29,
+  "human": true,
+  "itemCountry": "EG",
+  "international": false
+ },
+ {
+  "briefing": 201,
+  "storyId": 1060739,
+  "language": "de",
+  "titles": [
+   "Ex-FIFA-Mann warnt eindringlich: UEFA droht \"Fiasko\", während Infantino \"den Mercedes-Katalog\" hinlegt",
+   "\"Infantino holt Vorsprung heraus\": Warnung vor \"Fiasko\" im Fifa-Machtkampf",
+   "Ex-Mediendirektor Tognoni warnt UEFA vor \"Fiasko\" im FIFA-Machtkampf",
+   "Ex-Mediendirektor warnt UEFA vor „Fiasko“ im FIFA-Machtkampf"
+  ],
+  "sites": {
+   "DE": 4,
+   "AT": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Fifa-Machtkampf",
+   "FIFA",
+   "Gianni Infantino"
+  ],
+  "media": 4,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 201,
+  "storyId": 1060739,
+  "language": "de",
+  "titles": [
+   "Ex-FIFA-Mann warnt eindringlich: UEFA droht \"Fiasko\", während Infantino \"den Mercedes-Katalog\" hinlegt",
+   "\"Infantino holt Vorsprung heraus\": Warnung vor \"Fiasko\" im Fifa-Machtkampf",
+   "Ex-Mediendirektor Tognoni warnt UEFA vor \"Fiasko\" im FIFA-Machtkampf",
+   "Ex-Mediendirektor warnt UEFA vor „Fiasko“ im FIFA-Machtkampf"
+  ],
+  "sites": {
+   "DE": 4,
+   "AT": 1
+  },
+  "topic": "sport",
+  "others": [
+   "UEFA",
+   "Fifa-Machtkampf",
+   "Gianni Infantino"
+  ],
+  "media": 4,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 201,
+  "storyId": 1060739,
+  "language": "de",
+  "titles": [
+   "Ex-FIFA-Mann warnt eindringlich: UEFA droht \"Fiasko\", während Infantino \"den Mercedes-Katalog\" hinlegt",
+   "\"Infantino holt Vorsprung heraus\": Warnung vor \"Fiasko\" im Fifa-Machtkampf",
+   "Ex-Mediendirektor Tognoni warnt UEFA vor \"Fiasko\" im FIFA-Machtkampf",
+   "Ex-Mediendirektor warnt UEFA vor „Fiasko“ im FIFA-Machtkampf"
+  ],
+  "sites": {
+   "DE": 4,
+   "AT": 1
+  },
+  "topic": "sport",
+  "others": [
+   "UEFA",
+   "Fifa-Machtkampf",
+   "FIFA"
+  ],
+  "media": 4,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 201,
+  "storyId": 1051936,
+  "language": "fr",
+  "titles": [
+   "La bataille du VAR reprend : Zamalek assiège la Fédération de football avec des questions embarrassantes",
+   "The VAR battle reignites: Zamalek corners the Football Association with embarrassing questions",
+   "La batalla del VAR se reaviva: el Zamalek acorrala a la Federación de Fútbol con preguntas incómodas",
+   "Zamalek SC issues official statement on EFA's respons…",
+   "La fédération de football répond au Zamalek concernan…",
+   "Football Association responds to Zamalek regarding VA…"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Football Association",
+   "SC"
+  ],
+  "media": 2,
+  "name": "Zamalek",
+  "kind": "organization",
+  "qid": "Q286504",
+  "label": "Zamalek SC",
+  "description": "Egyptian sports club based in Giza",
+  "links": 44,
+  "human": false,
+  "itemCountry": "EG",
+  "international": false
+ },
+ {
+  "briefing": 201,
+  "storyId": 1129200,
+  "language": "pt",
+  "titles": [
+   "Equipas lusas já conhecem árbitros para jogos europeus",
+   "Os árbitros para os jogos europeus de Torreense, Benfica e SC Braga",
+   "UEFA nomeia árbitros para compromissos europeus de Benfica, Torreense e Sp. Braga",
+   "Os árbitros nomeados pela UEFA para os jogos de Benfica, Torreense e Braga na Europa",
+   "Já há árbitros para os jogos europeus de Benfica, Torreense e Sp. Braga"
+  ],
+  "sites": {
+   "PT": 9
+  },
+  "topic": "sport",
+  "others": [
+   "Torreense",
+   "UEFA",
+   "Jasper Vergoote"
+  ],
+  "media": 6,
+  "name": "Benfica",
+  "kind": "organization",
+  "qid": "Q131499",
+  "label": "S.L. Benfica",
+  "description": "professional association football club based in Lisbon, Portugal",
+  "links": 92,
+  "human": false,
+  "itemCountry": "PT",
+  "international": false
+ },
+ {
+  "briefing": 201,
+  "storyId": 1129200,
+  "language": "pt",
+  "titles": [
+   "Equipas lusas já conhecem árbitros para jogos europeus",
+   "Os árbitros para os jogos europeus de Torreense, Benfica e SC Braga",
+   "UEFA nomeia árbitros para compromissos europeus de Benfica, Torreense e Sp. Braga",
+   "Os árbitros nomeados pela UEFA para os jogos de Benfica, Torreense e Braga na Europa",
+   "Já há árbitros para os jogos europeus de Benfica, Torreense e Sp. Braga"
+  ],
+  "sites": {
+   "PT": 9
+  },
+  "topic": "sport",
+  "others": [
+   "Benfica",
+   "UEFA",
+   "Jasper Vergoote"
+  ],
+  "media": 6,
+  "name": "Torreense",
+  "kind": "organization",
+  "qid": "Q1853273",
+  "label": "S.C.U. Torreense",
+  "description": "association football club in Portugal",
+  "links": 27,
+  "human": false,
+  "itemCountry": "PT",
+  "international": false
+ },
+ {
+  "briefing": 201,
+  "storyId": 1129200,
+  "language": "pt",
+  "titles": [
+   "Equipas lusas já conhecem árbitros para jogos europeus",
+   "Os árbitros para os jogos europeus de Torreense, Benfica e SC Braga",
+   "UEFA nomeia árbitros para compromissos europeus de Benfica, Torreense e Sp. Braga",
+   "Os árbitros nomeados pela UEFA para os jogos de Benfica, Torreense e Braga na Europa",
+   "Já há árbitros para os jogos europeus de Benfica, Torreense e Sp. Braga"
+  ],
+  "sites": {
+   "PT": 9
+  },
+  "topic": "sport",
+  "others": [
+   "Benfica",
+   "Torreense",
+   "Jasper Vergoote"
+  ],
+  "media": 6,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 191,
+  "storyId": 1097408,
+  "language": "fr",
+  "titles": [
+   "« Une confusion aggravée par une situation pour le moins paradoxale » : encore un problème avec l’arbitrage en Serie A !",
+   "VAR e arbitri, situazione surreale in A: \"Un fantasma s'aggira fra i campi della Serie A\"",
+   "Serie A, caos VAR e nessun interlocutore per i club: De Marco è fermo, scontro con Orsato",
+   "La Repubblica - VAR, manca uniformità e i club non hanno un referente",
+   "Il VAR si riaccende e salva Chiffi, ma non Di Bello. Il ritorno di Abisso: arbitri, com’è andato il weekend"
+  ],
+  "sites": {
+   "FR": 2,
+   "IT": 3
+  },
+  "topic": "sport",
+  "others": [
+   "Di Bello",
+   "Abisso",
+   "Chiffi"
+  ],
+  "media": 5,
+  "name": "Serie A",
+  "kind": "organization",
+  "qid": "Q15804",
+  "label": "Q15804",
+  "description": "professional league competition for football clubs located at the top of the Italian football league system",
+  "links": 107,
+  "human": false,
+  "itemCountry": "IT",
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1105895,
+  "language": "en",
+  "titles": [
+   "Fiorentina fury: letter to Serie A over refereeing errors. Here are the disputed incidents",
+   "La Fiorentina protesta: chiesti chiarimenti alla Lega Calcio per gli episodi arbitrali contro il Como",
+   "Fiorentina irritata per l'arbitraggio contro il Como: il club contatta la Serie A"
+  ],
+  "sites": {
+   "IT": 3
+  },
+  "topic": "sport",
+  "others": [
+   "Serie A",
+   "Como",
+   "La Fiorentina"
+  ],
+  "media": 3,
+  "name": "Fiorentina",
+  "kind": "organization",
+  "qid": "Q2052",
+  "label": "ACF Fiorentina",
+  "description": "association football club in Florence, Italy",
+  "links": 96,
+  "human": false,
+  "itemCountry": "IT",
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1105895,
+  "language": "en",
+  "titles": [
+   "Fiorentina fury: letter to Serie A over refereeing errors. Here are the disputed incidents",
+   "La Fiorentina protesta: chiesti chiarimenti alla Lega Calcio per gli episodi arbitrali contro il Como",
+   "Fiorentina irritata per l'arbitraggio contro il Como: il club contatta la Serie A"
+  ],
+  "sites": {
+   "IT": 3
+  },
+  "topic": "sport",
+  "others": [
+   "Fiorentina",
+   "Como",
+   "La Fiorentina"
+  ],
+  "media": 3,
+  "name": "Serie A",
+  "kind": "organization",
+  "qid": "Q15804",
+  "label": "Q15804",
+  "description": "professional league competition for football clubs located at the top of the Italian football league system",
+  "links": 107,
+  "human": false,
+  "itemCountry": "IT",
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1105895,
+  "language": "en",
+  "titles": [
+   "Fiorentina fury: letter to Serie A over refereeing errors. Here are the disputed incidents",
+   "La Fiorentina protesta: chiesti chiarimenti alla Lega Calcio per gli episodi arbitrali contro il Como",
+   "Fiorentina irritata per l'arbitraggio contro il Como: il club contatta la Serie A"
+  ],
+  "sites": {
+   "IT": 3
+  },
+  "topic": "sport",
+  "others": [
+   "Fiorentina",
+   "Serie A",
+   "La Fiorentina"
+  ],
+  "media": 3,
+  "name": "Como",
+  "kind": "organization",
+  "qid": "Q1120838",
+  "label": "Como 1907",
+  "description": "association football club in Italy",
+  "links": 56,
+  "human": false,
+  "itemCountry": "IT",
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1105895,
+  "language": "en",
+  "titles": [
+   "Fiorentina fury: letter to Serie A over refereeing errors. Here are the disputed incidents",
+   "La Fiorentina protesta: chiesti chiarimenti alla Lega Calcio per gli episodi arbitrali contro il Como",
+   "Fiorentina irritata per l'arbitraggio contro il Como: il club contatta la Serie A"
+  ],
+  "sites": {
+   "IT": 3
+  },
+  "topic": "sport",
+  "others": [
+   "Fiorentina",
+   "Serie A",
+   "Como"
+  ],
+  "media": 3,
+  "name": "La Fiorentina",
+  "kind": "organization",
+  "qid": "Q1626989",
+  "label": "Vittoria Tesi",
+  "description": "Italian opera singer and music teacher (1701-1775)",
+  "links": 11,
+  "human": true,
+  "itemCountry": null,
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1086458,
+  "language": "en",
+  "titles": [
+   "Güler red card controversy rocks Spanish soccer as missing TV footage leaves VAR powerless",
+   "Spanish Refereeing Committee Addresses Controversy Over Arda Güler's Non-Expulsion",
+   "El Comité de Árbitros explica por qué el VAR no intervino en la expulsión de Güler, jugador del Real Madrid, y el Sevilla responde de inmediato: \"Ganas de ver tIempo de revisión\"",
+   "Sevilla boss makes stunning Real Madrid accusation as VAR controversy erupts before El Clasico",
+   "Why did VAR not intervene in the Guler incident? The referees' committee justifies: we follow the television broadcast!",
+   "Pourquoi la VAR n'est-elle pas intervenue sur l'action de Güler ? La commission des arbitres se justifie : nous suivons la diffusion télévis..."
+  ],
+  "sites": {
+   "AT": 1,
+   "BE": 1,
+   "CH": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Real Madrid",
+   "Arda Güler",
+   "VAR"
+  ],
+  "media": 14,
+  "name": "SEVILLA",
+  "kind": "organization",
+  "qid": "Q10329",
+  "label": "Sevilla FC",
+  "description": "Spanish professional football club based in Seville",
+  "links": 87,
+  "human": false,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1086458,
+  "language": "en",
+  "titles": [
+   "Güler red card controversy rocks Spanish soccer as missing TV footage leaves VAR powerless",
+   "Spanish Refereeing Committee Addresses Controversy Over Arda Güler's Non-Expulsion",
+   "El Comité de Árbitros explica por qué el VAR no intervino en la expulsión de Güler, jugador del Real Madrid, y el Sevilla responde de inmediato: \"Ganas de ver tIempo de revisión\"",
+   "Sevilla boss makes stunning Real Madrid accusation as VAR controversy erupts before El Clasico",
+   "Why did VAR not intervene in the Guler incident? The referees' committee justifies: we follow the television broadcast!",
+   "Pourquoi la VAR n'est-elle pas intervenue sur l'action de Güler ? La commission des arbitres se justifie : nous suivons la diffusion télévis..."
+  ],
+  "sites": {
+   "AT": 1,
+   "BE": 1,
+   "CH": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Real Madrid",
+   "SEVILLA",
+   "VAR"
+  ],
+  "media": 14,
+  "name": "Arda Güler",
+  "kind": "person",
+  "qid": "Q108159340",
+  "label": "Αrda Güler",
+  "description": "Turkish association football player (born 2005)",
+  "links": 65,
+  "human": true,
+  "itemCountry": "TR",
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1086458,
+  "language": "en",
+  "titles": [
+   "Güler red card controversy rocks Spanish soccer as missing TV footage leaves VAR powerless",
+   "Spanish Refereeing Committee Addresses Controversy Over Arda Güler's Non-Expulsion",
+   "El Comité de Árbitros explica por qué el VAR no intervino en la expulsión de Güler, jugador del Real Madrid, y el Sevilla responde de inmediato: \"Ganas de ver tIempo de revisión\"",
+   "Sevilla boss makes stunning Real Madrid accusation as VAR controversy erupts before El Clasico",
+   "Why did VAR not intervene in the Guler incident? The referees' committee justifies: we follow the television broadcast!",
+   "Pourquoi la VAR n'est-elle pas intervenue sur l'action de Güler ? La commission des arbitres se justifie : nous suivons la diffusion télévis..."
+  ],
+  "sites": {
+   "AT": 1,
+   "BE": 1,
+   "CH": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Real Madrid",
+   "SEVILLA",
+   "Arda Güler"
+  ],
+  "media": 14,
+  "name": "VAR",
+  "kind": "organization",
+  "qid": "Q28406836",
+  "label": "video assistant referee",
+  "description": "in association football, match official that reviews decisions made by the head referee with the use of video footage",
+  "links": 64,
+  "human": false,
+  "itemCountry": null,
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1071578,
+  "language": "nl",
+  "titles": [
+   "Competitievervalsing in Eredivisie zorgt voor ophef: 'Sport onrecht aangedaan'"
+  ],
+  "sites": {
+   "NL": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Eredivisie",
+   "Sem Steijn",
+   "Feyenoord"
+  ],
+  "media": 1,
+  "name": "Ronald Waterreus",
+  "kind": "person",
+  "qid": "Q374838",
+  "label": "Ronald Waterreus",
+  "description": "Dutch footballer (born 1970)",
+  "links": 24,
+  "human": true,
+  "itemCountry": null,
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1071578,
+  "language": "nl",
+  "titles": [
+   "Competitievervalsing in Eredivisie zorgt voor ophef: 'Sport onrecht aangedaan'"
+  ],
+  "sites": {
+   "NL": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Ronald Waterreus",
+   "Sem Steijn",
+   "Feyenoord"
+  ],
+  "media": 1,
+  "name": "Eredivisie",
+  "kind": "organization",
+  "qid": "Q167541",
+  "label": "Eredivisie",
+  "description": "professional association football league in the Netherlands",
+  "links": 74,
+  "human": false,
+  "itemCountry": "NL",
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1071578,
+  "language": "nl",
+  "titles": [
+   "Competitievervalsing in Eredivisie zorgt voor ophef: 'Sport onrecht aangedaan'"
+  ],
+  "sites": {
+   "NL": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Ronald Waterreus",
+   "Eredivisie",
+   "Feyenoord"
+  ],
+  "media": 1,
+  "name": "Sem Steijn",
+  "kind": "person",
+  "qid": "Q56787914",
+  "label": "Sem Steijn",
+  "description": "Dutch association football player",
+  "links": 18,
+  "human": true,
+  "itemCountry": "NL",
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1071578,
+  "language": "nl",
+  "titles": [
+   "Competitievervalsing in Eredivisie zorgt voor ophef: 'Sport onrecht aangedaan'"
+  ],
+  "sites": {
+   "NL": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Ronald Waterreus",
+   "Eredivisie",
+   "Sem Steijn"
+  ],
+  "media": 1,
+  "name": "Feyenoord",
+  "kind": "organization",
+  "qid": "Q868133",
+  "label": "Sparta-Feyenoord",
+  "description": "defunct Dutch baseball team",
+  "links": 5,
+  "human": false,
+  "itemCountry": "NL",
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1092347,
+  "language": "en",
+  "titles": [
+   "Now even RED CARDS go digital! Referee uses a 'smartphone' to dish out his punishments - but fans are not convinced"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Rentistas",
+   "Nacional"
+  ],
+  "media": 1,
+  "name": "Eduardo Varela",
+  "kind": "person",
+  "qid": "Q16238998",
+  "label": "Eduardo Varela",
+  "description": "Mexican journalist",
+  "links": 0,
+  "human": true,
+  "itemCountry": "MX",
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1092347,
+  "language": "en",
+  "titles": [
+   "Now even RED CARDS go digital! Referee uses a 'smartphone' to dish out his punishments - but fans are not convinced"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Eduardo Varela",
+   "Nacional"
+  ],
+  "media": 1,
+  "name": "Rentistas",
+  "kind": "organization",
+  "qid": "Q1022933",
+  "label": "C.A. Rentistas",
+  "description": "association football club",
+  "links": 21,
+  "human": false,
+  "itemCountry": "UY",
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1103262,
+  "language": "en",
+  "titles": [
+   "World Cup outbursts costs suspensions for Egypt coach Hassan and star Zico",
+   "Egypt coach, team director, and Zico suspended over referee criticism after Argentina defeat",
+   "FIFA suspends coach Hassan and forward Zico for three and five matches",
+   "FIFA žestoko kaznila Egipćane nakon poraza od Argentine",
+   "Fifa suspends Egypt coach Hassan over World Cup referee criticism",
+   "Duras sanciones a Egipto por criticar al árbitro en el Mundial"
+  ],
+  "sites": {
+   "FR": 1,
+   "DK": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Hossam Hassan",
+   "Mostafa Zico"
+  ],
+  "media": 10,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 191,
+  "storyId": 1103262,
+  "language": "en",
+  "titles": [
+   "World Cup outbursts costs suspensions for Egypt coach Hassan and star Zico",
+   "Egypt coach, team director, and Zico suspended over referee criticism after Argentina defeat",
+   "FIFA suspends coach Hassan and forward Zico for three and five matches",
+   "FIFA žestoko kaznila Egipćane nakon poraza od Argentine",
+   "Fifa suspends Egypt coach Hassan over World Cup referee criticism",
+   "Duras sanciones a Egipto por criticar al árbitro en el Mundial"
+  ],
+  "sites": {
+   "FR": 1,
+   "DK": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Mostafa Zico"
+  ],
+  "media": 10,
+  "name": "Hossam Hassan",
+  "kind": "person",
+  "qid": "Q448937",
+  "label": "Hossam Hassan",
+  "description": "Egyptian association football player and coach",
+  "links": 36,
+  "human": true,
+  "itemCountry": "EG",
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1103262,
+  "language": "en",
+  "titles": [
+   "World Cup outbursts costs suspensions for Egypt coach Hassan and star Zico",
+   "Egypt coach, team director, and Zico suspended over referee criticism after Argentina defeat",
+   "FIFA suspends coach Hassan and forward Zico for three and five matches",
+   "FIFA žestoko kaznila Egipćane nakon poraza od Argentine",
+   "Fifa suspends Egypt coach Hassan over World Cup referee criticism",
+   "Duras sanciones a Egipto por criticar al árbitro en el Mundial"
+  ],
+  "sites": {
+   "FR": 1,
+   "DK": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Hossam Hassan"
+  ],
+  "media": 10,
+  "name": "Mostafa Zico",
+  "kind": "person",
+  "qid": "Q121537482",
+  "label": "Mostafa Ziko",
+  "description": "Egyptian association football player",
+  "links": 29,
+  "human": true,
+  "itemCountry": "EG",
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1107205,
+  "language": "fr",
+  "titles": [
+   "Un expert en arbitrage crée la surprise à propos d'Al-Hilal et d'Al-Hazm : un penalty non accordé !",
+   "Refereeing Controversy Erupts After Al-Hilal vs Al-Hazm Match",
+   "A refereeing expert springs a surprise regarding Al-Hilal and Al-Hazm: a penalty that was not awarded!"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Al-Hilal",
+   "Saudi Pro League",
+   "Saad Al-Kathiri"
+  ],
+  "media": 2,
+  "name": "Al-Hazm",
+  "kind": "organization",
+  "qid": "Q26201058",
+  "label": "Al-Hazm",
+  "description": "human settlement in Oman",
+  "links": 2,
+  "human": false,
+  "itemCountry": "OM",
+  "international": false
+ },
+ {
+  "briefing": 191,
+  "storyId": 1107205,
+  "language": "fr",
+  "titles": [
+   "Un expert en arbitrage crée la surprise à propos d'Al-Hilal et d'Al-Hazm : un penalty non accordé !",
+   "Refereeing Controversy Erupts After Al-Hilal vs Al-Hazm Match",
+   "A refereeing expert springs a surprise regarding Al-Hilal and Al-Hazm: a penalty that was not awarded!"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Al-Hilal",
+   "Al-Hazm",
+   "Saad Al-Kathiri"
+  ],
+  "media": 2,
+  "name": "Saudi Pro League",
+  "kind": "organization",
+  "qid": "Q255633",
+  "label": "Saudi Pro League",
+  "description": "highest division of association football in the Saudi league system",
+  "links": 48,
+  "human": false,
+  "itemCountry": "SA",
+  "international": false
+ },
+ {
+  "briefing": 190,
+  "storyId": 995798,
+  "language": "en",
+  "titles": [
+   "CTA explains missing VAR review in Real Madrid's 4-1 win over Sevilla",
+   "Spanish Refereeing Committee Addresses Controversy Over Arda Güler's Non-Expulsion",
+   "Güler red card controversy rocks Spanish soccer as missing TV footage leaves VAR powerless",
+   "El Comité de Árbitros explica por qué el VAR no intervino en la expulsión de Güler, jugador del Real Madrid, y el Sevilla responde de inmediato: \"Ganas de ver tIempo de revisión\"",
+   "La explicación del CTA sobre lo ocurrido con Güler ante el Sevilla: \"Las cámaras del VAR son las mismas que las de televisión\"",
+   "Sevilla slam VAR as Arda Guler escapes red card in Real Madrid's 4-1 win"
+  ],
+  "sites": {
+   "ES": 1,
+   "ID": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Real Madrid",
+   "SEVILLA",
+   "FC Séville"
+  ],
+  "media": 15,
+  "name": "Arda Güler",
+  "kind": "person",
+  "qid": "Q108159340",
+  "label": "Αrda Güler",
+  "description": "Turkish association football player (born 2005)",
+  "links": 65,
+  "human": true,
+  "itemCountry": "TR",
+  "international": false
+ },
+ {
+  "briefing": 190,
+  "storyId": 995798,
+  "language": "en",
+  "titles": [
+   "CTA explains missing VAR review in Real Madrid's 4-1 win over Sevilla",
+   "Spanish Refereeing Committee Addresses Controversy Over Arda Güler's Non-Expulsion",
+   "Güler red card controversy rocks Spanish soccer as missing TV footage leaves VAR powerless",
+   "El Comité de Árbitros explica por qué el VAR no intervino en la expulsión de Güler, jugador del Real Madrid, y el Sevilla responde de inmediato: \"Ganas de ver tIempo de revisión\"",
+   "La explicación del CTA sobre lo ocurrido con Güler ante el Sevilla: \"Las cámaras del VAR son las mismas que las de televisión\"",
+   "Sevilla slam VAR as Arda Guler escapes red card in Real Madrid's 4-1 win"
+  ],
+  "sites": {
+   "ES": 1,
+   "ID": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Real Madrid",
+   "Arda Güler",
+   "FC Séville"
+  ],
+  "media": 15,
+  "name": "SEVILLA",
+  "kind": "organization",
+  "qid": "Q10329",
+  "label": "Sevilla FC",
+  "description": "Spanish professional football club based in Seville",
+  "links": 87,
+  "human": false,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 190,
+  "storyId": 1062611,
+  "language": "fr",
+  "titles": [
+   "Entre l'affaire Negreira et le scandale Al Ahly-Pyramids : qui est l'arbitre des « cinq filles » pressenti pour diriger le Clasico ?",
+   "Javier Alberola Rojas, the ‘five girls’ referee in the Clásico frame",
+   "The referee for \"El Clasico\" has been appointed, what is his record in Real and Barça matches?",
+   "El Clasico referee watch: Alberola Rojas’ record and controversial calls ahead of Barcelona vs Real Madrid",
+   "Between the Negreira case and the Al-Ahly and Pyramids scandal: who is the \"five girls\" referee tipped to officiate the Clasico?",
+   "Between the Negreira case and the Al Ahly and Pyramids scandal: who is the \"five girls\" referee tipped to take charge of the Clasico?"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Javier Alberola Rojas",
+   "Real Madrid"
+  ],
+  "media": 6,
+  "name": "Al Ahly",
+  "kind": "organization",
+  "qid": "Q223566",
+  "label": "Al Ahly SC",
+  "description": "association football club in Cairo, Egypt",
+  "links": 65,
+  "human": false,
+  "itemCountry": "EG",
+  "international": false
+ },
+ {
+  "briefing": 190,
+  "storyId": 1062611,
+  "language": "fr",
+  "titles": [
+   "Entre l'affaire Negreira et le scandale Al Ahly-Pyramids : qui est l'arbitre des « cinq filles » pressenti pour diriger le Clasico ?",
+   "Javier Alberola Rojas, the ‘five girls’ referee in the Clásico frame",
+   "The referee for \"El Clasico\" has been appointed, what is his record in Real and Barça matches?",
+   "El Clasico referee watch: Alberola Rojas’ record and controversial calls ahead of Barcelona vs Real Madrid",
+   "Between the Negreira case and the Al-Ahly and Pyramids scandal: who is the \"five girls\" referee tipped to officiate the Clasico?",
+   "Between the Negreira case and the Al Ahly and Pyramids scandal: who is the \"five girls\" referee tipped to take charge of the Clasico?"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Al Ahly",
+   "Real Madrid"
+  ],
+  "media": 6,
+  "name": "Javier Alberola Rojas",
+  "kind": "person",
+  "qid": "Q26421088",
+  "label": "Javier Alberola Rojas",
+  "description": "Football Referee",
+  "links": 9,
+  "human": true,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 190,
+  "storyId": 999928,
+  "language": "en",
+  "titles": [
+   "Howard Webb speaks out on Tottenham referee controversy - 'Should it really matter'"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Tottenham"
+  ],
+  "media": 1,
+  "name": "Howard Webb",
+  "kind": "person",
+  "qid": "Q187480",
+  "label": "Howard Webb",
+  "description": "English football referee",
+  "links": 53,
+  "human": true,
+  "itemCountry": "GB",
+  "international": false
+ },
+ {
+  "briefing": 190,
+  "storyId": 999928,
+  "language": "en",
+  "titles": [
+   "Howard Webb speaks out on Tottenham referee controversy - 'Should it really matter'"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Howard Webb"
+  ],
+  "media": 1,
+  "name": "Tottenham",
+  "kind": "organization",
+  "qid": "Q18741",
+  "label": "Tottenham Hotspur F.C.",
+  "description": "association football club in London, England",
+  "links": 102,
+  "human": false,
+  "itemCountry": "GB",
+  "international": false
+ },
+ {
+  "briefing": 190,
+  "storyId": 1044906,
+  "language": "el",
+  "titles": [
+   "ΠΑΟΚ – Ηρακλής: Το VAR χρωστά εξηγήσεις για το 85'",
+   "ΠΑΟΚ – Ηρακλής. Θολωμένα μυαλά, βαλς και φυσικά Φωτιάς",
+   "ΠΑΟΚ-Ηρακλής: Όλες οι αμφισβητούμενες φάσεις που οδήγησαν το VAR σε… υπερωρία! (vids)",
+   "Ανατροπή ΠΑΟΚ μέσω… VAR κόντρα στον Ηρακλή με αποδοκιμασίες – Η βαθμολογία της Super League",
+   "ΠΑΟΚ: Το VAR έσωσε τον Δικέφαλο με νέα απόφαση – σκάνδαλο"
+  ],
+  "sites": {
+   "GR": 6
+  },
+  "topic": "sport",
+  "others": [
+   "ΠΑΟΚ",
+   "Ηρακλή",
+   "Φωτιάς"
+  ],
+  "media": 5,
+  "name": "Ηρακλής",
+  "kind": "organization",
+  "qid": "Q592241",
+  "label": "G.S. Iraklis Thessalonikis (men's association football)",
+  "description": "association football team in Greece",
+  "links": 32,
+  "human": false,
+  "itemCountry": "GR",
+  "international": false
+ },
+ {
+  "briefing": 190,
+  "storyId": 1015476,
+  "language": "de",
+  "titles": [
+   "Riera wütet: Detektiv Albert und die UEFA",
+   "Albert Riera sorgt wieder für Aufsehen"
+  ],
+  "sites": {
+   "DE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Eintracht Frankfurt",
+   "Roter Stern Belgrad",
+   "UEFA"
+  ],
+  "media": 2,
+  "name": "Albert Riera",
+  "kind": "person",
+  "qid": "Q215435",
+  "label": "Albert Riera",
+  "description": "Spanish association football player",
+  "links": 43,
+  "human": true,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 190,
+  "storyId": 1015476,
+  "language": "de",
+  "titles": [
+   "Riera wütet: Detektiv Albert und die UEFA",
+   "Albert Riera sorgt wieder für Aufsehen"
+  ],
+  "sites": {
+   "DE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Albert Riera",
+   "Roter Stern Belgrad",
+   "UEFA"
+  ],
+  "media": 2,
+  "name": "Eintracht Frankfurt",
+  "kind": "organization",
+  "qid": "Q38245",
+  "label": "Eintracht Frankfurt",
+  "description": "sports club based in Frankfurt am Main, Hesse, Germany",
+  "links": 103,
+  "human": false,
+  "itemCountry": "DE",
+  "international": false
+ },
+ {
+  "briefing": 190,
+  "storyId": 1015476,
+  "language": "de",
+  "titles": [
+   "Riera wütet: Detektiv Albert und die UEFA",
+   "Albert Riera sorgt wieder für Aufsehen"
+  ],
+  "sites": {
+   "DE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Albert Riera",
+   "Eintracht Frankfurt",
+   "Roter Stern Belgrad"
+  ],
+  "media": 2,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 173,
+  "storyId": 863440,
+  "language": "fr",
+  "titles": [
+   "FIFA : Ramon Vega se lance à l’assaut de Gianni Infantino"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Ramon Vega",
+   "FIFA"
+  ],
+  "media": 1,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 173,
+  "storyId": 863440,
+  "language": "fr",
+  "titles": [
+   "FIFA : Ramon Vega se lance à l’assaut de Gianni Infantino"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Gianni Infantino",
+   "Ramon Vega"
+  ],
+  "media": 1,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 173,
+  "storyId": 995627,
+  "language": "en",
+  "titles": [
+   "Beckham has UEFA's support for his candidacy for FIFA presidency.",
+   "Beckham bénéficie du soutien de l'UEFA pour sa candidature à la présidence de la FIFA.",
+   "David Beckham bénéficie du soutien de l'UEFA dans sa candidature à la présidence de la FIFA face à Infantino.",
+   "David Beckham is being backed by UEFA in his bid for the FIFA presidency against Infantino.",
+   "En quête d'un rival pour Infantino, le football européen aurait-il Beckham en tête ?",
+   "Looking for a rival to Infantino, is European football calling out Beckham's name?"
+  ],
+  "sites": {
+   "VN": 10,
+   "MX": 1,
+   "KE": 1,
+   "DE": 2
+  },
+  "topic": "sport",
+  "others": [
+   "David Beckham",
+   "UEFA",
+   "Gianni Infantino"
+  ],
+  "media": 18,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 173,
+  "storyId": 995627,
+  "language": "en",
+  "titles": [
+   "Beckham has UEFA's support for his candidacy for FIFA presidency.",
+   "Beckham bénéficie du soutien de l'UEFA pour sa candidature à la présidence de la FIFA.",
+   "David Beckham bénéficie du soutien de l'UEFA dans sa candidature à la présidence de la FIFA face à Infantino.",
+   "David Beckham is being backed by UEFA in his bid for the FIFA presidency against Infantino.",
+   "En quête d'un rival pour Infantino, le football européen aurait-il Beckham en tête ?",
+   "Looking for a rival to Infantino, is European football calling out Beckham's name?"
+  ],
+  "sites": {
+   "VN": 10,
+   "MX": 1,
+   "KE": 1,
+   "DE": 2
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "UEFA",
+   "Gianni Infantino"
+  ],
+  "media": 18,
+  "name": "David Beckham",
+  "kind": "person",
+  "qid": "Q10520",
+  "label": "David Beckham",
+  "description": "English footballer (born 1975)",
+  "links": 139,
+  "human": true,
+  "itemCountry": "GB",
+  "international": false
+ },
+ {
+  "briefing": 173,
+  "storyId": 995627,
+  "language": "en",
+  "titles": [
+   "Beckham has UEFA's support for his candidacy for FIFA presidency.",
+   "Beckham bénéficie du soutien de l'UEFA pour sa candidature à la présidence de la FIFA.",
+   "David Beckham bénéficie du soutien de l'UEFA dans sa candidature à la présidence de la FIFA face à Infantino.",
+   "David Beckham is being backed by UEFA in his bid for the FIFA presidency against Infantino.",
+   "En quête d'un rival pour Infantino, le football européen aurait-il Beckham en tête ?",
+   "Looking for a rival to Infantino, is European football calling out Beckham's name?"
+  ],
+  "sites": {
+   "VN": 10,
+   "MX": 1,
+   "KE": 1,
+   "DE": 2
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "David Beckham",
+   "Gianni Infantino"
+  ],
+  "media": 18,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 173,
+  "storyId": 995627,
+  "language": "en",
+  "titles": [
+   "Beckham has UEFA's support for his candidacy for FIFA presidency.",
+   "Beckham bénéficie du soutien de l'UEFA pour sa candidature à la présidence de la FIFA.",
+   "David Beckham bénéficie du soutien de l'UEFA dans sa candidature à la présidence de la FIFA face à Infantino.",
+   "David Beckham is being backed by UEFA in his bid for the FIFA presidency against Infantino.",
+   "En quête d'un rival pour Infantino, le football européen aurait-il Beckham en tête ?",
+   "Looking for a rival to Infantino, is European football calling out Beckham's name?"
+  ],
+  "sites": {
+   "VN": 10,
+   "MX": 1,
+   "KE": 1,
+   "DE": 2
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "David Beckham",
+   "UEFA"
+  ],
+  "media": 18,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 173,
+  "storyId": 904113,
+  "language": "en",
+  "titles": [
+   "Sports news (October 17): Man City faces the risk of being banned from European competitions.",
+   "Manchester City Could Face 7–10-Year European Ban As Per Leak Report Claims",
+   "УЕФА спрема драконска казна: Манчестер Сити без Европа 10 години?!",
+   "Bericht: Diese Strafen könnten Man City bevorstehen",
+   "Brisanter Insider-Bericht - Wird Man City 10 Jahre gesperrt?",
+   "Man City set for Global Super League after UEFA ban and PL relegation in perfect final punishment"
+  ],
+  "sites": {
+   "VN": 2,
+   "MK": 3,
+   "AT": 1,
+   "DE": 3,
+   "PL": 1,
+   "GB": 1,
+   "RO": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Manchester City"
+  ],
+  "media": 17,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 173,
+  "storyId": 904113,
+  "language": "en",
+  "titles": [
+   "Sports news (October 17): Man City faces the risk of being banned from European competitions.",
+   "Manchester City Could Face 7–10-Year European Ban As Per Leak Report Claims",
+   "УЕФА спрема драконска казна: Манчестер Сити без Европа 10 години?!",
+   "Bericht: Diese Strafen könnten Man City bevorstehen",
+   "Brisanter Insider-Bericht - Wird Man City 10 Jahre gesperrt?",
+   "Man City set for Global Super League after UEFA ban and PL relegation in perfect final punishment"
+  ],
+  "sites": {
+   "VN": 2,
+   "MK": 3,
+   "AT": 1,
+   "DE": 3,
+   "PL": 1,
+   "GB": 1,
+   "RO": 2
+  },
+  "topic": "sport",
+  "others": [
+   "UEFA"
+  ],
+  "media": 17,
+  "name": "Manchester City",
+  "kind": "organization",
+  "qid": "Q50602",
+  "label": "Manchester City F.C.",
+  "description": "association football club in Manchester, England",
+  "links": 118,
+  "human": false,
+  "itemCountry": "GB",
+  "international": false
+ },
+ {
+  "briefing": 173,
+  "storyId": 969493,
+  "language": "it",
+  "titles": [
+   "Calvarese: \"L'indirizzo della Uefa è chiaro: arbitro più centrale, meno uso del Var\"",
+   "Calvarese, cambia tutto per gli arbitri in Serie A e in Europa: «Il Var non deve trasformarsi in una seconda direzione arbitrale»"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "UEFA",
+   "Serie A"
+  ],
+  "media": 2,
+  "name": "Calvarese",
+  "kind": "person",
+  "qid": "Q18496322",
+  "label": "Calvarese",
+  "description": "frazione of Comunanza, Italy",
+  "links": 4,
+  "human": false,
+  "itemCountry": "IT",
+  "international": false
+ },
+ {
+  "briefing": 173,
+  "storyId": 969493,
+  "language": "it",
+  "titles": [
+   "Calvarese: \"L'indirizzo della Uefa è chiaro: arbitro più centrale, meno uso del Var\"",
+   "Calvarese, cambia tutto per gli arbitri in Serie A e in Europa: «Il Var non deve trasformarsi in una seconda direzione arbitrale»"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Calvarese",
+   "Serie A"
+  ],
+  "media": 2,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 173,
+  "storyId": 969493,
+  "language": "it",
+  "titles": [
+   "Calvarese: \"L'indirizzo della Uefa è chiaro: arbitro più centrale, meno uso del Var\"",
+   "Calvarese, cambia tutto per gli arbitri in Serie A e in Europa: «Il Var non deve trasformarsi in una seconda direzione arbitrale»"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Calvarese",
+   "UEFA"
+  ],
+  "media": 2,
+  "name": "Serie A",
+  "kind": "organization",
+  "qid": "Q15804",
+  "label": "Q15804",
+  "description": "professional league competition for football clubs located at the top of the Italian football league system",
+  "links": 107,
+  "human": false,
+  "itemCountry": "IT",
+  "international": false
+ },
+ {
+  "briefing": 173,
+  "storyId": 912194,
+  "language": "en",
+  "titles": [
+   "UEFA",
+   "România, în semifinala Unity EURO Cup 2026, turneu UEFA cu 22 de echipe pentru a celebra incluziunea prin fotbal",
+   "România, în semifinalele Unity EURO Cup: fotbalul care unește refugiați și comunități",
+   "România, în semifinale la Unity EURO Cup 2026, turneu UEFA cu 22 de echipe pentru a celebra incluziunea prin fotbal"
+  ],
+  "sites": {
+   "RO": 3
+  },
+  "topic": "sport",
+  "others": [
+   "Unhcr",
+   "Comisiei Europene",
+   "România"
+  ],
+  "media": 4,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 173,
+  "storyId": 912194,
+  "language": "en",
+  "titles": [
+   "UEFA",
+   "România, în semifinala Unity EURO Cup 2026, turneu UEFA cu 22 de echipe pentru a celebra incluziunea prin fotbal",
+   "România, în semifinalele Unity EURO Cup: fotbalul care unește refugiați și comunități",
+   "România, în semifinale la Unity EURO Cup 2026, turneu UEFA cu 22 de echipe pentru a celebra incluziunea prin fotbal"
+  ],
+  "sites": {
+   "RO": 3
+  },
+  "topic": "sport",
+  "others": [
+   "UEFA",
+   "Unhcr",
+   "Comisiei Europene"
+  ],
+  "media": 4,
+  "name": "România",
+  "kind": "organization",
+  "qid": "Q218",
+  "label": "Romania",
+  "description": "country in Southeast Europe",
+  "links": 348,
+  "human": false,
+  "itemCountry": "RO",
+  "international": false
+ },
+ {
+  "briefing": 173,
+  "storyId": 945451,
+  "language": "fr",
+  "titles": [
+   "Réforme de la gouvernance : ça a chauffé entre trois présidents de clubs et la FFF",
+   "Football : la FFF et les clubs se déchirent encore",
+   "Ligue 1 : le ton monte entre trois présidents de clubs et la FFF sur la réforme de la gouvernance",
+   "LFP - Olivier Létang et deux présidents de clubs ont eu un échange houleux avec la FFF",
+   "Réforme de la gouvernance : le ton monte entre des présidents de clubs et la FFF"
+  ],
+  "sites": {
+   "FR": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Ligue 1"
+  ],
+  "media": 5,
+  "name": "FFF",
+  "kind": "organization",
+  "qid": "Q244750",
+  "label": "French Football Federation",
+  "description": "governing body of association football in France",
+  "links": 51,
+  "human": false,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 173,
+  "storyId": 945451,
+  "language": "fr",
+  "titles": [
+   "Réforme de la gouvernance : ça a chauffé entre trois présidents de clubs et la FFF",
+   "Football : la FFF et les clubs se déchirent encore",
+   "Ligue 1 : le ton monte entre trois présidents de clubs et la FFF sur la réforme de la gouvernance",
+   "LFP - Olivier Létang et deux présidents de clubs ont eu un échange houleux avec la FFF",
+   "Réforme de la gouvernance : le ton monte entre des présidents de clubs et la FFF"
+  ],
+  "sites": {
+   "FR": 2
+  },
+  "topic": "sport",
+  "others": [
+   "FFF"
+  ],
+  "media": 5,
+  "name": "Ligue 1",
+  "kind": "organization",
+  "qid": "Q13394",
+  "label": "Ligue 1",
+  "description": "French professional league for men's association football clubs",
+  "links": 86,
+  "human": false,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 173,
+  "storyId": 798086,
+  "language": "en",
+  "titles": [
+   "Gianni Infantino under Fire again as FIFA insiders reveal new details of USMNT’s Folarin Balogun red card saga at 2026 World Cup",
+   "Gianni Infantino reportedly received $1.72 million in undisclosed World Cup compensation",
+   "Gianni Infantino faces growing questions over reported World Cup stake sale",
+   "FIFA prepara alteração da regra que beneficiou Folarin Balogun e Cristiano Ronaldo",
+   "Σάλος στην FIFA: Αλλάζουν κανονισμοί με παρέμβαση Ινφαντίνο!",
+   "La FIFA va modifier l’article 27 après la controverse autour de l’affaire Balogun"
+  ],
+  "sites": {
+   "PT": 3,
+   "GR": 1,
+   "ZA": 3,
+   "VN": 1,
+   "BE": 1,
+   "IT": 1,
+   "NL": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Gianni Infantino",
+   "Folarin Balogun"
+  ],
+  "media": 15,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 173,
+  "storyId": 798086,
+  "language": "en",
+  "titles": [
+   "Gianni Infantino under Fire again as FIFA insiders reveal new details of USMNT’s Folarin Balogun red card saga at 2026 World Cup",
+   "Gianni Infantino reportedly received $1.72 million in undisclosed World Cup compensation",
+   "Gianni Infantino faces growing questions over reported World Cup stake sale",
+   "FIFA prepara alteração da regra que beneficiou Folarin Balogun e Cristiano Ronaldo",
+   "Σάλος στην FIFA: Αλλάζουν κανονισμοί με παρέμβαση Ινφαντίνο!",
+   "La FIFA va modifier l’article 27 après la controverse autour de l’affaire Balogun"
+  ],
+  "sites": {
+   "PT": 3,
+   "GR": 1,
+   "ZA": 3,
+   "VN": 1,
+   "BE": 1,
+   "IT": 1,
+   "NL": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Folarin Balogun"
+  ],
+  "media": 15,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 173,
+  "storyId": 798086,
+  "language": "en",
+  "titles": [
+   "Gianni Infantino under Fire again as FIFA insiders reveal new details of USMNT’s Folarin Balogun red card saga at 2026 World Cup",
+   "Gianni Infantino reportedly received $1.72 million in undisclosed World Cup compensation",
+   "Gianni Infantino faces growing questions over reported World Cup stake sale",
+   "FIFA prepara alteração da regra que beneficiou Folarin Balogun e Cristiano Ronaldo",
+   "Σάλος στην FIFA: Αλλάζουν κανονισμοί με παρέμβαση Ινφαντίνο!",
+   "La FIFA va modifier l’article 27 après la controverse autour de l’affaire Balogun"
+  ],
+  "sites": {
+   "PT": 3,
+   "GR": 1,
+   "ZA": 3,
+   "VN": 1,
+   "BE": 1,
+   "IT": 1,
+   "NL": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Gianni Infantino"
+  ],
+  "media": 15,
+  "name": "Folarin Balogun",
+  "kind": "person",
+  "qid": "Q101035007",
+  "label": "Folarin Balogun",
+  "description": "American footballer (born 2001)",
+  "links": 46,
+  "human": true,
+  "itemCountry": "US",
+  "international": false
+ },
+ {
+  "briefing": 173,
+  "storyId": 962685,
+  "language": "fr",
+  "titles": [
+   "Madagascar : Des arbitres interpellent la FIFA et la CAF sur des pressions et des traitements jugés discriminatoires",
+   "VIDÉO. Madagascar: des arbitres de football dénoncent les pressions qu'ils disent subir",
+   "Football malgache: des arbitres interpellent la Fifa et la Caf"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "CAF"
+  ],
+  "media": 3,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 173,
+  "storyId": 962685,
+  "language": "fr",
+  "titles": [
+   "Madagascar : Des arbitres interpellent la FIFA et la CAF sur des pressions et des traitements jugés discriminatoires",
+   "VIDÉO. Madagascar: des arbitres de football dénoncent les pressions qu'ils disent subir",
+   "Football malgache: des arbitres interpellent la Fifa et la Caf"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "FIFA"
+  ],
+  "media": 3,
+  "name": "CAF",
+  "kind": "organization",
+  "qid": "Q168360",
+  "label": "Confederation of African Football",
+  "description": "governing body of association football in Africa",
+  "links": 80,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 173,
+  "storyId": 921018,
+  "language": "en",
+  "titles": [
+   "Spain to file CAS appeal over FIFA penalty for Islamophobic chants",
+   "Spain to file CAS appeal over Fifa penalty for Islamophobic chants",
+   "Spain fined for Islamophobic chants against African nation",
+   "Thirrjet e tifozëve në ndeshjen miqësore me Egjiptin, FIFA gjobit Spanjën me 20,000 dollarë",
+   "« Qui ne saute pas est musulman » : la Fédération espagnole de football sanctionnée après les incidents contre l’Égypte",
+   "Espanha é punida pela Fifa por cantos islamofóbicos em amistoso contra o Egito"
+  ],
+  "sites": {
+   "AL": 1,
+   "FR": 1,
+   "BR": 2,
+   "TR": 1,
+   "PT": 9,
+   "CA": 1,
+   "NG": 1,
+   "HR": 1,
+   "MA": 1
+  },
+  "topic": "sport",
+  "others": [],
+  "media": 30,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 173,
+  "storyId": 937190,
+  "language": "en",
+  "titles": [
+   "Morocco’s new government has new finance minister, keeps foreign, interior ministers unchanged",
+   "Morocco: Fouzi Lekjaa, head of Moroccan football, appointed Minister of Economy and Finance",
+   "Fouzi Lekjaa, el presidente de la Federación marroquí, asciende a Ministro de Economía",
+   "Fouzi Lekjaa, el hombre que transformó el fútbol marroquí, nuevo ministro de Economía",
+   "Morocco’s Football Chief appointed new Economy and Finance Minister",
+   "Maroc : Le patron du football africain hérite du portefeuille des Finances"
+  ],
+  "sites": {
+   "KE": 1
+  },
+  "topic": "politics",
+  "others": [],
+  "media": 8,
+  "name": "Fouzi Lekjaa",
+  "kind": "person",
+  "qid": "Q19365724",
+  "label": "Fouzi Lekjaa",
+  "description": "Moroccan politician",
+  "links": 9,
+  "human": true,
+  "itemCountry": "MA",
+  "international": false
+ },
+ {
+  "briefing": 173,
+  "storyId": 961691,
+  "language": "en",
+  "titles": [
+   "Safa consults with Cosafa to fast-track delayed VAR training for local referees"
+  ],
+  "sites": {
+   "ZA": 5
+  },
+  "topic": "sport",
+  "others": [
+   "SAFA"
+  ],
+  "media": 4,
+  "name": "COSAFA",
+  "kind": "organization",
+  "qid": "Q1137026",
+  "label": "Council of Southern Africa Football Associations",
+  "description": "football association in Southern Africa",
+  "links": 27,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 173,
+  "storyId": 1023504,
+  "language": "en",
+  "titles": [
+   "‘Like being a shit celebrity’: Inside the world of top-level football referees"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "William Ralston"
+  ],
+  "media": 1,
+  "name": "Thierry Henry",
+  "kind": "person",
+  "qid": "Q45901",
+  "label": "Thierry Henry",
+  "description": "French association football player and manager",
+  "links": 103,
+  "human": true,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 173,
+  "storyId": 945378,
+  "language": "de",
+  "titles": [
+   "UEFA übergeht Spaniens Schiedsrichter – nicht zum ersten Mal"
+  ],
+  "sites": {
+   "DE": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Spanier"
+  ],
+  "media": 1,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 173,
+  "storyId": 880337,
+  "language": "en",
+  "titles": [
+   "Is FIFA scrapping its peace prize after awarding it to US President Trump?",
+   "FIFA reconsiders controversial ‘Peace Prize’ it gave Donald Trump",
+   "Trump’s FIFA Peace Prize Under Investigation Over Award Decision",
+   "La prix de la paix en question : la FIFA réexamine sa position après l'hommage rendu à Trump",
+   "FIFA to Reconsider Peace Prize After Trump Received Inaugural Award",
+   "La FIFA étudie la suppression du prix de la paix après la polémique Trump"
+  ],
+  "sites": {
+   "BG": 1,
+   "FR": 1,
+   "GR": 3
+  },
+  "topic": "sport",
+  "others": [
+   "Donald Trump"
+  ],
+  "media": 15,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 173,
+  "storyId": 880337,
+  "language": "en",
+  "titles": [
+   "Is FIFA scrapping its peace prize after awarding it to US President Trump?",
+   "FIFA reconsiders controversial ‘Peace Prize’ it gave Donald Trump",
+   "Trump’s FIFA Peace Prize Under Investigation Over Award Decision",
+   "La prix de la paix en question : la FIFA réexamine sa position après l'hommage rendu à Trump",
+   "FIFA to Reconsider Peace Prize After Trump Received Inaugural Award",
+   "La FIFA étudie la suppression du prix de la paix après la polémique Trump"
+  ],
+  "sites": {
+   "BG": 1,
+   "FR": 1,
+   "GR": 3
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA"
+  ],
+  "media": 15,
+  "name": "Donald Trump",
+  "kind": "person",
+  "qid": "Q22686",
+  "label": "Donald Trump",
+  "description": "President of the United States (2017–2021; since 2025)",
+  "links": 334,
+  "human": true,
+  "itemCountry": "US",
+  "international": false
+ },
+ {
+  "briefing": 173,
+  "storyId": 949012,
+  "language": "en",
+  "titles": [
+   "FIFA normalisation committees: What are they & How they Work"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [],
+  "media": 1,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 173,
+  "storyId": 945376,
+  "language": "en",
+  "titles": [
+   "The governance imprint and sustainable development challenges of the Vietnam Football Federation in its 9th term.",
+   "L’empreinte de la gouvernance et les défis du développement durable de la Fédération vietnamienne de football durant son 9e mandat."
+  ],
+  "sites": {
+   "VN": 3
+  },
+  "topic": "sport",
+  "others": [],
+  "media": 1,
+  "name": "Vietnam Football Federation",
+  "kind": "organization",
+  "qid": "Q849362",
+  "label": "Vietnam Football Federation",
+  "description": "sports governing body",
+  "links": 27,
+  "human": false,
+  "itemCountry": "VN",
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 920930,
+  "language": "ro",
+  "titles": [
+   "Au apărut înregistrările VAR după scandalul de la Betis – Barcelona! Ce și-au spus arbitrii la golul anulat",
+   "Barcelona ganó con un golazo de Yamal, le anularon otro a Lo Celso y Pellegrini explotó contra el árbitro",
+   "Lamine Yamal deslumbra con una obra de arte ante el Betis: la otra toma de su golazo",
+   "¿Se salvó de la roja? Arbitraje marca el Betis vs Barcelona y a Lamine Yamal",
+   "La Cartuja también se vence a Lamine Yamal y el Barcelona golea al Betis",
+   "Rodri elogia al Betis con un palo al césped de La Cartuja y destaca lo 'invisible' de Lamine Yamal: \"Aporta cosas diferentes\""
+  ],
+  "sites": {
+   "RO": 2,
+   "AR": 2,
+   "MX": 1,
+   "ES": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Barcelona",
+   "Lamine Yamal"
+  ],
+  "media": 9,
+  "name": "Betis",
+  "kind": "organization",
+  "qid": "Q8723",
+  "label": "Real Betis Balompié",
+  "description": "Spanish professional football club",
+  "links": 77,
+  "human": false,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 920930,
+  "language": "ro",
+  "titles": [
+   "Au apărut înregistrările VAR după scandalul de la Betis – Barcelona! Ce și-au spus arbitrii la golul anulat",
+   "Barcelona ganó con un golazo de Yamal, le anularon otro a Lo Celso y Pellegrini explotó contra el árbitro",
+   "Lamine Yamal deslumbra con una obra de arte ante el Betis: la otra toma de su golazo",
+   "¿Se salvó de la roja? Arbitraje marca el Betis vs Barcelona y a Lamine Yamal",
+   "La Cartuja también se vence a Lamine Yamal y el Barcelona golea al Betis",
+   "Rodri elogia al Betis con un palo al césped de La Cartuja y destaca lo 'invisible' de Lamine Yamal: \"Aporta cosas diferentes\""
+  ],
+  "sites": {
+   "RO": 2,
+   "AR": 2,
+   "MX": 1,
+   "ES": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Betis",
+   "Lamine Yamal"
+  ],
+  "media": 9,
+  "name": "Barcelona",
+  "kind": "organization",
+  "qid": "Q7156",
+  "label": "FC Barcelona",
+  "description": "football club in Barcelona, Catalonia, Spain",
+  "links": 155,
+  "human": false,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 920930,
+  "language": "ro",
+  "titles": [
+   "Au apărut înregistrările VAR după scandalul de la Betis – Barcelona! Ce și-au spus arbitrii la golul anulat",
+   "Barcelona ganó con un golazo de Yamal, le anularon otro a Lo Celso y Pellegrini explotó contra el árbitro",
+   "Lamine Yamal deslumbra con una obra de arte ante el Betis: la otra toma de su golazo",
+   "¿Se salvó de la roja? Arbitraje marca el Betis vs Barcelona y a Lamine Yamal",
+   "La Cartuja también se vence a Lamine Yamal y el Barcelona golea al Betis",
+   "Rodri elogia al Betis con un palo al césped de La Cartuja y destaca lo 'invisible' de Lamine Yamal: \"Aporta cosas diferentes\""
+  ],
+  "sites": {
+   "RO": 2,
+   "AR": 2,
+   "MX": 1,
+   "ES": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Betis",
+   "Barcelona"
+  ],
+  "media": 9,
+  "name": "Lamine Yamal",
+  "kind": "person",
+  "qid": "Q113704154",
+  "label": "Lamine Yamal",
+  "description": "Spanish association football player (born 2007)",
+  "links": 98,
+  "human": true,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 709516,
+  "language": "el",
+  "titles": [
+   "Οι goal-line cameras έρχονται στη Super League: Όλα όσα πρέπει να ξέρετε",
+   "Goal Line Cameras και Goal-Line Technology: Ποιες είναι οι διαφορές και τι αλλάζει στη Super League",
+   "Super League: Έρχονται οι Goal-Line Cameras από την 8η αγωνιστική",
+   "Super League: Goal Line Cameras από την 8η αγωνιστική",
+   "Επίσημο: Ξεκινάνε oι Goal-line cameras στη Stoiximan Super League - Όσα πρέπει να ξέρετε",
+   "Super League: Goal Line Cameras από την 8η αγωνιστική, όλες οι λεπτομέρειες για τον τρόπο λειτουργίας τους"
+  ],
+  "sites": {
+   "GR": 13
+  },
+  "topic": "sport",
+  "others": [
+   "Stoiximan Super League"
+  ],
+  "media": 13,
+  "name": "Super League",
+  "kind": "organization",
+  "qid": "Q202699",
+  "label": "Swiss Super League",
+  "description": "Swiss men's association football top division",
+  "links": 51,
+  "human": false,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 709516,
+  "language": "el",
+  "titles": [
+   "Οι goal-line cameras έρχονται στη Super League: Όλα όσα πρέπει να ξέρετε",
+   "Goal Line Cameras και Goal-Line Technology: Ποιες είναι οι διαφορές και τι αλλάζει στη Super League",
+   "Super League: Έρχονται οι Goal-Line Cameras από την 8η αγωνιστική",
+   "Super League: Goal Line Cameras από την 8η αγωνιστική",
+   "Επίσημο: Ξεκινάνε oι Goal-line cameras στη Stoiximan Super League - Όσα πρέπει να ξέρετε",
+   "Super League: Goal Line Cameras από την 8η αγωνιστική, όλες οι λεπτομέρειες για τον τρόπο λειτουργίας τους"
+  ],
+  "sites": {
+   "GR": 13
+  },
+  "topic": "sport",
+  "others": [
+   "Super League"
+  ],
+  "media": 13,
+  "name": "Stoiximan Super League",
+  "kind": "organization",
+  "qid": "Q235114",
+  "label": "Super League Greece",
+  "description": "first-tier professional men's association football league in Greece",
+  "links": 48,
+  "human": false,
+  "itemCountry": "GR",
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 976373,
+  "language": "ro",
+  "titles": [
+   "Românul Feșnic și brigada lui, protagoniști pe paginile UEFA: „Ce face un arbitru de Europa League înaintea meciului?”"
+  ],
+  "sites": {
+   "RO": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Europa League",
+   "UEFA"
+  ],
+  "media": 1,
+  "name": "Horatiu Fesnic",
+  "kind": "person",
+  "qid": "Q42907713",
+  "label": "Horațiu Feșnic",
+  "description": "Angajat cu normă întreagă la stâna lui Becali",
+  "links": 6,
+  "human": true,
+  "itemCountry": "RO",
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 976373,
+  "language": "ro",
+  "titles": [
+   "Românul Feșnic și brigada lui, protagoniști pe paginile UEFA: „Ce face un arbitru de Europa League înaintea meciului?”"
+  ],
+  "sites": {
+   "RO": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Horatiu Fesnic",
+   "UEFA"
+  ],
+  "media": 1,
+  "name": "Europa League",
+  "kind": "organization",
+  "qid": "Q18760",
+  "label": "UEFA Europa League",
+  "description": "annual association football competition in Europe",
+  "links": 102,
+  "human": false,
+  "itemCountry": null,
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 976373,
+  "language": "ro",
+  "titles": [
+   "Românul Feșnic și brigada lui, protagoniști pe paginile UEFA: „Ce face un arbitru de Europa League înaintea meciului?”"
+  ],
+  "sites": {
+   "RO": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Horatiu Fesnic",
+   "Europa League"
+  ],
+  "media": 1,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 172,
+  "storyId": 960479,
+  "language": "tr",
+  "titles": [
+   "Kadın semineri"
+  ],
+  "sites": {
+   "TR": 2
+  },
+  "topic": "sport",
+  "others": [
+   "UEFA",
+   "VAR",
+   "MHK"
+  ],
+  "media": 1,
+  "name": "Taylor",
+  "kind": "person",
+  "qid": "Q136673266",
+  "label": "Kamario Taylor",
+  "description": "American football player (born 2007)",
+  "links": 2,
+  "human": true,
+  "itemCountry": "US",
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 960479,
+  "language": "tr",
+  "titles": [
+   "Kadın semineri"
+  ],
+  "sites": {
+   "TR": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Taylor",
+   "VAR",
+   "MHK"
+  ],
+  "media": 1,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 172,
+  "storyId": 960479,
+  "language": "tr",
+  "titles": [
+   "Kadın semineri"
+  ],
+  "sites": {
+   "TR": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Taylor",
+   "UEFA",
+   "MHK"
+  ],
+  "media": 1,
+  "name": "VAR",
+  "kind": "organization",
+  "qid": "Q28406836",
+  "label": "video assistant referee",
+  "description": "in association football, match official that reviews decisions made by the head referee with the use of video footage",
+  "links": 64,
+  "human": false,
+  "itemCountry": null,
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 1015943,
+  "language": "nl",
+  "titles": [
+   "Penalty Feyenoord en VAR maken veel los: 'Als je gevoetbald hebt...'"
+  ],
+  "sites": {
+   "NL": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Ronald Waterreus",
+   "Feyenoord",
+   "Telstar"
+  ],
+  "media": 1,
+  "name": "Jeroen Manschot",
+  "kind": "person",
+  "qid": "Q15876999",
+  "label": "Jeroen Manschot",
+  "description": "Dutch association football referee",
+  "links": 2,
+  "human": true,
+  "itemCountry": "NL",
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 1015943,
+  "language": "nl",
+  "titles": [
+   "Penalty Feyenoord en VAR maken veel los: 'Als je gevoetbald hebt...'"
+  ],
+  "sites": {
+   "NL": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Ronald Waterreus",
+   "Jeroen Manschot",
+   "Telstar"
+  ],
+  "media": 1,
+  "name": "Feyenoord",
+  "kind": "organization",
+  "qid": "Q868133",
+  "label": "Sparta-Feyenoord",
+  "description": "defunct Dutch baseball team",
+  "links": 5,
+  "human": false,
+  "itemCountry": "NL",
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 1015943,
+  "language": "nl",
+  "titles": [
+   "Penalty Feyenoord en VAR maken veel los: 'Als je gevoetbald hebt...'"
+  ],
+  "sites": {
+   "NL": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Ronald Waterreus",
+   "Jeroen Manschot",
+   "Feyenoord"
+  ],
+  "media": 1,
+  "name": "Telstar",
+  "kind": "organization",
+  "qid": "Q1071713",
+  "label": "SC Telstar",
+  "description": "association football club in IJmuiden, Netherlands",
+  "links": 32,
+  "human": false,
+  "itemCountry": "NL",
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 807320,
+  "language": "en",
+  "titles": [
+   "Rangers given new 'foul' verdict before Dundee goal as VAR decision leaves players raging"
+  ],
+  "sites": {
+   "GB": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Rangers"
+  ],
+  "media": 1,
+  "name": "The Dark Blues",
+  "kind": "organization",
+  "qid": "Q335483",
+  "label": "Dundee F.C.",
+  "description": "association football club in Dundee, Scotland",
+  "links": 47,
+  "human": false,
+  "itemCountry": "GB",
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 807320,
+  "language": "en",
+  "titles": [
+   "Rangers given new 'foul' verdict before Dundee goal as VAR decision leaves players raging"
+  ],
+  "sites": {
+   "GB": 2
+  },
+  "topic": "sport",
+  "others": [
+   "The Dark Blues"
+  ],
+  "media": 1,
+  "name": "Rangers",
+  "kind": "organization",
+  "qid": "Q19597",
+  "label": "Rangers F.C.",
+  "description": "association football club in Glasgow, Scotland",
+  "links": 80,
+  "human": false,
+  "itemCountry": "GB",
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 443562,
+  "language": "en",
+  "titles": [
+   "Infantino apology fails to sway England, Germany over FIFA future",
+   "Infantino apologized, but reelection as FIFA president remains far from certain",
+   "Fifa-Präsident Infantino: Einmal sorry! Und mehr Geld für alle! Aber der Machtkampf geht weiter",
+   "Gianni Infantino apologizes to FIFA Council amid calls for transparency",
+   "Infantino: «Ich möchte mich entschuldigen, aber...»",
+   "FIFA Approves $6.35 Billion Development Plan After Infantino Apologizes for Controversial Proposal"
+  ],
+  "sites": {
+   "DE": 2,
+   "CH": 1,
+   "KE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "FIFA Council"
+  ],
+  "media": 11,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 443562,
+  "language": "en",
+  "titles": [
+   "Infantino apology fails to sway England, Germany over FIFA future",
+   "Infantino apologized, but reelection as FIFA president remains far from certain",
+   "Fifa-Präsident Infantino: Einmal sorry! Und mehr Geld für alle! Aber der Machtkampf geht weiter",
+   "Gianni Infantino apologizes to FIFA Council amid calls for transparency",
+   "Infantino: «Ich möchte mich entschuldigen, aber...»",
+   "FIFA Approves $6.35 Billion Development Plan After Infantino Apologizes for Controversial Proposal"
+  ],
+  "sites": {
+   "DE": 2,
+   "CH": 1,
+   "KE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Gianni Infantino",
+   "FIFA Council"
+  ],
+  "media": 11,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 172,
+  "storyId": 443562,
+  "language": "en",
+  "titles": [
+   "Infantino apology fails to sway England, Germany over FIFA future",
+   "Infantino apologized, but reelection as FIFA president remains far from certain",
+   "Fifa-Präsident Infantino: Einmal sorry! Und mehr Geld für alle! Aber der Machtkampf geht weiter",
+   "Gianni Infantino apologizes to FIFA Council amid calls for transparency",
+   "Infantino: «Ich möchte mich entschuldigen, aber...»",
+   "FIFA Approves $6.35 Billion Development Plan After Infantino Apologizes for Controversial Proposal"
+  ],
+  "sites": {
+   "DE": 2,
+   "CH": 1,
+   "KE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Gianni Infantino",
+   "FIFA"
+  ],
+  "media": 11,
+  "name": "FIFA Council",
+  "kind": "organization",
+  "qid": "Q1388490",
+  "label": "FIFA Council",
+  "description": "institution",
+  "links": 16,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 172,
+  "storyId": 683501,
+  "language": "el",
+  "titles": [
+   "Σάλος στην FIFA: Αλλάζουν κανονισμοί με παρέμβαση Ινφαντίνο!",
+   "Fifa-Präsident Infantino: Einmal sorry! Und mehr Geld für alle! Aber der Machtkampf geht weiter",
+   "Ο Ινφαντίνο ζήτησε δημόσια συγγνώμη για το αμφιλεγόμενο σχέδιο της FIFA",
+   "Infantino: «Ich möchte mich entschuldigen, aber...»",
+   "Ο Ινφαντίνο ζήτησε συγγνώμη από το Συμβούλιο της FIFA",
+   "Fifa-Boss: „War nur ein Vorschlag“: Infantino entschuldigt sich für WM-Pläne"
+  ],
+  "sites": {
+   "GR": 4,
+   "DE": 2,
+   "CH": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "FIFA-Präsident",
+   "Ο Ινφαντίνο"
+  ],
+  "media": 6,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 172,
+  "storyId": 683501,
+  "language": "el",
+  "titles": [
+   "Σάλος στην FIFA: Αλλάζουν κανονισμοί με παρέμβαση Ινφαντίνο!",
+   "Fifa-Präsident Infantino: Einmal sorry! Und mehr Geld für alle! Aber der Machtkampf geht weiter",
+   "Ο Ινφαντίνο ζήτησε δημόσια συγγνώμη για το αμφιλεγόμενο σχέδιο της FIFA",
+   "Infantino: «Ich möchte mich entschuldigen, aber...»",
+   "Ο Ινφαντίνο ζήτησε συγγνώμη από το Συμβούλιο της FIFA",
+   "Fifa-Boss: „War nur ein Vorschlag“: Infantino entschuldigt sich für WM-Pläne"
+  ],
+  "sites": {
+   "GR": 4,
+   "DE": 2,
+   "CH": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Gianni Infantino",
+   "FIFA-Präsident",
+   "Ο Ινφαντίνο"
+  ],
+  "media": 6,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 172,
+  "storyId": 683501,
+  "language": "el",
+  "titles": [
+   "Σάλος στην FIFA: Αλλάζουν κανονισμοί με παρέμβαση Ινφαντίνο!",
+   "Fifa-Präsident Infantino: Einmal sorry! Und mehr Geld für alle! Aber der Machtkampf geht weiter",
+   "Ο Ινφαντίνο ζήτησε δημόσια συγγνώμη για το αμφιλεγόμενο σχέδιο της FIFA",
+   "Infantino: «Ich möchte mich entschuldigen, aber...»",
+   "Ο Ινφαντίνο ζήτησε συγγνώμη από το Συμβούλιο της FIFA",
+   "Fifa-Boss: „War nur ein Vorschlag“: Infantino entschuldigt sich für WM-Pläne"
+  ],
+  "sites": {
+   "GR": 4,
+   "DE": 2,
+   "CH": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Gianni Infantino",
+   "FIFA",
+   "Ο Ινφαντίνο"
+  ],
+  "media": 6,
+  "name": "FIFA-Präsident",
+  "kind": "organization",
+  "qid": "Q22955080",
+  "label": "president of FIFA",
+  "description": "",
+  "links": 0,
+  "human": false,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 167,
+  "storyId": 1040450,
+  "language": "de",
+  "titles": [
+   "FIFA-Machtkampf - die Chancen der Gegner von Gianni Infantino",
+   "Présidence de la Fifa: à un mois de la clôture des candidatures, Infantino fait le tour de ses soutiens"
+  ],
+  "sites": {
+   "DE": 2
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Europas Verbände",
+   "Fifa-Machtkampf"
+  ],
+  "media": 2,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 167,
+  "storyId": 1040450,
+  "language": "de",
+  "titles": [
+   "FIFA-Machtkampf - die Chancen der Gegner von Gianni Infantino",
+   "Présidence de la Fifa: à un mois de la clôture des candidatures, Infantino fait le tour de ses soutiens"
+  ],
+  "sites": {
+   "DE": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Gianni Infantino",
+   "Europas Verbände",
+   "Fifa-Machtkampf"
+  ],
+  "media": 2,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 167,
+  "storyId": 1016420,
+  "language": "fr",
+  "titles": [
+   "Manchester City : un dirigeant est prêt à démissionner en cas d’ingérence politique"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Manchester City",
+   "David Kogan"
+  ],
+  "media": 1,
+  "name": "Independent Football Regulator",
+  "kind": "organization",
+  "qid": "Q135435637",
+  "label": "Independent Football Regulator",
+  "description": "executive non-departmental public body, sponsored by the Department for Culture, Media and Sport",
+  "links": 2,
+  "human": false,
+  "itemCountry": "GB",
+  "international": false
+ },
+ {
+  "briefing": 167,
+  "storyId": 1016420,
+  "language": "fr",
+  "titles": [
+   "Manchester City : un dirigeant est prêt à démissionner en cas d’ingérence politique"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Independent Football Regulator",
+   "David Kogan"
+  ],
+  "media": 1,
+  "name": "Manchester City",
+  "kind": "organization",
+  "qid": "Q50602",
+  "label": "Manchester City F.C.",
+  "description": "association football club in Manchester, England",
+  "links": 118,
+  "human": false,
+  "itemCountry": "GB",
+  "international": false
+ },
+ {
+  "briefing": 167,
+  "storyId": 1020870,
+  "language": "fr",
+  "titles": [
+   "Arbitre de référence pour PSG/Barça",
+   "Un árbitro inglés estará al frente del PSG-Barcelona en la Champions",
+   "Champions League, designato l'arbitro di PSG-Barcellona: fischia l'inglese Michael Oliver",
+   "LdC : l'arbitre de PSG-Barça désigné",
+   "El inglés Michael Oliver arbitrará el PSG-Barça",
+   "PSG / Barcelone – Un arbitre anglais au sifflet"
+  ],
+  "sites": {
+   "FR": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Michael Oliver",
+   "PSG-Barça",
+   "FC Barcelone"
+  ],
+  "media": 8,
+  "name": "Paris Saint-Germain",
+  "kind": "organization",
+  "qid": "Q483020",
+  "label": "Paris Saint-Germain FC",
+  "description": "association football club in Paris, France having two UCL",
+  "links": 103,
+  "human": false,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 167,
+  "storyId": 1020870,
+  "language": "fr",
+  "titles": [
+   "Arbitre de référence pour PSG/Barça",
+   "Un árbitro inglés estará al frente del PSG-Barcelona en la Champions",
+   "Champions League, designato l'arbitro di PSG-Barcellona: fischia l'inglese Michael Oliver",
+   "LdC : l'arbitre de PSG-Barça désigné",
+   "El inglés Michael Oliver arbitrará el PSG-Barça",
+   "PSG / Barcelone – Un arbitre anglais au sifflet"
+  ],
+  "sites": {
+   "FR": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Paris Saint-Germain",
+   "Michael Oliver",
+   "PSG-Barça"
+  ],
+  "media": 8,
+  "name": "FC Barcelone",
+  "kind": "organization",
+  "qid": "Q7156",
+  "label": "FC Barcelona",
+  "description": "football club in Barcelona, Catalonia, Spain",
+  "links": 155,
+  "human": false,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 167,
+  "storyId": 1014443,
+  "language": "en",
+  "titles": [
+   "Don Dobson | FIFA, Infantino, JFF and the dark side of sports governance"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "JFF"
+  ],
+  "media": 1,
+  "name": "Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 167,
+  "storyId": 1014443,
+  "language": "en",
+  "titles": [
+   "Don Dobson | FIFA, Infantino, JFF and the dark side of sports governance"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Infantino",
+   "JFF"
+  ],
+  "media": 1,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 167,
+  "storyId": 936471,
+  "language": "en",
+  "titles": [
+   "UEFA has chosen David Beckham to oust the FIFA president.",
+   "Could David Beckham become FIFA president? Why his name is being discussed",
+   "Er Beckham rétti maðurinn til að knésetja Infantino?",
+   "Who would have expected that? Beckham as Infantino's opponent in election"
+  ],
+  "sites": {
+   "VN": 2,
+   "KE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "UEFA",
+   "Gianni Infantino"
+  ],
+  "media": 4,
+  "name": "David Beckham",
+  "kind": "person",
+  "qid": "Q10520",
+  "label": "David Beckham",
+  "description": "English footballer (born 1975)",
+  "links": 139,
+  "human": true,
+  "itemCountry": "GB",
+  "international": false
+ },
+ {
+  "briefing": 167,
+  "storyId": 936471,
+  "language": "en",
+  "titles": [
+   "UEFA has chosen David Beckham to oust the FIFA president.",
+   "Could David Beckham become FIFA president? Why his name is being discussed",
+   "Er Beckham rétti maðurinn til að knésetja Infantino?",
+   "Who would have expected that? Beckham as Infantino's opponent in election"
+  ],
+  "sites": {
+   "VN": 2,
+   "KE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "David Beckham",
+   "UEFA",
+   "Gianni Infantino"
+  ],
+  "media": 4,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 167,
+  "storyId": 936471,
+  "language": "en",
+  "titles": [
+   "UEFA has chosen David Beckham to oust the FIFA president.",
+   "Could David Beckham become FIFA president? Why his name is being discussed",
+   "Er Beckham rétti maðurinn til að knésetja Infantino?",
+   "Who would have expected that? Beckham as Infantino's opponent in election"
+  ],
+  "sites": {
+   "VN": 2,
+   "KE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "David Beckham",
+   "FIFA",
+   "Gianni Infantino"
+  ],
+  "media": 4,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 167,
+  "storyId": 936471,
+  "language": "en",
+  "titles": [
+   "UEFA has chosen David Beckham to oust the FIFA president.",
+   "Could David Beckham become FIFA president? Why his name is being discussed",
+   "Er Beckham rétti maðurinn til að knésetja Infantino?",
+   "Who would have expected that? Beckham as Infantino's opponent in election"
+  ],
+  "sites": {
+   "VN": 2,
+   "KE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "David Beckham",
+   "FIFA",
+   "UEFA"
+  ],
+  "media": 4,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 167,
+  "storyId": 1035812,
+  "language": "sq",
+  "titles": [
+   "Emanuela Rusta bëhet pjesë e trupës së arbitrave në finalet e Botërorit FIFA U-17 për vajza"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "FIFA"
+  ],
+  "media": 1,
+  "name": "Emanuela Rusta",
+  "kind": "person",
+  "qid": "Q124316828",
+  "label": "Emanuela Rusta",
+  "description": "Albanian association football referee",
+  "links": 1,
+  "human": true,
+  "itemCountry": null,
+  "international": false
+ },
+ {
+  "briefing": 167,
+  "storyId": 1035812,
+  "language": "sq",
+  "titles": [
+   "Emanuela Rusta bëhet pjesë e trupës së arbitrave në finalet e Botërorit FIFA U-17 për vajza"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Emanuela Rusta"
+  ],
+  "media": 1,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 167,
+  "storyId": 1011224,
+  "language": "sl",
+  "titles": [
+   "Infantino od Putina do Trumpa: zavidal bi mu tudi Sončni kralj"
+  ],
+  "sites": {
+   "SI": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Giannija Infantina",
+   "FIFA",
+   "Fife"
+  ],
+  "media": 1,
+  "name": "Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 167,
+  "storyId": 1011224,
+  "language": "sl",
+  "titles": [
+   "Infantino od Putina do Trumpa: zavidal bi mu tudi Sončni kralj"
+  ],
+  "sites": {
+   "SI": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Giannija Infantina",
+   "Infantino",
+   "Fife"
+  ],
+  "media": 1,
+  "name": "FIFA",
+  "kind": "organization",
+  "qid": "Q253414",
+  "label": "FIFA",
+  "description": "international governing body of association football",
+  "links": 164,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 167,
+  "storyId": 1013371,
+  "language": "fr",
+  "titles": [
+   "Football : Philippe Diallo veut que l’on vienne « au foot le cœur léger »",
+   "Football : Philippe Diallo veut que l’on vienne « au foot le cœur léger »"
+  ],
+  "sites": {
+   "FR": 3
+  },
+  "topic": "sport",
+  "others": [
+   "FFF"
+  ],
+  "media": 2,
+  "name": "Philippe Diallo",
+  "kind": "person",
+  "qid": "Q33208412",
+  "label": "Philippe Diallo",
+  "description": "French association football administrator (born 1963)",
+  "links": 3,
+  "human": true,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 167,
+  "storyId": 1013371,
+  "language": "fr",
+  "titles": [
+   "Football : Philippe Diallo veut que l’on vienne « au foot le cœur léger »",
+   "Football : Philippe Diallo veut que l’on vienne « au foot le cœur léger »"
+  ],
+  "sites": {
+   "FR": 3
+  },
+  "topic": "sport",
+  "others": [
+   "Philippe Diallo"
+  ],
+  "media": 2,
+  "name": "FFF",
+  "kind": "organization",
+  "qid": "Q244750",
+  "label": "French Football Federation",
+  "description": "governing body of association football in France",
+  "links": 51,
+  "human": false,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 167,
+  "storyId": 1000062,
+  "language": "en",
+  "titles": [
+   "\"One player is punished and another is rewarded\": Bellerin escalates his criticism of refereeing after the Barcelona match",
+   "'The punishments aren't the same': Bellerin questions refereeing after Betis defeat to Barcelona",
+   "« Un joueur est puni et un autre récompensé » : Bellerín monte au créneau contre l'arbitrage après le match face à Barcelone",
+   "\"Hay dos jugadas dudosas y una la castiga y otra la premia\"",
+   "Bellerín reclama dos decisiones determinantes del árbitro en el Betis - Barcelona: \"Hay dos jugadas dudosas, y una la castiga y otra la premia\"",
+   "Bellerín: \"Hay decisiones que no se castigan de la misma forma\""
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Bellerín",
+   "Betis"
+  ],
+  "media": 6,
+  "name": "Barcelona",
+  "kind": "organization",
+  "qid": "Q7156",
+  "label": "FC Barcelona",
+  "description": "football club in Barcelona, Catalonia, Spain",
+  "links": 155,
+  "human": false,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 167,
+  "storyId": 1000062,
+  "language": "en",
+  "titles": [
+   "\"One player is punished and another is rewarded\": Bellerin escalates his criticism of refereeing after the Barcelona match",
+   "'The punishments aren't the same': Bellerin questions refereeing after Betis defeat to Barcelona",
+   "« Un joueur est puni et un autre récompensé » : Bellerín monte au créneau contre l'arbitrage après le match face à Barcelone",
+   "\"Hay dos jugadas dudosas y una la castiga y otra la premia\"",
+   "Bellerín reclama dos decisiones determinantes del árbitro en el Betis - Barcelona: \"Hay dos jugadas dudosas, y una la castiga y otra la premia\"",
+   "Bellerín: \"Hay decisiones que no se castigan de la misma forma\""
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Barcelona",
+   "Betis"
+  ],
+  "media": 6,
+  "name": "Bellerín",
+  "kind": "person",
+  "qid": "Q14947422",
+  "label": "Héctor Bellerín",
+  "description": "Spanish association football player",
+  "links": 56,
+  "human": true,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 167,
+  "storyId": 1000062,
+  "language": "en",
+  "titles": [
+   "\"One player is punished and another is rewarded\": Bellerin escalates his criticism of refereeing after the Barcelona match",
+   "'The punishments aren't the same': Bellerin questions refereeing after Betis defeat to Barcelona",
+   "« Un joueur est puni et un autre récompensé » : Bellerín monte au créneau contre l'arbitrage après le match face à Barcelone",
+   "\"Hay dos jugadas dudosas y una la castiga y otra la premia\"",
+   "Bellerín reclama dos decisiones determinantes del árbitro en el Betis - Barcelona: \"Hay dos jugadas dudosas, y una la castiga y otra la premia\"",
+   "Bellerín: \"Hay decisiones que no se castigan de la misma forma\""
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Barcelona",
+   "Bellerín"
+  ],
+  "media": 6,
+  "name": "Betis",
+  "kind": "organization",
+  "qid": "Q8723",
+  "label": "Real Betis Balompié",
+  "description": "Spanish professional football club",
+  "links": 77,
+  "human": false,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 167,
+  "storyId": 1020255,
+  "language": "it",
+  "titles": [
+   "Champions, scelti gli arbitri per Roma e Napoli: chi sono e i precedenti con le italiane",
+   "Champions, gli arbitri delle italiane: al Napoli lo spagnolo Sanchez, alla Roma lo svizzero Scharer",
+   "Champions | arbitro spagnolo per il Napoli lo svizzero Scharer per la Roma",
+   "Champions: arbitro spagnolo per il Napoli, lo svizzero Scharer per la Roma",
+   "Champions League, le designazioni del 3° turno: Schärer arbitra Roma-Slovan Bratislava, a Sanchez Napoli-Bodø/Glimt",
+   "L'arbitro - Roma sempre vincente con Schärer nelle due gare all'Olimpico in Europa League. In parità il bilancio con il VAR Fedayi San"
+  ],
+  "sites": {
+   "IT": 4
+  },
+  "topic": "sport",
+  "others": [
+   "Roma",
+   "Schärer"
+  ],
+  "media": 6,
+  "name": "Napoli",
+  "kind": "organization",
+  "qid": "Q2641",
+  "label": "SSC Napoli",
+  "description": "Italian professional football club based in Naples",
+  "links": 118,
+  "human": false,
+  "itemCountry": "IT",
+  "international": false
+ },
+ {
+  "briefing": 105,
+  "storyId": 791275,
+  "language": "fr",
+  "titles": [
+   "Vos apps Android codées avec l’IA arrivent sur Google Play Store : voici ce que ça change concrètement",
+   "Android : Google facilite l’installation des applications IA sans passer par les fichiers APK",
+   "Google vous encourage à créer vos propres applications avec l'IA",
+   "Google Play veut mettre la création d’applications à la portée de tous grâce à l’IA",
+   "Google Makes It Easier to Put Your Own AI-Built App on Android",
+   "Play Store : Google permet de publier des applis codées par IA sans compte développeur"
+  ],
+  "sites": {
+   "CH": 1,
+   "FR": 1
+  },
+  "topic": "technology",
+  "others": [],
+  "media": 9,
+  "name": "Google",
+  "kind": "organization",
+  "qid": "Q95",
+  "label": "Google",
+  "description": "American multinational technology company, a subsidiary of Alphabet Inc.",
+  "links": 212,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 105,
+  "storyId": 790628,
+  "language": "fr",
+  "titles": [
+   "Plus rapide que Steam, vraiment ? Le nouveau launcher d’Epic Games se ferait déjà doubler par Valve",
+   "Steam og Epic i duell om raskeste «spill-launcher»",
+   "Epic Games presume de que su nueva app es más rápida que Steam y los jugadores se burlan: “Ese no es el problema”",
+   "Epic despidió a más de mil empleados y ahora exige usar IA para desarrollar su ambicioso juego con Disney",
+   "Epic Games Store cambia | usaron inteligencia artificial y la biblioteca tiene nueva interfaz",
+   "Epic Games has created a new AI launcher because “programming is hard”"
+  ],
+  "sites": {
+   "NO": 1,
+   "AT": 1,
+   "DE": 2
+  },
+  "topic": "technology",
+  "others": [
+   "Steam"
+  ],
+  "media": 24,
+  "name": "Epic Games",
+  "kind": "organization",
+  "qid": "Q739711",
+  "label": "Q739711",
+  "description": "American video game and software developer",
+  "links": 53,
+  "human": false,
+  "itemCountry": "US",
+  "international": false
+ },
+ {
+  "briefing": 105,
+  "storyId": 847126,
+  "language": "en",
+  "titles": [
+   "Building Fabric Apps with Microsoft’s Rayfin"
+  ],
+  "sites": {},
+  "topic": "technology",
+  "others": [],
+  "media": 1,
+  "name": "Microsoft",
+  "kind": "organization",
+  "qid": "Q2283",
+  "label": "Microsoft",
+  "description": "American multinational technology corporation",
+  "links": 178,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 104,
+  "storyId": 642336,
+  "language": "fr",
+  "titles": [
+   "FIFA : Gianni Infantino face à une contestation grandissante",
+   "Fifa : « La confiance en lui est perdue »… Gianni Infantino lâché par des membres du Conseil (mais solide au poste)",
+   "Tensión en la reunión de FIFA: Infantino ofrece disculpas por plan de venta del Mundial, pero mantiene en secreto detalles",
+   "Gianni Infantino llamó a la unidad del fútbol en el Consejo de la FIFA y anunció mejoras económicas",
+   "Fifa: Infantino se desculpa por tentar vender Copa, enquanto Arsène Wenger surge como alternativa na oposição",
+   "Infantino se disculpa con el consejo de la FIFA por tratar de vender el Mundial"
+  ],
+  "sites": {
+   "FR": 1,
+   "MX": 2,
+   "BR": 1,
+   "MA": 2,
+   "AR": 1,
+   "AT": 1,
+   "DE": 1,
+   "NL": 6,
+   "CH": 1,
+   "BE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Gianni Infantino",
+   "UEFA"
+  ],
+  "media": 22,
+  "name": "FIFA Council",
+  "kind": "organization",
+  "qid": "Q1388490",
+  "label": "FIFA Council",
+  "description": "institution",
+  "links": 16,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 104,
+  "storyId": 642336,
+  "language": "fr",
+  "titles": [
+   "FIFA : Gianni Infantino face à une contestation grandissante",
+   "Fifa : « La confiance en lui est perdue »… Gianni Infantino lâché par des membres du Conseil (mais solide au poste)",
+   "Tensión en la reunión de FIFA: Infantino ofrece disculpas por plan de venta del Mundial, pero mantiene en secreto detalles",
+   "Gianni Infantino llamó a la unidad del fútbol en el Consejo de la FIFA y anunció mejoras económicas",
+   "Fifa: Infantino se desculpa por tentar vender Copa, enquanto Arsène Wenger surge como alternativa na oposição",
+   "Infantino se disculpa con el consejo de la FIFA por tratar de vender el Mundial"
+  ],
+  "sites": {
+   "FR": 1,
+   "MX": 2,
+   "BR": 1,
+   "MA": 2,
+   "AR": 1,
+   "AT": 1,
+   "DE": 1,
+   "NL": 6,
+   "CH": 1,
+   "BE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA Council",
+   "UEFA"
+  ],
+  "media": 22,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 642336,
+  "language": "fr",
+  "titles": [
+   "FIFA : Gianni Infantino face à une contestation grandissante",
+   "Fifa : « La confiance en lui est perdue »… Gianni Infantino lâché par des membres du Conseil (mais solide au poste)",
+   "Tensión en la reunión de FIFA: Infantino ofrece disculpas por plan de venta del Mundial, pero mantiene en secreto detalles",
+   "Gianni Infantino llamó a la unidad del fútbol en el Consejo de la FIFA y anunció mejoras económicas",
+   "Fifa: Infantino se desculpa por tentar vender Copa, enquanto Arsène Wenger surge como alternativa na oposição",
+   "Infantino se disculpa con el consejo de la FIFA por tratar de vender el Mundial"
+  ],
+  "sites": {
+   "FR": 1,
+   "MX": 2,
+   "BR": 1,
+   "MA": 2,
+   "AR": 1,
+   "AT": 1,
+   "DE": 1,
+   "NL": 6,
+   "CH": 1,
+   "BE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA Council",
+   "Gianni Infantino"
+  ],
+  "media": 22,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 104,
+  "storyId": 868518,
+  "language": "en",
+  "titles": [
+   "Could Wenger really take on Infantino and run for the FIFA presidency?",
+   "FIFA-Wahl: Neuendorf setzt weiter auf Infantino-Alternative",
+   "Arsene Wenger entra en la carrera para arrebatarle la presidencia de la FIFA a Gianni Infantino",
+   "Senior figures in European football want Arsene Wenger to run for FIFA presidency against Gianni Infantino",
+   "Infantino, acorralado por las acusaciones de opacidad, la investigación judicial de la UEFA y la amenaza de Arsène Wenger",
+   "Wenger in the running to challenge Infantino for FIFA…"
+  ],
+  "sites": {
+   "DE": 3,
+   "MX": 1,
+   "ES": 1,
+   "PT": 4,
+   "VN": 2,
+   "FR": 1,
+   "BE": 2,
+   "DK": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Gianni Infantino",
+   "UEFA"
+  ],
+  "media": 21,
+  "name": "Arsène Wenger",
+  "kind": "person",
+  "qid": "Q47576",
+  "label": "Arsène Wenger",
+  "description": "French football manager (born 1949)",
+  "links": 93,
+  "human": true,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 868518,
+  "language": "en",
+  "titles": [
+   "Could Wenger really take on Infantino and run for the FIFA presidency?",
+   "FIFA-Wahl: Neuendorf setzt weiter auf Infantino-Alternative",
+   "Arsene Wenger entra en la carrera para arrebatarle la presidencia de la FIFA a Gianni Infantino",
+   "Senior figures in European football want Arsene Wenger to run for FIFA presidency against Gianni Infantino",
+   "Infantino, acorralado por las acusaciones de opacidad, la investigación judicial de la UEFA y la amenaza de Arsène Wenger",
+   "Wenger in the running to challenge Infantino for FIFA…"
+  ],
+  "sites": {
+   "DE": 3,
+   "MX": 1,
+   "ES": 1,
+   "PT": 4,
+   "VN": 2,
+   "FR": 1,
+   "BE": 2,
+   "DK": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Arsène Wenger",
+   "UEFA"
+  ],
+  "media": 21,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 868518,
+  "language": "en",
+  "titles": [
+   "Could Wenger really take on Infantino and run for the FIFA presidency?",
+   "FIFA-Wahl: Neuendorf setzt weiter auf Infantino-Alternative",
+   "Arsene Wenger entra en la carrera para arrebatarle la presidencia de la FIFA a Gianni Infantino",
+   "Senior figures in European football want Arsene Wenger to run for FIFA presidency against Gianni Infantino",
+   "Infantino, acorralado por las acusaciones de opacidad, la investigación judicial de la UEFA y la amenaza de Arsène Wenger",
+   "Wenger in the running to challenge Infantino for FIFA…"
+  ],
+  "sites": {
+   "DE": 3,
+   "MX": 1,
+   "ES": 1,
+   "PT": 4,
+   "VN": 2,
+   "FR": 1,
+   "BE": 2,
+   "DK": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Arsène Wenger",
+   "Gianni Infantino"
+  ],
+  "media": 21,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 104,
+  "storyId": 792389,
+  "language": "en",
+  "titles": [
+   "FIFA amends red card rules in connection with Trump's controversy.",
+   "Niente più casi Balogun: la FIFA modificherà il proprio regolamento disciplinare",
+   "Après le scandale Balogun à la Coupe du monde, la Fifa va modifier son article 27",
+   "« Une étape importante » : la Fédération belge assure que la Fifa va modifier une règle après l’affaire Balogun",
+   "FIFA modificaría su reglamento disciplinario tras polémica por Folarin Balogun en el Mundial",
+   "Donald Trump Has Forced FIFA Into Making Major Rule Change After World Cup"
+  ],
+  "sites": {
+   "VN": 3,
+   "IT": 1,
+   "FR": 3,
+   "IE": 1,
+   "BR": 2,
+   "BE": 6,
+   "AR": 1,
+   "GB": 2,
+   "AT": 2,
+   "DE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA"
+  ],
+  "media": 35,
+  "name": "Folarin Balogun",
+  "kind": "person",
+  "qid": "Q101035007",
+  "label": "Folarin Balogun",
+  "description": "American footballer (born 2001)",
+  "links": 46,
+  "human": true,
+  "itemCountry": "US",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 912374,
+  "language": "fr",
+  "titles": [
+   "Algérie : 30 ans de prison cumulés requis contre les 3 ex-présidents de la FAF !"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [],
+  "media": 1,
+  "name": "Fédération Algérienne de Football",
+  "kind": "organization",
+  "qid": "Q647526",
+  "label": "Algerian Football Federation",
+  "description": "sports governing body in Algeria",
+  "links": 34,
+  "human": false,
+  "itemCountry": "DZ",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 852598,
+  "language": "fr",
+  "titles": [
+   "CAF : Motsepe sort encore le chéquier… pour sauver sa peau ?",
+   "CAF : Motsepe augmente les aides en pleine fronde interne"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "CAF"
+  ],
+  "media": 2,
+  "name": "Patrice Motsepe",
+  "kind": "person",
+  "qid": "Q180639",
+  "label": "Patrice Motsepe",
+  "description": "South African businessman",
+  "links": 19,
+  "human": true,
+  "itemCountry": "ZA",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 864273,
+  "language": "fr",
+  "titles": [
+   "FIFA : Diallo charge la gestion d'Infantino",
+   "Coupe du Monde : Philippe Diallo cartonne Gianni Infantino",
+   "Fifa: \"La solidarité ce n'est pas du clientélisme\", Philippe Diallo pas tendre avec Infantino"
+  ],
+  "sites": {
+   "FR": 2
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Gianni Infantino",
+   "FFF"
+  ],
+  "media": 3,
+  "name": "Philippe Diallo",
+  "kind": "person",
+  "qid": "Q33208412",
+  "label": "Philippe Diallo",
+  "description": "French association football administrator (born 1963)",
+  "links": 3,
+  "human": true,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 864273,
+  "language": "fr",
+  "titles": [
+   "FIFA : Diallo charge la gestion d'Infantino",
+   "Coupe du Monde : Philippe Diallo cartonne Gianni Infantino",
+   "Fifa: \"La solidarité ce n'est pas du clientélisme\", Philippe Diallo pas tendre avec Infantino"
+  ],
+  "sites": {
+   "FR": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Philippe Diallo",
+   "FIFA",
+   "FFF"
+  ],
+  "media": 3,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 758262,
+  "language": "en",
+  "titles": [
+   "FIFA Council: Confederation chiefs win $15m grant uplifts for each member association",
+   "FIFA approves $25m for each member association as Infantino unveils $6.35bn funding plan",
+   "Le président de la FIFA présente ses excuses et annonce que chaque fédération recevra 25 millions de dollars, y compris le Vietnam.",
+   "FIFA president apologizes, announces each federation will receive $25 million, including Vietnam.",
+   "La FIFA n'allouera que 25 millions de dollars à chaque fédération si... Infantino est élu ?",
+   "FIFA proposes $6.35bn football development funding boost as Infantino apologises over withdrawn project"
+  ],
+  "sites": {
+   "VN": 8,
+   "MD": 1,
+   "PK": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA"
+  ],
+  "media": 10,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 863277,
+  "language": "en",
+  "titles": [
+   "Infantino apology fails to sway England, Germany over FIFA future",
+   "Fifa: les excuses d'Infantino jugées insuffisantes après son projet d’ouverture aux investisseurs privés",
+   "Infantino offers apology but 'no answers' at FIFA meeting over World Cup plan",
+   "Infantino pide disculpas",
+   "Infantino apologises amid calls for him to quit as FIFA president",
+   "FIFA president apologizes for controversial plan to 'sell the World Cup'."
+  ],
+  "sites": {
+   "FR": 3,
+   "VN": 5,
+   "MX": 2,
+   "BR": 2,
+   "US": 1,
+   "CA": 1,
+   "IE": 1,
+   "PT": 6,
+   "CH": 5,
+   "IT": 5,
+   "NG": 1,
+   "BE": 3,
+   "AR": 1,
+   "LU": 2,
+   "GB": 4,
+   "IN": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Gianni Infantino"
+  ],
+  "media": 82,
+  "name": "FIFA Council",
+  "kind": "organization",
+  "qid": "Q1388490",
+  "label": "FIFA Council",
+  "description": "institution",
+  "links": 16,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 104,
+  "storyId": 863277,
+  "language": "en",
+  "titles": [
+   "Infantino apology fails to sway England, Germany over FIFA future",
+   "Fifa: les excuses d'Infantino jugées insuffisantes après son projet d’ouverture aux investisseurs privés",
+   "Infantino offers apology but 'no answers' at FIFA meeting over World Cup plan",
+   "Infantino pide disculpas",
+   "Infantino apologises amid calls for him to quit as FIFA president",
+   "FIFA president apologizes for controversial plan to 'sell the World Cup'."
+  ],
+  "sites": {
+   "FR": 3,
+   "VN": 5,
+   "MX": 2,
+   "BR": 2,
+   "US": 1,
+   "CA": 1,
+   "IE": 1,
+   "PT": 6,
+   "CH": 5,
+   "IT": 5,
+   "NG": 1,
+   "BE": 3,
+   "AR": 1,
+   "LU": 2,
+   "GB": 4,
+   "IN": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA Council"
+  ],
+  "media": 82,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 860943,
+  "language": "es",
+  "titles": [
+   "FIFA-UEFA: alta tensión"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "FIFA-UEFA",
+   "FIFA"
+  ],
+  "media": 1,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 104,
+  "storyId": 851679,
+  "language": "en",
+  "titles": [
+   "Kurt Okraku: The man who arrived with promises and hope, but whose leadership faces questions about power and Ghana football’s future"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Kurt Okraku"
+  ],
+  "media": 1,
+  "name": "Ghana Football",
+  "kind": "organization",
+  "qid": "Q1478153",
+  "label": "football in Ghana",
+  "description": "overview of association football in Ghana",
+  "links": 9,
+  "human": false,
+  "itemCountry": "GH",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 851679,
+  "language": "en",
+  "titles": [
+   "Kurt Okraku: The man who arrived with promises and hope, but whose leadership faces questions about power and Ghana football’s future"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Ghana Football"
+  ],
+  "media": 1,
+  "name": "Kurt Okraku",
+  "kind": "person",
+  "qid": "Q72301782",
+  "label": "Kurt Okraku",
+  "description": "Ghanaian football journalist and administrator",
+  "links": 3,
+  "human": true,
+  "itemCountry": "GH",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 868644,
+  "language": "hr",
+  "titles": [
+   "Gianni Infantino dobio najozbiljnijeg konkurenta? On je nogometni autoritet"
+  ],
+  "sites": {
+   "HR": 2
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA-e",
+   "FIFA"
+  ],
+  "media": 1,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 851695,
+  "language": "en",
+  "titles": [
+   "CONMEBOL forced to change broadcast advertising arrangements"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "ESPN",
+   "Bwin",
+   "SBT"
+  ],
+  "media": 1,
+  "name": "CONMEBOL",
+  "kind": "organization",
+  "qid": "Q58733",
+  "label": "CONMEBOL",
+  "description": "governing body of association football in South America",
+  "links": 82,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 104,
+  "storyId": 865135,
+  "language": "es",
+  "titles": [
+   "Por Verón, el antecedente de Estudiantes en el TAS"
+  ],
+  "sites": {
+   "AR": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Tribunal de Arbitraje Deportivo",
+   "Estudiantes",
+   "CONMEBOL"
+  ],
+  "media": 1,
+  "name": "Marcos Rojo",
+  "kind": "person",
+  "qid": "Q507890",
+  "label": "Marcos Rojo",
+  "description": "Argentine association football player",
+  "links": 60,
+  "human": true,
+  "itemCountry": "AR",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 865135,
+  "language": "es",
+  "titles": [
+   "Por Verón, el antecedente de Estudiantes en el TAS"
+  ],
+  "sites": {
+   "AR": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Tribunal de Arbitraje Deportivo",
+   "Marcos Rojo",
+   "Estudiantes"
+  ],
+  "media": 1,
+  "name": "CONMEBOL",
+  "kind": "organization",
+  "qid": "Q58733",
+  "label": "CONMEBOL",
+  "description": "governing body of association football in South America",
+  "links": 82,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 104,
+  "storyId": 850122,
+  "language": "en",
+  "titles": [
+   "Olympique Marseille faces points deduction next season due to financial violations",
+   "'Puntenstraf dreigt voor Marseille vanwege financiële problemen'",
+   "OM : Stéphane Richard risque gros, la DNCG va encore sévir",
+   "OM : la DNCG envisage des sanctions sportives dès cet hiver",
+   "OM : retrait de points mais pas de Ligue 2, l’énorme menace de la DNCG",
+   "Ligue 1. L’OM risque des sanctions cet hiver pour ne pas avoir tenu ses engagements auprès de la DNCG"
+  ],
+  "sites": {
+   "NL": 1,
+   "FR": 7
+  },
+  "topic": "sport",
+  "others": [
+   "DNCG",
+   "Olympique de Marseille"
+  ],
+  "media": 13,
+  "name": "Olympique Marseille",
+  "kind": "organization",
+  "qid": "Q132885",
+  "label": "Olympique de Marseille",
+  "description": "association football club in Marseille, France",
+  "links": 85,
+  "human": false,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 860601,
+  "language": "es",
+  "titles": [
+   "Internacional Sub-15 del Barça y árbitro"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Atlético de Madrid",
+   "Gael José Seijo",
+   "FC Barcelona"
+  ],
+  "media": 1,
+  "name": "Real Federación Española de Fútbol",
+  "kind": "organization",
+  "qid": "Q207615",
+  "label": "Royal Spanish Football Federation",
+  "description": "governing body of association football in Spain",
+  "links": 55,
+  "human": false,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 887061,
+  "language": "es",
+  "titles": [
+   "Pablo Milad aborda su continuidad como presidente de la Federación: “Lo que busca la FIFA es estabilidad de gobernanza”",
+   "Pablo Milad dice que FIFA no quiere \"gobiernos de transición, sino que yo termine el periodo\""
+  ],
+  "sites": {
+   "CL": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA"
+  ],
+  "media": 2,
+  "name": "Pablo Milad",
+  "kind": "person",
+  "qid": "Q56025862",
+  "label": "Pablo Milad",
+  "description": "Chilean politician",
+  "links": 4,
+  "human": true,
+  "itemCountry": "CL",
+  "international": false
+ },
+ {
+  "briefing": 104,
+  "storyId": 837599,
+  "language": "en",
+  "titles": [
+   "Gareth Southgate criticises FIFA for handling of Cristiano Ronaldo suspension"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Cristiano Ronaldo",
+   "FIFA"
+  ],
+  "media": 1,
+  "name": "Gareth Southgate",
+  "kind": "person",
+  "qid": "Q316681",
+  "label": "Gareth Southgate",
+  "description": "English professional football manager and former player (born 1970)",
+  "links": 56,
+  "human": true,
+  "itemCountry": "GB",
+  "international": false
+ },
+ {
+  "briefing": 100,
+  "storyId": 801986,
+  "language": "en",
+  "titles": [
+   "Is the La Liga controversy the reason? UEFA leaves out Spanish referees from 54 matches",
+   "La polémique de la Liga en cause ? L'UEFA écarte les arbitres espagnols de 54 matches",
+   "La UEFA toma una medida extrema contra el bajo nivel arbitral en España"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "La Liga",
+   "Muhammad Sharaf Eldeen",
+   "Paris Saint-Germain"
+  ],
+  "media": 3,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 100,
+  "storyId": 792669,
+  "language": "en",
+  "titles": [
+   "Five nominations are only the start: the complete process of challenging Gianni Infantino explained",
+   "Elezioni FIFA, ecco i due nomi che la UEFA ha contattato per \"contrastare\" Infantino",
+   "La UEFA cerca il suo candidato per sfidare Infantino: sondate Kang e Klaveness",
+   "FIFA : Arsène Wenger sollicité pour défier Gianni Infantino",
+   "Arsene Wenger Tipped To Take On Gianni Infantino In FIFA Election? | First Sports With Rupha Ramani",
+   "Arsène Wenger emerges as possible challenger to Gianni Infantino's FIFA leadership: Report"
+  ],
+  "sites": {
+   "IT": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Arsène Wenger",
+   "UEFA"
+  ],
+  "media": 5,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 100,
+  "storyId": 792669,
+  "language": "en",
+  "titles": [
+   "Five nominations are only the start: the complete process of challenging Gianni Infantino explained",
+   "Elezioni FIFA, ecco i due nomi che la UEFA ha contattato per \"contrastare\" Infantino",
+   "La UEFA cerca il suo candidato per sfidare Infantino: sondate Kang e Klaveness",
+   "FIFA : Arsène Wenger sollicité pour défier Gianni Infantino",
+   "Arsene Wenger Tipped To Take On Gianni Infantino In FIFA Election? | First Sports With Rupha Ramani",
+   "Arsène Wenger emerges as possible challenger to Gianni Infantino's FIFA leadership: Report"
+  ],
+  "sites": {
+   "IT": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Gianni Infantino",
+   "FIFA",
+   "UEFA"
+  ],
+  "media": 5,
+  "name": "Arsène Wenger",
+  "kind": "person",
+  "qid": "Q47576",
+  "label": "Arsène Wenger",
+  "description": "French football manager (born 1949)",
+  "links": 93,
+  "human": true,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 100,
+  "storyId": 792669,
+  "language": "en",
+  "titles": [
+   "Five nominations are only the start: the complete process of challenging Gianni Infantino explained",
+   "Elezioni FIFA, ecco i due nomi che la UEFA ha contattato per \"contrastare\" Infantino",
+   "La UEFA cerca il suo candidato per sfidare Infantino: sondate Kang e Klaveness",
+   "FIFA : Arsène Wenger sollicité pour défier Gianni Infantino",
+   "Arsene Wenger Tipped To Take On Gianni Infantino In FIFA Election? | First Sports With Rupha Ramani",
+   "Arsène Wenger emerges as possible challenger to Gianni Infantino's FIFA leadership: Report"
+  ],
+  "sites": {
+   "IT": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Gianni Infantino",
+   "FIFA",
+   "Arsène Wenger"
+  ],
+  "media": 5,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 100,
+  "storyId": 632513,
+  "language": "en",
+  "titles": [
+   "Kofi Adams rules out government move to dissolve GFA, calls for reforms"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Minister for Sports and Recreation",
+   "Kofi Adams"
+  ],
+  "media": 1,
+  "name": "Ghana Football Association",
+  "kind": "organization",
+  "qid": "Q923074",
+  "label": "Ghana Football Association",
+  "description": "governing body of association football in Ghana",
+  "links": 31,
+  "human": false,
+  "itemCountry": "GH",
+  "international": false
+ },
+ {
+  "briefing": 100,
+  "storyId": 632513,
+  "language": "en",
+  "titles": [
+   "Kofi Adams rules out government move to dissolve GFA, calls for reforms"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Minister for Sports and Recreation",
+   "Ghana Football Association"
+  ],
+  "media": 1,
+  "name": "Kofi Adams",
+  "kind": "person",
+  "qid": "Q104442715",
+  "label": "Kofi Adams",
+  "description": "Ghanaian politician",
+  "links": 8,
+  "human": true,
+  "itemCountry": "GH",
+  "international": false
+ },
+ {
+  "briefing": 100,
+  "storyId": 805991,
+  "language": "en",
+  "titles": [
+   "“You never know tomorrow” – Tony Baffoe hints at possible GFA presidency bid"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [],
+  "media": 1,
+  "name": "Ghana Football Association",
+  "kind": "organization",
+  "qid": "Q923074",
+  "label": "Ghana Football Association",
+  "description": "governing body of association football in Ghana",
+  "links": 31,
+  "human": false,
+  "itemCountry": "GH",
+  "international": false
+ },
+ {
+  "briefing": 100,
+  "storyId": 688055,
+  "language": "en",
+  "titles": [
+   "Gianni Infantino: The key questions facing FIFA president at crunch council meeting",
+   "Fifa-Gipfel mit Konfrontation von Infantino mit Uefa-Gegnern",
+   "FIFA meets critics at FIFA Council",
+   "What to expect from the FIFA Council meeting in Zurich today",
+   "Infantino Faces FIFA Council Rebels Over Failed World Cup Stake Sale",
+   "Erstmals seit umstrittenem Investoren-Plan - Brisanter Fifa-Gipfel um Infantino!"
+  ],
+  "sites": {
+   "AT": 1,
+   "DE": 6,
+   "NZ": 1,
+   "AR": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA"
+  ],
+  "media": 34,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 100,
+  "storyId": 795128,
+  "language": "en",
+  "titles": [
+   "GFA set for financial boost as CAF increases annual funding for member associations to $700,000",
+   "Football africain : la CAF augmente de 33 % les subventions aux Associations membres",
+   "CAF : la FSF pourra toucher jusqu’à 408,8 millions FCFA par an, soit 102,2 millions de plus",
+   "CAF - Les subventions annuelles augmentent pour les fédérations et les Unions zonales, près de 400 milliards FCFA pour la FSF",
+   "CAF : Hause de 33 % des subventions annuelles de ses 54 Associations Membres",
+   "Football africain : la CAF porte à 700 000 dollars par an les subventions de ses 54 fédérations"
+  ],
+  "sites": {
+   "MA": 2
+  },
+  "topic": "sport",
+  "others": [],
+  "media": 11,
+  "name": "Confederation of African Football",
+  "kind": "organization",
+  "qid": "Q168360",
+  "label": "Confederation of African Football",
+  "description": "governing body of association football in Africa",
+  "links": 80,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 100,
+  "storyId": 734919,
+  "language": "es",
+  "titles": [
+   "Los árbitros pasan por caja: este es el sobresueldo que les pagará Tebas por hablar y llevar cámaras de LaLiga",
+   "El dinero extra que pagan LaLiga y el CTA a los árbitros por llevar cámaras y hablar con la prensa"
+  ],
+  "sites": {
+   "ES": 2
+  },
+  "topic": "sport",
+  "others": [
+   "CTA",
+   "Tebas"
+  ],
+  "media": 2,
+  "name": "LaLiga",
+  "kind": "organization",
+  "qid": "Q4453842",
+  "label": "Liga Nacional de Fútbol Profesional",
+  "description": "Spanish national association football organization",
+  "links": 24,
+  "human": false,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 100,
+  "storyId": 788568,
+  "language": "no",
+  "titles": [
+   "Tveir íslenskir eftirlitsmenn á vegum UEFA á morgun"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Tveir Íslendingar",
+   "Evrópudeildinni"
+  ],
+  "media": 1,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 100,
+  "storyId": 773918,
+  "language": "mk",
+  "titles": [
+   "Емил Божиновски контролор во Шпанија, Филип Поповски делегат во Словачка"
+  ],
+  "sites": {
+   "MK": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Фудбалската федерација на Македонија"
+  ],
+  "media": 1,
+  "name": "УЕФА",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 100,
+  "storyId": 781067,
+  "language": "en",
+  "titles": [
+   "FA announce punishment on Man Utd row after manager accused ref of bias on live TV",
+   "Premier League manager charged and fined by FA after Manchester United complaints",
+   "Premier League boss fined over Man United accusations after Erling Haaland controversy",
+   "Premier liga kaznila Alvara Arbelou jer je rekao da su suci gurali Manchester United",
+   "Alvaro Arbeloa kažnjen zbog komentiranja suđenja",
+   "Fulham boss Arbeloa fined over comments implying bias after Manchester United draw"
+  ],
+  "sites": {
+   "GB": 5,
+   "HR": 3,
+   "IE": 1,
+   "LU": 1,
+   "BR": 1,
+   "DK": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Manchester United",
+   "FA",
+   "Fulham"
+  ],
+  "media": 18,
+  "name": "Alvaro Arbeloa",
+  "kind": "person",
+  "qid": "Q250901",
+  "label": "Álvaro Arbeloa",
+  "description": "Spanish football manager and player (born 1983)",
+  "links": 71,
+  "human": true,
+  "itemCountry": "ES",
+  "international": false
+ },
+ {
+  "briefing": 100,
+  "storyId": 779576,
+  "language": "fr",
+  "titles": [
+   "Le football anglais au bord de l’effondrement financier",
+   "El fútbol inglés, en peligro: el 94% de los clubes opera con pérdidas",
+   "IFR report warns of financial crisis across English football",
+   "La bulle éclate : le football anglais au bord de la catastrophe financière, 94 % de ses clubs sombrant dans les pertes",
+   "Alerta en el fútbol inglés: el 94% de los clubes de las principales divisiones terminó con pérdidas la última temporada",
+   "Angleterre : 94% des clubs dans le rouge"
+  ],
+  "sites": {
+   "AR": 1,
+   "FR": 1,
+   "BE": 1,
+   "AT": 5,
+   "CH": 4,
+   "DE": 8
+  },
+  "topic": "sport",
+  "others": [],
+  "media": 31,
+  "name": "Independent Football Regulator",
+  "kind": "organization",
+  "qid": "Q135435637",
+  "label": "Independent Football Regulator",
+  "description": "executive non-departmental public body, sponsored by the Department for Culture, Media and Sport",
+  "links": 2,
+  "human": false,
+  "itemCountry": "GB",
+  "international": false
+ },
+ {
+  "briefing": 98,
+  "storyId": 754638,
+  "language": "en",
+  "titles": [
+   "Aleksander Ceferin prepara novo mandato na liderança da UEFA"
+  ],
+  "sites": {
+   "PT": 2
+  },
+  "topic": "sport",
+  "others": [
+   "UEFA"
+  ],
+  "media": 1,
+  "name": "Aleksander Ceferin",
+  "kind": "person",
+  "qid": "Q26819142",
+  "label": "Aleksander Čeferin",
+  "description": "Slovenian football administrator",
+  "links": 46,
+  "human": true,
+  "itemCountry": "SI",
+  "international": false
+ },
+ {
+  "briefing": 98,
+  "storyId": 754638,
+  "language": "en",
+  "titles": [
+   "Aleksander Ceferin prepara novo mandato na liderança da UEFA"
+  ],
+  "sites": {
+   "PT": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Aleksander Ceferin"
+  ],
+  "media": 1,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 98,
+  "storyId": 679481,
+  "language": "en",
+  "titles": [
+   "FIFA denies rules breach over new reports of Infantino’s extra income",
+   "Fifa, Infantino e il secondo stipendio non dichiarato",
+   "FIFA responde a la polémica del salario secreto de Gianni Infantino",
+   "Infantino, il Times accusa: 1,76 milioni di dollari in compensi non dichiarati dalla Fifa",
+   "La FIFA rejette les accusations de « second salaire » versé à Gianni Infantino",
+   "La FIFA rilancia le accuse contro Infantino: \"Non riceve un secondo stipendio\""
+  ],
+  "sites": {
+   "IT": 9,
+   "FR": 2,
+   "BA": 5,
+   "ES": 1,
+   "BE": 3,
+   "BR": 1,
+   "MX": 1,
+   "AR": 1,
+   "CH": 2
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA"
+  ],
+  "media": 40,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 98,
+  "storyId": 731718,
+  "language": "en",
+  "titles": [
+   "UEFA / Relevent",
+   "European soccer body UEFA ties financial future to US agency Relevent in 2nd rights sales deal",
+   "U.S. firm Relevent signs UEFA deal from '28-'36",
+   "La UEFA nombra a Relevent socio exclusivo de marketing y ventas para las competiciones de selecciones nacionales",
+   "Relevent comercializará los derechos de las competiciones de selecciones de 2028 a 2036"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Relevent"
+  ],
+  "media": 5,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 98,
+  "storyId": 721799,
+  "language": "en",
+  "titles": [
+   "Former Arsenal boss Wenger touted as challenger to Infantino as Fifa boss",
+   "Wenger, Kang and Norwegian FA president tipped as UEFA's candidates for FIFA election",
+   "FIFA : Arsène Wenger veut la place de Gianni Infantino",
+   "Arsene Wenger poate fi candidatul ales de UEFA pentru a-l detrona pe Infantino de la șefia FIFA!",
+   "Dramatic Turn at FIFA: Arsène Wenger May Challenge Gianni Infantino and Jeopardize His Reelection",
+   "Will Arsene Wenger run for FIFA president, challenging Infantino?"
+  ],
+  "sites": {
+   "FR": 4,
+   "ZA": 1,
+   "CI": 1,
+   "RO": 1,
+   "VN": 1,
+   "KE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Gianni Infantino",
+   "Wenger"
+  ],
+  "media": 9,
+  "name": "Arsène Wenger",
+  "kind": "person",
+  "qid": "Q47576",
+  "label": "Arsène Wenger",
+  "description": "French football manager (born 1949)",
+  "links": 93,
+  "human": true,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 98,
+  "storyId": 721799,
+  "language": "en",
+  "titles": [
+   "Former Arsenal boss Wenger touted as challenger to Infantino as Fifa boss",
+   "Wenger, Kang and Norwegian FA president tipped as UEFA's candidates for FIFA election",
+   "FIFA : Arsène Wenger veut la place de Gianni Infantino",
+   "Arsene Wenger poate fi candidatul ales de UEFA pentru a-l detrona pe Infantino de la șefia FIFA!",
+   "Dramatic Turn at FIFA: Arsène Wenger May Challenge Gianni Infantino and Jeopardize His Reelection",
+   "Will Arsene Wenger run for FIFA president, challenging Infantino?"
+  ],
+  "sites": {
+   "FR": 4,
+   "ZA": 1,
+   "CI": 1,
+   "RO": 1,
+   "VN": 1,
+   "KE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Arsène Wenger",
+   "Wenger"
+  ],
+  "media": 9,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 98,
+  "storyId": 721799,
+  "language": "en",
+  "titles": [
+   "Former Arsenal boss Wenger touted as challenger to Infantino as Fifa boss",
+   "Wenger, Kang and Norwegian FA president tipped as UEFA's candidates for FIFA election",
+   "FIFA : Arsène Wenger veut la place de Gianni Infantino",
+   "Arsene Wenger poate fi candidatul ales de UEFA pentru a-l detrona pe Infantino de la șefia FIFA!",
+   "Dramatic Turn at FIFA: Arsène Wenger May Challenge Gianni Infantino and Jeopardize His Reelection",
+   "Will Arsene Wenger run for FIFA president, challenging Infantino?"
+  ],
+  "sites": {
+   "FR": 4,
+   "ZA": 1,
+   "CI": 1,
+   "RO": 1,
+   "VN": 1,
+   "KE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Arsène Wenger",
+   "Gianni Infantino"
+  ],
+  "media": 9,
+  "name": "Wenger",
+  "kind": "person",
+  "qid": "Q665648",
+  "label": "Wenger",
+  "description": "company",
+  "links": 17,
+  "human": false,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 98,
+  "storyId": 741673,
+  "language": "en",
+  "titles": [
+   "Patrice Motsepe’s Caf presidency under pressure after Afcon U-turn as Eto’o waits in wings",
+   "An African legend and two Arabs: four potential candidates to succeed Motsepe as CAF president",
+   "Cameroun : Samuel Eto’o se positionne pour devenir président de la CAF",
+   "CAF : Samuel Eto’o prêt à un coup d’Etat contre Patrice Motsepe ?"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Patrice Motsepe",
+   "Samuel Eto’o",
+   "AFCON"
+  ],
+  "media": 4,
+  "name": "Confederation of African Football",
+  "kind": "organization",
+  "qid": "Q168360",
+  "label": "Confederation of African Football",
+  "description": "governing body of association football in Africa",
+  "links": 80,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 98,
+  "storyId": 741673,
+  "language": "en",
+  "titles": [
+   "Patrice Motsepe’s Caf presidency under pressure after Afcon U-turn as Eto’o waits in wings",
+   "An African legend and two Arabs: four potential candidates to succeed Motsepe as CAF president",
+   "Cameroun : Samuel Eto’o se positionne pour devenir président de la CAF",
+   "CAF : Samuel Eto’o prêt à un coup d’Etat contre Patrice Motsepe ?"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Confederation of African Football",
+   "Samuel Eto’o",
+   "AFCON"
+  ],
+  "media": 4,
+  "name": "Patrice Motsepe",
+  "kind": "person",
+  "qid": "Q180639",
+  "label": "Patrice Motsepe",
+  "description": "South African businessman",
+  "links": 19,
+  "human": true,
+  "itemCountry": "ZA",
+  "international": false
+ },
+ {
+  "briefing": 98,
+  "storyId": 741673,
+  "language": "en",
+  "titles": [
+   "Patrice Motsepe’s Caf presidency under pressure after Afcon U-turn as Eto’o waits in wings",
+   "An African legend and two Arabs: four potential candidates to succeed Motsepe as CAF president",
+   "Cameroun : Samuel Eto’o se positionne pour devenir président de la CAF",
+   "CAF : Samuel Eto’o prêt à un coup d’Etat contre Patrice Motsepe ?"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Confederation of African Football",
+   "Patrice Motsepe",
+   "Samuel Eto’o"
+  ],
+  "media": 4,
+  "name": "AFCON",
+  "kind": "organization",
+  "qid": "Q83145",
+  "label": "Africa Cup of Nations",
+  "description": "African association football tournament for men's national teams",
+  "links": 75,
+  "human": false,
+  "itemCountry": null,
+  "international": false
+ },
+ {
+  "briefing": 98,
+  "storyId": 684592,
+  "language": "fr",
+  "titles": [
+   "CAN tous les 2 ans : deux cadres de la CAF opposés à la réforme ?"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "CAF"
+  ],
+  "media": 1,
+  "name": "CAN",
+  "kind": "organization",
+  "qid": "Q170132",
+  "label": "Can",
+  "description": "German experimental rock band",
+  "links": 37,
+  "human": false,
+  "itemCountry": null,
+  "international": false
+ },
+ {
+  "briefing": 98,
+  "storyId": 734555,
+  "language": "en",
+  "titles": [
+   "Could Two Women Take On Gianni Infantino for FIFA President in 2027?",
+   "Fifa: Michele Kang und Lise Klaveness fordern wohl Infantino heraus",
+   "Fifa: Michele Kang und Lise Klaveness treten wohl gegen Gianni Infantino an",
+   "¿Una mujer al frente de la FIFA? Michele Kang y Lise Klaveness, dos opciones de la UEFA para evitar la reelección de Infantino",
+   "FIFA President Infantino has a chance of re-election without a strong rival — Dawn"
+  ],
+  "sites": {
+   "DE": 2,
+   "MX": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Lise Klaveness",
+   "Michele Kang"
+  ],
+  "media": 4,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ },
+ {
+  "briefing": 98,
+  "storyId": 734555,
+  "language": "en",
+  "titles": [
+   "Could Two Women Take On Gianni Infantino for FIFA President in 2027?",
+   "Fifa: Michele Kang und Lise Klaveness fordern wohl Infantino heraus",
+   "Fifa: Michele Kang und Lise Klaveness treten wohl gegen Gianni Infantino an",
+   "¿Una mujer al frente de la FIFA? Michele Kang y Lise Klaveness, dos opciones de la UEFA para evitar la reelección de Infantino",
+   "FIFA President Infantino has a chance of re-election without a strong rival — Dawn"
+  ],
+  "sites": {
+   "DE": 2,
+   "MX": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Gianni Infantino",
+   "Michele Kang"
+  ],
+  "media": 4,
+  "name": "Lise Klaveness",
+  "kind": "person",
+  "qid": "Q1810994",
+  "label": "Lise Klaveness",
+  "description": "President of the Norwegian Football Federation and former Norwegian national team football player",
+  "links": 14,
+  "human": true,
+  "itemCountry": "NO",
+  "international": false
+ },
+ {
+  "briefing": 98,
+  "storyId": 734555,
+  "language": "en",
+  "titles": [
+   "Could Two Women Take On Gianni Infantino for FIFA President in 2027?",
+   "Fifa: Michele Kang und Lise Klaveness fordern wohl Infantino heraus",
+   "Fifa: Michele Kang und Lise Klaveness treten wohl gegen Gianni Infantino an",
+   "¿Una mujer al frente de la FIFA? Michele Kang y Lise Klaveness, dos opciones de la UEFA para evitar la reelección de Infantino",
+   "FIFA President Infantino has a chance of re-election without a strong rival — Dawn"
+  ],
+  "sites": {
+   "DE": 2,
+   "MX": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA",
+   "Gianni Infantino",
+   "Lise Klaveness"
+  ],
+  "media": 4,
+  "name": "Michele Kang",
+  "kind": "person",
+  "qid": "Q117834396",
+  "label": "Michele Kang",
+  "description": "businesswoman and sports team owner",
+  "links": 9,
+  "human": true,
+  "itemCountry": "US",
+  "international": false
+ },
+ {
+  "briefing": 98,
+  "storyId": 751401,
+  "language": "en",
+  "titles": [
+   "Notable absence of Spanish referees in Europe raises… | YSscores"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Mohammed Ibrahim"
+  ],
+  "media": 1,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 98,
+  "storyId": 708757,
+  "language": "fr",
+  "titles": [
+   "Roland Duchâtelet : « Dans dix ans maximum, le VAR sera dirigé par l’IA »",
+   "\"Dans 10 ans au maximum, la VAR sera dirigée par l’IA\" : Roland Duchâtelet prédit une révolution",
+   "« Dans dix ans maximum, le VAR sera dirigé par l’IA ! » : Roland Duchâtelet veut en finir avec les polémiques arbitrales"
+  ],
+  "sites": {
+   "BE": 4
+  },
+  "topic": "sport",
+  "others": [
+   "VAR",
+   "Standard"
+  ],
+  "media": 3,
+  "name": "Roland Duchâtelet",
+  "kind": "person",
+  "qid": "Q728900",
+  "label": "Roland Duchâtelet",
+  "description": "businessman, football manager",
+  "links": 11,
+  "human": true,
+  "itemCountry": "BE",
+  "international": false
+ },
+ {
+  "briefing": 98,
+  "storyId": 728198,
+  "language": "tr",
+  "titles": [
+   "UEFA açıkladı! Cihan Aydın ve Kadir Sağlam o maçlarda görevli"
+  ],
+  "sites": {
+   "TR": 2
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA"
+  ],
+  "media": 1,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 98,
+  "storyId": 718127,
+  "language": "fr",
+  "titles": [
+   "OM : Michael Oliver désigné pour arbitrer le match face à l’Olympiakos en Ligue Europa"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Michael Oliver",
+   "Olympiakos",
+   "UEFA"
+  ],
+  "media": 1,
+  "name": "Ligue Europa",
+  "kind": "organization",
+  "qid": "Q18760",
+  "label": "UEFA Europa League",
+  "description": "annual association football competition in Europe",
+  "links": 102,
+  "human": false,
+  "itemCountry": null,
+  "international": false
+ },
+ {
+  "briefing": 98,
+  "storyId": 718127,
+  "language": "fr",
+  "titles": [
+   "OM : Michael Oliver désigné pour arbitrer le match face à l’Olympiakos en Ligue Europa"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Michael Oliver",
+   "Ligue Europa",
+   "Olympiakos"
+  ],
+  "media": 1,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 98,
+  "storyId": 719156,
+  "language": "fr",
+  "titles": [
+   "La justice annonce la date du nouveau procès Deschamps-Riolo"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Équipe de France",
+   "Didier Deschamps"
+  ],
+  "media": 1,
+  "name": "Daniel Riolo",
+  "kind": "person",
+  "qid": "Q3014605",
+  "label": "Daniel Riolo",
+  "description": "French-Italian journalist",
+  "links": 2,
+  "human": true,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 98,
+  "storyId": 738678,
+  "language": "fr",
+  "titles": [
+   "Football : « Les arbitres ont besoin d’être protégés » alerte l'étoile montante de l'arbitrage, Elisa Daupeux"
+  ],
+  "sites": {
+   "FR": 2
+  },
+  "topic": "sport",
+  "others": [
+   "Football"
+  ],
+  "media": 1,
+  "name": "Elisa Daupeux",
+  "kind": "person",
+  "qid": "Q131701732",
+  "label": "Élisa Daupeux",
+  "description": "",
+  "links": 3,
+  "human": true,
+  "itemCountry": "FR",
+  "international": false
+ },
+ {
+  "briefing": 98,
+  "storyId": 730752,
+  "language": "fr",
+  "titles": [
+   "LFP : échange Gerlinger-Létang sur l'arbitrage"
+  ],
+  "sites": {
+   "FR": 2
+  },
+  "topic": "sport",
+  "others": [
+   "LFP"
+  ],
+  "media": 1,
+  "name": "Loïs Openda",
+  "kind": "person",
+  "qid": "Q56183407",
+  "label": "Loïs Openda",
+  "description": "Belgian association football player",
+  "links": 37,
+  "human": true,
+  "itemCountry": "BE",
+  "international": false
+ },
+ {
+  "briefing": 96,
+  "storyId": 756939,
+  "language": "es",
+  "titles": [
+   "Carrick: “No entiendo la roja a Yoro y menos que entre el VAR”",
+   "Carrick: \"No es roja, y tuvo mucha repercusión\"",
+   "Carrick: “No estoy de acuerdo con la expulsión y no entiendo que lo revise el VAR”",
+   "Carrick: Ekki rétti tíminn til að tjá mig um það"
+  ],
+  "sites": {},
+  "topic": "sport",
+  "others": [
+   "Manchester United",
+   "Atlético de Madrid",
+   "Atletico Madrid"
+  ],
+  "media": 4,
+  "name": "Michael Carrick",
+  "kind": "person",
+  "qid": "Q29566",
+  "label": "Michael Carrick",
+  "description": "English footballer and manager",
+  "links": 69,
+  "human": true,
+  "itemCountry": "GB",
+  "international": false
+ },
+ {
+  "briefing": 96,
+  "storyId": 750148,
+  "language": "tr",
+  "titles": [
+   "Galatasaray'ın golü VAR'a takıldı! İşte o pozisyon",
+   "Galatasaray-Barcelona maçının kırılma anı! İptal edilen gol sonrası her şey tersine döndü",
+   "FC Barcelona lässt in Galatasaray nach VAR-Glück die Muskeln spielen"
+  ],
+  "sites": {
+   "TR": 3,
+   "DE": 1
+  },
+  "topic": "sport",
+  "others": [
+   "Galatasaray",
+   "Barcelona",
+   "Galatasaray-Barcelona"
+  ],
+  "media": 3,
+  "name": "UEFA",
+  "kind": "organization",
+  "qid": "Q35572",
+  "label": "Union of European Football Associations",
+  "description": "international governing body for association football in Europe",
+  "links": 127,
+  "human": false,
+  "itemCountry": null,
+  "international": true
+ },
+ {
+  "briefing": 96,
+  "storyId": 717779,
+  "language": "uk",
+  "titles": [
+   "Сумнівні пенальті, мовчання ВАР та палкі емоції тренерів — найрезонансніші епізоди минулого туру УПЛ"
+  ],
+  "sites": {
+   "UA": 2
+  },
+  "topic": "sport",
+  "others": [],
+  "media": 1,
+  "name": "УПЛ",
+  "kind": "organization",
+  "qid": "Q4470534",
+  "label": "Ukrainian Premier League",
+  "description": "",
+  "links": 6,
+  "human": false,
+  "itemCountry": "UA",
+  "international": false
+ },
+ {
+  "briefing": 96,
+  "storyId": 684679,
+  "language": "en",
+  "titles": [
+   "FIFA president Infantino is facing a storm of controversy.",
+   "Gianni Infantino ziet nieuwe miljoenenrel opduiken op slechtst denkbare moment",
+   "Media: Gianni Infantino miał niejawnie otrzymać ponad milion dolarów",
+   "FIFA President Infantino Embroiled in Controversy Over Undisclosed Compensation",
+   "FIFA President Gianni Infantino Faces Scrutiny Over Undisclosed $1.7M World Cup Payment",
+   "FIFA denies rules breach over new reports of Infantino’s extra income"
+  ],
+  "sites": {
+   "VN": 2,
+   "NL": 5,
+   "PL": 3,
+   "KR": 1,
+   "GB": 4,
+   "DE": 10,
+   "NG": 1,
+   "FR": 5,
+   "BE": 7,
+   "ES": 1,
+   "AT": 3,
+   "MX": 1,
+   "AR": 1,
+   "CA": 1,
+   "TR": 1,
+   "CH": 5,
+   "RO": 1,
+   "IN": 1
+  },
+  "topic": "sport",
+  "others": [
+   "FIFA"
+  ],
+  "media": 87,
+  "name": "Gianni Infantino",
+  "kind": "person",
+  "qid": "Q124138",
+  "label": "Q124138",
+  "description": "Swiss-Italian-Lebanese football administrator",
+  "links": 83,
+  "human": true,
+  "itemCountry": "CH",
+  "international": false
+ }
+]

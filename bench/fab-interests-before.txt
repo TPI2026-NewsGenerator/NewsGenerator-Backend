@@ -1,0 +1,9 @@
+
+== fab (id 4) en,fr sport
+"""Je m'intéresse surtout à tout ce qui touche l'UEFA : la Ligue des champions, la Ligue Europa, la Ligue Conférence, l'Euro et la Ligue des nations, les décisions, sanctions et enquêtes de l'UEFA, sa gouvernance et ses élections, le fair-play financier. Je suis aussi l'arbitrage du football : décisions arbitrales et VAR, polémiques, nominations et sanctions des arbitres, changements des règles du jeu."""
+  [44] w1 Compétitions UEFA : Ligue des champions, Ligue Europa, Ligue Conférence, Euro, Ligue des nations
+     kw: UEFA Champions League, UEFA Europa League, UEFA Conference League, Euro 2024, UEFA Nations League, Ligue des champions, Ligue Europa, Ligue Conférence, Euro football, Ligue des nations
+  [45] w1 Gouvernance UEFA : décisions, sanctions, enquêtes, élections, fair-play financier
+     kw: UEFA governance, UEFA sanctions, UEFA investigation, Financial Fair Play, UEFA elections, gouvernance UEFA, sanctions UEFA, enquêtes UEFA, fair-play financier, décisions UEFA
+  [46] w1 Arbitrage football : VAR, décisions arbitrales, polémiques, règles du jeu
+     kw: football refereeing, VAR football, referee sanctions, laws of the game, referee appointments, arbitrage football, VAR football, décisions arbitrales, règles du jeu football, polémique arbitrage

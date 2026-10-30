@@ -1,0 +1,13 @@
+<anonymous_script>:5
+      "fait": Le pape Léon XIV encourage les évêques français à poursuivre leur action contre la pédocriminalité dans l’Église lors de sa rencontre avec sept victimes à Lourdes,
+              ^
+
+SyntaxError: Unexpected token 'L', ..."  "fait": Le pape Lé"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at file:///C:/Users/roste/Documents/CPNV24/TPI/prog/NewsGenerator/server/bench/merge.mjs:37:45
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Promise.all (index 2)
+    at async file:///C:/Users/roste/Documents/CPNV24/TPI/prog/NewsGenerator/server/bench/merge.mjs:25:5
+
+Node.js v24.21.0
+seconds 35

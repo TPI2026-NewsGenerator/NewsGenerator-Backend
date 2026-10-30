@@ -1,0 +1,349 @@
+total 140 found0 53 found1 0 multi 87
+
+# José Mourinho (fr,3228) bc={"DE":51,"FR":222,"PT":120,"DK":19,"PL":33,"RO":81,"NL":60,"ES":20,"IN":4,"FI":3,"HR":33,"MX":16,"VN":1,"UY":3,"BA":28,"NA":1,"HN":4,"IE":5,"NG":14,"EC":5,"BR":18,"IT":207,"GB":77,"EE":1,"AL":1,"BE":53,"PE":4,"CL":5,"SI":7,"AR":5,"SK":24,"AT":16,"CH":7,"NO":5,"CD":15,"TR":4,"ZA":4,"HU":7,"JO":1,"CZ":2,"TN":1,"AU":4,"CA":1,"BJ":2,"LU":1,"US":1,"GH":2,"MD":1,"PY":1,"KE":2,"MY":1,"CR":1}/3228 
+  T: Real Madrid y Mourinho brillan con 16 victorias seguidas en el Bernabé | Kane, Drogba or Ronaldo? José Mourinho's best-ever goalscorers | How to watch Barcelona vs Real Madrid live: Stream, TV, latest updates 
+  H: Q79983|110|PT|Portuguese association football manager and f ;; Q250901|71|ES|Spanish football manager and player (born 198
+
+# Pedro Sánchez (es,2593) bc={"ES":890,"UY":4,"FR":144,"CH":25,"IT":63,"HR":20,"BE":29,"PY":3,"IR":1,"AL":5,"BA":4,"PE":8,"BR":7,"PT":20,"US":4,"MA":3,"VN":1,"CA":7,"IE":4,"HU":4,"RO":6,"AR":6,"MT":2,"MX":6,"GB":9,"CZ":4,"KE":27,"PK":1,"BO":1,"DE":48,"SK":1,"GH":1,"EC":2,"AT":5,"AD":1,"LU":6,"NL":4,"UA":1,"FO":2,"MY":1,"GI":2,"EE":1,"AU":1,"NO":3,"AZ":1,"SE":1}/2593 
+  T: Por qué Pedro Sánchez luce un lazo en la solapa: el significado de est | Sánchez anuncia 45 millones para impulsar 7 residencias universitarias | Nicolás Redondo, sobre el beso de Pedro Sánchez y Begoña: "Me parece i 
+  H: Q6070218|102|ES|Prime Minister of Spain since 2018 ;; Q379748|38|-|King of Aragon and Pamplona ;; Q25414599|5|CL|Chilean association football player ;; Q3374128|3|-|Spanish painter, active 1454-circa 1468 ;; Q6070209|1|-|
+
+# Carlos Alcaraz (en,2349) bc={"HR":10,"NL":43,"BE":92,"RO":29,"IT":82,"ES":30,"AT":49,"DE":34,"VN":3,"MX":13,"UY":2,"GB":87,"CA":12,"FR":56,"PL":11,"CH":25,"SK":10,"BA":9,"CL":10,"PK":1,"AR":16,"PT":17,"CD":3,"NG":3,"IN":1,"MA":1,"CU":1,"LU":1,"BR":12,"EE":7,"EC":2,"PY":1,"IE":1,"ZA":3,"SI":2,"PE":4,"MY":3,"AU":3,"GH":1,"AZ":3,"KE":1,"HU":2,"CZ":5}/2349 
+  T: ATP > Rick Macci comprend Carlos Alcaraz : "Participer à des exhibitio | Why Maja Chwalińska’s Wuhan Open title explains the ups and downs of a | Bjorn Borg: “Alcaraz es el jugador a seguir el año que viene. Ganará m 
+  H: Q85518537|67|ES|Spanish tennis player (born 2003) ;; Q88130791|26|AR|Argentine footballer (born 2002) ;; Q55457954|0|-|
+
+# Prime Minister (en,1527) bc={"VN":248,"MY":7,"BG":6,"GB":247,"PK":36,"CA":24,"AZ":5,"IR":1,"UA":11,"NZ":8,"ES":2,"TZ":11,"CH":2,"PH":1,"IN":17,"MT":12,"AU":10,"NA":4,"IE":3,"CZ":1,"KE":26,"IT":6,"SK":1,"JO":1,"BE":1,"ZA":2,"SG":1,"LU":1,"GI":1,"KR":2}/1527 
+  T: Prime Minister: The State must manage and regulate land prices and the | Prime Minister: Develop the high-end real estate segment according to  | Let the Courts Do Their Job 
+  H: 
+
+# George Russell (en,1038) bc={"RO":11,"NL":55,"CH":21,"GB":105,"FR":56,"IT":40,"PL":7,"PT":38,"DE":46,"AT":36,"VN":1,"AR":15,"EC":1,"BE":30,"BR":5,"SK":9,"MX":1,"SI":1,"AU":6,"CZ":11,"IE":4,"BA":5,"LU":3,"NO":1,"ES":5,"CA":7,"MY":9,"EE":2,"PK":1,"AZ":1,"HR":2,"KE":1,"CD":1,"MT":1,"NG":1}/1038 
+  T: Kimi Antonelli poate deveni în această săptămână cel mai tânăr campion | George Russell opens up on personal struggles that overshadowed his Si | Titelstrijd Formule 1 beslist? Dit moet er gebeuren voor Kimi Antonell 
+  H: Q17319645|52|GB|British racing driver (born 1998) ;; Q535308|20|US|American pianist and composer (1923–2009) ;; Q6084189|7|-|British politician ;; Q3101884|4|-|British politician ;; Q5545896|4|NZ|New Zealand politician (1854–1937)
+
+# Un hombre (es,1015) bc={"ES":162,"PE":27,"UY":13,"MX":35,"HN":5,"AR":58,"EC":12,"CL":4,"PY":6,"CR":11,"BO":1}/1015 
+  T: Herido un hombre en Pinos Puente tras un tiroteo junto a un salón de j | Herido un hombre en Pinos Puente tras un tiroteo junto a un salón de j | Un hombre fue apuñalado por su hermano en medio de una discusión y el  
+  H: 
+
+# un homme (fr,1004) bc={"FR":527,"BE":185,"LU":37,"MG":2,"CH":37,"CA":10,"TN":1,"IT":1,"MA":1,"BJ":2}/1004 
+  T: Gard : un mort et un blessé grave dans un accident de la route à Verfe | Marseille, au lendemain des émeutes | Un homme en prison parvient à se faire livrer de l’alcool et de la nou 
+  H: 
+
+# Gyanesh Kumar (null,970) bc={"IN":20,"GB":2,"FR":2,"CH":2,"NL":2,"BE":1,"KE":11,"AZ":1,"CA":1}/970 
+  T: Jagan Mohan Reddy Backs CJP In Jolt To NDA, Regrets Supporting Panel T | ‘Man Named Gyanesh Kumar Cannot Sleep At Night’: Rahul Gandhi Takes Ji | CJP to ‘Restrategise’ Anti-CEC Stir Following Release of Key Members 
+  H: Q124883782|8|-|26th Chief Election Commissioner of India (Re ;; Q109462623|0|IN|Indian businessperson (born 1983, child of Sa
+
+# le Premier ministre (es,961) bc={"BE":191,"FR":460,"CH":22,"CA":2,"IT":5,"BJ":2,"SN":10,"LU":4,"CD":1,"MG":1,"MA":1}/961 
+  T: En direct - Une cellule de crise présidée par Lecornu est en cours, le | La TVA sort par la porte et revient par la fenêtre : faut-il craindre  | Canada-Un feu de prairie sur une base militaire en Alberta tue 4 perso 
+  H: 
+
+# Pep Guardiola (de,819) bc={"TR":1,"RO":16,"FR":29,"DK":3,"MX":2,"VN":5,"BA":7,"GB":152,"PT":3,"DE":28,"SI":1,"PL":5,"AR":5,"ZW":1,"IE":11,"HR":2,"BE":16,"NL":21,"NG":2,"IN":1,"IT":11,"NO":2,"PK":2,"AU":4,"CD":2,"ES":6,"MD":1,"KE":2,"CL":1,"ZA":3,"AT":1,"SK":2,"MY":2,"CH":1,"BJ":2,"CA":1,"CZ":1}/819 
+  T: Pep Guardiola'dan Gazze sözleri! "Unutmayın" | Guardiola, declarație-manifest împotriva Israelului » „Au omorât peste | Guardiola: Solidarity with Palestine cannot stop and… | YSscores 
+  H: Q164038|95|ES|Spanish association football manager and play ;; Q696463|49|AR|Argentine association football player ;; Q122854683|3|-|Paraguayan football manager (born 1996)
+
+# Josh Allen (en,744) bc={"DE":6,"CA":7,"SG":1,"MX":6,"GB":4,"CH":1,"AU":2,"HU":1,"IN":1}/744 
+  T: Josh Allen tied a Jim Kelly record with a throw his teammates could ba | Josh Allen tied a Jim Kelly record with a throw his teammates could ba | Josh Allen Solid numbers in high-scoring win 
+  H: Q27966578|21|US|American football player (born 1996) ;; Q55615341|9|US|American football player (born 1997) ;; Q18637084|4|US|American football player (born 1991) ;; Q84296025|0|-|researcher ;; Q126224294|0|US|American YouTuber
+
+# Alex Scott (en,726) bc={"VN":1,"GB":119,"CD":8,"RO":1,"BR":2,"FR":16,"BA":2,"DE":3,"PT":5,"IT":26,"ZA":1,"DK":2,"AU":1,"IN":1,"HR":3,"IE":1,"CA":1,"KE":2,"EE":1,"CZ":1,"SK":2,"HU":1,"MY":1}/726 
+  T: Chelsea and Liverpool learn hefty asking price of Premier League’s “co | Chelsea and Liverpool learn hefty asking price of Premier League’s “co | Bournemouth veut plus de 100 M€ pour Alex Scott 
+  H: Q434354|26|GB|English association football player and telev ;; Q106778648|25|GB|English association football player (born 200 ;; Q2833032|13|GB|Scottish footballer (1937-2001) ;; Q4717764|4|GB|English footballer (1913-1962) ;; Q4717762|4|AU|Australian actor (1929–2015)
+
+# Lamar Jackson (en,725) bc={"CA":18,"DE":7,"MX":8,"GB":3,"AU":6,"KE":1,"HU":1}/725 
+  T: ‘We Need Lamar Back Now,’ ‘A Good Backup, but Still a Backup’ — Ravens | ‘We Need Lamar Back Now,’ ‘A Good Backup, but Still a Backup’ — Ravens | Ravens’ Derrick Henry takes immediate accountability after fumble ruin 
+  H: Q24809702|23|US|American football player (born 1997) ;; Q84778227|1|-|American football cornerback (born 1998) ;; Q126737144|1|US|American football running back ;; Q100817178|0|-|college basketball player (1982–1983) ;; Q102956486|0|US|American songwriter, producer, author, rapper
+
+# Abdul Karim (en,695) bc={}/695 
+  T: Diego Gomez wondergoal inspires Brighton to 5-0 win over Crystal Palac | Durban City take first-leg advantage in CAF Confederation Cup tie | Jorthy Mokio scores twice as Ajax beat Groningen 5-2 
+  H: Q60694054|3|PK|Pakistani politician ;; Q109564298|2|ID|Indonesian policeman ;; Q12470557|1|ID|Indonesian Ulama ;; Q123898582|0|ID|Indonesian politician (born 1975 in Bandung) ;; Q123872590|0|ID|Indonesian politician (born 1965 in Jambi)
+
+# Jayden Daniels (en,687) bc={"CA":8,"DE":5,"CH":1,"AU":3,"MX":3,"GB":5}/687 
+  T: Why Jayden Daniels wears a Japanese flag on his helmet during Commande | Commanders vs. 49ers Predictions: Week 6 Monday Night Football odds, p | 10 Commanders Quotes That Define Washington Entering Week 6 vs. 49ers 
+  H: Q66825384|11|US|American football player (born 2000) ;; Q107995938|0|-|New Zealander actor
+
+# Caleb Williams (en,653) bc={"DE":5,"MX":2,"CA":6,"AU":1,"GB":2}/653 
+  T: ‘The GOAT Loves Our QB,’ ‘Can Tom (Brady) Do All of Our Games?’ — Bear | Caleb Williams Spectacular in return from injury | ‘The GOAT Loves Our QB,’ ‘Can Tom (Brady) Do All of Our Games?’ — Bear 
+  H: Q108878513|10|US|American football player (born 2002) ;; Q138978779|1|-|college basketball player (2026–202_) Auburn ;; Q75947257|0|-|Peerage person ID=421954 ;; Q27840140|0|-| ;; Q137889690|0|-|college basketball player (2024–202_) Lafayet
+
+# Luis de la Fuente (es,600) bc={"MX":3,"ES":31,"RO":7,"UY":1,"PT":5,"FR":19,"BR":1,"GB":7,"HR":15,"CD":5,"HU":1,"PE":1,"DE":3,"CZ":4,"IT":4,"SK":2,"NL":13,"PL":1,"MD":1,"AT":1}/600 
+  T: Ligue des nations : Dani Carvajal n’a pas fait une croix sur la sélect | Équipe d’Espagne : Carvajal ouvre la porte à un retour en sélection | Espagne : Carvajal envoie un message à Luis de la Fuente 
+  H: Q23612411|3|ES|Roman Catholic prelate ;; Q19512999|1|AR|Argentine cardiologist (b. 1932) ;; Q56865130|0|-|researcher ;; Q125213149|0|ES|Spanish architect
+
+# Erin Patterson (en,588) bc={}/588 
+  T: Australian woman guilty of triple murder involving poisonous mushrooms | Australian woman found guilty of triple murder involving poisonous mus | Australian woman found guilty of triple murder with poisonous mushroom 
+  H: Q91142338|0|-|researcher (ORCID 0000-0002-0427-5824) ;; Q96139600|0|-|researcher (ORCID 0000-0001-9572-3882) ;; Q138033375|0|CA|Canadian political candidate from Nova Scotia
+
+# Laurent Nuñez (fr,578) bc={"ES":7,"IT":9,"BE":47,"PT":5,"FR":265,"AZ":2,"FO":1,"AL":5,"CY":1,"LU":6,"IR":2,"SE":1,"CZ":9,"CH":14,"MC":3,"AT":2,"DE":6,"NO":3,"MX":2,"MY":1,"MA":2,"BR":2,"RS":2,"HR":3,"PY":1,"RO":2,"GB":1}/578 
+  T: Macron rechaza la dimisión del ministro del Interior por el fiasco de  | France: Macron Rejects Interior Minister’s Resignation After Nationwid | Sous pression, Macron reconduit Nuñez mais réclame des changements de  
+  H: Q30729111|16|FR|French official and politician (born 1964) ;; Q3219418|1|FR|French writer (born 1978)
+
+# una mujer (es,568) bc={"ES":89,"PE":10,"PY":3,"AR":45,"EC":8,"UY":9,"MX":8,"HN":4,"CL":3,"CR":4}/568 
+  T: Desarticularon tres bandas narco en Córdoba e incautaron más de 500 do | Desarticularon tres bandas narco en Córdoba e incautaron más de 500 do | Sufrió un infarto y le hizo juicio a un médico por un supuesto mal dia 
+  H: 
+
+# Jorge Martin (de,508) bc={"PT":34,"FR":48,"IT":34,"AU":3,"ES":13,"BJ":2,"LU":2,"CH":17,"PL":2,"BE":5,"RO":3,"CU":1,"AT":18,"SI":2,"UY":1,"HR":3,"GB":5,"SK":1,"BA":1,"MY":5,"PY":1,"ZA":3,"SM":1,"BR":4,"PK":2}/508 
+  T: MotoGP : Jorge Martin affiche ses ambitions et envoie un message très  | ¿Qué circuitos le van mejor a Jorge Martín y cuáles a Marc Márquez? | La reflexión de Marc Márquez: "Si hay la moto puedes hacer cosas. Pero 
+  H: Q19729952|23|ES|Spanish motorcycle racer ;; Q88321395|0|-|researcher
+
+# Charles Leclerc (pl,504) bc={"GB":19,"RO":7,"FR":62,"ES":1,"IT":27,"PL":2,"PT":17,"BA":2,"DE":9,"MX":1,"EC":1,"PK":2,"BE":18,"NA":1,"AT":15,"HR":4,"NL":42,"ZA":3,"CZ":8,"SI":1,"IN":1,"CH":8,"SK":10,"AL":1,"IE":1,"AR":5,"NO":1,"KE":1,"BR":2,"MY":3,"EE":1}/504 
+  T: Horner: Red Bull blocked moves for Leclerc, Alonso | Hamilton’s Singapore GP pit call shows 'lack of trust' with Ferrari | PICTURES: Jannik Sinner's girlfriend Laila Hasanovic turns up the glam 
+  H: Q17541912|69|MC|Monegasque racing driver ;; Q503201|27|FR|French general (1772-1802) ;; Q1063337|6|FR|French historian and diplomat ;; Q2959388|2|FR|French general (1739–1818) ;; Q16467635|1|FR|French politician
+
+# Rui Borges (pt,502) bc={"PT":461,"CL":1,"FR":4,"UY":1,"DK":1,"NG":2,"MX":1,"EC":1}/502 
+  T: Más notícias para Rui Borges: Lesão pode afastar Rodrigo Zalazar dos p | Sporting só abre porta a Geny Catamo por uma “loucura”: Valor está tra | Craque que desapareceu do onze de Rui Borges pode ser titular no Sport 
+  H: Q121147850|12|PT|Portuguese football coach and former player ( ;; Q7378708|4|PT|Portuguese footballer (born 1973) ;; Q29033171|3|PT|Portuguese swimmer ;; Q30503559|0|-|researcher
+
+# Ben Johnson (en,485) bc={"CA":3,"GB":2,"AU":2}/485 
+  T: "Dude is so corny," "Such a weirdo": NFL fans brutally mock Ben Johnso | Caleb Williams’ injury return proves Bears can still win NFC North des | "Dude is so corny," "Such a weirdo": NFL fans brutally mock Ben Johnso 
+  H: Q349166|45|US|American film actor (1918–1996) ;; Q61906182|20|GB|English association football player (born 200 ;; Q816525|6|US|American lawyer and politician from Kentucky  ;; Q100838902|3|US|American college basketball coach (born 1980) ;; Q131127364|1|-|American songwriter and producer
+
+# Emiliano Martinez (sv,459) bc={"HR":10,"AR":5,"PT":27,"MA":4,"BR":2,"MX":2,"NG":8,"NL":15,"BE":24,"CL":2,"IE":1,"PL":3,"FR":18,"IT":9,"DE":35,"EE":1,"CA":2,"GB":26,"UY":1,"SK":3,"CH":13,"NO":3,"DK":5,"UA":2,"BA":2,"RO":4,"JO":1,"VN":5,"AT":4,"CZ":1,"TR":1,"HU":1,"LU":1,"MK":1,"CD":1,"KE":1}/459 
+  T: Emiliano Martinez se oglasio nakon uspješne operacije: Vidimo se za ne | Emiliano Martinez return timeline after Chelsea star has surgery on fr | Jedan od najboljih golmana svijeta javio se iz bolnice. Uspješno je op 
+  H: Q3275904|63|AR|Argentine footballer (born 1992) ;; Q97608024|24|UY|Uruguayan footballer (born 1999) ;; Q42394465|0|UY|Uruguayan writer
+
+# Jeremiah Smith (en,451) bc={"CA":1,"GB":1,"AU":3}/451 
+  T: Heisman Trophy odds: Darian Mensah, Trinidad Chambliss close in on Jer | Jeremiah Smith Reveals Ohio State’s Biggest Challenge With Luke Fahey  | Big Ten receiving yardage leaders after Week 7 
+  H: Q2734279|9|US|American lawyer, jurist and politician (1759– ;; Q122850316|5|US|American football player ;; Q16198089|2|-|British Royal Navy officer (died 1675) ;; Q18819509|1|-|Church of England clergyman and antiquarian ( ;; Q18530027|1|-|English Presbyterian minister
+
+# young people (en,442) bc={"GB":59,"VN":141,"ZA":6,"NZ":7,"ES":10,"CA":5,"NG":2,"GH":1,"AU":2,"PK":4,"SK":1,"BG":1,"IE":4,"TZ":4,"VA":1,"UG":1,"PH":2,"KE":2,"GI":1,"LV":1,"HU":1,"LU":1,"AZ":1,"KR":1}/442 
+  T: Sheffield school takes step back in time to offer children of today op | Hanoi apartment prices in October 2026: Cooling down compared to the b | The stadium is full, the nation is waiting 
+  H: 
+
+# Two People (en,432) bc={"ES":4,"GB":47,"VN":10,"UA":15,"JO":1,"AZ":8,"IE":5,"CA":20,"AU":5,"NZ":10,"IN":2,"NG":1,"MY":5,"PK":2,"KE":1,"LU":1}/432 
+  T: Zamfara Police Rescue Two Abducted Victims, Recover Rustled Livestock | Storm Adam keeps Valencia and Alicante on edge ahead of move towards C | Police investigate burglary in Worthing 
+  H: 
+
+# Nidal Malik Hasan (fr,431) bc={"GB":25,"PK":1,"PT":4,"NZ":6,"ES":18,"BE":5,"FR":18,"HN":1,"AU":3,"MX":7,"AL":1,"CL":1,"NG":3,"IT":18,"DE":6,"BR":1,"IE":3,"AT":1,"CA":7,"NL":9,"AR":1,"VA":1,"DK":1,"TN":1,"MT":1,"EE":2,"US":1,"KE":3,"PE":4,"BA":1,"RS":2,"CH":3,"HR":2,"RO":1,"HU":1,"EC":1}/431 
+  T: The surprising psychology of morbid curiosity - video | I worked on death row for 18 years. This is why the livestream executi | I worked on death row for 18 years. This is why the livestream executi 
+  H: Q1400551|21|US|American Army officer and mass murderer (born
+
+# La víctima (es,418) bc={"ES":67,"AR":47,"PY":5,"UY":14,"CL":9,"EC":6,"MX":4,"PE":10,"US":1,"CR":1,"AD":1}/418 
+  T: CIUDAD DE CORRIENTES: Un joven murió tras derrapar con su moto sobre A | Dos detenidos de 29 y 37 años por golpear en la cabeza a otro hombre d | Un hombre fue apuñalado por su hermano en medio de una discusión y el  
+  H: 
+
+# Daniel Dubois (en,417) bc={"RO":2,"AT":6,"GB":131,"NG":4,"FR":2,"CZ":1,"BE":1,"IE":5,"SK":2,"HR":8,"DE":4,"CH":3,"UA":4,"BA":2,"PL":1,"AU":5,"GH":2,"CD":1,"TR":1}/417 
+  T: Controversă în box, după ce arbitrul a ignorat prosopul aruncat de col | Dubois vs Itauma is a heavyweight rivalry for the future | Daniel Dubois has options: Head to America? Fury/Joshua winner? Kabaye 
+  H: Q30122489|16|GB|British boxer ;; Q113957|7|FR|French politician ;; Q3013963|2|FR|rugby union player ;; Q1160464|1|CH|Swiss ice hockey player ;; Q131312012|1|FR|
+
+# une femme (fr,412) bc={"BE":46,"FR":226,"CH":19,"LU":17,"SN":1,"TN":3,"CA":3,"IT":1,"MA":2}/412 
+  T: Perquisition à 5h du matin à Jumet: un singe emmené avec des voitures  | Perquisition à 5h du matin à Jumet: un singe emmené avec des voitures  | Elle bloque un robot livreur et finit menottée puis embarquée par la p 
+  H: 
+
+# Michael Jordan (sq,412) bc={"DE":13,"CA":6,"FR":16,"CY":1,"BR":4,"MX":3,"RO":5,"AR":5,"BE":8,"PL":3,"NG":1,"AL":1,"IT":7,"GH":1,"NL":10,"SI":3,"AU":2,"AT":7,"GB":12,"HU":2,"PE":1,"HR":7,"SK":2,"PT":1,"BA":1,"CH":2,"IE":1,"CR":1,"EE":1}/412 
+  T: Basketball: Er oder Jordan: NBA-Saison Nummer 24 als Argument für Jame | LeBron James startet mit 41 Jahren bei den Philadelphia 76ers in seine | Er oder Jordan: NBA-Saison Nummer 24 als Argument für James? 
+  H: Q41421|139|US|American basketball player and businessman (b ;; Q3308007|61|US|American actor (born 1987) ;; Q3308285|9|US|American computer scientist, University of Ca ;; Q6831716|6|GB|English footballer (born 1984) ;; Q65029442|5|US|American football offensive lineman
+
+# Ramon Vega (fr,404) bc={"FR":22,"MA":1,"DE":9,"TN":1,"PT":2,"BE":23,"PL":3,"SI":1,"CH":14,"AT":7,"HR":3,"NL":9,"IT":13,"BR":2,"HU":1,"IN":1,"LU":1,"JO":1,"RO":1,"SK":2,"MX":1,"MY":2,"RS":2,"IE":4,"GB":8,"CA":1,"CZ":3,"AU":1,"EE":1,"PY":1,"NG":1}/404 
+  T: FIFA : Ramon Vega se prépare à défier Gianni Infantino | Infantino à 16 voix de la présidence : son rival peut-il renverser la  | FIFA : Ramon Vega se lance à l’assaut de Gianni Infantino 
+  H: Q676250|15|CH|Swiss footballer/entrepreneur ;; Q32927010|2|PR|Puerto Rican sprinter (1939-2007)
+
+# David Ellison (en,400) bc={"BR":2,"FR":12,"CA":4,"MX":4,"CZ":1,"RO":3,"MY":2,"GB":2,"BE":1,"IT":1,"PE":2,"VN":1,"HR":1,"ES":7,"UA":1,"KR":1,"IN":1,"BA":1,"NL":2,"DE":2,"KE":2,"CH":1}/400 
+  T: Skydance’s Financial Decisions Could Put AEW’s TV Future At Risk | AEW WrestleDream 2026 Media Post-Show Scrum: Mercedes Mone Underwent B | AEW’s Television Future Still Not Guaranteed Despite Tony Khan’s Posit 
+  H: Q5233363|22|US|American film producer (born 1983) ;; Q5233362|2|GB|British actor (1939–2010) ;; Q132517436|0|NZ|New Zealand Māori leader, soldier, schoolteac ;; Q37371230|0|-|medical researcher at Oregon Health & Science ;; Q93479201|0|-|natural resources researcher
+
+# Michael Douglas (en,398) bc={"PT":2,"MX":4,"UY":1,"AT":2,"HR":24,"DE":41,"CH":1,"IN":1,"VN":1,"BA":9,"CZ":1,"FR":3,"MA":1,"GB":29,"UA":3,"FI":2,"ES":3,"IT":4,"IE":3,"BR":3,"AR":1,"BE":5,"NL":4,"AL":1,"CA":1,"NZ":1,"EE":1}/398 
+  T: Michael Douglas contó cómo el cáncer cambió sus prioridades y recordó  | Michael Douglas contó cómo el cáncer cambió sus prioridades y recordó  | Michael Douglas insultou Julia Roberts e traiu a mulher. Agora conta t 
+  H: Q119798|99|US|American actor, producer and activist (born 1 ;; Q172140|84|US|American author, screenwriter, film director  ;; Q358096|8|CA|Canadian skeleton racer ;; Q56428317|0|-|researcher ;; Q57686130|0|-|researcher ORCID ID = 0000-0001-8517-6678
+
+# Sophie Cunningham (en,396) bc={"PL":1,"DE":1,"GB":1}/396 
+  T: Sophie Cunningham praises Gabby Williams’ Valkyries impact | ‘Good work girls’: Sophie Cunningham praises high schoolers protesting | Angel Reese criticized by Sophie Cunningham as Fever star risks WNBA f 
+  H: Q65161168|21|US|American basketball player born 1996 ;; Q7562983|2|AU|Australian writer
+
+# Two men (en,395) bc={"AU":17,"GB":79,"NG":1,"IN":7,"VN":3,"CA":12,"ZW":1,"ZA":6,"MT":4,"IE":12,"PK":2,"MY":8,"LV":1,"UA":1,"NZ":4,"KE":4,"CY":1,"IT":1,"AZ":3,"ES":1}/395 
+  T: Two men shot during daylight dispute in Dallas, 17km north of Melbourn | Two motorcycle riders killed in head-on collision in Saga Prefecture | Two motorcycle riders killed in head-on collision in Saga Prefecture 
+  H: 
+
+# Pierre Sage (fr,393) bc={"FR":84,"GB":21,"DK":1,"CL":4,"CD":1,"SK":3,"IN":2,"BJ":4,"PT":2,"BE":1}/393 
+  T: Lens prêt à retenter le pari Dino Toppmöller | Lens prêt à retenter le pari Dino Toppmöller | Diego Gómez scored from the halfway line, and Brighton were 3-0 up on  
+  H: Q123584452|13|FR|French football coach (born 1979) ;; Q133581514|0|-|
+
+# Jerry Jones (en,387) bc={"MX":1,"AT":1,"CA":2,"DE":1,"ST":1}/387 
+  T: Brian Schottenheimer replacements: 5 best candidates if Jerry Jones fi | Jerry Jones Faces Intense Scrutiny for Keeping Cowboys Coaches Underpa | Brian Schottenheimer replacements: 5 best candidates if Jerry Jones fi 
+  H: Q1280022|19|US|American businessman and owner of the Dallas  ;; Q6183832|3|US|National Football League player (1894-1938) ;; Q6180877|2|CA|Canadian soldier (1858–1950) ;; Q16643824|1|US|American boxer ;; Q25190360|1|US|American football player (born 1944)
+
+# Stephen A. Smith (en,385) bc={"SG":1,"BR":2}/385 
+  T: ‘He Never Says It,’ ‘Stop That’ — Bill O’Reilly Debates ESPN’s Stephen | Stephen A. Smith rubs shoulders with Donald Trump and explains White H | Jemele Hill bashes Stephen A. Smith over Donald Trump, White House din 
+  H: Q7608548|11|US|American sports journalist ;; Q42955949|4|GB|British historian ;; Q7608571|2|CA|Canadian legal scholar ;; Q7610554|2|US|American academic; communications researcher ;; Q117859483|0|-|documentary director
+
+# Tobias Rausch (de,378) bc={"PT":1,"AT":9,"DE":278,"FR":6,"CH":7,"IT":4,"NL":6,"BA":2,"UA":2,"RO":1,"BR":1,"LU":3,"CZ":1,"BE":5,"AZ":1,"ES":7,"KE":4,"HR":1,"SE":1}/378 
+  T: A BMW deixou um político alemão sem carro de serviço. E ele foi bater  | „Braune Sch****“ - Linksextreme kippen Pferdemist vor CDU-Büros | Merz droht CDU-Politikern in Magdeburg bei Votum für AfD-Kandidaten 
+  H: Q23565388|6|DE|German politician (AfD) ;; Q62605756|1|-|German theatre director and author ;; Q55458661|0|-|researcher (ORCID 0000-0001-5773-5620) ;; Q91311776|0|-|researcher (ORCID 0000-0002-5142-1310) ;; Q139321088|0|-|
+
+# Imran Khan (en,377) bc={"IN":4,"PK":24,"SG":1,"IT":1,"ZA":3,"GB":10,"FR":7,"BR":2,"VN":1,"LU":2,"KE":2,"MY":2,"AZ":1,"CH":1}/377 
+  T: Bombay HC To Hear Imran Khan’s Plea Against ‘Leave India Notice’ On Oc | Bombay HC to hear Imran Khan’s plea against India exit order on Octobe | Imranissance is here. Why young adults are falling back in love with I 
+  H: Q155164|100|PK|Prime Minister of Pakistan from 2018 to 2022 ;; Q312781|41|US|Indian actor ;; Q122948143|0|-|gravitational wave researcher ;; Q136398548|0|CA|Canadian political candidate ;; Q42560214|0|-|ophthalmology researcher (ORCID 0000-0002-056
+
+# federal judge (en,374) bc={"CA":3,"HU":3,"GB":6,"IN":1,"ST":1,"KE":2}/374 
+  T: Trump: Washington golf course renovation to start in November | Trump: Washington golf course renovation to start in November | Bulldozed trees spike DC tensions: Inside Trump’s takeover of East Pot 
+  H: 
+
+# Pio Esposito (it,362) bc={"IT":188,"MX":1,"FR":6,"SM":3,"AR":1,"ZA":3,"BE":4,"NL":1,"RO":1,"NO":1,"GB":2}/362 
+  T: Inter, Pio Esposito non è più intoccabile: Bonny può cambiare le gerar | Bonny sulla scia di Pio Esposito e Carlos Augusto: così Chivu ha cambi | Com'è andata la prima Inter senza Lautaro? Thuram e Bonny decisivi, Pi 
+  H: Q119237165|24|IT|Italian footballer (born 2005) ;; Q136813682|0|-|Italian footballer (born 2002)
+
+# Jane Doe (en,359) bc={"DE":23,"CA":11,"PK":1,"GB":34,"AR":1,"SK":2,"IT":3,"FR":14,"CH":4,"BE":6,"NL":6,"GR":2,"CZ":4,"IE":2,"HU":1,"NO":4,"MX":3,"KR":1,"SE":1,"KE":1,"DK":1,"ES":1}/359 
+  T: The online campaign to unmask a Cornell rape accuser reached tens of m | Cornell University: Warum sich die Frauen mit »Jane Doe« solidarisiere | Cornell University: Warum sich die Frauen mit »Jane Doe« solidarisiere 
+  H: 
+
+# John Healey (en,350) bc={"GB":52,"FR":3,"IE":1,"IN":1,"KE":1,"ES":1}/350 
+  T: DWP benefits cuts warning issued with John Healey announcement imminen | Family firms to be hit with mega tax bills as Chancellor prepares cash | Family firms to be hit with mega tax bills as Chancellor prepares cash 
+  H: Q615077|27|GB|British politician (born 1960) ;; Q6238445|3|-|English translator ;; Q56236115|2|GB|British rower ;; Q104899022|1|GB|British semitologist ;; Q76179397|0|-|Peerage person ID=585365
+
+# Luis Suárez (es,345) bc={"PT":102,"PK":3,"FR":9,"UY":8,"CL":5,"CA":2,"HN":1,"TR":1,"MX":5,"AR":5,"GB":2,"AU":3,"EC":1,"BR":3,"NG":1,"BE":1,"AT":4,"RO":2,"HU":1,"AL":1,"US":1,"DE":2,"SK":3,"DK":1,"PL":2,"HR":2,"ES":5,"BA":1,"PE":1}/345 
+  T: Martino puso a Messi a la misma altura de este jugador en la historia: | Europa atenta ao rendimento de Luis Suárez na Champions | Messi scores twice to propel Inter Miami to victory over Atlanta Unite 
+  H: Q26517|114|UY|Uruguayan association football player ;; Q270367|50|ES|Spanish association football player and manag ;; Q28736721|33|CO|Colombian association football player ;; Q57245155|5|AR|Argentine association football player ;; Q25209803|2|-|Spanish Roman Catholic bishop
+
+# Bryce Young (en,344) bc={"CA":9,"DE":1,"MX":1,"AU":1}/344 
+  T: Bryce Young continues strong play with big passing day in Week 6 | NFL roundup | Panthers’ Bryce Young joins list of Hall of Famers with feat not seen  
+  H: Q79416176|12|US|American football player (born 2001) ;; Q134289747|1|US|American football player
+
+# Mike Flanagan (fr,344) bc={"ES":6,"BR":9,"UY":1,"NZ":1,"IT":4,"VN":1,"FR":19,"HR":2,"PE":3,"MX":1,"AR":2,"PT":1,"GB":3,"DE":1,"BE":1,"CH":2,"AU":1}/344 
+  T: Mike Flanagan reimagina 'Carrie' con ciberacoso y simulacros de tirote | Mike Flanagan actualiza con éxito 'Carrie' | Mike Flanagan actualiza con éxito 'Carrie' 
+  H: Q19668417|28|US|American filmmaker (born 1978) ;; Q1443732|7|GB|English footballer and manager (born 1952) ;; Q16019688|6|GB|Irish soldier who assisted the formation of t ;; Q869473|5|US|American baseball player and coach (1951–2011 ;; Q6846847|3|US|American football player
+
+# Mike McCarthy (en,326) bc={"MX":2,"CA":2,"AT":1}/326 
+  T: Steelers Coach Mike McCarthy Hurts Ankle, Returns for OT Win Over Bucs | Mike McCarthy shrugs off foot injury | Steelers coach Mike McCarthy injures ankle during game vs Bucs 
+  H: Q506866|12|US|American football coach (born 1963) ;; Q1933317|10|US|American cyclist ;; Q6847877|5|GB|Irish rugby union player ;; Q115804201|2|-|American baseball coach ;; Q22279122|2|-|journalist
+
+# Jackie Chan (de,17) bc={"DE":3,"BA":1,"KE":1}/17 
+  T: 5 películas de héroes de acción como Stallone, Schwarzenegger y Van Da | Karate Kid : Legends sur Canal+ Box Office : Jackie Chan et Ralph Macc | Fans feiern Foto mit Jackie Chan: Til Schweiger meldet sich an der Sei 
+  H: Q36970|162|US|Hong Kong actor and martial artist (born 1954 ;; Q123684766|1|BR|Brazilian footballer
+
+# John Campbell (en,14) bc={"NZ":1}/14 
+  T: Morning Report: Winston Peters and John Campbell in fiery clash over U | West Indies deny India clean sweep as Hope scores unbeaten 162 | West Indies deny India clean sweep as Hope scores unbeaten 162 
+  H: Q1702304|14|-|Scottish footballer who played for Sunderland ;; Q6224983|6|-|British naval officer, navigational expert an ;; Q1699536|5|US|U.S. Representative from South Carolina (1795 ;; Q19974175|3|-|Scottish soldier in the British Army ;; Q105466017|0|-|British Army surgeon
+
+# Lamine Camara (en,104) bc={"FR":11,"GB":4,"DE":1,"PE":1}/104 
+  T: Ligue 1 : Première défaite de la saison pour Monaco de Lamine Camara e | Mercato Liverpool : après Lamine Camara, une nouvelle piste à 90 M€ au | Monaco’s Filipe Luis confirms Lamine Camara is fit for Lorient 
+  H: Q116896436|28|SN|Senegalese footballer (born 2004) ;; Q63537079|0|FR|French politician ;; Q136112653|0|GN|Guinean politician
+
+# Moses Simon (en,21) bc={"NG":12}/21 
+  T: Simon Enters Late As Paris FC Edge Rennes 4-3 | Simon Features As Paris FC Beat Rennes 4-3, Go Level On Points With Le | Benfica boy Edokpolor stars in Super Eagles draw 
+  H: Q15900645|33|NG|Nigerian association football player ;; Q1523794|2|DE|German entrepreneur ;; Q105392849|0|-|holocaust victim, b. 1860-12-27 ;; Q105392850|0|-|holocaust victim, b. 1859-06-03
+
+# Rui Costa (it,84) bc={"PT":43,"BR":33,"FR":1}/84 
+  T: Rui Costa assistiu a jogo da Taça de Portugal ao vivo neste sábado | Rui Costa assistiu a jogo da Taça de Portugal ao vivo neste sábado | Rui Costa assistiu ao Louletano-Rio Ave da Taça de Portugal 
+  H: Q190608|58|PT|Portuguese footballer (born 1972) ;; Q363962|29|PT|Portuguese cyclist ;; Q10365240|9|BR|Brazilian politician ;; Q26405019|8|PT|Portuguese association football player ;; Q133259927|1|-|
+
+# Gianluca Mancini (it,18) bc={"IT":5,"FR":1}/18 
+  T: Roma, Mourinho e Pellegrini fanno pace: l’abbraccio dopo il Real Madri | L'anello è storia vecchia: Mourinho-Pellegrini, pace fatta dopo le rug | Alineaciones de Roma y Real Madrid por la Champions League: formacione 
+  H: Q28973528|38|IT|Italian association football player ;; Q140589421|0|-|
+
+# Antonio Raimondo (en,119) bc={"IT":37,"DE":1,"RO":4,"FR":2,"CA":1,"AR":1,"PT":1,"AT":1,"SK":1,"PL":1}/119 
+  T: Da Raimondo a Cisse: allora i talenti si trovano anche in Serie B. Ma  | Le luci del calciomercato su Antonio Raimondo | Di Vaio: “Pessina e Raimondo sono il futuro del Bologna” 
+  H: Q107999124|10|IT|Italian footballer
+
+# Der Täter (de,18) bc={"DE":15,"AT":2}/18 
+  T: Amoklauf an Schule in Oregon: Lehrerin wirft Handy – Familienvater ver | Oregon: Kinder in Grundschule erschossen | Angreifer tot : Drei Kinder an US-Grundschule erschossen 
+  H: 
+
+# Alieu Njie (it,15) bc={"IT":6}/15 
+  T: Njie, un gol per prendersi la Viola. E chiamare la Svezia dei grandi | Dalla Svezia, Njie chiama il Ct Potter: "Se uno gioca in Serie A deve  | Njie: "Voglio dare il massimo con la Fiorentina per conquistare la mag 
+  H: Q130361236|6|SE|Swedish footballer ;; Q133932745|1|GM|Gambian government official and politician
+
+# Matt Willis (en,22) bc={"GB":14}/22 
+  T: Jeff Brazier shares heartbreaking struggle to save son Freddy from add | Matt Willis says he feels 'a lot of guilt' about 'removing himself' fr | Matt Willis says he feels 'a lot of guilt' about 'removing himself' fr 
+  H: Q723063|14|GB|British musician, singer, actor, and televisi ;; Q6791435|2|US|American former football wide receiver ;; Q28728021|0|US|actor (1913–1989) ;; Q117850970|0|-|
+
+# Paola Iezzi (it,16) bc={"IT":15}/16 
+  T: X Factor, le bresciane Alìa e Milla conquistano i Live Show | X Factor 2026: chi sono i 12 concorrenti scelti da Gabbani, Irama , Pa | Chi sono i 12 finalisti di X Factor 2026: storia per storia, sogno per 
+  H: Q16586771|6|IT|Italian singer-songwriter, disc jockey and re
+
+# Mick Cronin (en,16) bc={}/16 
+  T: Where UCLA Could Stand With 5-Star Jalen Davis After Visit | Men's Basketball to Participate at Big Ten Media Day on Thursday | UCLA basketball’s Mick Cronin confirms surprising game-day routine rep 
+  H: Q15459203|3|US|American basketball coach ;; Q6838116|2|-|Australian rules footballer and coach ;; Q3311723|2|AU|Australian rugby league footballer and coach ;; Q6838118|1|-|Irish hurler
+
+# Jacob Vestergaard (sv,15) bc={"FO":15}/15 
+  T: Noyðast at hava tol í Tjørnuvík | Ferðavinnan vil hava strangari reglur fyri heimablídni | Havnargjøld: Kommunan missir stóran part av inntøkugrundarlagnum 
+  H: Q730980|10|-|Faroese politician ;; Q104166805|0|-|Danish cyclist ;; Q87213706|0|-|researcher
+
+# Matthew Robertson (en,14) bc={}/14 
+  T: Bantering Points: 10/7/26 | Rangers Recall Cole Beaudoin With Joe Veleno Headed to IR, Robertson C | Game #5: New York Islanders vs. New York Rangers Open Thread 
+  H: Q114586313|5|CA|Canadian ice hockey player (born 2001) ;; Q130302162|1|-|British para-cyclist (born 1999) ;; Q16211270|1|-| ;; Q16224821|0|CA|Canadian ice hockey player (born 1988) ;; Q91360511|0|-|researcher (ORCID 0000-0003-2545-8918)
+
+# Óscar Puente (es,110) bc={"PE":1,"ES":64}/110 
+  T: "Por ahora le ha salido bien": los malabares de Óscar Puente para pedi | Tebas responde a Uribes y defiende su comparación con Goebbels citando | Tebas recuerda a Uribes que Patxi López y Óscar Puente también han ape 
+  H: Q6174903|12|ES|Spanish politician and lawyer ;; Q125166637|0|-|mayor
+
+# Alan Carr (en,13) bc={"GB":7,"AU":1}/13 
+  T: Celebrity Traitors isn't as good this year for 1 reason – and it's not | Alan Carr castle plan given boost by heritage officers | Popular Amanda Holden TV show axed by the BBC 
+  H: Q32795|19|GB|British comedian and television personality ;; Q17305757|2|GB|Northern Ireland trade unionist ;; Q19662950|1|-|Australian rules footballer ;; Q56484671|0|-|researcher ;; Q51848507|0|-|researcher
+
+# Luís Neves (null,167) bc={"PT":166}/167 
+  T: As lealdades da seita | 15 minutos: Luís Neves avança com queixa-crime contra antigo secretári | Novo secretário-geral é exemplo de "servidor público" ao contrário do  
+  H: Q138395084|3|PT|Portuguese politician ;; Q3266781|1|CA|Canadian comics artist ;; Q64504435|1|PT|Portuguese businessperson ;; Q56543763|0|-|researcher
+
+# Thomas Perlmann (en,14) bc={"DE":1,"KR":1}/14 
+  T: Optogenetics just won the Nobel Prize, its first therapy is already un | Nobel Prize awarded for groundbreaking research on brain cells study | Hinter den Kulissen des Nobelpreises für Optogenetik: Der Anruf, der d 
+  H: Q6041808|3|SE|Swedish professor ;; Q67226342|0|-|researcher
+
+# Luís Castro (pt,91) bc={"PT":32,"ES":3,"AT":2,"BR":3,"HN":1}/91 
+  T: Luís Castro lembra após empate do Levante: «O valor da transferência d | Luís Castro: "Com o guarda-redes deles comprávamos quatro jogadores" | Luís Castro: "Com o guarda-redes deles comprávamos quatro jogadores" 
+  H: Q15896123|16|PT|Portuguese footballer and manager ;; Q6706760|3|SV|Salvadoran footballer ;; Q10320683|2|BR|Brazilian politician ;; Q12392457|1|ES|association football player ;; Q107283576|1|-|Cuban baseball player
+
+# Sergej Lavrov (hr,20) bc={"RS":1,"BA":1,"HR":1,"AL":1,"SE":1}/20 
+  T: Iran: Lavrov oggi a Teheran, Mosca tenta la mediazione per evitare nuo | "Zelenski ne želi pregovore" | Moskva "zagrmela"; NATO je prešao granicu? 
+  H: Q58217|102|RU|Russian politician of Armenian origin, Minist ;; Q4252224|1|-|Soviet economist (1928-2000)
+
+# John Geddie (en,14) bc={}/14 
+  T: Exclusive-US holds more secret talks with Myanmar’s military-backed ru | Exclusive-US holds more secret talks with Myanmar’s military-backed ru | Exclusive-US holds more secret talks with Myanmar’s military-backed ru 
+  H: Q6235040|3|-|British writer (1846-1927) ;; Q16065528|1|-|Scots-Canadian missionary ;; Q96384564|1|-|
+
+# Brad Smith (en,112) bc={"AZ":2,"MA":2,"DE":2,"BE":4,"IE":1,"FR":5,"ZA":2,"AR":1,"AT":1,"LU":1,"IN":2,"MD":2,"BR":2,"PT":2,"HU":1,"DK":2,"HR":3,"GB":3}/112 
+  T: Microsoft president warns green-card curbs could hurt US tech: Reports | Microsoft rebate a Vance tras quedar suspendida del programa PERM | Microsoft president warns Trump’s H-1B crackdown could push top AI tal 
+  H: Q15477554|25|AU|Australian association footballer (born 1994) ;; Q50300377|9|US|American lawyer and CLO of Microsoft (born 19 ;; Q2923428|1|US|American musician ;; Q108050118|1|US|American football player (born 1969) ;; Q120800246|1|US|American football coach (born c. 1950)
+
+# Ravi Shastri (en,22) bc={}/22 
+  T: ‘He should not play all three formats’: Ravi Shastri’s advice for Jasp | "Don’t think he should play all three formats" - Ravi Shastri's massiv | "Don’t think he should play all three formats" - Ravi Shastri's massiv 
+  H: Q3518502|21|IN|Indian cricket coach, former player and comme ;; Q87618897|0|-|researcher ;; Q134457027|0|-|professor of civil, construction, and environ
+
+# Mike Matheson (en,19) bc={"AT":1,"CA":2}/19 
+  T: Le Canadien évalue l’absence de Mike Matheson en raison d’une blessure | Habs recall defenceman David Reinbacher for game against Capitals | Montreal Canadiens holen Reinbacher in den NHL-Kader 
+  H: Q3313431|16|CA|Canadian ice hockey player ;; Q100880576|0|-|college basketball player (1983–1985) Oregon
+
+# Facundo Bernal (es,138) bc={"CL":2,"FR":1,"GB":1,"ES":11,"RO":2,"DK":2,"SK":2,"PT":2,"MX":3,"BO":2,"HN":1,"NL":10,"PL":1,"AT":1,"IT":2,"UY":1,"BA":1}/138 
+  T: La portada de ESTADIO Deportivo para el lunes 19 de octubre de 2026 | Manuel Pellegrini recibe feroz insulto de periodista de Barcelona: “Qu | El Betis prepara su respuesta oficial a la expulsión de Facundo Bernal 
+  H: Q111070073|10|UY|Uruguayan association football player ;; Q94638097|0|-|
+
+# Francis Ford Coppola (fr,14) bc={"FR":2,"IT":1,"ES":2,"CH":1}/14 
+  T: Wim Wenders contre Francis Ford Coppola : les folles coulisses du film | Francis Coppola’s ‘Megalopolis’ Back In Theaters | Francis Coppola’s ‘Megalopolis’ Back In Theaters 
+  H: Q56094|102|US|American filmmaker (born 1939)
+
+# Félix Lebrun (fr,176) bc={"FR":149,"SK":1,"SI":6,"SE":1,"BR":2}/176 
+  T: Le Stade toulousain miraculé, Félix Lebrun roi d'Europe, l'OL leader d | Quiz. XV de France, Félix Lebrun, record de penalties... Avez-vous bie | Quiz. XV de France, Félix Lebrun, record de penalties... Avez-vous bie 
+  H: Q113553703|21|FR|French table tennis player (born 2006) ;; Q112269928|0|FR|
+
+# Daniela Katzenberger (de,15) bc={"AT":3,"DE":12}/15 
+  T: Frisch verliebt! - Katzenberger-Mama tauscht Ex (37) gegen Neuen (31) | „Luft war raus“ - Daniela Katzenberger packt über ihre Intim-OP aus | Nicht nur eine Frage der Optik : Daniela Katzenberger nennt Gründe für 
+  H: Q22979|12|DE|German reality TV personality, TV host, model
+
+# Le maire (fr,85) bc={"FR":65,"CH":1,"MA":1,"BE":3}/85 
+  T: Jura. Intrusion, vitres cassées… Le maire tombe nez à nez avec les aut | Annemasse sous tension : une « guerre de territoire » liée au narcotra | Istres : un audit financier alerte la municipalité, cap sur des économ 
+  H: 
+
+# CHRIS WHEELER (en,20) bc={"GB":4}/20 
+  T: After nearly seven years of being Man United's main man is the time dr | Michael Carrick says he has blocked out noise surrounding Man United w | Leeds 1-1 Man United PLAYER RATINGS: Who 'still looks short of his bes 
+  H: Q17388907|5|AU|Australian cyclist ;; Q5108454|2|US|Baseball broadcaster ;; Q54853261|1|GB|British rally driver
+
+# La vittima (it,19) bc={"IT":18}/19 
+  T: Trovato sanguinante a piazza Garibaldi: ecco cosa era successo | Muore nello schianto con l’auto dell’ex, il figlio accusa: “Mia madre  | Cassano Magnago, donna morta in un frontale. Sospetto choc: "non un in 
+  H: 
+
+# Rahmat Shah (en,19) bc={"GB":1}/19 
+  T: Rahmat Shah calls hard-fought Abu Dhabi draw 'equal to a win' | Afghanistan batter Rahmat Shah joins Greg Chappell and Virat Kohli in  | Hasan Mahmud took Bangladesh’s first Test hat-trick by a fast bowler,  
+  H: Q7283504|11|AF|Afghan cricketer ;; Q109563928|1|ID| ;; Q115051493|0|-|
+
+# Chief Minister (en,146) bc={"PK":11,"IN":2,"MY":2,"AU":1,"KE":3}/146 
+  T: Sindh’s China Visit: A Vision for a Digital, Industrial and Prosperous | CM’s Livestock Card scheme boosts animal exports by 43pc | 19 dead, 25 hurt in stampede at India religious gathering 
+  H: 
+
+# my friend (en,19) bc={"VN":2,"GB":2,"IE":1}/19 
+  T: My friend no longer donates old clothes to charity. | A tale of two trap houses: being cuckooed ruined my friend’s life – bu | A tale of two trap houses: being cuckooed ruined my friend’s life – bu 
+  H: 
+
+# Second Person (en,16) bc={"SG":1,"AU":1,"CA":3}/16 
+  T: Russia Plague Mystery: WHO Probes Reports of Second Person With Unexpl | Agent Memory Breaks When the Second Person Writes to It | Russia denies another plague case as WHO presses for more information 
+  H: 
+
+# Igor Chernyshov (en,16) bc={"CA":2}/16 
+  T: Chernyshov’s two-goal performance gives Sharks an overtime win over Ki | Chernyshov's 2nd goal of the game gives the Sharks a 5-4 overtime win  | NHL : les Sharks font deux sur deux grâce à Chernyshov 
+  H: Q124307078|7|RU|Russian ice hockey player ;; Q4514327|5|RU|Russian footballer

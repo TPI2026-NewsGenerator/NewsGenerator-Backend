@@ -1,0 +1,16 @@
+briefing 16: 0 of 10 left out, 3177 ms
+briefing 17: 0 of 10 left out, 2790 ms
+briefing 18: 0 of 10 left out, 3332 ms
+briefing 19: 1 of 10 left out, 2680 ms
+   [8234] L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Win -> football
+briefing 20: 1 of 10 left out, 3540 ms
+   [8234] L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Win -> football
+briefing 21: 0 of 10 left out, 3652 ms
+briefing 22: 1 of 10 left out, 3025 ms
+   [8234] L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Win -> football
+briefing 23: 0 of 9 left out, 18965 ms
+briefing 24: 0 of 8 left out, 2093 ms
+briefing 25: 0 of 7 left out, 2349 ms
+briefing 26: 0 of 8 left out, 1497 ms
+102 cards, tokens {"calls":11,"input":27461,"output":4396}
+seconds 48

@@ -1,0 +1,18 @@
+candidates 50: UEFA 38, l'arbitrage du 12
+run 0: 15 chosen, UEFA 11, l'arbitrage du 4, kept 10: UEFA 6, l'arbitrage du 4  (4928+660 tokens)
+   K UEFA | Ceferin: ‘Political interference’ in Italian football could ‘undermine UEFA trust’ ahead of Euro 203
+   K UEFA | LdC : Lens et Feyenoord condamnés par l’UEFA
+   K UEFA | David De Gea chambre Manchester City
+   K l'arbitrage du | New VAR Rules Reopen the Debate Over Technology and Human Judgement
+   K l'arbitrage du | VAR saves referee after Johan Manzambi controversy away from Aston Villa - Expert
+   K UEFA | Spain has submitted a bid to host the Nations League Final Four - reports
+   K UEFA | Ligue des Nations : au terme d’un choc spectaculaire, l’Espagne s’offre l’Angleterre
+   K UEFA | DIRECT. Ligue des nations: suivez la conférence de presse de Zidane à J-1 de Belgique-France
+     UEFA | Irlande : les joueurs tranchent sur le maintien des matchs face à Israël
+     UEFA | Ligue des Nations de l'UEFA : Modric offre la victoire à la Croatie, la Suisse démarre fort, la Finl
+     UEFA | Benfica vs Bayern | Infos de base | UEFA Women's Champions League 2026/27
+     UEFA | Do Wales have what it takes to survive League A?
+   K l'arbitrage du | Real Madrid : Valverde victime d’une rupture ligamentaire, Mourinho relance la polémique arbitrale
+   K l'arbitrage du | ‘It’s like VAR has crept in’
+     UEFA | LdN : le dernier carré en Espagne ?
+seconds 33

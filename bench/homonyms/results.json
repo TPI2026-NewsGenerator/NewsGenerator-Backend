@@ -1,0 +1,6531 @@
+[
+ {
+  "name": "Maître Reda Kohen",
+  "lang": "fr",
+  "news": 4282,
+  "titles": [
+   "Agriculteurs à Agen : plan d’urgence d’octobre 2026, prêts à taux zéro, GNR, taxe foncière et assurance récolte, comment en bénéficier",
+   "Apple HomeView France : pourquoi l’écran domotique reste indisponible et comment l’acheter en connaissance de cause",
+   "Votre bailleur veut reprendre vos terres pour du solaire pendant que vous portez un projet agrivoltaïque : qui décide et que devient votre bail rural"
+  ],
+  "found": 0,
+  "mediaCountry": "FR",
+  "byCountry": {
+   "FR": 4282
+  },
+  "links": 4282,
+  "languageCountry": null
+ },
+ {
+  "name": "José Mourinho",
+  "lang": "fr",
+  "news": 3228,
+  "titles": [
+   "Real Madrid y Mourinho brillan con 16 victorias seguidas en el Bernabéu",
+   "Kane, Drogba or Ronaldo? José Mourinho's best-ever goalscorers",
+   "How to watch Barcelona vs Real Madrid live: Stream, TV, latest updates as El Clasico is coming up"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "DE": 51,
+   "FR": 222,
+   "PT": 120,
+   "DK": 19,
+   "PL": 33,
+   "RO": 81,
+   "NL": 60,
+   "ES": 20,
+   "IN": 4,
+   "FI": 3,
+   "HR": 33,
+   "MX": 16,
+   "VN": 1,
+   "UY": 3,
+   "BA": 28,
+   "NA": 1,
+   "HN": 4,
+   "IE": 5,
+   "NG": 14,
+   "EC": 5,
+   "BR": 18,
+   "IT": 207,
+   "GB": 77,
+   "EE": 1,
+   "AL": 1,
+   "BE": 53,
+   "PE": 4,
+   "CL": 5,
+   "SI": 7,
+   "AR": 5,
+   "SK": 24,
+   "AT": 16,
+   "CH": 7,
+   "NO": 5,
+   "CD": 15,
+   "TR": 4,
+   "ZA": 4,
+   "HU": 7,
+   "JO": 1,
+   "CZ": 2,
+   "TN": 1,
+   "AU": 4,
+   "CA": 1,
+   "BJ": 2,
+   "LU": 1,
+   "US": 1,
+   "GH": 2,
+   "MD": 1,
+   "PY": 1,
+   "KE": 2,
+   "MY": 1,
+   "CR": 1
+  },
+  "links": 3228,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q79983",
+    "description": "Portuguese association football manager and former player",
+    "links": 110,
+    "human": true,
+    "country": "PT"
+   },
+   {
+    "qid": "Q250901",
+    "description": "Spanish football manager and player (born 1983)",
+    "links": 71,
+    "human": true,
+    "country": "ES"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Pedro Sánchez",
+  "lang": "es",
+  "news": 2593,
+  "titles": [
+   "Por qué Pedro Sánchez luce un lazo en la solapa: el significado de este detalle",
+   "Sánchez anuncia 45 millones para impulsar 7 residencias universitarias con 2.000 nuevas plazas",
+   "Nicolás Redondo, sobre el beso de Pedro Sánchez y Begoña: \"Me parece impresentable, en la vida pública tienes que tener un nivel de pudor\""
+  ],
+  "found": 9,
+  "mediaCountry": null,
+  "byCountry": {
+   "ES": 890,
+   "UY": 4,
+   "FR": 144,
+   "CH": 25,
+   "IT": 63,
+   "HR": 20,
+   "BE": 29,
+   "PY": 3,
+   "IR": 1,
+   "AL": 5,
+   "BA": 4,
+   "PE": 8,
+   "BR": 7,
+   "PT": 20,
+   "US": 4,
+   "MA": 3,
+   "VN": 1,
+   "CA": 7,
+   "IE": 4,
+   "HU": 4,
+   "RO": 6,
+   "AR": 6,
+   "MT": 2,
+   "MX": 6,
+   "GB": 9,
+   "CZ": 4,
+   "KE": 27,
+   "PK": 1,
+   "BO": 1,
+   "DE": 48,
+   "SK": 1,
+   "GH": 1,
+   "EC": 2,
+   "AT": 5,
+   "AD": 1,
+   "LU": 6,
+   "NL": 4,
+   "UA": 1,
+   "FO": 2,
+   "MY": 1,
+   "GI": 2,
+   "EE": 1,
+   "AU": 1,
+   "NO": 3,
+   "AZ": 1,
+   "SE": 1
+  },
+  "links": 2593,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q6070218",
+    "description": "Prime Minister of Spain since 2018",
+    "links": 102,
+    "human": true,
+    "country": "ES"
+   },
+   {
+    "qid": "Q109858307",
+    "description": "1526-1609",
+    "links": 0,
+    "human": true,
+    "country": "ES"
+   },
+   {
+    "qid": "Q3374128",
+    "description": "Spanish painter, active 1454-circa 1468",
+    "links": 3,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q6070209",
+    "description": null,
+    "links": 1,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q25414599",
+    "description": "Chilean association football player",
+    "links": 5,
+    "human": true,
+    "country": "CL"
+   },
+   {
+    "qid": "Q379748",
+    "description": "King of Aragon and Pamplona",
+    "links": 38,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q62588094",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Carlos Alcaraz",
+  "lang": "en",
+  "news": 2349,
+  "titles": [
+   "ATP > Rick Macci comprend Carlos Alcaraz : \"Participer à des exhibitions est donc probablement la décision la plus intelligente\"",
+   "Why Maja Chwalińska’s Wuhan Open title explains the ups and downs of a tennis journey",
+   "Bjorn Borg: “Alcaraz es el jugador a seguir el año que viene. Ganará más Grand Slam y volverá a ser el número uno mundial\""
+  ],
+  "found": 3,
+  "mediaCountry": null,
+  "byCountry": {
+   "HR": 10,
+   "NL": 43,
+   "BE": 92,
+   "RO": 29,
+   "IT": 82,
+   "ES": 30,
+   "AT": 49,
+   "DE": 34,
+   "VN": 3,
+   "MX": 13,
+   "UY": 2,
+   "GB": 87,
+   "CA": 12,
+   "FR": 56,
+   "PL": 11,
+   "CH": 25,
+   "SK": 10,
+   "BA": 9,
+   "CL": 10,
+   "PK": 1,
+   "AR": 16,
+   "PT": 17,
+   "CD": 3,
+   "NG": 3,
+   "IN": 1,
+   "MA": 1,
+   "CU": 1,
+   "LU": 1,
+   "BR": 12,
+   "EE": 7,
+   "EC": 2,
+   "PY": 1,
+   "IE": 1,
+   "ZA": 3,
+   "SI": 2,
+   "PE": 4,
+   "MY": 3,
+   "AU": 3,
+   "GH": 1,
+   "AZ": 3,
+   "KE": 1,
+   "HU": 2,
+   "CZ": 5
+  },
+  "links": 2349,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q85518537",
+    "description": "Spanish tennis player (born 2003)",
+    "links": 67,
+    "human": true,
+    "country": "ES"
+   },
+   {
+    "qid": "Q88130791",
+    "description": "Argentine footballer (born 2002)",
+    "links": 26,
+    "human": true,
+    "country": "AR"
+   },
+   {
+    "qid": "Q55457954",
+    "description": null,
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Prime Minister",
+  "lang": "en",
+  "news": 1527,
+  "titles": [
+   "Prime Minister: The State must manage and regulate land prices and the real estate market.",
+   "Prime Minister: Develop the high-end real estate segment according to market demand.",
+   "Let the Courts Do Their Job"
+  ],
+  "found": 3,
+  "mediaCountry": null,
+  "byCountry": {
+   "VN": 248,
+   "MY": 7,
+   "BG": 6,
+   "GB": 247,
+   "PK": 36,
+   "CA": 24,
+   "AZ": 5,
+   "IR": 1,
+   "UA": 11,
+   "NZ": 8,
+   "ES": 2,
+   "TZ": 11,
+   "CH": 2,
+   "PH": 1,
+   "IN": 17,
+   "MT": 12,
+   "AU": 10,
+   "NA": 4,
+   "IE": 3,
+   "CZ": 1,
+   "KE": 26,
+   "IT": 6,
+   "SK": 1,
+   "JO": 1,
+   "BE": 1,
+   "ZA": 2,
+   "SG": 1,
+   "LU": 1,
+   "GI": 1,
+   "KR": 2
+  },
+  "links": 1527,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "George Russell",
+  "lang": "en",
+  "news": 1038,
+  "titles": [
+   "Kimi Antonelli poate deveni în această săptămână cel mai tânăr campion din istoria Formula 1: de ce rezultate are nevoie",
+   "George Russell opens up on personal struggles that overshadowed his Singapore GP victory",
+   "Titelstrijd Formule 1 beslist? Dit moet er gebeuren voor Kimi Antonelli om dit weekend al kampioen te worden"
+  ],
+  "found": 8,
+  "mediaCountry": null,
+  "byCountry": {
+   "RO": 11,
+   "NL": 55,
+   "CH": 21,
+   "GB": 105,
+   "FR": 56,
+   "IT": 40,
+   "PL": 7,
+   "PT": 38,
+   "DE": 46,
+   "AT": 36,
+   "VN": 1,
+   "AR": 15,
+   "EC": 1,
+   "BE": 30,
+   "BR": 5,
+   "SK": 9,
+   "MX": 1,
+   "SI": 1,
+   "AU": 6,
+   "CZ": 11,
+   "IE": 4,
+   "BA": 5,
+   "LU": 3,
+   "NO": 1,
+   "ES": 5,
+   "CA": 7,
+   "MY": 9,
+   "EE": 2,
+   "PK": 1,
+   "AZ": 1,
+   "HR": 2,
+   "KE": 1,
+   "CD": 1,
+   "MT": 1,
+   "NG": 1
+  },
+  "links": 1038,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q17319645",
+    "description": "British racing driver (born 1998)",
+    "links": 52,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q124560564",
+    "description": "(born 1935)",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q110180497",
+    "description": "Australian grazier and politician (1857-1914)",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q535308",
+    "description": "American pianist and composer (1923–2009)",
+    "links": 20,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q56261583",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q6084189",
+    "description": "British politician",
+    "links": 7,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q3101884",
+    "description": "British politician",
+    "links": 4,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q5545896",
+    "description": "New Zealand politician (1854–1937)",
+    "links": 4,
+    "human": true,
+    "country": "NZ"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Un hombre",
+  "lang": "es",
+  "news": 1015,
+  "titles": [
+   "Herido un hombre en Pinos Puente tras un tiroteo junto a un salón de juegos",
+   "Herido un hombre en Pinos Puente tras un tiroteo junto a un salón de juegos",
+   "Un hombre fue apuñalado por su hermano en medio de una discusión y el agresor fue detenido en Córdoba"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "ES": 162,
+   "PE": 27,
+   "UY": 13,
+   "MX": 35,
+   "HN": 5,
+   "AR": 58,
+   "EC": 12,
+   "CL": 4,
+   "PY": 6,
+   "CR": 11,
+   "BO": 1
+  },
+  "links": 1015,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "un homme",
+  "lang": "fr",
+  "news": 1004,
+  "titles": [
+   "Gard : un mort et un blessé grave dans un accident de la route à Verfeuil",
+   "Marseille, au lendemain des émeutes",
+   "Un homme en prison parvient à se faire livrer de l’alcool et de la nourriture… par un drone"
+  ],
+  "found": 4,
+  "mediaCountry": "FR",
+  "byCountry": {
+   "FR": 527,
+   "BE": 185,
+   "LU": 37,
+   "MG": 2,
+   "CH": 37,
+   "CA": 10,
+   "TN": 1,
+   "IT": 1,
+   "MA": 1,
+   "BJ": 2
+  },
+  "links": 1004,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Gyanesh Kumar",
+  "lang": null,
+  "news": 970,
+  "titles": [
+   "Jagan Mohan Reddy Backs CJP In Jolt To NDA, Regrets Supporting Panel That Selects ECs",
+   "‘Man Named Gyanesh Kumar Cannot Sleep At Night’: Rahul Gandhi Takes Jibe At CEC In Goa",
+   "CJP to ‘Restrategise’ Anti-CEC Stir Following Release of Key Members"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "IN": 20,
+   "GB": 2,
+   "FR": 2,
+   "CH": 2,
+   "NL": 2,
+   "BE": 1,
+   "KE": 11,
+   "AZ": 1,
+   "CA": 1
+  },
+  "links": 970,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q124883782",
+    "description": "26th Chief Election Commissioner of India (Retd. IAS Officer)",
+    "links": 8,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q109462623",
+    "description": "Indian businessperson (born 1983, child of Satya Narayan Thakur)",
+    "links": 0,
+    "human": true,
+    "country": "IN"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "le Premier ministre",
+  "lang": "es",
+  "news": 961,
+  "titles": [
+   "En direct - Une cellule de crise présidée par Lecornu est en cours, le Premier ministre s’exprimera ensuite",
+   "La TVA sort par la porte et revient par la fenêtre : faut-il craindre le retour du “chameau qui pue” ?",
+   "Canada-Un feu de prairie sur une base militaire en Alberta tue 4 personnes"
+  ],
+  "found": 3,
+  "mediaCountry": null,
+  "byCountry": {
+   "BE": 191,
+   "FR": 460,
+   "CH": 22,
+   "CA": 2,
+   "IT": 5,
+   "BJ": 2,
+   "SN": 10,
+   "LU": 4,
+   "CD": 1,
+   "MG": 1,
+   "MA": 1
+  },
+  "links": 961,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Pope Leo",
+  "lang": "en",
+  "news": 957,
+  "titles": [
+   "Pope Leo to hold Wednesday audience for first time since cancer surgery",
+   "Pope Leo pledges gradual return to duties in first event since cancer surgery",
+   "Pope Leo tells faithful in St. Peter's Square he will gradually resume duties after cancer surgery"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "NG": 10,
+   "PK": 7,
+   "GB": 58,
+   "IE": 17,
+   "CA": 25,
+   "ZA": 12,
+   "VA": 16,
+   "IN": 3,
+   "VN": 5,
+   "UA": 7,
+   "AU": 4,
+   "NZ": 5,
+   "PH": 4,
+   "LU": 2,
+   "MT": 3,
+   "KR": 1
+  },
+  "links": 957,
+  "languageCountry": null
+ },
+ {
+  "name": "Sylvester Ntim",
+  "lang": "en",
+  "news": 819,
+  "titles": [
+   "Mamelodi Sundowns await tests on Teboho Mokoena ligament injury",
+   "Rangers delay decision on £15.5m Badredine Bouanani option",
+   "Mourinho says Militao return can restore Real Madrid’s defensive security"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 819,
+  "languageCountry": null
+ },
+ {
+  "name": "Pep Guardiola",
+  "lang": "de",
+  "news": 819,
+  "titles": [
+   "Pep Guardiola'dan Gazze sözleri! \"Unutmayın\"",
+   "Guardiola, declarație-manifest împotriva Israelului » „Au omorât peste 34.000 de oameni în Gaza”",
+   "Guardiola: Solidarity with Palestine cannot stop and… | YSscores"
+  ],
+  "found": 3,
+  "mediaCountry": null,
+  "byCountry": {
+   "TR": 1,
+   "RO": 16,
+   "FR": 29,
+   "DK": 3,
+   "MX": 2,
+   "VN": 5,
+   "BA": 7,
+   "GB": 152,
+   "PT": 3,
+   "DE": 28,
+   "SI": 1,
+   "PL": 5,
+   "AR": 5,
+   "ZW": 1,
+   "IE": 11,
+   "HR": 2,
+   "BE": 16,
+   "NL": 21,
+   "NG": 2,
+   "IN": 1,
+   "IT": 11,
+   "NO": 2,
+   "PK": 2,
+   "AU": 4,
+   "CD": 2,
+   "ES": 6,
+   "MD": 1,
+   "KE": 2,
+   "CL": 1,
+   "ZA": 3,
+   "AT": 1,
+   "SK": 2,
+   "MY": 2,
+   "CH": 1,
+   "BJ": 2,
+   "CA": 1,
+   "CZ": 1
+  },
+  "links": 819,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q164038",
+    "description": "Spanish association football manager and player (born 1971)",
+    "links": 95,
+    "human": true,
+    "country": "ES"
+   },
+   {
+    "qid": "Q696463",
+    "description": "Argentine association football player",
+    "links": 49,
+    "human": true,
+    "country": "AR"
+   },
+   {
+    "qid": "Q122854683",
+    "description": "Paraguayan football manager (born 1996)",
+    "links": 3,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Josh Allen",
+  "lang": "en",
+  "news": 744,
+  "titles": [
+   "Josh Allen tied a Jim Kelly record with a throw his teammates could barely believe",
+   "Josh Allen tied a Jim Kelly record with a throw his teammates could barely believe",
+   "Josh Allen Solid numbers in high-scoring win"
+  ],
+  "found": 6,
+  "mediaCountry": null,
+  "byCountry": {
+   "DE": 6,
+   "CA": 7,
+   "SG": 1,
+   "MX": 6,
+   "GB": 4,
+   "CH": 1,
+   "AU": 2,
+   "HU": 1,
+   "IN": 1
+  },
+  "links": 744,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q27966578",
+    "description": "American football player (born 1996)",
+    "links": 21,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q84296025",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q55615341",
+    "description": "American football player (born 1997)",
+    "links": 9,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q18637084",
+    "description": "American football player (born 1991)",
+    "links": 4,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q126224294",
+    "description": "American YouTuber",
+    "links": 0,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q141212220",
+    "description": null,
+    "links": 0,
+    "human": true,
+    "country": "AU"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Eric Kwafo",
+  "lang": "en",
+  "news": 738,
+  "titles": [
+   "Ouaddou plans squad rotation as Orlando Pirates face 60-game season",
+   "CAF Champions League: North African clubs suffer setbacks as Sudan’s Al Hilal pick crucial away win",
+   "Wydad drop points at home after penalty drama against Amal Tiznit"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 738,
+  "languageCountry": null
+ },
+ {
+  "name": "Alex Scott",
+  "lang": "en",
+  "news": 726,
+  "titles": [
+   "Chelsea and Liverpool learn hefty asking price of Premier League’s “complete package”",
+   "Chelsea and Liverpool learn hefty asking price of Premier League’s “complete package”",
+   "Bournemouth veut plus de 100 M€ pour Alex Scott"
+  ],
+  "found": 9,
+  "mediaCountry": null,
+  "byCountry": {
+   "VN": 1,
+   "GB": 119,
+   "CD": 8,
+   "RO": 1,
+   "BR": 2,
+   "FR": 16,
+   "BA": 2,
+   "DE": 3,
+   "PT": 5,
+   "IT": 26,
+   "ZA": 1,
+   "DK": 2,
+   "AU": 1,
+   "IN": 1,
+   "HR": 3,
+   "IE": 1,
+   "CA": 1,
+   "KE": 2,
+   "EE": 1,
+   "CZ": 1,
+   "SK": 2,
+   "HU": 1,
+   "MY": 1
+  },
+  "links": 726,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q434354",
+    "description": "English association football player and television presenter (born 1984)",
+    "links": 26,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q106778648",
+    "description": "English association football player (born 2003)",
+    "links": 25,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q4717764",
+    "description": "English footballer (1913-1962)",
+    "links": 4,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q43882729",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q2833032",
+    "description": "Scottish footballer (1937-2001)",
+    "links": 13,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q4717766",
+    "description": "British racehorse trainer (1960–1994)",
+    "links": 2,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q4717762",
+    "description": "Australian actor (1929–2015)",
+    "links": 4,
+    "human": true,
+    "country": "AU"
+   },
+   {
+    "qid": "Q100920883",
+    "description": "college basketball player (1971–1972) New Mexico State",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q22284153",
+    "description": "founder of pediatric cancer charity",
+    "links": 3,
+    "human": true,
+    "country": "US"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Lamar Jackson",
+  "lang": "en",
+  "news": 725,
+  "titles": [
+   "‘We Need Lamar Back Now,’ ‘A Good Backup, but Still a Backup’ — Ravens Fans Call for Lamar Jackson’s Return After 13-10 Loss to Browns",
+   "‘We Need Lamar Back Now,’ ‘A Good Backup, but Still a Backup’ — Ravens Fans Call for Lamar Jackson’s Return After 13-10 Loss to Browns",
+   "Ravens’ Derrick Henry takes immediate accountability after fumble ruins Browns game"
+  ],
+  "found": 5,
+  "mediaCountry": null,
+  "byCountry": {
+   "CA": 18,
+   "DE": 7,
+   "MX": 8,
+   "GB": 3,
+   "AU": 6,
+   "KE": 1,
+   "HU": 1
+  },
+  "links": 725,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q24809702",
+    "description": "American football player (born 1997)",
+    "links": 23,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q100817178",
+    "description": "college basketball player (1982–1983)",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q102956486",
+    "description": "American songwriter, producer, author, rapper",
+    "links": 0,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q84778227",
+    "description": "American football cornerback (born 1998)",
+    "links": 1,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q126737144",
+    "description": "American football running back",
+    "links": 1,
+    "human": true,
+    "country": "US"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Elias Boateng",
+  "lang": "en",
+  "news": 724,
+  "titles": [
+   "Eric Tinkler urges Durban City to cut out complacency after CAF Confederation Cup win",
+   "Mohamed El-Basyouni: الاهلي’s clear roles helped secure African Champions League triumph",
+   "Al Ahly board member rejects claims over Zizo’s salary and reveals Trezeguet deal"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 724,
+  "languageCountry": null
+ },
+ {
+  "name": "PM Modi",
+  "lang": "en",
+  "news": 710,
+  "titles": [
+   "PM Modi congratulates Mona Agarwal, Avani Lekhara on gold-silver finish at Asian Para Games",
+   "PM Modi mourns Gwalior road accident victims, announces Rs 2 lakh aid for families",
+   "Women-led development under PM Modi is empowering India’s economic future"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "IN": 89,
+   "LU": 1,
+   "PK": 1,
+   "AU": 1
+  },
+  "links": 710,
+  "languageCountry": null
+ },
+ {
+  "name": "Abdul Karim",
+  "lang": "en",
+  "news": 695,
+  "titles": [
+   "Diego Gomez wondergoal inspires Brighton to 5-0 win over Crystal Palace",
+   "Durban City take first-leg advantage in CAF Confederation Cup tie",
+   "Jorthy Mokio scores twice as Ajax beat Groningen 5-2"
+  ],
+  "found": 10,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 695,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q12470557",
+    "description": "Indonesian Ulama",
+    "links": 1,
+    "human": true,
+    "country": "ID"
+   },
+   {
+    "qid": "Q60694054",
+    "description": "Pakistani politician",
+    "links": 3,
+    "human": true,
+    "country": "PK"
+   },
+   {
+    "qid": "Q109564298",
+    "description": "Indonesian policeman",
+    "links": 2,
+    "human": true,
+    "country": "ID"
+   },
+   {
+    "qid": "Q123898582",
+    "description": "Indonesian politician (born 1975 in Bandung)",
+    "links": 0,
+    "human": true,
+    "country": "ID"
+   },
+   {
+    "qid": "Q123872590",
+    "description": "Indonesian politician (born 1965 in Jambi)",
+    "links": 0,
+    "human": true,
+    "country": "ID"
+   },
+   {
+    "qid": "Q123878350",
+    "description": "Indonesian politician (born 1987 in Cianjur)",
+    "links": 0,
+    "human": true,
+    "country": "ID"
+   },
+   {
+    "qid": "Q114772934",
+    "description": "Indonesian civil servant",
+    "links": 0,
+    "human": true,
+    "country": "ID"
+   },
+   {
+    "qid": "Q114285245",
+    "description": null,
+    "links": 0,
+    "human": true,
+    "country": "ID"
+   },
+   {
+    "qid": "Q109428782",
+    "description": "Indonesian politician (born 1969 in Pasuruan)",
+    "links": 0,
+    "human": true,
+    "country": "ID"
+   },
+   {
+    "qid": "Q123900477",
+    "description": null,
+    "links": 0,
+    "human": true,
+    "country": "ID"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Jayden Daniels",
+  "lang": "en",
+  "news": 687,
+  "titles": [
+   "Why Jayden Daniels wears a Japanese flag on his helmet during Commanders games",
+   "Commanders vs. 49ers Predictions: Week 6 Monday Night Football odds, picks, and player props",
+   "10 Commanders Quotes That Define Washington Entering Week 6 vs. 49ers"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "CA": 8,
+   "DE": 5,
+   "CH": 1,
+   "AU": 3,
+   "MX": 3,
+   "GB": 5
+  },
+  "links": 687,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q66825384",
+    "description": "American football player (born 2000)",
+    "links": 11,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q107995938",
+    "description": "New Zealander actor",
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Samuel Ekow Amoasi Appiah",
+  "lang": "en",
+  "news": 663,
+  "titles": [
+   "CAF Champions League: Rangers petition CAF over alleged vandalism by MC Alger supporters",
+   "USM Alger qualify for CAF Confederation Cup group stage after THE PANTHERS FC withdrawal",
+   "Wiliete SC coach Beto Bianchi hospitalised after clash with Sundowns assistant"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 663,
+  "languageCountry": null
+ },
+ {
+  "name": "Caleb Williams",
+  "lang": "en",
+  "news": 653,
+  "titles": [
+   "‘The GOAT Loves Our QB,’ ‘Can Tom (Brady) Do All of Our Games?’ — Bears Fans Want More of 7-Time Super Bowl Champion QB on FOX",
+   "Caleb Williams Spectacular in return from injury",
+   "‘The GOAT Loves Our QB,’ ‘Can Tom (Brady) Do All of Our Games?’ — Bears Fans Want More of 7-Time Super Bowl Champion QB on FOX"
+  ],
+  "found": 10,
+  "mediaCountry": null,
+  "byCountry": {
+   "DE": 5,
+   "MX": 2,
+   "CA": 6,
+   "AU": 1,
+   "GB": 2
+  },
+  "links": 653,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q108878513",
+    "description": "American football player (born 2002)",
+    "links": 10,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q75947257",
+    "description": "Peerage person ID=421954",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q138978779",
+    "description": "college basketball player (2026–202_) Auburn",
+    "links": 1,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q27840140",
+    "description": null,
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q137889690",
+    "description": "college basketball player (2024–202_) Lafayette",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q137889689",
+    "description": "college basketball player (2024–202_) Georgetown",
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Felipe VI",
+  "lang": "es",
+  "news": 650,
+  "titles": [
+   "\"Necesidad de disimular\": Letizia y Felipe VI y el gesto de 2003 que revela lo que mantenían oculto",
+   "Devant les tombes, l’amer solennité – Par Abdelfettah Lahjomri",
+   "\"Cuando la reina Letizia coincide con amigos en público, sería rígido interpretar cualquier gesto de cercanía como una transgresión”"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "ES": 197,
+   "MA": 11,
+   "FR": 47,
+   "PT": 28,
+   "MX": 1,
+   "CH": 8,
+   "IT": 10,
+   "BE": 9,
+   "LU": 1,
+   "DE": 5,
+   "AR": 2,
+   "LT": 1,
+   "AT": 1,
+   "PE": 1,
+   "AZ": 3,
+   "PY": 1,
+   "EE": 1,
+   "FI": 2,
+   "GI": 1,
+   "UA": 1
+  },
+  "links": 650,
+  "languageCountry": null
+ },
+ {
+  "name": "Issa Said",
+  "lang": "en",
+  "news": 628,
+  "titles": [
+   "Ilyes Hamache makes Cambuur history with goal against AZ Alkmaar",
+   "Arsenal’s late resilience keeps title defence on track after Forest win",
+   "CAF Champions League: Egyptian sides win as preliminary round first legs conclude"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 628,
+  "languageCountry": null
+ },
+ {
+  "name": "Javier Tebas",
+  "lang": "es",
+  "news": 627,
+  "titles": [
+   "La Liga : la banderole des supporters du Real Madrid à l’encontre de Javier Tebas fait réagir le président de la Liga",
+   "La Liga : la banderole des supporters du Real Madrid à l’encontre de Javier Tebas fait réagir le président de la Liga",
+   "Javier Tebas contre-attaque après la banderole hostile des supporters du Real Madrid"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "SK": 4,
+   "FR": 28,
+   "MX": 11,
+   "AR": 5,
+   "BE": 18,
+   "CD": 3,
+   "PE": 5,
+   "UY": 7,
+   "DE": 10,
+   "ES": 15,
+   "HN": 2,
+   "RO": 6,
+   "GB": 14,
+   "IT": 13,
+   "HU": 2,
+   "PT": 17,
+   "AL": 1,
+   "AT": 6,
+   "VN": 1,
+   "AU": 1,
+   "BR": 4,
+   "EC": 2,
+   "NL": 14,
+   "CA": 2,
+   "LU": 1,
+   "BJ": 4,
+   "IE": 4,
+   "CL": 1,
+   "NG": 3,
+   "GH": 1,
+   "MA": 1,
+   "CH": 2,
+   "PL": 1,
+   "NO": 3,
+   "SE": 1,
+   "HR": 2,
+   "CZ": 1,
+   "DK": 1,
+   "BA": 1
+  },
+  "links": 627,
+  "languageCountry": null
+ },
+ {
+  "name": "Prince Harry",
+  "lang": "en",
+  "news": 612,
+  "titles": [
+   "Prince Harry defamation claim lodged by Sentebale is paused amid charity's financial woes",
+   "Piers Morgan’s Offer To ‘Help’ Prince Harry & Meghan Markle Was Anything but Kind",
+   "Prince Harry & Meghan Markle Need ‘Royal Gold Dust,’ Author Says"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "GB": 199,
+   "GH": 1,
+   "BE": 34,
+   "FR": 14,
+   "PK": 2,
+   "CA": 5,
+   "VN": 2,
+   "AZ": 1,
+   "ZA": 2,
+   "NZ": 2,
+   "LU": 3,
+   "BJ": 1,
+   "IE": 1,
+   "NG": 1,
+   "AU": 3,
+   "UA": 2
+  },
+  "links": 612,
+  "languageCountry": null
+ },
+ {
+  "name": "Luis de la Fuente",
+  "lang": "es",
+  "news": 600,
+  "titles": [
+   "Ligue des nations : Dani Carvajal n’a pas fait une croix sur la sélection espagnole",
+   "Équipe d’Espagne : Carvajal ouvre la porte à un retour en sélection",
+   "Espagne : Carvajal envoie un message à Luis de la Fuente"
+  ],
+  "found": 4,
+  "mediaCountry": null,
+  "byCountry": {
+   "MX": 3,
+   "ES": 31,
+   "RO": 7,
+   "UY": 1,
+   "PT": 5,
+   "FR": 19,
+   "BR": 1,
+   "GB": 7,
+   "HR": 15,
+   "CD": 5,
+   "HU": 1,
+   "PE": 1,
+   "DE": 3,
+   "CZ": 4,
+   "IT": 4,
+   "SK": 2,
+   "NL": 13,
+   "PL": 1,
+   "MD": 1,
+   "AT": 1
+  },
+  "links": 600,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q56865130",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q23612411",
+    "description": "Roman Catholic prelate",
+    "links": 3,
+    "human": true,
+    "country": "ES"
+   },
+   {
+    "qid": "Q19512999",
+    "description": "Argentine cardiologist (b. 1932)",
+    "links": 1,
+    "human": true,
+    "country": "AR"
+   },
+   {
+    "qid": "Q125213149",
+    "description": "Spanish architect",
+    "links": 0,
+    "human": true,
+    "country": "ES"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Australian woman",
+  "lang": "en",
+  "news": 591,
+  "titles": [
+   "Australian woman charged with poisoning colleague’s curry with snail pellets",
+   "Woman charged with lacing colleague’s curry with snail poison",
+   "Australian woman charged with lacing colleague's curry with snail poison"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "GB": 2
+  },
+  "links": 591,
+  "languageCountry": null
+ },
+ {
+  "name": "Erin Patterson",
+  "lang": "en",
+  "news": 588,
+  "titles": [
+   "Australian woman guilty of triple murder involving poisonous mushrooms",
+   "Australian woman found guilty of triple murder involving poisonous mushrooms",
+   "Australian woman found guilty of triple murder with poisonous mushrooms"
+  ],
+  "found": 3,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 588,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q91142338",
+    "description": "researcher (ORCID 0000-0002-0427-5824)",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q96139600",
+    "description": "researcher (ORCID 0000-0001-9572-3882)",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q138033375",
+    "description": "Canadian political candidate from Nova Scotia",
+    "links": 0,
+    "human": true,
+    "country": "CA"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Laurent Nuñez",
+  "lang": "fr",
+  "news": 578,
+  "titles": [
+   "Macron rechaza la dimisión del ministro del Interior por el fiasco de los disturbios",
+   "France: Macron Rejects Interior Minister’s Resignation After Nationwide Riots",
+   "Sous pression, Macron reconduit Nuñez mais réclame des changements de méthode \"face aux casseurs\""
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "ES": 7,
+   "IT": 9,
+   "BE": 47,
+   "PT": 5,
+   "FR": 265,
+   "AZ": 2,
+   "FO": 1,
+   "AL": 5,
+   "CY": 1,
+   "LU": 6,
+   "IR": 2,
+   "SE": 1,
+   "CZ": 9,
+   "CH": 14,
+   "MC": 3,
+   "AT": 2,
+   "DE": 6,
+   "NO": 3,
+   "MX": 2,
+   "MY": 1,
+   "MA": 2,
+   "BR": 2,
+   "RS": 2,
+   "HR": 3,
+   "PY": 1,
+   "RO": 2,
+   "GB": 1
+  },
+  "links": 578,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q30729111",
+    "description": "French official and politician (born 1964)",
+    "links": 16,
+    "human": true,
+    "country": "FR"
+   },
+   {
+    "qid": "Q3219418",
+    "description": "French writer (born 1978)",
+    "links": 1,
+    "human": true,
+    "country": "FR"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Kolo Muani",
+  "lang": "it",
+  "news": 571,
+  "titles": [
+   "Il mercante delle big europee: i 5 supercolpi di Markus Krosche, c'è anche Kolo Muani",
+   "Gabimi i madh i Juventusit me Kolo Muanin, 50 milionë euro dhe vetëm Spalletti ende beson te ai",
+   "Gabimi i madh i Juventusit me Kolo Muanin, 50 milionë euro dhe vetëm Spalletti ende beson te ai"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "IT": 147,
+   "FR": 6,
+   "ES": 3,
+   "PT": 2,
+   "DK": 3,
+   "BA": 1,
+   "CD": 1,
+   "RS": 4,
+   "HU": 1,
+   "NO": 2
+  },
+  "links": 571,
+  "languageCountry": "IT"
+ },
+ {
+  "name": "una mujer",
+  "lang": "es",
+  "news": 568,
+  "titles": [
+   "Desarticularon tres bandas narco en Córdoba e incautaron más de 500 dosis de droga",
+   "Desarticularon tres bandas narco en Córdoba e incautaron más de 500 dosis de droga",
+   "Sufrió un infarto y le hizo juicio a un médico por un supuesto mal diagnóstico: la Justicia rechazó la demanda"
+  ],
+  "found": 7,
+  "mediaCountry": null,
+  "byCountry": {
+   "ES": 89,
+   "PE": 10,
+   "PY": 3,
+   "AR": 45,
+   "EC": 8,
+   "UY": 9,
+   "MX": 8,
+   "HN": 4,
+   "CL": 3,
+   "CR": 4
+  },
+  "links": 568,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Elikplim Bokor",
+  "lang": "en",
+  "news": 561,
+  "titles": [
+   "Al-Ittihad end Ramon Planes’ contract after two years and nine months",
+   "Mamelodi Sundowns held by Wiliete in CAF Champions League title defence",
+   "Da Cruz records modest start as Kaizer Chiefs coach after 10 matches"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 561,
+  "languageCountry": null
+ },
+ {
+  "name": "Nuhu Adams",
+  "lang": "en",
+  "news": 543,
+  "titles": [
+   "Jose Gomes says players’ spirit powered Al-Khaleej comeback against Al Fateh",
+   "Yan Diomande stars as Real Madrid beat Sevilla FC 4-1 in La Liga",
+   "Yan Diomande shines again as Real Madrid starlet sets Liga record"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 543,
+  "languageCountry": null
+ },
+ {
+  "name": "Jorge Martin",
+  "lang": "de",
+  "news": 508,
+  "titles": [
+   "MotoGP : Jorge Martin affiche ses ambitions et envoie un message très clair à Marc Marquez",
+   "¿Qué circuitos le van mejor a Jorge Martín y cuáles a Marc Márquez?",
+   "La reflexión de Marc Márquez: \"Si hay la moto puedes hacer cosas. Pero si el año que viene no tiene la moto, por muy Martín, Quartararo o Márquez que seas, no puedes hacer nada\""
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "PT": 34,
+   "FR": 48,
+   "IT": 34,
+   "AU": 3,
+   "ES": 13,
+   "BJ": 2,
+   "LU": 2,
+   "CH": 17,
+   "PL": 2,
+   "BE": 5,
+   "RO": 3,
+   "CU": 1,
+   "AT": 18,
+   "SI": 2,
+   "UY": 1,
+   "HR": 3,
+   "GB": 5,
+   "SK": 1,
+   "BA": 1,
+   "MY": 5,
+   "PY": 1,
+   "ZA": 3,
+   "SM": 1,
+   "BR": 4,
+   "PK": 2
+  },
+  "links": 508,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q19729952",
+    "description": "Spanish motorcycle racer",
+    "links": 23,
+    "human": true,
+    "country": "ES"
+   },
+   {
+    "qid": "Q88321395",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Charles Leclerc",
+  "lang": "pl",
+  "news": 504,
+  "titles": [
+   "Horner: Red Bull blocked moves for Leclerc, Alonso",
+   "Hamilton’s Singapore GP pit call shows 'lack of trust' with Ferrari",
+   "PICTURES: Jannik Sinner's girlfriend Laila Hasanovic turns up the glamor in figure-hugging dress, gets reaction from Charles Leclerc's wife"
+  ],
+  "found": 6,
+  "mediaCountry": null,
+  "byCountry": {
+   "GB": 19,
+   "RO": 7,
+   "FR": 62,
+   "ES": 1,
+   "IT": 27,
+   "PL": 2,
+   "PT": 17,
+   "BA": 2,
+   "DE": 9,
+   "MX": 1,
+   "EC": 1,
+   "PK": 2,
+   "BE": 18,
+   "NA": 1,
+   "AT": 15,
+   "HR": 4,
+   "NL": 42,
+   "ZA": 3,
+   "CZ": 8,
+   "SI": 1,
+   "IN": 1,
+   "CH": 8,
+   "SK": 10,
+   "AL": 1,
+   "IE": 1,
+   "AR": 5,
+   "NO": 1,
+   "KE": 1,
+   "BR": 2,
+   "MY": 3,
+   "EE": 1
+  },
+  "links": 504,
+  "languageCountry": "PL",
+  "humans": [
+   {
+    "qid": "Q503201",
+    "description": "French general (1772-1802)",
+    "links": 27,
+    "human": true,
+    "country": "FR"
+   },
+   {
+    "qid": "Q17541912",
+    "description": "Monegasque racing driver",
+    "links": 69,
+    "human": true,
+    "country": "MC"
+   },
+   {
+    "qid": "Q1063337",
+    "description": "French historian and diplomat",
+    "links": 6,
+    "human": true,
+    "country": "FR"
+   },
+   {
+    "qid": "Q16467635",
+    "description": "French politician",
+    "links": 1,
+    "human": true,
+    "country": "FR"
+   },
+   {
+    "qid": "Q2959388",
+    "description": "French general (1739–1818)",
+    "links": 2,
+    "human": true,
+    "country": "FR"
+   },
+   {
+    "qid": "Q109853627",
+    "description": null,
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Rui Borges",
+  "lang": "pt",
+  "news": 502,
+  "titles": [
+   "Más notícias para Rui Borges: Lesão pode afastar Rodrigo Zalazar dos próximos três jogos do Sporting",
+   "Sporting só abre porta a Geny Catamo por uma “loucura”: Valor está traçado",
+   "Craque que desapareceu do onze de Rui Borges pode ser titular no Sporting - LASK Linz"
+  ],
+  "found": 4,
+  "mediaCountry": "PT",
+  "byCountry": {
+   "PT": 461,
+   "CL": 1,
+   "FR": 4,
+   "UY": 1,
+   "DK": 1,
+   "NG": 2,
+   "MX": 1,
+   "EC": 1
+  },
+  "links": 502,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q121147850",
+    "description": "Portuguese football coach and former player (1981-)",
+    "links": 12,
+    "human": true,
+    "country": "PT"
+   },
+   {
+    "qid": "Q29033171",
+    "description": "Portuguese swimmer",
+    "links": 3,
+    "human": true,
+    "country": "PT"
+   },
+   {
+    "qid": "Q30503559",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q7378708",
+    "description": "Portuguese footballer (born 1973)",
+    "links": 4,
+    "human": true,
+    "country": "PT"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": "Q121147850",
+   "media0": "Q121147850",
+   "local10": "Q121147850",
+   "local0": "Q121147850"
+  }
+ },
+ {
+  "name": "Ben Johnson",
+  "lang": "en",
+  "news": 485,
+  "titles": [
+   "\"Dude is so corny,\" \"Such a weirdo\": NFL fans brutally mock Ben Johnson's new dance moves in locker room after Bears' win vs. Falcons",
+   "Caleb Williams’ injury return proves Bears can still win NFC North despite debacles vs. Packers, Vikings",
+   "\"Dude is so corny,\" \"Such a weirdo\": NFL fans brutally mock Ben Johnson's new dance moves in locker room after Bears' win vs. Falcons"
+  ],
+  "found": 10,
+  "mediaCountry": null,
+  "byCountry": {
+   "CA": 3,
+   "GB": 2,
+   "AU": 2
+  },
+  "links": 485,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q349166",
+    "description": "American film actor (1918–1996)",
+    "links": 45,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q100838902",
+    "description": "American college basketball coach (born 1980)",
+    "links": 3,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q115158387",
+    "description": "American songwriter",
+    "links": 0,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q115651080",
+    "description": "visual artist",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q61906182",
+    "description": "English association football player (born 2000)",
+    "links": 20,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q816525",
+    "description": "American lawyer and politician from Kentucky (1858-1950)",
+    "links": 6,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q131127364",
+    "description": "American songwriter and producer",
+    "links": 1,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q100838911",
+    "description": "college basketball player (1989–1992) Green Bay",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q124061591",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q100838897",
+    "description": "college basketball player (2007–2010) Colgate",
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "President Ilham Aliyev",
+  "lang": "en",
+  "news": 478,
+  "titles": [
+   "Chronicles of Victory: President Ilham Aliyev interviewed by Russian TASS news agency on October 19, 2020 (PHOTO/VIDEO)",
+   "Chronicles of Victory: President Ilham Aliyev interviewed by Russian TASS news agency on October 19, 2020 (PHOTO/VIDEO)",
+   "President Ilham Aliyev’s social media accounts shared weekly summary of his activities"
+  ],
+  "found": 0,
+  "mediaCountry": "AZ",
+  "byCountry": {
+   "AZ": 474,
+   "KE": 3
+  },
+  "links": 478,
+  "languageCountry": null
+ },
+ {
+  "name": "Emiliano Martinez",
+  "lang": "sv",
+  "news": 459,
+  "titles": [
+   "Emiliano Martinez se oglasio nakon uspješne operacije: Vidimo se za nekoliko tjedana",
+   "Emiliano Martinez return timeline after Chelsea star has surgery on fractured jaw",
+   "Jedan od najboljih golmana svijeta javio se iz bolnice. Uspješno je operiran"
+  ],
+  "found": 3,
+  "mediaCountry": null,
+  "byCountry": {
+   "HR": 10,
+   "AR": 5,
+   "PT": 27,
+   "MA": 4,
+   "BR": 2,
+   "MX": 2,
+   "NG": 8,
+   "NL": 15,
+   "BE": 24,
+   "CL": 2,
+   "IE": 1,
+   "PL": 3,
+   "FR": 18,
+   "IT": 9,
+   "DE": 35,
+   "EE": 1,
+   "CA": 2,
+   "GB": 26,
+   "UY": 1,
+   "SK": 3,
+   "CH": 13,
+   "NO": 3,
+   "DK": 5,
+   "UA": 2,
+   "BA": 2,
+   "RO": 4,
+   "JO": 1,
+   "VN": 5,
+   "AT": 4,
+   "CZ": 1,
+   "TR": 1,
+   "HU": 1,
+   "LU": 1,
+   "MK": 1,
+   "CD": 1,
+   "KE": 1
+  },
+  "links": 459,
+  "languageCountry": "SE",
+  "humans": [
+   {
+    "qid": "Q3275904",
+    "description": "Argentine footballer (born 1992)",
+    "links": 63,
+    "human": true,
+    "country": "AR"
+   },
+   {
+    "qid": "Q97608024",
+    "description": "Uruguayan footballer (born 1999)",
+    "links": 24,
+    "human": true,
+    "country": "UY"
+   },
+   {
+    "qid": "Q42394465",
+    "description": "Uruguayan writer",
+    "links": 0,
+    "human": true,
+    "country": "UY"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Jeremiah Smith",
+  "lang": "en",
+  "news": 451,
+  "titles": [
+   "Heisman Trophy odds: Darian Mensah, Trinidad Chambliss close in on Jeremiah Smith",
+   "Jeremiah Smith Reveals Ohio State’s Biggest Challenge With Luke Fahey Replacing Julian Sayin",
+   "Big Ten receiving yardage leaders after Week 7"
+  ],
+  "found": 9,
+  "mediaCountry": null,
+  "byCountry": {
+   "CA": 1,
+   "GB": 1,
+   "AU": 3
+  },
+  "links": 451,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q16198089",
+    "description": "British Royal Navy officer (died 1675)",
+    "links": 2,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q2734279",
+    "description": "American lawyer, jurist and politician (1759–1842)",
+    "links": 9,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q120382053",
+    "description": "Indiana writer 1805-1874",
+    "links": 0,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q18819509",
+    "description": "Church of England clergyman and antiquarian (1815-95)",
+    "links": 1,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q18530027",
+    "description": "English Presbyterian minister",
+    "links": 1,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q18530029",
+    "description": "English headmaster",
+    "links": 1,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q111175798",
+    "description": "American politician (b. 1795)",
+    "links": 0,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q122850316",
+    "description": "American football player",
+    "links": 5,
+    "human": true,
+    "country": "US"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "young people",
+  "lang": "en",
+  "news": 442,
+  "titles": [
+   "Sheffield school takes step back in time to offer children of today options other than smartphones",
+   "Hanoi apartment prices in October 2026: Cooling down compared to the beginning of the year, but still difficult for young people to own a home.",
+   "The stadium is full, the nation is waiting"
+  ],
+  "found": 6,
+  "mediaCountry": null,
+  "byCountry": {
+   "GB": 59,
+   "VN": 141,
+   "ZA": 6,
+   "NZ": 7,
+   "ES": 10,
+   "CA": 5,
+   "NG": 2,
+   "GH": 1,
+   "AU": 2,
+   "PK": 4,
+   "SK": 1,
+   "BG": 1,
+   "IE": 4,
+   "TZ": 4,
+   "VA": 1,
+   "UG": 1,
+   "PH": 2,
+   "KE": 2,
+   "GI": 1,
+   "LV": 1,
+   "HU": 1,
+   "LU": 1,
+   "AZ": 1,
+   "KR": 1
+  },
+  "links": 442,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "von der Leyen",
+  "lang": "it",
+  "news": 439,
+  "titles": [
+   "Ue: von der Leyen, in arrivo domani strategia per l’Artico",
+   "Von der Leyen, Sánchez y Negreira",
+   "Von der Leyen lamenta las muertes tras el incendio en una base militar canadiense"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "IT": 73,
+   "DE": 12,
+   "ES": 28,
+   "PT": 14,
+   "HR": 15,
+   "BR": 2,
+   "UA": 3,
+   "HU": 2,
+   "AL": 12,
+   "BE": 9,
+   "FR": 2,
+   "ZA": 1,
+   "BG": 1,
+   "UY": 1,
+   "BA": 4,
+   "NL": 3,
+   "AZ": 3,
+   "IE": 1,
+   "DK": 1
+  },
+  "links": 439,
+  "languageCountry": "IT"
+ },
+ {
+  "name": "Two People",
+  "lang": "en",
+  "news": 432,
+  "titles": [
+   "Zamfara Police Rescue Two Abducted Victims, Recover Rustled Livestock",
+   "Storm Adam keeps Valencia and Alicante on edge ahead of move towards Catalonia",
+   "Police investigate burglary in Worthing"
+  ],
+  "found": 8,
+  "mediaCountry": null,
+  "byCountry": {
+   "ES": 4,
+   "GB": 47,
+   "VN": 10,
+   "UA": 15,
+   "JO": 1,
+   "AZ": 8,
+   "IE": 5,
+   "CA": 20,
+   "AU": 5,
+   "NZ": 10,
+   "IN": 2,
+   "NG": 1,
+   "MY": 5,
+   "PK": 2,
+   "KE": 1,
+   "LU": 1
+  },
+  "links": 432,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Nidal Malik Hasan",
+  "lang": "fr",
+  "news": 431,
+  "titles": [
+   "The surprising psychology of morbid curiosity - video",
+   "I worked on death row for 18 years. This is why the livestream execution was cancelled",
+   "I worked on death row for 18 years. This is why the livestream execution was cancelled"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "GB": 25,
+   "PK": 1,
+   "PT": 4,
+   "NZ": 6,
+   "ES": 18,
+   "BE": 5,
+   "FR": 18,
+   "HN": 1,
+   "AU": 3,
+   "MX": 7,
+   "AL": 1,
+   "CL": 1,
+   "NG": 3,
+   "IT": 18,
+   "DE": 6,
+   "BR": 1,
+   "IE": 3,
+   "AT": 1,
+   "CA": 7,
+   "NL": 9,
+   "AR": 1,
+   "VA": 1,
+   "DK": 1,
+   "TN": 1,
+   "MT": 1,
+   "EE": 2,
+   "US": 1,
+   "KE": 3,
+   "PE": 4,
+   "BA": 1,
+   "RS": 2,
+   "CH": 3,
+   "HR": 2,
+   "RO": 1,
+   "HU": 1,
+   "EC": 1
+  },
+  "links": 431,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q1400551",
+    "description": "American Army officer and mass murderer (born 1970)",
+    "links": 21,
+    "human": true,
+    "country": "US"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Claudia Sheinbaum",
+  "lang": "es",
+  "news": 425,
+  "titles": [
+   "“No es falta de dinero, es burocracia”; Sheinbaum culpa al IMSS por problemas en la distribución de medicamentos tras protestas de trabajadores",
+   "“Me canso ganso”: Sheinbaum promete modernizar el sistema de salud y combatir el desabasto de medicamentos",
+   "Sistema de salud tendrá transformación digital: Sheinbaum"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "MX": 150,
+   "UY": 9,
+   "PT": 2,
+   "PE": 3,
+   "LT": 1,
+   "HR": 3,
+   "AR": 1,
+   "IN": 1,
+   "PY": 1,
+   "CU": 4,
+   "HN": 1,
+   "BO": 1,
+   "CH": 1,
+   "ES": 11,
+   "US": 1,
+   "FR": 2,
+   "CA": 1,
+   "AZ": 2,
+   "KR": 1,
+   "BR": 2
+  },
+  "links": 425,
+  "languageCountry": null
+ },
+ {
+  "name": "La víctima",
+  "lang": "es",
+  "news": 418,
+  "titles": [
+   "CIUDAD DE CORRIENTES: Un joven murió tras derrapar con su moto sobre Av. Independencia",
+   "Dos detenidos de 29 y 37 años por golpear en la cabeza a otro hombre de 33 para robarle en la Milagrosa",
+   "Un hombre fue apuñalado por su hermano en medio de una discusión y el agresor fue detenido en Córdoba"
+  ],
+  "found": 4,
+  "mediaCountry": null,
+  "byCountry": {
+   "ES": 67,
+   "AR": 47,
+   "PY": 5,
+   "UY": 14,
+   "CL": 9,
+   "EC": 6,
+   "MX": 4,
+   "PE": 10,
+   "US": 1,
+   "CR": 1,
+   "AD": 1
+  },
+  "links": 418,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Daniel Dubois",
+  "lang": "en",
+  "news": 417,
+  "titles": [
+   "Controversă în box, după ce arbitrul a ignorat prosopul aruncat de colțul boxerului: „Nu ar trebui să aibă dreptul”",
+   "Dubois vs Itauma is a heavyweight rivalry for the future",
+   "Daniel Dubois has options: Head to America? Fury/Joshua winner? Kabayel? Hrgovic?"
+  ],
+  "found": 9,
+  "mediaCountry": null,
+  "byCountry": {
+   "RO": 2,
+   "AT": 6,
+   "GB": 131,
+   "NG": 4,
+   "FR": 2,
+   "CZ": 1,
+   "BE": 1,
+   "IE": 5,
+   "SK": 2,
+   "HR": 8,
+   "DE": 4,
+   "CH": 3,
+   "UA": 4,
+   "BA": 2,
+   "PL": 1,
+   "AU": 5,
+   "GH": 2,
+   "CD": 1,
+   "TR": 1
+  },
+  "links": 417,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q113957",
+    "description": "French politician",
+    "links": 7,
+    "human": true,
+    "country": "FR"
+   },
+   {
+    "qid": "Q1160464",
+    "description": "Swiss ice hockey player",
+    "links": 1,
+    "human": true,
+    "country": "CH"
+   },
+   {
+    "qid": "Q131312012",
+    "description": null,
+    "links": 1,
+    "human": true,
+    "country": "FR"
+   },
+   {
+    "qid": "Q30122489",
+    "description": "British boxer",
+    "links": 16,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q97534696",
+    "description": "Canadian anesthesiologist",
+    "links": 0,
+    "human": true,
+    "country": "CA"
+   },
+   {
+    "qid": "Q89493603",
+    "description": "Italian American computer engineer",
+    "links": 0,
+    "human": true,
+    "country": "IT"
+   },
+   {
+    "qid": "Q3013963",
+    "description": "rugby union player",
+    "links": 2,
+    "human": true,
+    "country": "FR"
+   },
+   {
+    "qid": "Q65579311",
+    "description": "French politician (mayor of Réveillon)",
+    "links": 0,
+    "human": true,
+    "country": "FR"
+   },
+   {
+    "qid": "Q116193396",
+    "description": "American inorganic chemist",
+    "links": 0,
+    "human": true,
+    "country": "US"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "President Bola Tinubu",
+  "lang": "en",
+  "news": 416,
+  "titles": [
+   "Tinubu Hails Jimoh Ibrahim Over Historic $14bn UN Budget Presentation",
+   "Breaking: 8 lawmakers resign, meet Tinubu in new development",
+   "Last moments of Shettima Muhammad Kashim"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "NG": 137,
+   "KE": 25,
+   "MY": 1
+  },
+  "links": 416,
+  "languageCountry": null
+ },
+ {
+  "name": "une femme",
+  "lang": "fr",
+  "news": 412,
+  "titles": [
+   "Perquisition à 5h du matin à Jumet: un singe emmené avec des voitures et d'autres affaires",
+   "Perquisition à 5h du matin à Jumet: un singe emmené avec des voitures et d'autres affaires",
+   "Elle bloque un robot livreur et finit menottée puis embarquée par la police"
+  ],
+  "found": 4,
+  "mediaCountry": "FR",
+  "byCountry": {
+   "BE": 46,
+   "FR": 226,
+   "CH": 19,
+   "LU": 17,
+   "SN": 1,
+   "TN": 3,
+   "CA": 3,
+   "IT": 1,
+   "MA": 2
+  },
+  "links": 412,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Michael Jordan",
+  "lang": "sq",
+  "news": 412,
+  "titles": [
+   "Basketball: Er oder Jordan: NBA-Saison Nummer 24 als Argument für James?",
+   "LeBron James startet mit 41 Jahren bei den Philadelphia 76ers in seine 24.",
+   "Er oder Jordan: NBA-Saison Nummer 24 als Argument für James?"
+  ],
+  "found": 10,
+  "mediaCountry": null,
+  "byCountry": {
+   "DE": 13,
+   "CA": 6,
+   "FR": 16,
+   "CY": 1,
+   "BR": 4,
+   "MX": 3,
+   "RO": 5,
+   "AR": 5,
+   "BE": 8,
+   "PL": 3,
+   "NG": 1,
+   "AL": 1,
+   "IT": 7,
+   "GH": 1,
+   "NL": 10,
+   "SI": 3,
+   "AU": 2,
+   "AT": 7,
+   "GB": 12,
+   "HU": 2,
+   "PE": 1,
+   "HR": 7,
+   "SK": 2,
+   "PT": 1,
+   "BA": 1,
+   "CH": 2,
+   "IE": 1,
+   "CR": 1,
+   "EE": 1
+  },
+  "links": 412,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q41421",
+    "description": "American basketball player and businessman (born 1963)",
+    "links": 139,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q3308007",
+    "description": "American actor (born 1987)",
+    "links": 61,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q3308285",
+    "description": "American computer scientist, University of California, Berkeley",
+    "links": 9,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q65029442",
+    "description": "American football offensive lineman",
+    "links": 5,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q6831715",
+    "description": "Irish politician",
+    "links": 3,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q1928047",
+    "description": "German draughtsperson, artist and comics artist",
+    "links": 1,
+    "human": true,
+    "country": "DE"
+   },
+   {
+    "qid": "Q27069141",
+    "description": "American football pplayer",
+    "links": 2,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q6831719",
+    "description": "British mycologist, writer, and television presenter",
+    "links": 1,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q6831716",
+    "description": "English footballer (born 1984)",
+    "links": 6,
+    "human": true,
+    "country": "GB"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Ramon Vega",
+  "lang": "fr",
+  "news": 404,
+  "titles": [
+   "FIFA : Ramon Vega se prépare à défier Gianni Infantino",
+   "Infantino à 16 voix de la présidence : son rival peut-il renverser la situation dans les derniers instants ? | Goal.com Français",
+   "FIFA : Ramon Vega se lance à l’assaut de Gianni Infantino"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "FR": 22,
+   "MA": 1,
+   "DE": 9,
+   "TN": 1,
+   "PT": 2,
+   "BE": 23,
+   "PL": 3,
+   "SI": 1,
+   "CH": 14,
+   "AT": 7,
+   "HR": 3,
+   "NL": 9,
+   "IT": 13,
+   "BR": 2,
+   "HU": 1,
+   "IN": 1,
+   "LU": 1,
+   "JO": 1,
+   "RO": 1,
+   "SK": 2,
+   "MX": 1,
+   "MY": 2,
+   "RS": 2,
+   "IE": 4,
+   "GB": 8,
+   "CA": 1,
+   "CZ": 3,
+   "AU": 1,
+   "EE": 1,
+   "PY": 1,
+   "NG": 1
+  },
+  "links": 404,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q676250",
+    "description": "Swiss footballer/entrepreneur",
+    "links": 15,
+    "human": true,
+    "country": "CH"
+   },
+   {
+    "qid": "Q32927010",
+    "description": "Puerto Rican sprinter (1939-2007)",
+    "links": 2,
+    "human": true,
+    "country": "PR"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "David Ellison",
+  "lang": "en",
+  "news": 400,
+  "titles": [
+   "Skydance’s Financial Decisions Could Put AEW’s TV Future At Risk",
+   "AEW WrestleDream 2026 Media Post-Show Scrum: Mercedes Mone Underwent Broken Nose Surgery, Tony Khan on When He Found Out Ilja Dragunov’s Status For WrestleDream, Dragunov on Reason For Leaving WWE For AEW, KAIRI Potentially Joining AEW, “Timeless” Toni Storm Abscense Update, Talks With David Ellison, & More",
+   "AEW’s Television Future Still Not Guaranteed Despite Tony Khan’s Positive Talks With David Ellison"
+  ],
+  "found": 8,
+  "mediaCountry": null,
+  "byCountry": {
+   "BR": 2,
+   "FR": 12,
+   "CA": 4,
+   "MX": 4,
+   "CZ": 1,
+   "RO": 3,
+   "MY": 2,
+   "GB": 2,
+   "BE": 1,
+   "IT": 1,
+   "PE": 2,
+   "VN": 1,
+   "HR": 1,
+   "ES": 7,
+   "UA": 1,
+   "KR": 1,
+   "IN": 1,
+   "BA": 1,
+   "NL": 2,
+   "DE": 2,
+   "KE": 2,
+   "CH": 1
+  },
+  "links": 400,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q5233363",
+    "description": "American film producer (born 1983)",
+    "links": 22,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q132517436",
+    "description": "New Zealand Māori leader, soldier, schoolteacher, veterans' advocate and children's health advocate (1936–2025)",
+    "links": 0,
+    "human": true,
+    "country": "NZ"
+   },
+   {
+    "qid": "Q37371230",
+    "description": "medical researcher at Oregon Health & Science University",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q93479201",
+    "description": "natural resources researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q88016449",
+    "description": "researcher (ORCID 0000-0003-1239-7757)",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q5233362",
+    "description": "British actor (1939–2010)",
+    "links": 2,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q96099142",
+    "description": "medical researcher at Johns Hopkins Medicine",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q100786064",
+    "description": "college basketball player (1995–1997) Fairleigh Dickinson",
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Michael Douglas",
+  "lang": "en",
+  "news": 398,
+  "titles": [
+   "Michael Douglas contó cómo el cáncer cambió sus prioridades y recordó los momentos que marcaron su carrera",
+   "Michael Douglas contó cómo el cáncer cambió sus prioridades y recordó los momentos que marcaron su carrera",
+   "Michael Douglas insultou Julia Roberts e traiu a mulher. Agora conta tudo num livro"
+  ],
+  "found": 7,
+  "mediaCountry": null,
+  "byCountry": {
+   "PT": 2,
+   "MX": 4,
+   "UY": 1,
+   "AT": 2,
+   "HR": 24,
+   "DE": 41,
+   "CH": 1,
+   "IN": 1,
+   "VN": 1,
+   "BA": 9,
+   "CZ": 1,
+   "FR": 3,
+   "MA": 1,
+   "GB": 29,
+   "UA": 3,
+   "FI": 2,
+   "ES": 3,
+   "IT": 4,
+   "IE": 3,
+   "BR": 3,
+   "AR": 1,
+   "BE": 5,
+   "NL": 4,
+   "AL": 1,
+   "CA": 1,
+   "NZ": 1,
+   "EE": 1
+  },
+  "links": 398,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q119798",
+    "description": "American actor, producer and activist (born 1944)",
+    "links": 99,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q172140",
+    "description": "American author, screenwriter, film director (1942–2008)",
+    "links": 84,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q56428317",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q358096",
+    "description": "Canadian skeleton racer",
+    "links": 8,
+    "human": true,
+    "country": "CA"
+   },
+   {
+    "qid": "Q57686130",
+    "description": "researcher ORCID ID = 0000-0001-8517-6678",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q95948454",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q107369701",
+    "description": "British QC",
+    "links": 0,
+    "human": true,
+    "country": "GB"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Sophie Cunningham",
+  "lang": "en",
+  "news": 396,
+  "titles": [
+   "Sophie Cunningham praises Gabby Williams’ Valkyries impact",
+   "‘Good work girls’: Sophie Cunningham praises high schoolers protesting transgender teammate",
+   "Angel Reese criticized by Sophie Cunningham as Fever star risks WNBA feud"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "PL": 1,
+   "DE": 1,
+   "GB": 1
+  },
+  "links": 396,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q65161168",
+    "description": "American basketball player born 1996",
+    "links": 21,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q7562983",
+    "description": "Australian writer",
+    "links": 2,
+    "human": true,
+    "country": "AU"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Two men",
+  "lang": "en",
+  "news": 395,
+  "titles": [
+   "Two men shot during daylight dispute in Dallas, 17km north of Melbourne",
+   "Two motorcycle riders killed in head-on collision in Saga Prefecture",
+   "Two motorcycle riders killed in head-on collision in Saga Prefecture"
+  ],
+  "found": 10,
+  "mediaCountry": null,
+  "byCountry": {
+   "AU": 17,
+   "GB": 79,
+   "NG": 1,
+   "IN": 7,
+   "VN": 3,
+   "CA": 12,
+   "ZW": 1,
+   "ZA": 6,
+   "MT": 4,
+   "IE": 12,
+   "PK": 2,
+   "MY": 8,
+   "LV": 1,
+   "UA": 1,
+   "NZ": 4,
+   "KE": 4,
+   "CY": 1,
+   "IT": 1,
+   "AZ": 3,
+   "ES": 1
+  },
+  "links": 395,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Pierre Sage",
+  "lang": "fr",
+  "news": 393,
+  "titles": [
+   "Lens prêt à retenter le pari Dino Toppmöller",
+   "Lens prêt à retenter le pari Dino Toppmöller",
+   "Diego Gómez scored from the halfway line, and Brighton were 3-0 up on Crystal Palace inside ten minutes"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "FR": 84,
+   "GB": 21,
+   "DK": 1,
+   "CL": 4,
+   "CD": 1,
+   "SK": 3,
+   "IN": 2,
+   "BJ": 4,
+   "PT": 2,
+   "BE": 1
+  },
+  "links": 393,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q123584452",
+    "description": "French football coach (born 1979)",
+    "links": 13,
+    "human": true,
+    "country": "FR"
+   },
+   {
+    "qid": "Q133581514",
+    "description": null,
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Jerry Jones",
+  "lang": "en",
+  "news": 387,
+  "titles": [
+   "Brian Schottenheimer replacements: 5 best candidates if Jerry Jones fires Cowboys HC",
+   "Jerry Jones Faces Intense Scrutiny for Keeping Cowboys Coaches Underpaid After Packers Loss",
+   "Brian Schottenheimer replacements: 5 best candidates if Jerry Jones fires Cowboys HC"
+  ],
+  "found": 9,
+  "mediaCountry": null,
+  "byCountry": {
+   "MX": 1,
+   "AT": 1,
+   "CA": 2,
+   "DE": 1,
+   "ST": 1
+  },
+  "links": 387,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q100859652",
+    "description": "college basketball player (2011–2014) Duquesne",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q100859650",
+    "description": "college basketball player (2009–2010) Bethune-Cookman",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q100859655",
+    "description": "college basketball player (1967–1967) Eastern Kentucky",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q100859654",
+    "description": "college basketball player (1987–1990) Texas-El Paso; Southern Illinois",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q1280022",
+    "description": "American businessman and owner of the Dallas Cowboys",
+    "links": 19,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q6180877",
+    "description": "Canadian soldier (1858–1950)",
+    "links": 2,
+    "human": true,
+    "country": "CA"
+   },
+   {
+    "qid": "Q6183832",
+    "description": "National Football League player (1894-1938)",
+    "links": 3,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q16643824",
+    "description": "American boxer",
+    "links": 1,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q25190360",
+    "description": "American football player (born 1944)",
+    "links": 1,
+    "human": true,
+    "country": "US"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Stephen A. Smith",
+  "lang": "en",
+  "news": 385,
+  "titles": [
+   "‘He Never Says It,’ ‘Stop That’ — Bill O’Reilly Debates ESPN’s Stephen A. Smith on Tom Brady’s Reluctance to Criticize Players on NFL Broadcasts",
+   "Stephen A. Smith rubs shoulders with Donald Trump and explains White House invite",
+   "Jemele Hill bashes Stephen A. Smith over Donald Trump, White House dinner"
+  ],
+  "found": 8,
+  "mediaCountry": null,
+  "byCountry": {
+   "SG": 1,
+   "BR": 2
+  },
+  "links": 385,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q117859483",
+    "description": "documentary director",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q122782692",
+    "description": "American architect",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q112537020",
+    "description": "veterinary medicine researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q41047036",
+    "description": "Biology researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q7608548",
+    "description": "American sports journalist",
+    "links": 11,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q42955949",
+    "description": "British historian",
+    "links": 4,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q7608571",
+    "description": "Canadian legal scholar",
+    "links": 2,
+    "human": true,
+    "country": "CA"
+   },
+   {
+    "qid": "Q7610554",
+    "description": "American academic; communications researcher",
+    "links": 2,
+    "human": true,
+    "country": "US"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Tobias Rausch",
+  "lang": "de",
+  "news": 378,
+  "titles": [
+   "A BMW deixou um político alemão sem carro de serviço. E ele foi bater à porta de Elon Musk",
+   "„Braune Sch****“ - Linksextreme kippen Pferdemist vor CDU-Büros",
+   "Merz droht CDU-Politikern in Magdeburg bei Votum für AfD-Kandidaten"
+  ],
+  "found": 6,
+  "mediaCountry": "DE",
+  "byCountry": {
+   "PT": 1,
+   "AT": 9,
+   "DE": 278,
+   "FR": 6,
+   "CH": 7,
+   "IT": 4,
+   "NL": 6,
+   "BA": 2,
+   "UA": 2,
+   "RO": 1,
+   "BR": 1,
+   "LU": 3,
+   "CZ": 1,
+   "BE": 5,
+   "AZ": 1,
+   "ES": 7,
+   "KE": 4,
+   "HR": 1,
+   "SE": 1
+  },
+  "links": 378,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q23565388",
+    "description": "German politician (AfD)",
+    "links": 6,
+    "human": true,
+    "country": "DE"
+   },
+   {
+    "qid": "Q55458661",
+    "description": "researcher (ORCID 0000-0001-5773-5620)",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q62605756",
+    "description": "German theatre director and author",
+    "links": 1,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q91311776",
+    "description": "researcher (ORCID 0000-0002-5142-1310)",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q139321088",
+    "description": null,
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q139518683",
+    "description": null,
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": "Q23565388",
+   "media10": "Q23565388",
+   "media0": "Q23565388",
+   "local10": "Q23565388",
+   "local0": "Q23565388"
+  }
+ },
+ {
+  "name": "Imran Khan",
+  "lang": "en",
+  "news": 377,
+  "titles": [
+   "Bombay HC To Hear Imran Khan’s Plea Against ‘Leave India Notice’ On October 26",
+   "Bombay HC to hear Imran Khan’s plea against India exit order on October 26",
+   "Imranissance is here. Why young adults are falling back in love with Imran Khan"
+  ],
+  "found": 10,
+  "mediaCountry": null,
+  "byCountry": {
+   "IN": 4,
+   "PK": 24,
+   "SG": 1,
+   "IT": 1,
+   "ZA": 3,
+   "GB": 10,
+   "FR": 7,
+   "BR": 2,
+   "VN": 1,
+   "LU": 2,
+   "KE": 2,
+   "MY": 2,
+   "AZ": 1,
+   "CH": 1
+  },
+  "links": 377,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q155164",
+    "description": "Prime Minister of Pakistan from 2018 to 2022",
+    "links": 100,
+    "human": true,
+    "country": "PK"
+   },
+   {
+    "qid": "Q122948143",
+    "description": "gravitational wave researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q136398548",
+    "description": "Canadian political candidate",
+    "links": 0,
+    "human": true,
+    "country": "CA"
+   },
+   {
+    "qid": "Q312781",
+    "description": "Indian actor",
+    "links": 41,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q42560214",
+    "description": "ophthalmology researcher (ORCID 0000-0002-0563-3208)",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q51161844",
+    "description": "quantum physicist",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q50064378",
+    "description": "Pakistani researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q57064458",
+    "description": "researcher ORCID: 0000-0002-9892-7271",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q57079043",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q59198528",
+    "description": "researcher ORCID ID = 0000-0001-7067-7461",
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "federal judge",
+  "lang": "en",
+  "news": 374,
+  "titles": [
+   "Trump: Washington golf course renovation to start in November",
+   "Trump: Washington golf course renovation to start in November",
+   "Bulldozed trees spike DC tensions: Inside Trump’s takeover of East Potomac Park"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "CA": 3,
+   "HU": 3,
+   "GB": 6,
+   "IN": 1,
+   "ST": 1,
+   "KE": 2
+  },
+  "links": 374,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Pio Esposito",
+  "lang": "it",
+  "news": 362,
+  "titles": [
+   "Inter, Pio Esposito non è più intoccabile: Bonny può cambiare le gerarchie, Chivu...",
+   "Bonny sulla scia di Pio Esposito e Carlos Augusto: così Chivu ha cambiato il modo di pensare all'Inter",
+   "Com'è andata la prima Inter senza Lautaro? Thuram e Bonny decisivi, Pio Esposito rimandato"
+  ],
+  "found": 2,
+  "mediaCountry": "IT",
+  "byCountry": {
+   "IT": 188,
+   "MX": 1,
+   "FR": 6,
+   "SM": 3,
+   "AR": 1,
+   "ZA": 3,
+   "BE": 4,
+   "NL": 1,
+   "RO": 1,
+   "NO": 1,
+   "GB": 2
+  },
+  "links": 362,
+  "languageCountry": "IT",
+  "humans": [
+   {
+    "qid": "Q119237165",
+    "description": "Italian footballer (born 2005)",
+    "links": 24,
+    "human": true,
+    "country": "IT"
+   },
+   {
+    "qid": "Q136813682",
+    "description": "Italian footballer (born 2002)",
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": "Q119237165",
+   "media10": "Q119237165",
+   "media0": "Q119237165",
+   "local10": "Q119237165",
+   "local0": "Q119237165"
+  }
+ },
+ {
+  "name": "Jane Doe",
+  "lang": "en",
+  "news": 359,
+  "titles": [
+   "The online campaign to unmask a Cornell rape accuser reached tens of millions",
+   "Cornell University: Warum sich die Frauen mit »Jane Doe« solidarisieren und die Männer schweigen",
+   "Cornell University: Warum sich die Frauen mit »Jane Doe« solidarisieren und die Männer schweigen"
+  ],
+  "found": 9,
+  "mediaCountry": null,
+  "byCountry": {
+   "DE": 23,
+   "CA": 11,
+   "PK": 1,
+   "GB": 34,
+   "AR": 1,
+   "SK": 2,
+   "IT": 3,
+   "FR": 14,
+   "CH": 4,
+   "BE": 6,
+   "NL": 6,
+   "GR": 2,
+   "CZ": 4,
+   "IE": 2,
+   "HU": 1,
+   "NO": 4,
+   "MX": 3,
+   "KR": 1,
+   "SE": 1,
+   "KE": 1,
+   "DK": 1,
+   "ES": 1
+  },
+  "links": 359,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "John Healey",
+  "lang": "en",
+  "news": 350,
+  "titles": [
+   "DWP benefits cuts warning issued with John Healey announcement imminent",
+   "Family firms to be hit with mega tax bills as Chancellor prepares cash grab",
+   "Family firms to be hit with mega tax bills as Chancellor prepares cash grab"
+  ],
+  "found": 9,
+  "mediaCountry": null,
+  "byCountry": {
+   "GB": 52,
+   "FR": 3,
+   "IE": 1,
+   "IN": 1,
+   "KE": 1,
+   "ES": 1
+  },
+  "links": 350,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q615077",
+    "description": "British politician (born 1960)",
+    "links": 27,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q6238445",
+    "description": "English translator",
+    "links": 3,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q76179397",
+    "description": "Peerage person ID=585365",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q76252065",
+    "description": "(1687-1750)",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q56236115",
+    "description": "British rower",
+    "links": 2,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q110944889",
+    "description": "(1764-1848)",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q56333973",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q102239473",
+    "description": "horse trainer",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q104899022",
+    "description": "British semitologist",
+    "links": 1,
+    "human": true,
+    "country": "GB"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Luis Suárez",
+  "lang": "es",
+  "news": 345,
+  "titles": [
+   "Martino puso a Messi a la misma altura de este jugador en la historia: “Junto con…”",
+   "Europa atenta ao rendimento de Luis Suárez na Champions",
+   "Messi scores twice to propel Inter Miami to victory over Atlanta United"
+  ],
+  "found": 7,
+  "mediaCountry": null,
+  "byCountry": {
+   "PT": 102,
+   "PK": 3,
+   "FR": 9,
+   "UY": 8,
+   "CL": 5,
+   "CA": 2,
+   "HN": 1,
+   "TR": 1,
+   "MX": 5,
+   "AR": 5,
+   "GB": 2,
+   "AU": 3,
+   "EC": 1,
+   "BR": 3,
+   "NG": 1,
+   "BE": 1,
+   "AT": 4,
+   "RO": 2,
+   "HU": 1,
+   "AL": 1,
+   "US": 1,
+   "DE": 2,
+   "SK": 3,
+   "DK": 1,
+   "PL": 2,
+   "HR": 2,
+   "ES": 5,
+   "BA": 1,
+   "PE": 1
+  },
+  "links": 345,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q26517",
+    "description": "Uruguayan association football player",
+    "links": 114,
+    "human": true,
+    "country": "UY"
+   },
+   {
+    "qid": "Q27913965",
+    "description": "Mexican badminton player",
+    "links": 0,
+    "human": true,
+    "country": "MX"
+   },
+   {
+    "qid": "Q270367",
+    "description": "Spanish association football player and manager (1935–2023)",
+    "links": 50,
+    "human": true,
+    "country": "ES"
+   },
+   {
+    "qid": "Q57245155",
+    "description": "Argentine association football player",
+    "links": 5,
+    "human": true,
+    "country": "AR"
+   },
+   {
+    "qid": "Q25209803",
+    "description": "Spanish Roman Catholic bishop",
+    "links": 2,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q34610373",
+    "description": "Spanish actor",
+    "links": 1,
+    "human": true,
+    "country": "ES"
+   },
+   {
+    "qid": "Q28736721",
+    "description": "Colombian association football player",
+    "links": 33,
+    "human": true,
+    "country": "CO"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Bryce Young",
+  "lang": "en",
+  "news": 344,
+  "titles": [
+   "Bryce Young continues strong play with big passing day in Week 6",
+   "NFL roundup",
+   "Panthers’ Bryce Young joins list of Hall of Famers with feat not seen since Peyton Manning, Drew Brees"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "CA": 9,
+   "DE": 1,
+   "MX": 1,
+   "AU": 1
+  },
+  "links": 344,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q79416176",
+    "description": "American football player (born 2001)",
+    "links": 12,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q134289747",
+    "description": "American football player",
+    "links": 1,
+    "human": true,
+    "country": "US"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Mike Flanagan",
+  "lang": "fr",
+  "news": 344,
+  "titles": [
+   "Mike Flanagan reimagina 'Carrie' con ciberacoso y simulacros de tiroteo (y Stephen King le da su bendición)",
+   "Mike Flanagan actualiza con éxito 'Carrie'",
+   "Mike Flanagan actualiza con éxito 'Carrie'"
+  ],
+  "found": 8,
+  "mediaCountry": null,
+  "byCountry": {
+   "ES": 6,
+   "BR": 9,
+   "UY": 1,
+   "NZ": 1,
+   "IT": 4,
+   "VN": 1,
+   "FR": 19,
+   "HR": 2,
+   "PE": 3,
+   "MX": 1,
+   "AR": 2,
+   "PT": 1,
+   "GB": 3,
+   "DE": 1,
+   "BE": 1,
+   "CH": 2,
+   "AU": 1
+  },
+  "links": 344,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q19668417",
+    "description": "American filmmaker (born 1978)",
+    "links": 28,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q1443732",
+    "description": "English footballer and manager (born 1952)",
+    "links": 7,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q16019688",
+    "description": "Irish soldier who assisted the formation of the Israeli armed forces",
+    "links": 6,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q869473",
+    "description": "American baseball player and coach (1951–2011)",
+    "links": 5,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q100789945",
+    "description": "college basketball player (1964–1964)",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q6846847",
+    "description": "American football player",
+    "links": 3,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q137788702",
+    "description": "Canadian political candidate from Ontario",
+    "links": 0,
+    "human": true,
+    "country": "CA"
+   },
+   {
+    "qid": "Q25710371",
+    "description": "ice hockey player (1968-)",
+    "links": 1,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Mike McCarthy",
+  "lang": "en",
+  "news": 326,
+  "titles": [
+   "Steelers Coach Mike McCarthy Hurts Ankle, Returns for OT Win Over Bucs",
+   "Mike McCarthy shrugs off foot injury",
+   "Steelers coach Mike McCarthy injures ankle during game vs Bucs"
+  ],
+  "found": 10,
+  "mediaCountry": null,
+  "byCountry": {
+   "MX": 2,
+   "CA": 2,
+   "AT": 1
+  },
+  "links": 326,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q136681927",
+    "description": "Australian maritime archaeologist, historian and museologist",
+    "links": 0,
+    "human": true,
+    "country": "AU"
+   },
+   {
+    "qid": "Q70231530",
+    "description": "archaeologist",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q1933317",
+    "description": "American cyclist",
+    "links": 10,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q506866",
+    "description": "American football coach (born 1963)",
+    "links": 12,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q6847877",
+    "description": "Irish rugby union player",
+    "links": 5,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q107524412",
+    "description": "American politician",
+    "links": 1,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q6847876",
+    "description": "American record producer",
+    "links": 1,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q6847875",
+    "description": "American businessman",
+    "links": 0,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q115804201",
+    "description": "American baseball coach",
+    "links": 2,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q22279122",
+    "description": "journalist",
+    "links": 2,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Jackie Chan",
+  "lang": "de",
+  "news": 17,
+  "titles": [
+   "5 películas de héroes de acción como Stallone, Schwarzenegger y Van Damme que fueron un desastre",
+   "Karate Kid : Legends sur Canal+ Box Office : Jackie Chan et Ralph Macchio unissent deux écoles pour un nouveau champion ce mercredi",
+   "Fans feiern Foto mit Jackie Chan: Til Schweiger meldet sich an der Seite einer Actionlegende zurück"
+  ],
+  "found": 3,
+  "mediaCountry": null,
+  "byCountry": {
+   "DE": 3,
+   "BA": 1,
+   "KE": 1
+  },
+  "links": 17,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q36970",
+    "description": "Hong Kong actor and martial artist (born 1954)",
+    "links": 162,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q123684766",
+    "description": "Brazilian footballer",
+    "links": 1,
+    "human": true,
+    "country": "BR"
+   }
+  ],
+  "rules": {
+   "famous": "Q36970",
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "John Campbell",
+  "lang": "en",
+  "news": 14,
+  "titles": [
+   "Morning Report: Winston Peters and John Campbell in fiery clash over UN document",
+   "West Indies deny India clean sweep as Hope scores unbeaten 162",
+   "West Indies deny India clean sweep as Hope scores unbeaten 162"
+  ],
+  "found": 7,
+  "mediaCountry": null,
+  "byCountry": {
+   "NZ": 1
+  },
+  "links": 14,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q19974175",
+    "description": "Scottish soldier in the British Army",
+    "links": 3,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q6224983",
+    "description": "British naval officer, navigational expert and colonial governor",
+    "links": 6,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q1702304",
+    "description": "Scottish footballer who played for Sunderland as a forward, 1870 (1870–1906)",
+    "links": 14,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q105466017",
+    "description": "British Army surgeon",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q108162126",
+    "description": "British Royal Navy officer, commander in 1813",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q108162127",
+    "description": "British Royal Navy officer, lieutenant in 1812",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q1699536",
+    "description": "U.S. Representative from South Carolina (1795-1845)",
+    "links": 5,
+    "human": true,
+    "country": "US"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Lamine Camara",
+  "lang": "en",
+  "news": 104,
+  "titles": [
+   "Ligue 1 : Première défaite de la saison pour Monaco de Lamine Camara et Sadibou Sané",
+   "Mercato Liverpool : après Lamine Camara, une nouvelle piste à 90 M€ au milieu",
+   "Monaco’s Filipe Luis confirms Lamine Camara is fit for Lorient"
+  ],
+  "found": 3,
+  "mediaCountry": null,
+  "byCountry": {
+   "FR": 11,
+   "GB": 4,
+   "DE": 1,
+   "PE": 1
+  },
+  "links": 104,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q116896436",
+    "description": "Senegalese footballer (born 2004)",
+    "links": 28,
+    "human": true,
+    "country": "SN"
+   },
+   {
+    "qid": "Q63537079",
+    "description": "French politician",
+    "links": 0,
+    "human": true,
+    "country": "FR"
+   },
+   {
+    "qid": "Q136112653",
+    "description": "Guinean politician",
+    "links": 0,
+    "human": true,
+    "country": "GN"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Martha Elena",
+  "lang": "es",
+  "news": 14,
+  "titles": [
+   "El accidente que tuvo Martha Elena, hija de Paquita la del Barrio, cuando se enteró de la muerte de la cantante",
+   "El accidente que tuvo Martha Elena, hija de Paquita la del Barrio, cuando se enteró de la muerte de la cantante",
+   "Hija adoptiva de Paquita la del Barrio habría recibido su herencia: ¿qué pasa ahora que murió?"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "MX": 6
+  },
+  "links": 14,
+  "languageCountry": null
+ },
+ {
+  "name": "Darya Shipilova",
+  "lang": "en",
+  "news": 92,
+  "titles": [
+   "Q&A: Expert discusses Russian plague scare",
+   "Russia ‘pressured’ dead plague scientist’s family to stay quiet",
+   "Mystery surrounds worker's death at Russia plague lab"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "GB": 8,
+   "NZ": 1,
+   "NL": 3,
+   "AT": 2,
+   "KE": 1,
+   "AU": 1,
+   "IE": 2,
+   "PK": 4,
+   "ES": 4,
+   "KR": 1,
+   "IT": 5,
+   "RO": 1,
+   "AL": 2
+  },
+  "links": 92,
+  "languageCountry": null
+ },
+ {
+  "name": "Haris Orkin",
+  "lang": "de",
+  "news": 15,
+  "titles": [
+   "Resident Evil Requiem Writer deutet DLC um Spencer an - IGN Daily Fix",
+   "Resident Evil Requiem : une déclaration inattendue dévoile un détail majeur du DLC",
+   "Resident Evil Requiem : le DLC creusera le Spencer repenti, la réécriture qui a fâché les fans"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "FR": 2,
+   "PK": 1,
+   "HU": 1
+  },
+  "links": 15,
+  "languageCountry": null
+ },
+ {
+  "name": "Jordi Versteegden",
+  "lang": "nl",
+  "news": 82,
+  "titles": [
+   "Hoe gaat het met de Hanslers op tv? ‘De verhaallijn is op’",
+   "Hoe gaat het met de Hanslers op tv? ‘De verhaallijn is op’",
+   "Hoe gaat het met de Hanslers op tv? ‘De verhaallijn is op’"
+  ],
+  "found": 0,
+  "mediaCountry": "NL",
+  "byCountry": {
+   "NL": 82
+  },
+  "links": 82,
+  "languageCountry": null
+ },
+ {
+  "name": "Swatantra Bhardwaj",
+  "lang": "en",
+  "news": 14,
+  "titles": [
+   "India News | Delhi: Patiala House Court Grants Regular Bail to Swatantra Bhardwaj, Rejects Delhi Exit Restriction",
+   "Patiala House Court grants regular bail to Swatantra Bhardwaj, denies Delhi exit restriction",
+   "Swatantra Bhardwaj Gets Regular Bail After Three-Week Interim Relief in CJP Protest Assault Case"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 14,
+  "languageCountry": null
+ },
+ {
+  "name": "Moses Simon",
+  "lang": "en",
+  "news": 21,
+  "titles": [
+   "Simon Enters Late As Paris FC Edge Rennes 4-3",
+   "Simon Features As Paris FC Beat Rennes 4-3, Go Level On Points With Leaders PSG",
+   "Benfica boy Edokpolor stars in Super Eagles draw"
+  ],
+  "found": 4,
+  "mediaCountry": "NG",
+  "byCountry": {
+   "NG": 12
+  },
+  "links": 21,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q105392849",
+    "description": "holocaust victim, b. 1860-12-27",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q105392850",
+    "description": "holocaust victim, b. 1859-06-03",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q15900645",
+    "description": "Nigerian association football player",
+    "links": 33,
+    "human": true,
+    "country": "NG"
+   },
+   {
+    "qid": "Q1523794",
+    "description": "German entrepreneur",
+    "links": 2,
+    "human": true,
+    "country": "DE"
+   }
+  ],
+  "rules": {
+   "famous": "Q15900645",
+   "media30": "Q15900645",
+   "media10": "Q15900645",
+   "media0": "Q15900645",
+   "local10": "Q15900645",
+   "local0": "Q15900645"
+  }
+ },
+ {
+  "name": "Cmdr. William Burke",
+  "lang": "en",
+  "news": 14,
+  "titles": [
+   "Small Top Party Aboard Paul Ignatius [Image 2 of 13]",
+   "Small Top Party Aboard Paul Ignatius [Image 7 of 13]",
+   "Small Top Party Aboard Paul Ignatius [Image 12 of 13]"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 14,
+  "languageCountry": null
+ },
+ {
+  "name": "Rui Costa",
+  "lang": "it",
+  "news": 84,
+  "titles": [
+   "Rui Costa assistiu a jogo da Taça de Portugal ao vivo neste sábado",
+   "Rui Costa assistiu a jogo da Taça de Portugal ao vivo neste sábado",
+   "Rui Costa assistiu ao Louletano-Rio Ave da Taça de Portugal"
+  ],
+  "found": 9,
+  "mediaCountry": "PT",
+  "byCountry": {
+   "PT": 43,
+   "BR": 33,
+   "FR": 1
+  },
+  "links": 84,
+  "languageCountry": "IT",
+  "humans": [
+   {
+    "qid": "Q363962",
+    "description": "Portuguese cyclist",
+    "links": 29,
+    "human": true,
+    "country": "PT"
+   },
+   {
+    "qid": "Q190608",
+    "description": "Portuguese footballer (born 1972)",
+    "links": 58,
+    "human": true,
+    "country": "PT"
+   },
+   {
+    "qid": "Q10365240",
+    "description": "Brazilian politician",
+    "links": 9,
+    "human": true,
+    "country": "BR"
+   },
+   {
+    "qid": "Q26405019",
+    "description": "Portuguese association football player",
+    "links": 8,
+    "human": true,
+    "country": "PT"
+   },
+   {
+    "qid": "Q30504128",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q133259927",
+    "description": null,
+    "links": 1,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q133497889",
+    "description": null,
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q47504328",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q58113745",
+    "description": "researcher, ORCID id # 0000-0003-2488-0914",
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Gianluca Mancini",
+  "lang": "it",
+  "news": 18,
+  "titles": [
+   "Roma, Mourinho e Pellegrini fanno pace: l’abbraccio dopo il Real Madrid chiude le vecchie tensioni",
+   "L'anello è storia vecchia: Mourinho-Pellegrini, pace fatta dopo le ruggini del passato",
+   "Alineaciones de Roma y Real Madrid por la Champions League: formaciones probables"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "IT": 5,
+   "FR": 1
+  },
+  "links": 18,
+  "languageCountry": "IT",
+  "humans": [
+   {
+    "qid": "Q28973528",
+    "description": "Italian association football player",
+    "links": 38,
+    "human": true,
+    "country": "IT"
+   },
+   {
+    "qid": "Q140589421",
+    "description": null,
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": "Q28973528",
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": "Q28973528",
+   "local0": "Q28973528"
+  }
+ },
+ {
+  "name": "Indian seafarers",
+  "lang": "en",
+  "news": 15,
+  "titles": [
+   "All nine Indian seafarers on board chemical tanker YARA J safe in Romania: Embassy",
+   "India urges Russia, Ukraine to protect Black Sea shipping",
+   "India Condemns Drone Attacks in Strait of Hormuz, Two Indian Sailors Missing"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "IN": 1
+  },
+  "links": 15,
+  "languageCountry": null
+ },
+ {
+  "name": "Antonio Raimondo",
+  "lang": "en",
+  "news": 119,
+  "titles": [
+   "Da Raimondo a Cisse: allora i talenti si trovano anche in Serie B. Ma in Italia c'è un problema",
+   "Le luci del calciomercato su Antonio Raimondo",
+   "Di Vaio: “Pessina e Raimondo sono il futuro del Bologna”"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "IT": 37,
+   "DE": 1,
+   "RO": 4,
+   "FR": 2,
+   "CA": 1,
+   "AR": 1,
+   "PT": 1,
+   "AT": 1,
+   "SK": 1,
+   "PL": 1
+  },
+  "links": 119,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q107999124",
+    "description": "Italian footballer",
+    "links": 10,
+    "human": true,
+    "country": "IT"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Der Täter",
+  "lang": "de",
+  "news": 18,
+  "titles": [
+   "Amoklauf an Schule in Oregon: Lehrerin wirft Handy – Familienvater verfolgt ihn",
+   "Oregon: Kinder in Grundschule erschossen",
+   "Angreifer tot : Drei Kinder an US-Grundschule erschossen"
+  ],
+  "found": 2,
+  "mediaCountry": "DE",
+  "byCountry": {
+   "DE": 15,
+   "AT": 2
+  },
+  "links": 18,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Essam Abdel Fattah",
+  "lang": "fr",
+  "news": 18,
+  "titles": [
+   "Essam Abdel Fattah comments on the referee's performa…",
+   "Essam Abdel Fattah commente la performance de l'arbit…",
+   "Essam Abdel Fattah comenta sobre el desempeño del árb…"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "CD": 1
+  },
+  "links": 18,
+  "languageCountry": null
+ },
+ {
+  "name": "Alieu Njie",
+  "lang": "it",
+  "news": 15,
+  "titles": [
+   "Njie, un gol per prendersi la Viola. E chiamare la Svezia dei grandi",
+   "Dalla Svezia, Njie chiama il Ct Potter: \"Se uno gioca in Serie A deve essere chiamato in Nazionale maggiore\"",
+   "Njie: \"Voglio dare il massimo con la Fiorentina per conquistare la maglia della Nazionale maggiore\""
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "IT": 6
+  },
+  "links": 15,
+  "languageCountry": "IT",
+  "humans": [
+   {
+    "qid": "Q130361236",
+    "description": "Swedish footballer",
+    "links": 6,
+    "human": true,
+    "country": "SE"
+   },
+   {
+    "qid": "Q133932745",
+    "description": "Gambian government official and politician",
+    "links": 1,
+    "human": true,
+    "country": "GM"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Filipa Turka",
+  "lang": "cs",
+  "news": 15,
+  "titles": [
+   "Máma by mě řezala, řekl Šťastný k Turkovu videu s doutníkem a větrníky",
+   "Hnutí Duha podá kvůli Turkově omluvě na facebooku návrh na exekuční vymáhání",
+   "Hnutí DUHA podá návrh na exekuční vymáhání vůči Turkovi. Omluva podle nich nesplnila příkaz soudu"
+  ],
+  "found": 0,
+  "mediaCountry": "CZ",
+  "byCountry": {
+   "CZ": 15
+  },
+  "links": 15,
+  "languageCountry": "CZ"
+ },
+ {
+  "name": "Giannijem Infantinom",
+  "lang": "hr",
+  "news": 5,
+  "titles": [
+   "Čeferin: Na večeri u Hrvatskoj rekli su mi \"Nema plaćanja, samo zaustavite Infantina\"",
+   "Čeferin: Na večeri u Hrvatskoj rekli su mi \"Nema plaćanja, samo zaustavite Infantina\"",
+   "Vlasnik restorana u Hrvatskoj nije htio naplatiti večeru Čeferinu, a policajac na granici imao samo jednu molbu"
+  ],
+  "found": 0,
+  "mediaCountry": "BA",
+  "byCountry": {
+   "HR": 2,
+   "BA": 3
+  },
+  "links": 5,
+  "languageCountry": "HR"
+ },
+ {
+  "name": "Matt Willis",
+  "lang": "en",
+  "news": 22,
+  "titles": [
+   "Jeff Brazier shares heartbreaking struggle to save son Freddy from addiction",
+   "Matt Willis says he feels 'a lot of guilt' about 'removing himself' from late pal Amy Winehouse's life to get sober before her death from alcohol poisoning",
+   "Matt Willis says he feels 'a lot of guilt' about 'removing himself' from late pal Amy Winehouse's life to get sober before her death from alcohol poisoning"
+  ],
+  "found": 4,
+  "mediaCountry": "GB",
+  "byCountry": {
+   "GB": 14
+  },
+  "links": 22,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q723063",
+    "description": "British musician, singer, actor, and television presenter (born 1983)",
+    "links": 14,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q28728021",
+    "description": "actor (1913–1989)",
+    "links": 0,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q6791435",
+    "description": "American former football wide receiver",
+    "links": 2,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q117850970",
+    "description": null,
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": "Q723063",
+   "media10": "Q723063",
+   "media0": "Q723063",
+   "local10": "Q723063",
+   "local0": "Q723063"
+  }
+ },
+ {
+  "name": "Paola Iezzi",
+  "lang": "it",
+  "news": 16,
+  "titles": [
+   "X Factor, le bresciane Alìa e Milla conquistano i Live Show",
+   "X Factor 2026: chi sono i 12 concorrenti scelti da Gabbani, Irama , Paola Iezzi e Jack La Furia per i Live",
+   "Chi sono i 12 finalisti di X Factor 2026: storia per storia, sogno per sogno"
+  ],
+  "found": 2,
+  "mediaCountry": "IT",
+  "byCountry": {
+   "IT": 15
+  },
+  "links": 16,
+  "languageCountry": "IT",
+  "humans": [
+   {
+    "qid": "Q16586771",
+    "description": "Italian singer-songwriter, disc jockey and record producer",
+    "links": 6,
+    "human": true,
+    "country": "IT"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": "Q16586771",
+   "media10": "Q16586771",
+   "media0": "Q16586771",
+   "local10": "Q16586771",
+   "local0": "Q16586771"
+  }
+ },
+ {
+  "name": "Mick Cronin",
+  "lang": "en",
+  "news": 16,
+  "titles": [
+   "Where UCLA Could Stand With 5-Star Jalen Davis After Visit",
+   "Men's Basketball to Participate at Big Ten Media Day on Thursday",
+   "UCLA basketball’s Mick Cronin confirms surprising game-day routine reports are accurate"
+  ],
+  "found": 4,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 16,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q15459203",
+    "description": "American basketball coach",
+    "links": 3,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q6838116",
+    "description": "Australian rules footballer and coach",
+    "links": 2,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q3311723",
+    "description": "Australian rugby league footballer and coach",
+    "links": 2,
+    "human": true,
+    "country": "AU"
+   },
+   {
+    "qid": "Q6838118",
+    "description": "Irish hurler",
+    "links": 1,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Fănel Bogos",
+  "lang": "ro",
+  "news": 14,
+  "titles": [
+   "Noi audieri în dosarul DNA Fănel Bogos. Cristina Trăilă a primit oficial calitatea de inculpat",
+   "Laura Gherasim acuză o tentativă de compromitere a Comisiei de cercetare a abuzurilor, în scandalul stenogramelor atribuite lui George Simion în dosarul Bogos",
+   "Anca Alexandrescu și George Simion s-au certat în direct, după întrebări despre stenograme și negocieri politice"
+  ],
+  "found": 0,
+  "mediaCountry": "RO",
+  "byCountry": {
+   "RO": 12
+  },
+  "links": 14,
+  "languageCountry": "RO"
+ },
+ {
+  "name": "Jacob Vestergaard",
+  "lang": "sv",
+  "news": 15,
+  "titles": [
+   "Noyðast at hava tol í Tjørnuvík",
+   "Ferðavinnan vil hava strangari reglur fyri heimablídni",
+   "Havnargjøld: Kommunan missir stóran part av inntøkugrundarlagnum"
+  ],
+  "found": 3,
+  "mediaCountry": "FO",
+  "byCountry": {
+   "FO": 15
+  },
+  "links": 15,
+  "languageCountry": "SE",
+  "humans": [
+   {
+    "qid": "Q730980",
+    "description": "Faroese politician",
+    "links": 10,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q104166805",
+    "description": "Danish cyclist",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q87213706",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Matthew Robertson",
+  "lang": "en",
+  "news": 14,
+  "titles": [
+   "Bantering Points: 10/7/26",
+   "Rangers Recall Cole Beaudoin With Joe Veleno Headed to IR, Robertson Clears Waivers",
+   "Game #5: New York Islanders vs. New York Rangers Open Thread"
+  ],
+  "found": 8,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 14,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q130302162",
+    "description": "British para-cyclist (born 1999)",
+    "links": 1,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q16224821",
+    "description": "Canadian ice hockey player (born 1988)",
+    "links": 0,
+    "human": true,
+    "country": "CA"
+   },
+   {
+    "qid": "Q114586313",
+    "description": "Canadian ice hockey player (born 2001)",
+    "links": 5,
+    "human": true,
+    "country": "CA"
+   },
+   {
+    "qid": "Q91360511",
+    "description": "researcher (ORCID 0000-0003-2545-8918)",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q57440264",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q101408117",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q75946503",
+    "description": "Peerage person ID=421365",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q16211270",
+    "description": null,
+    "links": 1,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Maj. Luis A. Camacho Santiago",
+  "lang": "en",
+  "news": 18,
+  "titles": [
+   "Luis Camacho Promotion Ceremony [Image 19 of 36]",
+   "Luis Camacho Promotion Ceremony [Image 20 of 36]",
+   "Luis Camacho Promotion Ceremony [Image 21 of 36]"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 18,
+  "languageCountry": null
+ },
+ {
+  "name": "Óscar Puente",
+  "lang": "es",
+  "news": 110,
+  "titles": [
+   "\"Por ahora le ha salido bien\": los malabares de Óscar Puente para pedir el voto sin pedir el voto y esquivar a la Junta Electoral",
+   "Tebas responde a Uribes y defiende su comparación con Goebbels citando a Puente y Patxi López",
+   "Tebas recuerda a Uribes que Patxi López y Óscar Puente también han apelado a Goebbels"
+  ],
+  "found": 2,
+  "mediaCountry": "ES",
+  "byCountry": {
+   "PE": 1,
+   "ES": 64
+  },
+  "links": 110,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q6174903",
+    "description": "Spanish politician and lawyer",
+    "links": 12,
+    "human": true,
+    "country": "ES"
+   },
+   {
+    "qid": "Q125166637",
+    "description": "mayor",
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": "Q6174903",
+   "media10": "Q6174903",
+   "media0": "Q6174903",
+   "local10": "Q6174903",
+   "local0": "Q6174903"
+  }
+ },
+ {
+  "name": "Alan Carr",
+  "lang": "en",
+  "news": 13,
+  "titles": [
+   "Celebrity Traitors isn't as good this year for 1 reason – and it's not Alan Carr",
+   "Alan Carr castle plan given boost by heritage officers",
+   "Popular Amanda Holden TV show axed by the BBC"
+  ],
+  "found": 5,
+  "mediaCountry": "GB",
+  "byCountry": {
+   "GB": 7,
+   "AU": 1
+  },
+  "links": 13,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q32795",
+    "description": "British comedian and television personality",
+    "links": 19,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q56484671",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q51848507",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q17305757",
+    "description": "Northern Ireland trade unionist",
+    "links": 2,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q19662950",
+    "description": "Australian rules footballer",
+    "links": 1,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": "Q32795",
+   "media0": "Q32795",
+   "local10": "Q32795",
+   "local0": "Q32795"
+  }
+ },
+ {
+  "name": "Luís Neves",
+  "lang": null,
+  "news": 167,
+  "titles": [
+   "As lealdades da seita",
+   "15 minutos: Luís Neves avança com queixa-crime contra antigo secretário-geral do MAI",
+   "Novo secretário-geral é exemplo de \"servidor público\" ao contrário do antecessor, diz MAI"
+  ],
+  "found": 4,
+  "mediaCountry": "PT",
+  "byCountry": {
+   "PT": 166
+  },
+  "links": 167,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q56543763",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q138395084",
+    "description": "Portuguese politician",
+    "links": 3,
+    "human": true,
+    "country": "PT"
+   },
+   {
+    "qid": "Q3266781",
+    "description": "Canadian comics artist",
+    "links": 1,
+    "human": true,
+    "country": "CA"
+   },
+   {
+    "qid": "Q64504435",
+    "description": "Portuguese businessperson",
+    "links": 1,
+    "human": true,
+    "country": "PT"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": "Q138395084",
+   "local10": null,
+   "local0": "Q138395084"
+  }
+ },
+ {
+  "name": "Simon Royer",
+  "lang": "fr",
+  "news": 16,
+  "titles": [
+   "\"Je viens de nulle part\", le destin fou du violoniste Simon Royer qui accompagne Céline Dion",
+   "« Céline Dion est la même avec ou sans les caméras » : des rues de Vannes aux plus grandes scènes avec la star québécoise, le fabuleux parcours de ce violoniste breton",
+   "« Céline Dion est la même avec ou sans les caméras » : des rues de Vannes aux plus grandes scènes avec la star québécoise, le fabuleux parcours de ce violoniste breton"
+  ],
+  "found": 0,
+  "mediaCountry": "FR",
+  "byCountry": {
+   "FR": 13
+  },
+  "links": 16,
+  "languageCountry": null
+ },
+ {
+  "name": "Thomas Perlmann",
+  "lang": "en",
+  "news": 14,
+  "titles": [
+   "Optogenetics just won the Nobel Prize, its first therapy is already under FDA review",
+   "Nobel Prize awarded for groundbreaking research on brain cells study",
+   "Hinter den Kulissen des Nobelpreises für Optogenetik: Der Anruf, der das Leben verändert"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "DE": 1,
+   "KR": 1
+  },
+  "links": 14,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q67226342",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q6041808",
+    "description": "Swedish professor",
+    "links": 3,
+    "human": true,
+    "country": "SE"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Luís Castro",
+  "lang": "pt",
+  "news": 91,
+  "titles": [
+   "Luís Castro lembra após empate do Levante: «O valor da transferência do guarda-redes do Deportivo dava para nós contratarmos 4 jogadores»",
+   "Luís Castro: \"Com o guarda-redes deles comprávamos quatro jogadores\"",
+   "Luís Castro: \"Com o guarda-redes deles comprávamos quatro jogadores\""
+  ],
+  "found": 8,
+  "mediaCountry": null,
+  "byCountry": {
+   "PT": 32,
+   "ES": 3,
+   "AT": 2,
+   "BR": 3,
+   "HN": 1
+  },
+  "links": 91,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q15896123",
+    "description": "Portuguese footballer and manager",
+    "links": 16,
+    "human": true,
+    "country": "PT"
+   },
+   {
+    "qid": "Q6706760",
+    "description": "Salvadoran footballer",
+    "links": 3,
+    "human": true,
+    "country": "SV"
+   },
+   {
+    "qid": "Q10320683",
+    "description": "Brazilian politician",
+    "links": 2,
+    "human": true,
+    "country": "BR"
+   },
+   {
+    "qid": "Q63987301",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q12392457",
+    "description": "association football player",
+    "links": 1,
+    "human": true,
+    "country": "ES"
+   },
+   {
+    "qid": "Q107283576",
+    "description": "Cuban baseball player",
+    "links": 1,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q104792477",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q117317496",
+    "description": "Chilean footballer",
+    "links": 1,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Sergej Lavrov",
+  "lang": "hr",
+  "news": 20,
+  "titles": [
+   "Iran: Lavrov oggi a Teheran, Mosca tenta la mediazione per evitare nuova escalation militare",
+   "\"Zelenski ne želi pregovore\"",
+   "Moskva \"zagrmela\"; NATO je prešao granicu?"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "RS": 1,
+   "BA": 1,
+   "HR": 1,
+   "AL": 1,
+   "SE": 1
+  },
+  "links": 20,
+  "languageCountry": "HR",
+  "humans": [
+   {
+    "qid": "Q58217",
+    "description": "Russian politician of Armenian origin, Minister of Foreign Affairs",
+    "links": 102,
+    "human": true,
+    "country": "RU"
+   },
+   {
+    "qid": "Q4252224",
+    "description": "Soviet economist (1928-2000)",
+    "links": 1,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": "Q58217",
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "John Geddie",
+  "lang": "en",
+  "news": 14,
+  "titles": [
+   "Exclusive-US holds more secret talks with Myanmar’s military-backed rulers in Tokyo, sources say",
+   "Exclusive-US holds more secret talks with Myanmar’s military-backed rulers in Tokyo, sources say",
+   "Exclusive-US holds more secret talks with Myanmar’s military-backed rulers in Tokyo, sources say"
+  ],
+  "found": 3,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 14,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q16065528",
+    "description": "Scots-Canadian missionary",
+    "links": 1,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q6235040",
+    "description": "British writer (1846-1927)",
+    "links": 3,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q96384564",
+    "description": null,
+    "links": 1,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Nolan Wells",
+  "lang": "en",
+  "news": 125,
+  "titles": [
+   "Nolan Wells group chats reveal suspicion, confusion after disappearance",
+   "North Carolina A&T Students March for Justice for Nolan Wells",
+   "Nolan Wells group chats reveal suspicion, confusion after disappearance"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "US": 1,
+   "GB": 3,
+   "CA": 2,
+   "KE": 1
+  },
+  "links": 125,
+  "languageCountry": null
+ },
+ {
+  "name": "46-year-old man",
+  "lang": "en",
+  "news": 13,
+  "titles": [
+   "Man fatally stabbed following street altercation in Tokyo",
+   "Man fatally stabbed following street altercation in Tokyo",
+   "Slain chef’s family infuriated by stayed charges"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "VN": 2,
+   "CA": 2,
+   "MT": 2,
+   "KE": 1
+  },
+  "links": 13,
+  "languageCountry": null
+ },
+ {
+  "name": "Palestinian children",
+  "lang": "en",
+  "news": 16,
+  "titles": [
+   "Israel Arrested Over 2,000 Palestinian Children Since Gaza War Began",
+   "US Charity Plans AI Surveillance of Speech in Gaza Classrooms",
+   "Israeli forces detain two men, fire tear gas to children during occupied West Bank raids"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "JO": 1,
+   "ZA": 1
+  },
+  "links": 16,
+  "languageCountry": null
+ },
+ {
+  "name": "Brad Smith",
+  "lang": "en",
+  "news": 112,
+  "titles": [
+   "Microsoft president warns green-card curbs could hurt US tech: Reports",
+   "Microsoft rebate a Vance tras quedar suspendida del programa PERM",
+   "Microsoft president warns Trump’s H-1B crackdown could push top AI talent abroad"
+  ],
+  "found": 9,
+  "mediaCountry": null,
+  "byCountry": {
+   "AZ": 2,
+   "MA": 2,
+   "DE": 2,
+   "BE": 4,
+   "IE": 1,
+   "FR": 5,
+   "ZA": 2,
+   "AR": 1,
+   "AT": 1,
+   "LU": 1,
+   "IN": 2,
+   "MD": 2,
+   "BR": 2,
+   "PT": 2,
+   "HU": 1,
+   "DK": 2,
+   "HR": 3,
+   "GB": 3
+  },
+  "links": 112,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q15477554",
+    "description": "Australian association footballer (born 1994)",
+    "links": 25,
+    "human": true,
+    "country": "AU"
+   },
+   {
+    "qid": "Q2923428",
+    "description": "American musician",
+    "links": 1,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q113940330",
+    "description": "furniture design and maker and owner at Bradford Woodworking",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q108050118",
+    "description": "American football player (born 1969)",
+    "links": 1,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q120800246",
+    "description": "American football coach (born c. 1950)",
+    "links": 1,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q125851583",
+    "description": "American state official and DOGE official",
+    "links": 0,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q50300377",
+    "description": "American lawyer and CLO of Microsoft (born 1959)",
+    "links": 9,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q4954264",
+    "description": "American entrepreneur",
+    "links": 0,
+    "human": true,
+    "country": "US"
+   },
+   {
+    "qid": "Q110228916",
+    "description": "American photographer (born 1970)",
+    "links": 0,
+    "human": true,
+    "country": "US"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Ravi Shastri",
+  "lang": "en",
+  "news": 22,
+  "titles": [
+   "‘He should not play all three formats’: Ravi Shastri’s advice for Jasprit Bumrah",
+   "\"Don’t think he should play all three formats\" - Ravi Shastri's massive statement on Team India star ahead of NZ vs IND 2026 series",
+   "\"Don’t think he should play all three formats\" - Ravi Shastri's massive statement on Team India star ahead of NZ vs IND 2026 series"
+  ],
+  "found": 4,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 22,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q3518502",
+    "description": "Indian cricket coach, former player and commentator",
+    "links": 21,
+    "human": true,
+    "country": "IN"
+   },
+   {
+    "qid": "Q87618897",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q134457027",
+    "description": "professor of civil, construction, and environmental engineering",
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Alicia del Río",
+  "lang": "es",
+  "news": 17,
+  "titles": [
+   "Afiliación bajo mínimos y con movimientos combativos en auge",
+   "El Sindicato de Inquilinas denuncia la destrucción del altar en memoria de Maricarmen en Retiro",
+   "Alicia del Río, entre el Sindicato de Inquilinas y la plataforma que pide trabajar menos horas en la huelga de educación"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "ES": 7
+  },
+  "links": 17,
+  "languageCountry": null
+ },
+ {
+  "name": "Mike Matheson",
+  "lang": "en",
+  "news": 19,
+  "titles": [
+   "Le Canadien évalue l’absence de Mike Matheson en raison d’une blessure au bas du corps",
+   "Habs recall defenceman David Reinbacher for game against Capitals",
+   "Montreal Canadiens holen Reinbacher in den NHL-Kader"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "AT": 1,
+   "CA": 2
+  },
+  "links": 19,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q100880576",
+    "description": "college basketball player (1983–1985) Oregon",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q3313431",
+    "description": "Canadian ice hockey player",
+    "links": 16,
+    "human": true,
+    "country": "CA"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "ukrán elnök",
+  "lang": "hu",
+  "news": 22,
+  "titles": [
+   "Az amerikaiak újra megosztják hírszerzési adataikat Ukrajnával",
+   "Zelenszkij: Washington folytatja a hírszerzési információj megosztását Ukrajnával",
+   "Zelenszkij: Washington folytatja a hírszerzési információj megosztását Ukrajnával"
+  ],
+  "found": 0,
+  "mediaCountry": "HU",
+  "byCountry": {
+   "HU": 22
+  },
+  "links": 22,
+  "languageCountry": "HU"
+ },
+ {
+  "name": "Navanethem «Navi» Pillay",
+  "lang": "de",
+  "news": 17,
+  "titles": [
+   "Nobelkomitee ehrt Navi Pillay für ihren mutigen Einsatz gegen weltweite Kriegsverbrechen",
+   "Navanethem «Navi» Pillay remporte le prix Nobel de la paix",
+   "Prix Nobel de la Paix 2026 : la récompense décernée à l'avocate sud-africaine Navanethem «Navi» Pillay"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "FR": 3,
+   "BE": 3,
+   "CH": 4,
+   "LU": 1
+  },
+  "links": 17,
+  "languageCountry": null
+ },
+ {
+  "name": "cinco pessoas",
+  "lang": "es",
+  "news": 15,
+  "titles": [
+   "Cinco pessoas em estado crítico após protestos em Paris. Torre de edifício histórico incendiado ruiu",
+   "Cinco pessoas em estado crítico em Paris na sequência de protestos em França",
+   "Cinco pessoas em estado crítico em Paris na sequência de protestos em França"
+  ],
+  "found": 0,
+  "mediaCountry": "PT",
+  "byCountry": {
+   "PT": 9,
+   "BR": 4
+  },
+  "links": 15,
+  "languageCountry": null
+ },
+ {
+  "name": "former T.J. Maxx worker",
+  "lang": "en",
+  "news": 18,
+  "titles": [
+   "Former T.J. Maxx employee accused of hiding camera in dressing room facing new charges",
+   "Former T.J. Maxx employee accused of hiding camera in dressing room facing new charges",
+   "Former T.J. Maxx employee accused of hiding camera in dressing room facing new charges"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 18,
+  "languageCountry": null
+ },
+ {
+  "name": "Alehandro Davidovič Fokina",
+  "lang": "sr",
+  "news": 17,
+  "titles": [
+   "Davidovič Fokina nakon velikog preokreta osvojio masters u Šangaju",
+   "Novi preokret za prvi masters u karijeri: Fokina osvojio Šangaj i učinio uslugu Đokoviću",
+   "TITULA! Alehandro Davidovič Fokina najbolji u Šangaju"
+  ],
+  "found": 0,
+  "mediaCountry": "RS",
+  "byCountry": {
+   "RS": 9
+  },
+  "links": 17,
+  "languageCountry": null
+ },
+ {
+  "name": "backup quarterback",
+  "lang": "en",
+  "news": 18,
+  "titles": [
+   "McCarthy Makes History in Relief, but Giants Fall Short vs. Saints",
+   "Three Primary Reasons The Ravens Should Beat The Browns Sunday",
+   "H.S. football: Backup quarterback leads Greenfield to 14-7 win"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 18,
+  "languageCountry": null
+ },
+ {
+  "name": "Ivana Perišića",
+  "lang": "sr",
+  "news": 14,
+  "titles": [
+   "Evo što je trener PSV-a rekao o tragičaru Perišiću",
+   "Evo što je trener PSV-a rekao o tragičaru Perišiću",
+   "Bilić izgubio živce: Šta je, pi*ka ti materina"
+  ],
+  "found": 0,
+  "mediaCountry": "HR",
+  "byCountry": {
+   "HR": 10,
+   "BA": 3
+  },
+  "links": 14,
+  "languageCountry": null
+ },
+ {
+  "name": "Facundo Bernal",
+  "lang": "es",
+  "news": 138,
+  "titles": [
+   "La portada de ESTADIO Deportivo para el lunes 19 de octubre de 2026",
+   "Manuel Pellegrini recibe feroz insulto de periodista de Barcelona: “Qué hijo de p…”",
+   "El Betis prepara su respuesta oficial a la expulsión de Facundo Bernal contra el Barcelona para desacreditar a Ricardo de Burgos Bengoetxea"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "CL": 2,
+   "FR": 1,
+   "GB": 1,
+   "ES": 11,
+   "RO": 2,
+   "DK": 2,
+   "SK": 2,
+   "PT": 2,
+   "MX": 3,
+   "BO": 2,
+   "HN": 1,
+   "NL": 10,
+   "PL": 1,
+   "AT": 1,
+   "IT": 2,
+   "UY": 1,
+   "BA": 1
+  },
+  "links": 138,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q111070073",
+    "description": "Uruguayan association football player",
+    "links": 10,
+    "human": true,
+    "country": "UY"
+   },
+   {
+    "qid": "Q94638097",
+    "description": null,
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Francis Ford Coppola",
+  "lang": "fr",
+  "news": 14,
+  "titles": [
+   "Wim Wenders contre Francis Ford Coppola : les folles coulisses du film « Hammett »",
+   "Francis Coppola’s ‘Megalopolis’ Back In Theaters",
+   "Francis Coppola’s ‘Megalopolis’ Back In Theaters"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "FR": 2,
+   "IT": 1,
+   "ES": 2,
+   "CH": 1
+  },
+  "links": 14,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q56094",
+    "description": "American filmmaker (born 1939)",
+    "links": 102,
+    "human": true,
+    "country": "US"
+   }
+  ],
+  "rules": {
+   "famous": "Q56094",
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Tavi Popescu",
+  "lang": "ro",
+  "news": 14,
+  "titles": [
+   "Tavi Popescu a fost aproape să spargă blestemul din Grecia! Portarul advers a intervenit spectaculos. VIDEO",
+   "Grecii îl distrug pe Charalambous după ce a dus echipa lui Tavi Popescu în prăpastie: „A scris istoria neagră!”",
+   "Dezastru pentru echipa lui Charalambous și Tavi Popescu! A rămas fără gol marcat și după meciul cu echipa care avea punctaj negativ"
+  ],
+  "found": 0,
+  "mediaCountry": "RO",
+  "byCountry": {
+   "RO": 14
+  },
+  "links": 14,
+  "languageCountry": "RO"
+ },
+ {
+  "name": "Votre bailleur",
+  "lang": "fr",
+  "news": 15,
+  "titles": [
+   "Votre bailleur vous a notifié un congé : faire annuler le congé du bail rural pour vice de forme et rester sur les terres devant le tribunal paritaire",
+   "Votre bailleur veut reprendre vos terres pour construire une maison : contester le congé, exiger le permis et retrouver vos parcelles devant le tribunal paritaire",
+   "Votre bailleur vend les terres que vous louez et vous demande de partir : la vente ne met pas fin à votre bail rural — préemption, congé contesté et reprise de l’acheteur devant le tribunal paritaire"
+  ],
+  "found": 0,
+  "mediaCountry": "FR",
+  "byCountry": {
+   "FR": 15
+  },
+  "links": 15,
+  "languageCountry": null
+ },
+ {
+  "name": "Félix Lebrun",
+  "lang": "fr",
+  "news": 176,
+  "titles": [
+   "Le Stade toulousain miraculé, Félix Lebrun roi d'Europe, l'OL leader de Ligue 1... Le récap sport du week-end",
+   "Quiz. XV de France, Félix Lebrun, record de penalties... Avez-vous bien suivi le week-end sportif ?",
+   "Quiz. XV de France, Félix Lebrun, record de penalties... Avez-vous bien suivi le week-end sportif ?"
+  ],
+  "found": 2,
+  "mediaCountry": "FR",
+  "byCountry": {
+   "FR": 149,
+   "SK": 1,
+   "SI": 6,
+   "SE": 1,
+   "BR": 2
+  },
+  "links": 176,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q113553703",
+    "description": "French table tennis player (born 2006)",
+    "links": 21,
+    "human": true,
+    "country": "FR"
+   },
+   {
+    "qid": "Q112269928",
+    "description": null,
+    "links": 0,
+    "human": true,
+    "country": "FR"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": "Q113553703",
+   "media0": "Q113553703",
+   "local10": "Q113553703",
+   "local0": "Q113553703"
+  }
+ },
+ {
+  "name": "Daniela Katzenberger",
+  "lang": "de",
+  "news": 15,
+  "titles": [
+   "Frisch verliebt! - Katzenberger-Mama tauscht Ex (37) gegen Neuen (31)",
+   "„Luft war raus“ - Daniela Katzenberger packt über ihre Intim-OP aus",
+   "Nicht nur eine Frage der Optik : Daniela Katzenberger nennt Gründe für Schamlippen-OP"
+  ],
+  "found": 2,
+  "mediaCountry": "DE",
+  "byCountry": {
+   "AT": 3,
+   "DE": 12
+  },
+  "links": 15,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q22979",
+    "description": "German reality TV personality, TV host, model, and singer",
+    "links": 12,
+    "human": true,
+    "country": "DE"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": "Q22979",
+   "media10": "Q22979",
+   "media0": "Q22979",
+   "local10": "Q22979",
+   "local0": "Q22979"
+  }
+ },
+ {
+  "name": "Le maire",
+  "lang": "fr",
+  "news": 85,
+  "titles": [
+   "Jura. Intrusion, vitres cassées… Le maire tombe nez à nez avec les auteurs qui sont âgés de moins de 10 ans",
+   "Annemasse sous tension : une « guerre de territoire » liée au narcotrafic inquiète élus et habitants",
+   "Istres : un audit financier alerte la municipalité, cap sur des économies imposées"
+  ],
+  "found": 3,
+  "mediaCountry": "FR",
+  "byCountry": {
+   "FR": 65,
+   "CH": 1,
+   "MA": 1,
+   "BE": 3
+  },
+  "links": 85,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "CHRIS WHEELER",
+  "lang": "en",
+  "news": 20,
+  "titles": [
+   "After nearly seven years of being Man United's main man is the time drawing near when Bruno Fernandes will have to pass on that mantle? His display vs Leeds was a microcosm of his season, writes CHRIS WHEELER",
+   "Michael Carrick says he has blocked out noise surrounding Man United with 'headphones' but believes their draw at Leeds is a 'fresh start' and has 'no doubts' his side can overturn poor run",
+   "Leeds 1-1 Man United PLAYER RATINGS: Who 'still looks short of his best'? Which star was 'a real handful'? And whose performance will have pleased Michael Carrick? Plus, vote for YOUR scores"
+  ],
+  "found": 3,
+  "mediaCountry": null,
+  "byCountry": {
+   "GB": 4
+  },
+  "links": 20,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q54853261",
+    "description": "British rally driver",
+    "links": 1,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q17388907",
+    "description": "Australian cyclist",
+    "links": 5,
+    "human": true,
+    "country": "AU"
+   },
+   {
+    "qid": "Q5108454",
+    "description": "Baseball broadcaster",
+    "links": 2,
+    "human": true,
+    "country": "US"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "una empleada",
+  "lang": "es",
+  "news": 15,
+  "titles": [
+   "Detenida una pareja por simular un atraco en un bar de Irún (Guipúzcoa)",
+   "Asalto a la bodega Rosés: tres hombres fueron detenidos por querer cobrar un cheque robado",
+   "Se sumó otra denuncia contra Martínez Lastra, ahora por amenazas"
+  ],
+  "found": 0,
+  "mediaCountry": "ES",
+  "byCountry": {
+   "UY": 1,
+   "AR": 1,
+   "ES": 8,
+   "PE": 1
+  },
+  "links": 15,
+  "languageCountry": null
+ },
+ {
+  "name": "Henry Constantín",
+  "lang": "fr",
+  "news": 14,
+  "titles": [
+   "El Observatorio Cubano de Derechos Humanos exige investigar las irregularidades en el proceso contra el periodista Henry Constantin",
+   "El Observatorio Cubano de Derechos Humanos exige investigar las irregularidades en el proceso contra el periodista Henry Constantin",
+   "El OCDH presenta queja formal ante la Fiscalía de Camagüey por graves irregularidades contra Henry Constantín"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "IT": 1
+  },
+  "links": 14,
+  "languageCountry": null
+ },
+ {
+  "name": "ΚΩΝΣΤΑΝΤΙΝΑ ΑΡΜΑΚΟΛΑ",
+  "lang": "el",
+  "news": 15,
+  "titles": [
+   "Το ευχαριστώ του Παναθηναϊκού στον κόσμο που βρέθηκε στο T-Center: \"Αυτοί είναι οι φίλαθλοί μας\"",
+   "EuroLeague: Η βαθμολογία μετά το μεγάλο διπλό του Ολυμπιακού στη Βαρκελώνη",
+   "EuroLeague: Το ιατρικό δελτίο της πρώτης ημέρας της έκτης αγωνιστικής"
+  ],
+  "found": 0,
+  "mediaCountry": "GR",
+  "byCountry": {
+   "GR": 15
+  },
+  "links": 15,
+  "languageCountry": "GR"
+ },
+ {
+  "name": "La vittima",
+  "lang": "it",
+  "news": 19,
+  "titles": [
+   "Trovato sanguinante a piazza Garibaldi: ecco cosa era successo",
+   "Muore nello schianto con l’auto dell’ex, il figlio accusa: “Mia madre inseguita e aspettata, ho i video”",
+   "Cassano Magnago, donna morta in un frontale. Sospetto choc: \"non un incidente\", chi c'era alla guida"
+  ],
+  "found": 2,
+  "mediaCountry": "IT",
+  "byCountry": {
+   "IT": 18
+  },
+  "links": 19,
+  "languageCountry": "IT",
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Rahmat Shah",
+  "lang": "en",
+  "news": 19,
+  "titles": [
+   "Rahmat Shah calls hard-fought Abu Dhabi draw 'equal to a win'",
+   "Afghanistan batter Rahmat Shah joins Greg Chappell and Virat Kohli in rare record – Check details",
+   "Hasan Mahmud took Bangladesh’s first Test hat-trick by a fast bowler, and they lead Afghanistan by 329 in Abu Dhabi"
+  ],
+  "found": 3,
+  "mediaCountry": null,
+  "byCountry": {
+   "GB": 1
+  },
+  "links": 19,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q109563928",
+    "description": null,
+    "links": 1,
+    "human": true,
+    "country": "ID"
+   },
+   {
+    "qid": "Q115051493",
+    "description": null,
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q7283504",
+    "description": "Afghan cricketer",
+    "links": 11,
+    "human": true,
+    "country": "AF"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Chief Minister",
+  "lang": "en",
+  "news": 146,
+  "titles": [
+   "Sindh’s China Visit: A Vision for a Digital, Industrial and Prosperous Province",
+   "CM’s Livestock Card scheme boosts animal exports by 43pc",
+   "19 dead, 25 hurt in stampede at India religious gathering"
+  ],
+  "found": 4,
+  "mediaCountry": null,
+  "byCountry": {
+   "PK": 11,
+   "IN": 2,
+   "MY": 2,
+   "AU": 1,
+   "KE": 3
+  },
+  "links": 146,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "my friend",
+  "lang": "en",
+  "news": 19,
+  "titles": [
+   "My friend no longer donates old clothes to charity.",
+   "A tale of two trap houses: being cuckooed ruined my friend’s life – but did it then help save him? – podcast",
+   "A tale of two trap houses: being cuckooed ruined my friend’s life – but did it then help save him? – podcast"
+  ],
+  "found": 6,
+  "mediaCountry": null,
+  "byCountry": {
+   "VN": 2,
+   "GB": 2,
+   "IE": 1
+  },
+  "links": 19,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Βαγγέλη Παυλίδη",
+  "lang": "el",
+  "news": 23,
+  "titles": [
+   "Αυξάνεται η πίεση στην Μπενφίκα για Παυλίδη ενόψει Ιανουαρίου",
+   "«Σεισμός» στην Ευρώπη για Παυλίδη: Τέσσερις κολοσσοί στα πόδια του!",
+   "Στο στόχαστρο της Τότεναμ ο Παυλίδης – Η πρόταση και το μπλόκο της Μπενφίκα"
+  ],
+  "found": 0,
+  "mediaCountry": "GR",
+  "byCountry": {
+   "GR": 23
+  },
+  "links": 23,
+  "languageCountry": "GR"
+ },
+ {
+  "name": "Mayor Karen Bass",
+  "lang": "en",
+  "news": 15,
+  "titles": [
+   "Hot weather and winds raise California wildfire threat as power shutoffs start",
+   "4 Takeaways From the Los Angeles Mayoral Debate",
+   "Mayor Karen Bass, challenger Nithya Raman to meet in high-stakes election debate"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {
+   "CA": 1
+  },
+  "links": 15,
+  "languageCountry": null
+ },
+ {
+  "name": "Second Person",
+  "lang": "en",
+  "news": 16,
+  "titles": [
+   "Russia Plague Mystery: WHO Probes Reports of Second Person With Unexplained Pneumonia",
+   "Agent Memory Breaks When the Second Person Writes to It",
+   "Russia denies another plague case as WHO presses for more information"
+  ],
+  "found": 3,
+  "mediaCountry": null,
+  "byCountry": {
+   "SG": 1,
+   "AU": 1,
+   "CA": 3
+  },
+  "links": 16,
+  "languageCountry": null,
+  "humans": [],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Igor Chernyshov",
+  "lang": "en",
+  "news": 16,
+  "titles": [
+   "Chernyshov’s two-goal performance gives Sharks an overtime win over Kings",
+   "Chernyshov's 2nd goal of the game gives the Sharks a 5-4 overtime win over the Kings",
+   "NHL : les Sharks font deux sur deux grâce à Chernyshov"
+  ],
+  "found": 2,
+  "mediaCountry": null,
+  "byCountry": {
+   "CA": 2
+  },
+  "links": 16,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q4514327",
+    "description": "Russian footballer",
+    "links": 5,
+    "human": true,
+    "country": "RU"
+   },
+   {
+    "qid": "Q124307078",
+    "description": "Russian ice hockey player",
+    "links": 7,
+    "human": true,
+    "country": "RU"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Bürgermeister Mamdani",
+  "lang": "de",
+  "news": 14,
+  "titles": [
+   "New York City: Pferdekutschen im Central Park in Manhattan droht das Aus",
+   "Gesetzentwurf des Bürgermeisters: Pferdekutschen im New Yorker Central Park droht das Aus",
+   "In Manhattan: Pferdekutschen im New Yorker Central Park droht das Aus"
+  ],
+  "found": 0,
+  "mediaCountry": "DE",
+  "byCountry": {
+   "DE": 12,
+   "CH": 1
+  },
+  "links": 14,
+  "languageCountry": null
+ },
+ {
+  "name": "Former First-Round Pick",
+  "lang": "en",
+  "news": 19,
+  "titles": [
+   "Warriors reportedly waiving ex-76ers 6-foot-6 wing, former first-round pick after preseason",
+   "Dolphins former first-round pick feels great after 2026 debut",
+   "Dolphins release former first-round pick from practice squad"
+  ],
+  "found": 0,
+  "mediaCountry": null,
+  "byCountry": {},
+  "links": 19,
+  "languageCountry": null
+ },
+ {
+  "name": "Chinese tourists",
+  "lang": "en",
+  "news": 18,
+  "titles": [
+   "Chinese tourists are captivated by Hanoi's autumn and Van Phuc silk village.",
+   "There have been some 'unusual developments' among Chinese tourists visiting Vietnam.",
+   "Reasons why the number of Chinese tourists visiting Vietnam is 'sluggish'."
+  ],
+  "found": 0,
+  "mediaCountry": "VN",
+  "byCountry": {
+   "VN": 16
+  },
+  "links": 18,
+  "languageCountry": null
+ }
+]

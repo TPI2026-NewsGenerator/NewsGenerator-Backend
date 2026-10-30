@@ -1,0 +1,16 @@
+briefing 16: 0 of 10 left out, 2665 ms
+briefing 17: 0 of 10 left out, 888 ms
+briefing 18: 0 of 10 left out, 831 ms
+briefing 19: 1 of 10 left out, 1200 ms
+   [8234] L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Win -> Sujet football, sport que le lecteur ne veut pas
+briefing 20: 1 of 10 left out, 953 ms
+   [8234] L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Win -> Sujet principal : football suisse, sport refusé par le lecteur
+briefing 21: 0 of 10 left out, 4704 ms
+briefing 22: 1 of 10 left out, 1108 ms
+   [8234] L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Win -> Sujet principal : football suisse, sport que le lecteur ne veut pas
+briefing 23: 0 of 9 left out, 1115 ms
+briefing 24: 0 of 8 left out, 1011 ms
+briefing 25: 0 of 7 left out, 989 ms
+briefing 26: 0 of 8 left out, 941 ms
+102 cards, tokens {"calls":11,"input":27461,"output":2077}
+seconds 17

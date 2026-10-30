@@ -1,0 +1,28 @@
+candidates 50: Football franç 32, Gastronomie 18
+run 0: 13 chosen, Football franç 8, Gastronomie 5, kept 10: Football franç 5, Gastronomie 5  (4733+552 tokens)
+   K Football franç | L’OM peut craindre le pire pour Amine Gouiri !
+   K Football franç | Équipe de France : les mots très inquiétants de Maxence Lacroix sur la blessure de Kylian Mbappé
+   K Football franç | Torres fires PSG to first win of Ligue 1 season
+   K Football franç | Football : les Bleus offrent une première victoire à Zidane
+   K Football franç | INFO : Le Paris FC se renforce au Paris SG et à l’AS Monaco
+     Football franç | Le PSG place 17 joueurs en équipes de france !
+     Football franç | PSG : Paris, Massy, Poissy… Les dates à garder en tête pour le projet de stade
+     Football franç | Le maire de Marseille annonce une mauvaise nouvelle à l’OM
+   K Gastronomie | Bordeaux : 14 chefs et sept étoiles Michelin pour un dîner caritatif au profit de la Banque alimenta
+   K Gastronomie | Les restaurants gastronomiques de Paris, nos bonnes adresses
+   K Gastronomie | Les restaurants des cheffes et chefs de Top Chef à Paris, nos bonnes adresses
+   K Gastronomie | Les nouveaux restaurants de Paris, nos bonnes adresses
+   K Gastronomie | Les restaurants gastronomiques et étoilés en terrasse à Paris, nos bonnes adresses
+run 1: 12 chosen, Football franç 8, Gastronomie 4, kept 10: Football franç 6, Gastronomie 4  (4733+488 tokens)
+   K Football franç | L’OM peut craindre le pire pour Amine Gouiri !
+   K Football franç | Équipe de France : les mots très inquiétants de Maxence Lacroix sur la blessure de Kylian Mbappé
+   K Football franç | Torres fires PSG to first win of Ligue 1 season
+   K Football franç | Football : les Bleus offrent une première victoire à Zidane
+   K Football franç | INFO : Le Paris FC se renforce au Paris SG et à l’AS Monaco
+   K Football franç | Le PSG place 17 joueurs en équipes de france !
+     Football franç | PSG : Paris, Massy, Poissy… Les dates à garder en tête pour le projet de stade
+     Football franç | Le maire de Marseille annonce une mauvaise nouvelle à l’OM
+   K Gastronomie | Bordeaux : 14 chefs et sept étoiles Michelin pour un dîner caritatif au profit de la Banque alimenta
+   K Gastronomie | Les restaurants gastronomiques de Paris, nos bonnes adresses
+   K Gastronomie | Les nouveaux restaurants de Paris, nos bonnes adresses
+   K Gastronomie | Les restaurants des cheffes et chefs de Top Chef à Paris, nos bonnes adresses

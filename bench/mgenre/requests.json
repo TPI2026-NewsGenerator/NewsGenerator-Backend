@@ -1,0 +1,2614 @@
+[
+ {
+  "id": "0",
+  "name": "UEFA",
+  "lang": "en",
+  "qids": [
+   "Q35572",
+   "Q108672702",
+   "Q18756",
+   "Q484028",
+   "Q189571",
+   "Q22669",
+   "Q59365764",
+   "Q241864",
+   "Q102920"
+  ],
+  "marked": true,
+  "source": "42 pytania. [START] UEFA [END] żąda wyjaśnień od Infantino",
+  "targets": [
+   "UEFA >> en",
+   "UEFA Euro 2024 qualifying >> en",
+   "UEFA Champions League >> en",
+   "UEFA Super Cup >> en",
+   "UEFA Euro 2016 >> en",
+   "UEFA Euro 2012 >> en",
+   "UEFA Conference League >> en",
+   "UEFA Euro 2008 >> en",
+   "UEFA Euro 2004 >> en"
+  ],
+  "titled": 9
+ },
+ {
+  "id": "1",
+  "name": "WWE",
+  "lang": "en",
+  "qids": [
+   "Q35339",
+   "Q18754",
+   "Q36103",
+   "Q1149935",
+   "Q1044551",
+   "Q30348876",
+   "Q17048749",
+   "Q53678016",
+   "Q1191816",
+   "Q1314174"
+  ],
+  "marked": true,
+  "source": "3 Reasons why Sami Zayn refused to rejoin The Bloodline on [START] WWE [END] RAW",
+  "targets": [
+   "WWE >> en",
+   "WWE Raw >> en",
+   "Royal Rumble >> en",
+   "WWE Studios >> en",
+   "WWE Backlash >> en",
+   "WWE 2K18 >> en",
+   "WWE 2K15 >> en",
+   "WWE 2K19 >> en",
+   "WWE '12 >> en",
+   "WWE SmackDown vs. Raw 2010 >> en"
+  ],
+  "titled": 10
+ },
+ {
+  "id": "2",
+  "name": "EU",
+  "lang": "en",
+  "qids": [
+   "Q211593"
+  ],
+  "marked": true,
+  "source": "Abkehr vom Verbrenner-Aus: Unterhändler im [START] Eu [END]ropaparlament finden Kompromiss",
+  "targets": [
+   "Eu, Seine-Maritime >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "3",
+  "name": "Medzinárodná futbalová federácia",
+  "lang": "sk",
+  "qids": [
+   "Q253414"
+  ],
+  "marked": false,
+  "source": "[START] Medzinárodná futbalová federácia [END] FIFA mesiace po skončení MS vo futbale potrestala trénera, funkcionára a hráča Egypta. Nad ich správaním krútil hlavou aj Yamal: Španielsko pyká za fanúšikov, FIFA zverejnila trest",
+  "targets": [
+   "FIFA >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "4",
+  "name": "EH Bildu",
+  "lang": "es",
+  "qids": [
+   "Q1029761",
+   "Q131598895",
+   "Q131607355"
+  ],
+  "marked": true,
+  "source": "Naiara Gutiérrez liderará el proyecto de [START] EH Bildu [END] en Santurtzi",
+  "targets": [
+   "EH Bildu >> en",
+   "Spokesperson of the EH Bildu Municipal Group in the City Hall >> en",
+   "Spokesperson of the EH Bildu Parliamentary Group in the Basque Parliament >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "5",
+  "name": "Shopee",
+  "lang": "en",
+  "qids": [
+   "Q54863641",
+   "Q109676747",
+   "Q3277698",
+   "Q119294200",
+   "Q140068735"
+  ],
+  "marked": true,
+  "source": "TikTok Shop tops [START] Shopee [END] in Thailand Q2 GMV share: report",
+  "targets": [
+   "Shopee >> en",
+   "SPX Express >> en",
+   "ASEAN Club Championship >> en",
+   "Shopee Maszeh >> en",
+   "2026–27 ASEAN Club Championship >> en"
+  ],
+  "titled": 3
+ },
+ {
+  "id": "6",
+  "name": "small business",
+  "lang": "en",
+  "qids": [
+   "Q1109680",
+   "Q7542688",
+   "Q495354",
+   "Q112970946",
+   "Q140148567",
+   "Q139886070",
+   "Q106437397",
+   "Q21052756",
+   "Q7542690"
+  ],
+  "marked": true,
+  "source": "I analyzed a [START] small business [END] payroll with AI and found $492K a year of potential savings",
+  "targets": [
+   "Small business >> en",
+   "Small Business Economics >> en",
+   "Small Business Administration >> en",
+   "Small Business Management >> en",
+   "Small Business Policy and the American Creed >> en",
+   "Small business enterprise >> en",
+   "Virginia Department of Small Business and Supplier Diversity >> en",
+   "Small Business Act (United States) >> en",
+   "Small Business Job Protection Act of 1996 >> en"
+  ],
+  "titled": 5
+ },
+ {
+  "id": "7",
+  "name": "MaxPreps",
+  "lang": "en",
+  "qids": [
+   "Q39052332",
+   "Q85784402"
+  ],
+  "marked": true,
+  "source": "[START] MaxPreps [END] Top 25 high school football scores: Prattville upsets No. 12 Thompson 28-27 on blocked field goal in Alabama",
+  "targets": [
+   "MaxPreps >> en",
+   "MaxPreps National Basketball Player of the Year awards >> en"
+  ],
+  "titled": 2
+ },
+ {
+  "id": "8",
+  "name": "Adelaide 36ers",
+  "lang": "fr",
+  "qids": [
+   "Q2756400"
+  ],
+  "marked": true,
+  "source": "[START] Adelaide 36ers [END] star Isaac Humphries announces retirement at just 28",
+  "targets": [
+   "Adelaide 36ers >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "9",
+  "name": "Bayern Münih",
+  "lang": "en",
+  "qids": [
+   "Q15789",
+   "Q994701"
+  ],
+  "marked": true,
+  "source": "[START] Bayern Münih [END]'te Sacha Boey kararı değişmedi!",
+  "targets": [
+   "FC Bayern Munich >> en",
+   "FC Bayern Munich II >> en"
+  ],
+  "titled": 2
+ },
+ {
+  "id": "10",
+  "name": "Zenith Bank",
+  "lang": "en",
+  "qids": [
+   "Q5978240",
+   "Q125410768",
+   "Q100337032",
+   "Q140798489"
+  ],
+  "marked": true,
+  "source": "[START] Zenith Bank [END] has 53 percent more equity than two years ago",
+  "targets": [
+   "Zenith Bank >> en",
+   "Zenith Bank Plc v Chief Arthur John & Others >> en",
+   "ZENITH BANK MID-CAP LOAN project >> en",
+   "Zenith Bank (Ghana) Limited >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "11",
+  "name": "Telecom",
+  "lang": "en",
+  "qids": [
+   "Q2311820",
+   "Q11319473",
+   "Q1583794",
+   "Q96734544"
+  ],
+  "marked": false,
+  "source": "[START] Telecom [END] Movistar transfiere 6 millones de clientes a Tuenti por condiciones regulatorias. Si recibís este SMS en el celular, vas a pasar a ser cliente de una nueva empresa de telefonía: qué tenés que saber",
+  "targets": [
+   "Télécom Paris >> en",
+   "Telecom Animation Film >> en",
+   "Telecom Egypt >> en",
+   "Telecom >> en"
+  ],
+  "titled": 3
+ },
+ {
+  "id": "12",
+  "name": "Fivers",
+  "lang": "de",
+  "qids": [
+   "Q19725719",
+   "Q877694",
+   "Q123985030",
+   "Q123985032",
+   "Q123985029"
+  ],
+  "marked": true,
+  "source": "European Handball - [START] Fivers [END] und Ferlach kassieren Hinspielpleiten",
+  "targets": [
+   "Fivers >> en",
+   "Handballclub Fivers Margareten >> en",
+   "Fivers Margareten vs. Westwien 20180217 >> en",
+   "Fivers Margareten vs. Team Austria 94, 2014-04-08 >> en",
+   "Fivers Margareten vs. Alpla Hard, 2014-03-29 >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "13",
+  "name": "Sarnese",
+  "lang": "it",
+  "qids": [
+   "Q18487407"
+  ],
+  "marked": true,
+  "source": "Serie D, Girone G: [START] Sarnese [END] in fuga, Viterbese aggancia Monastir, Venafro batte Paganese",
+  "targets": [
+   "Sarnese >> en"
+  ],
+  "titled": 0
+ },
+ {
+  "id": "14",
+  "name": "Zeekr",
+  "lang": "en",
+  "qids": [
+   "Q106621124",
+   "Q106553049",
+   "Q116817491",
+   "Q121816468",
+   "Q127874036",
+   "Q114608144",
+   "Q123472070",
+   "Q134103286",
+   "Q137921385"
+  ],
+  "marked": true,
+  "source": "Carro do Ano 2027 Mercedes, Geely, [START] Zeekr [END] e Ebro entram na corrida",
+  "targets": [
+   "Zeekr >> en",
+   "Zeekr 001 >> en",
+   "Zeekr X >> en",
+   "Volvo EM90 >> en",
+   "Zeekr 7X >> en",
+   "Zeekr 009 >> en",
+   "Zeekr 007 >> en",
+   "Zeekr 9X >> en",
+   "Zeekr 8X >> en"
+  ],
+  "titled": 9
+ },
+ {
+  "id": "15",
+  "name": "OVHCloud",
+  "lang": "fr",
+  "qids": [
+   "Q568183",
+   "Q105988477"
+  ],
+  "marked": true,
+  "source": "[START] OVHcloud [END] : 1h34 pour infecter des milliers de développeurs",
+  "targets": [
+   "OVHcloud >> en",
+   "Incendie du centre de données d'OVHcloud à Strasbourg >> fr"
+  ],
+  "titled": 2
+ },
+ {
+  "id": "16",
+  "name": "Schulleiter",
+  "lang": "de",
+  "qids": [
+   "Q1056391",
+   "Q28078592"
+  ],
+  "marked": true,
+  "source": "Motiv noch unklar - 14-Jähriger schiesst in Frankreich auf [START] Schulleiter [END] und Lehrerin",
+  "targets": [
+   "Head teacher >> en",
+   "Headmaster of a gymnasium >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "17",
+  "name": "consorcio",
+  "lang": "es",
+  "qids": [
+   "Q194166",
+   "Q1572774",
+   "Q5946888",
+   "Q8350122",
+   "Q314042",
+   "Q37033",
+   "Q7835189",
+   "Q2994760",
+   "Q6542557",
+   "Q101483295"
+  ],
+  "marked": true,
+  "source": "El presupuesto regional incluye partidas para la borrasca, el [START] consorcio [END] y el festival de Robe",
+  "targets": [
+   "Consortium >> en",
+   "Unicode Consortium >> en",
+   "Consorcio de Transportes de Bizkaia >> es",
+   "Consorcio Regional de Transportes de Madrid >> en",
+   "Rhein-Main-Verkehrsverbund >> en",
+   "World Wide Web Consortium >> en",
+   "Transit district >> en",
+   "Couperin (consortium) >> en",
+   "Library consortium >> en",
+   "Consortium of Social Science Associations >> en"
+  ],
+  "titled": 9
+ },
+ {
+  "id": "18",
+  "name": "Monopoly GO",
+  "lang": "fr",
+  "qids": [
+   "Q124179369"
+  ],
+  "marked": true,
+  "source": "Dés (dice) gratuits [START] Monopoly GO [END] 20 octobre 2026",
+  "targets": [
+   "Monopoly Go! >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "19",
+  "name": "Department for Work and Pensions",
+  "lang": "en",
+  "qids": [
+   "Q1191394",
+   "Q96376212",
+   "Q16934616"
+  ],
+  "marked": false,
+  "source": "[START] Department for Work and Pensions [END] DWP CMS child maintenance update on 'major' change with new 2 per cent charge. Woman, 53, accused of falsely claiming Universal Credit by declaring no assets",
+  "targets": [
+   "Department for Work and Pensions >> en",
+   "Iain Duncan Smith as Work and Pensions Secretary >> en",
+   "Department for Work and Pensions v Information Commissioner >> en"
+  ],
+  "titled": 3
+ },
+ {
+  "id": "20",
+  "name": "Fédération burkinabè de football",
+  "lang": "fr",
+  "qids": [
+   "Q852148"
+  ],
+  "marked": true,
+  "source": "Mondial 2030. Oumarou Sawadogo, président de la [START] Fédération burkinabè de football [END]: «Une finale au Maroc serait une vitrine pour l’Afrique tout entière»",
+  "targets": [
+   "Burkinabé Football Federation >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "21",
+  "name": "CNN-News18",
+  "lang": "en",
+  "qids": [
+   "Q1023924",
+   "Q5013123"
+  ],
+  "marked": false,
+  "source": "[START] CNN-News18 [END] Kirit Somaiya Demands Cancellation of Imran Khan’s OCI Card After Mumbai Protests | News18. BK Hari Prasad Defends Congress Protests, Accuses BJP of Targeting Democracy | News18",
+  "targets": [
+   "CNN-News18 >> en",
+   "CNN-News18 Indian of the Year >> en"
+  ],
+  "titled": 2
+ },
+ {
+  "id": "22",
+  "name": "New Azerbaijan Party",
+  "lang": "en",
+  "qids": [
+   "Q876402"
+  ],
+  "marked": true,
+  "source": "[START] New Azerbaijan Party [END] removes Ramiz Mehdiyev from its ranks",
+  "targets": [
+   "New Azerbaijan Party >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "23",
+  "name": "Hydro-Québec",
+  "lang": "fr",
+  "qids": [
+   "Q167840",
+   "Q111731463",
+   "Q113996102",
+   "Q273780",
+   "Q3152082",
+   "Q130463128",
+   "Q3137036"
+  ],
+  "marked": true,
+  "source": "Les mineurs de bitcoin mettront bientôt la clé sous la porte: [START] Hydro-Québec [END] bloqué en 2018?",
+  "targets": [
+   "Hydro-Québec >> en",
+   "TransÉnergie >> fr",
+   "Hydro-Quebec Distribution >> en",
+   "Hydro-Québec Building >> en",
+   "Institut de recherche d'Hydro-Québec >> en",
+   "Hydro-Quebec Auditorium >> en",
+   "History of Hydro-Québec >> en"
+  ],
+  "titled": 5
+ },
+ {
+  "id": "24",
+  "name": "Russian",
+  "lang": "en",
+  "qids": [
+   "Q7737",
+   "Q159",
+   "Q206855",
+   "Q34266",
+   "Q15634506",
+   "Q79854",
+   "Q797",
+   "Q189266",
+   "Q22116890"
+  ],
+  "marked": true,
+  "source": "[START] Russian [END] Strikes Leave 600,000 Ukrainians Without Power as 30 Energy Facilities Are Damaged",
+  "targets": [
+   "Russian language >> en",
+   "Russia >> en",
+   "Russian Wikipedia >> en",
+   "Russian Empire >> en",
+   "Russian Wikisource >> en",
+   "Communist Party of the Soviet Union >> en",
+   "Alaska >> en",
+   "Eastern Front (World War II) >> en",
+   "Russian Wiktionary >> en"
+  ],
+  "titled": 7
+ },
+ {
+  "id": "25",
+  "name": "Deportes Antofagasta",
+  "lang": "es",
+  "qids": [
+   "Q2076979"
+  ],
+  "marked": false,
+  "source": "[START] Deportes Antofagasta [END] La alarma con el partido de U de Chile contra Antofagasta por la Copa Chile: ¿Se suspende?. “Generar una situación de alto riesgo”: la advertencia que complica a Colo-Colo y la U",
+  "targets": [
+   "Deportes Antofagasta >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "26",
+  "name": "Zoho",
+  "lang": "en",
+  "qids": [
+   "Q8063247",
+   "Q1139115",
+   "Q126084789"
+  ],
+  "marked": true,
+  "source": "[START] Zoho [END]’s Sridhar Vembu calls SaaS layoffs ‘normal’, bets on reinvention by 2030",
+  "targets": [
+   "Zoho Corporation >> en",
+   "Zoho Office Suite >> en",
+   "Zoho >> en"
+  ],
+  "titled": 2
+ },
+ {
+  "id": "27",
+  "name": "iRobot",
+  "lang": "de",
+  "qids": [
+   "Q285161",
+   "Q74050",
+   "Q2492936",
+   "Q1949014",
+   "Q4041102",
+   "Q4037409",
+   "Q5973672",
+   "Q5973674",
+   "Q5973677",
+   "Q5973673"
+  ],
+  "marked": true,
+  "source": "Roomba Plus 675 Combo : [START] iRobot [END] s’attaque aux taches avant de laver",
+  "targets": [
+   "IRobot >> en",
+   "Roomba >> en",
+   "PackBot >> en",
+   "IRobot Create >> en",
+   "IRobot Warrior >> en",
+   "IRobot Dirt Dog >> en",
+   "IRobot Ranger >> en",
+   "Seaglider >> en",
+   "IRobot Transphibian >> en",
+   "R-Gator >> en"
+  ],
+  "titled": 10
+ },
+ {
+  "id": "28",
+  "name": "Asamblea Nacional de Venezuela",
+  "lang": "es",
+  "qids": [
+   "Q1585014"
+  ],
+  "marked": true,
+  "source": "EE.UU retira de la lista OFAC a Jorge Rodríguez, presidente de la [START] Asamblea Nacional de Venezuela [END], y hermano de Delcy Rodríguez",
+  "targets": [
+   "National Assembly of Venezuela >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "29",
+  "name": "Internacional de Bogotá",
+  "lang": "es",
+  "qids": [
+   "Q137324985"
+  ],
+  "marked": true,
+  "source": "[START] Internacional de Bogotá [END] vs Fortaleza FC: Duelo crucial en la Liga BetPlay II 2026 por la Fecha 15",
+  "targets": [
+   "Internacional de Bogotá >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "30",
+  "name": "Leidos",
+  "lang": "en",
+  "qids": [
+   "Q502132",
+   "Q96999144",
+   "Q125761917"
+  ],
+  "marked": true,
+  "source": "[START] Leidos [END] extends UK defence logistics contract through June 2029",
+  "targets": [
+   "Leidos >> en",
+   "Leidos flag >> en",
+   "Leidos Biomedical Research Inc. (United States) >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "31",
+  "name": "Région wallonne",
+  "lang": "fr",
+  "qids": [
+   "Q231"
+  ],
+  "marked": true,
+  "source": "Braine-le-Comte : Le dossier de l’aire de motorhomes victime d’une épidémie de congés maladie à la [START] Région wallonne [END]",
+  "targets": [
+   "Wallonia >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "32",
+  "name": "MacRumors",
+  "lang": "en",
+  "qids": [
+   "Q6722109"
+  ],
+  "marked": false,
+  "source": "[START] MacRumors [END] Apple : rendez-vous le 28 octobre pour de nouveaux Mac et un iPad mini. iOS 27.2 : Siri AI parle français, mais reste bloqué sur iPhone en France",
+  "targets": [
+   "MacRumors >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "33",
+  "name": "L'Est républicain",
+  "lang": "fr",
+  "qids": [
+   "Q3052319"
+  ],
+  "marked": false,
+  "source": "[START] L'Est républicain [END] Belfort. Piégée dans son lit médicalisé, une septuagénaire meurt brûlée à cause d'une cigarette. Sport et santé. Intolérance au gluten et sport : « C’est contraignant mais tout est possible »",
+  "targets": [
+   "L'Est Républicain >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "34",
+  "name": "Eramet",
+  "lang": "fr",
+  "qids": [
+   "Q1347990",
+   "Q2595811",
+   "Q30294650"
+  ],
+  "marked": true,
+  "source": "Detrás de la mega inversión de [START] Eramet [END] en el litio salteño, el estado francés avanza sobre el control de la minera",
+  "targets": [
+   "Eramet >> en",
+   "Eramet Titanium & Iron >> en",
+   "Eramet (Belgium) >> en"
+  ],
+  "titled": 2
+ },
+ {
+  "id": "35",
+  "name": "Wolters Kluwer",
+  "lang": "it",
+  "qids": [
+   "Q249798",
+   "Q27991299",
+   "Q9377764",
+   "Q2592867",
+   "Q109465951",
+   "Q6807205",
+   "Q30338371",
+   "Q67805252",
+   "Q5009588",
+   "Q84608018"
+  ],
+  "marked": true,
+  "source": "[START] Wolters Kluwer [END] introduce l'intelligenza artificiale conversazionale e la riconciliazione automatica degli estratti conto bancari nella suite cloud Genya per studi professionali e PMI italiane",
+  "targets": [
+   "Wolters Kluwer >> en",
+   "Wolters Kluwer Health >> en",
+   "Wolters Kluwer Polska >> en",
+   "Wolters Kluwer Deutschland >> en",
+   "Wolters Kluwer Italia >> en",
+   "Medknow Publications >> en",
+   "Wolters Kluwer Health (New Zealand) >> en",
+   "Wolters Kluwer ČR >> en",
+   "CCH Canadian >> en",
+   "Wolters Kluwer Hungary Kft. >> en"
+  ],
+  "titled": 3
+ },
+ {
+  "id": "36",
+  "name": "Missouri Valley Football Conference",
+  "lang": "en",
+  "qids": [
+   "Q1310058"
+  ],
+  "marked": false,
+  "source": "[START] Missouri Valley Football Conference [END] SDSU-USD rivalry game picked for afternoon kickoff, airing on ESPNU in Halloween matchup. Modrzewski throws for 3 TDs, runs for 1 score, South Dakota beats Murray State 48-20",
+  "targets": [
+   "Missouri Valley Football Conference >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "37",
+  "name": "The Lego Group",
+  "lang": "en",
+  "qids": [
+   "Q1063455"
+  ],
+  "marked": true,
+  "source": "[START] The LEGO Group [END] invites fans to mash-up STAR WARS™ and MARVEL universes for the first time ever in LEGO Ideas® challenge",
+  "targets": [
+   "The Lego Group >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "38",
+  "name": "AIUDF",
+  "lang": "en",
+  "qids": [
+   "Q2542705"
+  ],
+  "marked": true,
+  "source": "Assam Bypoll Election Result LIVE: Who Is Leading & Trailing Between BJP’s Devasish Sharma vs [START] AIUDF [END]’s Mohammed Badruddin Ajmal and Congress’ Sibamoni Bora in Nagaon? | ECI Results Update",
+  "targets": [
+   "All India United Democratic Front >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "39",
+  "name": "Krafton",
+  "lang": "fr",
+  "qids": [
+   "Q4035237",
+   "Q49829232"
+  ],
+  "marked": true,
+  "source": "[START] KRAFTON [END] Unveils 5-Game Lineup for G-STAR 2026",
+  "targets": [
+   "Krafton >> en",
+   "Krafton Coulee >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "40",
+  "name": "AINRC",
+  "lang": "en",
+  "qids": [
+   "Q1166149"
+  ],
+  "marked": true,
+  "source": "India News | [START] AINRC [END]'s Ashok Anand Wins Thattanchavady AC by 8,482 Votes, TVK Leads in Madurantakam, Dharapuram Bypolls",
+  "targets": [
+   "All India N. R. Congress >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "41",
+  "name": "Cornish Pirates",
+  "lang": "en",
+  "qids": [
+   "Q1134198"
+  ],
+  "marked": true,
+  "source": "[START] Cornish Pirates [END] sign Scotland Under-19s hooker Neill",
+  "targets": [
+   "Cornish Pirates >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "42",
+  "name": "Islamic Republic of Iran",
+  "lang": "en",
+  "qids": [
+   "Q794",
+   "Q1674127",
+   "Q2609135",
+   "Q378442",
+   "Q2408298",
+   "Q2465096",
+   "Q18643350",
+   "Q6082582",
+   "Q748603",
+   "Q6082591"
+  ],
+  "marked": false,
+  "source": "[START] Islamic Republic of Iran [END] Trump endorses Israel's Netanyahu for reelection. Trump endorses embattled Israeli Prime Minister Benjamin Netanyahu for reelection",
+  "targets": [
+   "Iran >> en",
+   "Islamic Republic of Iran Broadcasting >> en",
+   "Iranian Armed Forces >> en",
+   "Islamic Republic of Iran Air Force >> en",
+   "Islamic Republic of Iran Navy >> en",
+   "Islamic Republic of Iran Army >> en",
+   "Islamic Republic of Iran Ground Forces >> en",
+   "Islamic Republic of Iran Air Defense Force >> en",
+   "Islamic Republic of Iran Railways >> en",
+   "Police Command of the Islamic Republic of Iran >> en"
+  ],
+  "titled": 10
+ },
+ {
+  "id": "43",
+  "name": "Confederation of African Football",
+  "lang": "en",
+  "qids": [
+   "Q168360"
+  ],
+  "marked": false,
+  "source": "[START] Confederation of African Football [END] CAS to rule on AFCON final case next month. CAF Womenâs Champions League Egypt 2026 draw format confirmed",
+  "targets": [
+   "Confederation of African Football >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "44",
+  "name": "Zendesk",
+  "lang": "en",
+  "qids": [
+   "Q15401349",
+   "Q113954629",
+   "Q114685820",
+   "Q141709107",
+   "Q114685791",
+   "Q114685792"
+  ],
+  "marked": true,
+  "source": "[START] Zendesk [END] launches AI tools to automate employee support",
+  "targets": [
+   "Zendesk >> en",
+   "Zendesk Sell >> en",
+   "Zendesk Receives Takeover Approaches >> en",
+   "Zendesk Blog >> en",
+   "Zendesk Close to Striking Buyout Deal >> en",
+   "Zendesk Is in Settlement Talks With Activist Investor Jana >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "45",
+  "name": "Mississippi State",
+  "lang": "en",
+  "qids": [
+   "Q1939211",
+   "Q624090",
+   "Q15729844",
+   "Q18195558",
+   "Q15253671",
+   "Q6879318",
+   "Q2927993",
+   "Q98601509",
+   "Q6879315",
+   "Q1525928"
+  ],
+  "marked": true,
+  "source": "Game MVP: LSU vs. [START] Mississippi State [END]",
+  "targets": [
+   "Mississippi State University >> en",
+   "University of Southern Mississippi >> en",
+   "Mississippi State Bulldogs men's basketball >> en",
+   "Member of the Mississippi Senate >> en",
+   "Mississippi State, Mississippi >> en",
+   "Mississippi State Bulldogs football >> en",
+   "Mississippi State Bulldogs >> en",
+   "Mississippi Highways >> en",
+   "Mississippi State Bulldogs baseball >> en",
+   "Mississippi State Senate >> en"
+  ],
+  "titled": 8
+ },
+ {
+  "id": "46",
+  "name": "Regione Lazio",
+  "lang": "it",
+  "qids": [
+   "Q1282",
+   "Q100337747"
+  ],
+  "marked": true,
+  "source": "Carceri: Bonafoni (Pd), da domani [START] Regione Lazio [END] e' senza Garante persone detenute",
+  "targets": [
+   "Lazio >> en",
+   "Regione Lazio Loan for SMEs project >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "47",
+  "name": "Sarmiento de Junín",
+  "lang": "es",
+  "qids": [
+   "Q519966",
+   "Q116045863"
+  ],
+  "marked": true,
+  "source": "Por los incidentes ante River, Aprevide sancionó a [START] Sarmiento de Junín [END] con dos partidos a puertas cerradas",
+  "targets": [
+   "Club Atlético Sarmiento >> en",
+   "Club Atlético Sarmiento women >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "48",
+  "name": "Portugal Resident",
+  "lang": "en",
+  "qids": [
+   "Q141303877"
+  ],
+  "marked": false,
+  "source": "[START] Portugal Resident [END] Olhão exhibition shows city’s past and present. More than half of Portuguese say purchasing power has fallen",
+  "targets": [
+   "Portugal Resident >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "49",
+  "name": "Φενέρ",
+  "lang": "el",
+  "qids": [
+   "Q3708586"
+  ],
+  "marked": true,
+  "source": "Ολυμπιακός: Το ρίσκο με τα τρίποντα απέναντι στη [START] Φενέρ [END]",
+  "targets": [
+   "Fenner, New York >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "50",
+  "name": "Auburn football",
+  "lang": "en",
+  "qids": [
+   "Q4819311"
+  ],
+  "marked": true,
+  "source": "[START] Auburn football [END] dismisses All-American LB Xavier Atkins | Reports",
+  "targets": [
+   "Auburn Tigers football >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "51",
+  "name": "Cornell University",
+  "lang": "en",
+  "qids": [
+   "Q49115",
+   "Q845768",
+   "Q5171564",
+   "Q5171560",
+   "Q2997531",
+   "Q5171562",
+   "Q2902329",
+   "Q5171572",
+   "Q5171574"
+  ],
+  "marked": true,
+  "source": "[START] Cornell University [END]’s Basu on US-China AI Race",
+  "targets": [
+   "Cornell University >> en",
+   "Cornell Law School >> en",
+   "Cornell University College of Engineering >> en",
+   "New York State College of Agriculture and Life Sciences at Cornell University >> en",
+   "Cornell University Press >> en",
+   "Cornell University College of Architecture, Art, and Planning >> en",
+   "Cornell Big Red >> en",
+   "Cornell University Library >> en",
+   "New York State School of Industrial and Labor Relations at Cornell University >> en"
+  ],
+  "titled": 9
+ },
+ {
+  "id": "52",
+  "name": "U.S. Air Force",
+  "lang": "en",
+  "qids": [
+   "Q11223",
+   "Q1331280",
+   "Q3428253",
+   "Q3607176",
+   "Q4697913",
+   "Q407191",
+   "Q21082588",
+   "Q16147129",
+   "Q7863034",
+   "Q7572383"
+  ],
+  "marked": false,
+  "source": "[START] U.S. Air Force [END] 2026 Fire Prevention Week. 446th Airlift Wing JBLM ESGR BOSS LIFT",
+  "targets": [
+   "United States Air Force >> en",
+   "United States Air Force Academy >> en",
+   "U.S. Air Force Test Pilot School >> en",
+   "Air Force Research Laboratory >> en",
+   "Air Force Institute of Technology >> en",
+   "United States Air Force Reserve >> en",
+   "Aerospace Maintenance and Regeneration Center >> en",
+   "Air Force Falcons baseball >> en",
+   "Air Force Office of Special Investigations >> en",
+   "Space Innovation and Development Center >> en"
+  ],
+  "titled": 9
+ },
+ {
+  "id": "53",
+  "name": "NI",
+  "lang": null,
+  "qids": [
+   "Q1197"
+  ],
+  "marked": true,
+  "source": "‘It has been a pleasure’: Retired caretaker given lifetime achievement award after 27 years at [START] NI [END] primary school",
+  "targets": [
+   "Lower Saxony >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "54",
+  "name": "Sporting",
+  "lang": "pt",
+  "qids": [
+   "Q75729",
+   "Q12278",
+   "Q75684",
+   "Q208399",
+   "Q19585",
+   "Q329812",
+   "Q604581",
+   "Q621259",
+   "Q1056987",
+   "Q20925298"
+  ],
+  "marked": true,
+  "source": "Abel Ferreira deixou aviso sobre reforço do [START] Sporting [END]: \"Jogador de seleção\"",
+  "targets": [
+   "Sporting CP >> en",
+   "Sporting de Gijón >> en",
+   "S.C. Braga >> en",
+   "SC Bastia >> en",
+   "Royal Charleroi SC >> en",
+   "Sporting Kansas City >> en",
+   "Sporting Cristal >> en",
+   "S.C. Olhanense >> en",
+   "SC Toulon >> en",
+   "Sporting CP (cycling team) >> en"
+  ],
+  "titled": 10
+ },
+ {
+  "id": "55",
+  "name": "NRLW",
+  "lang": "en",
+  "qids": [
+   "Q48803169"
+  ],
+  "marked": true,
+  "source": "Jillaroos expect England fight after 90-4 Vegas bloodbath; Teen released after avoiding jail — [START] NRLW [END] Daily",
+  "targets": [
+   "NRL Women's Premiership >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "56",
+  "name": "Eurogruppo",
+  "lang": "it",
+  "qids": [
+   "Q149964"
+  ],
+  "marked": false,
+  "source": "[START] Eurogruppo [END] Dalle Camere arriva il sì allo scostamento. Giorgetti: “Serve prudenza, nuvole in vista”. Fonti Chigi, 'sul Cdm mero errore materiale'. Verso la manovra a novembre",
+  "targets": [
+   "Eurogroup >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "57",
+  "name": "Tourism sector",
+  "lang": "en",
+  "qids": [
+   "Q9323634",
+   "Q100344243",
+   "Q57786295"
+  ],
+  "marked": true,
+  "source": "Over 7,000 connections were made, expanding cooperation in the [START] tourism sector [END].",
+  "targets": [
+   "Tourism industry >> en",
+   "Tourism Sector (Global loan) project >> en",
+   "Tourism sector competitiveness in Portugal: applying Porter's Diamond >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "58",
+  "name": "Eurofighter",
+  "lang": "de",
+  "qids": [
+   "Q151384",
+   "Q700849",
+   "Q18354212",
+   "Q5411843",
+   "Q17501813",
+   "Q17501814",
+   "Q17501712",
+   "Q17501717",
+   "Q17501770",
+   "Q17501845"
+  ],
+  "marked": true,
+  "source": "Due caccia [START] Eurofighter [END] italiani decollano d'urgenza per un drone nello spazio aereo lituano",
+  "targets": [
+   "Eurofighter Typhoon >> en",
+   "Eurofighter GmbH >> en",
+   "Eurofighter (Zoosafari Fasanolandia) >> en",
+   "Eurofighter Typhoon (video game) >> en",
+   "Typhoon S >> en",
+   "Typhoon T >> en",
+   "Typhoon Tranche 1 >> en",
+   "Typhoon Block 1 >> en",
+   "C.16 Typhoon >> en",
+   "Typhoon AS >> en"
+  ],
+  "titled": 4
+ },
+ {
+  "id": "59",
+  "name": "Ligue contre le cancer",
+  "lang": "fr",
+  "qids": [
+   "Q3210061"
+  ],
+  "marked": true,
+  "source": "Tabac, alcool, alimentation… La [START] Ligue contre le cancer [END] propose 12 mesures aux candidats à la présidentielle 2027",
+  "targets": [
+   "Ligue nationale contre le cancer >> fr"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "60",
+  "name": "World Meteorological Organization",
+  "lang": "en",
+  "qids": [
+   "Q170424",
+   "Q28686426",
+   "Q3682092",
+   "Q8035959",
+   "Q27481254",
+   "Q64275668",
+   "Q55866452"
+  ],
+  "marked": false,
+  "source": "[START] World Meteorological Organization [END] UK Beast from the East snow update as weather experts warn El Nino is 'strengthening'. 'Prepare for El Nino' Householders warned do 10 things as phenomenon 'strengthening rapidly'",
+  "targets": [
+   "World Meteorological Organization >> en",
+   "WIGOS identifier >> en",
+   "WMO code >> en",
+   "World Meteorological Organization squares >> en",
+   "World Meteorological Organization Headquarters >> en",
+   "World Meteorological Organization (WMO) General Administrative Records (NAID 23889204) >> en",
+   "World Meteorological Organization Assessment of the Purported World Record 58°C Temperature Extreme at El Azizia, Libya (13 September 1922) >> en"
+  ],
+  "titled": 2
+ },
+ {
+  "id": "61",
+  "name": "Rospotrebnadzor",
+  "lang": "es",
+  "qids": [
+   "Q4736878"
+  ],
+  "marked": false,
+  "source": "[START] Rospotrebnadzor [END] Rusia descarta cualquier riesgo epidémico por contagio de peste neumónica. Russia Temporarily Bans Georgian Drinks Including Coca-Cola",
+  "targets": [
+   "Rospotrebnadzor >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "62",
+  "name": "Χούθι",
+  "lang": "el",
+  "qids": [
+   "Q3042087"
+  ],
+  "marked": true,
+  "source": "Υεμένη: Τουλάχιστον 53 νεκροί μετά από επίθεση των [START] Χούθι [END] – Συναγερμός στα νοσοκομεία",
+  "targets": [
+   "Houthis >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "63",
+  "name": "IG Group",
+  "lang": "en",
+  "qids": [
+   "Q481356"
+  ],
+  "marked": true,
+  "source": "FTSE 100 Today: Index Recovers After Sharp Fall; BT Group, [START] IG Group [END] and Other Stocks in Focus – Check Top Gainers, Losers and Key Factors",
+  "targets": [
+   "IG Group >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "64",
+  "name": "Αρμάνι",
+  "lang": "en",
+  "qids": [
+   "Q635484",
+   "Q36362"
+  ],
+  "marked": true,
+  "source": "Παναθηναϊκός: Τα εισιτήρια με Μπασκόνια, [START] Αρμάνι [END] και στο βάθος... Ολυμπιακός",
+  "targets": [
+   "Armani >> en",
+   "Olimpia Milano >> en"
+  ],
+  "titled": 2
+ },
+ {
+  "id": "65",
+  "name": "Liga Americana",
+  "lang": "es",
+  "qids": [
+   "Q465469",
+   "Q464995",
+   "Q464508",
+   "Q1548957",
+   "Q463569"
+  ],
+  "marked": true,
+  "source": "Tampa Bay conquista la [START] Liga Americana [END] y avanzan a la Serie Mundial 2026",
+  "targets": [
+   "American League >> en",
+   "American Hockey League >> en",
+   "American Football League >> en",
+   "2009 Women's Professional Soccer season >> en",
+   "American Birth Control League >> en"
+  ],
+  "titled": 5
+ },
+ {
+  "id": "66",
+  "name": "Nemci",
+  "lang": "sr",
+  "qids": [
+   "Q2439429"
+  ],
+  "marked": true,
+  "source": "Rukometni Mundijal na staklu? [START] Nemci [END] razmatraju spektakl za završnicu prvenstva",
+  "targets": [
+   "Nemci, Nova Gorica >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "67",
+  "name": "Shakhtar Donetsk",
+  "lang": "it",
+  "qids": [
+   "Q172969",
+   "Q3755011",
+   "Q123751553",
+   "Q123751551",
+   "Q123751549",
+   "Q123751548",
+   "Q123751552",
+   "Q123751547",
+   "Q131388941"
+  ],
+  "marked": false,
+  "source": "[START] Shakhtar Donetsk [END] Chivu fa mea culpa per le due sconfitte in Champions: “Io il responsabile, devo trovare la chiave giusta”. Alineaciones de Man City y AEK Athens por la Champions League: formaciones probables",
+  "targets": [
+   "FC Shakhtar Donetsk >> en",
+   "2011–12 FC Shakhtar Donetsk season >> en",
+   "Shakhtar Donetsk vs. Sporting Braga 2 - 0 >> en",
+   "Shakhtar Donetsk vs Juventus, 5 December 2012, UEFA Champions League >> en",
+   "Shakhtar Donetsk v Real Madrid, 25 November 2015 >> en",
+   "Shakhtar Donetsk v Manchester United, 2 October 2013 >> en",
+   "Shakhtar Donetsk vs. Celta de Vigo >> en",
+   "Shakhtar Donetsk v Arsenal, 3 November 2010 >> en",
+   "FC Shakhtar Donetsk U-19 >> en"
+  ],
+  "titled": 2
+ },
+ {
+  "id": "68",
+  "name": "Arkansas Department of Health",
+  "lang": "en",
+  "qids": [
+   "Q28368926"
+  ],
+  "marked": true,
+  "source": "[START] Arkansas Department of Health [END] confirms first flu-related death of 2026-27 season",
+  "targets": [
+   "Arkansas Department of Health >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "69",
+  "name": "LAWMA",
+  "lang": "en",
+  "qids": [
+   "Q39087202"
+  ],
+  "marked": true,
+  "source": "Sanwo-Olu asks [START] LAWMA [END] boss to resign over waste crisis – Report",
+  "targets": [
+   "Lagos Waste Management Authority >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "70",
+  "name": "ENC",
+  "lang": "hr",
+  "qids": [
+   "Q273570"
+  ],
+  "marked": true,
+  "source": "[START] ENC [END] counties see uptick in early voter turnout compared to 2022 primaries",
+  "targets": [
+   "École nationale des chartes >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "71",
+  "name": "Telstra",
+  "lang": "en",
+  "qids": [
+   "Q721162",
+   "Q295886",
+   "Q917998",
+   "Q3174343",
+   "Q880443",
+   "Q17639780",
+   "Q7697860",
+   "Q7697863",
+   "Q56750701"
+  ],
+  "marked": true,
+  "source": "[START] Telstra [END] expands Aura fibre network as AI infrastructure demand grows",
+  "targets": [
+   "Telstra >> en",
+   "Stadium Australia >> en",
+   "Docklands Stadium >> en",
+   "National Aboriginal & Torres Strait Islander Art Award >> en",
+   "Telstra Tower >> en",
+   "30 Pirie Street >> en",
+   "Telstra Endeavour >> en",
+   "Telstra Corporation Ltd v Desktop Marketing Systems Pty Ltd >> en",
+   "Telstra Business Women's Awards >> en"
+  ],
+  "titled": 8
+ },
+ {
+  "id": "72",
+  "name": "Albertsons",
+  "lang": null,
+  "qids": [
+   "Q2831861",
+   "Q2926064",
+   "Q4712283",
+   "Q96464227",
+   "Q4712284",
+   "Q48978485",
+   "Q110453422",
+   "Q116724929",
+   "Q115350320",
+   "Q57444048"
+  ],
+  "marked": true,
+  "source": "[START] Albertsons [END] and Kroger to Call Ex-CEOs to Testify Over Failed Deal - Mon, 19 Oct 2026 PST",
+  "targets": [
+   "Albertsons >> en",
+   "Albertsons Stadium >> en",
+   "Albertsons LLC >> en",
+   "Albertsons Library >> en",
+   "Albertsons Boise Open >> en",
+   "Albertsons Dam >> en",
+   "Albertsons Library, Special Collections and Archives >> en",
+   "Albertsons at Melrose Park >> en",
+   "Albertsons Market >> en",
+   "Albertsons Library Data Management Strategic Agenda Summer 2017 - Spring 2019 >> en"
+  ],
+  "titled": 4
+ },
+ {
+  "id": "73",
+  "name": "LSEG",
+  "lang": null,
+  "qids": [
+   "Q5573225"
+  ],
+  "marked": false,
+  "source": "[START] LSEG [END] Netflix faces engagement questions ahead of Q3 results. London Stock Exchange Group fails to shake off £131m fraud lawsuit",
+  "targets": [
+   "London Stock Exchange Group >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "74",
+  "name": "Route du Rhum",
+  "lang": "fr",
+  "qids": [
+   "Q833088",
+   "Q17638469",
+   "Q56314026",
+   "Q3444098",
+   "Q3444096",
+   "Q48754268",
+   "Q113840706",
+   "Q48760402",
+   "Q115748762",
+   "Q115748717"
+  ],
+  "marked": true,
+  "source": "Une tempête annoncée en Bretagne : le village de la [START] Route du Rhum [END] pourra-t-il rester ouvert à Saint-Malo ?",
+  "targets": [
+   "Route du Rhum >> en",
+   "2014 Route du Rhum >> en",
+   "2018 Route du Rhum >> en",
+   "2010 Route du Rhum >> en",
+   "2006 Route du Rhum >> en",
+   "2002 Route du Rhum >> en",
+   "2022 Route du Rhum >> en",
+   "1978 Route du Rhum >> en",
+   "1986 Route du Rhum >> en",
+   "1994 Route du Rhum >> en"
+  ],
+  "titled": 10
+ },
+ {
+  "id": "75",
+  "name": "Argan",
+  "lang": "fr",
+  "qids": [
+   "Q63492312"
+  ],
+  "marked": true,
+  "source": "[START] ARGAN [END] : Mise à disposition du rapport du commissaire à la fusion",
+  "targets": [
+   "Argan >> en"
+  ],
+  "titled": 0
+ },
+ {
+  "id": "76",
+  "name": "Michigan State University",
+  "lang": "en",
+  "qids": [
+   "Q270222",
+   "Q3856893",
+   "Q12204555",
+   "Q6837719",
+   "Q6837737",
+   "Q16983311",
+   "Q6837734",
+   "Q12204556",
+   "Q6837724",
+   "Q6837720"
+  ],
+  "marked": true,
+  "source": "USDA awards $16.2M for [START] Michigan State University [END] Greenhouse Complex modernisation",
+  "targets": [
+   "Michigan State University >> en",
+   "Michigan State Spartans men's basketball >> en",
+   "Michigan State University College of Human Medicine >> en",
+   "Michigan State University College of Law >> en",
+   "Michigan State University Press >> en",
+   "Western Michigan University Homer Stryker M.D. School of Medicine >> en",
+   "Michigan State University Libraries >> en",
+   "Michigan State University College of Osteopathic Medicine >> en",
+   "Michigan State University College of Veterinary Medicine >> en",
+   "Michigan State University College of Natural Science >> en"
+  ],
+  "titled": 10
+ },
+ {
+  "id": "77",
+  "name": "TDECU",
+  "lang": "en",
+  "qids": [
+   "Q39055673",
+   "Q14711138"
+  ],
+  "marked": false,
+  "source": "[START] TDECU [END] Weigman Leads #20/18 Football to Big 12 Win vs. Oklahoma State. Explosive second-half not enough as Cowboy Football falls at No. 20 Houston, 35-32",
+  "targets": [
+   "Texas Dow Employees Credit Union >> en",
+   "TDECU Stadium >> en"
+  ],
+  "titled": 2
+ },
+ {
+  "id": "78",
+  "name": "VG13",
+  "lang": "en",
+  "qids": [
+   "Q61725628"
+  ],
+  "marked": false,
+  "source": "[START] VG13 [END] OGLASILI SE TALIJANI Arhitekti poručili: ‘To nije konačno rješenje za stadion na Maksimiru’. Talijanski arhitekti oglasili se nakon objave novih slika Maksimira: 'Nisu bile namijenjene javnosti'",
+  "targets": [
+   "White Stone heliport >> en"
+  ],
+  "titled": 0
+ },
+ {
+  "id": "79",
+  "name": "JOSE",
+  "lang": "en",
+  "qids": [
+   "Q14950421"
+  ],
+  "marked": true,
+  "source": "HACE SABER: A los HEREDEROS CONOCIDOS Y DESCONOCIDOS del causante [START] JOSE [END] MARCIAL PUERTA (difunto), quien era venezolano,C.I. N°V-2.533.605. Fecha de publicación 19/10/2026",
+  "targets": [
+   "Jose (actor) >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "80",
+  "name": "CIMG",
+  "lang": "en",
+  "qids": [
+   "Q16733405"
+  ],
+  "marked": true,
+  "source": "Adansi Travels earns [START] CIMG [END] Hall of Fame status after fourth consecutive win",
+  "targets": [
+   "Chartered Institute of Marketing Ghana >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "81",
+  "name": "DIY SOS",
+  "lang": "en",
+  "qids": [
+   "Q5205175"
+  ],
+  "marked": true,
+  "source": "Nick Knowles breaks silence over [START] DIY SOS [END] cuts as fans brand BBC move ‘a very bad decision’",
+  "targets": [
+   "DIY SOS >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "82",
+  "name": "التحالف",
+  "lang": "ar",
+  "qids": [
+   "Q20304899",
+   "Q507343",
+   "Q662849",
+   "Q761877",
+   "Q7248622",
+   "Q855669",
+   "Q2344776",
+   "Q639383",
+   "Q97193048",
+   "Q86890510"
+  ],
+  "marked": true,
+  "source": "[START] التحالف [END]: اعتراض صاروخ باليستي أطلق باتجاه الرياض",
+  "targets": [
+   "At Tahalif >> en",
+   "Progressive Alliance of Socialists and Democrats >> en",
+   "National Alliance (Italy) >> en",
+   "Democratic Alliance (South Africa) >> en",
+   "Progressive Alliance >> en",
+   "American Popular Revolutionary Alliance >> en",
+   "Democratic Republican Alliance >> en",
+   "European Free Alliance >> en",
+   "Alliance for the Union of Romanians >> en",
+   "Perikatan Nasional >> en"
+  ],
+  "titled": 9
+ },
+ {
+  "id": "83",
+  "name": "PFL Chicago",
+  "lang": "en",
+  "qids": [
+   "Q137217518"
+  ],
+  "marked": true,
+  "source": "MMA Junkie Radio #3712: Guest Jordan Burroughs, UFC Edmonton, [START] PFL Chicago [END] recaps",
+  "targets": [
+   "PFL Chicago: Pettis vs. McKee >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "84",
+  "name": "Irlanda do Norte",
+  "lang": "pt",
+  "qids": [
+   "Q26",
+   "Q7058547"
+  ],
+  "marked": false,
+  "source": "[START] Irlanda do Norte [END] Portugal cai para 24.º no ranking feminino da FIFA. Portugal desce dois lugares no ranking feminino da FIFA",
+  "targets": [
+   "Northern Ireland >> en",
+   "Northern Ireland at the 2006 Commonwealth Games >> en"
+  ],
+  "titled": 2
+ },
+ {
+  "id": "85",
+  "name": "Région bruxelloise",
+  "lang": "fr",
+  "qids": [
+   "Q240"
+  ],
+  "marked": true,
+  "source": "La [START] Région bruxelloise [END] met en vente la résidence de fonction de son ministre-Président",
+  "targets": [
+   "Brussels >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "86",
+  "name": "Boston University",
+  "lang": "en",
+  "qids": [
+   "Q49110",
+   "Q4948172",
+   "Q4119659",
+   "Q3064264",
+   "Q4948192",
+   "Q4948174",
+   "Q4948193",
+   "Q4947980",
+   "Q4948171",
+   "Q4948182"
+  ],
+  "marked": true,
+  "source": "Five Different Crimson Score as No. 5 Field Hockey Defeats [START] Boston University [END]",
+  "targets": [
+   "Boston University >> en",
+   "Boston University College of Arts and Sciences >> en",
+   "Boston University School of Medicine >> en",
+   "Boston University School of Law >> en",
+   "Boston University Terriers men's basketball >> en",
+   "Boston University College of Fine Arts >> en",
+   "Boston University Terriers men's ice hockey >> en",
+   "Boston Medical Center >> en",
+   "Boston University College of Communication >> en",
+   "Boston University Medical Campus >> en"
+  ],
+  "titled": 10
+ },
+ {
+  "id": "87",
+  "name": "Evropska unija",
+  "lang": "sr",
+  "qids": [
+   "Q458",
+   "Q926883",
+   "Q117243"
+  ],
+  "marked": true,
+  "source": "[START] Evropska unija [END] pred savršenom olujom: Protesti potresaju Evropu, četiri najveće sile u političkoj krizi, a Brisel nema rešenje za Ukrajinu",
+  "targets": [
+   "European Union >> en",
+   "Greenland and the European Union >> en",
+   "European Union and the United Nations >> en"
+  ],
+  "titled": 3
+ },
+ {
+  "id": "88",
+  "name": "Die Höhle der Löwen",
+  "lang": "de",
+  "qids": [
+   "Q20827221"
+  ],
+  "marked": true,
+  "source": "\"[START] Die Höhle der Löwen [END]\": Gründer macht Heiratsantrag mitten in der Vox-Show",
+  "targets": [
+   "Die Höhle der Löwen >> de"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "89",
+  "name": "ambulanciers",
+  "lang": "fr",
+  "qids": [
+   "Q108290428"
+  ],
+  "marked": true,
+  "source": "Menacés à la machette, des [START] ambulanciers [END] échappent au pire à Pornic face à un patient en crise",
+  "targets": [
+   "Ambulance workers >> en"
+  ],
+  "titled": 0
+ },
+ {
+  "id": "90",
+  "name": "Tribunal Penal Internacional",
+  "lang": "pt",
+  "qids": [
+   "Q47488",
+   "Q183219",
+   "Q478358"
+  ],
+  "marked": true,
+  "source": "A Perigosa Guerra ao [START] Tribunal Penal Internacional [END]",
+  "targets": [
+   "International Criminal Court >> en",
+   "International Criminal Tribunal for the former Yugoslavia >> en",
+   "International Criminal Tribunal for Rwanda >> en"
+  ],
+  "titled": 3
+ },
+ {
+  "id": "91",
+  "name": "global investors",
+  "lang": "en",
+  "qids": [
+   "Q5570441"
+  ],
+  "marked": true,
+  "source": "Stability of Ghana's economy is attracting strong interest from [START] global investors [END] - Mahama",
+  "targets": [
+   "Madhya Pradesh Global Investors' Summit >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "92",
+  "name": "Latvian Television",
+  "lang": "en",
+  "qids": [
+   "Q945592",
+   "Q15219228"
+  ],
+  "marked": true,
+  "source": "[START] Latvian Television [END]'s morning newscast had technical issues Friday",
+  "targets": [
+   "Latvian Television >> en",
+   "Latvian Television building >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "93",
+  "name": "Scarlet Knights",
+  "lang": "en",
+  "qids": [
+   "Q7382804",
+   "Q7430437",
+   "Q923819"
+  ],
+  "marked": false,
+  "source": "[START] Scarlet Knights [END] Field-Best 271 Lifts Men’s Golf to 6th-Place Finish at Quail Valley. Can Rutgers Football End FBS Longest Streak?",
+  "targets": [
+   "Rutgers Scarlet Knights men's basketball >> en",
+   "Scarlet Knights (comics) >> en",
+   "Rutgers Scarlet Knights >> en"
+  ],
+  "titled": 3
+ },
+ {
+  "id": "94",
+  "name": "Ho Chi Minh City Party Committee",
+  "lang": "en",
+  "qids": [
+   "Q10825624"
+  ],
+  "marked": true,
+  "source": "Comrade Bui Thanh Nhan holds the position of Head of the Propaganda Department of the [START] Ho Chi Minh City Party Committee [END].",
+  "targets": [
+   "Ho Chi Minh City Party Committee >> en"
+  ],
+  "titled": 0
+ },
+ {
+  "id": "95",
+  "name": "Cour suprême américaine",
+  "lang": "fr",
+  "qids": [
+   "Q11201"
+  ],
+  "marked": true,
+  "source": "La [START] Cour suprême américaine [END] rejette le recours du cerveau présumé des attentats du 11-Septembre",
+  "targets": [
+   "Supreme Court of the United States >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "96",
+  "name": "Coreia do Norte",
+  "lang": "pt",
+  "qids": [
+   "Q423",
+   "Q827575",
+   "Q18128809",
+   "Q141989",
+   "Q41510590",
+   "Q123010892",
+   "Q140391",
+   "Q65038587",
+   "Q1091927",
+   "Q141384"
+  ],
+  "marked": true,
+  "source": "Seul promete “punição severa” após [START] Coreia do Norte [END] ameaçar adotar novas medidas na fronteira",
+  "targets": [
+   "North Korea >> en",
+   "North Korea at the Olympics >> en",
+   "North Korea at the 2016 Summer Olympics >> en",
+   "North Korea at the 2012 Summer Olympics >> en",
+   "North Korea at the 2018 Winter Olympics >> en",
+   "North Korea at the 2024 Summer Olympics >> en",
+   "North Korea at the 2008 Summer Olympics >> en",
+   "North Korea and weapons of mass destruction >> en",
+   "North Korea at the 2004 Summer Olympics >> en",
+   "North Korea at the 2010 Winter Olympics >> en"
+  ],
+  "titled": 10
+ },
+ {
+  "id": "97",
+  "name": "Houthi",
+  "lang": "it",
+  "qids": [
+   "Q112660832",
+   "Q255997",
+   "Q18145759",
+   "Q55751464",
+   "Q30324741",
+   "Q133523383"
+  ],
+  "marked": true,
+  "source": "Britse straaljagers naar Saudi-Arabië vanwege strijd tegen [START] Houthi [END]'s",
+  "targets": [
+   "Houthi >> en",
+   "Houthi insurgency >> en",
+   "Houthi takeover of Yemen >> en",
+   "Banu Hut >> en",
+   "Sarkha >> en",
+   "Houthi attacks on commercial vessels >> en"
+  ],
+  "titled": 5
+ },
+ {
+  "id": "98",
+  "name": "Verifactu",
+  "lang": "ca",
+  "qids": [],
+  "marked": true,
+  "source": "Los empresarios extremeños reciben con los brazos abiertos el aplazamiento de [START] Verifactu [END]",
+  "targets": [],
+  "titled": 0
+ },
+ {
+  "id": "99",
+  "name": "Lamine Yamal",
+  "lang": "es",
+  "qids": [
+   "Q113704154"
+  ],
+  "marked": true,
+  "source": "PSG vs. FC Barcelona: Willian Pacho ante [START] Lamine Yamal [END] por la Champions League",
+  "targets": [
+   "Lamine Yamal >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "100",
+  "name": "National Association of Nigerian Students",
+  "lang": "en",
+  "qids": [
+   "Q17025279"
+  ],
+  "marked": false,
+  "source": "[START] National Association of Nigerian Students [END] NANS denies planned protest, demands independent probe into Aro hospital student death. NANS Gives Neuro-Psychiatric Hospital Abeokuta 24 Hours to Explain Student’s Death",
+  "targets": [
+   "National Association of Nigerian Students >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "101",
+  "name": "Ehpad",
+  "lang": "fr",
+  "qids": [
+   "Q30114662",
+   "Q1654937",
+   "Q27118386",
+   "Q108442056",
+   "Q44367887",
+   "Q109317680",
+   "Q112990014"
+  ],
+  "marked": true,
+  "source": "Un infirmier en [START] Ehpad [END] soupçonné d’avoir commis une erreur fatale de médicaments",
+  "targets": [
+   "Établissement d'hébergement pour personnes âgées dépendantes >> en",
+   "Maison de retraite Ferrari >> fr",
+   "EHPAD Bon séjour >> en",
+   "EHPAD Les Quatre Moulins >> en",
+   "EHPAD Les Mimosas >> en",
+   "Hospice Roederer-Boisseau >> fr",
+   "Ehpad Ma Maison Breteuil >> en"
+  ],
+  "titled": 3
+ },
+ {
+  "id": "102",
+  "name": "Boyu Capital",
+  "lang": "en",
+  "qids": [
+   "Q120328128"
+  ],
+  "marked": false,
+  "source": "[START] Boyu Capital [END] AI agent developer Manus raises $500M+ at reported $4B valuation. Butterfly Effect says Manus raised more than $500 million",
+  "targets": [
+   "Boyu Capital >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "103",
+  "name": "Shelly Group",
+  "lang": "de",
+  "qids": [],
+  "marked": true,
+  "source": "Die vor einer Übernahme stehende [START] Shelly Group [END] BG1100003166 hat ihren Umsatz in den ersten neun Monaten um rund 30 Prozent auf 112,8 Millionen Euro gesteigert.",
+  "targets": [],
+  "titled": 0
+ },
+ {
+  "id": "104",
+  "name": "Metro de Lisboa",
+  "lang": "es",
+  "qids": [
+   "Q746032"
+  ],
+  "marked": true,
+  "source": "Trabalhadores do [START] Metro de Lisboa [END] marcam greves parciais para 28 e 30 de outubro",
+  "targets": [
+   "Lisbon Metro >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "105",
+  "name": "VTM NIEUWS",
+  "lang": "nl",
+  "qids": [
+   "Q5264348"
+  ],
+  "marked": false,
+  "source": "[START] VTM NIEUWS [END] Theo Francken over ‘rijkswacht 2.0’: “Bij extreme agressie moet je die harde hand durven bovenhalen”. Opvallend: 82 procent wil rijkswacht terug, blijkt uit ‘De Vraag van Vandaag’",
+  "targets": [
+   "VTM Nieuws >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "106",
+  "name": "Pogacar",
+  "lang": "fr",
+  "qids": [
+   "Q113815224"
+  ],
+  "marked": true,
+  "source": "[START] Pogacar [END] já definiu os principais objetivos em 2027",
+  "targets": [
+   "Pogačar Square >> en"
+  ],
+  "titled": 0
+ },
+ {
+  "id": "107",
+  "name": "Éditions Solar",
+  "lang": "fr",
+  "qids": [
+   "Q16684420"
+  ],
+  "marked": false,
+  "source": "[START] Éditions Solar [END] Nîmes: Hugo Zeldine dévoile ses 60 recettes gourmandes dans un premier livre de pâtisserie. Psychologie. Trouble borderline à l’adolescence : où s’arrête la crise d’ado ?",
+  "targets": [
+   "Éditions Solar >> fr"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "108",
+  "name": "Parkdean Resorts",
+  "lang": "en",
+  "qids": [
+   "Q7138226"
+  ],
+  "marked": true,
+  "source": "[START] Parkdean Resorts [END] has November breaks from £159 with Vernon Kay and 90s pop acts",
+  "targets": [
+   "Parkdean Resorts >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "109",
+  "name": "Asia Times",
+  "lang": "en",
+  "qids": [
+   "Q727162",
+   "Q4806481"
+  ],
+  "marked": false,
+  "source": "[START] Asia Times [END] Why Starshield’s slowdown really hurts Ukraine. Calls mount for a true accounting of Trump’s Iran war",
+  "targets": [
+   "Asia Times >> en",
+   "Asia Times >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "110",
+  "name": "ESTAC",
+  "lang": "fr",
+  "qids": [
+   "Q501693",
+   "Q11920747"
+  ],
+  "marked": true,
+  "source": "Alain Perrin, ancien coach de l’Atac puis de l’[START] Estac [END], après la disparition de Daniel Zorzetto : « Il aurait pu être numéro 1 ailleurs »",
+  "targets": [
+   "ES Troyes AC >> en",
+   "Estac >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "111",
+  "name": "Department of Sport, Arts and Culture",
+  "lang": "en",
+  "qids": [
+   "Q98140210"
+  ],
+  "marked": false,
+  "source": "[START] Department of Sport, Arts and Culture [END] SAFA says R20m VAR funding remains untouched as project faces further checks. EXPLAINED: Where is the R20m transferred to SAFA for VAR?",
+  "targets": [
+   "Department of Sport, Arts and Culture >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "112",
+  "name": "De la Espriella",
+  "lang": "es",
+  "qids": [
+   "Q140940758",
+   "Q137204778"
+  ],
+  "marked": true,
+  "source": "Matador le cobró a Vicky Dávila sus antiguas palabras contra [START] De la Espriella [END] y la tildó de “arrodillada”",
+  "targets": [
+   "Gobierno de Abelardo de la Espriella >> es",
+   "Abelardo de la Espriella >> en"
+  ],
+  "titled": 2
+ },
+ {
+  "id": "113",
+  "name": "Тоттенхэм",
+  "lang": "ru",
+  "qids": [
+   "Q18741",
+   "Q55074091",
+   "Q14641974",
+   "Q774642",
+   "Q503375"
+  ],
+  "marked": true,
+  "source": "«[START] Тоттенхэм [END]» впервые с мая победил в АПЛ, Мичков оформил дубль в НХЛ. Главное к утру",
+  "targets": [
+   "Tottenham Hotspur F.C. >> en",
+   "Tottenham Hotspur Stadium >> en",
+   "Tottenham Hotspur F.C. Women >> en",
+   "Tottenham Hotspur (Superleague Formula team) >> en",
+   "Tottenham >> en"
+  ],
+  "titled": 5
+ },
+ {
+  "id": "114",
+  "name": "Rebel Wolves",
+  "lang": "fr",
+  "qids": [
+   "Q121590517"
+  ],
+  "marked": false,
+  "source": "[START] Rebel Wolves [END] The Blood of Dawnwalker Update 1.1 Arrives Next Week With Skill Respec and New Difficulty. The Blood of Dawnwalker sembra un altro gioco con l'enorme Update 1.1",
+  "targets": [
+   "Rebel Wolves >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "115",
+  "name": "Consejo de la FIFA",
+  "lang": "es",
+  "qids": [
+   "Q1388490"
+  ],
+  "marked": true,
+  "source": "Los miembros europeos del [START] Consejo de la FIFA [END] exigen datos inmediatos de pagos a Infantino y sus gastos",
+  "targets": [
+   "FIFA Council >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "116",
+  "name": "UC Davis",
+  "lang": "en",
+  "qids": [
+   "Q129421",
+   "Q7864150",
+   "Q7864152",
+   "Q7864165",
+   "Q30281092",
+   "Q7864163",
+   "Q7864155",
+   "Q7864157",
+   "Q7864160",
+   "Q7864156"
+  ],
+  "marked": true,
+  "source": "Burns, Chalk leave marks in Southern Utah's 38-17 win over [START] UC Davis [END]",
+  "targets": [
+   "University of California, Davis >> en",
+   "UC Davis Aggies >> en",
+   "UC Davis Aggies men's basketball >> en",
+   "UC Davis School of Medicine >> en",
+   "UC Davis Health System >> en",
+   "UC Davis School of Law >> en",
+   "UC Davis College of Biological Sciences >> en",
+   "UC Davis College of Letters and Science >> en",
+   "UC Davis Medical Center >> en",
+   "UC Davis College of Engineering >> en"
+  ],
+  "titled": 9
+ },
+ {
+  "id": "117",
+  "name": "BIO",
+  "lang": null,
+  "qids": [
+   "Q1332822"
+  ],
+  "marked": true,
+  "source": "Gard : une exploitation [START] bio [END] de Marguerittes récompensée pour son modèle agricole",
+  "targets": [
+   "Bio, Lot >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "118",
+  "name": "gjykata",
+  "lang": "sq",
+  "qids": [
+   "Q11201",
+   "Q1518827",
+   "Q122880",
+   "Q4951",
+   "Q7801",
+   "Q47488",
+   "Q183219",
+   "Q8900",
+   "Q10526701"
+  ],
+  "marked": true,
+  "source": "Rama: [START] Gjykata [END] i ka cilësuar të ligjshme arrestimet, do shohim mundësinë e uljes së moshës për dënimin penal",
+  "targets": [
+   "Supreme Court of the United States >> en",
+   "European Court of Justice >> en",
+   "European Court of Human Rights >> en",
+   "Court of Justice of the European Union >> en",
+   "International Court of Justice >> en",
+   "International Criminal Court >> en",
+   "International Criminal Tribunal for the former Yugoslavia >> en",
+   "European Court of Auditors >> en",
+   "Court of Appeal for Northern Norrland >> en"
+  ],
+  "titled": 9
+ },
+ {
+  "id": "119",
+  "name": "gut bacteria",
+  "lang": "en",
+  "qids": [
+   "Q105846474",
+   "Q96759542"
+  ],
+  "marked": true,
+  "source": "[START] Gut bacteria [END] thrive on plant fiber, but an unlikely neighbor helps them succeed",
+  "targets": [
+   "Gut bacteria >> en",
+   "Gut Bacteria and Brain of the Baby >> en"
+  ],
+  "titled": 0
+ },
+ {
+  "id": "120",
+  "name": "Jambos",
+  "lang": "en",
+  "qids": [
+   "Q87289773"
+  ],
+  "marked": true,
+  "source": "Hearts-daft BBC broadcaster Martin Geissler calls out the [START] Jambos [END]’ vile songbook at Celtic Park – it’s a pity none of the Ibrox-facing broadcasters will do the same…",
+  "targets": [
+   "Jambos >> en"
+  ],
+  "titled": 0
+ },
+ {
+  "id": "121",
+  "name": "EE. UU",
+  "lang": "es",
+  "qids": [],
+  "marked": true,
+  "source": "¡17-0! [START] EE. UU [END]. logra la mayor goleada en la historia de los Mundiales",
+  "targets": [],
+  "titled": 0
+ },
+ {
+  "id": "122",
+  "name": "OL",
+  "lang": "fr",
+  "qids": [
+   "Q1201876"
+  ],
+  "marked": true,
+  "source": "Coup de théâtre, PSG-[START] OL [END] sur le point d'être reporté !",
+  "targets": [
+   "Open Library >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "123",
+  "name": "Primera División",
+  "lang": "es",
+  "qids": [
+   "Q324867",
+   "Q606832",
+   "Q223170",
+   "Q58305",
+   "Q764690",
+   "Q1139408",
+   "Q40068",
+   "Q1311336",
+   "Q954911"
+  ],
+  "marked": true,
+  "source": "El Almería lidera las nuevas predicciones de ascenso a [START] Primera División [END]",
+  "targets": [
+   "La Liga >> en",
+   "Liga de Primera >> en",
+   "AFA Liga Profesional de Fútbol >> en",
+   "Maltese Challenge League >> en",
+   "Liga MX >> en",
+   "Liga FPD >> en",
+   "Liga F >> en",
+   "Primera División de El Salvador >> en",
+   "APF División de Honor >> en"
+  ],
+  "titled": 9
+ },
+ {
+  "id": "124",
+  "name": "Assemblée nationale",
+  "lang": "fr",
+  "qids": [
+   "Q740744",
+   "Q1969585",
+   "Q1599346",
+   "Q1634099",
+   "Q1969587",
+   "Q1492249",
+   "Q876424",
+   "Q1969545",
+   "Q1853640",
+   "Q1138299"
+  ],
+  "marked": true,
+  "source": "Après l’[START] Assemblée nationale [END] la veille, Sébastien Lecornu s’est exprimé devant les sénateurs lors des questions au gouvernement ce mercredi 21 octobre.…",
+  "targets": [
+   "Assemblée Nationale station >> en",
+   "National Assembly (Niger) >> en",
+   "National Assembly of Chad >> en",
+   "National Assembly (Cameroon) >> en",
+   "National Assembly (Republic of the Congo) >> en",
+   "National Assembly of Quebec >> en",
+   "National Constituent Assembly (France) >> en",
+   "National Assembly of Gabon >> en",
+   "National Assembly (Senegal) >> en",
+   "National Assembly (Tanzania) >> en"
+  ],
+  "titled": 10
+ },
+ {
+  "id": "125",
+  "name": "UAE",
+  "lang": "en",
+  "qids": [
+   "Q878",
+   "Q6779",
+   "Q3551367",
+   "Q471007",
+   "Q235910",
+   "Q99390906",
+   "Q35282156"
+  ],
+  "marked": true,
+  "source": "Azerbaijan-[START] UAE [END] joint tactical flight drill concludes (VIDEO)",
+  "targets": [
+   "United Arab Emirates >> en",
+   "UTC+04:00 >> en",
+   "Abdelmalek Essaâdi University >> en",
+   "UAE (emulator) >> en",
+   "United Arab Emirates national football team >> en",
+   "Union des Anciens Etudiants de l'Universite Libre de Bruxelles >> en",
+   "Mount Aue >> en"
+  ],
+  "titled": 5
+ },
+ {
+  "id": "126",
+  "name": "EU",
+  "lang": "en",
+  "qids": [
+   "Q211593",
+   "Q458"
+  ],
+  "marked": true,
+  "source": "AfD und [START] EU [END]: So wollen Alice Weidel und ihre Partei die EU abwickeln",
+  "targets": [
+   "Eu, Seine-Maritime >> en",
+   "European Union >> en"
+  ],
+  "titled": 2
+ },
+ {
+  "id": "127",
+  "name": "Ghana Football",
+  "lang": "en",
+  "qids": [
+   "Q1478153",
+   "Q923074",
+   "Q5555352",
+   "Q55612594",
+   "Q104852894"
+  ],
+  "marked": true,
+  "source": "Andre Ayew backs government support to revive [START] Ghana football [END]",
+  "targets": [
+   "Football in Ghana >> en",
+   "Ghana Football Association >> en",
+   "Ghana Football Leagues >> en",
+   "Ghana Football Association cash gift scandal >> en",
+   "Ghana Football Awards >> en"
+  ],
+  "titled": 5
+ },
+ {
+  "id": "128",
+  "name": "Al-Hazm",
+  "lang": "es",
+  "qids": [
+   "Q2499905",
+   "Q66291655",
+   "Q26201058"
+  ],
+  "marked": true,
+  "source": "Refereeing expert drops a bombshell over Al-Hilal and [START] Al-Hazm [END]: an uncounted penalty!",
+  "targets": [
+   "Al-Hazem FC >> en",
+   "Al-Hazm Station >> en",
+   "Al-Hazm >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "129",
+  "name": "Farc",
+  "lang": "es",
+  "qids": [
+   "Q155801",
+   "Q38366566"
+  ],
+  "marked": true,
+  "source": "Alias Contador, señalado disidente de las [START] Farc [END], regresó a Colombia tras cumplir condena en Estados Unidos",
+  "targets": [
+   "Revolutionary Armed Forces of Colombia >> en",
+   "Commons (Colombia) >> en"
+  ],
+  "titled": 2
+ },
+ {
+  "id": "130",
+  "name": "Μπεσίκτας",
+  "lang": "el",
+  "qids": [
+   "Q172567",
+   "Q459495",
+   "Q854669",
+   "Q65360",
+   "Q4086096"
+  ],
+  "marked": true,
+  "source": "Η [START] Μπεσίκτας [END] συμφώνησε σε τριετές συμβόλαιο με τον Γουίλοκ",
+  "targets": [
+   "Beşiktaş J.K. >> en",
+   "Beşiktaş >> en",
+   "Beşiktaş J.K. (men's basketball) >> en",
+   "Beşiktaş JK (women's basketball) >> en",
+   "Μπεσίκτας Ζιμναστίκ Κουλουμπού >> el"
+  ],
+  "titled": 5
+ },
+ {
+  "id": "131",
+  "name": "DocMorris",
+  "lang": "de",
+  "qids": [
+   "Q669499",
+   "Q230343",
+   "Q10475311"
+  ],
+  "marked": true,
+  "source": "[START] DocMorris [END] gains 1.5 million customers as prescription sales rise 78%",
+  "targets": [
+   "DocMorris >> en",
+   "DocMorris >> en",
+   "DOZ Apotek >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "132",
+  "name": "NIT",
+  "lang": "en",
+  "qids": [
+   "Q571381"
+  ],
+  "marked": false,
+  "source": "[START] NIT [END] Atenção, solteiros: o país mais feliz do mundo vai oferecer viagens (e encontros) à borla. Roupa de marca e decoração a partir de 25 cêntimos. Esta loja tem de tudo",
+  "targets": [
+   "National Invitation Tournament >> en"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "133",
+  "name": "ברצלונה",
+  "lang": null,
+  "qids": [
+   "Q1492",
+   "Q7156",
+   "Q28496610",
+   "Q54893",
+   "Q378906",
+   "Q522899",
+   "Q10467",
+   "Q248782"
+  ],
+  "marked": false,
+  "source": "[START] ברצלונה [END] קאנסלו: אני לא מוכן לסבול יותר רעש מסביבי. מכה לפ.ס.ז': קברצחאליה קרע את הרצועה הצולבת",
+  "targets": [
+   "Barcelona >> en",
+   "FC Barcelona >> en",
+   "Barcelona (Parliament of Catalonia constituency) >> en",
+   "FC Barcelona Bàsquet >> en",
+   "FC Barcelona Handbol >> en",
+   "FC Barcelona Femení >> en",
+   "FC Barcelona Atlètic >> en",
+   "Barcelona S.C. >> en"
+  ],
+  "titled": 8
+ },
+ {
+  "id": "134",
+  "name": "Magenta TV",
+  "lang": "de",
+  "qids": [
+   "Q2401696"
+  ],
+  "marked": false,
+  "source": "[START] Magenta TV [END] Πήλιος: «Δεν μπορώ να χαρώ το γκολ μου – Βασικός μας στόχος το πρωτάθλημα». Πήλιος: «Προσπαθήσαμε να κάνουμε το παιχνίδι μας, βασικός μας στόχος το πρωτάθλημα»",
+  "targets": [
+   "MagentaTV >> de"
+  ],
+  "titled": 1
+ },
+ {
+  "id": "135",
+  "name": "FMF",
+  "lang": "ro",
+  "qids": [
+   "Q738074",
+   "Q1144618",
+   "Q3116927",
+   "Q1160682",
+   "Q5442863",
+   "Q1427712",
+   "Q14881867",
+   "Q14881874",
+   "Q431594",
+   "Q30296846"
+  ],
+  "marked": true,
+  "source": "Noi delegări UEFA pentru reprezentanții [START] FMF [END]",
+  "targets": [
+   "Moldovan Football Federation >> en",
+   "Familial Mediterranean fever >> en",
+   "Royal Moroccan Football Federation >> en",
+   "Mexican Football Federation >> en",
+   "Feminist Majority Foundation >> en",
+   "Fleet Marine Force >> en",
+   "MEFV >> en",
+   "Mefv >> en",
+   "United States Foreign Military Financing >> en",
+   "Fetal Medicine Foundation >> en"
+  ],
+  "titled": 8
+ },
+ {
+  "id": "136",
+  "name": "FMF",
+  "lang": "fr",
+  "qids": [
+   "Q1144618",
+   "Q3116927",
+   "Q1160682",
+   "Q738074",
+   "Q650130",
+   "Q662763",
+   "Q1427712",
+   "Q15091568",
+   "Q14881867"
+  ],
+  "marked": true,
+  "source": "[START] FMF [END] : le collège électoral élargi aux clubs, aux arbitres et aux joueurs",
+  "targets": [
+   "Familial Mediterranean fever >> en",
+   "Royal Moroccan Football Federation >> en",
+   "Mexican Football Federation >> en",
+   "Moldovan Football Federation >> en",
+   "Mozambican Football Federation >> en",
+   "Malagasy Football Federation >> en",
+   "Fleet Marine Force >> en",
+   "Monégasque Football Federation >> en",
+   "MEFV >> en"
+  ],
+  "titled": 9
+ }
+]

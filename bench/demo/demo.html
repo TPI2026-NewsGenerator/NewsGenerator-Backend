@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Démo NewsGenerator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #fbf9f4; --panel: #ffffff; --ink: #1d1b18; --muted: #6b665e; --line: #e4dfd4;
+    --server: #3c5a78; --server-soft: #e6edf4; --reader: #b3362f; --reader-soft: #f7e4e1;
+    --ok: #2f7a4d; --ok-soft: #e1f0e6; --warn: #9a6a12; --warn-soft: #f6ecd6;
+    --serif: "Source Serif 4", Georgia, serif; --display: "Fraunces", Georgia, serif; --mono: "IBM Plex Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #161514; --panel: #1f1e1c; --ink: #ece8e1; --muted: #a39d93; --line: #34312d;
+        --server: #8db0d3; --server-soft: #22303d; --reader: #e8847b; --reader-soft: #3a2422;
+        --ok: #7cc79a; --ok-soft: #1f3327; --warn: #e0b45c; --warn-soft: #3a2f1a;
+    }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.55 var(--serif); }
+main { max-width: 1080px; margin: 0 auto; padding: 32px 16px 80px; }
+h1 { font: 700 2.3rem/1.1 var(--display); margin: 0 0 8px; }
+h2 { font: 700 1.45rem/1.2 var(--display); margin: 0 0 4px; }
+h3 { font: 600 1.05rem/1.3 var(--serif); margin: 18px 0 6px; }
+p { margin: 6px 0; }
+.lead { color: var(--muted); max-width: 760px; }
+.status { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 26px; font: 13px var(--mono); }
+.pill { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; background: var(--panel); }
+.pill.up { border-color: var(--ok); color: var(--ok); }
+.pill.down { color: var(--muted); }
+section.box { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px; margin: 18px 0; }
+.kicker { font: 500 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--server); }
+.kicker.reader { color: var(--reader); }
+textarea { width: 100%; min-height: 150px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 12px;
+    background: var(--bg); color: var(--ink); font: 15px/1.5 var(--serif); }
+textarea.news { min-height: 220px; font: 13.5px/1.5 var(--mono); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; }
+button, select { font: 600 15px var(--serif); border-radius: 10px; border: 1px solid var(--ink); padding: 9px 18px; cursor: pointer;
+    background: var(--ink); color: var(--bg); }
+button.ghost, select { background: transparent; color: var(--ink); border-color: var(--line); font-weight: 400; }
+button:disabled { opacity: .45; cursor: wait; }
+.hint { color: var(--muted); font-size: 14px; }
+.error { color: var(--reader); font-weight: 600; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.interest { border: 1px solid var(--line); border-left: 4px solid var(--server); border-radius: 10px; padding: 12px 14px; background: var(--bg); }
+.interest .meta { font: 12px var(--mono); color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.chip { font: 12px var(--mono); border-radius: 6px; padding: 2px 7px; background: var(--server-soft); color: var(--server); white-space: nowrap; }
+.chip.reader { background: var(--reader-soft); color: var(--reader); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip small { opacity: .7; }
+.step { border-top: 1px solid var(--line); padding-top: 18px; margin-top: 22px; }
+.step:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
+.step-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.secs { font: 12px var(--mono); color: var(--muted); }
+.explain { color: var(--muted); font-size: 15px; max-width: 820px; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; margin-top: 8px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 11.5px var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+td.num { font: 13px var(--mono); white-space: nowrap; }
+.n { display: inline-block; min-width: 26px; text-align: center; font: 600 12px var(--mono); border-radius: 6px; background: var(--server-soft); color: var(--server); padding: 1px 5px; }
+.bar { position: relative; height: 8px; background: var(--line); border-radius: 4px; min-width: 120px; margin-top: 4px; }
+.bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--server); }
+.bar b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--reader); }
+.yes { color: var(--ok); font-weight: 600; }
+.no { color: var(--muted); }
+.out { color: var(--reader); font-weight: 600; }
+details { margin-top: 10px; }
+summary { cursor: pointer; font: 13px var(--mono); color: var(--server); }
+pre { white-space: pre-wrap; word-break: break-word; background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px; font: 12.5px/1.5 var(--mono); max-height: 420px; overflow: auto; }
+.card { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; background: var(--bg); margin: 12px 0; }
+.card .src { font: 12px var(--mono); color: var(--muted); }
+.card h4 { font: 700 1.2rem/1.25 var(--display); margin: 4px 0 2px; }
+.card .orig { color: var(--muted); font-size: 14px; font-style: italic; }
+.card .why { color: var(--reader); font-size: 15px; margin: 6px 0; }
+.card .passages p { margin: 8px 0; }
+.card .tr { border-left: 3px solid var(--line); padding-left: 10px; color: var(--muted); font-size: 15px; }
+.dense { font: 11.5px var(--mono); color: var(--muted); word-break: break-all; }
+.skipped { columns: 2 280px; color: var(--muted); font-size: 14.5px; }
+.skipped li { margin-bottom: 6px; break-inside: avoid; }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--server); border-radius: 50%;
+    animation: spin 0.9s linear infinite; vertical-align: -2px; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<main>
+    <div class="kicker">NewsGenerator · démo</div>
+    <h1>Le parcours d’une nouvelle</h1>
+    <p class="lead">Écris un profil, l’IA le découpe en intérêts. Colle ensuite des nouvelles : elles suivent les mêmes étapes qu’un briefing,
+        et chaque étape montre ce qu’elle a pris en compte. Rien n’est enregistré.</p>
+    <div class="status" id="status"><span class="pill">vérification des services…</span></div>
+
+    <section class="box">
+        <div class="kicker reader">1 · Le lecteur</div>
+        <h2>Profil</h2>
+        <p class="hint">Écris comme le lecteur l’écrirait : ses sujets, les précisions qui comptent, et ce qu’il ne veut pas.</p>
+        <textarea id="profile">Je suis le football suisse et français : la Super League, la Ligue 1, l'équipe de Suisse et ses joueurs à l'étranger. J'aime aussi l'astronomie : les missions spatiales et les nouveaux télescopes. Je ne veux pas de paris sportifs ni de people.</textarea>
+        <div class="row">
+            <label class="hint" for="language">Il lit en</label>
+            <select id="language">
+                <option value="fr" selected>français</option>
+                <option value="en">anglais</option>
+                <option value="de">allemand</option>
+                <option value="it">italien</option>
+                <option value="es">espagnol</option>
+            </select>
+            <button id="make">Générer profil</button>
+            <span id="profile-state" class="hint"></span>
+        </div>
+        <div id="profile-out"></div>
+    </section>
+
+    <section class="box">
+        <div class="kicker">2 · Les nouvelles</div>
+        <h2>Nouvelles à tester</h2>
+        <p class="hint">Une adresse par ligne, ou un texte : sa première ligne est son titre. Sépare deux textes par une ligne <code>---</code>.
+            Une adresse est lue comme le briefing lit une page ; un texte collé passe tel quel (utile pour un site qui bloque la lecture).</p>
+        <textarea id="news" class="news" placeholder="https://www.exemple.ch/sport/football/un-article
+https://www.autre-media.fr/espace/un-autre-article
+---
+Le télescope Roman franchit une étape
+La NASA a terminé l'assemblage du télescope spatial Roman, qui doit observer des milliers d'exoplanètes…"></textarea>
+        <div class="row">
+            <button id="run" disabled>Analyser les nouvelles</button>
+            <span id="run-state" class="hint">Génère d’abord le profil.</span>
+        </div>
+    </section>
+
+    <section class="box" id="steps-box" hidden>
+        <div class="kicker">3 · Le parcours</div>
+        <h2>Étape par étape</h2>
+        <div id="steps"></div>
+    </section>
+
+    <section class="box">
+        <div class="kicker">Ce que la démo ne fait pas</div>
+        <ul class="skipped">
+            <li><b>Le volume.</b> Un vrai briefing classe des dizaines de milliers de nouvelles et donne à l’IA les 40 plus proches (plus 10 de Google News). Ici, toutes les nouvelles collées vont à l’IA ; le repère de score montre si elles auraient eu leur chance.</li>
+            <li><b>Les autres médias.</b> En vrai, une histoire réunit tous les médias qui racontent le même fait, depuis 2 500 flux. Ici, seules les nouvelles collées peuvent se regrouper.</li>
+            <li><b>La vérification des articles de chaque histoire</b> et la fusion de deux histoires du même fait par l’IA.</li>
+            <li><b>La corroboration</b> (qui a écrit l’article lui-même) et les démentis : ils demandent plusieurs articles du même fait.</li>
+            <li><b>Les sources</b> : la découverte de flux pour le profil, Google News et la crédibilité des sites.</li>
+            <li><b>Les votes du lecteur</b> (pouces), qui servent d’exemples au choix de l’IA.</li>
+        </ul>
+    </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'})[c]);
+const fmt = (value, digits = 3) => Number(value).toFixed(digits).replace('.', ',');
+const piece = (word) => esc(String(word).replace(/^▁/, '·'));
+let profile = null;
+let news = new Map();
+let stories = new Map();
+
+// the services: the embedders asked in their order, the AI
+fetch('/api/status').then(r => r.json()).then(s => {
+    $('status').innerHTML = [
+        ...s.embedders.map(e => `<span class="pill ${e.up ? 'up' : 'down'}">bge-m3 · ${esc(e.name)} ${e.up ? `✓ ${e.device === 'cuda' ? 'carte graphique' : 'processeur'}` : '✗'}</span>`),
+        `<span class="pill ${s.ai ? 'up' : 'down'}">IA gemma4:31b ${s.ai ? '✓' : '✗ (clé manquante)'}</span>`,
+        `<span class="pill ${s.vocabulary ? 'up' : 'down'}">vocabulaire bge-m3 ${s.vocabulary ? '✓' : '✗ (numéros des jetons)'}</span>`,
+    ].join('');
+}).catch(() => { $('status').innerHTML = '<span class="pill down">serveur de démo injoignable</span>'; });
+
+const wordChips = (words, kind = '') => `<div class="chips">${words.map(w => `<span class="chip ${kind}">${piece(w.word)} <small>${fmt(w.weight, 2)}</small></span>`).join('')}</div>`;
+
+$('make').onclick = async () => {
+    $('make').disabled = true;
+    $('profile-state').innerHTML = '<span class="spinner"></span>L’IA découpe le profil, puis bge-m3 vectorise chaque intérêt…';
+    try {
+        const res = await fetch('/api/profile', {method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({text: $('profile').value, language: $('language').value})});
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error);
+        profile = body;
+        $('profile-state').textContent = `IA ${fmt(body.seconds.ai, 1)} s · vecteurs ${fmt(body.seconds.embedding, 1)} s`;
+        $('profile-out').innerHTML = `
+            <h3>${body.interests.length} intérêt${body.interests.length > 1 ? 's' : ''}</h3>
+            <p class="explain">Chaque intérêt devient deux vecteurs bge-m3 : le sens (1 024 nombres) et les mots qui pèsent (ci-dessous, les plus lourds).
+                Le poids multiplie son score : 1 pour un intérêt principal, 0,85 pour un intérêt secondaire.</p>
+            <div class="grid">${body.interests.map(i => `
+                <div class="interest">
+                    <div class="meta">intérêt ${i.id} · poids ${fmt(i.weight, 2)} · rubrique ${esc(i.category)} · ${i.weightedWords} mots pesés</div>
+                    <p>${esc(i.text)}</p>
+                    ${wordChips(i.words)}
+                    <details><summary>mots-clés et recherches de sources</summary>
+                        <p class="hint">Mots-clés : ${esc(i.keywords)}</p>
+                        <p class="hint">Recherches Google News : ${i.searches.map(esc).join(' · ')}</p>
+                    </details>
+                </div>`).join('')}</div>
+            <h3>Ce qu’il refuse</h3>
+            ${body.refused.length ? `<div class="chips">${body.refused.map(r => `<span class="chip reader">${esc(r)}</span>`).join('')}</div>
+                <p class="explain">Un refus n’est jamais un vecteur (il attirerait ce qu’il refuse) : seule l’IA en tient compte, au choix puis à la relecture.</p>`
+                : '<p class="hint">Rien.</p>'}`;
+        $('run').disabled = false;
+        $('run-state').textContent = '';
+    } catch (err) {
+        $('profile-state').innerHTML = `<span class="error">${esc(err.message)}</span>`;
+    } finally {
+        $('make').disabled = false;
+    }
+};
+
+const interestName = (id) => {
+    const interest = profile.interests.find(i => i.id === id);
+    return interest ? `${id} · ${esc(interest.text.split(':')[0].slice(0, 40))}` : id;
+};
+const label = (n) => `<span class="n">${n}</span>`;
+const step = (kicker, title, explain, html, secs) => {
+    const div = document.createElement('div');
+    div.className = 'step';
+    div.innerHTML = `<div class="step-head"><div><div class="kicker">${kicker}</div><h2>${title}</h2></div>${secs != null ? `<span class="secs">${fmt(secs, 1)} s</span>` : ''}</div>
+        <p class="explain">${explain}</p>${html}`;
+    $('steps').insertBefore(div, $('waiting'));
+};
+
+const render = {
+    read(e) {
+        news = new Map(e.news.map(item => [item.n, item]));
+        step('Étape 1', 'Lecture', 'Chaque adresse est téléchargée et son article extrait (Readability), comme le briefing lit une page. Une page de moins de 60 mots (un chapeau, un mur payant) ne peut pas donner de passages.',
+            `<div class="table-wrap"><table><tr><th>#</th><th>Source</th><th>Titre</th><th>Langue</th><th>Mots</th><th>Lisible</th></tr>
+            ${e.news.map(item => `<tr><td>${label(item.n)}</td><td>${esc(item.source)}</td><td>${esc(item.title)}</td><td>${esc(item.languageName)}</td>
+                <td class="num">${item.words}</td><td>${item.read ? (item.readable ? '<span class="yes">oui</span>' : '<span class="out">trop court</span>') : `<span class="out">page non lue${item.error ? ` (${esc(item.error)})` : ''}</span>`}</td></tr>`).join('')}
+            </table></div>`);
+    },
+    embed(e) {
+        step('Étape 2', 'bge-m3 : deux vecteurs par nouvelle', `Le titre seul, puis le titre avec le début de la description (400 caractères), sont encodés. Le vecteur <b>dense</b> (1 024 nombres) porte le sens ; le vecteur <b>creux</b> donne un poids à chaque mot qui compte${e.vocabulary ? '' : ' (numéros des jetons : le vocabulaire n’est pas sur cette machine)'}. Un nom rare est découpé en morceaux (·In · fa · ntino).`,
+            e.news.map(item => `<h3>${label(item.n)} ${esc(news.get(item.n).title)}</h3>
+                <p class="dense">dense : [${item.dense.map(v => fmt(v, 4)).join('  ')} … ] · ${item.weightedWords} mots pesés sur 250 002</p>
+                ${wordChips(item.words)}`).join(''));
+    },
+    group(e) {
+        const shown = e.pairs.filter(p => p.title > 0.3);
+        step('Étape 3', 'Regroupement en histoires', `Comme dans la base (pgvector) : deux nouvelles racontent le même fait si leurs <b>titres</b> sont proches (dense + creux ≥ ${fmt(e.thresholds.title, 2)}) et leurs <b>textes</b> aussi (dense ≥ ${fmt(e.thresholds.text, 2)}), dans la même langue. Deux titres du même média doivent atteindre ${fmt(e.thresholds.title + e.thresholds.sameMedium, 2)}. Une histoire va à l’IA avec les titres des autres médias.`,
+            `${shown.length ? `<div class="table-wrap"><table><tr><th>Paire</th><th>Titres dense</th><th>Titres creux</th><th>Titres total</th><th>Textes</th><th>Verdict</th></tr>
+                ${shown.map(p => `<tr><td>${label(p.a)} ${label(p.b)}</td><td class="num">${fmt(p.titleDense)}</td><td class="num">${fmt(p.titleSparse)}</td>
+                    <td class="num">${fmt(p.title)} / ${fmt(p.needed, 2)}</td><td class="num">${fmt(p.text)}</td>
+                    <td>${p.joined ? '<span class="yes">même histoire</span>' : `<span class="no">${!p.sameLanguage ? 'autre langue' : p.title < p.needed ? 'titres trop loin' : 'textes trop loin'}</span>`}</td></tr>`).join('')}
+                </table></div>` : '<p class="hint">Aucune paire proche.</p>'}
+            <p>${e.stories.length} histoire${e.stories.length > 1 ? 's' : ''} : ${e.stories.map(s => s.members.map(label).join(' + ')).join(' &nbsp;·&nbsp; ')}</p>`);
+    },
+    rank(e) {
+        stories = new Map(e.stories.map(s => [s.id, s]));
+        const max = Math.max(1, ...e.stories.map(s => s.score), e.reference + 0.1);
+        step('Étape 4', 'Classement par les vecteurs', `Chaque nouvelle reçoit le score de son meilleur intérêt : poids × (dense + ${fmt(e.sparseWeight, 1)} × creux), sur le titre et le début de la description. Une histoire prend le score de sa meilleure nouvelle. En vrai, seules les 40 meilleures de dizaines de milliers vont à l’IA ; le trait rouge est un repère (${fmt(e.reference)} : la 150<sup>e</sup> histoire d’un lecteur à 3 intérêts, 48 h, le 7 octobre), pas une règle.`,
+            `<div class="table-wrap"><table><tr><th>Rang</th><th>Histoire</th><th>Score</th><th>Par intérêt (dense / creux)</th><th>Mots partagés avec son intérêt</th></tr>
+            ${e.stories.map(s => `<tr><td class="num">${s.rank}</td><td>${s.members.map(label).join(' ')} ${esc(news.get(s.lead).title)}</td>
+                <td class="num">${fmt(s.score)}<div class="bar"><i style="width:${Math.max(0, s.score) / max * 100}%"></i><b style="left:${e.reference / max * 100}%"></b></div></td>
+                <td class="num">${s.scores.map(x => `<div${x.interest === s.interest ? ' style="font-weight:600"' : ''}>${interestName(x.interest)} : ${fmt(x.score)} <span class="no">(${fmt(x.dense)} / ${fmt(x.sparse)})</span></div>`).join('')}</td>
+                <td>${s.shared.length ? `<div class="chips">${s.shared.map(w => `<span class="chip">${piece(w.word)} <small>${fmt(w.news, 2)}×${fmt(w.interest, 2)}</small></span>`).join('')}</div>` : '<span class="no">aucun</span>'}</td></tr>`).join('')}
+            </table></div>`);
+    },
+    choose(e) {
+        const notChosen = e.notChosen.map(id => stories.get(id));
+        step('Étape 5', 'Le choix de l’IA', `L’IA (gemma4:31b) lit le profil entier, ses intérêts et chaque histoire (titre, 200 caractères de description, titres des autres médias). Elle choisit au plus 15 histoires qui conviennent vraiment, exclut ce que le lecteur refuse, et dit pourquoi en une phrase. Le briefing en garde ${e.maxBriefing}, réparties entre les intérêts ; les suivantes sont la réserve.`,
+            `${e.chosen.length ? `<table><tr><th>Ordre</th><th>Histoire</th><th>Pourquoi, selon l’IA</th><th></th></tr>
+                ${e.chosen.map(c => { const s = stories.get(c.id); return `<tr><td class="num">${c.rank}</td><td>${s.members.map(label).join(' ')} ${esc(news.get(s.lead).title)}</td>
+                    <td class="why">${esc(c.why)}</td><td>${c.inBriefing ? '<span class="chip ok">briefing</span>' : '<span class="chip warn">réserve</span>'}</td></tr>`; }).join('')}</table>` : '<p class="out">L’IA n’a choisi aucune histoire : aucune ne correspond assez au profil.</p>'}
+            ${notChosen.length ? `<h3>Écartées par l’IA</h3><ul>${notChosen.map(s => `<li>${s.members.map(label).join(' ')} ${esc(news.get(s.lead).title)} <span class="no">(score ${fmt(s.score)})</span></li>`).join('')}</ul>` : ''}
+            <details><summary>voir le prompt envoyé à l’IA</summary><pre>${esc(e.prompt)}</pre></details>`);
+    },
+    review(e) {
+        const judged = new Map(e.reviews.flatMap(r => r.judged).map(j => [String(j.id).replace(/^\[|\]$/g, ''), j]));
+        step('Étapes 6 et 7', 'Passages, puis relecture', `Pour chaque histoire choisie, l’IA ne rédige rien : elle désigne les phrases de l’article qui disent le mieux la nouvelle, montrées mot pour mot, puis traduites si besoin. Ensuite, elle relit chaque carte avec ses passages et dit, carte par carte, son sujet et le refus le plus proche : seule une carte dont le sujet est ce refus est retirée. Une carte illisible ou retirée laisse sa place à la réserve.`,
+            `<div class="table-wrap"><table><tr><th>Histoire</th><th>Lecture</th><th>Sujet selon la relecture</th><th>Refus le plus proche</th><th>Verdict</th></tr>
+            ${e.results.map(r => { const s = stories.get(r.story); const j = judged.get(String(r.story));
+                return `<tr><td>${s.members.map(label).join(' ')} ${esc(news.get(r.lead).title)}${r.fromReserve ? ' <span class="chip warn">réserve</span>' : ''}</td>
+                <td>${r.unreadable ? '<span class="out">illisible</span>' : '<span class="yes">passages choisis</span>'}</td>
+                <td>${esc(j?.subject ?? (r.unreadable ? '—' : ''))}</td><td>${j?.refusal ? `<span class="chip reader">${esc(j.refusal)}</span>` : '<span class="no">aucun</span>'}</td>
+                <td>${r.unreadable ? '<span class="out">remplacée</span>' : r.leftOut ? '<span class="out">retirée</span>' : '<span class="yes">gardée</span>'}</td></tr>`; }).join('')}
+            </table></div>
+            ${e.reviews.some(r => r.failed) ? '<p class="error">La relecture n’a pas répondu : les cartes sont gardées, comme dans un briefing.</p>' : ''}
+            ${e.reviews.filter(r => r.prompt).map((r, i) => `<details><summary>voir le prompt de la relecture${e.reviews.length > 1 ? ` (tour ${i + 1})` : ''}</summary><pre>${esc(r.prompt)}</pre></details>`).join('')}`);
+    },
+    cards(e) {
+        const tokens = Object.values(e.usage).reduce((sum, u) => sum + u.input + u.output, 0);
+        const secs = Object.values(e.seconds).reduce((a, b) => a + b, 0);
+        step('Résultat', `Le briefing : ${e.cards.length} carte${e.cards.length > 1 ? 's' : ''}`, `Comme le lecteur le verrait. ${fmt(secs, 1)} s en tout, ${tokens.toLocaleString('fr-CH')} jetons d’IA (${Object.entries(e.seconds).map(([k, v]) => `${k} ${fmt(v, 1)} s`).join(', ')}).`,
+            e.cards.length ? e.cards.map(c => `<div class="card">
+                <div class="src">${esc(c.source)} · ${esc(c.languageName)}${c.topic ? ` · ${esc(c.topic)}` : ''}${c.sourcing ? ` · sources ${({named: 'nommées', anonymous: 'anonymes', none: 'non citées'})[c.sourcing] ?? esc(c.sourcing)}` : ''}${c.fromReserve ? ' · de la réserve' : ''}</div>
+                <h4>${esc(c.titleTranslation ?? c.title)}</h4>
+                ${c.titleTranslation ? `<div class="orig">${esc(c.title)}</div>` : ''}
+                <div class="why">${esc(c.why)}</div>
+                <div class="passages">${(c.translation ?? c.passages ?? 'Les passages n’ont pas pu être choisis : l’IA n’a pas répondu.').split('\n\n').map(p => `<p>${esc(p)}</p>`).join('')}</div>
+                ${c.translation ? `<details><summary>texte original</summary><div class="tr">${c.passages.split('\n\n').map(p => `<p>${esc(p)}</p>`).join('')}</div></details>` : ''}
+                <div class="chips">${c.interest ? `<span class="chip">${esc(c.interest.split(':')[0])}</span>` : ''}${c.media.length > 1 ? `<span class="chip ok">${c.media.length} médias</span>` : ''}${c.url ? `<a class="chip" href="${esc(c.url)}" target="_blank" rel="noopener">lire l’article</a>` : ''}</div>
+            </div>`).join('') : '<p class="hint">Aucune carte.</p>');
+    },
+};
+
+$('run').onclick = async () => {
+    $('run').disabled = true;
+    $('steps-box').hidden = false;
+    $('steps').innerHTML = '<p id="waiting" class="hint"><span class="spinner"></span>Lecture des pages…</p>';
+    const next = {read: 'bge-m3 encode les nouvelles…', embed: 'Regroupement…', group: 'Classement…', rank: 'L’IA choisit…',
+        choose: 'L’IA choisit les passages, puis relit les cartes…', review: 'Les cartes…'};
+    try {
+        const res = await fetch('/api/news', {method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({profileId: profile.id, news: $('news').value})});
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        for (;;) {
+            const {value, done} = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, {stream: true});
+            let line;
+            while ((line = buffer.indexOf('\n')) >= 0) {
+                const event = JSON.parse(buffer.slice(0, line));
+                buffer = buffer.slice(line + 1);
+                if (event.step === 'error') throw new Error(event.message);
+                render[event.step]?.(event);
+                $('waiting').innerHTML = next[event.step] ? `<span class="spinner"></span>${next[event.step]}` : '';
+            }
+        }
+    } catch (err) {
+        $('waiting').innerHTML = `<span class="error">${esc(err.message)}</span>`;
+    } finally {
+        $('run').disabled = false;
+    }
+};
+</script>
+</body>
+</html>

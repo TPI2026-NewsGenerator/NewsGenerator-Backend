@@ -1,0 +1,50 @@
+
+==== fab
+-- today ×2: 3 interests
+      UEFA : la Ligue des champions, la Ligue Europa, la Ligue Conférence, l'Euro et la Ligue des nations
+      Gouvernance de l'UEFA : les décisions, sanctions et enquêtes de l'UEFA, sa gouvernance et ses élections, le fair-play financier
+      Arbitrage du football : décisions arbitrales et VAR, polémiques, nominations et sanctions des arbitres, changements des règles du jeu
+
+==== lecteur-test
+-- today ×2: 2 interests
+      football français : la Ligue 1, le PSG, l'OM et l'équipe de France, surtout les résultats, les blessures et les transferts
+      gastronomie : les restaurants étoilés, les chefs, le guide Michelin et les nouvelles tables à Paris et Lyon
+
+==== lecteur-difficile
+-- today ×2: 3 interests
+      Tennis : le circuit ATP, les Grands Chelems et les jeunes joueurs suisses
+      Intelligence artificielle : les nouveaux modèles, la recherche et la régulation en Europe
+      Politique suisse : les votations fédérales et les décisions du Conseil fédéral
+
+==== mots-clés
+-- today ×2: 5 interests
+      Formule 1 : F1, Verstappen
+      MotoGP : MotoGP, Ducati
+      Réglementation et technique sport automobile : règlement technique 2027
+      Marché des pilotes : transferts de pilotes
+      Sécurité : sécurité des circuits
+
+==== english
+-- today ×2: 2 interests
+      Climate science and energy policy: new IPCC reports, carbon capture research, EU emissions trading and heat pump subsidies
+      Astronomy: JWST discoveries, exoplanets
+
+==== familier
+-- today ×1: 3 interests
+      cuisine japonaise : la cuisine japonaise, les ramen surtout
+      restaurants à Genève : les nouveaux restos à Genève
+      jeux vidéo : jeux vidéo (Nintendo, les sorties indé)
+-- today ×1: 2 interests
+      cuisine japonaise : la cuisine japonaise, les ramen surtout, et les nouveaux restos à Genève
+      jeux vidéo : jeux vidéo (Nintendo, les sorties indé)
+
+==== secondaire
+-- today ×1: 2 interests
+      Santé du chien : vaccins, alimentation, maladies des bergers allemands, nouvelles lois sur les chiens en Suisse
+      Randonnée : randonnée en Valais et les cabanes du CAS
+-- today ×1: 4 interests
+      Santé du chien : vaccins, alimentation, maladies des bergers allemands
+      Lois sur les chiens en Suisse : nouvelles lois sur les chiens en Suisse
+      Randonnée en Valais : la randonnée en Valais
+      Cabanes du CAS : les cabanes du CAS
+seconds 45

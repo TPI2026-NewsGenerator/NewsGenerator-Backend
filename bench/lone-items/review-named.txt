@@ -1,0 +1,35 @@
+# 1 La Joaqui (es, 16) media -: infobae.com 10, elintransigente.com 1, elonce.com 1, lacapital.com.ar 1
+  I: Q117011461 6 wikis AR Argentine singer
+  T: La madre de El Noba expuso el dolor más grande de La Joaqui: «las mentiras»
+  T: La mamá de El Noba reveló que La Joaqui la llamaba para contarle qué la angustiaba de su relación con Luck Ra: "Las mentiras"
+  T: Luck Ra reveló el sufrimiento por su mamá tras la escandalosa separación con La Joaqui: “Me dolía más por ella”
+
+# 2 De Ketelaere (it, 84) media BE: tuttoatalanta.com 17, lesoir.be 6, news.google.com 6, calciomercato.com 5
+  I: Q139702327 0 wikis - entomologist
+  T: Dove deve giocare De Ketelaere? Sarri lo usa sulla fascia e fin qui è ancora a secco
+  T: Moreira da urlo, De Ketelaere non graffia: le pagelle di Milan-Atalanta
+  T: Milan-Atalanta, le formazioni ufficiali
+
+# 3 Di Battista (it, 26) media IT: ansa.it 7, repubblica.it 6, adnkronos.com 5, ilfattoquotidiano.it 3
+  I: Q721088 9 wikis IT Italian musician
+  T: Di Battista: "Casa mia sembra un mix tra MasterChef e Un medico in famiglia"
+  T: Di Battista: La mia casa è un mix tra MasterChef e Un medico in famiglia
+  T: Di Battista ironizza sul latino e chiarisce: non emulerà Lotito né guiderà la Lazio
+
+# 4 Eduardo Varela (es, 16) media -: dailymail.com 3, as.com 2, infobae.com 2, mundodeportivo.com 2
+  I: Q16238998 0 wikis MX Mexican journalist
+  T: Now even RED CARDS go digital! Referee uses a 'smartphone' to dish out his punishments - but fans are not convinced
+  T: Urugvajci tlakujejo pot elektronskim kartonom
+  T: Uruguay fracasa en su innovación de las tarjetas virtuales
+
+# 5 De Martino (it, 35) media IT: adnkronos.com 8, ansa.it 6, fanpage.it 6, ilgiornale.it 2
+  I: Q33668937 0 wikis - botanist
+  T: La Pennicanza, la bomba di Fiorello: "Chi saranno i super ospiti di Sanremo"
+  T: Fiorello provoca Sanremo: «Brad Pitt con De Martino»
+  T: Sanremo, Fiorello lancia il primo 'spoiler': "Brad Pitt co-conduttore per una serata"
+
+# 6 Van Hecke (nl, 46) media NL: ad.nl 14, football.london 8, foot01.com 4, sports.yahoo.com 3
+  I: Q2486064 9 wikis - Flemish painter (1620-1684)
+  T: Van Hecke, Marmoush And Maddison Get 7.5 | Tottenham Hotspur Players Rated In Impressive Win Vs Coventry City
+  T: LIVE Premier League | Spurs herpakt zich na fout Van Hecke: goal Marmoush telt ondanks elleboog aan Van Ewijk
+  T: Teruggekeerde ster schiet Spurs op voorsprong, Van Hecke voorkomt assist Van Ewijk

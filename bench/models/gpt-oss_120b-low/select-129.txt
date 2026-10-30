@@ -1,0 +1,18 @@
+candidates 50: Football franç 33, Gastronomie 17
+run 0: 15 chosen, Football franç 6, Gastronomie 9, kept 10: Football franç 5, Gastronomie 5  (5145+644 tokens)
+   K Football franç | Torres fires PSG to first win of Ligue 1 season
+   K Football franç | L’OM peut craindre le pire pour Amine Gouiri !
+   K Football franç | Équipe de France : les mots très inquiétants de Maxence Lacroix sur la blessure de Kylian Mbappé
+   K Football franç | Football : les Bleus offrent une première victoire à Zidane
+   K Football franç | Turquie - France : les notes du match
+   K Gastronomie | Les meilleurs boutique-hôtels 4 étoiles de Paris
+   K Gastronomie | Les restaurants gastronomiques et étoilés en terrasse à Paris, nos bonnes adresses
+   K Gastronomie | Les restaurants gastronomiques de Paris, nos bonnes adresses
+   K Gastronomie | 8 new Paris restaurants everyone is talking about this year
+   K Gastronomie | Où manger à Paris en septembre 2026 ? Les nouveaux restaurants aux décors et concepts les plus fous
+     Gastronomie | Dit zijn de 12 goedkoopste Michelinsterrenrestaurants in Parijs
+     Gastronomie | Bordeaux : 14 chefs et sept étoiles Michelin pour un dîner caritatif au profit de la Banque alimenta
+     Football franç | PSG : Paris, Massy, Poissy… Les dates à garder en tête pour le projet de stade
+     Gastronomie | Les nouveaux restaurants de street food à Paris, nos bons plans et bonnes adresses
+     Gastronomie | Les restaurants ouverts le 11 novembre 2025 à Paris, nos bonnes adresses pour ce jour férié
+seconds 5

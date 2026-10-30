@@ -1,0 +1,25 @@
+candidates 50: Football franç 32, Gastronomie 18
+run 0: 12 chosen, Football franç 8, Gastronomie 4, kept 10: Football franç 6, Gastronomie 4  (4656+505 tokens)
+   K Football franç | L’OM peut craindre le pire pour Amine Gouiri !
+   K Football franç | Équipe de France : les mots très inquiétants de Maxence Lacroix sur la blessure de Kylian Mbappé
+   K Football franç | Torres fires PSG to first win of Ligue 1 season
+   K Football franç | Football : les Bleus offrent une première victoire à Zidane
+   K Gastronomie | Bordeaux : 14 chefs et sept étoiles Michelin pour un dîner caritatif au profit de la Banque alimenta
+   K Football franç | INFO : Le Paris FC se renforce au Paris SG et à l’AS Monaco
+   K Football franç | Le PSG place 17 joueurs en équipes de france !
+     Football franç | PSG : Paris, Massy, Poissy… Les dates à garder en tête pour le projet de stade
+     Football franç | Le maire de Marseille annonce une mauvaise nouvelle à l’OM
+   K Gastronomie | Où manger à Paris en septembre 2026 ? Les nouveaux restaurants aux décors et concepts les plus fous
+   K Gastronomie | Les restaurants des cheffes et chefs de Top Chef à Paris, nos bonnes adresses
+   K Gastronomie | Les restaurants gastronomiques de Paris, nos bonnes adresses
+run 1: 10 chosen, Football franç 8, Gastronomie 2, kept 10: Football franç 8, Gastronomie 2  (4656+433 tokens)
+   K Football franç | L’OM peut craindre le pire pour Amine Gouiri !
+   K Football franç | Équipe de France : les mots très inquiétants de Maxence Lacroix sur la blessure de Kylian Mbappé
+   K Football franç | Torres fires PSG to first win of Ligue 1 season
+   K Football franç | Football : les Bleus offrent une première victoire à Zidane
+   K Gastronomie | Bordeaux : 14 chefs et sept étoiles Michelin pour un dîner caritatif au profit de la Banque alimenta
+   K Football franç | INFO : Le Paris FC se renforce au Paris SG et à l’AS Monaco
+   K Football franç | PSG : Paris, Massy, Poissy… Les dates à garder en tête pour le projet de stade
+   K Football franç | Le maire de Marseille annonce une mauvaise nouvelle à l’OM
+   K Gastronomie | Où manger à Paris en septembre 2026 ? Les nouveaux restaurants aux décors et concepts les plus fous
+   K Football franç | Le PSG place 17 joueurs en équipes de france !

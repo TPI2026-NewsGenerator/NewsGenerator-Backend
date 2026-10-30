@@ -1,0 +1,4 @@
+briefing 14: 0 of 9 left out, 1733 ms
+briefing 15: 0 of 8 left out, 2200 ms
+17 cards, tokens {"calls":2,"input":4280,"output":14}
+seconds 4

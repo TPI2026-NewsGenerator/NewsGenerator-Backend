@@ -1,0 +1,182 @@
+[
+ {
+  "name": "Mohammed Ibrahim",
+  "lang": "en",
+  "news": 89,
+  "titles": [
+   "Coutinho leads Santos to victory over Fluminense | YSscores",
+   "Mourinho changes his ideas in search of the best vers… | YSscores",
+   "Cucurella: We must continue on this path, and the RB… | YSscores"
+  ],
+  "found": 9,
+  "mediaCountry": null,
+  "byCountry": {
+   "NG": 1
+  },
+  "links": 89,
+  "languageCountry": null,
+  "humans": [
+   {
+    "qid": "Q115722781",
+    "description": "Kuwaiti association football player",
+    "links": 0,
+    "human": true,
+    "country": "KW"
+   },
+   {
+    "qid": "Q103057830",
+    "description": "Ph.D. Hasselt University 2018",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q6892054",
+    "description": "Lebanese basketball player (born 1983)",
+    "links": 3,
+    "human": true,
+    "country": "LB"
+   },
+   {
+    "qid": "Q130611677",
+    "description": null,
+    "links": 1,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q1374752",
+    "description": "Sudanese-British businessman",
+    "links": 20,
+    "human": true,
+    "country": "GB"
+   },
+   {
+    "qid": "Q88645657",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q82687344",
+    "description": "researcher",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q99351218",
+    "description": "researcher ORCID 0000-0002-4766-0669",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q87763284",
+    "description": "researcher (ORCID 0000-0001-8925-395X)",
+    "links": 0,
+    "human": true,
+    "country": null
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": null,
+   "media10": null,
+   "media0": null,
+   "local10": null,
+   "local0": null
+  }
+ },
+ {
+  "name": "Istvan Kovacs",
+  "lang": "ro",
+  "news": 28,
+  "titles": [
+   "Adrian Porumboiu, fără milă după ce Istvan Kovacs a fost delegat la Real Madrid - Leipzig! + Cel mai bun arbitru român",
+   "Fără milă! Adrian Porumboiu, după ce Istvan Kovacs a fost delegat la Real Madrid - Leipzig: ”Să îi pună 5 camere VAR”",
+   "Istvan Kovacs, trimis pe „Bernabeu” să o arbitreze pe Real Madrid în Liga Campionilor"
+  ],
+  "found": 9,
+  "mediaCountry": "RO",
+  "byCountry": {
+   "RO": 25
+  },
+  "links": 28,
+  "languageCountry": "RO",
+  "humans": [
+   {
+    "qid": "Q12731153",
+    "description": "Romanian association football referee",
+    "links": 31,
+    "human": true,
+    "country": "RO"
+   },
+   {
+    "qid": "Q225271",
+    "description": "boxer",
+    "links": 22,
+    "human": true,
+    "country": "HU"
+   },
+   {
+    "qid": "Q102423349",
+    "description": "Ph.D. University of Szeged 2003",
+    "links": 0,
+    "human": true,
+    "country": null
+   },
+   {
+    "qid": "Q1674905",
+    "description": "Olympic wrestler",
+    "links": 15,
+    "human": true,
+    "country": "HU"
+   },
+   {
+    "qid": "Q1120175",
+    "description": "football player, b. 1992",
+    "links": 10,
+    "human": true,
+    "country": "HU"
+   },
+   {
+    "qid": "Q1120183",
+    "description": "Hungarian politician (1911-2011)",
+    "links": 7,
+    "human": true,
+    "country": "HU"
+   },
+   {
+    "qid": "Q6434867",
+    "description": "Hungarian pornographic film director and producer",
+    "links": 8,
+    "human": true,
+    "country": "HU"
+   },
+   {
+    "qid": "Q104502450",
+    "description": "Romanian politician from Crasna, Sălaj County",
+    "links": 0,
+    "human": true,
+    "country": "RO"
+   },
+   {
+    "qid": "Q12349485",
+    "description": "Romanian-Hungarian archaeologist (1880–1955)",
+    "links": 2,
+    "human": true,
+    "country": "RO"
+   }
+  ],
+  "rules": {
+   "famous": null,
+   "media30": "Q12731153",
+   "media10": "Q12731153",
+   "media0": "Q12731153",
+   "local10": "Q12731153",
+   "local0": "Q12731153"
+  }
+ }
+]

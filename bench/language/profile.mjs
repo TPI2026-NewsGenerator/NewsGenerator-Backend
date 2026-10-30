@@ -1,0 +1,10 @@
+import 'dotenv/config';
+import pg from 'pg';
+const id = Number(process.argv[2]);
+const client = new pg.Client({connectionString: process.env.DATABASE_URL});
+await client.connect();
+const {rows: [p]} = await client.query('SELECT languages, discovery_status, discovery_error FROM user_profiles WHERE id_user = $1', [id]);
+const {rows: interests} = await client.query('SELECT text, weight, keywords, searches, sections, category FROM profile_interests WHERE id_user = $1 ORDER BY position', [id]);
+const {rows: feeds} = await client.query('SELECT site, language, category, left(url, 90) AS url FROM user_feeds WHERE id_user = $1 ORDER BY id', [id]);
+await client.end();
+console.log(JSON.stringify({profile: p, interests, feeds}, null, 1));

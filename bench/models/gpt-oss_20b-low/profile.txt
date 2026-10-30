@@ -1,0 +1,59 @@
+
+==== fab
+-- today ×1: 2 interests
+      la Ligue des champions, la Ligue Europa, la Ligue Conférence, l'Euro et la Ligue des nations, les décisions, sanctions et enquêtes de l'UEFA, sa gouvernance et ses élections, le fair-play financier
+      Je suis aussi l'arbitrage du football : décisions arbitrales et VAR, polémiques, nominations et sanctions des arbitres, changements des règles du jeu
+-- today ×1: 2 interests
+      UEFA : la Ligue des champions, la Ligue Europa, la Ligue Conférence, l'Euro et la Ligue des nations, les décisions, sanctions et enquêtes de l'UEFA, sa gouvernance et ses élections, le fair-play financier
+      arbitrage du football : décisions arbitrales et VAR, polémiques, nominations et sanctions des arbitres, changements des règles du jeu
+
+==== lecteur-test
+-- today ×1: 2 interests
+      football français : la Ligue 1, le PSG, l'OM et l'équipe de France, surtout les résultats, les blessures et les transferts
+      gastronomie : les restaurants étoilés, les chefs, le guide Michelin et les nouvelles tables à Paris et Lyon
+-- today ×1: 2 interests
+      football français : la Ligue 1, le PSG, l'OM et l'équipe de France, surtout les résultats, les blessures et les transferts.
+      gastronomie : les restaurants étoilés, les chefs, le guide Michelin et les nouvelles tables à Paris et Lyon.
+
+==== lecteur-difficile
+-- today ×1: 3 interests
+      le tennis de près : le circuit ATP, les Grands Chelems et les jeunes joueurs suisses
+      actualité de l'intelligence artificielle : les nouveaux modèles, la recherche et la régulation en Europe
+      politique suisse m'intéresse, surtout les votations fédérales et les décisions du Conseil fédéral
+-- today ×1: 3 interests, missing: football
+      Je suis le tennis de près : le circuit ATP, les Grands Chelems et les jeunes joueurs suisses, mais rien sur les paris sportifs, les cotes ou la vie privée des joueurs.
+      Je veux aussi l'actualité de l'intelligence artificielle : les nouveaux modèles, la recherche et la régulation en Europe, mais pas les annonces marketing de produits ni les cryptomonnaies.
+      Enfin, la politique suisse m'intéresse, surtout les votations fédérales et les décisions du Conseil fédéral, mais pas les faits divers ni la politique cantonale.
+
+==== mots-clés
+-- today ×2: 6 interests, missing: sécurité, circuits
+      F1
+      MotoGP
+      Verstappen
+      Ducati
+      règlement technique 2027
+      transferts de pilotes
+
+==== english
+-- today ×1: 6 interests, missing: science, energy, policy, astronomy
+      new IPCC reports
+      carbon capture research
+      EU emissions trading
+      heat pump subsidies
+      JWST discoveries
+      exoplanets
+-- today ×1: 3 interests
+      climate science: new IPCC reports, carbon capture research
+      energy policy: EU emissions trading and heat pump subsidies
+      astronomy: JWST discoveries, exoplanets
+
+==== familier
+-- today ×2: 2 interests
+      cuisine japonaise, les ramen surtout, et les nouveaux restos à Genève
+      jeux vidéo (Nintendo, les sorties indé)
+
+==== secondaire
+-- today ×2: 2 interests
+      Principalement la santé de mon chien : vaccins, alimentation, maladies des bergers allemands, nouvelles lois sur les chiens en Suisse
+      Accessoirement la randonnée en Valais et les cabanes du CAS
+seconds 91

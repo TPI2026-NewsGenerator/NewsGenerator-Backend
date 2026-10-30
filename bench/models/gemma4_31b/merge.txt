@@ -1,0 +1,18 @@
+2 runs: joined to its fact 78% (64/82), joined to another fact 7% (14, 12 of them into a shown card: hidden)
+tokens per call: 1705 read, 1069 written, 14.1 s
+  ×2 joined  affaires: Tottenham 'cheated' by Manchester City as new 115 charges punishment v
+             into Manchetser City Found Guilty Of Premier League Charges, Set To Appeal:
+  ×2 apart   sport: Knieverletzung: Mbappé fehlt Frankreich für drei Spiele
+  ×2 joined  societe: Pédocriminalité dans l’Eglise : Léon XIV encourage les évêques françai
+             into (shown) Visite du pape en France : les images de la messe de Léon XIV à Lourde
+  ×2 joined  societe: Frankreich-Besuch: Papst Leo XIV. trifft sich mit Missbrauchsopfern in
+             into (shown) Visite du pape en France : les images de la messe de Léon XIV à Lourde
+  ×2 joined  monde: Volksabstimmung: Schweizer lehnen Abschottung durch strikte Neutralitä
+             into (shown) Les Suisses appelés à un référendum proposant de durcir leur neutralit
+  ×2 joined  monde: Le peuple suisse rejette l'initiative pour la neutralité par 70,2% des
+             into (shown) Les Suisses appelés à un référendum proposant de durcir leur neutralit
+  ×2 joined  monde: Swiss voters crush neutrality initiative that would have ended sanctio
+             into (shown) Les Suisses appelés à un référendum proposant de durcir leur neutralit
+  ×2 joined  monde: Initiative sur la neutralité: «Les millions de Blocher n’ont pas eu le
+             into (shown) Les Suisses appelés à un référendum proposant de durcir leur neutralit
+seconds 48

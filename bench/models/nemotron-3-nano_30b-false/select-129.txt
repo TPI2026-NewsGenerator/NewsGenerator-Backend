@@ -1,0 +1,13 @@
+candidates 50: Football franç 33, Gastronomie 17
+run 0: 10 chosen, Football franç 6, Gastronomie 4, kept 10: Football franç 6, Gastronomie 4  (5320+374 tokens)
+   K Gastronomie | Les restaurants pas chers et abordables de Paris, nos bonnes adresses
+   K Football franç | Torres fires PSG to first win of Ligue 1 season
+   K Football franç | Ligue des Nations Classement : Football Scores, Résultats & Calendrier
+   K Football franç | Ligue omanie Classement : Football Scores, Résultats & Calendrier
+   K Gastronomie | Où manger avant ou après une séance de film ? Les restaurants autour des salles de cinéma à Paris
+   K Gastronomie | Les nouveaux restaurants de street food à Paris, nos bons plans et bonnes adresses
+   K Gastronomie | Les restaurants où manger autour des salles de spectacles, de concerts et des théâtres à Paris
+   K Football franç | How to get Lorient vs Paris FC tickets: Ligue 1 prices, fixture information, last-minute sales & mor
+   K Football franç | Belgique - France : suivez les pronostics, meilleurs paris et cotes
+   K Football franç | Football : les Bleus offrent une première victoire à Zidane
+seconds 4

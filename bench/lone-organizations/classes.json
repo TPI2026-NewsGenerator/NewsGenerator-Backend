@@ -1,0 +1,10606 @@
+{
+ "Q4830453": {
+  "label": "business",
+  "items": 1049
+ },
+ "Q476028": {
+  "label": "association football club",
+  "items": 875
+ },
+ "Q891723": {
+  "label": "public company",
+  "items": 629
+ },
+ "Q6881511": {
+  "label": "enterprise",
+  "items": 516
+ },
+ "Q43229": {
+  "label": "organization",
+  "items": 354
+ },
+ "Q7278": {
+  "label": "political party",
+  "items": 227
+ },
+ "Q35127": {
+  "label": "website",
+  "items": 179
+ },
+ "Q163740": {
+  "label": "nonprofit organization",
+  "items": 144
+ },
+ "Q6256": {
+  "label": "country",
+  "items": 135
+ },
+ "Q327333": {
+  "label": "government agency",
+  "items": 132
+ },
+ "Q3624078": {
+  "label": "sovereign state",
+  "items": 130
+ },
+ "Q1616075": {
+  "label": "television station",
+  "items": 128
+ },
+ "Q13393265": {
+  "label": "basketball team",
+  "items": 109
+ },
+ "Q783794": {
+  "label": "company",
+  "items": 105
+ },
+ "Q23002039": {
+  "label": "public educational institution of the United States",
+  "items": 99
+ },
+ "Q22687": {
+  "label": "bank",
+  "items": 91
+ },
+ "Q1110794": {
+  "label": "daily newspaper",
+  "items": 88
+ },
+ "Q847017": {
+  "label": "sports club",
+  "items": 86
+ },
+ "Q11032": {
+  "label": "newspaper",
+  "items": 82
+ },
+ "Q4498974": {
+  "label": "ice hockey team",
+  "items": 78
+ },
+ "Q15991303": {
+  "label": "association football league",
+  "items": 77
+ },
+ "Q3918": {
+  "label": "university",
+  "items": 76
+ },
+ "Q5398426": {
+  "label": "television series",
+  "items": 74
+ },
+ "Q5": {
+  "label": "human",
+  "items": 71
+ },
+ "Q45400320": {
+  "label": "open-access publisher",
+  "items": 68
+ },
+ "Q2367225": {
+  "label": "university and college sports club",
+  "items": 66
+ },
+ "Q431289": {
+  "label": "brand",
+  "items": 65
+ },
+ "Q875538": {
+  "label": "public university",
+  "items": 64
+ },
+ "Q46970": {
+  "label": "airline",
+  "items": 64
+ },
+ "Q41298": {
+  "label": "magazine",
+  "items": 57
+ },
+ "Q1478443": {
+  "label": "association football federation",
+  "items": 57
+ },
+ "Q18608583": {
+  "label": "recurring sporting event",
+  "items": 56
+ },
+ "Q786820": {
+  "label": "automobile manufacturer",
+  "items": 56
+ },
+ "Q561068": {
+  "label": "specialty channel",
+  "items": 56
+ },
+ "Q623109": {
+  "label": "sports league",
+  "items": 54
+ },
+ "Q1153191": {
+  "label": "online newspaper",
+  "items": 54
+ },
+ "Q23002054": {
+  "label": "private not-for-profit educational institution",
+  "items": 50
+ },
+ "Q215380": {
+  "label": "musical group",
+  "items": 50
+ },
+ "Q210167": {
+  "label": "video game developer",
+  "items": 50
+ },
+ "Q7889": {
+  "label": "video game",
+  "items": 48
+ },
+ "Q103229495": {
+  "label": "men's association football team",
+  "items": 47
+ },
+ "Q17232649": {
+  "label": "news website",
+  "items": 47
+ },
+ "Q62078547": {
+  "label": "public research university",
+  "items": 46
+ },
+ "Q192283": {
+  "label": "news agency",
+  "items": 46
+ },
+ "Q15944511": {
+  "label": "association football team",
+  "items": 43
+ },
+ "Q135408445": {
+  "label": "men's national association football team",
+  "items": 43
+ },
+ "Q1549591": {
+  "label": "big city",
+  "items": 41
+ },
+ "Q15416": {
+  "label": "television program",
+  "items": 41
+ },
+ "Q17156793": {
+  "label": "American football team",
+  "items": 40
+ },
+ "Q13027888": {
+  "label": "baseball team",
+  "items": 39
+ },
+ "Q615150": {
+  "label": "land-grant university",
+  "items": 39
+ },
+ "Q650241": {
+  "label": "financial institution",
+  "items": 39
+ },
+ "Q2085381": {
+  "label": "publishing house",
+  "items": 38
+ },
+ "Q15936437": {
+  "label": "research university",
+  "items": 38
+ },
+ "Q14350": {
+  "label": "radio station",
+  "items": 37
+ },
+ "Q11422536": {
+  "label": "international sport governing body",
+  "items": 35
+ },
+ "Q902104": {
+  "label": "private university",
+  "items": 34
+ },
+ "Q658255": {
+  "label": "subsidiary company",
+  "items": 33
+ },
+ "Q28640": {
+  "label": "profession",
+  "items": 32
+ },
+ "Q161726": {
+  "label": "multinational corporation",
+  "items": 32
+ },
+ "Q484652": {
+  "label": "international organization",
+  "items": 32
+ },
+ "Q11424": {
+  "label": "film",
+  "items": 32
+ },
+ "Q59152282": {
+  "label": "video streaming service",
+  "items": 32
+ },
+ "Q33829": {
+  "label": "human population",
+  "items": 31
+ },
+ "Q18043413": {
+  "label": "supermarket chain",
+  "items": 31
+ },
+ "Q730038": {
+  "label": "credit institution",
+  "items": 31
+ },
+ "Q1002697": {
+  "label": "periodical",
+  "items": 31
+ },
+ "Q12737077": {
+  "label": "occupation",
+  "items": 31
+ },
+ "Q270791": {
+  "label": "state-owned enterprise",
+  "items": 31
+ },
+ "Q245065": {
+  "label": "intergovernmental organization",
+  "items": 31
+ },
+ "Q219577": {
+  "label": "holding company",
+  "items": 31
+ },
+ "Q515": {
+  "label": "city",
+  "items": 30
+ },
+ "Q43009164": {
+  "label": "rugby union club",
+  "items": 30
+ },
+ "Q15991290": {
+  "label": "professional sports league",
+  "items": 30
+ },
+ "Q11691": {
+  "label": "stock exchange",
+  "items": 29
+ },
+ "Q123480": {
+  "label": "landlocked country",
+  "items": 29
+ },
+ "Q732717": {
+  "label": "law enforcement agency",
+  "items": 29
+ },
+ "Q10429667": {
+  "label": "car brand",
+  "items": 29
+ },
+ "Q18388277": {
+  "label": "technology company",
+  "items": 29
+ },
+ "Q167270": {
+  "label": "trademark",
+  "items": 28
+ },
+ "Q1137109": {
+  "label": "video game publisher",
+  "items": 28
+ },
+ "Q20857065": {
+  "label": "United States federal agency",
+  "items": 28
+ },
+ "Q66344": {
+  "label": "central bank",
+  "items": 28
+ },
+ "Q64027599": {
+  "label": "gas station chain",
+  "items": 27
+ },
+ "Q2001305": {
+  "label": "television channel",
+  "items": 27
+ },
+ "Q11396960": {
+  "label": "production company",
+  "items": 27
+ },
+ "Q1058914": {
+  "label": "software company",
+  "items": 26
+ },
+ "Q778575": {
+  "label": "conglomerate",
+  "items": 26
+ },
+ "Q4438121": {
+  "label": "sports organization",
+  "items": 26
+ },
+ "Q41710": {
+  "label": "ethnic group",
+  "items": 26
+ },
+ "Q96888669": {
+  "label": "academic publisher",
+  "items": 26
+ },
+ "Q620615": {
+  "label": "mobile app",
+  "items": 25
+ },
+ "Q484170": {
+  "label": "commune of France",
+  "items": 24
+ },
+ "Q7270": {
+  "label": "republic",
+  "items": 24
+ },
+ "Q1589009": {
+  "label": "privately held company",
+  "items": 23
+ },
+ "Q13580678": {
+  "label": "multisports club",
+  "items": 23
+ },
+ "Q223371": {
+  "label": "stock market index",
+  "items": 23
+ },
+ "Q13406554": {
+  "label": "sports competition",
+  "items": 23
+ },
+ "Q507619": {
+  "label": "retail chain",
+  "items": 22
+ },
+ "Q82794": {
+  "label": "region",
+  "items": 22
+ },
+ "Q268592": {
+  "label": "industry",
+  "items": 22
+ },
+ "Q35798": {
+  "label": "executive branch",
+  "items": 22
+ },
+ "Q1126006": {
+  "label": "public broadcaster",
+  "items": 22
+ },
+ "Q179164": {
+  "label": "unitary state",
+  "items": 22
+ },
+ "Q1254874": {
+  "label": "television network",
+  "items": 22
+ },
+ "Q141145821": {
+  "label": "global systemically important bank",
+  "items": 21
+ },
+ "Q176799": {
+  "label": "military unit",
+  "items": 21
+ },
+ "Q11862829": {
+  "label": "academic discipline",
+  "items": 21
+ },
+ "Q31855": {
+  "label": "research institute",
+  "items": 21
+ },
+ "Q37002670": {
+  "label": "unicameral legislature",
+  "items": 20
+ },
+ "Q726870": {
+  "label": "brick and mortar",
+  "items": 20
+ },
+ "Q708676": {
+  "label": "charitable organization",
+  "items": 20
+ },
+ "Q2401749": {
+  "label": "telecommunications company",
+  "items": 20
+ },
+ "Q20639856": {
+  "label": "professional sports team",
+  "items": 20
+ },
+ "Q51576574": {
+  "label": "Mediterranean country",
+  "items": 20
+ },
+ "Q486972": {
+  "label": "human settlement",
+  "items": 19
+ },
+ "Q5633421": {
+  "label": "scientific journal",
+  "items": 19
+ },
+ "Q4164871": {
+  "label": "position",
+  "items": 19
+ },
+ "Q2485448": {
+  "label": "sports governing body",
+  "items": 18
+ },
+ "Q480242": {
+  "label": "statistical service",
+  "items": 18
+ },
+ "Q1762059": {
+  "label": "film production company",
+  "items": 18
+ },
+ "Q1047113": {
+  "label": "field of study",
+  "items": 18
+ },
+ "Q6266": {
+  "label": "nation",
+  "items": 18
+ },
+ "Q1752939": {
+  "label": "independent agency of the United States government",
+  "items": 18
+ },
+ "Q341": {
+  "label": "free software",
+  "items": 18
+ },
+ "Q6576792": {
+  "label": "online community",
+  "items": 18
+ },
+ "Q47443726": {
+  "label": "recurring tennis tournament",
+  "items": 17
+ },
+ "Q112099": {
+  "label": "island country",
+  "items": 17
+ },
+ "Q178790": {
+  "label": "labor union",
+  "items": 17
+ },
+ "Q3220391": {
+  "label": "social networking service",
+  "items": 17
+ },
+ "Q10541491": {
+  "label": "legal form",
+  "items": 17
+ },
+ "Q17197366": {
+  "label": "type of organization",
+  "items": 16
+ },
+ "Q772547": {
+  "label": "armed forces",
+  "items": 16
+ },
+ "Q6138528": {
+  "label": "political coalition",
+  "items": 16
+ },
+ "Q3305213": {
+  "label": "painting",
+  "items": 16
+ },
+ "Q1320047": {
+  "label": "book publisher",
+  "items": 15
+ },
+ "Q190752": {
+  "label": "supreme court",
+  "items": 15
+ },
+ "Q17127659": {
+  "label": "terrorist organization",
+  "items": 15
+ },
+ "Q10517054": {
+  "label": "handball team",
+  "items": 15
+ },
+ "Q35535": {
+  "label": "police",
+  "items": 15
+ },
+ "Q18558301": {
+  "label": "college sports team",
+  "items": 15
+ },
+ "Q6154783": {
+  "label": "UCI WorldTeam",
+  "items": 15
+ },
+ "Q28140340": {
+  "label": "women's association football team",
+  "items": 15
+ },
+ "Q7397": {
+  "label": "software",
+  "items": 14
+ },
+ "Q1266087": {
+  "label": "meteorological service organization",
+  "items": 14
+ },
+ "Q482994": {
+  "label": "album",
+  "items": 14
+ },
+ "Q15265344": {
+  "label": "broadcaster",
+  "items": 14
+ },
+ "Q2178147": {
+  "label": "trade association",
+  "items": 14
+ },
+ "Q8187769": {
+  "label": "economic activity",
+  "items": 14
+ },
+ "Q17376093": {
+  "label": "cricket team",
+  "items": 14
+ },
+ "Q51481377": {
+  "label": "women's association football club",
+  "items": 14
+ },
+ "Q7188": {
+  "label": "government",
+  "items": 14
+ },
+ "Q13479982": {
+  "label": "cryptocurrency",
+  "items": 14
+ },
+ "Q21980538": {
+  "label": "commercial organization",
+  "items": 13
+ },
+ "Q118140435": {
+  "label": "very large online platform",
+  "items": 13
+ },
+ "Q249556": {
+  "label": "railway company",
+  "items": 13
+ },
+ "Q16521": {
+  "label": "taxon",
+  "items": 13
+ },
+ "Q1478437": {
+  "label": "association football competition",
+  "items": 13
+ },
+ "Q1639780": {
+  "label": "regulatory agency",
+  "items": 13
+ },
+ "Q23905105": {
+  "label": "women's national association football team",
+  "items": 13
+ },
+ "Q167037": {
+  "label": "corporation",
+  "items": 13
+ },
+ "Q5741069": {
+  "label": "rock band",
+  "items": 13
+ },
+ "Q19967801": {
+  "label": "online service",
+  "items": 13
+ },
+ "Q2385804": {
+  "label": "educational institution",
+  "items": 13
+ },
+ "Q101352": {
+  "label": "family name",
+  "items": 12
+ },
+ "Q2738074": {
+  "label": "political movement",
+  "items": 12
+ },
+ "Q3331189": {
+  "label": "version, edition or translation",
+  "items": 12
+ },
+ "Q196600": {
+  "label": "media franchise",
+  "items": 12
+ },
+ "Q7210356": {
+  "label": "political organization",
+  "items": 12
+ },
+ "Q16334295": {
+  "label": "group of humans",
+  "items": 12
+ },
+ "Q20858006": {
+  "label": "federal law enforcement agency of the United States",
+  "items": 12
+ },
+ "Q334453": {
+  "label": "division",
+  "items": 12
+ },
+ "Q747074": {
+  "label": "comune of Italy",
+  "items": 12
+ },
+ "Q127693126": {
+  "label": "successor state",
+  "items": 12
+ },
+ "Q108300140": {
+  "label": "occupation group according to ISCO-08",
+  "items": 12
+ },
+ "Q3907564": {
+  "label": "territorial police force",
+  "items": 11
+ },
+ "Q29791211": {
+  "label": "sport in a geographic region",
+  "items": 11
+ },
+ "Q60147807": {
+  "label": "automobile racing series",
+  "items": 11
+ },
+ "Q3390477": {
+  "label": "online marketplace",
+  "items": 11
+ },
+ "Q18536323": {
+  "label": "basketball league",
+  "items": 11
+ },
+ "Q7725634": {
+  "label": "literary work",
+  "items": 11
+ },
+ "Q1668024": {
+  "label": "service on Internet",
+  "items": 11
+ },
+ "Q67476316": {
+  "label": "college athletic conference",
+  "items": 11
+ },
+ "Q12909644": {
+  "label": "political ideology",
+  "items": 11
+ },
+ "Q20638319": {
+  "label": "UCI ProTeam",
+  "items": 11
+ },
+ "Q2493450": {
+  "label": "juvenile political organization",
+  "items": 11
+ },
+ "Q935741": {
+  "label": "election commission",
+  "items": 11
+ },
+ "Q25401607": {
+  "label": "cryptocurrency exchange",
+  "items": 11
+ },
+ "Q112144412": {
+  "label": "esports discipline",
+  "items": 10
+ },
+ "Q105062392": {
+  "label": "financial regulatory agency",
+  "items": 10
+ },
+ "Q35657": {
+  "label": "U.S. state",
+  "items": 10
+ },
+ "Q6589202": {
+  "label": "interior ministry",
+  "items": 10
+ },
+ "Q79913": {
+  "label": "non-governmental organization",
+  "items": 10
+ },
+ "Q2659904": {
+  "label": "government organization",
+  "items": 10
+ },
+ "Q241317": {
+  "label": "computing platform",
+  "items": 10
+ },
+ "Q3044788": {
+  "label": "non-ministerial government department",
+  "items": 10
+ },
+ "Q2992826": {
+  "label": "athletic conference",
+  "items": 10
+ },
+ "Q3914": {
+  "label": "school",
+  "items": 10
+ },
+ "Q936518": {
+  "label": "aerospace manufacturer",
+  "items": 10
+ },
+ "Q7410456": {
+  "label": "national police",
+  "items": 10
+ },
+ "Q31629": {
+  "label": "type of sport",
+  "items": 10
+ },
+ "Q95155801": {
+  "label": "fact-checking organisation",
+  "items": 10
+ },
+ "Q37726": {
+  "label": "army",
+  "items": 10
+ },
+ "Q18509232": {
+  "label": "fast food restaurant chain",
+  "items": 10
+ },
+ "Q1194093": {
+  "label": "international non-governmental organization",
+  "items": 9
+ },
+ "Q155271": {
+  "label": "think tank",
+  "items": 9
+ },
+ "Q48204": {
+  "label": "voluntary association",
+  "items": 9
+ },
+ "Q112872396": {
+  "label": "type of educational institution",
+  "items": 9
+ },
+ "Q15221215": {
+  "label": "rugby league team",
+  "items": 9
+ },
+ "Q2472587": {
+  "label": "people",
+  "items": 9
+ },
+ "Q15081030": {
+  "label": "motorcycle manufacturer",
+  "items": 9
+ },
+ "Q231002": {
+  "label": "nationality",
+  "items": 9
+ },
+ "Q6065085": {
+  "label": "political party in Spain",
+  "items": 9
+ },
+ "Q17149090": {
+  "label": "armed organization",
+  "items": 9
+ },
+ "Q41487": {
+  "label": "court",
+  "items": 9
+ },
+ "Q1941779": {
+  "label": "fashion house",
+  "items": 9
+ },
+ "Q136653105": {
+  "label": "type of industry",
+  "items": 9
+ },
+ "Q47913": {
+  "label": "intelligence agency",
+  "items": 9
+ },
+ "Q14941854": {
+  "label": "oil company",
+  "items": 9
+ },
+ "Q19644607": {
+  "label": "pharmaceutical company",
+  "items": 9
+ },
+ "Q17271186": {
+  "label": "Canadian football team",
+  "items": 9
+ },
+ "Q76213285": {
+  "label": "clothing store chain",
+  "items": 9
+ },
+ "Q5009242": {
+  "label": "cable channel",
+  "items": 9
+ },
+ "Q2312410": {
+  "label": "sports discipline",
+  "items": 9
+ },
+ "Q112193867": {
+  "label": "type of disease",
+  "items": 9
+ },
+ "Q1371037": {
+  "label": "university of technology",
+  "items": 9
+ },
+ "Q20514253": {
+  "label": "blockchain",
+  "items": 9
+ },
+ "Q848197": {
+  "label": "parliamentary group",
+  "items": 9
+ },
+ "Q910252": {
+  "label": "United States federal executive department",
+  "items": 9
+ },
+ "Q1331793": {
+  "label": "media company",
+  "items": 9
+ },
+ "Q10689397": {
+  "label": "television production company",
+  "items": 9
+ },
+ "Q200250": {
+  "label": "metropolis",
+  "items": 8
+ },
+ "Q130405942": {
+  "label": "national sports governing body",
+  "items": 8
+ },
+ "Q2412834": {
+  "label": "reserve team",
+  "items": 8
+ },
+ "Q1112537": {
+  "label": "ministry of Italy",
+  "items": 8
+ },
+ "Q847906": {
+  "label": "online magazine",
+  "items": 8
+ },
+ "Q4897819": {
+  "label": "role",
+  "items": 8
+ },
+ "Q20074337": {
+  "label": "auto racing team",
+  "items": 8
+ },
+ "Q63791824": {
+  "label": "country bordering the Baltic Sea",
+  "items": 8
+ },
+ "Q1252971": {
+  "label": "food manufacturer",
+  "items": 8
+ },
+ "Q50301185": {
+  "label": "tennis tour with multiple editions",
+  "items": 8
+ },
+ "Q10497835": {
+  "label": "Formula One team",
+  "items": 8
+ },
+ "Q1194970": {
+  "label": "dot-com company",
+  "items": 8
+ },
+ "Q13433827": {
+  "label": "encyclopedia article",
+  "items": 8
+ },
+ "Q1802419": {
+  "label": "state government",
+  "items": 8
+ },
+ "Q532": {
+  "label": "village",
+  "items": 8
+ },
+ "Q42744322": {
+  "label": "urban municipality in Germany",
+  "items": 8
+ },
+ "Q20653563": {
+  "label": "UCI Trade Team I",
+  "items": 8
+ },
+ "Q233591": {
+  "label": "communist party",
+  "items": 8
+ },
+ "Q220505": {
+  "label": "film festival",
+  "items": 8
+ },
+ "Q3032333": {
+  "label": "sports division",
+  "items": 8
+ },
+ "Q2267705": {
+  "label": "field of study",
+  "items": 8
+ },
+ "Q737498": {
+  "label": "academic journal",
+  "items": 8
+ },
+ "Q131784011": {
+  "label": "biopharmaceutical company",
+  "items": 8
+ },
+ "Q1344963": {
+  "label": "world championship",
+  "items": 8
+ },
+ "Q189409": {
+  "label": "lottery",
+  "items": 8
+ },
+ "Q2570643": {
+  "label": "senate",
+  "items": 8
+ },
+ "Q11313190": {
+  "label": "sports newspaper",
+  "items": 8
+ },
+ "Q1618899": {
+  "label": "fashion label",
+  "items": 8
+ },
+ "Q375928": {
+  "label": "lower house",
+  "items": 8
+ },
+ "Q122759350": {
+  "label": "user-generated content platform",
+  "items": 8
+ },
+ "Q140892892": {
+  "label": "country sometimes considered transcontinental",
+  "items": 8
+ },
+ "Q8463186": {
+  "label": "national association football cup",
+  "items": 8
+ },
+ "Q61883": {
+  "label": "air force",
+  "items": 8
+ },
+ "Q294414": {
+  "label": "public office",
+  "items": 8
+ },
+ "Q60170135": {
+  "label": "political alliance",
+  "items": 7
+ },
+ "Q1188663": {
+  "label": "colonial colleges",
+  "items": 7
+ },
+ "Q22222786": {
+  "label": "government program",
+  "items": 7
+ },
+ "Q1193236": {
+  "label": "news media",
+  "items": 7
+ },
+ "Q4959031": {
+  "label": "appellate court",
+  "items": 7
+ },
+ "Q748720": {
+  "label": "institutions of the European Union",
+  "items": 7
+ },
+ "Q186165": {
+  "label": "web portal",
+  "items": 7
+ },
+ "Q207320": {
+  "label": "paramilitary organization",
+  "items": 7
+ },
+ "Q21191270": {
+  "label": "television series episode",
+  "items": 7
+ },
+ "Q72398691": {
+  "label": "video game news website",
+  "items": 7
+ },
+ "Q1093829": {
+  "label": "city in the United States",
+  "items": 7
+ },
+ "Q16024164": {
+  "label": "medical journal",
+  "items": 7
+ },
+ "Q28106049": {
+  "label": "autonomous government",
+  "items": 7
+ },
+ "Q11483816": {
+  "label": "annual event",
+  "items": 7
+ },
+ "Q781132": {
+  "label": "military branch",
+  "items": 7
+ },
+ "Q732876": {
+  "label": "professional golf tour",
+  "items": 7
+ },
+ "Q206361": {
+  "label": "concern",
+  "items": 7
+ },
+ "Q14645593": {
+  "label": "rugby union team",
+  "items": 7
+ },
+ "Q2462003": {
+  "label": "instant messaging client",
+  "items": 7
+ },
+ "Q130303173": {
+  "label": "service type",
+  "items": 7
+ },
+ "Q16917": {
+  "label": "hospital",
+  "items": 7
+ },
+ "Q151885": {
+  "label": "concept",
+  "items": 7
+ },
+ "Q2264924": {
+  "label": "port city",
+  "items": 7
+ },
+ "Q33506": {
+  "label": "museum",
+  "items": 7
+ },
+ "Q5341295": {
+  "label": "educational organization",
+  "items": 7
+ },
+ "Q3487908": {
+  "label": "venture capital firm",
+  "items": 7
+ },
+ "Q15925165": {
+  "label": "specialized agency of the United Nations",
+  "items": 7
+ },
+ "Q2135465": {
+  "label": "legal term or legal concept",
+  "items": 7
+ },
+ "Q39835986": {
+  "label": "sports website",
+  "items": 7
+ },
+ "Q157031": {
+  "label": "foundation",
+  "items": 7
+ },
+ "Q16110": {
+  "label": "region of Italy",
+  "items": 7
+ },
+ "Q20901295": {
+  "label": "foreign affairs ministry",
+  "items": 7
+ },
+ "Q18534542": {
+  "label": "restaurant chain",
+  "items": 7
+ },
+ "Q137183855": {
+  "label": "perfume brand",
+  "items": 7
+ },
+ "Q11815167": {
+  "label": "archipelagic state",
+  "items": 7
+ },
+ "Q123705": {
+  "label": "neighborhood",
+  "items": 7
+ },
+ "Q902814": {
+  "label": "border city",
+  "items": 7
+ },
+ "Q6979593": {
+  "label": "national association football team",
+  "items": 7
+ },
+ "Q204310": {
+  "label": "gendarmerie",
+  "items": 7
+ },
+ "Q721067": {
+  "label": "professional wrestling promotion",
+  "items": 7
+ },
+ "Q59134440": {
+  "label": "rugby union competition",
+  "items": 7
+ },
+ "Q56061": {
+  "label": "administrative territorial entity",
+  "items": 6
+ },
+ "Q51929311": {
+  "label": "largest city",
+  "items": 6
+ },
+ "Q1934969": {
+  "label": "defense contractor",
+  "items": 6
+ },
+ "Q500834": {
+  "label": "tournament",
+  "items": 6
+ },
+ "Q11060274": {
+  "label": "print",
+  "items": 6
+ },
+ "Q773668": {
+  "label": "open-access journal",
+  "items": 6
+ },
+ "Q18536800": {
+  "label": "mixed martial arts event",
+  "items": 6
+ },
+ "Q7275": {
+  "label": "state",
+  "items": 6
+ },
+ "Q189445": {
+  "label": "bicameral legislature",
+  "items": 6
+ },
+ "Q388602": {
+  "label": "electoral alliance",
+  "items": 6
+ },
+ "Q112827555": {
+  "label": "decentralised agency of the European Union",
+  "items": 6
+ },
+ "Q7094076": {
+  "label": "online database",
+  "items": 6
+ },
+ "Q1262438": {
+  "label": "international court",
+  "items": 6
+ },
+ "Q1248784": {
+  "label": "airport",
+  "items": 6
+ },
+ "Q18127": {
+  "label": "record label",
+  "items": 6
+ },
+ "Q619610": {
+  "label": "social state",
+  "items": 6
+ },
+ "Q189210": {
+  "label": "web application",
+  "items": 6
+ },
+ "Q134556": {
+  "label": "single",
+  "items": 6
+ },
+ "Q20639847": {
+  "label": "professional cycling team",
+  "items": 6
+ },
+ "Q34542757": {
+  "label": "international association football clubs cup",
+  "items": 6
+ },
+ "Q15986354": {
+  "label": "basketball association",
+  "items": 6
+ },
+ "Q15285626": {
+  "label": "organization established by the United Nations",
+  "items": 6
+ },
+ "Q105543609": {
+  "label": "musical work/composition",
+  "items": 6
+ },
+ "Q848507": {
+  "label": "commercial bank",
+  "items": 6
+ },
+ "Q15617994": {
+  "label": "administrative territorial entity type",
+  "items": 6
+ },
+ "Q17505024": {
+  "label": "space agency",
+  "items": 6
+ },
+ "Q99934885": {
+  "label": "higher federal authority",
+  "items": 6
+ },
+ "Q5503": {
+  "label": "rapid transit",
+  "items": 6
+ },
+ "Q4120211": {
+  "label": "regional organization",
+  "items": 6
+ },
+ "Q521458": {
+  "label": "railway infrastructure manager",
+  "items": 6
+ },
+ "Q7187": {
+  "label": "gene",
+  "items": 6
+ },
+ "Q4508": {
+  "label": "navy",
+  "items": 6
+ },
+ "Q3270632": {
+  "label": "national championship",
+  "items": 6
+ },
+ "Q382927": {
+  "label": "UCI Professional Continental Team",
+  "items": 6
+ },
+ "Q627436": {
+  "label": "field of work",
+  "items": 6
+ },
+ "Q2300373": {
+  "label": "national trade union center",
+  "items": 6
+ },
+ "Q1006644": {
+  "label": "federal government",
+  "items": 6
+ },
+ "Q1914636": {
+  "label": "activity",
+  "items": 6
+ },
+ "Q2023214": {
+  "label": "political party in Germany",
+  "items": 6
+ },
+ "Q1288568": {
+  "label": "modern language",
+  "items": 6
+ },
+ "Q47461344": {
+  "label": "written work",
+  "items": 6
+ },
+ "Q17633526": {
+  "label": "Wikinews article",
+  "items": 6
+ },
+ "Q11033": {
+  "label": "mass media",
+  "items": 6
+ },
+ "Q3238445": {
+  "label": "security agency",
+  "items": 6
+ },
+ "Q11371": {
+  "label": "internet service provider",
+  "items": 6
+ },
+ "Q870780": {
+  "label": "chatbot",
+  "items": 6
+ },
+ "Q4287745": {
+  "label": "medical organization",
+  "items": 6
+ },
+ "Q2143354": {
+  "label": "insurance company",
+  "items": 6
+ },
+ "Q3778417": {
+  "label": "green party",
+  "items": 6
+ },
+ "Q1345691": {
+  "label": "international financial institution",
+  "items": 6
+ },
+ "Q7406919": {
+  "label": "service",
+  "items": 6
+ },
+ "Q27970162": {
+  "label": "hardware store chain",
+  "items": 5
+ },
+ "Q1055701": {
+  "label": "computer manufacturer",
+  "items": 5
+ },
+ "Q113025511": {
+  "label": "government agency of Switzerland",
+  "items": 5
+ },
+ "Q166140": {
+  "label": "registration authority",
+  "items": 5
+ },
+ "Q115839789": {
+  "label": "basketball club",
+  "items": 5
+ },
+ "Q3579158": {
+  "label": "board game publishing company",
+  "items": 5
+ },
+ "Q2305295": {
+  "label": "weekly newspaper",
+  "items": 5
+ },
+ "Q1269299": {
+  "label": "type of business entity",
+  "items": 5
+ },
+ "Q4382945": {
+  "label": "online shop",
+  "items": 5
+ },
+ "Q20181813": {
+  "label": "colonial power",
+  "items": 5
+ },
+ "Q557206": {
+  "label": "Catholic university",
+  "items": 5
+ },
+ "Q986008": {
+  "label": "payment system",
+  "items": 5
+ },
+ "Q5189488": {
+  "label": "Crown corporation",
+  "items": 5
+ },
+ "Q4209223": {
+  "label": "Rechtsstaat",
+  "items": 5
+ },
+ "Q1620945": {
+  "label": "historically black college or university",
+  "items": 5
+ },
+ "Q618779": {
+  "label": "award",
+  "items": 5
+ },
+ "Q2990262": {
+  "label": "national oil company",
+  "items": 5
+ },
+ "Q498162": {
+  "label": "census-designated place in the United States",
+  "items": 5
+ },
+ "Q3024240": {
+  "label": "historical country",
+  "items": 5
+ },
+ "Q1323642": {
+  "label": "transcontinental country",
+  "items": 5
+ },
+ "Q2961812": {
+  "label": "generalist television channel",
+  "items": 5
+ },
+ "Q3957": {
+  "label": "town",
+  "items": 5
+ },
+ "Q726": {
+  "label": "horse",
+  "items": 5
+ },
+ "Q113145171": {
+  "label": "type of chemical entity",
+  "items": 5
+ },
+ "Q1358344": {
+  "label": "news program",
+  "items": 5
+ },
+ "Q568765": {
+  "label": "sports magazine",
+  "items": 5
+ },
+ "Q955824": {
+  "label": "learned society",
+  "items": 5
+ },
+ "Q378427": {
+  "label": "literary award",
+  "items": 5
+ },
+ "Q96080490": {
+  "label": "sheriff's office",
+  "items": 5
+ },
+ "Q1802587": {
+  "label": "German public state broadcaster",
+  "items": 5
+ },
+ "Q253030": {
+  "label": "major regional center",
+  "items": 5
+ },
+ "Q15590336": {
+  "label": "music streaming service",
+  "items": 5
+ },
+ "Q130735522": {
+  "label": "online film database",
+  "items": 5
+ },
+ "Q141683": {
+  "label": "broadcast network",
+  "items": 5
+ },
+ "Q10932402": {
+  "label": "food delivery",
+  "items": 5
+ },
+ "Q207694": {
+  "label": "art museum",
+  "items": 5
+ },
+ "Q28060193": {
+  "label": "governmental meteorological service",
+  "items": 5
+ },
+ "Q2073644": {
+  "label": "brokerage firm",
+  "items": 5
+ },
+ "Q81989119": {
+  "label": "video game distribution platform",
+  "items": 5
+ },
+ "Q2175765": {
+  "label": "tram stop",
+  "items": 5
+ },
+ "Q63171169": {
+  "label": "rugby union franchise",
+  "items": 5
+ },
+ "Q21032622": {
+  "label": "space grant institution",
+  "items": 5
+ },
+ "Q38723": {
+  "label": "higher education institution",
+  "items": 5
+ },
+ "Q63981612": {
+  "label": "product category",
+  "items": 5
+ },
+ "Q13442814": {
+  "label": "scholarly article",
+  "items": 5
+ },
+ "Q1756006": {
+  "label": "UCI Continental Team",
+  "items": 5
+ },
+ "Q837171": {
+  "label": "financial services",
+  "items": 5
+ },
+ "Q4358176": {
+  "label": "council",
+  "items": 5
+ },
+ "Q17024704": {
+  "label": "motorcycle racing series",
+  "items": 5
+ },
+ "Q2269756": {
+  "label": "ministry of education",
+  "items": 5
+ },
+ "Q17374546": {
+  "label": "Australian rules football club",
+  "items": 5
+ },
+ "Q41614": {
+  "label": "constitutional monarchy",
+  "items": 5
+ },
+ "Q100707163": {
+  "label": "television franchise",
+  "items": 5
+ },
+ "Q112965645": {
+  "label": "symptom or sign",
+  "items": 5
+ },
+ "Q216337": {
+  "label": "boy band",
+  "items": 5
+ },
+ "Q2500378": {
+  "label": "department of the United Kingdom Government",
+  "items": 5
+ },
+ "Q30234158": {
+  "label": "food safety organization",
+  "items": 5
+ },
+ "Q13235160": {
+  "label": "manufacturer",
+  "items": 5
+ },
+ "Q956214": {
+  "label": "chef-lieu",
+  "items": 5
+ },
+ "Q1093580": {
+  "label": "Chinese family name",
+  "items": 5
+ },
+ "Q20107444": {
+  "label": "bitcoin exchange",
+  "items": 5
+ },
+ "Q1788820": {
+  "label": "defence ministry",
+  "items": 5
+ },
+ "Q7058673": {
+  "label": "video game series",
+  "items": 5
+ },
+ "Q895526": {
+  "label": "governing body",
+  "items": 5
+ },
+ "Q859563": {
+  "label": "secular state",
+  "items": 5
+ },
+ "Q202686": {
+  "label": "Commonwealth realm",
+  "items": 5
+ },
+ "Q8142": {
+  "label": "currency",
+  "items": 5
+ },
+ "Q1156831": {
+  "label": "umbrella organization",
+  "items": 5
+ },
+ "Q1061197": {
+  "label": "radio network",
+  "items": 5
+ },
+ "Q895914": {
+  "label": "constitutional institution",
+  "items": 5
+ },
+ "Q2005696": {
+  "label": "commercial vehicle manufacturer",
+  "items": 5
+ },
+ "Q58840819": {
+  "label": "national rugby union team",
+  "items": 5
+ },
+ "Q1529128": {
+  "label": "postal service",
+  "items": 5
+ },
+ "Q63383584": {
+  "label": "medical device company",
+  "items": 5
+ },
+ "Q135641761": {
+  "label": "men's association football league",
+  "items": 5
+ },
+ "Q1520223": {
+  "label": "constitutional republic",
+  "items": 5
+ },
+ "Q27020041": {
+  "label": "sports season",
+  "items": 5
+ },
+ "Q4182287": {
+  "label": "search engine",
+  "items": 5
+ },
+ "Q641066": {
+  "label": "girl group",
+  "items": 4
+ },
+ "Q208511": {
+  "label": "global city",
+  "items": 4
+ },
+ "Q17084016": {
+  "label": "nonprofit corporation",
+  "items": 4
+ },
+ "Q2512624": {
+  "label": "bank holding company",
+  "items": 4
+ },
+ "Q568041": {
+  "label": "universal bank",
+  "items": 4
+ },
+ "Q475000": {
+  "label": "stock market",
+  "items": 4
+ },
+ "Q3958441": {
+  "label": "economic sector",
+  "items": 4
+ },
+ "Q1530022": {
+  "label": "religious organization",
+  "items": 4
+ },
+ "Q12340140": {
+  "label": "weekly magazine",
+  "items": 4
+ },
+ "Q7574898": {
+  "label": "specialist law enforcement agency",
+  "items": 4
+ },
+ "Q15711797": {
+  "label": "finance ministry",
+  "items": 4
+ },
+ "Q17444909": {
+  "label": "astronomical object type",
+  "items": 4
+ },
+ "Q4022": {
+  "label": "river",
+  "items": 4
+ },
+ "Q472093": {
+  "label": "distribution network operator for electricity",
+  "items": 4
+ },
+ "Q24634210": {
+  "label": "podcast show",
+  "items": 4
+ },
+ "Q15275719": {
+  "label": "recurring event",
+  "items": 4
+ },
+ "Q2298435": {
+  "label": "futures exchange",
+  "items": 4
+ },
+ "Q58841125": {
+  "label": "women's national rugby union team",
+  "items": 4
+ },
+ "Q842112": {
+  "label": "socialist state",
+  "items": 4
+ },
+ "Q849866": {
+  "label": "communist state",
+  "items": 4
+ },
+ "Q166118": {
+  "label": "archives",
+  "items": 4
+ },
+ "Q114392939": {
+  "label": "drink brand",
+  "items": 4
+ },
+ "Q2551394": {
+  "label": "sea rescue organization",
+  "items": 4
+ },
+ "Q3055118": {
+  "label": "single entity of population",
+  "items": 4
+ },
+ "Q11753232": {
+  "label": "launch service provider",
+  "items": 4
+ },
+ "Q86255944": {
+  "label": "national cricket team",
+  "items": 4
+ },
+ "Q349": {
+  "label": "sport",
+  "items": 4
+ },
+ "Q1966910": {
+  "label": "national academy",
+  "items": 4
+ },
+ "Q58973026": {
+  "label": "rugby union governing body",
+  "items": 4
+ },
+ "Q26398": {
+  "label": "public broadcasting",
+  "items": 4
+ },
+ "Q1449648": {
+  "label": "tabloid",
+  "items": 4
+ },
+ "Q193424": {
+  "label": "web service",
+  "items": 4
+ },
+ "Q125265855": {
+  "label": "classified advertising website",
+  "items": 4
+ },
+ "Q483110": {
+  "label": "stadium",
+  "items": 4
+ },
+ "Q143467": {
+  "label": "unified combatant command",
+  "items": 4
+ },
+ "Q1328899": {
+  "label": "standards organization",
+  "items": 4
+ },
+ "Q829080": {
+  "label": "professional association",
+  "items": 4
+ },
+ "Q11488158": {
+  "label": "corporate title",
+  "items": 4
+ },
+ "Q21234891": {
+  "label": "Mexican cartel",
+  "items": 4
+ },
+ "Q121132955": {
+  "label": "type of mass media",
+  "items": 4
+ },
+ "Q174844": {
+  "label": "megacity",
+  "items": 4
+ },
+ "Q2465832": {
+  "label": "branch of science",
+  "items": 4
+ },
+ "Q107655869": {
+  "label": "group of awards",
+  "items": 4
+ },
+ "Q52110228": {
+  "label": "geopolitical group",
+  "items": 4
+ },
+ "Q2221906": {
+  "label": "geographic location",
+  "items": 4
+ },
+ "Q1631129": {
+  "label": "hotel chain",
+  "items": 4
+ },
+ "Q4671286": {
+  "label": "academic major",
+  "items": 4
+ },
+ "Q723685": {
+  "label": "video on demand",
+  "items": 4
+ },
+ "Q35749": {
+  "label": "parliament",
+  "items": 4
+ },
+ "Q122754124": {
+  "label": "ambiguous Wikidata item",
+  "items": 4
+ },
+ "Q139312011": {
+  "label": "United Nations programmes and funds",
+  "items": 4
+ },
+ "Q55983715": {
+  "label": "organisms known by a particular common name",
+  "items": 4
+ },
+ "Q11294827": {
+  "label": "camera manufacturer",
+  "items": 4
+ },
+ "Q94993988": {
+  "label": "commercial traffic aerodrome",
+  "items": 4
+ },
+ "Q63241860": {
+  "label": "streaming service",
+  "items": 4
+ },
+ "Q3184121": {
+  "label": "municipality of Brazil",
+  "items": 4
+ },
+ "Q183288": {
+  "label": "National Olympic Committee",
+  "items": 4
+ },
+ "Q16887380": {
+  "label": "group",
+  "items": 4
+ },
+ "Q6979657": {
+  "label": "national public health institute",
+  "items": 4
+ },
+ "Q30315988": {
+  "label": "Mexican Secretariat of State",
+  "items": 4
+ },
+ "Q15911314": {
+  "label": "association",
+  "items": 4
+ },
+ "Q22808403": {
+  "label": "underground station",
+  "items": 4
+ },
+ "Q28819924": {
+  "label": "political alignment",
+  "items": 4
+ },
+ "Q494230": {
+  "label": "medical school",
+  "items": 4
+ },
+ "Q27973": {
+  "label": "ridesharing company",
+  "items": 4
+ },
+ "Q322948": {
+  "label": "subscription",
+  "items": 4
+ },
+ "Q694589": {
+  "label": "American football position",
+  "items": 4
+ },
+ "Q33742": {
+  "label": "natural language",
+  "items": 4
+ },
+ "Q24579448": {
+  "label": "podcast directory",
+  "items": 4
+ },
+ "Q89566111": {
+  "label": "cricket federation",
+  "items": 4
+ },
+ "Q170584": {
+  "label": "project",
+  "items": 4
+ },
+ "Q11541386": {
+  "label": "type of business or company",
+  "items": 4
+ },
+ "Q41176": {
+  "label": "building",
+  "items": 4
+ },
+ "Q3336843": {
+  "label": "constituent country of the United Kingdom",
+  "items": 4
+ },
+ "Q2881199": {
+  "label": "public body in Spain",
+  "items": 4
+ },
+ "Q465613": {
+  "label": "people's republic",
+  "items": 4
+ },
+ "Q3538931": {
+  "label": "high court of justice of Spain",
+  "items": 4
+ },
+ "Q7248095": {
+  "label": "professional services network",
+  "items": 4
+ },
+ "Q559856": {
+  "label": "online video platform",
+  "items": 4
+ },
+ "Q57305": {
+  "label": "trade fair",
+  "items": 4
+ },
+ "Q97010948": {
+  "label": "state department of transportation of the United States",
+  "items": 4
+ },
+ "Q32766": {
+  "label": "constitutional court",
+  "items": 4
+ },
+ "Q637846": {
+  "label": "upper house",
+  "items": 4
+ },
+ "Q178706": {
+  "label": "institution",
+  "items": 4
+ },
+ "Q20821044": {
+  "label": "federal police",
+  "items": 4
+ },
+ "Q106179098": {
+  "label": "sailboat class",
+  "items": 4
+ },
+ "Q860861": {
+  "label": "sculpture",
+  "items": 4
+ },
+ "Q1899015": {
+  "label": "conservation organization",
+  "items": 4
+ },
+ "Q1785733": {
+  "label": "environmental organization",
+  "items": 4
+ },
+ "Q2324556": {
+  "label": "state media",
+  "items": 4
+ },
+ "Q1114515": {
+  "label": "comics publishing company",
+  "items": 4
+ },
+ "Q431603": {
+  "label": "advocacy group",
+  "items": 4
+ },
+ "Q24040733": {
+  "label": "mixed martial arts organization",
+  "items": 4
+ },
+ "Q1187811": {
+  "label": "college town",
+  "items": 4
+ },
+ "Q78464255": {
+  "label": "UCI ProTeam",
+  "items": 4
+ },
+ "Q1320217": {
+  "label": "central government",
+  "items": 4
+ },
+ "Q1941618": {
+  "label": "mobile network operator",
+  "items": 4
+ },
+ "Q133699310": {
+  "label": "State Commercial Company",
+  "items": 4
+ },
+ "Q4204501": {
+  "label": "historical ethnic group",
+  "items": 4
+ },
+ "Q6631808": {
+  "label": "baseball league",
+  "items": 4
+ },
+ "Q75179296": {
+  "label": "ice hockey league",
+  "items": 4
+ },
+ "Q18918145": {
+  "label": "academic journal article",
+  "items": 4
+ },
+ "Q261428": {
+  "label": "discount store",
+  "items": 4
+ },
+ "Q10711424": {
+  "label": "state with limited recognition",
+  "items": 4
+ },
+ "Q841645": {
+  "label": "Internet television",
+  "items": 4
+ },
+ "Q8513": {
+  "label": "database",
+  "items": 4
+ },
+ "Q664702": {
+  "label": "bookmaker",
+  "items": 4
+ },
+ "Q100039327": {
+  "label": "autonomous constitutional agency",
+  "items": 4
+ },
+ "Q56427813": {
+  "label": "type of legal entity in France",
+  "items": 4
+ },
+ "Q928830": {
+  "label": "metro station",
+  "items": 4
+ },
+ "Q110315658": {
+  "label": "elected legislative house",
+  "items": 4
+ },
+ "Q1341478": {
+  "label": "energy company",
+  "items": 4
+ },
+ "Q12973014": {
+  "label": "sports team",
+  "items": 4
+ },
+ "Q1110684": {
+  "label": "regulatory college",
+  "items": 3
+ },
+ "Q55488": {
+  "label": "railway station",
+  "items": 3
+ },
+ "Q368290": {
+  "label": "film distributor",
+  "items": 3
+ },
+ "Q14037025": {
+  "label": "ministry",
+  "items": 3
+ },
+ "Q23905071": {
+  "label": "military unit type-size class",
+  "items": 3
+ },
+ "Q48004378": {
+  "label": "esport competition",
+  "items": 3
+ },
+ "Q1916382": {
+  "label": "media conglomerate",
+  "items": 3
+ },
+ "Q4936585": {
+  "label": "body of the European Union",
+  "items": 3
+ },
+ "Q112861866": {
+  "label": "corporate body of the European Union",
+  "items": 3
+ },
+ "Q1684600": {
+  "label": "news magazine",
+  "items": 3
+ },
+ "Q19973770": {
+  "label": "ministry of culture",
+  "items": 3
+ },
+ "Q106651372": {
+  "label": "business newspaper",
+  "items": 3
+ },
+ "Q20983877": {
+  "label": "unicorn",
+  "items": 3
+ },
+ "Q25393896": {
+  "label": "municipal police in the United States",
+  "items": 3
+ },
+ "Q5038204": {
+  "label": "card association",
+  "items": 3
+ },
+ "Q482517": {
+  "label": "chaebol",
+  "items": 3
+ },
+ "Q1393724": {
+  "label": "political faction",
+  "items": 3
+ },
+ "Q2089936": {
+  "label": "consulting company",
+  "items": 3
+ },
+ "Q210337": {
+  "label": "media player software",
+  "items": 3
+ },
+ "Q811701": {
+  "label": "model series",
+  "items": 3
+ },
+ "Q1664720": {
+  "label": "institute",
+  "items": 3
+ },
+ "Q1743327": {
+  "label": "church college",
+  "items": 3
+ },
+ "Q1066670": {
+  "label": "tag team",
+  "items": 3
+ },
+ "Q62049": {
+  "label": "county seat",
+  "items": 3
+ },
+ "Q37929123": {
+  "label": "electric vehicle charging network",
+  "items": 3
+ },
+ "Q1307214": {
+  "label": "form of government",
+  "items": 3
+ },
+ "Q14928": {
+  "label": "oil tanker",
+  "items": 3
+ },
+ "Q2101438": {
+  "label": "political action committee",
+  "items": 3
+ },
+ "Q512187": {
+  "label": "federal republic",
+  "items": 3
+ },
+ "Q1335818": {
+  "label": "supranational union",
+  "items": 3
+ },
+ "Q1005416": {
+  "label": "federal agency",
+  "items": 3
+ },
+ "Q336473": {
+  "label": "aid agency",
+  "items": 3
+ },
+ "Q170156": {
+  "label": "confederation",
+  "items": 3
+ },
+ "Q15899789": {
+  "label": "principal organ of the United Nations",
+  "items": 3
+ },
+ "Q1353040": {
+  "label": "coast guard",
+  "items": 3
+ },
+ "Q15720476": {
+  "label": "volleyball team",
+  "items": 3
+ },
+ "Q130261443": {
+  "label": "Catalan historical locality",
+  "items": 3
+ },
+ "Q1144991": {
+  "label": "military reserve force",
+  "items": 3
+ },
+ "Q111038019": {
+  "label": "sports news website",
+  "items": 3
+ },
+ "Q695850": {
+  "label": "airbase",
+  "items": 3
+ },
+ "Q122229703": {
+  "label": "management consulting company",
+  "items": 3
+ },
+ "Q130478340": {
+  "label": "French National Sports Federation",
+  "items": 3
+ },
+ "Q111190932": {
+  "label": "Canadian federal department",
+  "items": 3
+ },
+ "Q137018865": {
+  "label": "type of place",
+  "items": 3
+ },
+ "Q5418962": {
+  "label": "private equity firm",
+  "items": 3
+ },
+ "Q41795373": {
+  "label": "redistribution market",
+  "items": 3
+ },
+ "Q155076": {
+  "label": "juridical person",
+  "items": 3
+ },
+ "Q320289": {
+  "label": "chamber of deputies",
+  "items": 3
+ },
+ "Q8502": {
+  "label": "mountain",
+  "items": 3
+ },
+ "Q2324835": {
+  "label": "national railway",
+  "items": 3
+ },
+ "Q15127012": {
+  "label": "town in the United States",
+  "items": 3
+ },
+ "Q1666019": {
+  "label": "pressure group",
+  "items": 3
+ },
+ "Q740752": {
+  "label": "transport company",
+  "items": 3
+ },
+ "Q1326624": {
+  "label": "electricity supply company",
+  "items": 3
+ },
+ "Q117467246": {
+  "label": "animated television series",
+  "items": 3
+ },
+ "Q2424752": {
+  "label": "product",
+  "items": 3
+ },
+ "Q124964": {
+  "label": "coalition",
+  "items": 3
+ },
+ "Q319845": {
+  "label": "investment bank",
+  "items": 3
+ },
+ "Q699386": {
+  "label": "statutory corporation",
+  "items": 3
+ },
+ "Q20642011": {
+  "label": "guerrilla organization",
+  "items": 3
+ },
+ "Q1187145": {
+  "label": "credit bureau",
+  "items": 3
+ },
+ "Q5659726": {
+  "label": "government agency",
+  "items": 3
+ },
+ "Q3351682": {
+  "label": "central university",
+  "items": 3
+ },
+ "Q112057532": {
+  "label": "type of technology",
+  "items": 3
+ },
+ "Q33104069": {
+  "label": "political concept",
+  "items": 3
+ },
+ "Q2418896": {
+  "label": "part of the world",
+  "items": 3
+ },
+ "Q5107": {
+  "label": "continent",
+  "items": 3
+ },
+ "Q1073015": {
+  "label": "domain name registrar",
+  "items": 3
+ },
+ "Q3814081": {
+  "label": "app marketplace",
+  "items": 3
+ },
+ "Q10729872": {
+  "label": "medical association",
+  "items": 3
+ },
+ "Q19307174": {
+  "label": "digital distribution platform",
+  "items": 3
+ },
+ "Q218616": {
+  "label": "proprietary software",
+  "items": 3
+ },
+ "Q3275581": {
+  "label": "shared universe",
+  "items": 3
+ },
+ "Q37178026": {
+  "label": "metaorganization",
+  "items": 3
+ },
+ "Q25178247": {
+  "label": "professional wrestling stable",
+  "items": 3
+ },
+ "Q29028649": {
+  "label": "economic concept",
+  "items": 3
+ },
+ "Q3922583": {
+  "label": "health profession",
+  "items": 3
+ },
+ "Q15891112": {
+  "label": "upper house of U.S. state legislature",
+  "items": 3
+ },
+ "Q3394132": {
+  "label": "state police",
+  "items": 3
+ },
+ "Q13641126": {
+  "label": "community and regional governments",
+  "items": 3
+ },
+ "Q1276157": {
+  "label": "travel website",
+  "items": 3
+ },
+ "Q621985": {
+  "label": "Spanish regional parliament",
+  "items": 3
+ },
+ "Q1340449": {
+  "label": "review site",
+  "items": 3
+ },
+ "Q189533": {
+  "label": "academic degree",
+  "items": 3
+ },
+ "Q20857129": {
+  "label": "university system",
+  "items": 3
+ },
+ "Q865588": {
+  "label": "committee",
+  "items": 3
+ },
+ "Q97374157": {
+  "label": "international parliament",
+  "items": 3
+ },
+ "Q108255949": {
+  "label": "variety store chain",
+  "items": 3
+ },
+ "Q2943071": {
+  "label": "congressional caucus",
+  "items": 3
+ },
+ "Q130109687": {
+  "label": "type of tax",
+  "items": 3
+ },
+ "Q779239": {
+  "label": "international broadcasting",
+  "items": 3
+ },
+ "Q28134845": {
+  "label": "dating app",
+  "items": 3
+ },
+ "Q2516426": {
+  "label": "transport ministry",
+  "items": 3
+ },
+ "Q59859818": {
+  "label": "data controller",
+  "items": 3
+ },
+ "Q43702": {
+  "label": "federation",
+  "items": 3
+ },
+ "Q868557": {
+  "label": "music festival",
+  "items": 3
+ },
+ "Q40056": {
+  "label": "computer program",
+  "items": 3
+ },
+ "Q129238": {
+  "label": "startup company",
+  "items": 3
+ },
+ "Q34770": {
+  "label": "language",
+  "items": 3
+ },
+ "Q1962634": {
+  "label": "news broadcasting",
+  "items": 3
+ },
+ "Q188451": {
+  "label": "music genre",
+  "items": 3
+ },
+ "Q220499": {
+  "label": "streaming media",
+  "items": 3
+ },
+ "Q1221156": {
+  "label": "federated state of Germany",
+  "items": 3
+ },
+ "Q166142": {
+  "label": "application software",
+  "items": 3
+ },
+ "Q66811410": {
+  "label": "medical profession",
+  "items": 3
+ },
+ "Q125292208": {
+  "label": "decentralized agency of the government of Mexico",
+  "items": 3
+ },
+ "Q47577": {
+  "label": "Fibonacci number",
+  "items": 3
+ },
+ "Q2915234": {
+  "label": "Motzkin number",
+  "items": 3
+ },
+ "Q1143635": {
+  "label": "business school",
+  "items": 3
+ },
+ "Q52990223": {
+  "label": "open science tool",
+  "items": 3
+ },
+ "Q506883": {
+  "label": "free and open-source software",
+  "items": 3
+ },
+ "Q108178728": {
+  "label": "national capital",
+  "items": 3
+ },
+ "Q847027": {
+  "label": "grande école",
+  "items": 3
+ },
+ "Q1555508": {
+  "label": "radio program",
+  "items": 3
+ },
+ "Q1548033": {
+  "label": "large bank",
+  "items": 3
+ },
+ "Q131734": {
+  "label": "brewery",
+  "items": 3
+ },
+ "Q118340725": {
+  "label": "Japanese bank holding company",
+  "items": 3
+ },
+ "Q946499": {
+  "label": "cruise line",
+  "items": 3
+ },
+ "Q7315155": {
+  "label": "research center",
+  "items": 3
+ },
+ "Q134161": {
+  "label": "joint-stock company",
+  "items": 3
+ },
+ "Q506240": {
+  "label": "television film",
+  "items": 3
+ },
+ "Q10708051": {
+  "label": "competition class",
+  "items": 3
+ },
+ "Q13226383": {
+  "label": "facility",
+  "items": 3
+ },
+ "Q1329436": {
+  "label": "consumer organization",
+  "items": 3
+ },
+ "Q265662": {
+  "label": "national university",
+  "items": 3
+ },
+ "Q17431399": {
+  "label": "national museum",
+  "items": 3
+ },
+ "Q3343298": {
+  "label": "non-departmental public body",
+  "items": 3
+ },
+ "Q106650967": {
+  "label": "tabloid newspaper",
+  "items": 3
+ },
+ "Q114955954": {
+  "label": "crowdsourced project",
+  "items": 3
+ },
+ "Q111188397": {
+  "label": "executive department of the Philippines",
+  "items": 3
+ },
+ "Q11448906": {
+  "label": "science award",
+  "items": 3
+ },
+ "Q752783": {
+  "label": "human spaceflight",
+  "items": 3
+ },
+ "Q47258130": {
+  "label": "academic conference series",
+  "items": 3
+ },
+ "Q15284": {
+  "label": "municipality",
+  "items": 3
+ },
+ "Q5225895": {
+  "label": "public limited company",
+  "items": 3
+ },
+ "Q4202064": {
+  "label": "publishing platform",
+  "items": 3
+ },
+ "Q1468664": {
+  "label": "logistics company",
+  "items": 3
+ },
+ "Q2668072": {
+  "label": "collection",
+  "items": 3
+ },
+ "Q134016126": {
+  "label": "state agency of New York",
+  "items": 3
+ },
+ "Q679165": {
+  "label": "squadron",
+  "items": 3
+ },
+ "Q2074737": {
+  "label": "municipality of Spain",
+  "items": 3
+ },
+ "Q115456878": {
+  "label": "legislative branch agency",
+  "items": 3
+ },
+ "Q1092499": {
+  "label": "public prosecutor's office",
+  "items": 3
+ },
+ "Q24354647": {
+  "label": "editorial team",
+  "items": 3
+ },
+ "Q20202352": {
+  "label": "locality of Mexico",
+  "items": 3
+ },
+ "Q223832": {
+  "label": "dominion of the British Empire",
+  "items": 3
+ },
+ "Q1154710": {
+  "label": "association football venue",
+  "items": 3
+ },
+ "Q15632617": {
+  "label": "fictional human",
+  "items": 3
+ },
+ "Q5001853": {
+  "label": "business channel",
+  "items": 3
+ },
+ "Q573607": {
+  "label": "revenue service",
+  "items": 3
+ },
+ "Q217107": {
+  "label": "travel agency",
+  "items": 3
+ },
+ "Q3546112": {
+  "label": "insurance type",
+  "items": 3
+ },
+ "Q5266746": {
+  "label": "development bank",
+  "items": 3
+ },
+ "Q1075106": {
+  "label": "state university system",
+  "items": 3
+ },
+ "Q36835995": {
+  "label": "General directorate",
+  "items": 3
+ },
+ "Q47531586": {
+  "label": "Institute of National Importance",
+  "items": 3
+ },
+ "Q4835091": {
+  "label": "territory",
+  "items": 3
+ },
+ "Q1685451": {
+  "label": "student society",
+  "items": 3
+ },
+ "Q707813": {
+  "label": "Hanseatic city",
+  "items": 3
+ },
+ "Q2995256": {
+  "label": "rail vehicle manufacturer",
+  "items": 3
+ },
+ "Q3464665": {
+  "label": "television series season",
+  "items": 3
+ },
+ "Q3337001": {
+  "label": "nationality for sports",
+  "items": 3
+ },
+ "Q91615393": {
+  "label": "Wikidata item that needs to be split",
+  "items": 3
+ },
+ "Q20136634": {
+  "label": "Wikipedia overview article",
+  "items": 3
+ },
+ "Q7191": {
+  "label": "Nobel Prize",
+  "items": 3
+ },
+ "Q7638697": {
+  "label": "sun grant institution",
+  "items": 3
+ },
+ "Q189004": {
+  "label": "college",
+  "items": 3
+ },
+ "Q7897276": {
+  "label": "unparished area",
+  "items": 3
+ },
+ "Q1377182": {
+  "label": "liberal arts college",
+  "items": 3
+ },
+ "Q1789476": {
+  "label": "bibliographic database",
+  "items": 3
+ },
+ "Q141255352": {
+  "label": "online newspaper without paywall",
+  "items": 3
+ },
+ "Q85827478": {
+  "label": "smart contract platform",
+  "items": 3
+ },
+ "Q4671277": {
+  "label": "academic institution",
+  "items": 3
+ },
+ "Q1318941": {
+  "label": "stage race",
+  "items": 3
+ },
+ "Q105758271": {
+  "label": "multilateral development bank",
+  "items": 3
+ },
+ "Q9209474": {
+  "label": "auction house",
+  "items": 3
+ },
+ "Q11446": {
+  "label": "ship",
+  "items": 3
+ },
+ "Q1788992": {
+  "label": "criminal organization",
+  "items": 3
+ },
+ "Q20667921": {
+  "label": "type of French administrative division",
+  "items": 3
+ },
+ "Q67515288": {
+  "label": "cinema by country or region",
+  "items": 3
+ },
+ "Q100029091": {
+  "label": "Specialized technical organisation",
+  "items": 3
+ },
+ "Q1509758": {
+  "label": "Bundestag faction",
+  "items": 3
+ },
+ "Q15141321": {
+  "label": "train service",
+  "items": 3
+ },
+ "Q133284163": {
+  "label": "generative artificial intelligence chatbot",
+  "items": 3
+ },
+ "Q33685": {
+  "label": "limited company",
+  "items": 3
+ },
+ "Q6979629": {
+  "label": "national mapping agency",
+  "items": 3
+ },
+ "Q30849": {
+  "label": "blog",
+  "items": 3
+ },
+ "Q16519632": {
+  "label": "scientific organization",
+  "items": 3
+ },
+ "Q1079023": {
+  "label": "championship",
+  "items": 3
+ },
+ "Q18325436": {
+  "label": "501(c)(3) organization",
+  "items": 2
+ },
+ "Q1005418": {
+  "label": "federal office of Switzerland",
+  "items": 2
+ },
+ "Q641347": {
+  "label": "local Internet registry",
+  "items": 2
+ },
+ "Q83057": {
+  "label": "region of Belgium",
+  "items": 2
+ },
+ "Q138775": {
+  "label": "border guard",
+  "items": 2
+ },
+ "Q32798322": {
+  "label": "Q32798322",
+  "items": 2
+ },
+ "Q55657615": {
+  "label": "commission",
+  "items": 2
+ },
+ "Q3630770": {
+  "label": "Independent adminstrative authority",
+  "items": 2
+ },
+ "Q16858238": {
+  "label": "train and rail category",
+  "items": 2
+ },
+ "Q131986827": {
+  "label": "Residence of the British Royal Family",
+  "items": 2
+ },
+ "Q11016": {
+  "label": "technology",
+  "items": 2
+ },
+ "Q28886448": {
+  "label": "work with multiple executions",
+  "items": 2
+ },
+ "Q1255441": {
+  "label": "telegraphic address",
+  "items": 2
+ },
+ "Q6762254": {
+  "label": "Islamist movement",
+  "items": 2
+ },
+ "Q460336": {
+  "label": "state police",
+  "items": 2
+ },
+ "Q1266169": {
+  "label": "telephone company",
+  "items": 2
+ },
+ "Q1070414": {
+  "label": "supporters' group",
+  "items": 2
+ },
+ "Q3445354": {
+  "label": "United States senior military college",
+  "items": 2
+ },
+ "Q24862": {
+  "label": "short film",
+  "items": 2
+ },
+ "Q100271038": {
+  "label": "tabletop role-playing game publisher",
+  "items": 2
+ },
+ "Q136410232": {
+  "label": "research organization",
+  "items": 2
+ },
+ "Q105576516": {
+  "label": "Marine Logistics Group",
+  "items": 2
+ },
+ "Q2466826": {
+  "label": "UCI Women's Team",
+  "items": 2
+ },
+ "Q80425135": {
+  "label": "UCI Women’s WorldTeam",
+  "items": 2
+ },
+ "Q43501": {
+  "label": "zoo",
+  "items": 2
+ },
+ "Q66724388": {
+  "label": "autonomous country within the Kingdom of Denmark",
+  "items": 2
+ },
+ "Q1241288": {
+  "label": "economic affairs ministry",
+  "items": 2
+ },
+ "Q197952": {
+  "label": "corporate group",
+  "items": 2
+ },
+ "Q96116695": {
+  "label": "type of system",
+  "items": 2
+ },
+ "Q112046": {
+  "label": "transmission system operator for electricity",
+  "items": 2
+ },
+ "Q1906268": {
+  "label": "municipality of Bulgaria",
+  "items": 2
+ },
+ "Q8473": {
+  "label": "military",
+  "items": 2
+ },
+ "Q1641122": {
+  "label": "online service provider",
+  "items": 2
+ },
+ "Q953806": {
+  "label": "bus stop",
+  "items": 2
+ },
+ "Q136405773": {
+  "label": "administrative structure of Bulgaria",
+  "items": 2
+ },
+ "Q94670589": {
+  "label": "Christian organization",
+  "items": 2
+ },
+ "Q116460050": {
+  "label": "asset type",
+  "items": 2
+ },
+ "Q17558136": {
+  "label": "YouTube channel",
+  "items": 2
+ },
+ "Q55850593": {
+  "label": "music track with vocals",
+  "items": 2
+ },
+ "Q6456916": {
+  "label": "national economy",
+  "items": 2
+ },
+ "Q3125101": {
+  "label": "trial court",
+  "items": 2
+ },
+ "Q113727727": {
+  "label": "foreign subsidiary company",
+  "items": 2
+ },
+ "Q157963": {
+  "label": "savings bank",
+  "items": 2
+ },
+ "Q40357": {
+  "label": "prison",
+  "items": 2
+ },
+ "Q17007978": {
+  "label": "counterintelligence state",
+  "items": 2
+ },
+ "Q129341528": {
+  "label": "institution of the French State",
+  "items": 2
+ },
+ "Q23955632": {
+  "label": "Catholic organization",
+  "items": 2
+ },
+ "Q1875618": {
+  "label": "aviation authority",
+  "items": 2
+ },
+ "Q3001412": {
+  "label": "horse race",
+  "items": 2
+ },
+ "Q20739124": {
+  "label": "entertainment company",
+  "items": 2
+ },
+ "Q103231176": {
+  "label": "men's association football club",
+  "items": 2
+ },
+ "Q12738586": {
+  "label": "payment processor",
+  "items": 2
+ },
+ "Q182290": {
+  "label": "customs agency",
+  "items": 2
+ },
+ "Q26211545": {
+  "label": "desa",
+  "items": 2
+ },
+ "Q1413677": {
+  "label": "justice ministry",
+  "items": 2
+ },
+ "Q192350": {
+  "label": "ministry",
+  "items": 2
+ },
+ "Q2912397": {
+  "label": "single-day road race",
+  "items": 2
+ },
+ "Q179076": {
+  "label": "trading venue",
+  "items": 2
+ },
+ "Q734698": {
+  "label": "collectible card game",
+  "items": 2
+ },
+ "Q15804899": {
+  "label": "deck-building game",
+  "items": 2
+ },
+ "Q2093358": {
+  "label": "language regulator",
+  "items": 2
+ },
+ "Q207299": {
+  "label": "administrative region of Greece",
+  "items": 2
+ },
+ "Q1416653": {
+  "label": "newspaper of record",
+  "items": 2
+ },
+ "Q116620926": {
+  "label": "novel award",
+  "items": 2
+ },
+ "Q15987302": {
+  "label": "legal profession",
+  "items": 2
+ },
+ "Q762548": {
+  "label": "chocolaterie",
+  "items": 2
+ },
+ "Q7366": {
+  "label": "song",
+  "items": 2
+ },
+ "Q1920810": {
+  "label": "human rights organization",
+  "items": 2
+ },
+ "Q2549179": {
+  "label": "department store chain",
+  "items": 2
+ },
+ "Q1076486": {
+  "label": "sports venue",
+  "items": 2
+ },
+ "Q22947": {
+  "label": "inhabitant",
+  "items": 2
+ },
+ "Q45909448": {
+  "label": "federation of political parties",
+  "items": 2
+ },
+ "Q31884698": {
+  "label": "tenants' union",
+  "items": 2
+ },
+ "Q49773": {
+  "label": "social movement",
+  "items": 2
+ },
+ "Q334166": {
+  "label": "mode of transport",
+  "items": 2
+ },
+ "Q3128539": {
+  "label": "high court",
+  "items": 2
+ },
+ "Q107099245": {
+  "label": "sport ministry",
+  "items": 2
+ },
+ "Q2519914": {
+  "label": "brand name",
+  "items": 2
+ },
+ "Q106760956": {
+  "label": "engineering society",
+  "items": 2
+ },
+ "Q3152824": {
+  "label": "cultural institution",
+  "items": 2
+ },
+ "Q130425523": {
+  "label": "National Sports Federation of Spain",
+  "items": 2
+ },
+ "Q216048": {
+  "label": "team sport",
+  "items": 2
+ },
+ "Q212434": {
+  "label": "Olympic sport",
+  "items": 2
+ },
+ "Q47728": {
+  "label": "hobby",
+  "items": 2
+ },
+ "Q340169": {
+  "label": "communications media",
+  "items": 2
+ },
+ "Q17377208": {
+  "label": "railway undertaking",
+  "items": 2
+ },
+ "Q5834296": {
+  "label": "EPE",
+  "items": 2
+ },
+ "Q62382254": {
+  "label": "association football database",
+  "items": 2
+ },
+ "Q15063611": {
+  "label": "city in the state of New York",
+  "items": 2
+ },
+ "Q1758690": {
+  "label": "municipal police",
+  "items": 2
+ },
+ "Q15239622": {
+  "label": "disputed territory",
+  "items": 2
+ },
+ "Q1898583": {
+  "label": "marine force",
+  "items": 2
+ },
+ "Q136410955": {
+  "label": "independant government agency of Bulgaria",
+  "items": 2
+ },
+ "Q26256810": {
+  "label": "topic",
+  "items": 2
+ },
+ "Q294308": {
+  "label": "publicly funded health care",
+  "items": 2
+ },
+ "Q132560290": {
+  "label": "third-party payer",
+  "items": 2
+ },
+ "Q376346": {
+  "label": "web color",
+  "items": 2
+ },
+ "Q7048977": {
+  "label": "abstract entity",
+  "items": 2
+ },
+ "Q489209": {
+  "label": "joint venture",
+  "items": 2
+ },
+ "Q121614922": {
+  "label": "Moroccan public institution",
+  "items": 2
+ },
+ "Q13218391": {
+  "label": "charter city",
+  "items": 2
+ },
+ "Q69943958": {
+  "label": "occupational group",
+  "items": 2
+ },
+ "Q148578": {
+  "label": "space telescope",
+  "items": 2
+ },
+ "Q96251598": {
+  "label": "type of object",
+  "items": 2
+ },
+ "Q18450215": {
+  "label": "e-commerce platform",
+  "items": 2
+ },
+ "Q2878855": {
+  "label": "bus rapid transit",
+  "items": 2
+ },
+ "Q3354859": {
+  "label": "collegiate university",
+  "items": 2
+ },
+ "Q13582798": {
+  "label": "French public establishment of a scientific and technological character",
+  "items": 2
+ },
+ "Q22950320": {
+  "label": "collective head of state",
+  "items": 2
+ },
+ "Q640506": {
+  "label": "cabinet",
+  "items": 2
+ },
+ "Q15978299": {
+  "label": "municipality with town privileges in the Czech Republic",
+  "items": 2
+ },
+ "Q257978": {
+  "label": "statutory city in the Czech Republic",
+  "items": 2
+ },
+ "Q8452914": {
+  "label": "district town",
+  "items": 2
+ },
+ "Q5153359": {
+  "label": "municipality of the Czech Republic",
+  "items": 2
+ },
+ "Q7841907": {
+  "label": "municipality with authorized municipal office",
+  "items": 2
+ },
+ "Q7819319": {
+  "label": "Czech municipality with expanded powers",
+  "items": 2
+ },
+ "Q1465684": {
+  "label": "competition regulator",
+  "items": 2
+ },
+ "Q644371": {
+  "label": "international airport",
+  "items": 2
+ },
+ "Q62832": {
+  "label": "observatory",
+  "items": 2
+ },
+ "Q28108": {
+  "label": "political system",
+  "items": 2
+ },
+ "Q12332021": {
+  "label": "politics by country",
+  "items": 2
+ },
+ "Q26857732": {
+  "label": "Australian rules football league",
+  "items": 2
+ },
+ "Q17279032": {
+  "label": "elective office",
+  "items": 2
+ },
+ "Q129133491": {
+  "label": "ethnological term",
+  "items": 2
+ },
+ "Q1137809": {
+  "label": "courthouse",
+  "items": 2
+ },
+ "Q1412224": {
+  "label": "tribunal",
+  "items": 2
+ },
+ "Q1807108": {
+  "label": "shipping line",
+  "items": 2
+ },
+ "Q135236697": {
+  "label": "Enumeration of 200",
+  "items": 2
+ },
+ "Q57590076": {
+  "label": "hotel booking website",
+  "items": 2
+ },
+ "Q19973795": {
+  "label": "ministry of energy",
+  "items": 2
+ },
+ "Q31728": {
+  "label": "public administration",
+  "items": 2
+ },
+ "Q7079212": {
+  "label": "office of emergency management",
+  "items": 2
+ },
+ "Q119018971": {
+  "label": "generative artificial intelligence website",
+  "items": 2
+ },
+ "Q133797182": {
+  "label": "art-sharing website",
+  "items": 2
+ },
+ "Q11780435": {
+  "label": "monthly magazine",
+  "items": 2
+ },
+ "Q136762766": {
+  "label": "UN peacekeeping mission",
+  "items": 2
+ },
+ "Q29043181": {
+  "label": "sports database",
+  "items": 2
+ },
+ "Q613142": {
+  "label": "law firm",
+  "items": 2
+ },
+ "Q117406600": {
+  "label": "Belgian state-owned company",
+  "items": 2
+ },
+ "Q21032617": {
+  "label": "sea grant institution",
+  "items": 2
+ },
+ "Q2006518": {
+  "label": "royal family",
+  "items": 2
+ },
+ "Q3333855": {
+  "label": "métropole",
+  "items": 2
+ },
+ "Q130388971": {
+  "label": "type of university",
+  "items": 2
+ },
+ "Q15259995": {
+  "label": "recurring tournament",
+  "items": 2
+ },
+ "Q1144170": {
+  "label": "Ministère public",
+  "items": 2
+ },
+ "Q35769": {
+  "label": "WWE programs",
+  "items": 2
+ },
+ "Q67145856": {
+  "label": "multinational sports team",
+  "items": 2
+ },
+ "Q29428403": {
+  "label": "pentad",
+  "items": 2
+ },
+ "Q60767305": {
+  "label": "neobank",
+  "items": 2
+ },
+ "Q28051323": {
+  "label": "video-conferencing software",
+  "items": 2
+ },
+ "Q20639848": {
+  "label": "club cycling team",
+  "items": 2
+ },
+ "Q131647": {
+  "label": "medal",
+  "items": 2
+ },
+ "Q190928": {
+  "label": "shipyard",
+  "items": 2
+ },
+ "Q24657198": {
+  "label": "podcatcher",
+  "items": 2
+ },
+ "Q218819": {
+  "label": "customs union",
+  "items": 2
+ },
+ "Q135236637": {
+  "label": "Icosad",
+  "items": 2
+ },
+ "Q24902509": {
+  "label": "human activity",
+  "items": 2
+ },
+ "Q11344": {
+  "label": "chemical element",
+  "items": 2
+ },
+ "Q13366104": {
+  "label": "even number",
+  "items": 2
+ },
+ "Q76214980": {
+  "label": "electronics store chain",
+  "items": 2
+ },
+ "Q3077240": {
+  "label": "forge",
+  "items": 2
+ },
+ "Q115203600": {
+  "label": "repository hosting service",
+  "items": 2
+ },
+ "Q115217949": {
+  "label": "repository web interface",
+  "items": 2
+ },
+ "Q5589413": {
+  "label": "government-owned and controlled corporation",
+  "items": 2
+ },
+ "Q40186999": {
+  "label": "cryptocurrency wallet",
+  "items": 2
+ },
+ "Q5583816": {
+  "label": "Google Chrome extension",
+  "items": 2
+ },
+ "Q110225820": {
+  "label": "Jesuit university",
+  "items": 2
+ },
+ "Q28933155": {
+  "label": "news aggregation website",
+  "items": 2
+ },
+ "Q106611381": {
+  "label": "jewelry shop chain",
+  "items": 2
+ },
+ "Q811102": {
+  "label": "type of building",
+  "items": 2
+ },
+ "Q10676514": {
+  "label": "sports television program",
+  "items": 2
+ },
+ "Q63364175": {
+  "label": "ice hockey federation",
+  "items": 2
+ },
+ "Q92438": {
+  "label": "microblogging",
+  "items": 2
+ },
+ "Q80011137": {
+  "label": "United States Navy Command unit",
+  "items": 2
+ },
+ "Q1005420": {
+  "label": "federal office",
+  "items": 2
+ },
+ "Q42314054": {
+  "label": "ammunition model",
+  "items": 2
+ },
+ "Q10929058": {
+  "label": "product model",
+  "items": 2
+ },
+ "Q34542827": {
+  "label": "international association football national teams competition",
+  "items": 2
+ },
+ "Q119982961": {
+  "label": "profession and socioprofessional category in France",
+  "items": 2
+ },
+ "Q41253": {
+  "label": "movie theater",
+  "items": 2
+ },
+ "Q168678": {
+  "label": "corporate name",
+  "items": 2
+ },
+ "Q12488913": {
+  "label": "kampung of Papua",
+  "items": 2
+ },
+ "Q4230006": {
+  "label": "asset management company",
+  "items": 2
+ },
+ "Q29555881": {
+  "label": "segment of a television episode",
+  "items": 2
+ },
+ "Q24354": {
+  "label": "theatre building",
+  "items": 2
+ },
+ "Q117246174": {
+  "label": "generative artificial intelligence",
+  "items": 2
+ },
+ "Q115305900": {
+  "label": "large language model",
+  "items": 2
+ },
+ "Q877517": {
+  "label": "ball game",
+  "items": 2
+ },
+ "Q1774587": {
+  "label": "hospital network",
+  "items": 2
+ },
+ "Q414147": {
+  "label": "academy of sciences",
+  "items": 2
+ },
+ "Q1310653": {
+  "label": "Swedish Royal Academies",
+  "items": 2
+ },
+ "Q109423813": {
+  "label": "órganos constitucionales autónomos de México",
+  "items": 2
+ },
+ "Q55190325": {
+  "label": "musical instrument manufacturing company",
+  "items": 2
+ },
+ "Q493522": {
+  "label": "municipality of Belgium",
+  "items": 2
+ },
+ "Q15273785": {
+  "label": "Belgian municipality with the title of city",
+  "items": 2
+ },
+ "Q16323605": {
+  "label": "food brand",
+  "items": 2
+ },
+ "Q7309051": {
+  "label": "Regional Electoral Courts",
+  "items": 2
+ },
+ "Q19828534": {
+  "label": "wing",
+  "items": 2
+ },
+ "Q9826": {
+  "label": "high school",
+  "items": 2
+ },
+ "Q924286": {
+  "label": "transport network",
+  "items": 2
+ },
+ "Q3320743": {
+  "label": "title of honor",
+  "items": 2
+ },
+ "Q5988403": {
+  "label": "identity provider",
+  "items": 2
+ },
+ "Q135427824": {
+  "label": "government agency of Vietnam",
+  "items": 2
+ },
+ "Q188509": {
+  "label": "suburb",
+  "items": 2
+ },
+ "Q28821169": {
+  "label": "national health service",
+  "items": 2
+ },
+ "Q1210425": {
+  "label": "internet hosting service",
+  "items": 2
+ },
+ "Q100906234": {
+  "label": "multinational military coalition",
+  "items": 2
+ },
+ "Q130583773": {
+  "label": "type of crime",
+  "items": 2
+ },
+ "Q46395": {
+  "label": "British Overseas Territories",
+  "items": 2
+ },
+ "Q1200957": {
+  "label": "tourist destination",
+  "items": 2
+ },
+ "Q42337018": {
+  "label": "patronage website",
+  "items": 2
+ },
+ "Q114393305": {
+  "label": "state agency of California",
+  "items": 2
+ },
+ "Q207170": {
+  "label": "office suite",
+  "items": 2
+ },
+ "Q7247856": {
+  "label": "productivity software",
+  "items": 2
+ },
+ "Q395994": {
+  "label": "capital district or territory",
+  "items": 2
+ },
+ "Q65235246": {
+  "label": "Financial Intelligence Unit",
+  "items": 2
+ },
+ "Q1542938": {
+  "label": "grand établissement",
+  "items": 2
+ },
+ "Q55379753": {
+  "label": "handball federation",
+  "items": 2
+ },
+ "Q1969448": {
+  "label": "term",
+  "items": 2
+ },
+ "Q10551526": {
+  "label": "confessional state",
+  "items": 2
+ },
+ "Q113614232": {
+  "label": "decentralized cryptocurrency exchange",
+  "items": 2
+ },
+ "Q4182927": {
+  "label": "stockbroker",
+  "items": 2
+ },
+ "Q109536316": {
+  "label": "meme coin",
+  "items": 2
+ },
+ "Q24952557": {
+  "label": "Union Government ministries of India",
+  "items": 2
+ },
+ "Q13406463": {
+  "label": "Wikimedia list article",
+  "items": 2
+ },
+ "Q98456412": {
+  "label": "school accreditor",
+  "items": 2
+ },
+ "Q26401003": {
+  "label": "individual animal",
+  "items": 2
+ },
+ "Q108564724": {
+  "label": "social democratic party",
+  "items": 2
+ },
+ "Q5760634": {
+  "label": "hectad",
+  "items": 2
+ },
+ "Q136688173": {
+  "label": "large language model library",
+  "items": 2
+ },
+ "Q929833": {
+  "label": "rare disease",
+  "items": 2
+ },
+ "Q1663017": {
+  "label": "engineering school",
+  "items": 2
+ },
+ "Q113574332": {
+  "label": "Roblox experience",
+  "items": 2
+ },
+ "Q15303456": {
+  "label": "rugby union venue",
+  "items": 2
+ },
+ "Q124587498": {
+  "label": "internet map service",
+  "items": 2
+ },
+ "Q121182": {
+  "label": "information system",
+  "items": 2
+ },
+ "Q15105893": {
+  "label": "town in Croatia",
+  "items": 2
+ },
+ "Q7892363": {
+  "label": "cable news in the United States",
+  "items": 2
+ },
+ "Q50386450": {
+  "label": "operatic character",
+  "items": 2
+ },
+ "Q386208": {
+  "label": "mascot character",
+  "items": 2
+ },
+ "Q193622": {
+  "label": "order",
+  "items": 2
+ },
+ "Q580200": {
+  "label": "Federal courts (Germany)",
+  "items": 2
+ },
+ "Q1656682": {
+  "label": "event",
+  "items": 2
+ },
+ "Q19862851": {
+  "label": "massive open online course provider",
+  "items": 2
+ },
+ "Q57285129": {
+  "label": "education company",
+  "items": 2
+ },
+ "Q11114344": {
+  "label": "points of the compass",
+  "items": 2
+ },
+ "Q362165": {
+  "label": "school subject",
+  "items": 2
+ },
+ "Q124315169": {
+  "label": "vehicle functional class",
+  "items": 2
+ },
+ "Q14514600": {
+  "label": "group of fictional characters",
+  "items": 2
+ },
+ "Q27949697": {
+  "label": "Wikibase reason for deprecated rank",
+  "items": 2
+ },
+ "Q132364": {
+  "label": "communication protocol",
+  "items": 2
+ },
+ "Q1643932": {
+  "label": "tabletop role-playing game",
+  "items": 2
+ },
+ "Q537929": {
+  "label": "autonomous agency",
+  "items": 2
+ },
+ "Q63982911": {
+  "label": "type of museum",
+  "items": 2
+ },
+ "Q42303753": {
+  "label": "designated intractable/rare disease",
+  "items": 2
+ },
+ "Q37866906": {
+  "label": "information resource",
+  "items": 2
+ },
+ "Q2416723": {
+  "label": "theme park",
+  "items": 2
+ },
+ "Q134692242": {
+  "label": "Galician political party",
+  "items": 2
+ },
+ "Q2577005": {
+  "label": "superior court",
+  "items": 2
+ },
+ "Q113805953": {
+  "label": "charitable corporation",
+  "items": 2
+ },
+ "Q79007": {
+  "label": "street",
+  "items": 2
+ },
+ "Q30941437": {
+  "label": "pornographic film studio",
+  "items": 2
+ },
+ "Q179671": {
+  "label": "nation state",
+  "items": 2
+ },
+ "Q1911105": {
+  "label": "popular science magazine",
+  "items": 2
+ },
+ "Q2352616": {
+  "label": "catalog",
+  "items": 2
+ },
+ "Q1547289": {
+  "label": "Lutherstadt",
+  "items": 2
+ },
+ "Q14784328": {
+  "label": "state capital in Germany",
+  "items": 2
+ },
+ "Q4481787": {
+  "label": "Federal Reserve Bank",
+  "items": 2
+ },
+ "Q1417728": {
+  "label": "trade name",
+  "items": 2
+ },
+ "Q6738353": {
+  "label": "major party",
+  "items": 2
+ },
+ "Q33120876": {
+  "label": "Wikimedia content project",
+  "items": 2
+ },
+ "Q1293664": {
+  "label": "open content",
+  "items": 2
+ },
+ "Q1322494": {
+  "label": "sociotope",
+  "items": 2
+ },
+ "Q115471117": {
+  "label": "self-depicting entity",
+  "items": 2
+ },
+ "Q18189": {
+  "label": "educational stage",
+  "items": 2
+ },
+ "Q3375722": {
+  "label": "theatrical character",
+  "items": 2
+ },
+ "Q136937248": {
+  "label": "ongoing project",
+  "items": 2
+ },
+ "Q15809678": {
+  "label": "financial product",
+  "items": 2
+ },
+ "Q123186574": {
+  "label": "SIC industry classification",
+  "items": 2
+ },
+ "Q918240": {
+  "label": "territorial evolution of the British Empire",
+  "items": 2
+ },
+ "Q375336": {
+  "label": "film studio",
+  "items": 2
+ },
+ "Q135239856": {
+  "label": "women’s rugby union competition for national teams",
+  "items": 2
+ },
+ "Q6832945": {
+  "label": "private company limited by shares",
+  "items": 2
+ },
+ "Q1407225": {
+  "label": "television award",
+  "items": 2
+ },
+ "Q135432460": {
+  "label": "ministry of Vietnam",
+  "items": 2
+ },
+ "Q28872924": {
+  "label": "designation for an administrative territorial entity of a single country",
+  "items": 2
+ },
+ "Q12315821": {
+  "label": "transport accident investigation agency",
+  "items": 2
+ },
+ "Q2101619": {
+  "label": "political slogan",
+  "items": 2
+ },
+ "Q1378498": {
+  "label": "commercial broadcasting",
+  "items": 2
+ },
+ "Q15627509": {
+  "label": "military organization",
+  "items": 2
+ },
+ "Q14565197": {
+  "label": "body-relative direction",
+  "items": 2
+ },
+ "Q125577386": {
+  "label": "foreign intelligence service",
+  "items": 2
+ },
+ "Q149621": {
+  "label": "district",
+  "items": 2
+ },
+ "Q55582088": {
+  "label": "stablecoin",
+  "items": 2
+ },
+ "Q1710033": {
+  "label": "autonomous region with special statute",
+  "items": 2
+ },
+ "Q27865755": {
+  "label": "Canadian federal department or agency",
+  "items": 2
+ },
+ "Q102336293": {
+  "label": "live streaming service",
+  "items": 2
+ },
+ "Q138796": {
+  "label": "resistance movement",
+  "items": 2
+ },
+ "Q43747": {
+  "label": "Internet slang",
+  "items": 2
+ },
+ "Q133459727": {
+  "label": "tchoukball league",
+  "items": 2
+ },
+ "Q12046615": {
+  "label": "feature type",
+  "items": 2
+ },
+ "Q15704239": {
+  "label": "infantry battalion",
+  "items": 2
+ },
+ "Q11204": {
+  "label": "legislature",
+  "items": 2
+ },
+ "Q4774348": {
+  "label": "anti-corruption agency",
+  "items": 2
+ },
+ "Q137126043": {
+  "label": "Undesirable foreign organization in Russia",
+  "items": 2
+ },
+ "Q4117139": {
+  "label": "biological database",
+  "items": 2
+ },
+ "Q16481820": {
+  "label": "autonomous police",
+  "items": 2
+ },
+ "Q130371093": {
+  "label": "film franchise",
+  "items": 2
+ },
+ "Q212805": {
+  "label": "digital library",
+  "items": 2
+ },
+ "Q829548": {
+  "label": "over-the-top media service",
+  "items": 2
+ },
+ "Q9135": {
+  "label": "operating system",
+  "items": 2
+ },
+ "Q184973": {
+  "label": "internet radio",
+  "items": 2
+ },
+ "Q17627622": {
+  "label": "community and regional parliament",
+  "items": 2
+ },
+ "Q98140118": {
+  "label": "department of the South African government",
+  "items": 2
+ },
+ "Q110811507": {
+  "label": "French political nuance",
+  "items": 2
+ },
+ "Q1107679": {
+  "label": "animation studio",
+  "items": 2
+ },
+ "Q47154513": {
+  "label": "structural class of chemical entities",
+  "items": 2
+ },
+ "Q110376455": {
+  "label": "Australian Government body",
+  "items": 2
+ },
+ "Q99541706": {
+  "label": "historical unrecognized state",
+  "items": 2
+ },
+ "Q94579592": {
+  "label": "defunct association football club",
+  "items": 2
+ },
+ "Q721830": {
+  "label": "subscription television",
+  "items": 2
+ },
+ "Q1774898": {
+  "label": "clinic",
+  "items": 2
+ },
+ "Q11000047": {
+  "label": "health system",
+  "items": 2
+ },
+ "Q1810858": {
+  "label": "blog software",
+  "items": 2
+ },
+ "Q81058955": {
+  "label": "national demonym",
+  "items": 2
+ },
+ "Q253019": {
+  "label": "Ortsteil",
+  "items": 2
+ },
+ "Q7209526": {
+  "label": "Police tactical unit",
+  "items": 2
+ },
+ "Q61715186": {
+  "label": "podcast hosting service",
+  "items": 2
+ },
+ "Q1389311": {
+  "label": "integrated device manufacturer",
+  "items": 2
+ },
+ "Q26303": {
+  "label": "ultramarathon",
+  "items": 2
+ },
+ "Q25768329": {
+  "label": "political party in Catalonia",
+  "items": 2
+ },
+ "Q134626": {
+  "label": "district capital",
+  "items": 2
+ },
+ "Q3477381": {
+  "label": "automotive supplier",
+  "items": 2
+ },
+ "Q49008": {
+  "label": "prime number",
+  "items": 2
+ },
+ "Q16317911": {
+  "label": "positive integer",
+  "items": 2
+ },
+ "Q1103699": {
+  "label": "Fibonacci prime",
+  "items": 2
+ },
+ "Q12786684": {
+  "label": "Cantor number",
+  "items": 2
+ },
+ "Q973861": {
+  "label": "factorial prime",
+  "items": 2
+ },
+ "Q375355": {
+  "label": "harshad number",
+  "items": 2
+ },
+ "Q2085786": {
+  "label": "primorial prime",
+  "items": 2
+ },
+ "Q728223": {
+  "label": "Euclid number",
+  "items": 2
+ },
+ "Q1021645": {
+  "label": "office building",
+  "items": 2
+ },
+ "Q4263830": {
+  "label": "literary form",
+  "items": 2
+ },
+ "Q1250464": {
+  "label": "realm",
+  "items": 2
+ },
+ "Q1134686": {
+  "label": "frazione",
+  "items": 2
+ },
+ "Q721639": {
+  "label": "flag carrier",
+  "items": 2
+ },
+ "Q1519799": {
+  "label": "ministry of health",
+  "items": 2
+ },
+ "Q99935030": {
+  "label": "Oberste Bundesbehörde",
+  "items": 2
+ },
+ "Q73365221": {
+  "label": "APC-funded journal",
+  "items": 2
+ },
+ "Q171": {
+  "label": "wiki",
+  "items": 2
+ },
+ "Q485258": {
+  "label": "federative unit of Brazil",
+  "items": 2
+ },
+ "Q183888": {
+  "label": "software developer",
+  "items": 2
+ },
+ "Q136418537": {
+  "label": "US state national guard",
+  "items": 2
+ },
+ "Q108403040": {
+  "label": "university in Ontario",
+  "items": 2
+ },
+ "Q845392": {
+  "label": "polytechnic",
+  "items": 2
+ },
+ "Q690109": {
+  "label": "branch of service",
+  "items": 2
+ },
+ "Q2389789": {
+  "label": "steel roller coaster",
+  "items": 2
+ },
+ "Q860572": {
+  "label": "photo agency",
+  "items": 2
+ },
+ "Q11221827": {
+  "label": "ministry of Spain",
+  "items": 2
+ },
+ "Q15648574": {
+  "label": "racecar constructor",
+  "items": 2
+ },
+ "Q2755753": {
+  "label": "area of London",
+  "items": 2
+ },
+ "Q92483361": {
+  "label": "subscription television channel",
+  "items": 2
+ },
+ "Q3726248": {
+  "label": "territorial body",
+  "items": 2
+ },
+ "Q135734549": {
+  "label": "Dutch government agency",
+  "items": 2
+ },
+ "Q116961403": {
+  "label": "conversational AI",
+  "items": 2
+ },
+ "Q85635630": {
+  "label": "urban district of North Rhine-Westphalia",
+  "items": 2
+ },
+ "Q1172284": {
+  "label": "data set",
+  "items": 2
+ },
+ "Q5784108": {
+  "label": "judicial council",
+  "items": 2
+ },
+ "Q5621421": {
+  "label": "private company",
+  "items": 2
+ },
+ "Q317623": {
+  "label": "technical standard",
+  "items": 2
+ },
+ "Q21451686": {
+  "label": "Scottish unitary authority council",
+  "items": 2
+ },
+ "Q1778118": {
+  "label": "volcano observatory",
+  "items": 2
+ },
+ "Q76215292": {
+  "label": "furniture store chain",
+  "items": 2
+ },
+ "Q6017592": {
+  "label": "ministry of Peru",
+  "items": 2
+ },
+ "Q22996476": {
+  "label": "ayuntamiento",
+  "items": 2
+ },
+ "Q202866": {
+  "label": "animated film",
+  "items": 2
+ },
+ "Q2671652": {
+  "label": "medical test",
+  "items": 2
+ },
+ "Q23037160": {
+  "label": "quasi-state",
+  "items": 2
+ },
+ "Q2658935": {
+  "label": "beauty contest",
+  "items": 2
+ },
+ "Q58863414": {
+  "label": "female beauty pageant",
+  "items": 2
+ },
+ "Q320501": {
+  "label": "Landtag",
+  "items": 2
+ },
+ "Q26213387": {
+  "label": "Olympic delegation",
+  "items": 2
+ },
+ "Q1298668": {
+  "label": "science project",
+  "items": 2
+ },
+ "Q5058355": {
+  "label": "cellular component",
+  "items": 2
+ },
+ "Q171441": {
+  "label": "enclave",
+  "items": 2
+ },
+ "Q650483": {
+  "label": "sports journalism",
+  "items": 2
+ },
+ "Q3508237": {
+  "label": "agriculture and forestry trade union",
+  "items": 2
+ },
+ "Q55341040": {
+  "label": "video game database",
+  "items": 2
+ },
+ "Q20027953": {
+  "label": "aircraft functional class",
+  "items": 2
+ },
+ "Q73364223": {
+  "label": "society journal",
+  "items": 2
+ },
+ "Q11707": {
+  "label": "restaurant",
+  "items": 2
+ },
+ "Q828803": {
+  "label": "job title",
+  "items": 2
+ },
+ "Q8171": {
+  "label": "word",
+  "items": 2
+ },
+ "Q180958": {
+  "label": "faculty",
+  "items": 2
+ },
+ "Q15720567": {
+  "label": "superhero team",
+  "items": 2
+ },
+ "Q14623646": {
+  "label": "fictional organization",
+  "items": 2
+ },
+ "Q110706912": {
+  "label": "Islamic organization",
+  "items": 2
+ },
+ "Q483639": {
+  "label": "cloud computing",
+  "items": 2
+ },
+ "Q1254596": {
+  "label": "software as a service",
+  "items": 2
+ },
+ "Q136649946": {
+  "label": "type of position",
+  "items": 2
+ },
+ "Q179216": {
+  "label": "cartel",
+  "items": 2
+ },
+ "Q471855": {
+  "label": "jurisdiction",
+  "items": 2
+ },
+ "Q355567": {
+  "label": "noble title",
+  "items": 2
+ },
+ "Q133442": {
+  "label": "city-state",
+  "items": 2
+ },
+ "Q5354754": {
+  "label": "talent agency",
+  "items": 2
+ },
+ "Q417175": {
+  "label": "kingdom",
+  "items": 2
+ },
+ "Q6957341": {
+  "label": "major religious group",
+  "items": 2
+ },
+ "Q54445847": {
+  "label": "type of economic interaction",
+  "items": 2
+ },
+ "Q137290726": {
+  "label": "language-based geopolitical organization",
+  "items": 2
+ },
+ "Q210588": {
+  "label": "umbrella term",
+  "items": 2
+ },
+ "Q815823": {
+  "label": "business model",
+  "items": 2
+ },
+ "Q136069342": {
+  "label": "ministry of Bulgaria",
+  "items": 2
+ },
+ "Q1151628": {
+  "label": "marine expeditionary unit",
+  "items": 2
+ },
+ "Q16831714": {
+  "label": "government building",
+  "items": 2
+ },
+ "Q1139184": {
+  "label": "United Kingdom Special Forces",
+  "items": 1
+ },
+ "Q47224683": {
+  "label": "special forces regiment",
+  "items": 1
+ },
+ "Q1920219": {
+  "label": "social issue",
+  "items": 1
+ },
+ "Q45364": {
+  "label": "wing",
+  "items": 1
+ },
+ "Q98658352": {
+  "label": "higher education institution directly under Ministry of Education of the People’s Republic of China",
+  "items": 1
+ },
+ "Q16077796": {
+  "label": "vice-ministerial level university",
+  "items": 1
+ },
+ "Q76998317": {
+  "label": "sailing competition",
+  "items": 1
+ },
+ "Q68": {
+  "label": "computer",
+  "items": 1
+ },
+ "Q185149": {
+  "label": "small form factor",
+  "items": 1
+ },
+ "Q90285879": {
+  "label": "glass producer",
+  "items": 1
+ },
+ "Q1191337": {
+  "label": "electronic toll collection",
+  "items": 1
+ },
+ "Q216712": {
+  "label": "region of New Zealand",
+  "items": 1
+ },
+ "Q8386": {
+  "label": "drug",
+  "items": 1
+ },
+ "Q188724": {
+  "label": "non-steroidal anti-inflammatory drug",
+  "items": 1
+ },
+ "Q5175548": {
+  "label": "cottage orné",
+  "items": 1
+ },
+ "Q3591586": {
+  "label": "public scientific, cultural or professional establishment",
+  "items": 1
+ },
+ "Q179023": {
+  "label": "French colonial empire",
+  "items": 1
+ },
+ "Q15409298": {
+  "label": "Japanese ministry",
+  "items": 1
+ },
+ "Q98426086": {
+  "label": "volleyball association",
+  "items": 1
+ },
+ "Q2651004": {
+  "label": "Palazzo",
+  "items": 1
+ },
+ "Q7535186": {
+  "label": "professional skill",
+  "items": 1
+ },
+ "Q1767829": {
+  "label": "comprehensive university",
+  "items": 1
+ },
+ "Q17028492": {
+  "label": "hypothetical technology",
+  "items": 1
+ },
+ "Q6453739": {
+  "label": "primitive notion",
+  "items": 1
+ },
+ "Q3242920": {
+  "label": "data protection authority",
+  "items": 1
+ },
+ "Q2537117": {
+  "label": "major film studios",
+  "items": 1
+ },
+ "Q3117900": {
+  "label": "Q3117900",
+  "items": 1
+ },
+ "Q128520788": {
+  "label": "AI safety institute",
+  "items": 1
+ },
+ "Q15275192": {
+  "label": "political initiative",
+  "items": 1
+ },
+ "Q2801262": {
+  "label": "hacker group",
+  "items": 1
+ },
+ "Q122828037": {
+  "label": "office of state attorney",
+  "items": 1
+ },
+ "Q1940786": {
+  "label": "quango",
+  "items": 1
+ },
+ "Q56087210": {
+  "label": "tabloid media",
+  "items": 1
+ },
+ "Q701632": {
+  "label": "municipal council",
+  "items": 1
+ },
+ "Q7885131": {
+  "label": "uniformed service",
+  "items": 1
+ },
+ "Q15849571": {
+  "label": "sub-brand",
+  "items": 1
+ },
+ "Q1186981": {
+  "label": "supercarrier",
+  "items": 1
+ },
+ "Q31840118": {
+  "label": "Product group",
+  "items": 1
+ },
+ "Q732577": {
+  "label": "publication",
+  "items": 1
+ },
+ "Q3186812": {
+  "label": "gazette",
+  "items": 1
+ },
+ "Q134301525": {
+  "label": "ministry of Uruguay",
+  "items": 1
+ },
+ "Q11879590": {
+  "label": "female given name",
+  "items": 1
+ },
+ "Q2667285": {
+  "label": "ancient university",
+  "items": 1
+ },
+ "Q138587933": {
+  "label": "list of coaches",
+  "items": 1
+ },
+ "Q98426739": {
+  "label": "tennis association",
+  "items": 1
+ },
+ "Q15893266": {
+  "label": "former entity",
+  "items": 1
+ },
+ "Q1059324": {
+  "label": "university hospital",
+  "items": 1
+ },
+ "Q153936": {
+  "label": "militia",
+  "items": 1
+ },
+ "Q1951366": {
+  "label": "public utility",
+  "items": 1
+ },
+ "Q1381899": {
+  "label": "cities in Vietnam",
+  "items": 1
+ },
+ "Q15818902": {
+  "label": "HDMI stick",
+  "items": 1
+ },
+ "Q3249551": {
+  "label": "process",
+  "items": 1
+ },
+ "Q1262712": {
+  "label": "gas pipeline",
+  "items": 1
+ },
+ "Q22575733": {
+  "label": "TV magazine",
+  "items": 1
+ },
+ "Q125258836": {
+  "label": "brother duo",
+  "items": 1
+ },
+ "Q14192234": {
+  "label": "mainland territory of Australia",
+  "items": 1
+ },
+ "Q61676930": {
+  "label": "pharmacy chain",
+  "items": 1
+ },
+ "Q40434727": {
+  "label": "team rivalry in sports",
+  "items": 1
+ },
+ "Q1153401": {
+  "label": "fashion show",
+  "items": 1
+ },
+ "Q2065227": {
+  "label": "government gazette",
+  "items": 1
+ },
+ "Q137901542": {
+  "label": "NCAA volleyball team",
+  "items": 1
+ },
+ "Q111628618": {
+  "label": "upper-level agency of Denmark",
+  "items": 1
+ },
+ "Q12362643": {
+  "label": "financial supervisory authority",
+  "items": 1
+ },
+ "Q2276925": {
+  "label": "municipality of Galicia",
+  "items": 1
+ },
+ "Q20643955": {
+  "label": "human biblical figure",
+  "items": 1
+ },
+ "Q105438538": {
+  "label": "United States Army Air Defense Artillery Brigade",
+  "items": 1
+ },
+ "Q17455058": {
+  "label": "music museum",
+  "items": 1
+ },
+ "Q24699794": {
+  "label": "museum building",
+  "items": 1
+ },
+ "Q1046088": {
+  "label": "hall of fame",
+  "items": 1
+ },
+ "Q15692657": {
+  "label": "Canadian superior court",
+  "items": 1
+ },
+ "Q74817647": {
+  "label": "aspect in a geographic region",
+  "items": 1
+ },
+ "Q56019": {
+  "label": "military rank",
+  "items": 1
+ },
+ "Q2499115": {
+  "label": "parliamentary committee of inquiry",
+  "items": 1
+ },
+ "Q76213979": {
+  "label": "convenience store chain",
+  "items": 1
+ },
+ "Q6043746": {
+  "label": "intellectual property organization",
+  "items": 1
+ },
+ "Q624902": {
+  "label": "online advertising",
+  "items": 1
+ },
+ "Q37038": {
+  "label": "advertising",
+  "items": 1
+ },
+ "Q1341006": {
+  "label": "extracurricular activity",
+  "items": 1
+ },
+ "Q811430": {
+  "label": "fixed construction",
+  "items": 1
+ },
+ "Q160016": {
+  "label": "member states of the United Nations",
+  "items": 1
+ },
+ "Q6688521": {
+  "label": "permanent members of the United Nations Security Council",
+  "items": 1
+ },
+ "Q113393649": {
+  "label": "cratonym",
+  "items": 1
+ },
+ "Q2526886": {
+  "label": "ecclesiastical polity",
+  "items": 1
+ },
+ "Q998672": {
+  "label": "book fair",
+  "items": 1
+ },
+ "Q42336871": {
+  "label": "crowdfunding platform",
+  "items": 1
+ },
+ "Q344836": {
+  "label": "supermax prison",
+  "items": 1
+ },
+ "Q132776456": {
+  "label": "twin brother duo",
+  "items": 1
+ },
+ "Q1790144": {
+  "label": "unit of time",
+  "items": 1
+ },
+ "Q21684377": {
+  "label": "unit without standard conversion to SI",
+  "items": 1
+ },
+ "Q82047057": {
+  "label": "UCUM derived unit",
+  "items": 1
+ },
+ "Q5509032": {
+  "label": "funding body",
+  "items": 1
+ },
+ "Q5419285": {
+  "label": "examination board",
+  "items": 1
+ },
+ "Q118798990": {
+  "label": "international association of the faithful",
+  "items": 1
+ },
+ "Q3863": {
+  "label": "asteroid",
+  "items": 1
+ },
+ "Q7258040": {
+  "label": "water utility",
+  "items": 1
+ },
+ "Q4539": {
+  "label": "cooperative",
+  "items": 1
+ },
+ "Q130639613": {
+  "label": "automobile repair shop chain",
+  "items": 1
+ },
+ "Q6857899": {
+  "label": "militia of the United States",
+  "items": 1
+ },
+ "Q20032039": {
+  "label": "tire manufacturer",
+  "items": 1
+ },
+ "Q75179210": {
+  "label": "handball league",
+  "items": 1
+ },
+ "Q16827539": {
+  "label": "Combat support agency",
+  "items": 1
+ },
+ "Q2835959": {
+  "label": "health insurance organisation in Belgium",
+  "items": 1
+ },
+ "Q59281": {
+  "label": "provisional government",
+  "items": 1
+ },
+ "Q56477766": {
+  "label": "electoral ward of Melbourne City Council",
+  "items": 1
+ },
+ "Q55850643": {
+  "label": "music track without lyrics",
+  "items": 1
+ },
+ "Q3143387": {
+  "label": "ministry of the Netherlands",
+  "items": 1
+ },
+ "Q1137319": {
+  "label": "market maker",
+  "items": 1
+ },
+ "Q28653": {
+  "label": "mendicant order",
+  "items": 1
+ },
+ "Q95993050": {
+  "label": "first order",
+  "items": 1
+ },
+ "Q21040876": {
+  "label": "one-state party",
+  "items": 1
+ },
+ "Q108838260": {
+  "label": "executive agency in the Scottish government",
+  "items": 1
+ },
+ "Q110256698": {
+  "label": "Stack Exchange forum site",
+  "items": 1
+ },
+ "Q10931": {
+  "label": "revolution",
+  "items": 1
+ },
+ "Q16335296": {
+  "label": "historical profession",
+  "items": 1
+ },
+ "Q98579904": {
+  "label": "tractor brand",
+  "items": 1
+ },
+ "Q18195680": {
+  "label": "shoe style",
+  "items": 1
+ },
+ "Q7543013": {
+  "label": "Small business software",
+  "items": 1
+ },
+ "Q124708886": {
+  "label": "super PAC",
+  "items": 1
+ },
+ "Q223662": {
+  "label": "SI base unit",
+  "items": 1
+ },
+ "Q1978718": {
+  "label": "unit of length",
+  "items": 1
+ },
+ "Q82047053": {
+  "label": "UCUM base unit",
+  "items": 1
+ },
+ "Q12036470": {
+  "label": "metric unit",
+  "items": 1
+ },
+ "Q61708099": {
+  "label": "urban district in Saxony",
+  "items": 1
+ },
+ "Q100709275": {
+  "label": "combat vehicle family",
+  "items": 1
+ },
+ "Q131436": {
+  "label": "board game",
+  "items": 1
+ },
+ "Q63563749": {
+  "label": "online integrated development environment",
+  "items": 1
+ },
+ "Q6953133": {
+  "label": "NCI-designated Cancer Center",
+  "items": 1
+ },
+ "Q22130673": {
+  "label": "general incorporated association",
+  "items": 1
+ },
+ "Q12057459": {
+  "label": "writers union",
+  "items": 1
+ },
+ "Q1162751": {
+  "label": "Government of Hungary",
+  "items": 1
+ },
+ "Q1081138": {
+  "label": "historic site",
+  "items": 1
+ },
+ "Q17326725": {
+  "label": "group of companies",
+  "items": 1
+ },
+ "Q261232": {
+  "label": "business unit",
+  "items": 1
+ },
+ "Q765517": {
+  "label": "credit rating agency",
+  "items": 1
+ },
+ "Q1760610": {
+  "label": "comic book",
+  "items": 1
+ },
+ "Q96253971": {
+  "label": "type of property",
+  "items": 1
+ },
+ "Q3664326": {
+  "label": "Pirate Party",
+  "items": 1
+ },
+ "Q1484397": {
+  "label": "talent show",
+  "items": 1
+ },
+ "Q614593": {
+  "label": "collegiate body",
+  "items": 1
+ },
+ "Q43060": {
+  "label": "online music store",
+  "items": 1
+ },
+ "Q1711361": {
+  "label": "youth ministry",
+  "items": 1
+ },
+ "Q1391517": {
+  "label": "trade association",
+  "items": 1
+ },
+ "Q1138279": {
+  "label": "associated state",
+  "items": 1
+ },
+ "Q18357417": {
+  "label": "online social movement",
+  "items": 1
+ },
+ "Q938993": {
+  "label": "frivolous political party",
+  "items": 1
+ },
+ "Q10651067": {
+  "label": "representation team",
+  "items": 1
+ },
+ "Q16735822": {
+  "label": "history museum",
+  "items": 1
+ },
+ "Q15097084": {
+  "label": "heritage register",
+  "items": 1
+ },
+ "Q108841485": {
+  "label": "council",
+  "items": 1
+ },
+ "Q4356073": {
+  "label": "spectator sport",
+  "items": 1
+ },
+ "Q29555301": {
+  "label": "fundación bancaria",
+  "items": 1
+ },
+ "Q2917176": {
+  "label": "savings bank",
+  "items": 1
+ },
+ "Q483394": {
+  "label": "genre",
+  "items": 1
+ },
+ "Q235557": {
+  "label": "file format",
+  "items": 1
+ },
+ "Q15709854": {
+  "label": "liquefied natural gas terminal",
+  "items": 1
+ },
+ "Q7049495": {
+  "label": "nonmineral",
+  "items": 1
+ },
+ "Q169336": {
+  "label": "mixture",
+  "items": 1
+ },
+ "Q317088": {
+  "label": "commodity",
+  "items": 1
+ },
+ "Q4867756": {
+  "label": "basketball tournament",
+  "items": 1
+ },
+ "Q54782868": {
+  "label": "Q54782868",
+  "items": 1
+ },
+ "Q2990946": {
+  "label": "golf tournament",
+  "items": 1
+ },
+ "Q134016100": {
+  "label": "state agency of Florida",
+  "items": 1
+ },
+ "Q1789452": {
+  "label": "criterion",
+  "items": 1
+ },
+ "Q187931": {
+  "label": "phrase",
+  "items": 1
+ },
+ "Q11396118": {
+  "label": "divided territory",
+  "items": 1
+ },
+ "Q61809711": {
+  "label": "color pattern",
+  "items": 1
+ },
+ "Q5420795": {
+  "label": "expansion team",
+  "items": 1
+ },
+ "Q209225": {
+  "label": "national liberation movement",
+  "items": 1
+ },
+ "Q1131951": {
+  "label": "acidity function",
+  "items": 1
+ },
+ "Q2914650": {
+  "label": "identity politics",
+  "items": 1
+ },
+ "Q9149": {
+  "label": "fundamentalism",
+  "items": 1
+ },
+ "Q50843310": {
+  "label": "team tennis event",
+  "items": 1
+ },
+ "Q166902": {
+  "label": "primary color",
+  "items": 1
+ },
+ "Q56053097": {
+  "label": "HTML4 named color",
+  "items": 1
+ },
+ "Q910300": {
+  "label": "spectral color",
+  "items": 1
+ },
+ "Q137796868": {
+  "label": "Crayola crayon color",
+  "items": 1
+ },
+ "Q1295201": {
+  "label": "grocery store",
+  "items": 1
+ },
+ "Q750656": {
+  "label": "hypermarket",
+  "items": 1
+ },
+ "Q1207505": {
+  "label": "quality",
+  "items": 1
+ },
+ "Q6806478": {
+  "label": "medical brigade",
+  "items": 1
+ },
+ "Q190258": {
+  "label": "need",
+  "items": 1
+ },
+ "Q172847": {
+  "label": "peptide",
+  "items": 1
+ },
+ "Q28598684": {
+  "label": "branch of biology",
+  "items": 1
+ },
+ "Q131565179": {
+  "label": "branch of astronomy",
+  "items": 1
+ },
+ "Q891055": {
+  "label": "package manager",
+  "items": 1
+ },
+ "Q312466": {
+  "label": "utility software",
+  "items": 1
+ },
+ "Q685309": {
+  "label": "former municipality of Switzerland",
+  "items": 1
+ },
+ "Q11183787": {
+  "label": "Ortschaft",
+  "items": 1
+ },
+ "Q123370638": {
+  "label": "branch of computer science",
+  "items": 1
+ },
+ "Q125161275": {
+  "label": "type of intelligence",
+  "items": 1
+ },
+ "Q61061942": {
+  "label": "online real estate database",
+  "items": 1
+ },
+ "Q13218357": {
+  "label": "city of California",
+  "items": 1
+ },
+ "Q132555858": {
+  "label": "railway station in a highway median",
+  "items": 1
+ },
+ "Q6040928": {
+  "label": "Institute of Technology",
+  "items": 1
+ },
+ "Q15910354": {
+  "label": "soft skills",
+  "items": 1
+ },
+ "Q1142726": {
+  "label": "intelligent agent",
+  "items": 1
+ },
+ "Q73806652": {
+  "label": "police oversight organization",
+  "items": 1
+ },
+ "Q2469603": {
+  "label": "news style",
+  "items": 1
+ },
+ "Q1740966": {
+  "label": "public transport bus service",
+  "items": 1
+ },
+ "Q1329623": {
+  "label": "cultural center",
+  "items": 1
+ },
+ "Q897403": {
+  "label": "language school",
+  "items": 1
+ },
+ "Q3282637": {
+  "label": "film producer",
+  "items": 1
+ },
+ "Q578109": {
+  "label": "television producer",
+  "items": 1
+ },
+ "Q5420001": {
+  "label": "exempt charity",
+  "items": 1
+ },
+ "Q55990535": {
+  "label": "computer model",
+  "items": 1
+ },
+ "Q171751": {
+  "label": "banana republic",
+  "items": 1
+ },
+ "Q234262": {
+  "label": "surah",
+  "items": 1
+ },
+ "Q10742": {
+  "label": "autonomous community of Spain",
+  "items": 1
+ },
+ "Q406957": {
+  "label": "NUTS 1 statistical territorial entity",
+  "items": 1
+ },
+ "Q100546947": {
+  "label": "gymnastics association",
+  "items": 1
+ },
+ "Q64801076": {
+  "label": "education in country or region",
+  "items": 1
+ },
+ "Q20151226": {
+  "label": "international rally championship series",
+  "items": 1
+ },
+ "Q116052725": {
+  "label": "national geopolitical entity",
+  "items": 1
+ },
+ "Q141728554": {
+  "label": "police unit type class",
+  "items": 1
+ },
+ "Q23384401": {
+  "label": "Islamic term",
+  "items": 1
+ },
+ "Q12189625": {
+  "label": "Sufi terminology",
+  "items": 1
+ },
+ "Q26849121": {
+  "label": "amateur cycling team",
+  "items": 1
+ },
+ "Q6822251": {
+  "label": "meta-ethnicity",
+  "items": 1
+ },
+ "Q12031379": {
+  "label": "capital of region",
+  "items": 1
+ },
+ "Q1993723": {
+  "label": "administrative territorial entity of the Ottoman Empire",
+  "items": 1
+ },
+ "Q44565": {
+  "label": "eyalet",
+  "items": 1
+ },
+ "Q113388921": {
+  "label": "privileged Ottoman province",
+  "items": 1
+ },
+ "Q5519929": {
+  "label": "game creation system",
+  "items": 1
+ },
+ "Q193564": {
+  "label": "game engine",
+  "items": 1
+ },
+ "Q73628410": {
+  "label": "chamber of the National Court of Spain",
+  "items": 1
+ },
+ "Q19720191": {
+  "label": "large publisher",
+  "items": 1
+ },
+ "Q480477": {
+  "label": "local court (Germany)",
+  "items": 1
+ },
+ "Q2138576": {
+  "label": "Registration court",
+  "items": 1
+ },
+ "Q5113": {
+  "label": "bird",
+  "items": 1
+ },
+ "Q96312874": {
+  "label": "Public Research Organization",
+  "items": 1
+ },
+ "Q10498148": {
+  "label": "research council",
+  "items": 1
+ },
+ "Q109909183": {
+  "label": "nuclear research institute",
+  "items": 1
+ },
+ "Q62687": {
+  "label": "forestry agency",
+  "items": 1
+ },
+ "Q98417505": {
+  "label": "swimming association",
+  "items": 1
+ },
+ "Q1059863": {
+  "label": "women's magazine",
+  "items": 1
+ },
+ "Q131693011": {
+  "label": "DJ collective",
+  "items": 1
+ },
+ "Q583152": {
+  "label": "neutrino detector",
+  "items": 1
+ },
+ "Q1254933": {
+  "label": "astronomical observatory",
+  "items": 1
+ },
+ "Q42421242": {
+  "label": "field hockey club",
+  "items": 1
+ },
+ "Q3301053": {
+  "label": "consolidated city-county",
+  "items": 1
+ },
+ "Q140044899": {
+  "label": "municipality of Colorado",
+  "items": 1
+ },
+ "Q614084": {
+  "label": "consumer cooperative",
+  "items": 1
+ },
+ "Q947233": {
+  "label": "High Council of State",
+  "items": 1
+ },
+ "Q102356": {
+  "label": "brigade",
+  "items": 1
+ },
+ "Q349843": {
+  "label": "allied health profession",
+  "items": 1
+ },
+ "Q104086571": {
+  "label": "first-order class",
+  "items": 1
+ },
+ "Q189898": {
+  "label": "Emirate",
+  "items": 1
+ },
+ "Q95074": {
+  "label": "character",
+  "items": 1
+ },
+ "Q10836209": {
+  "label": "digital currency",
+  "items": 1
+ },
+ "Q18204722": {
+  "label": "decentralized autonomous organization",
+  "items": 1
+ },
+ "Q62032401": {
+  "label": "album chart",
+  "items": 1
+ },
+ "Q1116826": {
+  "label": "private security company",
+  "items": 1
+ },
+ "Q917441": {
+  "label": "environment ministry",
+  "items": 1
+ },
+ "Q1534992": {
+  "label": "housing company",
+  "items": 1
+ },
+ "Q21672098": {
+  "label": "village of Ukraine",
+  "items": 1
+ },
+ "Q6502151": {
+  "label": "tax evasion",
+  "items": 1
+ },
+ "Q192909": {
+  "label": "scandal",
+  "items": 1
+ },
+ "Q1172486": {
+  "label": "data breach",
+  "items": 1
+ },
+ "Q866427": {
+  "label": "Grand Tour",
+  "items": 1
+ },
+ "Q5852411": {
+  "label": "state of Australia",
+  "items": 1
+ },
+ "Q63869263": {
+  "label": "bakery chain",
+  "items": 1
+ },
+ "Q3409269": {
+  "label": "statistical unit",
+  "items": 1
+ },
+ "Q16465919": {
+  "label": "community website",
+  "items": 1
+ },
+ "Q612825": {
+  "label": "online dating service",
+  "items": 1
+ },
+ "Q848328": {
+  "label": "serotype",
+  "items": 1
+ },
+ "Q1499804": {
+  "label": "grade of an order",
+  "items": 1
+ },
+ "Q1781513": {
+  "label": "position",
+  "items": 1
+ },
+ "Q119173073": {
+  "label": "United States article III court",
+  "items": 1
+ },
+ "Q4663903": {
+  "label": "Wikimedia portal",
+  "items": 1
+ },
+ "Q34548345": {
+  "label": "international association football clubs competition",
+  "items": 1
+ },
+ "Q11904181": {
+  "label": "Spanish electoral administration",
+  "items": 1
+ },
+ "Q62008942": {
+  "label": "electronic device model",
+  "items": 1
+ },
+ "Q3736859": {
+  "label": "virtual band",
+  "items": 1
+ },
+ "Q6619719": {
+  "label": "fictional musical ensemble",
+  "items": 1
+ },
+ "Q1492380": {
+  "label": "restaurant guide",
+  "items": 1
+ },
+ "Q4383245": {
+  "label": "public authority",
+  "items": 1
+ },
+ "Q141546978": {
+  "label": "video game franchise",
+  "items": 1
+ },
+ "Q1414426": {
+  "label": "film database",
+  "items": 1
+ },
+ "Q110029326": {
+  "label": "platform company",
+  "items": 1
+ },
+ "Q1668023": {
+  "label": "Internet booking engine",
+  "items": 1
+ },
+ "Q65295049": {
+  "label": "online taxi service",
+  "items": 1
+ },
+ "Q113595787": {
+  "label": "inter-dealer quotation system",
+  "items": 1
+ },
+ "Q2008856": {
+  "label": "command",
+  "items": 1
+ },
+ "Q78634583": {
+  "label": "military training unit",
+  "items": 1
+ },
+ "Q11533936": {
+  "label": "Judo competition",
+  "items": 1
+ },
+ "Q11224256": {
+  "label": "IP network",
+  "items": 1
+ },
+ "Q1301371": {
+  "label": "computer network",
+  "items": 1
+ },
+ "Q12579633": {
+  "label": "invention",
+  "items": 1
+ },
+ "Q11384": {
+  "label": "wide area network",
+  "items": 1
+ },
+ "Q139256889": {
+  "label": "Crown body",
+  "items": 1
+ },
+ "Q121296737": {
+  "label": "department of the Government of Bangladesh",
+  "items": 1
+ },
+ "Q1426546": {
+  "label": "loyalty program",
+  "items": 1
+ },
+ "Q7930989": {
+  "label": "city or town",
+  "items": 1
+ },
+ "Q137393561": {
+  "label": "type of park",
+  "items": 1
+ },
+ "Q15614021": {
+  "label": "VoIP software",
+  "items": 1
+ },
+ "Q1094617": {
+  "label": "mutant",
+  "items": 1
+ },
+ "Q15711870": {
+  "label": "animated character",
+  "items": 1
+ },
+ "Q15773347": {
+  "label": "film character",
+  "items": 1
+ },
+ "Q55740544": {
+  "label": "CGI character",
+  "items": 1
+ },
+ "Q135641755": {
+  "label": "women's association football league",
+  "items": 1
+ },
+ "Q34763": {
+  "label": "peninsula",
+  "items": 1
+ },
+ "Q80071": {
+  "label": "symbol",
+  "items": 1
+ },
+ "Q17335294": {
+  "label": "flag or coat of arms",
+  "items": 1
+ },
+ "Q2627141": {
+  "label": "inter-parliamentary institution",
+  "items": 1
+ },
+ "Q109509795": {
+  "label": "web broadcaster",
+  "items": 1
+ },
+ "Q1298239": {
+  "label": "executive order",
+  "items": 1
+ },
+ "Q18328097": {
+  "label": "courage award",
+  "items": 1
+ },
+ "Q1788716": {
+  "label": "military decoration",
+  "items": 1
+ },
+ "Q107390": {
+  "label": "federated state",
+  "items": 1
+ },
+ "Q836915": {
+  "label": "free state",
+  "items": 1
+ },
+ "Q596321": {
+  "label": "ward",
+  "items": 1
+ },
+ "Q18786396": {
+  "label": "pig breed",
+  "items": 1
+ },
+ "Q1155404": {
+  "label": "vector graphics editor",
+  "items": 1
+ },
+ "Q105557478": {
+  "label": "distributed collaboration software",
+  "items": 1
+ },
+ "Q105558035": {
+  "label": "prototype software",
+  "items": 1
+ },
+ "Q7258079": {
+  "label": "unlisted public company",
+  "items": 1
+ },
+ "Q5198626": {
+  "label": "cycling club",
+  "items": 1
+ },
+ "Q8436": {
+  "label": "family",
+  "items": 1
+ },
+ "Q14752149": {
+  "label": "amateur football club",
+  "items": 1
+ },
+ "Q761977": {
+  "label": "original design manufacturer",
+  "items": 1
+ },
+ "Q240795": {
+  "label": "tag editor",
+  "items": 1
+ },
+ "Q2916479": {
+  "label": "shopping cart software",
+  "items": 1
+ },
+ "Q864897": {
+  "label": "single-elimination tournament",
+  "items": 1
+ },
+ "Q18247357": {
+  "label": "group of structures or buildings",
+  "items": 1
+ },
+ "Q253946": {
+  "label": "fashion week",
+  "items": 1
+ },
+ "Q819122": {
+  "label": "location-based game",
+  "items": 1
+ },
+ "Q41346237": {
+  "label": "interactive web map",
+  "items": 1
+ },
+ "Q124785394": {
+  "label": "online atlas",
+  "items": 1
+ },
+ "Q132798322": {
+  "label": "type of plan, scheme or program",
+  "items": 1
+ },
+ "Q7243180": {
+  "label": "primary ticket outlet",
+  "items": 1
+ },
+ "Q44405595": {
+  "label": "fictional intelligence agency",
+  "items": 1
+ },
+ "Q32178211": {
+  "label": "music organization",
+  "items": 1
+ },
+ "Q21073023": {
+  "label": "combustible powder",
+  "items": 1
+ },
+ "Q1929547": {
+  "label": "chalcophile element",
+  "items": 1
+ },
+ "Q146083": {
+  "label": "Ancient Egyptian deity",
+  "items": 1
+ },
+ "Q1259759": {
+  "label": "miniseries",
+  "items": 1
+ },
+ "Q132180130": {
+  "label": "car parts shop chain",
+  "items": 1
+ },
+ "Q47371099": {
+  "label": "non-positive integer",
+  "items": 1
+ },
+ "Q12503": {
+  "label": "integer",
+  "items": 1
+ },
+ "Q28920052": {
+  "label": "non-negative integer",
+  "items": 1
+ },
+ "Q2313686": {
+  "label": "automorphic number",
+  "items": 1
+ },
+ "Q2767837": {
+  "label": "additive identity",
+  "items": 1
+ },
+ "Q4115680": {
+  "label": "Italian city-state",
+  "items": 1
+ },
+ "Q135261034": {
+  "label": "proposed sports team",
+  "items": 1
+ },
+ "Q2727468": {
+  "label": "build automation",
+  "items": 1
+ },
+ "Q956086": {
+  "label": "bug tracking system",
+  "items": 1
+ },
+ "Q965769": {
+  "label": "continuous integration",
+  "items": 1
+ },
+ "Q15042037": {
+  "label": "statistical territorial entity",
+  "items": 1
+ },
+ "Q105742469": {
+  "label": "legislative capital",
+  "items": 1
+ },
+ "Q7593080": {
+  "label": "add-on",
+  "items": 1
+ },
+ "Q571": {
+  "label": "book",
+  "items": 1
+ },
+ "Q57933693": {
+  "label": "book edition",
+  "items": 1
+ },
+ "Q438994": {
+  "label": "pensions in Germany",
+  "items": 1
+ },
+ "Q59284889": {
+  "label": "retirement provision",
+  "items": 1
+ },
+ "Q58038367": {
+  "label": "private retirement provision",
+  "items": 1
+ },
+ "Q105074756": {
+  "label": "municipal corporation of West Bengal",
+  "items": 1
+ },
+ "Q11271835": {
+  "label": "state capital",
+  "items": 1
+ },
+ "Q65591238": {
+  "label": "Potentially Inappropriate Medication List",
+  "items": 1
+ },
+ "Q5283178": {
+  "label": "distributed social network",
+  "items": 1
+ },
+ "Q5264406": {
+  "label": "designation",
+  "items": 1
+ },
+ "Q1077701": {
+  "label": "regional council",
+  "items": 1
+ },
+ "Q98426442": {
+  "label": "track and field athletics federation",
+  "items": 1
+ },
+ "Q3257686": {
+  "label": "locality",
+  "items": 1
+ },
+ "Q25424534": {
+  "label": "military junta",
+  "items": 1
+ },
+ "Q135728463": {
+  "label": "men's national basketball team",
+  "items": 1
+ },
+ "Q3963243": {
+  "label": "social news website",
+  "items": 1
+ },
+ "Q393351": {
+  "label": "aggregator",
+  "items": 1
+ },
+ "Q1956140": {
+  "label": "payment service provider",
+  "items": 1
+ },
+ "Q90834785": {
+  "label": "racing automobile model",
+  "items": 1
+ },
+ "Q5380486": {
+  "label": "entertainment journalism",
+  "items": 1
+ },
+ "Q120097528": {
+  "label": "entertainment news program",
+  "items": 1
+ },
+ "Q1714118": {
+  "label": "online publication",
+  "items": 1
+ },
+ "Q57655433": {
+  "label": "type of legal entity in the United Kingdom",
+  "items": 1
+ },
+ "Q106730301": {
+  "label": "type of legal entity in Ireland",
+  "items": 1
+ },
+ "Q19884092": {
+  "label": "Italian law",
+  "items": 1
+ },
+ "Q2534790": {
+  "label": "election act",
+  "items": 1
+ },
+ "Q268378": {
+  "label": "work",
+  "items": 1
+ },
+ "Q1190554": {
+  "label": "occurrence",
+  "items": 1
+ },
+ "Q8192354": {
+  "label": "gang rape",
+  "items": 1
+ },
+ "Q137552198": {
+  "label": "cryptologic term",
+  "items": 1
+ },
+ "Q282283": {
+  "label": "prediction market",
+  "items": 1
+ },
+ "Q115211614": {
+  "label": "Paralympic mascot",
+  "items": 1
+ },
+ "Q28813646": {
+  "label": "fictional seahorse",
+  "items": 1
+ },
+ "Q5375622": {
+  "label": "encryption software",
+  "items": 1
+ },
+ "Q18922759": {
+  "label": "messaging app",
+  "items": 1
+ },
+ "Q7163": {
+  "label": "politics",
+  "items": 1
+ },
+ "Q1221033": {
+  "label": "rank group",
+  "items": 1
+ },
+ "Q123130760": {
+  "label": "NAICS industry classification",
+  "items": 1
+ },
+ "Q23702035": {
+  "label": "former liberal party",
+  "items": 1
+ },
+ "Q26934845": {
+  "label": "integral overseas territory",
+  "items": 1
+ },
+ "Q1151616": {
+  "label": "stateless nation",
+  "items": 1
+ },
+ "Q3469910": {
+  "label": "performing arts center",
+  "items": 1
+ },
+ "Q164950": {
+  "label": "dynasty",
+  "items": 1
+ },
+ "Q57318": {
+  "label": "free imperial city",
+  "items": 1
+ },
+ "Q26830017": {
+  "label": "state in the Holy Roman Empire",
+  "items": 1
+ },
+ "Q877998": {
+  "label": "students' union",
+  "items": 1
+ },
+ "Q12592379": {
+  "label": "public institution in South Korea",
+  "items": 1
+ },
+ "Q855697": {
+  "label": "subcontinent",
+  "items": 1
+ },
+ "Q1572106": {
+  "label": "mathematics competition",
+  "items": 1
+ },
+ "Q27963052": {
+  "label": "student wing",
+  "items": 1
+ },
+ "Q92707903": {
+  "label": "PM20 subject category",
+  "items": 1
+ },
+ "Q2266479": {
+  "label": "chamber of parliament",
+  "items": 1
+ },
+ "Q1407236": {
+  "label": "weigh house",
+  "items": 1
+ },
+ "Q7210362": {
+  "label": "political party committee",
+  "items": 1
+ },
+ "Q5253501": {
+  "label": "delayed open access journal",
+  "items": 1
+ },
+ "Q89934": {
+  "label": "community of Belgium",
+  "items": 1
+ },
+ "Q917146": {
+  "label": "moshav",
+  "items": 1
+ },
+ "Q582706": {
+  "label": "Israeli settlement",
+  "items": 1
+ },
+ "Q70441508": {
+  "label": "voluntary health agencies",
+  "items": 1
+ },
+ "Q189603": {
+  "label": "public health",
+  "items": 1
+ },
+ "Q122973425": {
+  "label": "ethnonational group",
+  "items": 1
+ },
+ "Q137805": {
+  "label": "pension provider",
+  "items": 1
+ },
+ "Q580148": {
+  "label": "employment website",
+  "items": 1
+ },
+ "Q127334927": {
+  "label": "band",
+  "items": 1
+ },
+ "Q4200298": {
+  "label": "distrik",
+  "items": 1
+ },
+ "Q191067": {
+  "label": "article",
+  "items": 1
+ },
+ "Q116979266": {
+  "label": "state broadcaster",
+  "items": 1
+ },
+ "Q107677413": {
+  "label": "Q107677413",
+  "items": 1
+ },
+ "Q5335686": {
+  "label": "free trade area",
+  "items": 1
+ },
+ "Q111972893": {
+  "label": "type of structure",
+  "items": 1
+ },
+ "Q5227240": {
+  "label": "data library",
+  "items": 1
+ },
+ "Q1480561": {
+  "label": "issue tracking system",
+  "items": 1
+ },
+ "Q16920237": {
+  "label": "code reviewing software",
+  "items": 1
+ },
+ "Q6686945": {
+  "label": "wiki software",
+  "items": 1
+ },
+ "Q16947796": {
+  "label": "continuous integration software",
+  "items": 1
+ },
+ "Q131406845": {
+  "label": "software series",
+  "items": 1
+ },
+ "Q17701409": {
+  "label": "economics award",
+  "items": 1
+ },
+ "Q1752434": {
+  "label": "general cargo ship",
+  "items": 1
+ },
+ "Q7896797": {
+  "label": "university spin-off",
+  "items": 1
+ },
+ "Q139850703": {
+  "label": "comedy news",
+  "items": 1
+ },
+ "Q88789639": {
+  "label": "artistic profession",
+  "items": 1
+ },
+ "Q2945729": {
+  "label": "regional hospital center",
+  "items": 1
+ },
+ "Q96264607": {
+  "label": "type of security",
+  "items": 1
+ },
+ "Q1141415": {
+  "label": "reflation",
+  "items": 1
+ },
+ "Q6055890": {
+  "label": "funding",
+  "items": 1
+ },
+ "Q386724": {
+  "label": "work",
+  "items": 1
+ },
+ "Q2324820": {
+  "label": "government bond",
+  "items": 1
+ },
+ "Q9662": {
+  "label": "kernel",
+  "items": 1
+ },
+ "Q15545584": {
+  "label": "collaborative work",
+  "items": 1
+ },
+ "Q5503618": {
+  "label": "fried chicken restaurant",
+  "items": 1
+ },
+ "Q4481741": {
+  "label": "federal ministry in Russia",
+  "items": 1
+ },
+ "Q1153767": {
+  "label": "platform as a service",
+  "items": 1
+ },
+ "Q117350903": {
+  "label": "hyperscaler",
+  "items": 1
+ },
+ "Q3354958": {
+  "label": "peacekeeping",
+  "items": 1
+ },
+ "Q192611": {
+  "label": "electoral unit",
+  "items": 1
+ },
+ "Q2983893": {
+  "label": "quarter",
+  "items": 1
+ },
+ "Q138024519": {
+  "label": "Roman Catholic episcopal title",
+  "items": 1
+ },
+ "Q119241588": {
+  "label": "youth sports competition",
+  "items": 1
+ },
+ "Q1375427": {
+  "label": "European championship",
+  "items": 1
+ },
+ "Q56604316": {
+  "label": "telecommunications equipment industry",
+  "items": 1
+ },
+ "Q62671332": {
+  "label": "mountain infantry division",
+  "items": 1
+ },
+ "Q2251595": {
+  "label": "protection",
+  "items": 1
+ },
+ "Q1717246": {
+  "label": "prevention",
+  "items": 1
+ },
+ "Q2721136": {
+  "label": "image hosting service",
+  "items": 1
+ },
+ "Q467745": {
+  "label": "union territory of India",
+  "items": 1
+ },
+ "Q879146": {
+  "label": "Christian denomination",
+  "items": 1
+ },
+ "Q4204511": {
+  "label": "historic Church",
+  "items": 1
+ },
+ "Q34651": {
+  "label": "Christian Church",
+  "items": 1
+ },
+ "Q2638480": {
+  "label": "church congregation",
+  "items": 1
+ },
+ "Q15304003": {
+  "label": "country of the Kingdom of the Netherlands",
+  "items": 1
+ },
+ "Q900119": {
+  "label": "United Nations list of non-self-governing territories",
+  "items": 1
+ },
+ "Q30124446": {
+  "label": "legislative building",
+  "items": 1
+ },
+ "Q111141985": {
+  "label": "asociación civil",
+  "items": 1
+ },
+ "Q574050": {
+  "label": "bank group",
+  "items": 1
+ },
+ "Q15623926": {
+  "label": "Wikimedia set index article",
+  "items": 1
+ },
+ "Q2555896": {
+  "label": "municipality of Colombia",
+  "items": 1
+ },
+ "Q10864048": {
+  "label": "first-level administrative division",
+  "items": 1
+ },
+ "Q499073": {
+  "label": "direct-controlled municipality",
+  "items": 1
+ },
+ "Q13218690": {
+  "label": "town in Hungary",
+  "items": 1
+ },
+ "Q681277": {
+  "label": "city with county rights",
+  "items": 1
+ },
+ "Q135641762": {
+  "label": "men's ice hockey league",
+  "items": 1
+ },
+ "Q26907166": {
+  "label": "temporal entity",
+  "items": 1
+ },
+ "Q99642674": {
+  "label": "research unit",
+  "items": 1
+ },
+ "Q6751493": {
+  "label": "darul Ifta",
+  "items": 1
+ },
+ "Q124130081": {
+  "label": "commuter rail network",
+  "items": 1
+ },
+ "Q76821174": {
+  "label": "tool manufacturing company",
+  "items": 1
+ },
+ "Q131733833": {
+  "label": "type of architectural structure",
+  "items": 1
+ },
+ "Q134496690": {
+  "label": "facility type",
+  "items": 1
+ },
+ "Q123754112": {
+  "label": "municipality of the Valencian Community",
+  "items": 1
+ },
+ "Q778043": {
+  "label": "electronic trading platform",
+  "items": 1
+ },
+ "Q106561513": {
+  "label": "proof-of-work cryptocurrency",
+  "items": 1
+ },
+ "Q23670565": {
+  "label": "professional services firm",
+  "items": 1
+ },
+ "Q264965": {
+  "label": "subculture",
+  "items": 1
+ },
+ "Q17518557": {
+  "label": "collection of articles",
+  "items": 1
+ },
+ "Q21014462": {
+  "label": "cell line",
+  "items": 1
+ },
+ "Q27555319": {
+  "label": "spontaneously immortalized cell line",
+  "items": 1
+ },
+ "Q277759": {
+  "label": "book series",
+  "items": 1
+ },
+ "Q1809541": {
+  "label": "staff",
+  "items": 1
+ },
+ "Q41773366": {
+  "label": "NUTS 3 statistical territorial entity",
+  "items": 1
+ },
+ "Q3435941": {
+  "label": "administrative territorial entity of Croatia",
+  "items": 1
+ },
+ "Q20719690": {
+  "label": "NUTS 2 statistical territorial entity",
+  "items": 1
+ },
+ "Q113709736": {
+  "label": "social media app",
+  "items": 1
+ },
+ "Q678345": {
+  "label": "prequel",
+  "items": 1
+ },
+ "Q62127": {
+  "label": "department of Haiti",
+  "items": 1
+ },
+ "Q399541": {
+  "label": "board of education",
+  "items": 1
+ },
+ "Q1074523": {
+  "label": "planned community",
+  "items": 1
+ },
+ "Q1580166": {
+  "label": "dictionary entry",
+  "items": 1
+ },
+ "Q373899": {
+  "label": "record chart",
+  "items": 1
+ },
+ "Q135741070": {
+  "label": "recurring international multi-sports competition",
+  "items": 1
+ },
+ "Q22988604": {
+  "label": "mythological Greek character",
+  "items": 1
+ },
+ "Q814610": {
+  "label": "emergency service",
+  "items": 1
+ },
+ "Q820477": {
+  "label": "mine",
+  "items": 1
+ },
+ "Q29643579": {
+  "label": "multi-level marketing company",
+  "items": 1
+ },
+ "Q1620908": {
+  "label": "historical region",
+  "items": 1
+ },
+ "Q5255892": {
+  "label": "democratic republic",
+  "items": 1
+ },
+ "Q1501855": {
+  "label": "party platform",
+  "items": 1
+ },
+ "Q578015": {
+  "label": "mounted police",
+  "items": 1
+ },
+ "Q1061648": {
+  "label": "sovereign wealth fund",
+  "items": 1
+ },
+ "Q43791339": {
+  "label": "political party in Bulgaria",
+  "items": 1
+ },
+ "Q21484471": {
+  "label": "Wikimedia article covering multiple topics",
+  "items": 1
+ },
+ "Q14946528": {
+  "label": "conflation",
+  "items": 1
+ },
+ "Q589481": {
+  "label": "Olympic stadium",
+  "items": 1
+ },
+ "Q6634155": {
+  "label": "national stadium",
+  "items": 1
+ },
+ "Q19978220": {
+  "label": "nautical term",
+  "items": 1
+ },
+ "Q125097588": {
+  "label": "web mapping platform",
+  "items": 1
+ },
+ "Q113103481": {
+  "label": "Olympian god",
+  "items": 1
+ },
+ "Q22989102": {
+  "label": "Greek deity",
+  "items": 1
+ },
+ "Q1569856": {
+  "label": "lunar deity",
+  "items": 1
+ },
+ "Q37273423": {
+  "label": "Academia",
+  "items": 1
+ },
+ "Q138844764": {
+  "label": "American football hall of fame",
+  "items": 1
+ },
+ "Q17000324": {
+  "label": "sports museum",
+  "items": 1
+ },
+ "Q3356153": {
+  "label": "French inter-ministry organization",
+  "items": 1
+ },
+ "Q117447800": {
+  "label": "Q117447800",
+  "items": 1
+ },
+ "Q2511322": {
+  "label": "lycée",
+  "items": 1
+ },
+ "Q63101990": {
+  "label": "military aviation command",
+  "items": 1
+ },
+ "Q63090850": {
+  "label": "Canadian military unit",
+  "items": 1
+ },
+ "Q4989906": {
+  "label": "monument",
+  "items": 1
+ },
+ "Q1004": {
+  "label": "comic",
+  "items": 1
+ },
+ "Q9261468": {
+  "label": "organizational subdivision",
+  "items": 1
+ },
+ "Q17492398": {
+  "label": "direct-broadcast satellite television",
+  "items": 1
+ },
+ "Q7096323": {
+  "label": "open-access repository",
+  "items": 1
+ },
+ "Q2217301": {
+  "label": "serial",
+  "items": 1
+ },
+ "Q108934881": {
+  "label": "open science infrastructure",
+  "items": 1
+ },
+ "Q2033233": {
+  "label": "bibliographic index",
+  "items": 1
+ },
+ "Q42414514": {
+  "label": "bookstore chain",
+  "items": 1
+ },
+ "Q136361597": {
+  "label": "doubly landlocked country",
+  "items": 1
+ },
+ "Q11422631": {
+  "label": "United Nations Depository Library",
+  "items": 1
+ },
+ "Q106632462": {
+  "label": "newspaper genre",
+  "items": 1
+ },
+ "Q71266741": {
+  "label": "smartphone model series",
+  "items": 1
+ },
+ "Q13408009": {
+  "label": "French law",
+  "items": 1
+ },
+ "Q10351538": {
+  "label": "intercardinal direction",
+  "items": 1
+ },
+ "Q130538169": {
+  "label": "periodical section",
+  "items": 1
+ },
+ "Q134995802": {
+  "label": "type of website",
+  "items": 1
+ },
+ "Q7888355": {
+  "label": "United Nations Climate Change Conference",
+  "items": 1
+ },
+ "Q61974339": {
+  "label": "esports team",
+  "items": 1
+ },
+ "Q134390": {
+  "label": "province of the Netherlands",
+  "items": 1
+ },
+ "Q2127330": {
+  "label": "public transport company",
+  "items": 1
+ },
+ "Q117023459": {
+  "label": "type of institution",
+  "items": 1
+ },
+ "Q30301644": {
+  "label": "Cabinet of Serbia",
+  "items": 1
+ },
+ "Q106839123": {
+  "label": "means of transport",
+  "items": 1
+ },
+ "Q756202": {
+  "label": "reserve currency",
+  "items": 1
+ },
+ "Q19892282": {
+  "label": "crypto asset",
+  "items": 1
+ },
+ "Q1643989": {
+  "label": "legal tender",
+  "items": 1
+ },
+ "Q135267623": {
+  "label": "Enumeration of 600",
+  "items": 1
+ },
+ "Q61866692": {
+  "label": "Wikimedia gadget",
+  "items": 1
+ },
+ "Q17489659": {
+  "label": "group of works",
+  "items": 1
+ },
+ "Q36161": {
+  "label": "set",
+  "items": 1
+ },
+ "Q133309046": {
+  "label": "state agency of North Carolina",
+  "items": 1
+ },
+ "Q5434359": {
+  "label": "fantasy sport",
+  "items": 1
+ },
+ "Q1900326": {
+  "label": "network",
+  "items": 1
+ },
+ "Q1549427": {
+  "label": "hiking club",
+  "items": 1
+ },
+ "Q377688": {
+  "label": "type foundry",
+  "items": 1
+ },
+ "Q329864": {
+  "label": "military technology",
+  "items": 1
+ },
+ "Q18142": {
+  "label": "tower block",
+  "items": 1
+ },
+ "Q11303": {
+  "label": "skyscraper",
+  "items": 1
+ },
+ "Q27686": {
+  "label": "hotel",
+  "items": 1
+ },
+ "Q628858": {
+  "label": "workplace",
+  "items": 1
+ },
+ "Q1005397": {
+  "label": "Bundesagentur",
+  "items": 1
+ },
+ "Q1585340": {
+  "label": "arbitration board",
+  "items": 1
+ },
+ "Q13460321": {
+  "label": "certification services provider",
+  "items": 1
+ },
+ "Q136677251": {
+  "label": "Capital of Culture (designation)",
+  "items": 1
+ },
+ "Q13384978": {
+  "label": "regional court",
+  "items": 1
+ },
+ "Q5305962": {
+  "label": "Dravidian party",
+  "items": 1
+ },
+ "Q27631499": {
+  "label": "Commission and consultative or deliberative ministerial body",
+  "items": 1
+ },
+ "Q502074": {
+  "label": "heliport",
+  "items": 1
+ },
+ "Q4868510": {
+  "label": "multinational military command",
+  "items": 1
+ },
+ "Q110401282": {
+  "label": "type of worldview",
+  "items": 1
+ },
+ "Q4294273": {
+  "label": "Constituent Department of the State Council",
+  "items": 1
+ },
+ "Q1663557": {
+  "label": "initiative",
+  "items": 1
+ },
+ "Q159334": {
+  "label": "secondary school",
+  "items": 1
+ },
+ "Q941725": {
+  "label": "specialized court",
+  "items": 1
+ },
+ "Q471822": {
+  "label": "megalopolis",
+  "items": 1
+ },
+ "Q59284985": {
+  "label": "social security benefits",
+  "items": 1
+ },
+ "Q3537504": {
+  "label": "Conditional cash transfer",
+  "items": 1
+ },
+ "Q38034470": {
+  "label": "fictional association football team",
+  "items": 1
+ },
+ "Q9299236": {
+  "label": "Registered association (eingetragener Verein)",
+  "items": 1
+ },
+ "Q6918183": {
+  "label": "motor club",
+  "items": 1
+ },
+ "Q337810": {
+  "label": "roadside assistance",
+  "items": 1
+ },
+ "Q847301": {
+  "label": "political campaign",
+  "items": 1
+ },
+ "Q21076217": {
+  "label": "art project",
+  "items": 1
+ },
+ "Q127701543": {
+  "label": "Direct Reporting Unit",
+  "items": 1
+ },
+ "Q4698330": {
+  "label": "air force academy",
+  "items": 1
+ },
+ "Q19828545": {
+  "label": "Separate Operating Agency",
+  "items": 1
+ },
+ "Q19828505": {
+  "label": "Field Operating Agency",
+  "items": 1
+ },
+ "Q17343829": {
+  "label": "unincorporated community",
+  "items": 1
+ },
+ "Q7892196": {
+  "label": "United States Service academies",
+  "items": 1
+ },
+ "Q162633": {
+  "label": "academy",
+  "items": 1
+ },
+ "Q9275911": {
+  "label": "defunct American football team",
+  "items": 1
+ },
+ "Q212930": {
+  "label": "online shopping",
+  "items": 1
+ },
+ "Q7373622": {
+  "label": "Royal Air Force station",
+  "items": 1
+ },
+ "Q187588": {
+  "label": "social class",
+  "items": 1
+ },
+ "Q6934728": {
+  "label": "multilateral treaty",
+  "items": 1
+ },
+ "Q252550": {
+  "label": "trade agreement",
+  "items": 1
+ },
+ "Q9639292": {
+  "label": "peace award",
+  "items": 1
+ },
+ "Q5073533": {
+  "label": "Chapter nine institutions",
+  "items": 1
+ },
+ "Q48851989": {
+  "label": "state-owned enterprise of the United States",
+  "items": 1
+ },
+ "Q8514": {
+  "label": "desert",
+  "items": 1
+ },
+ "Q26263224": {
+  "label": "international tunnel",
+  "items": 1
+ },
+ "Q1317590": {
+  "label": "undersea tunnel",
+  "items": 1
+ },
+ "Q1311958": {
+  "label": "railway tunnel",
+  "items": 1
+ },
+ "Q210980": {
+  "label": "virtual community",
+  "items": 1
+ },
+ "Q61708053": {
+  "label": "independent city of Saxony-Anhalt",
+  "items": 1
+ },
+ "Q118733587": {
+  "label": "type of meteorological phenomenon",
+  "items": 1
+ },
+ "Q938236": {
+  "label": "panel",
+  "items": 1
+ },
+ "Q92326395": {
+  "label": "Basque political party",
+  "items": 1
+ },
+ "Q59445711": {
+  "label": "News Sources and Follow-up Communication",
+  "items": 1
+ },
+ "Q102440913": {
+  "label": "digital As good",
+  "items": 1
+ },
+ "Q941043": {
+  "label": "United States National Seashore",
+  "items": 1
+ },
+ "Q1160573": {
+  "label": "horse breed",
+  "items": 1
+ },
+ "Q659390": {
+  "label": "construct",
+  "items": 1
+ },
+ "Q83790": {
+  "label": "textbook",
+  "items": 1
+ },
+ "Q108569710": {
+  "label": "city of Ohio",
+  "items": 1
+ },
+ "Q179875": {
+  "label": "debate",
+  "items": 1
+ },
+ "Q328554": {
+  "label": "accounts receivable",
+  "items": 1
+ },
+ "Q1224852": {
+  "label": "word form",
+  "items": 1
+ },
+ "Q1336920": {
+  "label": "community college",
+  "items": 1
+ },
+ "Q16631188": {
+  "label": "military position",
+  "items": 1
+ },
+ "Q50686": {
+  "label": "one-party state",
+  "items": 1
+ },
+ "Q38033430": {
+  "label": "class of award",
+  "items": 1
+ },
+ "Q136668430": {
+  "label": "award for unpublished books",
+  "items": 1
+ },
+ "Q170424": {
+  "label": "World Meteorological Organization",
+  "items": 1
+ },
+ "Q3154693": {
+  "label": "city council",
+  "items": 1
+ },
+ "Q134602570": {
+  "label": "class of being",
+  "items": 1
+ },
+ "Q105712795": {
+  "label": "toll road operator",
+  "items": 1
+ },
+ "Q54806917": {
+  "label": "satellite internet constellation",
+  "items": 1
+ },
+ "Q917182": {
+  "label": "military academy",
+  "items": 1
+ },
+ "Q1305580": {
+  "label": "vehicle holder",
+  "items": 1
+ },
+ "Q351764": {
+  "label": "e-commerce payment system",
+  "items": 1
+ },
+ "Q3708659": {
+  "label": "department of the Italian republic",
+  "items": 1
+ },
+ "Q5589168": {
+  "label": "government ministry of Syria",
+  "items": 1
+ },
+ "Q67197389": {
+  "label": "Enumeration of 500",
+  "items": 1
+ },
+ "Q140934888": {
+  "label": "marque",
+  "items": 1
+ },
+ "Q3356060": {
+  "label": "employers' association",
+  "items": 1
+ },
+ "Q518261": {
+  "label": "cultural area",
+  "items": 1
+ },
+ "Q166280": {
+  "label": "S.A.",
+  "items": 1
+ },
+ "Q30515": {
+  "label": "slogan",
+  "items": 1
+ },
+ "Q1125321": {
+  "label": "currency union",
+  "items": 1
+ },
+ "Q15642541": {
+  "label": "human-geographic territorial entity",
+  "items": 1
+ },
+ "Q747699": {
+  "label": "unit of account",
+  "items": 1
+ },
+ "Q131467261": {
+  "label": "ministry of Portugal",
+  "items": 1
+ },
+ "Q23930024": {
+  "label": "streaming media receiver",
+  "items": 1
+ },
+ "Q686822": {
+  "label": "bill",
+  "items": 1
+ },
+ "Q127418887": {
+  "label": "polling institute",
+  "items": 1
+ },
+ "Q76212517": {
+  "label": "café chain",
+  "items": 1
+ },
+ "Q1186164": {
+  "label": "spin-off company",
+  "items": 1
+ },
+ "Q136675338": {
+  "label": "manufacturing company",
+  "items": 1
+ },
+ "Q546113": {
+  "label": "public policy",
+  "items": 1
+ },
+ "Q99536263": {
+  "label": "retailer",
+  "items": 1
+ },
+ "Q3635085": {
+  "label": "communication software",
+  "items": 1
+ },
+ "Q7309637": {
+  "label": "regulated market",
+  "items": 1
+ },
+ "Q39049892": {
+  "label": "ERC-20",
+  "items": 1
+ },
+ "Q29654788": {
+  "label": "Unicode character",
+  "items": 1
+ },
+ "Q778000": {
+  "label": "Q778000",
+  "items": 1
+ },
+ "Q21192991": {
+  "label": "central purchasing body",
+  "items": 1
+ },
+ "Q98400282": {
+  "label": "application-level package manager",
+  "items": 1
+ },
+ "Q4485156": {
+  "label": "software feature",
+  "items": 1
+ },
+ "Q1349648": {
+  "label": "municipality of Greece",
+  "items": 1
+ },
+ "Q996839": {
+  "label": "fraternal organization",
+  "items": 1
+ },
+ "Q66740226": {
+  "label": "military term",
+  "items": 1
+ },
+ "Q3467906": {
+  "label": "virtual assistant",
+  "items": 1
+ },
+ "Q4826847": {
+  "label": "autonomous agent",
+  "items": 1
+ },
+ "Q2297769": {
+  "label": "software agent",
+  "items": 1
+ },
+ "Q2578692": {
+  "label": "commonwealth",
+  "items": 1
+ },
+ "Q3277997": {
+  "label": "cooperative bank",
+  "items": 1
+ },
+ "Q3455524": {
+  "label": "administrative region",
+  "items": 1
+ },
+ "Q7243374": {
+  "label": "prime ministerial government",
+  "items": 1
+ },
+ "Q20708386": {
+  "label": "notorious market",
+  "items": 1
+ },
+ "Q1266818": {
+  "label": "independent city in the United States",
+  "items": 1
+ },
+ "Q3538838": {
+  "label": "administrative tribunal",
+  "items": 1
+ },
+ "Q2259825": {
+  "label": "student council",
+  "items": 1
+ },
+ "Q182103": {
+  "label": "pension fund",
+  "items": 1
+ },
+ "Q1802963": {
+  "label": "mansion",
+  "items": 1
+ },
+ "Q52177058": {
+  "label": "civic building",
+  "items": 1
+ },
+ "Q2114972": {
+  "label": "presidential palace",
+  "items": 1
+ },
+ "Q6867215": {
+  "label": "infrastructure ministry",
+  "items": 1
+ },
+ "Q105985": {
+  "label": "judiciary",
+  "items": 1
+ },
+ "Q1474521": {
+  "label": "function",
+  "items": 1
+ },
+ "Q169930": {
+  "label": "extended play",
+  "items": 1
+ },
+ "Q18706073": {
+  "label": "public institution of intermunicipal cooperation with own taxation",
+  "items": 1
+ },
+ "Q334911": {
+  "label": "health insurance",
+  "items": 1
+ },
+ "Q4781507": {
+  "label": "applications of artificial intelligence",
+  "items": 1
+ },
+ "Q132727830": {
+  "label": "liquor store chain",
+  "items": 1
+ },
+ "Q30313989": {
+  "label": "leisure center",
+  "items": 1
+ },
+ "Q2925872": {
+  "label": "second-hand shop",
+  "items": 1
+ },
+ "Q20146776": {
+  "label": "rallying team",
+  "items": 1
+ },
+ "Q165116": {
+  "label": "grand duchy",
+  "items": 1
+ },
+ "Q66050470": {
+  "label": "conjugation table for French verb",
+  "items": 1
+ },
+ "Q4260475": {
+  "label": "medical facility",
+  "items": 1
+ },
+ "Q15847440": {
+  "label": "public security ministry",
+  "items": 1
+ },
+ "Q130308484": {
+  "label": "mail-order pharmacy",
+  "items": 1
+ },
+ "Q129676344": {
+  "label": "large city",
+  "items": 1
+ },
+ "Q82346275": {
+  "label": "ministry of migration",
+  "items": 1
+ },
+ "Q13217644": {
+  "label": "municipality of Portugal",
+  "items": 1
+ },
+ "Q986172": {
+  "label": "magistrates' court",
+  "items": 1
+ },
+ "Q27731": {
+  "label": "automotive navigation system",
+  "items": 1
+ },
+ "Q202805": {
+  "label": "combination",
+  "items": 1
+ },
+ "Q7603882": {
+  "label": "U.S. state supreme court",
+  "items": 1
+ },
+ "Q382996": {
+  "label": "incentive program",
+  "items": 1
+ },
+ "Q120174435": {
+  "label": "social programme",
+  "items": 1
+ },
+ "Q22137024": {
+  "label": "official website",
+  "items": 1
+ },
+ "Q6081679": {
+  "label": "criminal police",
+  "items": 1
+ },
+ "Q2641403": {
+  "label": "samba school",
+  "items": 1
+ },
+ "Q65661087": {
+  "label": "village in Belarus",
+  "items": 1
+ },
+ "Q2772772": {
+  "label": "military museum",
+  "items": 1
+ },
+ "Q3329663": {
+  "label": "medical museum",
+  "items": 1
+ },
+ "Q66715801": {
+  "label": "musical profession",
+  "items": 1
+ },
+ "Q850270": {
+  "label": "concept car",
+  "items": 1
+ },
+ "Q721747": {
+  "label": "commemorative plaque",
+  "items": 1
+ },
+ "Q6606110": {
+  "label": "industrialist",
+  "items": 1
+ },
+ "Q3117865": {
+  "label": "hotel group",
+  "items": 1
+ },
+ "Q110316962": {
+  "label": "sole chamber",
+  "items": 1
+ },
+ "Q18758641": {
+  "label": "watercraft class",
+  "items": 1
+ },
+ "Q1697305": {
+  "label": "narrative motif",
+  "items": 1
+ },
+ "Q2995443": {
+  "label": "folklore motif",
+  "items": 1
+ },
+ "Q97940647": {
+  "label": "integer factorization algorithm",
+  "items": 1
+ },
+ "Q1364556": {
+  "label": "music award",
+  "items": 1
+ },
+ "Q11398": {
+  "label": "biological classification",
+  "items": 1
+ },
+ "Q1267114": {
+  "label": "Vorfeldorganisation",
+  "items": 1
+ },
+ "Q271855": {
+  "label": "government budget",
+  "items": 1
+ },
+ "Q712597": {
+  "label": "article",
+  "items": 1
+ },
+ "Q399495": {
+  "label": "standard language",
+  "items": 1
+ },
+ "Q106652786": {
+  "label": "entertainment newspaper",
+  "items": 1
+ },
+ "Q2266066": {
+  "label": "individual time trial",
+  "items": 1
+ },
+ "Q113223474": {
+  "label": "SBN hub",
+  "items": 1
+ },
+ "Q50870824": {
+  "label": "gourmet supermarket chain",
+  "items": 1
+ },
+ "Q120121699": {
+  "label": "political economic union",
+  "items": 1
+ },
+ "Q118365": {
+  "label": "dictatorship of the proletariat",
+  "items": 1
+ },
+ "Q185145": {
+  "label": "great power",
+  "items": 1
+ },
+ "Q1098467": {
+  "label": "regional Italian",
+  "items": 1
+ },
+ "Q124059801": {
+  "label": "American football league",
+  "items": 1
+ },
+ "Q29441572": {
+  "label": "heptad",
+  "items": 1
+ },
+ "Q28963381": {
+  "label": "group of major economic countries",
+  "items": 1
+ },
+ "Q27951399": {
+  "label": "Institute of Science and Technology",
+  "items": 1
+ },
+ "Q183366": {
+  "label": "territory",
+  "items": 1
+ },
+ "Q7248070": {
+  "label": "professional gridiron football",
+  "items": 1
+ },
+ "Q7247969": {
+  "label": "professional football in Canada",
+  "items": 1
+ },
+ "Q7884789": {
+  "label": "toponym",
+  "items": 1
+ },
+ "Q485669": {
+  "label": "telematics",
+  "items": 1
+ },
+ "Q7162158": {
+  "label": "prison agency",
+  "items": 1
+ },
+ "Q140172580": {
+  "label": "type of machine",
+  "items": 1
+ },
+ "Q140424465": {
+  "label": "type of vehicle",
+  "items": 1
+ },
+ "Q5162954": {
+  "label": "conservation designation",
+  "items": 1
+ },
+ "Q108402759": {
+  "label": "university in British Columbia",
+  "items": 1
+ },
+ "Q20983788": {
+  "label": "free operating system",
+  "items": 1
+ },
+ "Q131669": {
+  "label": "Linux distribution",
+  "items": 1
+ },
+ "Q38926": {
+  "label": "news",
+  "items": 1
+ },
+ "Q109657450": {
+  "label": "blockchain framework",
+  "items": 1
+ },
+ "Q1148446": {
+  "label": "patent office",
+  "items": 1
+ },
+ "Q1792533": {
+  "label": "art ministry",
+  "items": 1
+ },
+ "Q141131708": {
+  "label": "type of group",
+  "items": 1
+ },
+ "Q17270000": {
+  "label": "football club",
+  "items": 1
+ },
+ "Q5892272": {
+  "label": "web hosting service",
+  "items": 1
+ },
+ "Q1625990": {
+  "label": "website builder",
+  "items": 1
+ },
+ "Q17315159": {
+  "label": "international association football match",
+  "items": 1
+ },
+ "Q493386": {
+  "label": "friendly match",
+  "items": 1
+ },
+ "Q1191383": {
+  "label": "fabless semiconductor manufacturer",
+  "items": 1
+ },
+ "Q61016951": {
+  "label": "United States federal prison",
+  "items": 1
+ },
+ "Q1068715": {
+  "label": "telecommunications network",
+  "items": 1
+ },
+ "Q223638": {
+  "label": "guide book",
+  "items": 1
+ },
+ "Q11688446": {
+  "label": "Roman deity",
+  "items": 1
+ },
+ "Q3621649": {
+  "label": "judiciary of Brazil",
+  "items": 1
+ },
+ "Q6017523": {
+  "label": "independent media",
+  "items": 1
+ },
+ "Q29642950": {
+  "label": "Python package",
+  "items": 1
+ },
+ "Q194195": {
+  "label": "amusement park",
+  "items": 1
+ },
+ "Q1006283": {
+  "label": "national trust",
+  "items": 1
+ },
+ "Q2590631": {
+  "label": "municipality of Hungary",
+  "items": 1
+ },
+ "Q7049045": {
+  "label": "non-state actor",
+  "items": 1
+ },
+ "Q21561328": {
+  "label": "unitary authority",
+  "items": 1
+ },
+ "Q904802": {
+  "label": "cardinal virtues",
+  "items": 1
+ },
+ "Q66715753": {
+  "label": "Wikimedia list of persons by position held",
+  "items": 1
+ },
+ "Q130479961": {
+  "label": "group of people in a location",
+  "items": 1
+ },
+ "Q875765": {
+  "label": "Aktiengesellschaft",
+  "items": 1
+ },
+ "Q12301324": {
+  "label": "polling organization",
+  "items": 1
+ },
+ "Q65553774": {
+  "label": "chain",
+  "items": 1
+ },
+ "Q83708009": {
+  "label": "civil registration",
+  "items": 1
+ },
+ "Q11660": {
+  "label": "artificial intelligence",
+  "items": 1
+ },
+ "Q139444619": {
+  "label": "international space station",
+  "items": 1
+ },
+ "Q1471432": {
+  "label": "space laboratory",
+  "items": 1
+ },
+ "Q12832168": {
+  "label": "artificial satellite of the Earth",
+  "items": 1
+ },
+ "Q184876": {
+  "label": "frame of reference",
+  "items": 1
+ },
+ "Q3756873": {
+  "label": "Gaelic Athletic Association county",
+  "items": 1
+ },
+ "Q1489259": {
+  "label": "superpower",
+  "items": 1
+ },
+ "Q5035794": {
+  "label": "capitalist state",
+  "items": 1
+ },
+ "Q852190": {
+  "label": "shipwreck",
+  "items": 1
+ },
+ "Q474157": {
+  "label": "collaborative software",
+  "items": 1
+ },
+ "Q98966309": {
+  "label": "classification of human settlements",
+  "items": 1
+ },
+ "Q46831": {
+  "label": "mountain range",
+  "items": 1
+ },
+ "Q1414991": {
+  "label": "area",
+  "items": 1
+ },
+ "Q526877": {
+  "label": "web series",
+  "items": 1
+ },
+ "Q5772674": {
+  "label": "Hispanic-serving institution",
+  "items": 1
+ },
+ "Q137784709": {
+  "label": "state media company",
+  "items": 1
+ },
+ "Q4370167": {
+  "label": "politonym",
+  "items": 1
+ },
+ "Q122538751": {
+  "label": "video streaming service app",
+  "items": 1
+ },
+ "Q16294865": {
+  "label": "subscription video on demand service",
+  "items": 1
+ },
+ "Q29023906": {
+  "label": "temporary exhibition",
+  "items": 1
+ },
+ "Q105615608": {
+  "label": "hypermarket chain",
+  "items": 1
+ },
+ "Q559618": {
+  "label": "fictional universe",
+  "items": 1
+ },
+ "Q3687335": {
+  "label": "Council of state",
+  "items": 1
+ },
+ "Q11514315": {
+  "label": "historical period",
+  "items": 1
+ },
+ "Q11042": {
+  "label": "culture",
+  "items": 1
+ },
+ "Q1292119": {
+  "label": "style",
+  "items": 1
+ },
+ "Q1149029": {
+  "label": "systems integrator",
+  "items": 1
+ },
+ "Q134550": {
+  "label": "transliteration",
+  "items": 1
+ },
+ "Q17342249": {
+  "label": "ethical attitude",
+  "items": 1
+ },
+ "Q4845841": {
+  "label": "settlement in Croatia",
+  "items": 1
+ },
+ "Q131376155": {
+  "label": "Directorate-General of the European Commission",
+  "items": 1
+ },
+ "Q2327515": {
+  "label": "City district in Baden-Württemberg",
+  "items": 1
+ },
+ "Q4946461": {
+  "label": "spa town",
+  "items": 1
+ },
+ "Q108460239": {
+  "label": "truck manufacturer",
+  "items": 1
+ },
+ "Q3511280": {
+  "label": "international class",
+  "items": 1
+ },
+ "Q186875": {
+  "label": "Mersenne prime",
+  "items": 1
+ },
+ "Q207264": {
+  "label": "Fermat number",
+  "items": 1
+ },
+ "Q245102": {
+  "label": "triangular number",
+  "items": 1
+ },
+ "Q13366129": {
+  "label": "odd number",
+  "items": 1
+ },
+ "Q10338607": {
+  "label": "Mersenne number",
+  "items": 1
+ },
+ "Q80903301": {
+  "label": "near-square prime",
+  "items": 1
+ },
+ "Q96399905": {
+  "label": "power of three",
+  "items": 1
+ },
+ "Q3327228": {
+  "label": "Fermat prime",
+  "items": 1
+ },
+ "Q34982659": {
+  "label": "quarter of Bucharest",
+  "items": 1
+ },
+ "Q116951701": {
+  "label": "operating area",
+  "items": 1
+ },
+ "Q56055944": {
+  "label": "type of arts",
+  "items": 1
+ },
+ "Q223393": {
+  "label": "literary genre",
+  "items": 1
+ },
+ "Q20653564": {
+  "label": "UCI Trade Team II",
+  "items": 1
+ },
+ "Q565428": {
+  "label": "download manager",
+  "items": 1
+ },
+ "Q21577192": {
+  "label": "BitTorrent client",
+  "items": 1
+ },
+ "Q4894405": {
+  "label": "journalism genre",
+  "items": 1
+ },
+ "Q1808947": {
+  "label": "Major Commands of the United States Air Force",
+  "items": 1
+ },
+ "Q98374631": {
+  "label": "transport by country or region",
+  "items": 1
+ },
+ "Q228830": {
+  "label": "supplier",
+  "items": 1
+ },
+ "Q2324993": {
+  "label": "state power",
+  "items": 1
+ },
+ "Q42855995": {
+  "label": "factory owner",
+  "items": 1
+ },
+ "Q782673": {
+  "label": "highway patrol",
+  "items": 1
+ },
+ "Q106071004": {
+  "label": "town of New York",
+  "items": 1
+ },
+ "Q33384": {
+  "label": "dialect",
+  "items": 1
+ },
+ "Q436240": {
+  "label": "ancient language",
+  "items": 1
+ },
+ "Q2039348": {
+  "label": "municipality of the Netherlands",
+  "items": 1
+ },
+ "Q1852859": {
+  "label": "cadastral populated place in the Netherlands",
+  "items": 1
+ },
+ "Q13539802": {
+  "label": "place with town rights and privileges",
+  "items": 1
+ },
+ "Q107471279": {
+  "label": "chemistry award",
+  "items": 1
+ },
+ "Q1346018": {
+  "label": "infrastructure as a service",
+  "items": 1
+ },
+ "Q28169384": {
+  "label": "commission of inquiry",
+  "items": 1
+ },
+ "Q1501336": {
+  "label": "truth and reconciliation commission",
+  "items": 1
+ },
+ "Q209465": {
+  "label": "campus",
+  "items": 1
+ },
+ "Q123458532": {
+  "label": "violation of international public law",
+  "items": 1
+ },
+ "Q137863866": {
+  "label": "type of prison facility",
+  "items": 1
+ },
+ "Q76226590": {
+  "label": "life insurance company",
+  "items": 1
+ },
+ "Q44896819": {
+  "label": "badminton club",
+  "items": 1
+ },
+ "Q20076236": {
+  "label": "state system",
+  "items": 1
+ },
+ "Q107974746": {
+  "label": "criminal mega gang",
+  "items": 1
+ },
+ "Q476190": {
+  "label": "United States congressional committee",
+  "items": 1
+ },
+ "Q24905": {
+  "label": "verb",
+  "items": 1
+ },
+ "Q191780": {
+  "label": "ordinal number",
+  "items": 1
+ },
+ "Q20857085": {
+  "label": "state agency of the United States",
+  "items": 1
+ },
+ "Q1058891": {
+  "label": "mobile virtual network operator",
+  "items": 1
+ },
+ "Q13741": {
+  "label": "integrated development environment",
+  "items": 1
+ },
+ "Q7777570": {
+  "label": "theatrical production",
+  "items": 1
+ },
+ "Q15229207": {
+  "label": "sports award",
+  "items": 1
+ },
+ "Q136418600": {
+  "label": "US state-level national guard",
+  "items": 1
+ },
+ "Q18325841": {
+  "label": "public transport network",
+  "items": 1
+ },
+ "Q60784896": {
+  "label": "Internet audio-visual programming service provider",
+  "items": 1
+ },
+ "Q110812553": {
+  "label": "media of country or region",
+  "items": 1
+ },
+ "Q106805967": {
+  "label": "performed music",
+  "items": 1
+ },
+ "Q15630849": {
+  "label": "village of Bulgaria",
+  "items": 1
+ },
+ "Q4224624": {
+  "label": "kmetstvo of Bulgaria",
+  "items": 1
+ },
+ "Q1127126": {
+  "label": "military alliance",
+  "items": 1
+ },
+ "Q2558591": {
+  "label": "world ranking list",
+  "items": 1
+ },
+ "Q28873665": {
+  "label": "rating system",
+  "items": 1
+ },
+ "Q2024496": {
+  "label": "online publisher",
+  "items": 1
+ },
+ "Q126718835": {
+  "label": "Q126718835",
+  "items": 1
+ },
+ "Q3550859": {
+  "label": "online gambling",
+  "items": 1
+ },
+ "Q851990": {
+  "label": "population group",
+  "items": 1
+ },
+ "Q874411": {
+  "label": "browser extension",
+  "items": 1
+ },
+ "Q1752459": {
+  "label": "investment company",
+  "items": 1
+ },
+ "Q1071015": {
+  "label": "social enterprise",
+  "items": 1
+ },
+ "Q6368": {
+  "label": "web browser",
+  "items": 1
+ },
+ "Q208674": {
+  "label": "portmanteau",
+  "items": 1
+ },
+ "Q6501447": {
+  "label": "local government",
+  "items": 1
+ },
+ "Q16562419": {
+  "label": "political entity",
+  "items": 1
+ },
+ "Q25449457": {
+  "label": "continental country",
+  "items": 1
+ },
+ "Q1346215": {
+  "label": "ruling party",
+  "items": 1
+ },
+ "Q61353107": {
+  "label": "chronological summary",
+  "items": 1
+ },
+ "Q117384805": {
+  "label": "spacecraft family",
+  "items": 1
+ },
+ "Q3147836": {
+  "label": "political identity",
+  "items": 1
+ },
+ "Q12369284": {
+  "label": "clipped word",
+  "items": 1
+ },
+ "Q2986700": {
+  "label": "parliamentary committee",
+  "items": 1
+ },
+ "Q1065579": {
+  "label": "fashion accessory",
+  "items": 1
+ },
+ "Q1898357": {
+  "label": "naval academy",
+  "items": 1
+ },
+ "Q179222": {
+  "label": "income tax",
+  "items": 1
+ },
+ "Q1865205": {
+  "label": "bar association",
+  "items": 1
+ },
+ "Q1712663": {
+  "label": "transatlantic race",
+  "items": 1
+ },
+ "Q136787658": {
+  "label": "Proscribed terrorist groups or organisations",
+  "items": 1
+ },
+ "Q2235308": {
+  "label": "ship type",
+  "items": 1
+ },
+ "Q27495502": {
+  "label": "federal district of Brazil",
+  "items": 1
+ },
+ "Q11680670": {
+  "label": "organic certification",
+  "items": 1
+ },
+ "Q55648452": {
+  "label": "non-fungible token",
+  "items": 1
+ },
+ "Q22909549": {
+  "label": "unitary parliamentary republic",
+  "items": 1
+ },
+ "Q10983451": {
+  "label": "Court of Audit",
+  "items": 1
+ },
+ "Q3502482": {
+  "label": "cultural region",
+  "items": 1
+ },
+ "Q2108946": {
+  "label": "press office",
+  "items": 1
+ },
+ "Q98457443": {
+  "label": "inquiry report",
+  "items": 1
+ },
+ "Q85942930": {
+  "label": "artistic duo",
+  "items": 1
+ },
+ "Q109288825": {
+  "label": "male duo",
+  "items": 1
+ },
+ "Q29431432": {
+  "label": "dyad",
+  "items": 1
+ },
+ "Q1434401": {
+  "label": "dzielnica",
+  "items": 1
+ },
+ "Q98416814": {
+  "label": "skiing association",
+  "items": 1
+ },
+ "Q55102916": {
+  "label": "parish of Asturias",
+  "items": 1
+ },
+ "Q8776398": {
+  "label": "collective population entity of Spain",
+  "items": 1
+ },
+ "Q2360980": {
+  "label": "unit of amount",
+  "items": 1
+ },
+ "Q5056668": {
+  "label": "lodging",
+  "items": 1
+ },
+ "Q30139652": {
+  "label": "health care structure",
+  "items": 1
+ },
+ "Q989255": {
+  "label": "Middle-earth race",
+  "items": 1
+ },
+ "Q15702752": {
+  "label": "fictional species of animal",
+  "items": 1
+ },
+ "Q28100286": {
+  "label": "fictional intelligent species",
+  "items": 1
+ },
+ "Q2323591": {
+  "label": "rada",
+  "items": 1
+ },
+ "Q19953632": {
+  "label": "former administrative territorial entity",
+  "items": 1
+ },
+ "Q85631896": {
+  "label": "urban district of Bavaria",
+  "items": 1
+ },
+ "Q42178109": {
+  "label": "gigacoaster",
+  "items": 1
+ },
+ "Q1799072": {
+  "label": "method",
+  "items": 1
+ },
+ "Q2828218": {
+  "label": "air navigation service provider",
+  "items": 1
+ },
+ "Q27032363": {
+  "label": "photo archive",
+  "items": 1
+ },
+ "Q43639983": {
+  "label": "political party in Croatia",
+  "items": 1
+ },
+ "Q175122": {
+  "label": "terrestrial television",
+  "items": 1
+ },
+ "Q327245": {
+  "label": "team",
+  "items": 1
+ },
+ "Q1410110": {
+  "label": "branch",
+  "items": 1
+ },
+ "Q120146927": {
+  "label": "USMC band",
+  "items": 1
+ },
+ "Q1569167": {
+  "label": "video game character",
+  "items": 1
+ },
+ "Q22074483": {
+  "label": "fictional android",
+  "items": 1
+ },
+ "Q39725049": {
+  "label": "type of publication",
+  "items": 1
+ },
+ "Q15715406": {
+  "label": "neighbourhood of Helsinki",
+  "items": 1
+ },
+ "Q1208802": {
+  "label": "direct-administered municipality",
+  "items": 1
+ },
+ "Q1066538": {
+  "label": "national central city",
+  "items": 1
+ },
+ "Q129268952": {
+  "label": "former national capital",
+  "items": 1
+ },
+ "Q120442195": {
+  "label": "missing persons organization",
+  "items": 1
+ },
+ "Q7294229": {
+  "label": "rapid transit in India",
+  "items": 1
+ },
+ "Q1935049": {
+  "label": "military school",
+  "items": 1
+ },
+ "Q11499011": {
+  "label": "broadcaster",
+  "items": 1
+ },
+ "Q160091": {
+  "label": "plain",
+  "items": 1
+ },
+ "Q55276680": {
+  "label": "television in a country",
+  "items": 1
+ },
+ "Q1415080": {
+  "label": "Staatsanwaltschaft",
+  "items": 1
+ },
+ "Q201658": {
+  "label": "film genre",
+  "items": 1
+ },
+ "Q554950": {
+  "label": "recommender system",
+  "items": 1
+ },
+ "Q3363974": {
+  "label": "animal theme park",
+  "items": 1
+ },
+ "Q757292": {
+  "label": "border checkpoint",
+  "items": 1
+ },
+ "Q4173144": {
+  "label": "Jewish political movements",
+  "items": 1
+ },
+ "Q939616": {
+  "label": "secret service",
+  "items": 1
+ },
+ "Q1849110": {
+  "label": "outlaw motorcycle club",
+  "items": 1
+ },
+ "Q20073476": {
+  "label": "engineer battalion",
+  "items": 1
+ },
+ "Q15961987": {
+  "label": "television genre",
+  "items": 1
+ },
+ "Q15961983": {
+  "label": "radio genre",
+  "items": 1
+ },
+ "Q89540750": {
+  "label": "airborne division",
+  "items": 1
+ },
+ "Q11121294": {
+  "label": "simulation software",
+  "items": 1
+ },
+ "Q30014735": {
+  "label": "bus-based transport system",
+  "items": 1
+ },
+ "Q77664398": {
+  "label": "association football terminology",
+  "items": 1
+ },
+ "Q124570238": {
+  "label": "educational travel",
+  "items": 1
+ },
+ "Q18691601": {
+  "label": "ward of Tanzania",
+  "items": 1
+ },
+ "Q497893": {
+  "label": "literary society",
+  "items": 1
+ },
+ "Q2282872": {
+  "label": "diet",
+  "items": 1
+ },
+ "Q7302866": {
+  "label": "audio track",
+  "items": 1
+ },
+ "Q35760": {
+  "label": "essay",
+  "items": 1
+ },
+ "Q19895173": {
+  "label": "Payments bank",
+  "items": 1
+ },
+ "Q3181044": {
+  "label": "online food ordering",
+  "items": 1
+ },
+ "Q1952852": {
+  "label": "municipality of Mexico",
+  "items": 1
+ },
+ "Q5281480": {
+  "label": "disciplinary repository",
+  "items": 1
+ },
+ "Q45787211": {
+  "label": "preprint server",
+  "items": 1
+ },
+ "Q1068473": {
+  "label": "educational technology",
+  "items": 1
+ },
+ "Q4839609": {
+  "label": "mobile backend as a service",
+  "items": 1
+ },
+ "Q3644502": {
+  "label": "open source",
+  "items": 1
+ },
+ "Q1189842": {
+  "label": "crown",
+  "items": 1
+ },
+ "Q132241": {
+  "label": "festival",
+  "items": 1
+ },
+ "Q66817758": {
+  "label": "national tennis team",
+  "items": 1
+ },
+ "Q20897549": {
+  "label": "art institution",
+  "items": 1
+ },
+ "Q55097243": {
+  "label": "defunct organization",
+  "items": 1
+ },
+ "Q133284914": {
+  "label": "artificial intelligence website",
+  "items": 1
+ },
+ "Q18543": {
+  "label": "Major League Soccer",
+  "items": 1
+ },
+ "Q23058": {
+  "label": "canton of Switzerland",
+  "items": 1
+ },
+ "Q1985622": {
+  "label": "defense",
+  "items": 1
+ },
+ "Q465842": {
+  "label": "state of Nigeria",
+  "items": 1
+ },
+ "Q175331": {
+  "label": "demonstration",
+  "items": 1
+ },
+ "Q56148524": {
+  "label": "Body of the Government of India",
+  "items": 1
+ },
+ "Q189053": {
+  "label": "command-line interface",
+  "items": 1
+ },
+ "Q2446662": {
+  "label": "tourism ministry",
+  "items": 1
+ },
+ "Q1243341": {
+  "label": "ministry of trade",
+  "items": 1
+ },
+ "Q6518196": {
+  "label": "Legislative Assembly of Brazilian states",
+  "items": 1
+ },
+ "Q3927244": {
+  "label": "borough of Bologna",
+  "items": 1
+ },
+ "Q5119": {
+  "label": "capital city",
+  "items": 1
+ },
+ "Q3678588": {
+  "label": "Città regie della Sardegna",
+  "items": 1
+ },
+ "Q14970": {
+  "label": "tanker",
+  "items": 1
+ },
+ "Q11775750": {
+  "label": "public prosecutor's office",
+  "items": 1
+ },
+ "Q2282540": {
+  "label": "cruller",
+  "items": 1
+ },
+ "Q2695280": {
+  "label": "technique",
+  "items": 1
+ },
+ "Q7604699": {
+  "label": "statutory board of the Singapore Government",
+  "items": 1
+ },
+ "Q2325038": {
+  "label": "state church",
+  "items": 1
+ },
+ "Q1620797": {
+  "label": "historic district in the United States",
+  "items": 1
+ },
+ "Q1673189": {
+  "label": "irregular military",
+  "items": 1
+ },
+ "Q2262261": {
+  "label": "Law enforcement in Brazil",
+  "items": 1
+ },
+ "Q100503226": {
+  "label": "town of the United Kingdom",
+  "items": 1
+ },
+ "Q1115575": {
+  "label": "civil parish",
+  "items": 1
+ },
+ "Q295382": {
+  "label": "sustainable business",
+  "items": 1
+ },
+ "Q655686": {
+  "label": "commercial building",
+  "items": 1
+ },
+ "Q13219666": {
+  "label": "tennis tournament",
+  "items": 1
+ },
+ "Q48673590": {
+  "label": "exhibition tennis tournament",
+  "items": 1
+ },
+ "Q17990971": {
+  "label": "public enterprise",
+  "items": 1
+ },
+ "Q7603708": {
+  "label": "legislature of a constituent state",
+  "items": 1
+ },
+ "Q117349473": {
+  "label": "artificial intelligence model",
+  "items": 1
+ },
+ "Q192776": {
+  "label": "artificial neural network",
+  "items": 1
+ },
+ "Q12363077": {
+  "label": "research grant",
+  "items": 1
+ },
+ "Q2442401": {
+  "label": "record company",
+  "items": 1
+ },
+ "Q1660312": {
+  "label": "major label",
+  "items": 1
+ },
+ "Q116453729": {
+  "label": "record label group",
+  "items": 1
+ },
+ "Q1167393": {
+  "label": "economic indicator",
+  "items": 1
+ },
+ "Q2054307": {
+  "label": "wing of the party",
+  "items": 1
+ },
+ "Q325261": {
+  "label": "satellite state",
+  "items": 1
+ },
+ "Q285852": {
+  "label": "volunteer fire department",
+  "items": 1
+ },
+ "Q874405": {
+  "label": "social group",
+  "items": 1
+ },
+ "Q1744559": {
+  "label": "classification in sports",
+  "items": 1
+ },
+ "Q2037699": {
+  "label": "regional broadcaster",
+  "items": 1
+ },
+ "Q10926884": {
+  "label": "National Government",
+  "items": 1
+ },
+ "Q3559207": {
+  "label": "decentralized administration of Greece",
+  "items": 1
+ },
+ "Q15629146": {
+  "label": "autonomous province of Serbia",
+  "items": 1
+ },
+ "Q1267939": {
+  "label": "statistical region of Serbia",
+  "items": 1
+ },
+ "Q66735881": {
+  "label": "airlift wing",
+  "items": 1
+ },
+ "Q18654742": {
+  "label": "pizzeria chain",
+  "items": 1
+ },
+ "Q2088231": {
+  "label": "military reserve",
+  "items": 1
+ },
+ "Q113953810": {
+  "label": "television software",
+  "items": 1
+ },
+ "Q3027665": {
+  "label": "live streaming",
+  "items": 1
+ },
+ "Q2312501": {
+  "label": "sports tribunal",
+  "items": 1
+ },
+ "Q2882257": {
+  "label": "First Nation band",
+  "items": 1
+ },
+ "Q7048982": {
+  "label": "non-profit hospital",
+  "items": 1
+ },
+ "Q3631467": {
+  "label": "Local Health Authority",
+  "items": 1
+ },
+ "Q2305901": {
+  "label": "ministry of social affairs",
+  "items": 1
+ },
+ "Q6695859": {
+  "label": "Vietnamese family name",
+  "items": 1
+ },
+ "Q7697093": {
+  "label": "television play",
+  "items": 1
+ },
+ "Q77733378": {
+  "label": "sports term",
+  "items": 1
+ },
+ "Q63349565": {
+  "label": "executive search firm",
+  "items": 1
+ },
+ "Q244381": {
+  "label": "microstate",
+  "items": 1
+ },
+ "Q577487": {
+  "label": "listings magazine",
+  "items": 1
+ },
+ "Q828395": {
+  "label": "social policy",
+  "items": 1
+ },
+ "Q1145523": {
+  "label": "collaboration",
+  "items": 1
+ },
+ "Q62968288": {
+  "label": "marine regiment",
+  "items": 1
+ },
+ "Q1220959": {
+  "label": "building of public administration",
+  "items": 1
+ },
+ "Q104601620": {
+  "label": "independent administrative authority",
+  "items": 1
+ },
+ "Q24581379": {
+  "label": "podcast network",
+  "items": 1
+ },
+ "Q135236673": {
+  "label": "Pentacontad",
+  "items": 1
+ },
+ "Q12759805": {
+  "label": "sultanate",
+  "items": 1
+ },
+ "Q124629760": {
+  "label": "family of large language models",
+  "items": 1
+ },
+ "Q2111088": {
+  "label": "private bank",
+  "items": 1
+ },
+ "Q5470256": {
+  "label": "form of cricket",
+  "items": 1
+ },
+ "Q61092682": {
+  "label": "court administration",
+  "items": 1
+ },
+ "Q200464": {
+  "label": "Portuguese Empire",
+  "items": 1
+ },
+ "Q333542": {
+  "label": "overseas province of Portugal",
+  "items": 1
+ },
+ "Q914359": {
+  "label": "cloud storage",
+  "items": 1
+ },
+ "Q4379965": {
+  "label": "Apple service",
+  "items": 1
+ },
+ "Q1343205": {
+  "label": "file-hosting service",
+  "items": 1
+ },
+ "Q1958056": {
+  "label": "science fiction convention",
+  "items": 1
+ },
+ "Q60169073": {
+  "label": "ward of Nigeria",
+  "items": 1
+ },
+ "Q11057861": {
+  "label": "autonomous university",
+  "items": 1
+ },
+ "Q108415420": {
+  "label": "comprehensive academic and research university",
+  "items": 1
+ },
+ "Q19914123": {
+  "label": "Japanese family name",
+  "items": 1
+ },
+ "Q3054943": {
+  "label": "set of numbers",
+  "items": 1
+ },
+ "Q1128796": {
+  "label": "uncountable set",
+  "items": 1
+ },
+ "Q43067961": {
+  "label": "employee-owned company",
+  "items": 1
+ },
+ "Q66475652": {
+  "label": "banned work",
+  "items": 1
+ },
+ "Q83405": {
+  "label": "factory",
+  "items": 1
+ },
+ "Q87120569": {
+  "label": "organised trading facility",
+  "items": 1
+ },
+ "Q5419137": {
+  "label": "veterans' organization",
+  "items": 1
+ },
+ "Q117209127": {
+  "label": "Q117209127",
+  "items": 1
+ },
+ "Q3491832": {
+  "label": "review aggregator",
+  "items": 1
+ },
+ "Q59825643": {
+  "label": "online music database",
+  "items": 1
+ },
+ "Q312461": {
+  "label": "terra nullius",
+  "items": 1
+ },
+ "Q1260006": {
+  "label": "drug cartel",
+  "items": 1
+ },
+ "Q214339": {
+  "label": "social role",
+  "items": 1
+ },
+ "Q4158552": {
+  "label": "transit police",
+  "items": 1
+ },
+ "Q3356049": {
+  "label": "Q3356049",
+  "items": 1
+ },
+ "Q446901": {
+  "label": "nursing school",
+  "items": 1
+ },
+ "Q12015335": {
+  "label": "technical sciences",
+  "items": 1
+ },
+ "Q11670533": {
+  "label": "elevated station",
+  "items": 1
+ },
+ "Q685935": {
+  "label": "trade magazine",
+  "items": 1
+ },
+ "Q2607729": {
+  "label": "multi-utility",
+  "items": 1
+ },
+ "Q63981919": {
+  "label": "sport rivalry",
+  "items": 1
+ },
+ "Q1451906": {
+  "label": "women's organization",
+  "items": 1
+ },
+ "Q9212979": {
+  "label": "musical duo",
+  "items": 1
+ },
+ "Q7558495": {
+  "label": "solo musical project",
+  "items": 1
+ },
+ "Q126489133": {
+  "label": "shadow fleet",
+  "items": 1
+ },
+ "Q137794385": {
+  "label": "rail brand",
+  "items": 1
+ },
+ "Q91908084": {
+  "label": "passenger train service",
+  "items": 1
+ },
+ "Q15142889": {
+  "label": "weapon family",
+  "items": 1
+ },
+ "Q41222493": {
+  "label": "taxi service",
+  "items": 1
+ },
+ "Q4430243": {
+  "label": "social organization",
+  "items": 1
+ },
+ "Q137396449": {
+  "label": "proprietary operating system",
+  "items": 1
+ },
+ "Q11368": {
+  "label": "Unix",
+  "items": 1
+ },
+ "Q43627": {
+  "label": "Mac operating system",
+  "items": 1
+ },
+ "Q105989562": {
+  "label": "UNIX 03",
+  "items": 1
+ },
+ "Q28599747": {
+  "label": "education agency",
+  "items": 1
+ },
+ "Q8027727": {
+  "label": "Wissenschaft",
+  "items": 1
+ },
+ "Q2131387": {
+  "label": "mass movement in the German Democratic Republic",
+  "items": 1
+ },
+ "Q45290083": {
+  "label": "rugby league venue",
+  "items": 1
+ },
+ "Q20747255": {
+  "label": "road space rationing",
+  "items": 1
+ },
+ "Q62391930": {
+  "label": "beauty pageant edition",
+  "items": 1
+ },
+ "Q212198": {
+  "label": "pub",
+  "items": 1
+ },
+ "Q64170203": {
+  "label": "video game project",
+  "items": 1
+ },
+ "Q173227": {
+  "label": "physical constant",
+  "items": 1
+ },
+ "Q846785": {
+  "label": "action",
+  "items": 1
+ },
+ "Q135905403": {
+  "label": "Cypriot government department",
+  "items": 1
+ },
+ "Q56088892": {
+  "label": "ministry of food",
+  "items": 1
+ },
+ "Q82799": {
+  "label": "name",
+  "items": 1
+ },
+ "Q6764145": {
+  "label": "Marine Expeditionary Force",
+  "items": 1
+ },
+ "Q1156739": {
+  "label": "umbrella brand",
+  "items": 1
+ },
+ "Q39594": {
+  "label": "bay",
+  "items": 1
+ },
+ "Q117349475": {
+  "label": "artificial intelligence model type",
+  "items": 1
+ },
+ "Q15989663": {
+  "label": "global distribution system",
+  "items": 1
+ },
+ "Q691154": {
+  "label": "ministry of public works",
+  "items": 1
+ },
+ "Q152559": {
+  "label": "macrolanguage",
+  "items": 1
+ },
+ "Q137186904": {
+  "label": "transcontinental region",
+  "items": 1
+ },
+ "Q2470676": {
+  "label": "export credit agency",
+  "items": 1
+ },
+ "Q135267675": {
+  "label": "Enumeration of 35",
+  "items": 1
+ },
+ "Q1846372": {
+  "label": "Federal Public Service",
+  "items": 1
+ },
+ "Q15063586": {
+  "label": "state of Malaysia",
+  "items": 1
+ },
+ "Q1060280": {
+  "label": "advanced driver-assistance system",
+  "items": 1
+ },
+ "Q102786": {
+  "label": "abbreviation",
+  "items": 1
+ },
+ "Q3231690": {
+  "label": "car model",
+  "items": 1
+ },
+ "Q1309121": {
+  "label": "hermit kingdom",
+  "items": 1
+ },
+ "Q3303230": {
+  "label": "pariah state",
+  "items": 1
+ },
+ "Q111302220": {
+  "label": "établissement public local à caractère industriel ou commercial",
+  "items": 1
+ },
+ "Q211606": {
+  "label": "social structure",
+  "items": 1
+ },
+ "Q4737473": {
+  "label": "alumni magazine",
+  "items": 1
+ },
+ "Q23038290": {
+  "label": "fossil taxon",
+  "items": 1
+ },
+ "Q121144598": {
+  "label": "type of Christian institution",
+  "items": 1
+ },
+ "Q23847174": {
+  "label": "religious concept",
+  "items": 1
+ },
+ "Q139498752": {
+  "label": "fragrance manufacturer",
+  "items": 1
+ },
+ "Q140541890": {
+  "label": "flavoring manufacturer",
+  "items": 1
+ },
+ "Q33283984": {
+  "label": "Act of the Parliament of India",
+  "items": 1
+ },
+ "Q3410938": {
+  "label": "pure play",
+  "items": 1
+ },
+ "Q3902101": {
+  "label": "television platform",
+  "items": 1
+ },
+ "Q3149875": {
+  "label": "aviation incident",
+  "items": 1
+ },
+ "Q29142": {
+  "label": "criminal attempt",
+  "items": 1
+ },
+ "Q1531833": {
+  "label": "sport association",
+  "items": 1
+ },
+ "Q3246109": {
+  "label": "derby",
+  "items": 1
+ },
+ "Q104098715": {
+  "label": "territorial entity type",
+  "items": 1
+ },
+ "Q57663626": {
+  "label": "toyline",
+  "items": 1
+ },
+ "Q12494379": {
+  "label": "constitutional organ of Indonesia",
+  "items": 1
+ },
+ "Q114962596": {
+  "label": "historical position",
+  "items": 1
+ },
+ "Q208500": {
+  "label": "principality",
+  "items": 1
+ },
+ "Q56903543": {
+  "label": "CBFC classification category",
+  "items": 1
+ },
+ "Q15407956": {
+  "label": "university college",
+  "items": 1
+ },
+ "Q82042": {
+  "label": "part of speech",
+  "items": 1
+ },
+ "Q55344424": {
+  "label": "blockchain explorer",
+  "items": 1
+ },
+ "Q133944039": {
+  "label": "Association of Polish Minecraft Wiki",
+  "items": 1
+ },
+ "Q101244": {
+  "label": "acronym",
+  "items": 1
+ },
+ "Q56436498": {
+  "label": "village in India",
+  "items": 1
+ },
+ "Q104832689": {
+  "label": "party political foundation",
+  "items": 1
+ },
+ "Q1752346": {
+  "label": "assembly",
+  "items": 1
+ },
+ "Q33002955": {
+  "label": "knowledge graph",
+  "items": 1
+ },
+ "Q593744": {
+  "label": "knowledge base",
+  "items": 1
+ },
+ "Q638153": {
+  "label": "semantic wiki",
+  "items": 1
+ },
+ "Q115660447": {
+  "label": "Wikibase instance",
+  "items": 1
+ },
+ "Q136375263": {
+  "label": "Wikimedia multilingual project",
+  "items": 1
+ },
+ "Q36509592": {
+  "label": "wiki with script conversion",
+  "items": 1
+ },
+ "Q19605341": {
+  "label": "business network",
+  "items": 1
+ },
+ "Q107715": {
+  "label": "physical quantity",
+  "items": 1
+ },
+ "Q1554231": {
+  "label": "resource",
+  "items": 1
+ },
+ "Q12782082": {
+  "label": "state corporation",
+  "items": 1
+ },
+ "Q10387680": {
+  "label": "organization unit",
+  "items": 1
+ },
+ "Q123588392": {
+  "label": "type of tool",
+  "items": 1
+ },
+ "Q4229700": {
+  "label": "Committee of National Security",
+  "items": 1
+ },
+ "Q4146825": {
+  "label": "State Committee of the Soviet Union",
+  "items": 1
+ },
+ "Q56291528": {
+  "label": "state order",
+  "items": 1
+ },
+ "Q3302125": {
+  "label": "state decoration",
+  "items": 1
+ },
+ "Q64513524": {
+  "label": "economic term",
+  "items": 1
+ },
+ "Q7604698": {
+  "label": "statutory authority",
+  "items": 1
+ },
+ "Q2324813": {
+  "label": "state bank",
+  "items": 1
+ },
+ "Q261362": {
+  "label": "employment agency",
+  "items": 1
+ },
+ "Q23397": {
+  "label": "lake",
+  "items": 1
+ },
+ "Q30092776": {
+  "label": "lake water body",
+  "items": 1
+ },
+ "Q28820001": {
+  "label": "musical scene",
+  "items": 1
+ },
+ "Q131401": {
+  "label": "caliphate",
+  "items": 1
+ },
+ "Q4204060": {
+  "label": "Islamic state",
+  "items": 1
+ },
+ "Q21512251": {
+  "label": "self-proclaimed state",
+  "items": 1
+ },
+ "Q47462966": {
+  "label": "Assize Court",
+  "items": 1
+ },
+ "Q5084": {
+  "label": "hamlet",
+  "items": 1
+ },
+ "Q192287": {
+  "label": "administrative divisions of Russia",
+  "items": 1
+ },
+ "Q464780": {
+  "label": "mint",
+  "items": 1
+ },
+ "Q1447463": {
+  "label": "package delivery",
+  "items": 1
+ },
+ "Q11812394": {
+  "label": "theatre company",
+  "items": 1
+ },
+ "Q752106": {
+  "label": "legislature broadcaster",
+  "items": 1
+ },
+ "Q104886628": {
+  "label": "sailing team",
+  "items": 1
+ },
+ "Q930752": {
+  "label": "medical specialty",
+  "items": 1
+ },
+ "Q672729": {
+  "label": "Islamic Republic",
+  "items": 1
+ },
+ "Q53536964": {
+  "label": "royal palace",
+  "items": 1
+ },
+ "Q2087181": {
+  "label": "historic house museum",
+  "items": 1
+ },
+ "Q7328910": {
+  "label": "art collection",
+  "items": 1
+ },
+ "Q16884952": {
+  "label": "country house",
+  "items": 1
+ },
+ "Q42138": {
+  "label": "citizenship",
+  "items": 1
+ },
+ "Q28648855": {
+  "label": "police unit",
+  "items": 1
+ },
+ "Q84368158": {
+  "label": "health app",
+  "items": 1
+ },
+ "Q1787375": {
+  "label": "children's interest channel",
+  "items": 1
+ },
+ "Q324254": {
+  "label": "ontology",
+  "items": 1
+ },
+ "Q6565769": {
+  "label": "Canadian appellate court",
+  "items": 1
+ },
+ "Q609269": {
+  "label": "army corps",
+  "items": 1
+ },
+ "Q106823225": {
+  "label": "expeditionary force",
+  "items": 1
+ },
+ "Q4481675": {
+  "label": "Federal service (Russian Federation)",
+  "items": 1
+ },
+ "Q69964246": {
+  "label": "school of public health",
+  "items": 1
+ },
+ "Q1639378": {
+  "label": "social system",
+  "items": 1
+ },
+ "Q116763871": {
+  "label": "federally insured, state-chartered credit union",
+  "items": 1
+ },
+ "Q8928": {
+  "label": "constellation",
+  "items": 1
+ },
+ "Q25536112": {
+  "label": "independent administrative authority",
+  "items": 1
+ },
+ "Q131324128": {
+  "label": "water polo club",
+  "items": 1
+ },
+ "Q937228": {
+  "label": "property",
+  "items": 1
+ },
+ "Q2351730": {
+  "label": "progress",
+  "items": 1
+ },
+ "Q4291415": {
+  "label": "oil and gas field",
+  "items": 1
+ },
+ "Q11771944": {
+  "label": "civil service",
+  "items": 1
+ },
+ "Q224747": {
+  "label": "civil service of India",
+  "items": 1
+ },
+ "Q3595209": {
+  "label": "All India Services",
+  "items": 1
+ },
+ "Q3329412": {
+  "label": "archaeological museum",
+  "items": 1
+ },
+ "Q570116": {
+  "label": "tourist attraction",
+  "items": 1
+ },
+ "Q50932406": {
+  "label": "tennis ranking",
+  "items": 1
+ },
+ "Q72588": {
+  "label": "content delivery network",
+  "items": 1
+ },
+ "Q44409287": {
+  "label": "type of machine element",
+  "items": 1
+ },
+ "Q2467478": {
+  "label": "widget",
+  "items": 1
+ },
+ "Q4470686": {
+  "label": "decoration",
+  "items": 1
+ },
+ "Q76223357": {
+  "label": "fitness center chain",
+  "items": 1
+ },
+ "Q1334294": {
+  "label": "software repository",
+  "items": 1
+ },
+ "Q192532": {
+  "label": "digital rights management",
+  "items": 1
+ },
+ "Q868410": {
+  "label": "graphics software",
+  "items": 1
+ },
+ "Q138348066": {
+  "label": "female occupation",
+  "items": 1
+ },
+ "Q110416322": {
+  "label": "unitary authority",
+  "items": 1
+ },
+ "Q56611639": {
+  "label": "media industry",
+  "items": 1
+ },
+ "Q116777014": {
+  "label": "generative pre-trained transformer",
+  "items": 1
+ },
+ "Q1044361": {
+  "label": "Feistel cipher",
+  "items": 1
+ },
+ "Q3408368": {
+  "label": "form of address in the United Kingdom",
+  "items": 1
+ },
+ "Q115859699": {
+  "label": "honorific prefix",
+  "items": 1
+ },
+ "Q112807602": {
+  "label": "type of social group",
+  "items": 1
+ },
+ "Q123129246": {
+  "label": "Christian denominational family",
+  "items": 1
+ },
+ "Q136558811": {
+  "label": "type of military area",
+  "items": 1
+ },
+ "Q1461523": {
+  "label": "console application",
+  "items": 1
+ },
+ "Q811930": {
+  "label": "construction company",
+  "items": 1
+ },
+ "Q12353044": {
+  "label": "oil refinery",
+  "items": 1
+ },
+ "Q2016362": {
+  "label": "morning paper",
+  "items": 1
+ },
+ "Q498289": {
+  "label": "dual-listed company",
+  "items": 1
+ },
+ "Q5594490": {
+  "label": "Grand Divisions of Tennessee",
+  "items": 1
+ },
+ "Q130367871": {
+  "label": "public research institution in Italy",
+  "items": 1
+ },
+ "Q8010730": {
+  "label": "independent organ",
+  "items": 1
+ },
+ "Q11484275": {
+  "label": "government office",
+  "items": 1
+ },
+ "Q124652943": {
+  "label": "JMA meteorological office",
+  "items": 1
+ },
+ "Q107494520": {
+  "label": "physics award",
+  "items": 1
+ },
+ "Q26817508": {
+  "label": "rose cultivar",
+  "items": 1
+ },
+ "Q16147743": {
+  "label": "State Secretary",
+  "items": 1
+ },
+ "Q56829666": {
+  "label": "baseball competition",
+  "items": 1
+ },
+ "Q125818804": {
+  "label": "ultra-trail race",
+  "items": 1
+ },
+ "Q2093999": {
+  "label": "trail running",
+  "items": 1
+ },
+ "Q124628741": {
+  "label": "geospatial company",
+  "items": 1
+ },
+ "Q188628": {
+  "label": "board of directors",
+  "items": 1
+ },
+ "Q113052893": {
+  "label": "Department of Ministry of Bermuda",
+  "items": 1
+ },
+ "Q1122435": {
+  "label": "Regional Economic Communities",
+  "items": 1
+ },
+ "Q3591867": {
+  "label": "proposed country",
+  "items": 1
+ },
+ "Q837675": {
+  "label": "jury",
+  "items": 1
+ },
+ "Q638608": {
+  "label": "software development",
+  "items": 1
+ },
+ "Q95988573": {
+  "label": "customer relationship management software",
+  "items": 1
+ },
+ "Q17103526": {
+  "label": "marketing automation",
+  "items": 1
+ },
+ "Q271680": {
+  "label": "software framework",
+  "items": 1
+ },
+ "Q100589423": {
+  "label": "chess federation",
+  "items": 1
+ },
+ "Q51073561": {
+  "label": "civil police",
+  "items": 1
+ },
+ "Q68295960": {
+  "label": "Swedish government agency",
+  "items": 1
+ },
+ "Q124343324": {
+  "label": "Chinese state-owned enterprise",
+  "items": 1
+ },
+ "Q6451276": {
+  "label": "Congressional Research Service report",
+  "items": 1
+ },
+ "Q6979740": {
+  "label": "national under-21 association football team",
+  "items": 1
+ },
+ "Q63976454": {
+  "label": "X account",
+  "items": 1
+ },
+ "Q4887441": {
+  "label": "benefit corporation",
+  "items": 1
+ },
+ "Q422007": {
+  "label": "aktiebolag",
+  "items": 1
+ },
+ "Q11513034": {
+  "label": "association under the French law of 1901",
+  "items": 1
+ },
+ "Q39049085": {
+  "label": "challenger bank",
+  "items": 1
+ },
+ "Q67197347": {
+  "label": "Tetracontad",
+  "items": 1
+ },
+ "Q1186723": {
+  "label": "distributed revision control system",
+  "items": 1
+ },
+ "Q1077784": {
+  "label": "programming tool",
+  "items": 1
+ },
+ "Q101408242": {
+  "label": "filestore",
+  "items": 1
+ },
+ "Q4086495": {
+  "label": "startup accelerator",
+  "items": 1
+ },
+ "Q5341296": {
+  "label": "educational program",
+  "items": 1
+ },
+ "Q1274955": {
+  "label": "space force",
+  "items": 1
+ },
+ "Q769802": {
+  "label": "continental union",
+  "items": 1
+ },
+ "Q1307792": {
+  "label": "one-design sailboat",
+  "items": 1
+ },
+ "Q893182": {
+  "label": "olympic sailing class",
+  "items": 1
+ },
+ "Q106040099": {
+  "label": "adult content subscription service",
+  "items": 1
+ },
+ "Q19824398": {
+  "label": "news desk",
+  "items": 1
+ },
+ "Q2257409": {
+  "label": "fraternal party",
+  "items": 1
+ },
+ "Q2400020": {
+  "label": "function hall",
+  "items": 1
+ },
+ "Q7777281": {
+  "label": "Theater Sustainment Command",
+  "items": 1
+ },
+ "Q736559": {
+  "label": "secretary of state",
+  "items": 1
+ },
+ "Q2961832": {
+  "label": "national broadcast channel",
+  "items": 1
+ },
+ "Q1141770": {
+  "label": "Crown entity",
+  "items": 1
+ },
+ "Q128558762": {
+  "label": "computer family",
+  "items": 1
+ },
+ "Q18033451": {
+  "label": "awareness month",
+  "items": 1
+ },
+ "Q54935786": {
+  "label": "medium-sized district town",
+  "items": 1
+ },
+ "Q210272": {
+  "label": "cultural heritage",
+  "items": 1
+ },
+ "Q25550691": {
+  "label": "city hall",
+  "items": 1
+ },
+ "Q105855428": {
+  "label": "defunct sports competition",
+  "items": 1
+ },
+ "Q4736525": {
+  "label": "alternative investment",
+  "items": 1
+ },
+ "Q216931": {
+  "label": "advertising agency",
+  "items": 1
+ },
+ "Q33837": {
+  "label": "archipelago",
+  "items": 1
+ },
+ "Q1048835": {
+  "label": "political territorial entity",
+  "items": 1
+ },
+ "Q96247293": {
+  "label": "type of management",
+  "items": 1
+ },
+ "Q194166": {
+  "label": "consortium",
+  "items": 1
+ },
+ "Q29300714": {
+  "label": "international association",
+  "items": 1
+ },
+ "Q856564": {
+  "label": "library association",
+  "items": 1
+ },
+ "Q1792374": {
+  "label": "aerobatic team",
+  "items": 1
+ },
+ "Q19967846": {
+  "label": "online gaming service",
+  "items": 1
+ },
+ "Q15811108": {
+  "label": "Führerpartei",
+  "items": 1
+ },
+ "Q40482169": {
+  "label": "defunct political party",
+  "items": 1
+ },
+ "Q1469680": {
+  "label": "state party",
+  "items": 1
+ },
+ "Q131338872": {
+  "label": "LGBT sanctuary city",
+  "items": 1
+ },
+ "Q4505959": {
+  "label": "digital map",
+  "items": 1
+ },
+ "Q205961": {
+  "label": "skill",
+  "items": 1
+ },
+ "Q84326403": {
+  "label": "adult camming website",
+  "items": 1
+ },
+ "Q7075": {
+  "label": "library",
+  "items": 1
+ },
+ "Q123237961": {
+  "label": "abortion by country",
+  "items": 1
+ },
+ "Q6972269": {
+  "label": "national development bank",
+  "items": 1
+ },
+ "Q898675": {
+  "label": "Eisenstein prime",
+  "items": 1
+ },
+ "Q624025": {
+  "label": "Sophie Germain prime",
+  "items": 1
+ },
+ "Q599093": {
+  "label": "Perrin number",
+  "items": 1
+ },
+ "Q816063": {
+  "label": "Bell number",
+  "items": 1
+ },
+ "Q1486643": {
+  "label": "pronic number",
+  "items": 1
+ },
+ "Q11606": {
+  "label": "magic number",
+  "items": 1
+ },
+ "Q1136880": {
+  "label": "power of two",
+  "items": 1
+ },
+ "Q1462591": {
+  "label": "taxicab number",
+  "items": 1
+ },
+ "Q19861951": {
+  "label": "type of food or dish",
+  "items": 1
+ },
+ "Q1122253": {
+  "label": "computer emergency response team",
+  "items": 1
+ },
+ "Q108486313": {
+  "label": "Vietnamese middle name",
+  "items": 1
+ },
+ "Q202444": {
+  "label": "given name",
+  "items": 1
+ },
+ "Q137905795": {
+  "label": "EU program",
+  "items": 1
+ },
+ "Q62079110": {
+  "label": "subsidiary organization",
+  "items": 1
+ },
+ "Q2138558": {
+  "label": "regiopolis",
+  "items": 1
+ },
+ "Q85635301": {
+  "label": "urban district of Mecklenburg-Vorpommern",
+  "items": 1
+ },
+ "Q22923920": {
+  "label": "territorial collectivity of France with special status",
+  "items": 1
+ },
+ "Q6047930": {
+  "label": "internal security",
+  "items": 1
+ },
+ "Q1360517": {
+  "label": "internet backbone",
+  "items": 1
+ },
+ "Q132680629": {
+  "label": "city of North Carolina",
+  "items": 1
+ },
+ "Q11028": {
+  "label": "information",
+  "items": 1
+ },
+ "Q98116669": {
+  "label": "religious complex",
+  "items": 1
+ },
+ "Q19691007": {
+  "label": "institutional complex",
+  "items": 1
+ },
+ "Q702492": {
+  "label": "urban area",
+  "items": 1
+ },
+ "Q7396640": {
+  "label": "sacerdotal state",
+  "items": 1
+ },
+ "Q627272": {
+  "label": "employers' organization",
+  "items": 1
+ },
+ "Q59284933": {
+  "label": "Q59284933",
+  "items": 1
+ },
+ "Q2145277": {
+  "label": "house of representatives",
+  "items": 1
+ },
+ "Q83878004": {
+  "label": "network",
+  "items": 1
+ },
+ "Q665487": {
+  "label": "diocese",
+  "items": 1
+ },
+ "Q9842": {
+  "label": "primary school",
+  "items": 1
+ },
+ "Q10302978": {
+  "label": "public institute",
+  "items": 1
+ },
+ "Q1244922": {
+  "label": "embankment dam",
+  "items": 1
+ },
+ "Q25297051": {
+  "label": "transborder building",
+  "items": 1
+ },
+ "Q1355334": {
+  "label": "buttress dam",
+  "items": 1
+ },
+ "Q3497167": {
+  "label": "gravity dam",
+  "items": 1
+ },
+ "Q15911738": {
+  "label": "hydroelectric power station",
+  "items": 1
+ },
+ "Q1924900": {
+  "label": "metallic material",
+  "items": 1
+ },
+ "Q271449": {
+  "label": "precious metal",
+  "items": 1
+ },
+ "Q2088357": {
+  "label": "musical ensemble",
+  "items": 1
+ },
+ "Q2080521": {
+  "label": "market hall",
+  "items": 1
+ },
+ "Q25401445": {
+  "label": "decimal currency",
+  "items": 1
+ },
+ "Q3511068": {
+  "label": "digital currency exchanger",
+  "items": 1
+ },
+ "Q1251750": {
+  "label": "distillery",
+  "items": 1
+ },
+ "Q601401": {
+  "label": "trade",
+  "items": 1
+ },
+ "Q1147226": {
+  "label": "digital wallet",
+  "items": 1
+ },
+ "Q1365703": {
+  "label": "mobile payment",
+  "items": 1
+ },
+ "Q875157": {
+  "label": "resort",
+  "items": 1
+ },
+ "Q33270056": {
+  "label": "genealogy database",
+  "items": 1
+ },
+ "Q33270324": {
+  "label": "genealogy website",
+  "items": 1
+ },
+ "Q174814": {
+  "label": "electrical substation",
+  "items": 1
+ },
+ "Q62933756": {
+  "label": "military unit branch-type-size class",
+  "items": 1
+ },
+ "Q1301203": {
+  "label": "legal proceeding",
+  "items": 1
+ },
+ "Q5119518": {
+  "label": "cider mill",
+  "items": 1
+ },
+ "Q56887437": {
+  "label": "bus type",
+  "items": 1
+ },
+ "Q11410": {
+  "label": "game",
+  "items": 1
+ },
+ "Q773944": {
+  "label": "fandom",
+  "items": 1
+ },
+ "Q4456236": {
+  "label": "terrorist group",
+  "items": 1
+ },
+ "Q276548": {
+  "label": "secret society",
+  "items": 1
+ },
+ "Q44597158": {
+  "label": "health specialty",
+  "items": 1
+ },
+ "Q1959446": {
+  "label": "service sector",
+  "items": 1
+ },
+ "Q1416251": {
+  "label": "gossip magazine",
+  "items": 1
+ },
+ "Q1140229": {
+  "label": "political union",
+  "items": 1
+ },
+ "Q1767520": {
+  "label": "court of cassation",
+  "items": 1
+ },
+ "Q29167934": {
+  "label": "labour inspectorate",
+  "items": 1
+ },
+ "Q5333510": {
+  "label": "economic ideology",
+  "items": 1
+ },
+ "Q3456650": {
+  "label": "blog network",
+  "items": 1
+ },
+ "Q129261549": {
+  "label": "political party, political movement",
+  "items": 1
+ },
+ "Q105085320": {
+  "label": "Beobachtungsobjekt",
+  "items": 1
+ },
+ "Q838795": {
+  "label": "comic strip",
+  "items": 1
+ },
+ "Q860447": {
+  "label": "emergency medical services",
+  "items": 1
+ },
+ "Q41719": {
+  "label": "hypothesis",
+  "items": 1
+ },
+ "Q104934": {
+  "label": "fundamental interaction",
+  "items": 1
+ },
+ "Q1426035": {
+  "label": "local government area of Victoria",
+  "items": 1
+ },
+ "Q21156425": {
+  "label": "wrestling event",
+  "items": 1
+ },
+ "Q107467117": {
+  "label": "type of award",
+  "items": 1
+ },
+ "Q110071217": {
+  "label": "village of Illinois",
+  "items": 1
+ },
+ "Q3480479": {
+  "label": "Public employment service in Belgium",
+  "items": 1
+ },
+ "Q839954": {
+  "label": "archaeological site",
+  "items": 1
+ },
+ "Q1617500": {
+  "label": "hieron",
+  "items": 1
+ },
+ "Q1351282": {
+  "label": "crown colony",
+  "items": 1
+ },
+ "Q28017710": {
+  "label": "digital platform",
+  "items": 1
+ },
+ "Q141545093": {
+  "label": "WWE brand",
+  "items": 1
+ },
+ "Q1427940": {
+  "label": "warning system",
+  "items": 1
+ },
+ "Q1052989": {
+  "label": "cell broadcast",
+  "items": 1
+ },
+ "Q24834073": {
+  "label": "ministry of War",
+  "items": 1
+ },
+ "Q203607": {
+  "label": "guilder",
+  "items": 1
+ },
+ "Q1641851": {
+  "label": "United States court of appeals",
+  "items": 1
+ },
+ "Q2986717": {
+  "label": "presidential commission",
+  "items": 1
+ },
+ "Q107551175": {
+  "label": "game genre",
+  "items": 1
+ },
+ "Q1008803": {
+  "label": "federal territory of Malaysia",
+  "items": 1
+ },
+ "Q257391": {
+  "label": "federal capital",
+  "items": 1
+ },
+ "Q114290793": {
+  "label": "immigration office",
+  "items": 1
+ },
+ "Q2528718": {
+  "label": "Government of Romania",
+  "items": 1
+ },
+ "Q1364302": {
+  "label": "ministry of agriculture",
+  "items": 1
+ },
+ "Q119143679": {
+  "label": "system lifecycle phase",
+  "items": 1
+ },
+ "Q94532151": {
+  "label": "oilfield service company",
+  "items": 1
+ },
+ "Q60198902": {
+  "label": "hosting foundation",
+  "items": 1
+ },
+ "Q74106598": {
+  "label": "deportation order for foreigners under French law",
+  "items": 1
+ },
+ "Q697852": {
+  "label": "real estate investment trust",
+  "items": 1
+ },
+ "Q43371537": {
+  "label": "trading venue",
+  "items": 1
+ },
+ "Q1896989": {
+  "label": "subject of international law",
+  "items": 1
+ },
+ "Q1147274": {
+  "label": "Apostolic see",
+  "items": 1
+ },
+ "Q1063239": {
+  "label": "polity",
+  "items": 1
+ },
+ "Q2120466": {
+  "label": "pontifical university",
+  "items": 1
+ },
+ "Q11348": {
+  "label": "function",
+  "items": 1
+ },
+ "Q25508351": {
+  "label": "colonial goods store",
+  "items": 1
+ },
+ "Q13137940": {
+  "label": "sport with racquet/stick/club",
+  "items": 1
+ },
+ "Q11828004": {
+  "label": "province of Canada",
+  "items": 1
+ },
+ "Q108569739": {
+  "label": "village of Ohio",
+  "items": 1
+ },
+ "Q70152878": {
+  "label": "sports scandal",
+  "items": 1
+ },
+ "Q16844746": {
+  "label": "match fixing in association football",
+  "items": 1
+ },
+ "Q2334719": {
+  "label": "legal case",
+  "items": 1
+ },
+ "Q119454533": {
+  "label": "Psychological Operations Group",
+  "items": 1
+ },
+ "Q20873950": {
+  "label": "women's rights organization",
+  "items": 1
+ },
+ "Q191093": {
+  "label": "province of South Africa",
+  "items": 1
+ },
+ "Q47272186": {
+  "label": "headquarters",
+  "items": 1
+ },
+ "Q5611017": {
+  "label": "groundscraper",
+  "items": 1
+ },
+ "Q670113": {
+  "label": "fixed-base operator",
+  "items": 1
+ },
+ "Q27970155": {
+  "label": "tennis center",
+  "items": 1
+ },
+ "Q104886589": {
+  "label": "fictional faction",
+  "items": 1
+ },
+ "Q125191": {
+  "label": "photograph",
+  "items": 1
+ },
+ "Q488053": {
+  "label": "photograph album",
+  "items": 1
+ },
+ "Q263274": {
+  "label": "kremlin",
+  "items": 1
+ },
+ "Q15243209": {
+  "label": "historic district",
+  "items": 1
+ },
+ "Q481289": {
+  "label": "official residence",
+  "items": 1
+ },
+ "Q2319498": {
+  "label": "architectural landmark",
+  "items": 1
+ },
+ "Q192581": {
+  "label": "job activity",
+  "items": 1
+ },
+ "Q585956": {
+  "label": "masia",
+  "items": 1
+ },
+ "Q114608872": {
+  "label": "annual sporting event",
+  "items": 1
+ },
+ "Q100034524": {
+  "label": "Q100034524",
+  "items": 1
+ },
+ "Q1273203": {
+  "label": "mailbox provider",
+  "items": 1
+ },
+ "Q28601953": {
+  "label": "email system",
+  "items": 1
+ },
+ "Q327618": {
+  "label": "webmail",
+  "items": 1
+ },
+ "Q21743174": {
+  "label": "mobile software",
+  "items": 1
+ },
+ "Q165194": {
+  "label": "application programming interface",
+  "items": 1
+ },
+ "Q137218058": {
+  "label": "ministry of Moldova",
+  "items": 1
+ },
+ "Q16274795": {
+  "label": "shipbuilding company",
+  "items": 1
+ },
+ "Q1487973": {
+  "label": "animal welfare organization",
+  "items": 1
+ },
+ "Q15206795": {
+  "label": "exhibition space",
+  "items": 1
+ },
+ "Q2261863": {
+  "label": "stad",
+  "items": 1
+ },
+ "Q59239320": {
+  "label": "national rugby league team",
+  "items": 1
+ },
+ "Q339834": {
+  "label": "regional power",
+  "items": 1
+ },
+ "Q6579042": {
+  "label": "national bank",
+  "items": 1
+ },
+ "Q126368951": {
+  "label": "public television station",
+  "items": 1
+ },
+ "Q126368900": {
+  "label": "public radio station",
+  "items": 1
+ },
+ "Q7309239": {
+  "label": "Regional sports network",
+  "items": 1
+ },
+ "Q21886169": {
+  "label": "men's magazine",
+  "items": 1
+ },
+ "Q13605686": {
+  "label": "nude magazine",
+  "items": 1
+ },
+ "Q110656899": {
+  "label": "pornographic film distributor",
+  "items": 1
+ },
+ "Q1468524": {
+  "label": "city center",
+  "items": 1
+ },
+ "Q676050": {
+  "label": "old town",
+  "items": 1
+ },
+ "Q131862": {
+  "label": "triangulation station",
+  "items": 1
+ },
+ "Q137916409": {
+  "label": "graph database management system",
+  "items": 1
+ },
+ "Q1662340": {
+  "label": "mode of transmission",
+  "items": 1
+ },
+ "Q112667618": {
+  "label": "mathematical society",
+  "items": 1
+ },
+ "Q19478619": {
+  "label": "metaclass",
+  "items": 1
+ },
+ "Q6944143": {
+  "label": "mutual-benefit nonprofit corporation",
+  "items": 1
+ },
+ "Q124017602": {
+  "label": "association football training venue",
+  "items": 1
+ },
+ "Q93429702": {
+  "label": "credit organization (business in Russia)",
+  "items": 1
+ },
+ "Q1791899": {
+  "label": "cultural magazine",
+  "items": 1
+ },
+ "Q59264914": {
+  "label": "transport megaproject",
+  "items": 1
+ },
+ "Q1067164": {
+  "label": "transport service itinerary",
+  "items": 1
+ },
+ "Q58327688": {
+  "label": "web-based service",
+  "items": 1
+ },
+ "Q85632250": {
+  "label": "cloud gaming service",
+  "items": 1
+ },
+ "Q1151733": {
+  "label": "baseball position",
+  "items": 1
+ },
+ "Q3282509": {
+  "label": "Nordic agrarian parties",
+  "items": 1
+ },
+ "Q11197007": {
+  "label": "ethnoreligious group",
+  "items": 1
+ },
+ "Q113517220": {
+  "label": "ice hockey club",
+  "items": 1
+ },
+ "Q2532278": {
+  "label": "representative assembly",
+  "items": 1
+ },
+ "Q1129645": {
+  "label": "trade bloc",
+  "items": 1
+ },
+ "Q10655185": {
+  "label": "Riksdag committee",
+  "items": 1
+ },
+ "Q3664863": {
+  "label": "Mobile Urgency Group",
+  "items": 1
+ },
+ "Q9247597": {
+  "label": "house of commons",
+  "items": 1
+ },
+ "Q117826820": {
+  "label": "bicycle brand",
+  "items": 1
+ },
+ "Q131361364": {
+  "label": "motorcycle brand",
+  "items": 1
+ }
+}

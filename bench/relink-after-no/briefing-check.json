@@ -1,0 +1,237 @@
+[
+ {
+  "title": "Ova 42 pitanja UEFA je poslala FIFA, a kroje sudbinu fudbala",
+  "why": "UEFA has set a deadline for Gianni Infantino to answer 42 questions about his work at FIFA and controversial business arrangements.",
+  "countries": [],
+  "names": [
+   {
+    "name": "UEFA",
+    "qid": "Q35572",
+    "kind": "organization"
+   },
+   {
+    "name": "FIFA",
+    "qid": "Q253414",
+    "kind": "organization"
+   },
+   {
+    "name": "Đaniju Infantinu",
+    "qid": null,
+    "kind": "person"
+   },
+   {
+    "name": "Infantino",
+    "qid": "Q124138",
+    "kind": "person"
+   }
+  ]
+ },
+ {
+  "title": "FIFA approves normalisation committee for Nigeria",
+  "why": "FIFA approved a normalisation committee to take charge of the Nigeria Football Federation until new leadership is elected.",
+  "countries": [
+   "NG"
+  ],
+  "names": [
+   {
+    "name": "FIFA",
+    "qid": "Q253414",
+    "kind": "organization"
+   },
+   {
+    "name": "NFF",
+    "qid": "Q932762",
+    "kind": "organization"
+   }
+  ]
+ },
+ {
+  "title": "Gros \"ouf\" de soulagement pour le football belge : le verdict est tombé dans l'affaire Refaelov !",
+  "why": "A court ruling in Brussels regarding the Refaelov case provides a legal victory for UEFA and the Belgian Union.",
+  "countries": [
+   "BE"
+  ],
+  "names": [
+   {
+    "name": "UEFA",
+    "qid": "Q35572",
+    "kind": "organization"
+   },
+   {
+    "name": "Lior Refaelov",
+    "qid": null,
+    "kind": "person"
+   },
+   {
+    "name": "Antwerp",
+    "qid": "Q732002",
+    "kind": "organization"
+   }
+  ]
+ },
+ {
+  "title": "ЕК отказва да разследва ФИФА въпреки обвиненията в злоупотреба с власт",
+  "why": "The European Commission refused to investigate FIFA despite accusations of abuse of dominant position.",
+  "countries": [],
+  "names": [
+   {
+    "name": "ФИФА",
+    "qid": "Q253414",
+    "kind": "organization"
+   },
+   {
+    "name": "ЕК",
+    "qid": null,
+    "kind": "organization"
+   }
+  ]
+ },
+ {
+  "title": "« Je me présente » : lâché par une partie de la Serie A, Malagò voit un ancien dirigeant du Milan AC aux 29 titres menacer sa prise de pouvoir sur le calcio",
+  "why": "Internal power struggles and threats to the leadership of the Italian Football Federation.",
+  "countries": [
+   "IT"
+  ],
+  "names": [
+   {
+    "name": "Giovanni Malagò",
+    "qid": "Q7002247",
+    "kind": "person"
+   },
+   {
+    "name": "FIGC",
+    "qid": "Q201897",
+    "kind": "organization"
+   },
+   {
+    "name": "Serie A",
+    "qid": "Q15804",
+    "kind": "organization"
+   },
+   {
+    "name": "Adriano Galliani",
+    "qid": "Q264086",
+    "kind": "person"
+   }
+  ]
+ },
+ {
+  "title": "Fifa’s disciplinary rules have changed: What clubs, players and agents need to know now",
+  "why": "Amendments to FIFA’s Disciplinary Code affecting clubs, players, and agents.",
+  "countries": [],
+  "names": [
+   {
+    "name": "Clubs",
+    "qid": null,
+    "kind": "organization"
+   },
+   {
+    "name": "FIFA",
+    "qid": "Q253414",
+    "kind": "organization"
+   }
+  ]
+ },
+ {
+  "title": "Há vida para Infantino. Volte-face muda tudo nas eleições da FIFA",
+  "why": "Shifts in support among confederations (AFC, CONMEBOL, CAF, OFC) regarding the FIFA presidential elections.",
+  "countries": [],
+  "names": [
+   {
+    "name": "FIFA",
+    "qid": "Q253414",
+    "kind": "organization"
+   },
+   {
+    "name": "Gianni Infantino",
+    "qid": "Q124138",
+    "kind": "person"
+   },
+   {
+    "name": "AFC",
+    "qid": null,
+    "kind": "organization"
+   }
+  ]
+ },
+ {
+  "title": "FOTO&VIDEO Instruire la toate nivelurile pentru arbitrajul românesc",
+  "why": "Training activities for the improvement of match officials by the Romanian Football Federation's refereeing department.",
+  "countries": [
+   "RO"
+  ],
+  "names": [
+   {
+    "name": "Federației Române de Fotbal",
+    "qid": "Q631999",
+    "kind": "organization"
+   },
+   {
+    "name": "Kyros Vassaras",
+    "qid": null,
+    "kind": "person"
+   },
+   {
+    "name": "Liga 1",
+    "qid": "Q237753",
+    "kind": "organization"
+   },
+   {
+    "name": "CCA",
+    "qid": null,
+    "kind": "organization"
+   }
+  ]
+ },
+ {
+  "title": "SFA belatedly issue Celtic penalty verdict as VAR advice changed after Motherwell 'handball' error",
+  "why": "The SFA's Head of Refereeing Operations admitted a mistake following a controversial VAR handball decision.",
+  "countries": [
+   "GB"
+  ],
+  "names": [
+   {
+    "name": "Celtic",
+    "qid": "Q19593",
+    "kind": "organization"
+   },
+   {
+    "name": "Head of Refereeing Operations",
+    "qid": null,
+    "kind": "person"
+   },
+   {
+    "name": "Motherwell",
+    "qid": "Q216523",
+    "kind": "organization"
+   },
+   {
+    "name": "SFA",
+    "qid": null,
+    "kind": "organization"
+   }
+  ]
+ },
+ {
+  "title": "\"A liderança da arbitragem, tão permissiva e submissa perante outros, quer condicionar e silenciar o Braga\"",
+  "why": "The president of Braga attacks the refereeing leadership following a sanction imposed on the club.",
+  "countries": [],
+  "names": [
+   {
+    "name": "António Salvador",
+    "qid": null,
+    "kind": "person"
+   },
+   {
+    "name": "Conselho de Arbitragem",
+    "qid": null,
+    "kind": "organization"
+   },
+   {
+    "name": "Braga",
+    "qid": null,
+    "kind": "person"
+   }
+  ]
+ }
+]

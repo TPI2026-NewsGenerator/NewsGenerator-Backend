@@ -1,0 +1,13 @@
+
+{"variant": "torch", "threads": 6, "texts": 200, "seconds": 98.6, "textsPerSecond": 2.03}
+{"variant": "onnx", "threads": 6, "texts": 200, "seconds": 76.6, "textsPerSecond": 2.61}
+{"variant": "int8x", "threads": 6, "texts": 200, "seconds": 37.4, "textsPerSecond": 5.35}
+{"variant": "int8", "threads": 6, "texts": 200, "seconds": 18.1, "textsPerSecond": 11.03}
+{"variant": "torch", "threads": 6, "texts": 200, "seconds": 114.2, "textsPerSecond": 1.75}
+{"variant": "onnx", "threads": 6, "texts": 200, "seconds": 69.7, "textsPerSecond": 2.87}
+{"variant": "int8x", "threads": 6, "texts": 200, "seconds": 32.8, "textsPerSecond": 6.1}
+{"variant": "int8", "threads": 6, "texts": 200, "seconds": 17.2, "textsPerSecond": 11.64}
+{"variant": "torch", "threads": 6, "texts": 200, "seconds": 146.5, "textsPerSecond": 1.37}
+{"variant": "onnx", "threads": 6, "texts": 200, "seconds": 50.7, "textsPerSecond": 3.95}
+{"variant": "int8x", "threads": 6, "texts": 200, "seconds": 36.9, "textsPerSecond": 5.42}
+{"variant": "int8", "threads": 6, "texts": 200, "seconds": 32.0, "textsPerSecond": 6.24}

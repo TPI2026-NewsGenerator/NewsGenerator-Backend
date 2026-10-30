@@ -1,0 +1,18 @@
+file:///C:/Users/roste/Documents/CPNV24/TPI/prog/NewsGenerator/server/node_modules/.pnpm/ollama@0.6.3/node_modules/ollama/dist/browser.mjs:73
+  throw new ResponseError(message, response.status);
+        ^
+
+ResponseError: timed out waiting for a concurrent request slot
+    at checkOk (file:///C:/Users/roste/Documents/CPNV24/TPI/prog/NewsGenerator/server/node_modules/.pnpm/ollama@0.6.3/node_modules/ollama/dist/browser.mjs:73:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async post (file:///C:/Users/roste/Documents/CPNV24/TPI/prog/NewsGenerator/server/node_modules/.pnpm/ollama@0.6.3/node_modules/ollama/dist/browser.mjs:156:3)
+    at async Ollama.processStreamableRequest (file:///C:/Users/roste/Documents/CPNV24/TPI/prog/NewsGenerator/server/node_modules/.pnpm/ollama@0.6.3/node_modules/ollama/dist/browser.mjs:297:22)
+    at async file:///C:/Users/roste/Documents/CPNV24/TPI/prog/NewsGenerator/server/bench/check.mjs:29:26
+    at async Promise.all (index 1)
+    at async file:///C:/Users/roste/Documents/CPNV24/TPI/prog/NewsGenerator/server/bench/check.mjs:28:5 {
+  error: 'timed out waiting for a concurrent request slot',
+  status_code: 429
+}
+
+Node.js v24.21.0
+seconds 301

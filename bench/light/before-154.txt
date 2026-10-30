@@ -1,0 +1,33 @@
+candidates 50: Tennis 15, Intelligence a 17, Politique suis 18
+run 0: 15 chosen, Tennis 5, Intelligence a 6, Politique suis 4, kept 10: Tennis 3, Intelligence a 4, Politique suis 3  (4882+621 tokens)
+   K Politique suis | Neutralité suisse: une claque, un plébiscite et une clarification qui tombe à point
+   K Politique suis | Berne alloue des millions pour l'intégration des étrangers
+   K Intelligence a | ‘Our industry sees the risks and is concerned’: European tech leaders join calls for AI slowdown
+   K Intelligence a | La pression sur la Suisse est immense: comment le sommet mondial de l’IA à Genève va «tenter de mett
+   K Intelligence a | Intelligence artificielle : Washington et Pékin déploient un canal de communication direct sur les i
+   K Politique suis | L'évaluation d'un deuxième système de défense antiaérienne est terminée, l'Eurosam serait favori
+   K Intelligence a | AI companies investigating possible future of rights, protection for artificial intelligence agents
+   K Tennis | L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Winsley Boteli?
+   K Tennis | Tennis : Kyrian Jacquet se qualifie pour sa première demi-finale sur le grand circuit
+   K Tennis | "Il ne va pas s'arrêter là" : le tennisman Arthur Fils va intégrer le Top 10 mondial, une première d
+     Tennis | Laver Cup chiefs open up on future plans as tournament eyes expansion beyond North America
+     Tennis | “It doesn't matter”: Alexander Zverev responds to huge No.1 opportunity after Sinner withdrawal
+     Intelligence a | Les dirigeants d’OpenAI et d’Anthropic convoqués dans le cadre d’une enquête australienne sur l’inte
+     Politique suis | Swiss voters decide on NATO cooperation and neutrality
+     Intelligence a | Le point de vue. Intelligence artificielle : « La machine est en marche, on ne l'arrêtera pas mais..
+run 1: 15 chosen, Tennis 6, Intelligence a 6, Politique suis 3, kept 10: Tennis 3, Intelligence a 4, Politique suis 3  (4882+630 tokens)
+   K Politique suis | Neutralité suisse: une claque, un plébiscite et une clarification qui tombe à point
+   K Intelligence a | ‘Our industry sees the risks and is concerned’: European tech leaders join calls for AI slowdown
+   K Politique suis | Berne alloue des millions pour l'intégration des étrangers
+   K Intelligence a | La pression sur la Suisse est immense: comment le sommet mondial de l’IA à Genève va «tenter de mett
+   K Intelligence a | Intelligence artificielle : Washington et Pékin déploient un canal de communication direct sur les i
+   K Politique suis | L'évaluation d'un deuxième système de défense antiaérienne est terminée, l'Eurosam serait favori
+   K Intelligence a | AI companies investigating possible future of rights, protection for artificial intelligence agents
+   K Tennis | L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Winsley Boteli?
+   K Tennis | "Il ne va pas s'arrêter là" : le tennisman Arthur Fils va intégrer le Top 10 mondial, une première d
+   K Tennis | “It doesn't matter”: Alexander Zverev responds to huge No.1 opportunity after Sinner withdrawal
+     Tennis | Laver Cup chiefs open up on future plans as tournament eyes expansion beyond North America
+     Tennis | “The US Open and Davis Cup took a toll”: Ben Shelton forced out of another ATP tournament
+     Intelligence a | Les dirigeants d’OpenAI et d’Anthropic convoqués dans le cadre d’une enquête australienne sur l’inte
+     Intelligence a | Le point de vue. Intelligence artificielle : « La machine est en marche, on ne l'arrêtera pas mais..
+     Tennis | Tennis : Kyrian Jacquet se qualifie pour sa première demi-finale sur le grand circuit

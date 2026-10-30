@@ -1,0 +1,237 @@
+# 1 César Jáuregui (es, 110) media MX: infobae.com 31, 860liderinformativo.mx 11, reforma.com 8, diariodemexico.com 6
+  I: Q63150137 0 wikis ES researcher
+  T: Senado insta a investigar relación del exfiscal César Jáuregui con operativo de la CIA
+  T: Senado pide esclarecer responsabilidades por caso del exfiscal César Jáuregui y su presunto vínculo con operativo de la CIA
+  T: Maru Campos asegura que no habrá impunidad en el caso del exfiscal César Jáuregu
+
+# 2 Philippe ROSE (fr, 18) media FR BYLINE: paris-normandie.fr 18
+  I: Q65601005 0 wikis FR French politician
+  T: Guilaine Dufosse
+
+# 3 Vítor Severino (pt, 37) media PT: sapo.pt 13, record.pt 6, ojogo.pt 4, maisfutebol.iol.pt 3
+  I: Q117222870 0 wikis - researcher
+  T: Vítor Severino elogia adversário e deixa desabafo: «Não esperava tantas cambalhotas no marcador»
+  T: Severino no Jamor: «Temos muito caminho para andar»
+  T: Vítor Severino: «Não esperava que fosse um jogo com todas estas cambalhotas»
+
+# 4 Mohamed Abdelmonem (en, 22) media -: africasoccer.com 13, news.google.com 4, goal.com 2, foot-sur7.fr 1
+  I: Q89182500 0 wikis - researcher
+  T: Chute d'Abdel Moneim : carton rouge et but refusé agrémentent le duel entre Lyon et Nice | Goal.com Français
+  T: Nice beaten by Lyon as Egypt defender Mohamed Abdelmonem goes off injured
+  T: Mohamed Abdelmonem starts fifth successive Nice match against Strasbourg
+
+# 5 Romaine Bostick (en, 69) media - BYLINE: bloomberg.com 69
+  I: Q117249870 0 wikis - Anchor, "Bloomberg Markets," Bloomberg
+  T: Alger’s Crawford: There’s Skittishness in the Market
+  T: X-Energy CEO on Amazon, AEP Nuclear Data Center Deal
+  T: Amazon Rallies as Morgan Stanley Sees Major AI Upside | Closing Bell
+
+# 6 son mari (fr, 35) media FR: ouest-france.fr 8, sudinfo.be 4, autonews.fr 2, letelegramme.fr 2
+  I: Q131459528 0 wikis ES NOT HUMAN (no description)
+  T: Quel choc ! Elle prépare une surprise d'anniversaire pour son mari et tout tourne mal
+  T: Une gendarme soupçonnée d'avoir attribué à son mari deux enfants nés de son supérieur en Italie
+  T: Elle avait une liaison secrète avec son supérieur : une gendarme poursuivie pour avoir fait croire à son mari qu’il était le père de leurs d
+
+# 7 Laynie Luck (en, 48) media -: fightful.com 12, wrestlingheadlines.com 5, ringsidenews.com 4, sescoops.com 4
+  I: Q137882954 0 wikis US American professional wrestler
+  T: Backstage News On Former WWE ID Talents’ Continued Appearances On EVOLVE
+  T: Backstage WWE Updates – Laynie Luck & Anya Rune
+  T: Anya Rune Expected To Remain On WWE Evolve For Next Few Months Due To Its Taping Schedule
+
+# 8 Maxence Kagni (fr, 55) media FR BYLINE: lcp.fr 55
+  I: Q135233438 0 wikis - (no description)
+  T: Les députés suppriment en commission la taxe exceptionnelle sur les complémentaires santé
+  T: Interdire la vente de tabac à toute une génération: la mesure votée en commission
+  T: MaPrimeRénov': l'Agence nationale de l'habitat acte le coup de rabot de 351 millions d'euros pour l'année 2026
+
+# 9 femmes enceintes (fr, 18) media FR: fr.cibercuba.com 2, lyoncapitale.fr 2, senego.com 2, 20minutes.fr 1
+  I: Q139179316 0 wikis - NOT HUMAN (no description)
+  T: Enclavement et le manque d’ambulance à Kégnéko (Mamou) : le calvaire quotidien des évacuations sanitaires
+  T: Grippe : la campagne de vaccination est lancée en Bourgogne-Franche-Comté
+  T: La Russie remet à Cuba plus de 750 tonnes d'huile pour les personnes vulnérables
+
+# 10 Stéphane Ibarra (fr, 15) media FR: franceinfo.fr 2, ouest-france.fr 2, bfmtv.com 1, bienpublic.com 1
+  I: Q63455965 0 wikis FR French politician
+  T: NEWS FRANCE. Elections sénatoriales : 11 recours dont celui de Stéphane Ibarra en Vendée [Réd. Les Sables-d’Olonne]
+  T: En Vendée, le socialiste Stéphane Ibarra conteste l’élection de Maxence de Rugy au Sénat
+  T: Politique. Le rival socialiste de Bruno Retailleau demande d'annuler l'élection sénatoriale en Vendée
+
+# 11 Will Petersen (en, 14) media - BYLINE: bvmsports.com 14
+  I: Q109885483 0 wikis US American poet (1928–1994)
+  T: Did Sean Payton make a CURIOUS comment about Broncos QB Bo Nix? | Freshly Grated
+  T: Jahdae Barron has a huge opportunity to fill in for Pat Surtain II and will prove he’s a starting CB
+  T: Bo Nix and some Broncos players are getting defensive about poor offense which is never a good sign
+
+# 12 Hans van Koningsbrugge (nl, 16) media NL BYLINE: telegraaf.nl 16
+  I: Q21552560 0 wikis - (no description)
+  T: ‘Trump heeft nog nooit iets negatiefs gezegd over Poetin’
+  T: ‘Dit heeft me enorm verbaasd in oorlog Oekraïne’
+  T: ‘Moordcommando werd op Zelenski afgestuurd’
+
+# 13 Young Workers (en, 20) media -: vietnam.vn 3, fastcompany.com 2, bloomberg.com 1, castanet.net 1
+  I: Q29009332 0 wikis - NOT HUMAN newsletter published in 2008
+  T: Expanded earned income tax credit improved housing security for childless young adults
+  T: ‘Circle back,’ ‘synergy,’ ‘boil the ocean’: The corporate phrases Gen Z doesn’t get, and what they say instead
+  T: BP Tapera promotes subsidized home loans for young workers
+
+# 14 Amy Moser (en, 14) media - BYLINE: dvidshub.net 14
+  I: Q131355985 0 wikis CH (no description)
+  T: EODMU5 Conducts a Training Event [Image 1 of 5]
+  T: EODMU5 Conducts a Training Event [Image 2 of 5]
+  T: EODMU5 Conducts a Training Event [Image 3 of 5]
+
+# 15 Nathaly Ramírez (es, 14) media -: diariolibre.com 4, us.headtopics.com 4, infobae.com 2, fanpage.it 1
+  I: Q133881991 0 wikis PE Peruvian volleyball player
+  T: Honran a Nathaly Ramírez en una vigilia en El Bronx
+  T: Detuvieron a un hombre acusado de empujar a una madre y a su bebé desde un balcón en Nueva York
+  T: Abuse victim once consoled by NYC mom killed in 15-story shove speaks out: ‘We’re not protected’
+
+# 16 Sonia Bruganelli (it, 16) media IT: fanpage.it 3, adnkronos.com 2, ilfattoquotidiano.it 2, lacitymag.it 2
+  I: Q130060225 0 wikis IT Italian TV personality (born 1974)
+  T: Paolo Bonolis choc sull’adulterio davanti all’ex moglie Sonia Bruganelli: «Ogni tanto una boccata d’aria!». Lei lo punge sui tradimenti e lu
+  T: Paolo Bonolis smonta la Bibbia e Sonia Bruganelli lo punge sull’adulterio: «Ogni tanto una boccata d’aria!»
+  T: Sonia Bruganelli e Paolo Bonolis, la frecciata sul tradimento: “Tu pure hai commesso adulterio”
+
+# 17 Ryad Rani (fr, 42) media FR: ouest-france.fr 5, humanite.fr 4, bfmtv.com 3, courrierinternational.com 2
+  I: Q141673179 0 wikis - (no description)
+  T: Ryad Rani, Sabrine Kharbach, Soumaya Sarré... Quels sont les visages qui incarnent la mobilisation lycéenne ?
+  T: Mobilisation lycéenne : s’étonner de la capacité des jeunes à s’exprimer, preuve d’un indécrottable préjugé
+  T: Les lycéens peuvent-ils gagner ? Avec Ryad Rani (USL) et Chloé Barbey (MJCF) | ÇA IRA !
+
+# 18 Gracie Bon (es, 23) media -: infobae.com 6, dailymail.com 2, extra.ec 2, news.ssbcrack.com 2
+  I: Q124365133 0 wikis PA Panamanian model and social media personality
+  T: Influencer Gracie Bon Defends Instagram Post Amid Controversy Over Panama Earthquake Response
+  T: Terremoto en Panamá: Gracie Bon mantiene la entrega de donaciones e insumos pese a las críticas por sus fotos
+  T: „Helfen? Nein. Fotoshooting? Ja.“ - Influencerin POsiert vor Katastrophen-Kulisse
+
+# 19 Santiago Espíndola (es, 25) media -: lapaginamillonaria.com 18, soydelmillo.com 2, eldestapeweb.com 1, news.ssbcrack.com 1
+  I: Q22696470 0 wikis AR cyclist
+  T: Leonardo Ponzio explicó por qué subió a Santiago Espíndola a la Primera de River y bajó a Lucas Silva a Reserva
+  T: La contundente respuesta de Ponzio sobre Santiago Espíndola en River: “No es”
+  T: River Plate se prepara para enfrentar a Sarmiento con el regreso de Thiago Almada y la inclusión del juvenil Santiago Espíndola en la convoc
+
+# 20 Christine Villemin (fr, 24) media FR: ouest-france.fr 5, estrepublicain.fr 2, letelegramme.fr 2, 20min.ch 1
+  I: Q56051969 0 wikis FR (no description)
+  T: Affaire Grégory : quarante-deux ans après, Christine Villemin face à ceux qui l’accusent toujours
+  T: Affaire Grégory. « Peut-on en vouloir à une dame de cet âge-là de croire ce qu’elle dit même si ce n’est pas vrai ? » : dernier acte d’une «
+  T: Nouveau rebondissement dans l'affaire Grégory
+
+# 21 Kim Jong Un (null, 184) media -: devdiscourse.com 12, bloomberg.com 5, infobae.com 4, kfgo.com 4
+  I: Q131541644 0 wikis - NOT HUMAN 2017 song by Lacrim
+  T: Kim Jong Un Death Rumors: Who Would Rule North Korea and What Happens Next?
+  T: Kim Jong Un fell into a coma after a brain hemorrhage - The Sun
+  T: Trump Downplays Talk of Meeting North Korea’s Kim Next Month
+
+# 22 Laura Gallacher (it, 16) media -: dailymail.com 2, mirror.co.uk 2, bild.de 1, dailyrecord.co.uk 1
+  I: Q63484578 0 wikis - British author
+  T: Russell Brand na suđenju za silovanje i seksualni napad: Dolazi u sud sa suprugom, poriče optužbe
+  T: Who is Laura Gallacher? Russell Brand's wife stands firm by his side during rape trial
+  T: Wer ist eigentlich die Ehefrau von Russell Brand? - Hand in Hand zum Vergewaltigungsprozess
+
+# 23 Tana Rivera (es, 61) media ES: infobae.com 23, 20minutos.es 7, lecturas.com 5, antena3.com 4
+  I: Q76269700 0 wikis - daughter of Eugenia Martínez de Irujo, XIII Duchess of Montoro
+  T: Las sospechas de Roca Rey sobre las filtraciones de su relación con Tana Rivera
+  T: Pilar Vidal desmiente los rumores de Roca Rey con otra mujer tras su ruptura con Tana Rivera: "No está con ninguna rubia"
+  T: Las primeras y sorprendentes palabras de Fran Rivera sobre la ruptura de su hija Tana y Roca Rey
+
+# 24 Tora Agarwala (en, 22) media -: kelo.com 3, kfgo.com 3, wkzo.com 3, wtaq.com 3
+  I: Q125359646 0 wikis IN journalist in India
+  T: Dodge the cops, reach the protest: India’s latest online political game goes viral
+  T: Analysis-Modi’s predicament: Gen Z pours out on India’s streets as dissent surges
+  T: From ‘cockroach’ post to protest leader: India’s Dipke tests Modi government
+
+# 25 four children (en, 30) media UA: unn.ua 4, abs-cbn.com 2, inkorr.com 2, inquirer.com 2
+  I: Q20816093 0 wikis - NOT HUMAN painting by Gerard Sekoto
+  T: 2 women arrested after allegedly leaving 4 children unattended in Bexar County
+  T: Four children injured in deadly Six Flags roller coaster accident as school remembers victim
+  T: Peshawar school roof collapse kills four children and injures twenty
+
+# 26 Dave Bacon (en, 80) media - BYLINE: bvmsports.com 74, cleveland.com 6
+  I: Q137158052 0 wikis - (no description)
+  T: Browns prepare for Jets, Guardians look to stay alive: Thursday’s Sports 4 CLE
+  T: Where the Browns stand entering Week 5; looking ahead to the Jets: Wednesday’s Sports 4 CLE
+  T: Browns looking to extend AFC North lead, Guardians looking to extend season: Tuesday’s Sports 4 CLE
+
+# 27 Aleksander Zverev (sr, 22) media RS: nova.rs 11, b92.net 9, danas.rs 2
+  I: Q140042263 0 wikis - Russian priest resided in Estonia (1870–1931)
+  T: Đoković dobio odlične vesti, navijači su ovo čekali da čuju
+  T: Zverev nadigrao De Minora i prošao u polufinale Šangaja
+  T: Zverev posle velike borbe plasirao se u četvrtfinale Šangaja
+
+# 28 Raphaële Schober (fr, 18) media FR: lalsace.fr 2, ouest-france.fr 2, bfmtv.com 1, bienpublic.com 1
+  I: Q139614845 0 wikis FR (no description)
+  T: Alsace. Wittelsheim : ses délégations retirées à la maire Raphaële Schober (RN)
+  T: Une maire menace d’annuler un mariage à cause du bruit (vidéo)
+  T: L'élection de la seule maire RN d'Alsace annulée par la justice
+
+# 29 Marcelo Paz (pt, 14) media BR: cnnbrasil.com.br 3, terra.com.br 3, infobae.com 2, lance.com.br 2
+  I: Q55469368 0 wikis AR Argentine singer
+  T: Marcelo Paz planeja a sua saída do Corinthians
+  T: Organizadas do Corinthians pedem afastamento de Memphis e demissão de Marcelo Paz
+  T: Torcidas organizadas do Corinthians pedem saída de Marcelo Paz e afastamento de Memphis Depay
+
+# 30 Two teenagers (en, 51) media -: nst.com.my 4, fox4news.com 3, cp24.com 2, dailymail.com 2
+  I: Q18891301 0 wikis - NOT HUMAN painting by Edvard Munch
+  T: Teens injured in 12m fall from Ferris wheel at Greymouth event
+  T: Two teenagers arrested after boy, 14, stabbed at Manchester Arndale over the weekend
+  T: Two teenagers killed in collision involving two cars in Suffolk
+
+# 31 senior engineer (en, 21) media - BYLINE: medium.com 18, levelup.gitconnected.com 1, news.lavx.hu 1, techloy.com 1
+  I: Q102324004 0 wikis - NOT HUMAN position
+  T: My Senior Engineer Watched a Junior Solve His Hardest Problem With AI. He Didn’t Say a Word for the
+  T: A Senior Engineer Let Claude Code Rewrite a Database Migration. The Tests Passed. The Rollback Didn’
+  T: We Froze Junior Hiring to Save Money. Eighteen Months Later One Incident Showed Me the Bill.
+
+# 32 Scott Pianowski (en, 16) media - BYLINE: sports.yahoo.com 16
+  I: Q79057744 0 wikis - American sportswriter
+  T: Fantasy Football Week 6 Booms & Busts: Caleb Williams makes triumphant return, breathes life into Colston Loveland, Luther Burden III
+  T: Fantasy Football Week 6 Start/Sit Advice: What to do with Luther Burden III, Dameon Pierce, more players
+  T: Week 6 Fantasy Football Sleepers: Keenan Allen, Tyler Higbee among underrated options for your lineup
+
+# 33 Alberto Ibáñez (es, 15) media ES: democrata.es 9, eldiario.es 2, elmundo.es 2, eldebate.com 1
+  I: Q73830805 0 wikis - researcher
+  T: Compromís y Podemos ultiman un acuerdo a la espera de que Frente Amplio rectifique y se integre en la lista única valenciana
+  T: Tensión en Compromís por la cabeza de lista por Valencia para las elecciones del 29-N
+  T: La batalla interna en Compromís por el número 1 por València pone en riesgo el gran acuerdo de la izquierda valenciana
+
+# 34 il conducente (it, 16) media IT: quibrescia.it 3, fanpage.it 2, lanazione.it 2, repubblica.it 2
+  I: Q58836097 0 wikis - NOT HUMAN episode of Criminal Minds (S11 E12)
+  T: Spino d'Adda - Doblò a fuoco
+  T: Incidente a Moncalieri, scontro tra un'auto e uno scooter: ferito e portato al Cto il centauro, il 62enne era alla guida del mezzo senza pat
+  T: Napoli, incidente in Corso Vittorio Emanuele: auto si ribalta al centro della carreggiata, come sta il conducente
+
+# 35 Guendalina Tavassi (it, 24) media IT: lacitymag.it 7, fanpage.it 6, it.blastingnews.com 5, agenziagiornalisticaopinione.it 1
+  I: Q63422958 0 wikis IT Italian showgirl, model, television personality and influencer
+  T: Grande Fratello Vip, stasera nuovo appuntamento: le anticipazioni
+  T: Grande Fratello Vip: anticipazioni esclusive sul nuovo appuntamento di stasera.
+  T: Grande Fratello Vip, Marina La Rosa senza freni sulle dimensioni intime di Alessandro Varsi: «È una mazza!». Poi umilia Guendalina Tavassi d
+
+# 36 Jeff Dickerson (en, 17) media -: sports.yahoo.com 5, bvmsports.com 3, on3.com 3, heavy.com 2
+  I: Q100779382 0 wikis - college basketball player (1990–1990) Florida International
+  T: Spire Motorsports Has Bigger Plans for 2027, and Kasey Kahne Is Just the Beginning
+  T: Kasey Kahne Reveals How Unexpected NASCAR Comeback Deal Came Together
+  T: Spire owner Jeff Dickerson teases another major surprise after Kasey Kahne announcement
+
+# 37 Stephen Sayers (en, 14) media GB BYLINE: chroniclelive.co.uk 14
+  I: Q117268991 0 wikis - researcher
+  T: Sayers family cleared of violent disorder after organised crime group feud
+  T: Sayers violent disorder trial: Jury must decide if it was attack or defence
+  T: See moment members of Sayers family allegedly attack car following feud
+
+# 38 Angomcha Bimol Akoijam (en, 28) media -: news18.com 19, news.abplive.com 3, inshorts.com 1, livemint.com 1
+  I: Q125118079 0 wikis - Indian academic and politician
+  T: BJP Questions Rahul Gandhi’s Silence on Bimol Akoijam | Elon Musk’s X Faces GST Questions | RR
+  T: Who is Angomcha Bimol Akoijam? Congress' Manipur MP accused of sexual assault by over 10 students at JNU
+  T: Congress MP Bimol Akoijam Accused of Sexual Harassment: Calls Allegations a Political Witch Hunt
+
+# 39 Jacques Moretti (fr, 22) media CH: news.google.com 3, watson.ch 3, blick.ch 2, fanpage.it 2
+  I: Q137721229 0 wikis FR French man, owner of bars located in Switzerland
+  T: Incendie de Crans-Montana : Jacques Moretti va subir une expertise psychiatrique, ce que cela pourrait changer pour la suite de la procédure
+  T: Incendie de Crans-Montana : Jacques Moretti en prison pour violences présumées sur sa femme Jessica Moretti
+  T: Crans-Montana bar owner warned of risks before tragic fire
+
+# 40 Eduardo Varela (es, 16) media -: dailymail.com 3, as.com 2, infobae.com 2, mundodeportivo.com 2
+  I: Q16238998 0 wikis MX Mexican journalist
+  T: Now even RED CARDS go digital! Referee uses a 'smartphone' to dish out his punishments - but fans are not convinced
+  T: Urugvajci tlakujejo pot elektronskim kartonom
+  T: Uruguay fracasa en su innovación de las tarjetas virtuales

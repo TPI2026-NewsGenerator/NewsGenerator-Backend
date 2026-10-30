@@ -1,0 +1,31 @@
+1 runs: joined to its fact 54% (22/41), joined to another fact 8% (8, 1 of them into a shown card: hidden)
+tokens per call: 4095 read, 1143 written, 48.4 s
+  ×1 apart   monde: Rain eases in Bangkok but persistent flooding forces thousands to leav
+  ×1 apart   monde: "Nos conditions sont claires" : l'Iran maintient ses exigences pour ro
+  ×1 apart   monde: „Wasser steht bis zur Hüfte“ – Bangkok ruft wegen Überschwemmungen Kat
+  ×1 joined  ia: After Dozens of Incidents at OpenAI and Anthropic, OpenAI Pauses Model
+             into (shown) Zehntausende protestieren in Madrid gegen Zwangsräumung von 87-Jährige
+  ×1 apart   ia: China and the US Say They've Agreed to Start Talks About AI
+  ×1 apart   ia: KI mit Kontrollverlust: OpenAI stoppt Training seiner Top-Modelle
+  ×1 apart   ia: TikTok évite un procès aux États-Unis sur la protection des mineurs en
+  ×1 apart   ia: Intelligence artificielle : OpenAI reconnaît la mise en ligne par erre
+  ×1 joined  sport: Menée et malmenée, l'Espagne s'offre finalement un succès spectaculair
+             into La victoria de España en Wembley dispara la audiencia de La 1
+  ×1 joined  sport: Equipe de France: la blessure de Kylian Mbappé peut-elle avoir un lien
+             into Équipe de France: le staff de Zidane a tranché, Mbappé ne sera pas rem
+  ×1 joined  sport: Zidane wins on France coaching debut, but Mbappé injury clouds victory
+             into Équipe de France: le staff de Zidane a tranché, Mbappé ne sera pas rem
+  ×1 joined  sport: Französische Nationalmannschaft: Mbappés Verletzung trübt Zidanes Eins
+             into Équipe de France: le staff de Zidane a tranché, Mbappé ne sera pas rem
+  ×1 joined  sport: Spain expose England's shortcomings in breathtaking Wembley comeback
+             into La victoria de España en Wembley dispara la audiencia de La 1
+  ×1 joined  sport: Ligue des nations - L'Espagne championne du monde bat l'Angleterre à W
+             into La victoria de España en Wembley dispara la audiencia de La 1
+  ×1 joined  sport: À quelle heure et sur quelle chaîne regarder Angleterre-Espagne en Lig
+             into La victoria de España en Wembley dispara la audiencia de La 1
+  ×1 apart   affaires: El presidente del Manchester City rompe su silencio: “Confiamos en dem
+  ×1 apart   affaires: Europe’s leading leagues demand major FIFA reforms over governance con
+  ×1 apart   affaires: Tyson Fury casts fresh doubt over Anthony Joshua fight as promoter row
+  ×1 apart   societe: Frankreich-Besuch: Papst Leo XIV. trifft sich mit Missbrauchsopfern in
+  ×1 apart   societe: Visite du pape en France : Léon XIV appelle à "la paix" et "au dialogu
+seconds 76

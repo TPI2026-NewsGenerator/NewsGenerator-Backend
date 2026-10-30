@@ -1,0 +1,16 @@
+briefing 16: 0 of 10 left out, 694 ms
+briefing 17: 0 of 10 left out, 714 ms
+briefing 18: 0 of 10 left out, 517 ms
+briefing 19: 1 of 10 left out, 667 ms
+   [8234] L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Win -> Le sujet principal est l'équipe nationale de football suisse.
+briefing 20: 1 of 10 left out, 744 ms
+   [8234] L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Win -> Le sujet principal est l'équipe nationale de football suisse.
+briefing 21: 0 of 10 left out, 559 ms
+briefing 22: 1 of 10 left out, 899 ms
+   [8234] L'esprit d'Alexandre le Grand pour inspirer cette nouvelle Nati et Win -> Le sujet principal est l'équipe nationale de football suisse.
+briefing 23: 0 of 9 left out, 560 ms
+briefing 24: 0 of 8 left out, 538 ms
+briefing 25: 0 of 7 left out, 542 ms
+briefing 26: 0 of 8 left out, 615 ms
+102 cards, tokens {"calls":11,"input":28140,"output":290}
+seconds 8

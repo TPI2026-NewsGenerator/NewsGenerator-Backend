@@ -1,0 +1,33 @@
+candidates 50: UEFA 38, Arbitrage du f 12
+run 0: 15 chosen, UEFA 12, Arbitrage du f 3, kept 10: UEFA 7, Arbitrage du f 3  (5144+667 tokens)
+   K UEFA | Ceferin: ‘Political interference’ in Italian football could ‘undermine UEFA trust’ ahead of Euro 203
+   K UEFA | LdC : Lens et Feyenoord condamnés par l’UEFA
+   K UEFA | Pourquoi les tribunes étaient-elles vides lors du match de la Géorgie contre l’Irlande du Nord en Li
+   K UEFA | Spain has submitted a bid to host the Nations League Final Four - reports
+   K UEFA | ‘Cheats’—Soccer World Reacts to Man City Being Found Guilty of Financial Misconduct
+   K Arbitrage du f | New VAR Rules Reopen the Debate Over Technology and Human Judgement
+   K Arbitrage du f | Un match rejoué à cause d’une erreur d’arbitrage - FA Cup - Qualifications
+   K Arbitrage du f | VAR saves referee after Johan Manzambi controversy away from Aston Villa - Expert
+   K UEFA | Ligue des Nations : au terme d’un choc spectaculaire, l’Espagne s’offre l’Angleterre
+   K UEFA | DIRECT. Ligue des nations: suivez la conférence de presse de Zidane à J-1 de Belgique-France
+     UEFA | Irlande : les joueurs tranchent sur le maintien des matchs face à Israël
+     UEFA | Ligue des Nations : pour les débuts de Mark van Bommel, la Belgique surclasse l’Italie
+     UEFA | Allemagne - Grèce, aperçu de l’UEFA Nations League : tout ce qu’il faut savoir
+     UEFA | Ligue des Nations de l'UEFA : Modric offre la victoire à la Croatie, la Suisse démarre fort, la Finl
+     UEFA | Do Wales have what it takes to survive League A?
+run 1: 15 chosen, UEFA 12, Arbitrage du f 3, kept 10: UEFA 7, Arbitrage du f 3  (5144+674 tokens)
+   K UEFA | Ceferin: ‘Political interference’ in Italian football could ‘undermine UEFA trust’ ahead of Euro 203
+   K UEFA | LdC : Lens et Feyenoord condamnés par l’UEFA
+   K UEFA | Pourquoi les tribunes étaient-elles vides lors du match de la Géorgie contre l’Irlande du Nord en Li
+   K UEFA | Spain has submitted a bid to host the Nations League Final Four - reports
+   K UEFA | ‘Cheats’—Soccer World Reacts to Man City Being Found Guilty of Financial Misconduct
+   K Arbitrage du f | New VAR Rules Reopen the Debate Over Technology and Human Judgement
+   K Arbitrage du f | Un match rejoué à cause d’une erreur d’arbitrage - FA Cup - Qualifications
+   K Arbitrage du f | VAR saves referee after Johan Manzambi controversy away from Aston Villa - Expert
+   K UEFA | Ligue des Nations : au terme d’un choc spectaculaire, l’Espagne s’offre l’Angleterre
+   K UEFA | DIRECT. Ligue des nations: suivez la conférence de presse de Zidane à J-1 de Belgique-France
+     UEFA | Irlande : les joueurs tranchent sur le maintien des matchs face à Israël
+     UEFA | Ligue des Nations : pour les débuts de Mark van Bommel, la Belgique surclasse l’Italie
+     UEFA | Allemagne - Grèce, aperçu de l’UEFA Nations League : tout ce qu’il faut savoir
+     UEFA | Ligue des Nations de l'UEFA : Modric offre la victoire à la Croatie, la Suisse démarre fort, la Finl
+     UEFA | Do Wales have what it takes to survive League A?

@@ -1,0 +1,33 @@
+briefing 1: 8 of 10 left out, 1549 ms
+   [940] Cristiano Ronaldo draws blank as Wales edged out by Portugal in Nation -> mentionne le pays de Galles, équipe de football
+   [1515] Ghana coach Carlos Queiroz demands VAR implementation after opener los -> mentionne la Côte d'Ivoire, équipe de football
+   [1802] Portugal: énorme occasion ratée, but refusé... la soirée très frustran -> mentionne le pays de Galles, équipe de football
+   [1723] Xavi y Klopp se dan la mano en su debut: Países Bajos empatan 1-1 con  -> mentionne les Pays-Bas et l'Allemagne, équipes de football
+   [1082] Armenia vs Latvia Prediction and Betting Tips | September 25th 2026 -> mentionne l'Arménie et la Lettonie, équipes de football
+   [2282] Albania vs Belarus Prediction and Betting Tips | September 26th 2026 -> mentionne l'Albanie et la Biélorussie, équipes de football
+   [1817] Montenegro vs Cyprus Prediction and Betting Tips | September 25th 2026 -> mentionne le Monténégro et Chypre, équipes de football
+   [1569] Prediction: Germany vs Greece -> mentionne l'Allemagne et la Grèce, équipes de football
+briefing 2: 7 of 8 left out, 1538 ms
+   [1527] Huijsen on the derby: if the mistakes had favoured Real Madrid, there  -> le Real Madrid est un club de football, le lecteur ne veut pas parler de football
+   [969] Jürgen Klopp, Joshua Kimmich, Xavi and co. in heated discussions after -> l'Allemagne et les Pays-Bas sont des équipes de football, le lecteur ne veut pas parler de football
+   [999] Equipe de France: la compo probable des Bleus pour la première de Zida -> l'équipe de France est une équipe de football, le lecteur ne veut pas parler de football
+   [1350] Italy vs. Belgium—Nations League: Preview, Predictions and Lineups -> l'Italie et la Belgique sont des équipes de football, le lecteur ne veut pas parler de football
+   [1245] Turkiye vs. France—Nations League: Preview, Predictions and Lineups -> la Turquie et la France sont des équipes de football, le lecteur ne veut pas parler de football
+   [962] Is Portugal v Wales on TV? Channel, kick-off time and how to watch Nat -> le Portugal et le pays de Galles sont des équipes de football, le lecteur ne veut pas parler de football
+   [979] Is Netherlands v Germany on TV? Channel, kick-off time and how to watc -> les Pays-Bas et l'Allemagne sont des équipes de football, le lecteur ne veut pas parler de football
+briefing 3: 1 of 10 left out, 586 ms
+   [5120] Israel in UEFA — why a Middle Eastern country plays in Europe -> mention d'Israël
+briefing 4: 2 of 7 left out, 707 ms
+   [4695] Why have the Republic of Ireland's two games against Israel become so  -> mentionne le conflit à Gaza et la polémique politique liée à Israël
+   [2684] Mbappé's behaviour angers Real Madrid | Goal.com -> parle de l'angélisme de Mbappé et de son comportement, sans lien avec les sujets refusés
+briefing 5: 1 of 5 left out, 809 ms
+   [3794] EN DIRECT Turquie - France : Dembélé en pointe, Mbappé à gauche, la pr -> Le texte porte sur un match France-Turquie avec Zidane comme sélectionneur, ce qui ne correspond pas aux centres d'intérêt du lecteur (UEFA, arbitrage, finances, etc.)
+briefing 6: 0 of 4 left out, 1281 ms
+briefing 7: 1 of 2 left out, 578 ms
+   [8312] Austria vs Kosovo Prediction and Betting Tips | September 27th 2026 -> Le lecteur ne s'intéresse pas au football de club, seulement aux compétitions internationales de l'UEFA
+briefing 9: 1 of 1 left out, 614 ms
+   [8644] Un joli slalom dans la surface : le joueur du PSG Mika Godts ouvre le  -> Le sujet principal de la carte est un but marqué par un joueur du PSG lors d'un match de Ligue des nations, ce qui ne correspond pas à un sujet refusé par le lecteur.
+briefing 13: 1 of 5 left out, 576 ms
+   [2213] Zinédine Zidane réussit son baptême du feu en Turquie pour son premier -> le profil ne mentionne pas le football comme sujet refusé, donc aucune carte n'est refusée pour ce motif
+52 cards, tokens {"calls":9,"input":14745,"output":1237}
+seconds 9

@@ -1,0 +1,11 @@
+briefing 14: 6 of 9 left out, 1691 ms
+   [2213] Revivez Turquie - France - Ligue des Nations A - Groupe 1 : Premier su -> football
+   [10927] Football - Ligue 1. Match amical, repos, entraînement : on connaît le  -> football
+   [7795] Le PSG place 17 joueurs en équipes de france ! -> football
+   [8602] Le maire de Marseille annonce une mauvaise nouvelle à l’OM -> football
+   [10677] Les restaurants des cheffes et chefs de Top Chef à Paris, nos bonnes a -> football
+   [7087] OM : Pierre-Emile Højbjerg déclenche un véritable scandale au Danemark -> football
+briefing 15: 1 of 8 left out, 656 ms
+   [11180] European football news and transfers: Barcelona, Real Madrid, PSG, Bay -> mentionne des clubs européens sans aborder le football français ou les sujets interdits
+17 cards, tokens {"calls":2,"input":4280,"output":201}
+seconds 3

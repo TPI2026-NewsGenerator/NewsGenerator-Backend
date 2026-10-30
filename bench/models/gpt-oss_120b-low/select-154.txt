@@ -1,0 +1,15 @@
+candidates 50: Tennis 14, Intelligence a 18, Politique suis 18
+run 0: 12 chosen, Tennis 3, Intelligence a 5, Politique suis 4, kept 10: Tennis 3, Intelligence a 4, Politique suis 3  (5486+695 tokens)
+   K Tennis | Tennis : Kyrian Jacquet se qualifie pour sa première demi-finale sur le grand circuit
+   K Tennis | "Il ne va pas s'arrêter là" : le tennisman Arthur Fils va intégrer le Top 10 mondial, une première d
+   K Tennis | Laver Cup chiefs open up on future plans as tournament eyes expansion beyond North America
+   K Intelligence a | Le point de vue. Intelligence artificielle : « La machine est en marche, on ne l'arrêtera pas mais..
+   K Intelligence a | De nouveaux matériaux aux diagnostics, la nouvelle odyssée de l’intelligence artificielle
+   K Intelligence a | Les dirigeants d’OpenAI et d’Anthropic convoqués dans le cadre d’une enquête australienne sur l’inte
+   K Intelligence a | Advances in AI — September 2026
+     Intelligence a | La pression sur la Suisse est immense: comment le sommet mondial de l’IA à Genève va «tenter de mett
+   K Politique suis | «Opération d'enfumage» ou décision unanime: on a voté sur la neutralité
+   K Politique suis | Ce qu’il faut savoir avant les votations de dimanche
+   K Politique suis | Votations fédérales: retrouvez les résultats via nos cartes et nos graphiques
+     Politique suis | Voici tous les résultats des votations de ce dimanche
+seconds 5

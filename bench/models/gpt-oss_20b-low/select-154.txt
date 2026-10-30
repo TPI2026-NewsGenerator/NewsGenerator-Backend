@@ -1,0 +1,13 @@
+candidates 50: Tennis 14, Intelligence a 18, Politique suis 18
+run 0: 10 chosen, Tennis 0, Intelligence a 3, Politique suis 7, kept 10: Tennis 0, Intelligence a 3, Politique suis 7  (5486+637 tokens)
+   K Politique suis | Votations fédérales: retrouvez les résultats via nos cartes et nos graphiques
+   K Politique suis | Voici tous les résultats des votations de ce dimanche
+   K Politique suis | Ce qu’il faut savoir avant les votations de dimanche
+   K Politique suis | In Switzerland, voters are voting for stricter neutrality: the result could force the country to lif
+   K Politique suis | Swiss voters decide on NATO cooperation and neutrality
+   K Politique suis | «La Suisse est du bon côté de l'histoire» ++ Rejet net des 2 initiatives
+   K Politique suis | Neutralité suisse: une claque, un plébiscite et une clarification qui tombe à point
+   K Intelligence a | Le point de vue. Intelligence artificielle : « La machine est en marche, on ne l'arrêtera pas mais..
+   K Intelligence a | De nouveaux matériaux aux diagnostics, la nouvelle odyssée de l’intelligence artificielle
+   K Intelligence a | Intelligence artificielle: comment l’IA peut soutenir une croissance durable
+seconds 9
