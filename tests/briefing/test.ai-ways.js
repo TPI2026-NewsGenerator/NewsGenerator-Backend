@@ -83,6 +83,39 @@ describe('the AI version of a card', () => {
         expect(chat).toHaveBeenCalledTimes(3);
     });
 
+    it('should tell the AI which figures are not the article\'s when it asks again, and keep the points that are right', async () => {
+        const asked = [];
+        chat.mockImplementation(async ({messages}) => {
+            asked.push(messages[0].content);
+            return messages[0].content.startsWith('You write the key points')
+                ? answer({points: [{text: 'A strike of 24 hours on Monday.'}, {text: 'A strike of 48 hours.'}]})
+                : answer({summary: 'A strike of 24 hours on Monday.'});
+        });
+
+        const ways = await aiWaysOf('SBB strike on Monday', page, {language: 'en'});
+
+        // the second answer is as wrong as the first: the point that is right stays, the other goes
+        expect(ways.points).toEqual(['A strike of 24 hours on Monday.']);
+        const again = asked.filter(prompt => prompt.includes('Your previous answer has figures the article does not give: 48.'));
+        expect(again).toHaveLength(1);
+        expect(again[0]).toMatch(/^You write the key points/);
+    });
+
+    it('should take a round of 16 for the eighth-finals the article writes in words, and a time in its other form', async () => {
+        const cup = {content: '', blocks: [
+            {kind: 'text', text: 'Der VAR kommt ab dem Achtelfinale des Pokals zum Einsatz.'},
+            {kind: 'text', text: 'Das Spiel beginnt am Samstag um 20h15 in Zürich.'},
+        ]};
+        answering({points: {points: [{text: 'VAR is used from the round of 16.'}, {text: 'The match starts on Saturday at 20:15.'}]},
+            summary: {summary: 'VAR comes in the round of 16, the match is on Saturday at 8:15 p.m.'}});
+
+        const ways = await aiWaysOf('VAR im Pokal', cup, {language: 'en'});
+
+        expect(ways.points).toHaveLength(2);
+        expect(ways.summary).toContain('round of 16');
+        expect(chat).toHaveBeenCalledTimes(2);
+    });
+
     it('should give nothing when its model fails, Gemini never asked for it', async () => {
         chat.mockRejectedValue(Object.assign(new Error('down'), {status_code: 503}));
 

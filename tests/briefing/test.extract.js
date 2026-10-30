@@ -10,7 +10,7 @@ import {describe, expect, it, jest} from '@jest/globals';
 
 const chat = jest.fn();
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
-const {buildExtract, canSummarize, extractArticle, keepsFigures, passagesText, sentencesOf, shorterWays, splitSentences, translatePassages, translateTexts} =
+const {ORIGINAL_END, ORIGINAL_START, buildExtract, canSummarize, extractArticle, keepsFigures, passagesText, sentencesOf, shorterWays, splitSentences, translatePassages, translateTexts, withoutOriginalMarks} =
     await import('../../services/utils/extract.js');
 const {newUsage} = await import('../../services/utils/ollama.js');
 
@@ -119,6 +119,26 @@ describe('keepsFigures', () => {
         expect(keepsFigures('The crew will speak at 7 p.m.', "L'équipage parlera à 17h00.")).toBe(false);
         expect(keepsFigures('A 5 amp fuse', 'Un fusible de 17 ampères')).toBe(false);
     });
+
+    it('should take a time written with a dot, a colon or on the 12-hour clock as the same', () => {
+        expect(keepsFigures('am Samstag (18.30 Uhr/Sky)', 'on Saturday (6:30 p.m./Sky)')).toBe(true);
+        expect(keepsFigures('Kick-off 18:30', 'Coup d’envoi à 18.30')).toBe(true);
+        expect(keepsFigures('am Samstag (18.30 Uhr)', 'on Saturday (6:45 p.m.)')).toBe(false);
+        expect(keepsFigures('a 2:1 win', 'a 2:1 win')).toBe(true);
+    });
+
+    it('should take the digits of Arabic and Persian as ours', () => {
+        expect(keepsFigures('خسر ٢-٠ أمام الأهلي', 'lost 2-0 to Al Ahly')).toBe(true);
+        expect(keepsFigures('خسر ٢-٠ أمام الأهلي', 'lost 3-0 to Al Ahly')).toBe(false);
+        expect(keepsFigures('۱٫۵ میلیون', '1.5 million')).toBe(true);
+    });
+
+    it('should take "1/8-finals" and the round of 16 as the same', () => {
+        expect(keepsFigures('Въвеждат ВАР за 1/8-финалите', 'VAR will come in the round of 16')).toBe(true);
+        expect(keepsFigures('VAR comes in the round of 16', 'Le VAR arrive en 1/8 de finale')).toBe(true);
+        expect(keepsFigures('Въвеждат ВАР за 1/8-финалите', 'VAR will come in the round of 32')).toBe(false);
+        expect(keepsFigures('1/3 of the vote', 'a third of the vote')).toBe(false);
+    });
 });
 
 describe('translatePassages', () => {
@@ -136,9 +156,44 @@ describe('translatePassages', () => {
             .mockResolvedValueOnce(json({translations: ['Il a reçu une amende de 10 000 $.']}));
         expect(await translatePassages(passages, 'English', 'French')).toEqual([[s('Il a reçu une amende de 10 000 $.')]]);
 
+        // one sentence that never comes: nothing to show of the translation
         chat.mockReset().mockResolvedValue(json({translations: ['Il a reçu une amende.']}));
         expect(await translatePassages(passages, 'English', 'French')).toBeNull();
+        expect(chat).toHaveBeenCalledTimes(3);
+    });
+
+    const three = [[s('The VAR comes in the 1/8-finals.'), s('He was fined $10,000.', true)], [s('It ends on Sunday.')]];
+
+    it('should keep the sentences translated and ask again only the ones that lost a figure, telling the AI so', async () => {
+        chat.mockReset()
+            .mockResolvedValueOnce(json({translations: ['Le VAR arrive en 1/8 de finale.', 'Il a reçu une amende.', 'Cela finit dimanche.']}))
+            .mockResolvedValueOnce(json({translations: ['Il a reçu une amende de 10 000 $.']}));
+        expect(await translatePassages(three, 'English', 'French')).toEqual([
+            [s('Le VAR arrive en 1/8 de finale.'), s('Il a reçu une amende de 10 000 $.', true)], [s('Cela finit dimanche.')]]);
         expect(chat).toHaveBeenCalledTimes(2);
+        const second = chat.mock.calls[1][0].messages.at(-1).content;
+        expect(second).toContain('[1] He was fined $10,000.');
+        expect(second).not.toContain('VAR');
+        expect(second).toContain('lost or changed a figure');
+        expect(chat.mock.calls[0][0].messages.at(-1).content).not.toContain('lost or changed a figure');
+    });
+
+    it('should leave a sentence it cannot translate with its figures in its own language between parentheses', async () => {
+        // the three together: the second sentence loses its figure; then alone, it always does
+        chat.mockReset().mockImplementation(async ({messages}) => json({translations: messages.at(-1).content.includes('[3]')
+            ? ['Le VAR arrive en 1/8 de finale.', 'Il a reçu une amende.', 'Cela finit dimanche.'] : ['Il a reçu une amende.']}));
+
+        expect(await translatePassages(three, 'English', 'French')).toEqual([
+            [s('Le VAR arrive en 1/8 de finale.'), s('(“He was fined $10,000.”)')], [s('Cela finit dimanche.')]]);
+        // in a briefing the sentence is marked, to be shown in italics
+        expect((await translatePassages(three, 'English', 'French', null, {marked: true}))[0][1])
+            .toEqual(s(`${ORIGINAL_START}(“He was fined $10,000.”)${ORIGINAL_END}`));
+        expect(withoutOriginalMarks(`a ${ORIGINAL_START}(b)${ORIGINAL_END} c`)).toBe('a (b) c');
+    });
+
+    it('should give no translation when it could not translate half of the sentences', async () => {
+        chat.mockReset().mockResolvedValue(json({translations: ['Rien.', 'Rien.', 'Rien.']}));
+        expect(await translatePassages(three, 'English', 'French')).toBeNull();
     });
 });
 

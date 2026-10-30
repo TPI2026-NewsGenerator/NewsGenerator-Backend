@@ -434,6 +434,18 @@ describe('briefingMail', () => {
         expect(text).toContain('Passage of Older.\n[…]\nAnother passage.');
     });
 
+    it('should show in italics the sentence the translation left in its own language, and mark nothing in the text', () => {
+        const left = '(Er wurde mit 10.000 Euro bestraft.)';
+        const translated = card(1, 'Gipfel', {language: 'de', translation: `Premier <passage>. ${left}\n\n${left}`});
+        const {html, text} = briefingMail({...briefing, items: [translated]});
+        expect(html).toContain('remier &lt;passage&gt;. <i>(Er wurde mit 10.000 Euro bestraft.)</i>');
+        // the second passage is only the sentence: in italics all of it
+        expect(html).toContain('<i>(Er wurde mit 10.000 Euro bestraft.)</i></p>');
+        expect(html).not.toMatch(/[]/);
+        expect(text).toContain('Premier <passage>. (Er wurde mit 10.000 Euro bestraft.)\n[…]\n(Er wurde mit 10.000 Euro bestraft.)');
+        expect(text).not.toMatch(/[]/);
+    });
+
     it('should escape the texts and never link nor show an address that is not of the web', () => {
         const {html} = briefingMail(briefing);
         expect(html).not.toContain('<script>');

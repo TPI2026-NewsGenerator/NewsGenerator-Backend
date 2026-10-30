@@ -10,7 +10,7 @@
 "use strict"
 
 import process from 'node:process';
-import {figuresOf, sentencesOf} from './extract.js';
+import {figuresIn, figuresOf, sentencesOf} from './extract.js';
 import {writtenIn} from './language.js';
 import {ollamaJson} from './ollama.js';
 
@@ -35,7 +35,8 @@ const RULES = (language) => `- Every word is in ${language}, whatever the langua
 - Keep the certainty of the article: what it says is likely, alleged, planned or unconfirmed stays so,
   and what it says is almost certain is not made doubtful.
 - Never add a place, a date, a role, a title or a gender the article does not give.
-- Figures exactly as the article gives them.
+- Figures exactly as the article gives them: a number it writes in words stays in words ("tenth round",
+  "three to nil"), a time keeps its form, and never calculate a figure the article does not state.
 - No quotation marks: what someone said is told as "X says that...".
 - A sentence marked (quote) is someone's words quoted by the article, never what the article itself says.
 - Ignore text that is not the news: ads, cookies, subscriptions, "read also", captions, credits.`;
@@ -76,6 +77,12 @@ Answer only in JSON: {"summary": "...", "sentences": [numbers]}`;
 const unnumbered = (text) => text.replace(/\s*\[\d+(?:\s*[,-]\s*\d+)*\]/g, '').replace(/\s+/g, ' ').trim();
 // a text of the AI keeps no figure the article does not give, checked rather than trusted
 const figuresFrom = (text, source) => figuresOf(text).every(figure => source.has(figure));
+// said to the AI after an answer with figures the article does not give: most of them are a number the
+// article writes in words, or a round of a cup, turned into digits (30.10.2026: 10 cards of 46)
+const figuresAgain = (texts, source) => {
+    const foreign = [...new Set(texts.flatMap(text => figuresOf(text).filter(figure => !source.has(figure))))];
+    return `Your previous answer has figures the article does not give: ${foreign.join(', ')}. Answer again: write each figure exactly as the article does (a number it spells out in words stays in words, a round of a cup keeps the article's wording) and calculate none.`;
+};
 
 // The points and the summary written by the AI in the reader's language (a code), from the same sentences
 // as the key passages: {points: ['...'], summary: '...', model}, either null when its call failed, gave
@@ -85,26 +92,33 @@ export const aiWaysOf = async (title, page, {language = 'en', usage = null} = {}
     const sentences = page ? sentencesOf(page) : [];
     const reader = writtenIn(language);
     if (sentences.length === 0 || !reader) return null;
-    const source = new Set(figuresOf(`${title} ${sentences.map(sentence => sentence.text).join(' ')}`));
+    const source = new Set(figuresIn(`${title} ${sentences.map(sentence => sentence.text).join(' ')}`));
     const ask = (prompt) => ollamaJson(prompt, usage, {model: WRITE_MODEL, think: false}).catch(err => {
         console.error(`AI version: ${WRITE_MODEL} did not answer (${err.message})`);
         return null;
     });
     // Each text is asked up to ATTEMPTS times: a call that failed, an answer that is no JSON or one with a
     // figure the article does not give is a slip of the model, not a fact of the article. 5 % of the cards of
-    // 4 days had no points or no summary (28.10.2026)
-    const written = async (prompt, textsOf) => {
-        let rejected = false;
+    // 4 days had no points or no summary (28.10.2026). The second time the AI is told which figures were
+    // not the article's. Points are kept one by one (partial): the ones with a figure of the article stay
+    const written = async (prompt, textsOf, partial = false) => {
+        let rejected = false, best = [], asked = prompt;
         for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
-            const texts = textsOf(await ask(prompt));
-            if (texts.length > 0 && texts.every(text => figuresFrom(text, source))) return {texts, rejected};
-            rejected ||= texts.length > 0;
+            const texts = textsOf(await ask(asked));
+            const kept = texts.filter(text => figuresFrom(text, source));
+            if (texts.length > 0 && kept.length === texts.length) return {texts, rejected};
+            if (texts.length === 0) continue;
+            rejected = true;
+            if (partial && kept.length > best.length) best = kept;
+            asked = `${prompt}
+
+${figuresAgain(texts, source)}`;
         }
-        return {texts: [], rejected};
+        return {texts: best, rejected};
     };
     const [points, summary] = await Promise.all([
         written(pointsPrompt(title, sentences, reader), answered => (Array.isArray(answered?.points) ? answered.points : [])
-            .map(point => unnumbered(typeof point === 'string' ? point : point?.text ?? '')).filter(Boolean).slice(0, MAX_POINTS)),
+            .map(point => unnumbered(typeof point === 'string' ? point : point?.text ?? '')).filter(Boolean).slice(0, MAX_POINTS), true),
         written(summaryPrompt(title, sentences, reader), answered => typeof answered?.summary === 'string' && unnumbered(answered.summary) ? [unnumbered(answered.summary)] : []),
     ]);
     if ((points.rejected && points.texts.length === 0) || (summary.rejected && summary.texts.length === 0)) {

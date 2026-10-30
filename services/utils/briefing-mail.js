@@ -14,6 +14,7 @@
 
 import {languageName} from './language.js';
 import {countryNames} from './country-names.js';
+import {ORIGINAL_END, ORIGINAL_START, withoutOriginalMarks} from './original-marks.js';
 
 // The colours and fonts of the page (client styles/index.css). Mail apps keep inline styles and simple
 // tables only; the fonts of the page are asked from Google Fonts, which Apple Mail and Outlook for Mac
@@ -81,6 +82,8 @@ const fill = (template, values = {}) => escape(template).replace(/\{(\w+)\}/g, (
 const fillText = (template, values = {}) => template.replace(/\{(\w+)\}/g, (place, name) => values[name] ?? place);
 const when = (iso, t = ENGLISH) => iso ? new Date(iso).toLocaleString(t.locale, {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich'}) : '';
 const day = (iso, t = ENGLISH) => iso ? new Date(iso).toLocaleDateString(t.locale, {day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Zurich'}) : '';
+// a sentence the translation left in its own language (see extract.js) is in italics, between its parentheses
+const italicOriginals = (html) => html.replaceAll(ORIGINAL_START, '<i>').replaceAll(ORIGINAL_END, '</i>');
 const paragraphsOf = (text) => String(text ?? '').split(/\n\s*\n/).map(paragraph => paragraph.trim()).filter(Boolean);
 
 // The ways the sentences of a card can be sent in, as the page shows them (client formats.js): the 3
@@ -140,10 +143,10 @@ const kicker = (text, tone = 'mute') => `<p class="ng-${tone}" style="${KICKER}$
 // the passages, "[…]" between two of them; the first letter of the first card large, as on the page
 const passagesHtml = (paragraphs, lede) => paragraphs.map((paragraph, i) => {
     const gap = i > 0 ? `<p class="ng-mute" style="${BODY};color:${LIGHT.mute};margin:12px 0">[…]</p>` : '';
-    const dropCap = lede && i === 0 && paragraph.length > 1;
+    const dropCap = lede && i === 0 && paragraph.length > 1 && paragraph[0] !== ORIGINAL_START;
     const text = dropCap
-        ? `<span class="ng-accent" style="float:left;font:500 66px/0.8 ${DISPLAY};color:${LIGHT.accent};margin:6px 8px 0 0">${escape(paragraph[0])}</span>${escape(paragraph.slice(1))}`
-        : escape(paragraph);
+        ? `<span class="ng-accent" style="float:left;font:500 66px/0.8 ${DISPLAY};color:${LIGHT.accent};margin:6px 8px 0 0">${escape(paragraph[0])}</span>${italicOriginals(escape(paragraph.slice(1)))}`
+        : italicOriginals(escape(paragraph));
     return `${gap}<p class="ng-ink" style="${BODY}">${text}</p>`;
 }).join('');
 
@@ -152,13 +155,16 @@ const digestHtml = (paragraphs, lede) => passagesHtml([paragraphs.join(' […] '
 
 // the bullet points, a sentence each, the most important first
 const pointsHtml = (paragraphs) => `<ul style="margin:0;padding-left:22px">${paragraphs
-    .map(paragraph => `<li class="ng-ink" style="${BODY};margin-top:8px">${escape(paragraph)}</li>`).join('')}</ul>`;
+    .map(paragraph => `<li class="ng-ink" style="${BODY};margin-top:8px">${italicOriginals(escape(paragraph))}</li>`).join('')}</ul>`;
 const WAYS_HTML = {points: pointsHtml, digest: digestHtml, passages: passagesHtml};
 
 // the same in the text of the e-mail
-const wayText = ({paragraphs, way}) => way === 'points'
-    ? paragraphs.map(paragraph => `• ${paragraph}`).join('\n')
-    : paragraphs.join(way === 'digest' ? ' […] ' : '\n[…]\n');
+const wayText = ({paragraphs: marked, way}) => {
+    const paragraphs = marked.map(withoutOriginalMarks);
+    return way === 'points'
+        ? paragraphs.map(paragraph => `• ${paragraph}`).join('\n')
+        : paragraphs.join(way === 'digest' ? ' […] ' : '\n[…]\n');
+};
 
 const contestedHtml = (denials, t = ENGLISH) => denials.length === 0 ? '' : `
 <div class="ng-rule" style="margin-top:24px;border-left:2px solid ${LIGHT.accent};padding-left:18px">
