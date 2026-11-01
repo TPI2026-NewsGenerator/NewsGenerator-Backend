@@ -14,7 +14,8 @@ const respond = async (res, work, status = 200) => {
     try {
         res.status(status).json(await work());
     } catch (error) {
-        res.status(error.status || 500).json({error: error.message ?? String(error)});
+        // retryIn: how long Wikidata asks to wait (ms), for a client that carries on by itself
+        res.status(error.status || 500).json({error: error.message ?? String(error), ...(error.retryIn ? {retryIn: error.retryIn} : {})});
     }
 };
 

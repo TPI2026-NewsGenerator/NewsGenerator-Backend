@@ -27,8 +27,24 @@ and none stands out, and the others are followed as written. A profile follows 3
    least one, and the client asks the others with the next lot. An answer that is HTML (a restart, a timeout, a
    refusal of the tunnel) is told as such by the client (`readAnswer`: "The server answered 524 with a page, not
    data") and not as "Unexpected token '<'". A request
-   that fails (Wikidata asking to wait) stops the loop with the message and "Try again" carries on from the lot that
-   failed. Each name is, in this order:
+   that fails does not stop the import (the user, 2.11.2026: a failure on 8 names is certain on 300):
+   - **The server answers for the names it told and says how long to wait.** Wikidata asking to wait (429), being
+     slow or answering a page that is no JSON stops the search: the answer holds the names looked for so far and
+     `retryIn`, the milliseconds to wait (30 s when Wikidata does not say, 2 s to 2 min); a failure on the first
+     name is a 502 that carries `retryIn` too. When the Wikipedias of the doubts of a lot cannot be counted, the
+     first doubt and the names after it are not answered (the reader would be asked about clear names).
+   - **The client carries on by itself** (`withRetry`, `checkNames` of `importNames.js`): after what the server
+     asks, and at least 4, 8, 16, 32 then 60 s, it asks the same lot again, for a failure that passes (no network,
+     a page, a 5xx, a 408 or a 429, which says `retryAfter`), never for a call the server refuses (400, 403, 404).
+     The page says "Wikidata or the server is slow... Carrying on in 24 s by itself, nothing is lost" with the seconds
+     counted down; the names told are kept. It gives up after 10 minutes of waiting without an answer, then "Try
+     again" carries on from the names that are left. The step of following is asked again the same way (it is
+     without harm to ask it twice).
+   - **What Wikidata told is kept** 6 hours in memory (`memo.js`: the items a name may be, the Wikipedias of an
+     item): a list imported twice, or a lot asked again, does not ask again.
+   - Measured (2.11.2026, real code and real Wikidata, a refusal to go faster and a page of HTML added in the
+     middle of 40 names): all 40 told, no error and no click, the same results as without failures, 122 s against 24 s.
+   Each name is, in this order:
    - `invalid`: not 2 to 60 characters;
    - `known`: already followed, as an item (by one of its names) or as written;
    - `word`: Wikidata has no item for it (the pages of Wikimedia, of a family or given name left aside);

@@ -49,7 +49,7 @@ jest.unstable_mockModule('../../services/utils/wikidata.js', async () => ({
     readItem, searchItems, candidatesFor, describeItems, PERSON_SITELINKS: 10, SITELINKS_AHEAD: 3, readCountries: async () => new Map(), exactItems: async () => [], wikimediaHeaders: () => ({}), isQid: (value) => /^Q\d+$/.test(value ?? ''),
 }));
 
-const {EntityService, mergeNews, namesFor} = await import('../../services/entity-service.js');
+const {EntityService, forgetLookups, mergeNews, namesFor} = await import('../../services/entity-service.js');
 const {kindOf, namesOf, usableName, withoutClubWords} = await import('../../services/utils/wikidata-names.js');
 
 const PSG = {id: 1, qid: 'Q483020', label: 'Paris Saint-Germain FC', description: 'club', kind: 'club',
@@ -369,6 +369,8 @@ describe('a list of names followed at once', () => {
     const found = (qid, label, description = null) => ({qid, label, description});
     const kept = (word) => ({watch_terms: word, text: 'Le football', languages: ['fr']});
     afterEach(() => {
+        // what Wikidata said is kept: not from one test to the next
+        forgetLookups();
         EntityModel.followed.mockResolvedValue([]);
         EntityModel.count.mockResolvedValue(0);
         EntityModel.byQids.mockReset().mockResolvedValue([]);
@@ -452,11 +454,64 @@ describe('a list of names followed at once', () => {
         candidatesFor.mockRejectedValueOnce(Object.assign(new Error('Wikidata asked to wait.'), {paused: true}));
         await expect(EntityService.checkNames(8, ['Gianni Infantino'])).rejects.toMatchObject({status: 502});
 
+        // the Wikipedias of a doubt cannot be counted: it is not answered, the client asks it again after the wait
         candidatesFor.mockResolvedValue({exact: [found('Q1', 'Al'), found('Q2', 'Al')], others: []});
-        describeItems.mockRejectedValue(new Error('Wikidata lags behind.'));
-        const {results} = await EntityService.checkNames(8, ['Al']);
-        expect(results[0].status).toBe('choose');
+        describeItems.mockRejectedValue(Object.assign(new Error('Wikidata lags behind.'), {paused: true, retryIn: 9000}));
+        await expect(EntityService.checkNames(8, ['Al'])).rejects.toMatchObject({status: 502, retryIn: 9000});
         spy.mockRestore();
+    });
+
+    it('should answer for the names looked for when Wikidata stops the search, with how long to wait, and lose none', async () => {
+        const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        candidatesFor
+            .mockResolvedValueOnce({exact: [found('Q124138', 'Gianni Infantino')], others: []})
+            .mockResolvedValueOnce({exact: [], others: []})
+            .mockRejectedValueOnce(Object.assign(new Error('Wikidata asked to wait.'), {paused: true, retryIn: 7000}));
+        const answer = await EntityService.checkNames(8, ['Gianni Infantino', 'Vadims Ļašenko', 'Lise Klaveness', 'Roberto Rosetti']);
+
+        // the two names told, the others asked again after the wait; the last was not tried
+        expect(answer.results.map(result => [result.name, result.status])).toEqual([['Gianni Infantino', 'linked'], ['Vadims Ļašenko', 'word']]);
+        expect(answer.retryIn).toBe(7000);
+        expect(candidatesFor).toHaveBeenCalledTimes(3);
+
+        // a wait that is not told is 30 s, one told too short is 2 s
+        candidatesFor.mockRejectedValueOnce(Object.assign(new Error('busy'), {paused: true}));
+        await expect(EntityService.checkNames(8, ['Alpha One'])).rejects.toMatchObject({status: 502, retryIn: 30000});
+        candidatesFor.mockRejectedValueOnce(Object.assign(new Error('busy'), {paused: true, retryIn: 100}));
+        await expect(EntityService.checkNames(8, ['Alpha Two'])).rejects.toMatchObject({retryIn: 2000});
+        spy.mockRestore();
+    });
+
+    it('should leave the doubts and the names after them when their Wikipedias cannot be counted, the clear names told', async () => {
+        const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        candidatesFor.mockImplementation(async (name) => ({
+            'Gianni Infantino': {exact: [found('Q124138', 'Gianni Infantino')], others: []},
+            'Michael Oliver': {exact: [found('Q1', 'Michael Oliver'), found('Q2', 'Michael Oliver')], others: []},
+            'Lise Klaveness': {exact: [found('Q5', 'Lise Klaveness')], others: []},
+        }[name] ?? {exact: [], others: []}));
+        describeItems.mockRejectedValue(Object.assign(new Error('Wikidata lags behind.'), {paused: true, retryIn: 12000}));
+
+        const answer = await EntityService.checkNames(8, ['Gianni Infantino', 'Michael Oliver', 'Lise Klaveness']);
+        expect(answer.results.map(result => result.name)).toEqual(['Gianni Infantino']);
+        expect(answer.retryIn).toBe(12000);
+        spy.mockRestore();
+    });
+
+    it('should not ask Wikidata again for a name or an item it told of, the same list twice', async () => {
+        candidatesFor.mockImplementation(async (name) => name === 'Michael Oliver'
+            ? {exact: [found('Q1', 'Michael Oliver'), found('Q2', 'Michael Oliver')], others: []} : {exact: [], others: []});
+        describeItems.mockResolvedValue([{qid: 'Q1', label: 'Michael Oliver', description: '', links: 20}, {qid: 'Q2', label: 'Michael Oliver', description: '', links: 15}]);
+
+        const first = await EntityService.checkNames(8, ['Michael Oliver', 'Nobody Known']);
+        const again = await EntityService.checkNames(8, ['Michael Oliver', 'Nobody Known']);
+
+        expect(again).toEqual(first);
+        expect(candidatesFor).toHaveBeenCalledTimes(2);
+        expect(describeItems).toHaveBeenCalledTimes(1);
+        // the language of the reader is part of the question
+        ProfileModel.get.mockResolvedValue({watch_terms: [], text: 'Football', languages: ['de']});
+        await EntityService.checkNames(8, ['Nobody Known']);
+        expect(candidatesFor).toHaveBeenCalledTimes(3);
     });
 
     it('should follow the items and the words at once, the items Wikidata has with their label, and read them in full after', async () => {

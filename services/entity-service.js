@@ -26,6 +26,7 @@ import {cleanWatchTerms} from "./utils/watch-terms.js";
 import {mayName} from "./utils/name-prefilter.js";
 import {namesOfCards, shortName, suggestedNames} from "./utils/card-names.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
+import {memo} from "./utils/memo.js";
 
 // Wikidata changes slowly: a squad between two windows of transfers, a coach now and then
 const REFRESH_DAYS = 7;
@@ -61,6 +62,18 @@ const CHOICES_MAX = 8;
 // Cloudflare, which answer with a page of HTML after about 100 s (524), and a name takes up to 30 s when Wikidata
 // is slow (two searches of 15 s). The answer tells the first names only, the client asks the others again
 const CHECK_BUDGET_MS = 30e3;
+// What Wikidata said of a name (the items it may be) and of an item (the Wikipedias it is in) is kept: a list
+// imported twice, or carried on after a pause, does not ask again. They are not worth much of a day
+const KEPT_LOOKUPS_MS = 6 * 3600e3;
+const candidates = memo({ttlMs: KEPT_LOOKUPS_MS, max: 5000});
+const wikipedias = memo({ttlMs: KEPT_LOOKUPS_MS, max: 20000});
+export const forgetLookups = () => {
+    candidates.clear();
+    wikipedias.clear();
+};
+// How long a client should wait after Wikidata stopped a search (ms): what it asked for, between 2 s and 2 min,
+// 30 s when it did not say
+const waitOf = (err) => Math.min(Math.max(err?.retryIn ?? 30e3, 2e3), 120e3);
 
 // Of several items a name may be, the one that stands out: in at least PERSON_SITELINKS Wikipedias and in
 // SITELINKS_AHEAD times more than any other, whatever it is (a person, a club, a place); null when none does.
@@ -293,8 +306,11 @@ export const EntityService = {
     //   found only by an alias counting half): the reader says which, or none;
     // - 'word': none, to follow as written;
     // - 'invalid': 2 to 60 characters are a name.
-    // 'names': CHECK_MAX at most a request; the ones left when the request has taken CHECK_BUDGET_MS are not
-    // looked for: the results are those of the first names, at least one
+    // 'names': CHECK_MAX at most a request. The answer tells the first names, at least one: the ones left when
+    // the request has taken CHECK_BUDGET_MS are not looked for, and Wikidata stopping the search (it asks to wait,
+    // is slow, does not answer) leaves the names after the last told, with retryIn: the milliseconds to wait before
+    // asking them again. Nothing is lost: a request that fails on its first name is a 502 that carries retryIn too.
+    // {results, retryIn?}
     checkNames: async (profileId, names, {budgetMs = CHECK_BUDGET_MS} = {}) => {
         if (profileId === null) throw fail(400, 'Write your profile first.');
         if (!Array.isArray(names) || names.length === 0 || names.length > CHECK_MAX || !names.every(name => typeof name === 'string')) {
@@ -305,6 +321,7 @@ export const EntityService = {
         const known = new Set([...rows.flatMap(row => namesFor(row, row)), ...words].map(mentionKey).filter(Boolean));
         // each name looked for, one after the other (a call every 0.4 s, whoever asks)
         const entries = [];
+        let retryIn = null;
         const started = Date.now();
         for (const name of names) {
             if (entries.length > 0 && Date.now() - started > budgetMs) break;
@@ -314,12 +331,17 @@ export const EntityService = {
             } else if (known.has(mentionKey(written))) {
                 entries.push({name: written, status: 'known'});
             } else {
-                let found;
-                try {
-                    found = await candidatesFor(written, language);
-                } catch (err) {
-                    console.error(`Entities: "${written}" not looked for in Wikidata (${err.message})`);
-                    throw fail(502, 'Wikidata could not be searched, try again in a moment.');
+                const key = `${language} ${mentionKey(written)}`;
+                let found = candidates.get(key);
+                if (!found) {
+                    try {
+                        found = await candidatesFor(written, language);
+                        candidates.set(key, found);
+                    } catch (err) {
+                        console.error(`Entities: "${written}" not looked for in Wikidata (${err.message})`);
+                        retryIn = waitOf(err);
+                        break;
+                    }
                 }
                 const pool = [...found.exact, ...found.others];
                 entries.push(pool.length === 0 ? {name: written, status: 'word'}
@@ -328,16 +350,27 @@ export const EntityService = {
             }
         }
         // a doubt: the item that stands out settles it. The Wikipedias of the items of all the doubts are counted
-        // together, 50 items a call; one that cannot be counted leaves the doubt to the reader
-        const doubts = entries.filter(entry => entry.status === 'choose');
+        // together, 50 items a call. When they cannot be counted the doubts are not answered (and the names after
+        // the first of them, which the client asks again): the reader would be asked about names that are clear
         const links = new Map();
-        const qids = [...new Set(doubts.flatMap(entry => entry.pool.map(item => item.qid)))];
-        for (let i = 0; i < qids.length; i += 50) {
+        const qids = [...new Set(entries.filter(entry => entry.status === 'choose').flatMap(entry => entry.pool.map(item => item.qid)))];
+        for (const qid of qids) if (wikipedias.get(qid) !== undefined) links.set(qid, wikipedias.get(qid));
+        const toCount = qids.filter(qid => !links.has(qid));
+        for (let i = 0; i < toCount.length; i += 50) {
             try {
-                (await describeItems(qids.slice(i, i + 50), {batch: 50})).forEach(item => links.set(item.qid, item.links));
+                for (const item of await describeItems(toCount.slice(i, i + 50), {batch: 50})) {
+                    links.set(item.qid, item.links);
+                    wikipedias.set(item.qid, item.links);
+                }
             } catch (err) {
                 console.error(`Entities: the namesakes were not told apart (${err.message})`);
+                retryIn = waitOf(err);
+                entries.length = Math.max(0, entries.findIndex(entry => entry.status === 'choose'));
+                break;
             }
+        }
+        if (entries.length === 0) {
+            throw Object.assign(fail(502, 'Wikidata could not be searched, try again in a moment.'), {retryIn: retryIn ?? waitOf(null)});
         }
         const results = entries.map(({pool, ...entry}) => {
             if (!pool) return entry;
@@ -354,7 +387,7 @@ export const EntityService = {
             return item ? {...entry, status: 'linked', item, famous: true}
                 : {...entry, items: [...pool].sort((a, b) => (weight.get(b.qid) ?? 0) - (weight.get(a.qid) ?? 0)).slice(0, CHOICES_MAX)};
         });
-        return {results};
+        return retryIn === null ? {results} : {results, retryIn};
     },
 
     // A list of names followed at once: qids, the items of Wikidata (300 at most), words, the names to follow as
@@ -391,7 +424,7 @@ export const EntityService = {
                 described.push(...await describeItems(unknown.slice(i, i + 50), {batch: 50}));
             } catch (err) {
                 console.error(`Entities: items not described by Wikidata (${err.message})`);
-                throw fail(502, 'Wikidata could not be read, try again in a moment.');
+                throw Object.assign(fail(502, 'Wikidata could not be read, try again in a moment.'), {retryIn: waitOf(err)});
             }
         }
         await EntityModel.addNamed(described.map(item => ({qid: item.qid, label: item.label, description: item.description || null})));
