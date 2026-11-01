@@ -14,6 +14,8 @@ jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {saveR
 jest.unstable_mockModule('../../services/utils/contested.js', () => ({contestedOf: jest.fn(async () => []), withoutDenied: jest.fn(posts => posts)}));
 const aiWaysOf = jest.fn(async () => null);
 jest.unstable_mockModule('../../services/utils/ai-ways.js', () => ({aiWaysOf}));
+const glossariesOfStories = jest.fn(async () => new Map());
+jest.unstable_mockModule('../../services/utils/card-spellings.js', () => ({glossariesOfStories}));
 const extract = await import('../../services/utils/extract.js');
 jest.unstable_mockModule('../../services/utils/extract.js', () => ({...extract, extractArticle: jest.fn()}));
 
@@ -33,6 +35,7 @@ const usage = {summarizing: {}, contesting: {}};
 beforeEach(() => {
     Crawlers.Html.mockReset();
     extractArticle.mockReset();
+    glossariesOfStories.mockReset().mockResolvedValue(new Map());
     // a passage is a paragraph of sentences (see extract.js)
     extractArticle.mockResolvedValue({passages: [[{text: 'The first sentence.'}]], translation: [], topic: null, sourcing: null});
 });
@@ -83,6 +86,26 @@ describe('readStories', () => {
         const [read] = await readStories([story(1, article('https://www.example.org/a'))], {usage});
         expect(read.unreadable).toBe(false);
         expect(read.summary).toBeNull();
+    });
+
+    it('should tell the translation of a story how Wikidata spells the names of its news, and keep it for the title', async () => {
+        const glossary = [{written: 'Φραπάρ', spelled: 'Stéphanie Frappart'}];
+        glossariesOfStories.mockResolvedValue(new Map([[1, {glossary, names: ['Stéphanie Frappart', 'Stéphane Lannoy']}]]));
+        Crawlers.Html.mockResolvedValue([{url: 'https://www.example.org/a', content: FULL}, {url: 'https://www.example.org/b', content: FULL}]);
+        const reads = await readStories([story(1, article('https://www.example.org/a')), story(2, article('https://www.example.org/b'))], {usage});
+        expect(extractArticle).toHaveBeenCalledWith('A news', expect.anything(),
+            expect.objectContaining({glossary, names: ['Stéphanie Frappart', 'Stéphane Lannoy']}));
+        expect(extractArticle).toHaveBeenCalledWith('A news', expect.anything(), expect.not.objectContaining({glossary: expect.anything()}));
+        expect(reads.map(read => [read.glossary, read.names])).toEqual([[glossary, ['Stéphanie Frappart', 'Stéphane Lannoy']], [[], []]]);
+    });
+
+    it('should read a story without the spelling of its names when Wikidata could not be asked', async () => {
+        glossariesOfStories.mockResolvedValue(new Map());
+        Crawlers.Html.mockResolvedValue([{url: 'https://www.example.org/a', content: FULL}]);
+        const [read] = await readStories([story(1, article('https://www.example.org/a'))], {usage});
+        expect(read.unreadable).toBe(false);
+        expect(read.glossary).toEqual([]);
+        expect(read.names).toEqual([]);
     });
 
     it('should keep the pages read for counting who wrote the cards', async () => {

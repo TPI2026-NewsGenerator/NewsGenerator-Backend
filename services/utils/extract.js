@@ -13,6 +13,7 @@ import {TOPICS, isTopic} from './topics.js';
 import {languageOf, ownLanguage, writtenIn} from './language.js';
 import {ollamaJson} from './ollama.js';
 import {ORIGINAL_END, ORIGINAL_START, withoutOriginalMarks} from './original-marks.js';
+import {alignNames, spellingNote, spellingsOf} from './spellings.js';
 
 // Summaries written by the AI changed what the article says in 4 of 30 articles, 3 of them again in
 // a second run (a cause it never gives, a certainty turned around, the words of one person given to
@@ -217,12 +218,23 @@ export const keepsFigures = (original, translation) => {
     });
 };
 
-const translatePrompt = (sentences, from, to, again = false) => `Translate these sentences of a news article from ${from} into ${to}.
+// A name written in another alphabet can't "stay as it is": the AI guessed its Latin spelling, better with a
+// first name and a sentence than for a word alone ("Frapar" for "Φραπάρ" in a title, "Stéphanie Frappart" in
+// the text of the card, briefings 252 and 253 of 27.10.2026), and gave a man a woman's first name
+// ("Stéphanie Lannoy" for "Στεφάν Λανουά"). The spellings of the card are told to the translation too
+// (see spellings.js)
+const NAMES_RULE = `Names of people, organisations and places stay as they are; a name written in another alphabet than
+the Latin one (Greek, Cyrillic, Arabic, Chinese...) is written as the international press and Wikipedia spell it in the
+Latin alphabet ("Μπαπέ" is "Mbappé"), and when you do not know that spelling, transliterated sound by sound, the same
+way each time. A man's first name never becomes a woman's, nor the reverse (Stéphane and Stéphanie are two people): the
+articles and the endings of the original often say which.`;
+
+const translatePrompt = (sentences, from, to, again = false, note = '') => `Translate these sentences of a news article from ${from} into ${to}.
 Translate each one faithfully and completely: the same facts, the same figures, the same names, the
-same certainty (may, reportedly, alleged, planned), nothing added and nothing left out. Names of
-people, organisations and places stay as they are.${again ? `
+same certainty (may, reportedly, alleged, planned), nothing added and nothing left out. ${NAMES_RULE}${again ? `
 A previous translation of these sentences lost or changed a figure (a number, a time, a score, a round of a
-cup): write every figure of the original as it is, a number written in words stays in words.` : ''}
+cup): write every figure of the original as it is, a number written in words stays in words.` : ''}${note ? `
+${note}` : ''}
 
 ${sentences.map((sentence, i) => `[${i + 1}] ${sentence}`).join('\n')}
 
@@ -235,19 +247,23 @@ const TRANSLATE_ATTEMPTS = 3;
 // ones that are not are asked again (told so), then left in their language between parentheses (marked:
 // in italics, see above) instead of the whole card losing its translation to one of them (30.10.2026:
 // "1/8-finals" written "round of 16" cost a card all of it). null when the AI does not answer one
-// translation per sentence, or when it could not translate half of them: the reader gets the original only
-export const translatePassages = async (passages, from, to, usage = null, {marked = false} = {}) => {
+// translation per sentence, or when it could not translate half of them: the reader gets the original only.
+// glossary: [{written, spelled}], the names of the news as Wikidata spells them, names the ones its other
+// news spell (see spellings.js)
+export const translatePassages = async (passages, from, to, usage = null, {marked = false, glossary = [], names = []} = {}) => {
     const sentences = passages.flat().map(sentence => sentence.text);
     const done = new Array(sentences.length).fill(null);
+    const note = spellingNote({glossary, names});
+    const spelled = spellingsOf({glossary, names});
     let lost = sentences.map((sentence, i) => i);
     for (let attempt = 0; attempt < TRANSLATE_ATTEMPTS && lost.length > 0; attempt++) {
-        const answer = await ollamaJson(translatePrompt(lost.map(i => sentences[i]), from, to, attempt > 0), usage).catch(() => null);
+        const answer = await ollamaJson(translatePrompt(lost.map(i => sentences[i]), from, to, attempt > 0, note), usage).catch(() => null);
         const translations = answer?.translations;
         if (!Array.isArray(translations) || translations.length !== lost.length) continue;
         lost = lost.filter((i, k) => {
             const translation = translations[k];
             if (typeof translation !== 'string' || !translation.trim() || !keepsFigures(sentences[i], translation)) return true;
-            done[i] = translation.trim();
+            done[i] = alignNames(translation.trim(), spelled, sentences[i]);
             return false;
         });
     }
@@ -261,28 +277,37 @@ export const translatePassages = async (passages, from, to, usage = null, {marke
     }));
 };
 
+// what a text is told of the spelling of its names, on the line under it
+const hintOf = (item) => {
+    const note = spellingNote(item);
+    return note ? `\n    ${note}` : '';
+};
+
 const textsPrompt = (texts, to) => `Translate these titles and descriptions of news articles into ${to}. Each one
 says its language between parentheses before it.
 Translate each one faithfully and completely: the same facts, the same figures, the same names, the
-same certainty (may, reportedly, alleged, planned), nothing added and nothing left out. Names of
-people, organisations and places stay as they are. A text cut at its end stays cut.
+same certainty (may, reportedly, alleged, planned), nothing added and nothing left out. ${NAMES_RULE} A text cut at
+its end stays cut.
 
-${texts.map(({text, from}, i) => `[${i + 1}] (${from}) ${text}`).join('\n')}
+${texts.map((item, i) => `[${i + 1}] (${item.from}) ${item.text}${hintOf(item)}`).join('\n')}
 
 Answer only in JSON: {"translations": ["...", one per text, in the same order]}`;
 
 // Titles and descriptions of several languages translated into 'to' (a language name) in one call:
-// texts [{text, from}], 'from' a language name. Answers one translation per text, null for one that
-// dropped a figure; all null when the AI does not answer one per text, asked once more first
+// texts [{text, from, glossary, names}], 'from' a language name; glossary [{written, spelled}] the names of
+// the news as Wikidata spells them, names the ones the card already spells (the translation of its text):
+// told to the AI, and a word of the translation a consonant off one of them put back as they spell it (see
+// spellings.js). Answers one translation per text, null for one that dropped a figure; all null when the AI
+// does not answer one per text, asked once more first
 export const translateTexts = async (texts, to, usage = null) => {
     for (let attempt = 0; attempt < 2; attempt++) {
         const answer = await ollamaJson(textsPrompt(texts, to), usage).catch(() => null);
         const translations = answer?.translations;
         if (!Array.isArray(translations) || translations.length !== texts.length) continue;
-        return texts.map(({text}, i) => {
+        return texts.map((item, i) => {
             // the AI often writes the number of the text again, its language sometimes: "[1] (German) ..."
             const translation = typeof translations[i] === 'string' ? translations[i].replace(/^\s*\[\d+\]\s*(?:\([^)]*\)\s*)?/, '').trim() : '';
-            return translation && keepsFigures(text, translation) ? translation : null;
+            return translation && keepsFigures(item.text, translation) ? alignNames(translation, spellingsOf(item), item.text) : null;
         });
     }
     return texts.map(() => null);
@@ -290,10 +315,10 @@ export const translateTexts = async (texts, to, usage = null) => {
 
 // The language of passages and their translation for a reader of 'language' (a code), null when they
 // are in that language already or could not be translated safely: {from, translation}
-export const translationFor = async (passages, language, usage = null, fallback = null, {marked = false} = {}) => {
+export const translationFor = async (passages, language, usage = null, fallback = null, {marked = false, glossary = [], names = []} = {}) => {
     const from = ownLanguage(passages.flat().map(sentence => sentence.text).join(' '), fallback);
     const translation = passages.length > 0 && from && from !== language && writtenIn(from) && writtenIn(language)
-        ? await translatePassages(passages, writtenIn(from), writtenIn(language), usage, {marked})
+        ? await translatePassages(passages, writtenIn(from), writtenIn(language), usage, {marked, glossary, names})
         : null;
     return {from, translation};
 };
@@ -303,7 +328,7 @@ export const translationFor = async (passages, language, usage = null, fallback 
 // digestTranslation, from, topic, sourcing}: passages as published, translation null when the article
 // is in the language of the reader or could not be translated safely; points and digest the shorter
 // ways of the card (see shorterWays), passages too; passages empty when the page has no text of its own
-export const extractArticle = async (title, page, {language = 'en', usage = null, marked = false} = {}) => {
+export const extractArticle = async (title, page, {language = 'en', usage = null, marked = false, glossary = [], names = []} = {}) => {
     const sentences = sentencesOf(page);
     if (sentences.length === 0) {
         return {passages: [], translation: null, points: [], pointsTranslation: null, digest: [], digestTranslation: null,
@@ -313,7 +338,7 @@ export const extractArticle = async (title, page, {language = 'en', usage = null
     const answer = await ollamaJson(extractPrompt(title, sentences), usage);
     const passages = buildExtract(sentences, answer?.sentences);
     const {points, digest} = shorterWays(sentences, answer?.sentences);
-    const {from, translation} = await translationFor(passages, language, usage, languageOf(page.content), {marked});
+    const {from, translation} = await translationFor(passages, language, usage, languageOf(page.content), {marked, glossary, names});
     // the shorter ways are sentences of the passages: their translation is the one of the passages
     const translated = translation && new Map(passages.flat().map((sentence, i) => [sentence, translation.flat()[i]]));
     const inReader = (ways) => translated ? ways.map(passage => passage.map(sentence => translated.get(sentence))) : null;

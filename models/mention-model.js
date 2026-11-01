@@ -162,6 +162,15 @@ export const MentionModel = {
                (SELECT count(*) FROM (SELECT 1 FROM article_mentions x WHERE x.id_mention = m.id LIMIT $2) t)::int AS news
         FROM card c JOIN mentions m ON m.id = c.id_mention`, articleIds, upTo),
 
+    // [{id_article, name, kind, qid}]: the names of these news that are an item of Wikidata, as the news
+    // write them, the least met first (the ones a translation guesses the spelling of), 'limit' at most:
+    // what a translation is told of how to spell them (see card-spellings.js)
+    linkedNamesOf: async (articleIds, limit) => articleIds.length === 0 ? [] : prisma.$queryRawUnsafe(`
+        SELECT am.id_article, m.name, m.kind, m.qid
+        FROM article_mentions am JOIN mentions m ON m.id = am.id_mention
+        WHERE am.id_article = ANY($1::int[]) AND m.qid IS NOT NULL
+        ORDER BY m.seen, am.id_article LIMIT $2`, articleIds, limit),
+
     // [{id_story, id_article, shared, likeness}]: the stories of these feeds with a news since 'since'
     // naming one of these names, or a name of the same item of Wikidata, none of 'excluded', at least
     // 'likeness' close to the story 'storyId' (the cosine of their centroids), the closest first.

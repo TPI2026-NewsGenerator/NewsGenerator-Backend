@@ -18,6 +18,8 @@ import {DiscoveryService} from "./discovery-service.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {newUsage} from "./utils/ollama.js";
 import {canSummarize, extractArticle, passagesText, sentencesOf, splitSentences, translateTexts, withoutOriginalMarks} from "./utils/extract.js";
+import {glossariesOfStories} from "./utils/card-spellings.js";
+import {alignNames, namesIn, spellingsOf} from "./utils/spellings.js";
 import {aiWaysOf} from "./utils/ai-ways.js";
 import {ANALYSIS_MODEL, TIMELINE_MAX, analysesOf, fittedArticles} from "./utils/card-analysis.js";
 import {languageOf} from "./utils/language.js";
@@ -502,11 +504,15 @@ const versionsOf = async (stories, {language, feedUrls, since}) => {
         .map(id => ({storyId: id, best: members.get(id)[0], members: members.get(id)}));
 };
 
+// what a story is told of the spelling of its names: {glossary, names}, both empty for none
+const spellingOf = (spelling) => ({glossary: spelling?.glossary ?? [], names: spelling?.names ?? []});
+
 // Chosen stories read: their texts say who wrote them and give the summary. Their pages are added to
-// 'content' (link -> page), which counts who wrote each card. Answers [{story, unreadable, summary}]:
+// 'content' (link -> page), which counts who wrote each card. Answers [{story, unreadable, summary, glossary}]:
 // unreadable when no article of the story could be read in full (a paywall, a protected site, its
-// first lines only), summary null when the AI failed on a page read. A story of Google News only
-// whose page is no news is left out
+// first lines only), summary null when the AI failed on a page read, glossary [{written, spelled}] how
+// Wikidata spells the names of its news and names the ones its news spell, that the translation is told of
+// (see card-spellings.js). A story of Google News only whose page is no news is left out
 export const readStories = async (chosen, {trusted = new Set(), language = null, usage, content = new Map(), first = false, step = async () => {}}) => {
     // the real address of the news of Google News to read, never asked twice (see google-news.js): of
     // the stories no feed lets read, and of the article in the language of the reader read first (the
@@ -545,6 +551,9 @@ export const readStories = async (chosen, {trusted = new Set(), language = null,
     // another language; and the denials of its news its articles report (see contested.js), asked
     // together
     if (first) await step('summarizing');
+    // how Wikidata spells the names the news of each story name: a name in Greek or in Cyrillic is told to the
+    // translation, which guessed its spelling (see spellings.js)
+    const glossaries = await glossariesOfStories(stories);
     const summaries = await mapWithConcurrency(stories, AI_CONCURRENCY, async (story, i) => {
         // the first lines of a page (a teaser, a paywall) do not tell the news
         const lead = reads[i].find(article => canSummarize(content.get(article.link)?.content));
@@ -552,7 +561,7 @@ export const readStories = async (chosen, {trusted = new Set(), language = null,
         const texts = reads[i].filter(article => content.has(article.link))
             .map(article => ({...toArticle(article), page: content.get(article.link)}));
         const [{passages, translation, points, pointsTranslation, digest, digestTranslation, topic, sourcing}, contested] = await Promise.all([
-            extractArticle(lead.title, content.get(lead.link), {language, usage: usage.summarizing, marked: true}),
+            extractArticle(lead.title, content.get(lead.link), {language, usage: usage.summarizing, marked: true, ...glossaries.get(story.storyId)}),
             contestedOf(lead.title, texts, {language, usage: usage.contesting}).catch(err => {
                 console.error(`Briefing: the denials of story ${story.storyId} were not read (${err.message})`);
                 return [];
@@ -566,8 +575,8 @@ export const readStories = async (chosen, {trusted = new Set(), language = null,
             topic, sourcing, contested, from: lead.link}};
     });
     return stories.map((story, i) => summaries[i].status === 'fulfilled'
-        ? {story, unreadable: Boolean(summaries[i].value.unreadable), summary: summaries[i].value.summary ?? null}
-        : {story, unreadable: false, summary: null});
+        ? {story, unreadable: Boolean(summaries[i].value.unreadable), summary: summaries[i].value.summary ?? null, ...spellingOf(glossaries.get(story.storyId))}
+        : {story, unreadable: false, summary: null, ...spellingOf(glossaries.get(story.storyId))});
 };
 
 // the closest story of each thread, the stories in their order: an affair followed over days is one card
@@ -741,6 +750,8 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     // briefing never waits on the review failing
     const content = new Map();
     const titleTranslation = new Map();
+    // lead -> {glossary, names}: how the card spells its names, from Wikidata and from its translated text
+    const spellings = new Map();
     let rounds = 0;
     const leadOf = (result) => result.story.members.find(article => article.link === result.summary?.from) ?? result.story.best;
     const read = async (chosen) => {
@@ -750,6 +761,12 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
         const leads = new Map(results.filter(result => !result.unreadable).map(result => [result, leadOf(result)]));
         // a title its feed cut ("…raises…") whole from its page read, before it is translated or judged
         for (const lead of leads.values()) lead.title = wholeTitle(lead.title, content.get(lead.link)?.title, mediumOfArticle(lead));
+        // the names the text of each card writes once translated, and how Wikidata spells them: a title is translated
+        // with them (a name alone in a title was guessed "Frapar", with its first name in the text "Frappart")
+        for (const [result, lead] of leads) {
+            const text = [result.summary?.translation, result.summary?.pointsTranslation, result.summary?.digestTranslation].filter(Boolean).join('\n');
+            spellings.set(lead, {glossary: result.glossary ?? [], names: [...new Set([...(result.names ?? []), ...namesIn(text)])]});
+        }
         // and the titles written in another language than the reader's translated, as their passages
         const foreign = [...leads.values()].filter(lead => lead.lang && lead.lang !== language && writtenIn(lead.lang) && writtenIn(language));
         const [leftOut, translations] = await Promise.all([
@@ -761,7 +778,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
                 console.error(`Briefing: the cards were not read again (${err.message})`);
                 return new Map();
             }),
-            foreign.length === 0 ? [] : translateTexts(foreign.map(lead => ({text: lead.title, from: writtenIn(lead.lang)})),
+            foreign.length === 0 ? [] : translateTexts(foreign.map(lead => ({text: lead.title, from: writtenIn(lead.lang), ...spellings.get(lead)})),
                 writtenIn(language), usage.summarizing),
         ]);
         foreign.forEach((lead, i) => titleTranslation.set(lead, translations[i]));
@@ -854,7 +871,8 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             // the title in the language of the reader when it is written in another, and that language
             titleTranslation: titleTranslation.get(lead) ?? null,
             language: lead.lang ?? null,
-            why: story.why,
+            // the sentence the choice wrote from the title as written: its names spelled as the card spells them
+            why: alignNames(story.why, spellingsOf(spellings.get(lead)), lead.title),
             interest: story.interest,
             // the project of the profile it was chosen for (see readerText), null for the profile itself
             project: story.project ?? null,
@@ -1365,8 +1383,9 @@ export const importedCard = async (address, page, {language, usage}) => {
     // asked once the page is known to be a news: a page refused cost two calls of deepseek
     const ai = await aiWaysOf(title, page, {language, usage}).catch(() => null);
     const lang = extract.from ?? languageOf(`${title} ${page.content.slice(0, 2000)}`);
+    const names = namesIn([passagesText(extract.translation), passagesText(extract.pointsTranslation)].filter(Boolean).join('\n'));
     const [titleTranslation] = lang && lang !== language && writtenIn(lang) && writtenIn(language)
-        ? await translateTexts([{text: title, from: writtenIn(lang)}], writtenIn(language), usage).catch(() => [null])
+        ? await translateTexts([{text: title, from: writtenIn(lang), names}], writtenIn(language), usage).catch(() => [null])
         : [null];
     const source = hostOf(address) ?? '';
     const lead = {title, url: address, source, publishedAt: dateOf(page.publishedAt), trusted: false, language: lang ?? null};

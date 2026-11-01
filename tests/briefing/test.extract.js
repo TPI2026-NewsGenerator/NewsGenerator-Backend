@@ -197,6 +197,37 @@ describe('translatePassages', () => {
     });
 });
 
+describe('translatePassages with the spelling of the names', () => {
+    it('should tell the AI how Wikidata spells the names of the news, in every try', async () => {
+        chat.mockReset().mockResolvedValueOnce(json({translations: ['Frappart led the seminar in 2026.']}));
+        await translatePassages([[s('Η Φραπάρ έκανε το σεμινάριο το 2026.')]], 'Greek', 'English', null,
+            {glossary: [{written: 'Φραπάρ', spelled: 'Stéphanie Frappart'}]});
+        const prompt = chat.mock.calls[0][0].messages.at(-1).content;
+        expect(prompt).toContain('another alphabet than');
+        expect(prompt).toContain('“Φραπάρ” is Stéphanie Frappart');
+    });
+
+    it('should put back a name written a consonant off the spelling of Wikidata, a figure kept', async () => {
+        chat.mockReset().mockResolvedValueOnce(json({translations: ['Frapar led the seminar in 2026.']}));
+        expect(await translatePassages([[s('Η Φραπάρ έκανε το σεμινάριο το 2026.')]], 'Greek', 'English', null,
+            {glossary: [{written: 'Φραπάρ', spelled: 'Stéphanie Frappart'}]}))
+            .toEqual([[s('Frappart led the seminar in 2026.')]]);
+    });
+
+    it('should tell the AI the spelling the other news of the card give to the names, and put back a name off it', async () => {
+        chat.mockReset().mockResolvedValueOnce(json({translations: ['The president, Stéphane Lanoy, spoke in 2026.']}));
+        expect(await translatePassages([[s('Ο πρόεδρος, Στεφάν Λανουά, μίλησε το 2026.')]], 'Greek', 'English', null, {names: ['Stéphane Lannoy']}))
+            .toEqual([[s('The president, Stéphane Lannoy, spoke in 2026.')]]);
+        expect(chat.mock.calls[0][0].messages.at(-1).content).toContain('already spells Stéphane Lannoy');
+    });
+
+    it('should tell nothing of names when it has none', async () => {
+        chat.mockReset().mockResolvedValueOnce(json({translations: ['He was fined $10,000.']}));
+        await translatePassages([[s('Il a reçu une amende de 10 000 $.')]], 'French', 'English');
+        expect(chat.mock.calls[0][0].messages.at(-1).content).not.toContain('Wikidata spells');
+    });
+});
+
 describe('translateTexts', () => {
     const texts = [{text: 'Bayern gewinnt 3:1 in Dortmund', from: 'German'}, {text: 'El árbitro anuló el gol', from: 'Spanish'}];
 
@@ -211,6 +242,39 @@ describe('translateTexts', () => {
     it('should not keep the number and the language the AI writes again before a translation', async () => {
         chat.mockReset().mockResolvedValueOnce(json({translations: ['[1] Le Bayern gagne 3-1 à Dortmund', "[2] (Spanish) L'arbitre a annulé le but"]}));
         expect(await translateTexts(texts, 'French')).toEqual(['Le Bayern gagne 3-1 à Dortmund', "L'arbitre a annulé le but"]);
+    });
+
+    it('should ask for the names of another alphabet as the press spells them, a man\'s first name staying a man\'s', async () => {
+        chat.mockReset().mockResolvedValueOnce(json({translations: ['Le Bayern gagne 3-1 à Dortmund', "L'arbitre a annulé le but"]}));
+        await translateTexts(texts, 'French');
+        const prompt = chat.mock.calls[0][0].messages.at(-1).content;
+        expect(prompt).toContain('another alphabet than');
+        expect(prompt).toContain('never becomes a woman');
+        // nothing told of the spelling of a name when the texts have none
+        expect(prompt).not.toContain('already spells');
+        expect(prompt).not.toContain('Wikidata spells');
+    });
+
+    it('should tell each text how Wikidata and its card spell its names, and put back a name a consonant off (briefings 252 and 253, 27.10.2026)', async () => {
+        chat.mockReset().mockResolvedValueOnce(json({translations: ["Thessaloniki: Women's refereeing seminar with UEFA's Frapar", 'A second title']}));
+        const names = ['Stéphanie Frappart', 'Thessaloniki'];
+        const glossary = [{written: 'Φραπάρ', spelled: 'Stéphanie Frappart'}];
+        const answer = await translateTexts([
+            {text: 'Θεσσαλονίκη: Σεμινάριο γυναικείας διαιτησίας με τη Φραπάρ της UEFA', from: 'Greek', names, glossary},
+            {text: 'Ένας δεύτερος τίτλος', from: 'Greek'},
+        ], 'English');
+        expect(answer).toEqual(["Thessaloniki: Women's refereeing seminar with UEFA's Frappart", 'A second title']);
+        const prompt = chat.mock.calls[0][0].messages.at(-1).content;
+        expect(prompt).toContain('“Φραπάρ” is Stéphanie Frappart');
+        expect(prompt).toContain('already spells Stéphanie Frappart, Thessaloniki');
+        // the second text is told nothing
+        expect(prompt.split('[2]')[1]).not.toContain('Wikidata spells');
+    });
+
+    it('should not change a name the original writes as it is', async () => {
+        chat.mockReset().mockResolvedValueOnce(json({translations: ['Frapar leads the seminar']}));
+        expect(await translateTexts([{text: 'Frapar leads the seminar', from: 'Greek', names: ['Stéphanie Frappart']}], 'English'))
+            .toEqual(['Frapar leads the seminar']);
     });
 
     it('should leave out a translation that lost a figure, and ask again an answer of another length', async () => {
