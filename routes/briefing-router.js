@@ -16,6 +16,10 @@ const router = express.Router();
 
 router.get('', authenticateToken, activeProfile, BriefingController.latest);
 router.post('', authenticateToken, activeProfile, BriefingController.start);
+// the tab of what the profile follows, read when it is opened: it can search a month of news
+router.get('/following', authenticateToken, activeProfile,
+    rateLimit({windowMs: 60e3, max: 20, key: req => `following ${req.user.id}`, message: 'Too many searches of the news you follow, try again in a minute.'}),
+    BriefingController.following);
 router.post('/:id/vote', authenticateToken, activeProfile, BriefingController.vote);
 // the e-mail of the briefing is for the administrators only (see admin.js)
 const MAIL_REFUSED = 'Sending the briefing by e-mail is for the administrators.';

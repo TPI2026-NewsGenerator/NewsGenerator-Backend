@@ -41,7 +41,6 @@ describe('withMarks', () => {
             angles: [{title: 'Le Var sous la pluie', titleTranslation: 'La VAR au Nigeria'}],
             contested: [{sentence: 'Infantino dément.', translation: null}],
         }],
-        watched: [{term: 'VAR', count: 1, news: [{title: 'Un match', excerpt: '…la VAR a annulé…'}]}],
     };
 
     it('should give the places of the terms in each text the page shows, the texts without any left out', () => {
@@ -65,10 +64,6 @@ describe('withMarks', () => {
         const marked = withMarks(briefing, [fifa, 'VAR']);
         expect(marked.items[0].found).toEqual([{term: 'FIFA', qid: 'Q253414', angle: false}, {term: 'VAR', qid: null, angle: false}]);
         expect(marked.items[0].marks).toEqual(withMarks(briefing, ['FIFA', 'Infantino', 'VAR']).items[0].marks);
-    });
-
-    it('should mark the excerpts of the news of the terms followed', () => {
-        expect(withMarks(briefing, ['VAR']).watched[0].news[0].marks).toEqual({excerpt: [[4, 7]]});
     });
 
     it('should leave a briefing as it is when the profile follows no term, or there is none', () => {

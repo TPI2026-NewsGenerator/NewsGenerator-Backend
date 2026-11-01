@@ -30,7 +30,8 @@ export const BriefingModel = {
     // hours: of news it is written from, size: the cards asked for
     create: async (userId, profileId, hours, size) => prisma.briefings.create({data: {id_user: userId, id_profile: profileId, status: 'running', step: 'starting', hours, size}}),
 
-    // the news of the terms the profile follows (see watchedNews)
+    // the news of the terms the profile follows the reader was shown, noted on its last ready briefing for
+    // the directory (see BriefingService.following and DirectoryModel.usage)
     watched: async (id, watched) => prisma.briefings.update({where: {id}, data: {watched}}),
 
     // [{storyId, names}]: the cards of the ready briefings of a profile of the last days, the ones of a

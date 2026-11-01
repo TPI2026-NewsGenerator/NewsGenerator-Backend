@@ -3,7 +3,8 @@
 // briefing reads them: the window growing until each has LIMIT news wanted (100 by default, env LIMIT).
 // FIXED=0 skips the first part (the 30 days of a word of three letters take a minute). Read only
 import {prisma} from '../config/db.js';
-import {feedsOf, followedNews, watchedNews} from '../services/briefing-service.js';
+import {BriefingModel} from '../models/briefing-model.js';
+import {feedsOf, followedNews, followingNews, watchedNews} from '../services/briefing-service.js';
 import {EntityService} from '../services/entity-service.js';
 
 const profileId = Number(process.env.PROFILE_ID);
@@ -45,5 +46,15 @@ const groups = await followedNews(profileId, words, {feedUrls, limit});
 console.log(`\nas the briefing reads them, ${limit} news wanted: ${Date.now() - started} ms ${size(groups)}`);
 for (const group of groups) {
     console.log(`  ${group.qid ?? 'word'} ${group.term}: ${group.count} stories in ${group.hours / 24} days, ${group.news.length} listed`);
+}
+
+// and as the tab of the page asks for them (BriefingService.following): the profile's own words, the terms
+// marked; nothing is noted on its briefing here
+BriefingModel.watched = async () => {};
+const tab = Date.now();
+const answer = await followingNews(profileId, limit);
+console.log(`\nthe tab opened, ${limit} news wanted: ${Date.now() - tab} ms ${size(answer)}`);
+for (const group of answer.groups) {
+    console.log(`  ${group.qid ?? 'word'} ${group.term}: ${group.count} stories in ${group.hours / 24} days, ${group.news.length} listed, ${group.news.filter(news => news.marks?.title || news.marks?.excerpt).length} marked`);
 }
 process.exit(0);

@@ -97,13 +97,20 @@ export const BriefingController = {
         }
     },
 
-    // {hours, size, watchLimit}: a new briefing of the news of the last hours, of 'size' cards, each name or
-    // word the profile follows with 'watchLimit' news if the last 30 days have them, written in background:
-    // 202 with the briefing running, asked again until ready
+    // ?limit=10 to 100, by tens: the news of what the profile follows, read now, {limit, groups}
+    following: async (req, res) => {
+        try {
+            res.status(200).json(await BriefingService.following(req.profileId, req.query.limit === undefined ? undefined : Number(req.query.limit)));
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
+    // {hours, size}: a new briefing of the news of the last hours, of 'size' cards, written in
+    // background: 202 with the briefing running, asked again until ready
     start: async (req, res) => {
         try {
-            res.status(202).json({briefing: await BriefingService.start(req.user.id, req.profileId, req.body?.hours ?? undefined,
-                req.body?.size ?? undefined, req.body?.watchLimit ?? undefined)});
+            res.status(202).json({briefing: await BriefingService.start(req.user.id, req.profileId, req.body?.hours ?? undefined, req.body?.size ?? undefined)});
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});
         }

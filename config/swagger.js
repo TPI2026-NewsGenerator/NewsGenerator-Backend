@@ -880,11 +880,19 @@ const options = {
                 "post": {
                     "tags": ["Briefing"],
                     "summary": "Write a new briefing",
-                    "description": "In background: answers the briefing running, GET /briefing until its status is 'ready' or 'failed'. One at a time per user. A story already shown can be chosen again; two stories telling the same news are one card.\n\n`hours`: of news it is written from, 48 when not given. A briefing of 168 hours (the week) gives one card per affair followed over the days, and prefers the news told by several media.\n\n`watchLimit`: the news each name, word or item followed should have in the tab of what the profile follows, 100 when not given. Independent of `hours`: the search goes back 1, 2, 4, 8, 16 then 30 days, only for the names that do not have that many yet.",
+                    "description": "In background: answers the briefing running, GET /briefing until its status is 'ready' or 'failed'. One at a time per user. A story already shown can be chosen again; two stories telling the same news are one card.\n\n`hours`: of news it is written from, 48 when not given. A briefing of 168 hours (the week) gives one card per affair followed over the days, and prefers the news told by several media.",
                     "requestBody": {"required": false, "content": {"application/json": {"schema": {"type": "object", "properties": {
-                        "hours": {"type": "integer", "minimum": 24, "maximum": 168, "multipleOf": 24, "default": 48},
-                        "watchLimit": {"type": "integer", "minimum": 10, "maximum": 100, "multipleOf": 10, "default": 100}}}}}},
-                    "responses": {"202": {"description": "{briefing: Briefing} running"}, "400": {"description": "hours is not 1 to 7 days, or watchLimit is not 10 to 100 by tens"}}
+                        "hours": {"type": "integer", "minimum": 24, "maximum": 168, "multipleOf": 24, "default": 48}}}}}},
+                    "responses": {"202": {"description": "{briefing: Briefing} running"}, "400": {"description": "hours is not 1 to 7 days"}}
+                }
+            },
+            "/briefing/following": {
+                "get": {
+                    "tags": ["Briefing"],
+                    "summary": "The news of what the profile follows, read now",
+                    "description": "The tab of what the profile follows, searched when it is opened and not part of a briefing: the items of Wikidata in its briefing and the names or words as written, from every feed, with no relevance. `limit`: the news each should have, 100 when not given. The search goes back 1, 2, 4, 8, 16 then 30 days, only for the names that do not have that many yet; each group tells the `hours` it was last read over. Kept 10 minutes.",
+                    "parameters": [{"name": "limit", "in": "query", "schema": {"type": "integer", "minimum": 10, "maximum": 100, "multipleOf": 10, "default": 100}}],
+                    "responses": {"200": {"description": "{limit, groups: [{term, qid, count, hours, limit, news: [{storyId, title, url, source, language, publishedAt, media, excerpt, marks}]}]}"}, "400": {"description": "limit is not 10 to 100 by tens"}}
                 }
             },
             "/briefing/{id}/vote": {

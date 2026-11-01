@@ -2,9 +2,9 @@
 
 What a profile follows, in one list and one page (`/following`, `/api/entities`, `services/entity-service.js`):
 items of Wikidata (a club, a person, an organisation, 30 at most) and names or words as written (20 at most).
-The news naming one, from every feed and with no relevance, are in the briefing, in a tab of its own, as many
-as the reader wants for each (10 to 100) going back up to 30 days to find them, not only the window of the
-briefing: the news of an item by the names the tagger found in them and the ones it linked to the item, in any
+The news naming one, from every feed and with no relevance, are in the tab "Following" of the briefing page,
+searched when it is opened (not part of the briefing), as many as the reader wants for each (10 to 100) going
+back up to 30 days to find them: the news of an item by the names the tagger found in them and the ones it linked to the item, in any
 language; the news of a word by their text. Each card of a briefing also shows the people and organisations it
 is about, each opening its page, and the names met card after card are suggested.
 
