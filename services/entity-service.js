@@ -24,6 +24,7 @@ import {readerLanguage} from "./utils/language.js";
 import {Filter} from "./utils/filter.js";
 import {cleanWatchTerms} from "./utils/watch-terms.js";
 import {mayName} from "./utils/name-prefilter.js";
+import {holdsTheme, themeOf} from "./utils/profile-theme.js";
 import {namesOfCards, shortName, suggestedNames} from "./utils/card-names.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {memo} from "./utils/memo.js";
@@ -83,6 +84,29 @@ const waitOf = (err) => Math.min(Math.max(err?.retryIn ?? 30e3, 2e3), 120e3);
 export const dominantOf = (items) => {
     const [first, second] = [...items].sort((a, b) => b.links - a.links);
     return first && first.links >= PERSON_SITELINKS && first.links >= SITELINKS_AHEAD * (second?.links ?? 0) ? first.qid : null;
+};
+
+// Of namesakes none of which stands out, the one of the theme of the profile (see profile-theme.js): the only one
+// whose description holds a word of it ("Spanish football manager" for a profile of football), or the one that
+// stands out among those that do; not when another is far ahead of it in Wikipedias, a footballer who has a famous
+// namesake of another trade is left to the reader. candidates: [{qid, description}], called what the reader wrote;
+// weight: Map qid -> Wikipedias. {item, word} or null
+const themedOf = (candidates, weight, theme) => {
+    const themed = candidates.filter(item => weight.has(item.qid) && holdsTheme(theme, item.description));
+    const [item] = themed.length === 1 ? themed
+        : themed.filter(candidate => candidate.qid === dominantOf(themed.map(found => ({qid: found.qid, links: weight.get(found.qid)}))));
+    const best = Math.max(0, ...weight.values());
+    return item && SITELINKS_AHEAD * weight.get(item.qid) >= best ? {item, word: holdsTheme(theme, item.description)} : null;
+};
+
+// the theme of a profile; none when its interests cannot be read, the doubts are then left to the reader
+const themeOfProfile = async (profileId) => {
+    try {
+        return themeOf(await ProfileModel.interests(profileId));
+    } catch (err) {
+        console.error(`Entities: the theme of the profile ${profileId} not read (${err.message})`);
+        return [];
+    }
 };
 
 const fail = (status, message) => Object.assign(new Error(message), {status});
@@ -302,8 +326,10 @@ export const EntityService = {
     // - 'linked': Wikidata has one item for it, item {qid, label, description} (the ones called exactly so, then
     //   the ones named so at the start; the pages of a family or given name left aside); or several and one
     //   stands out by far, in Wikipedias (see dominantOf), and is called with that name, told by famous: true;
-    // - 'choose': several and none stands out, items [..] (8 at most, the best known in Wikipedias first, the ones
-    //   found only by an alias counting half): the reader says which, or none;
+    //   or none stands out and one, called so, is of the theme of the profile (the only one whose description holds a
+    //   word of its interests, "football"; not when another is 3 times better known), told by themed: that word;
+    // - 'choose': several and none stands out, items [..] (8 at most, the ones of the theme of the profile first, then
+    //   the best known in Wikipedias, the ones found only by an alias counting half): the reader says which, or none;
     // - 'word': none, to follow as written;
     // - 'invalid': 2 to 60 characters are a name.
     // 'names': CHECK_MAX at most a request. The answer tells the first names, at least one: the ones left when
@@ -372,6 +398,7 @@ export const EntityService = {
         if (entries.length === 0) {
             throw Object.assign(fail(502, 'Wikidata could not be searched, try again in a moment.'), {retryIn: retryIn ?? waitOf(null)});
         }
+        const theme = qids.length > 0 ? await themeOfProfile(profileId) : [];
         const results = entries.map(({pool, ...entry}) => {
             if (!pool) return entry;
             // it must be called what the reader wrote, not only known by it: "LFF" is an alias of a league of Lithuania
@@ -382,10 +409,14 @@ export const EntityService = {
             const weighed = pool.filter(item => links.has(item.qid)).map(item => ({qid: item.qid, links: links.get(item.qid) * (called(item) ? 1 : 0.5)}));
             const standing = dominantOf(weighed);
             const item = pool.find(candidate => candidate.qid === standing && called(candidate));
-            // the ones to choose from, the best known first
+            if (item) return {...entry, status: 'linked', item, famous: true};
+            // none stands out: the one of the theme of the profile, if there is one
             const weight = new Map(weighed.map(found => [found.qid, found.links]));
-            return item ? {...entry, status: 'linked', item, famous: true}
-                : {...entry, items: [...pool].sort((a, b) => (weight.get(b.qid) ?? 0) - (weight.get(a.qid) ?? 0)).slice(0, CHOICES_MAX)};
+            const themed = themedOf(pool.filter(called), weight, theme);
+            if (themed) return {...entry, status: 'linked', item: themed.item, themed: themed.word};
+            // the ones to choose from, the ones of the theme first, the best known first
+            const ofTheme = (candidate) => holdsTheme(theme, candidate.description) ? 1 : 0;
+            return {...entry, items: [...pool].sort((a, b) => ofTheme(b) - ofTheme(a) || (weight.get(b.qid) ?? 0) - (weight.get(a.qid) ?? 0)).slice(0, CHOICES_MAX)};
         });
         return retryIn === null ? {results} : {results, retryIn};
     },

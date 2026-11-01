@@ -20,7 +20,7 @@ const untaggedArticles = jest.fn(async () => []);
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 jest.unstable_mockModule('../../models/entity-model.js', () => ({EntityModel}));
 jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {articlesHolding, untaggedArticles}}));
-const ProfileModel = {get: jest.fn(), setWatchTerms: jest.fn()};
+const ProfileModel = {get: jest.fn(), setWatchTerms: jest.fn(), interests: jest.fn(async () => [])};
 const BriefingModel = {recentCards: jest.fn(async () => [])};
 jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel}));
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel}));
@@ -74,6 +74,7 @@ beforeEach(() => {
     readItem.mockReset();
     ProfileModel.get.mockReset().mockResolvedValue({text: 'Le football', languages: ['fr'], watch_terms: []});
     ProfileModel.setWatchTerms.mockClear();
+    ProfileModel.interests.mockReset().mockResolvedValue([]);
 });
 
 describe('the names of an item of Wikidata', () => {
@@ -424,6 +425,75 @@ describe('a list of names followed at once', () => {
         const league = await EntityService.checkNames(8, ['LFF']);
         expect(league.results[0]).toMatchObject({status: 'choose'});
         expect(league.results[0].items.map(item => item.qid)).toEqual(['Q209008', 'Q7']);
+    });
+
+    describe('namesakes, none of which stands out, for a profile with a theme', () => {
+        const football = [
+            {text: 'Football governance: UEFA and its associations', keywords: 'football governance, UEFA governance, football federation election'},
+            {text: 'Refereeing: VAR, Laws of the Game', keywords: 'football refereeing, VAR technology, football referee appointment'},
+        ];
+        const ask = async (candidates, links, name = 'Michael Oliver') => {
+            candidatesFor.mockResolvedValue({exact: candidates, others: []});
+            describeItems.mockImplementation(async (qids) => qids.filter(qid => qid in links).map(qid => ({qid, label: name, description: '', links: links[qid]})));
+            return (await EntityService.checkNames(8, [name])).results[0];
+        };
+        const referee = found('Q1', 'Michael Oliver', 'English association football referee');
+        const actor = found('Q2', 'Michael Oliver', 'American actor');
+        const academic = found('Q3', 'Michael Oliver', 'academic');
+
+        it('should link the only one whose description holds the theme, and say which word', async () => {
+            ProfileModel.interests.mockResolvedValue(football);
+            const result = await ask([actor, referee, academic], {Q1: 20, Q2: 22, Q3: 20});
+            expect(result).toMatchObject({status: 'linked', item: {qid: 'Q1'}, themed: 'football'});
+            expect(result.famous).toBeUndefined();
+        });
+
+        it('should leave the choice to the reader, the ones of the theme first, when the profile has none or its interests cannot be read', async () => {
+            const noTheme = await ask([actor, referee, academic], {Q1: 20, Q2: 22, Q3: 20});
+            expect(noTheme.status).toBe('choose');
+            expect(noTheme.items.map(item => item.qid)).toEqual(['Q2', 'Q1', 'Q3']);
+            const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+            ProfileModel.interests.mockRejectedValue(new Error('database down'));
+            forgetLookups();
+            expect((await ask([actor, referee, academic], {Q1: 20, Q2: 22, Q3: 20})).status).toBe('choose');
+            spy.mockRestore();
+
+            // with a theme and none of them of it, the best known first as before
+            ProfileModel.interests.mockReset().mockResolvedValue(football);
+            forgetLookups();
+            const none = await ask([actor, academic], {Q2: 22, Q3: 20});
+            expect(none.status).toBe('choose');
+            expect(none.items.map(item => item.qid)).toEqual(['Q2', 'Q3']);
+        });
+
+        it('should put the ones of the theme first when several are, and link the one that stands out among them', async () => {
+            ProfileModel.interests.mockResolvedValue(football);
+            const player = found('Q4', 'Michael Oliver', 'English footballer');
+            const level = await ask([actor, referee, player], {Q1: 20, Q2: 25, Q4: 18});
+            expect(level.status).toBe('choose');
+            expect(level.items.map(item => item.qid)).toEqual(['Q1', 'Q4', 'Q2']);
+
+            forgetLookups();
+            const ahead = await ask([actor, referee, player], {Q1: 60, Q2: 70, Q4: 18});
+            expect(ahead).toMatchObject({status: 'linked', item: {qid: 'Q1'}, themed: 'football'});
+        });
+
+        it('should not link one of the theme when another is far ahead of it in Wikipedias, nor one only an alias of the name', async () => {
+            ProfileModel.interests.mockResolvedValue(football);
+            // a referee in 10 Wikipedias against namesakes in 40 and 35: 3 times 10 is less than 40, the reader says
+            const far = await ask([actor, referee, academic], {Q1: 10, Q2: 40, Q3: 35});
+            expect(far.status).toBe('choose');
+            expect(far.items.map(item => item.qid)).toEqual(['Q1', 'Q2', 'Q3']);
+
+            forgetLookups();
+            // a footballer who has the name as an alias, called otherwise: it is not him
+            const alias = found('Q5', 'Néstor Gorosito', 'Argentine football manager');
+            candidatesFor.mockResolvedValue({exact: [actor, academic], others: [alias]});
+            describeItems.mockImplementation(async (qids) => [{qid: 'Q2', links: 22}, {qid: 'Q3', links: 20}, {qid: 'Q5', links: 49}]
+                .filter(item => qids.includes(item.qid)).map(item => ({...item, label: item.qid, description: ''})));
+            const named = (await EntityService.checkNames(8, ['Michael Oliver'])).results[0];
+            expect(named.status).toBe('choose');
+        });
     });
 
     it('should stop looking after the time it has, telling the first names only, at least one, for the client to ask the others', async () => {
