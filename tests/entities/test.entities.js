@@ -386,11 +386,14 @@ describe('a list of names followed at once', () => {
             'Michael Oliver': {exact: [found('Q1', 'Michael Oliver', 'referee'), found('Q2', 'Michael Oliver', 'actor')], others: []},
             'Paris': {exact: [found('Q90', 'Paris'), found('Q3', 'Paris')], others: []},
             'Lise Klaveness': {exact: [], others: [found('Q5', 'Lise Klaveness')]},
+            // the coach, and a player who has his name as an alias, half as well known: the coach is called so
+            'Pep Guardiola': {exact: [found('Q164038', 'Pep Guardiola', 'coach'), found('Q696463', 'Néstor Gorosito', 'player'), found('Q122854683', 'Ariel Galeano', 'manager')],
+                others: [found('Q121980853', 'Pep Guardiola: první rok v Mnichově', 'book edition'), found('Q124354328', 'Pep Guardiola został wybrany najlepszym trenerem')]},
             // an acronym that is the alias of a league far ahead of the others: not its name, the reader chooses
             'LFF': {exact: [found('Q209008', 'First League'), found('Q7', 'Liburnia Film Festival')], others: []},
         }[name] ?? {exact: [], others: []}));
         // the Wikipedias each item is in: the club of Madrid far ahead of the Argentine one, Paris of the others, the namesakes level
-        const inWikipedias = {Q2469894: 2, Q8682: 200, Q90: 300, Q3: 20, Q1: 25, Q2: 22, Q209008: 40, Q7: 5};
+        const inWikipedias = {Q2469894: 2, Q8682: 200, Q90: 300, Q3: 20, Q1: 25, Q2: 22, Q209008: 40, Q7: 5, Q164038: 95, Q696463: 49, Q122854683: 3, Q121980853: 0, Q124354328: 1};
         describeItems.mockImplementation(async (qids) => qids.filter(qid => qid in inWikipedias).map(qid => ({qid, label: qid, description: '', links: inWikipedias[qid]})));
 
         const {results} = await EntityService.checkNames(8, ['psg', 'var', 'x', 'Gianni Infantino', 'Real Madrid', 'Michael Oliver', 'Paris', 'Lise Klaveness', 'Vadims Ļašenko']);
@@ -402,7 +405,7 @@ describe('a list of names followed at once', () => {
         // the item that stands out settles it, whatever the one called exactly so: the club of Madrid, not the Argentine one
         expect(results[4]).toMatchObject({item: {qid: 'Q8682'}, famous: true});
         expect(results[3].famous).toBeUndefined();
-        // several of the same weight: the reader chooses, the ones called so first
+        // several of the same weight: the reader chooses, the best known first
         expect(results[5].items.map(item => item.qid)).toEqual(['Q1', 'Q2']);
         // looked for in the language of the profile
         expect(candidatesFor).toHaveBeenCalledWith('Gianni Infantino', 'fr');
@@ -412,6 +415,9 @@ describe('a list of names followed at once', () => {
         expect(describeItems).toHaveBeenCalledTimes(1);
         expect(describeItems.mock.calls[0][0]).toEqual(expect.arrayContaining(['Q2469894', 'Q8682', 'Q1', 'Q2', 'Q90', 'Q3']));
 
+        // the coach far ahead of the books and of a player who has his name as an alias (95 against 49 and 0): linked
+        const coach = await EntityService.checkNames(8, ['Pep Guardiola']);
+        expect(coach.results[0]).toMatchObject({status: 'linked', famous: true, item: {qid: 'Q164038'}});
         // far ahead in Wikipedias but not called "LFF": left to the reader
         const league = await EntityService.checkNames(8, ['LFF']);
         expect(league.results[0]).toMatchObject({status: 'choose'});

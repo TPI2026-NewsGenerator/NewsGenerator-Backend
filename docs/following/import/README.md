@@ -30,10 +30,12 @@ and none stands out, and the others are followed as written. A profile follows 3
    - `linked`: one item in all, or several and one stands out: in at least 10 Wikipedias and 3 times more than any
      other, **and called with that name** (`dominantOf`: "Kylian Mbappé" among a book and a character, "Paris" the
      capital; not "LFF", the alias of a league of Lithuania far ahead of the others, nor "Real Madrid" when a
-     basketball section is close). The Wikipedias of the items of all the doubts of a lot are counted together,
-     50 items a call;
+     basketball section is close). An item found only by an alias, not called with the name, counts for half its
+     Wikipedias against the others: "Pep Guardiola" (95 Wikipedias) was asked about because Néstor Gorosito (49)
+     has it as an alias, and 95 is not 3 times 49. The Wikipedias of the items of all the doubts of a lot are
+     counted together, 50 items a call;
    - `choose`: several, none stands out ("Michael Oliver": a referee, an actor, an academic). The items are listed,
-     8 at most, the ones called exactly so first.
+     8 at most, the best known in Wikipedias first.
 3. **Review.** The counts, the names to choose (a radio list of each, "None of these: follow it as written" by
    default, a button "Pick the first of each"), the ones linked automatically in a list to check, and the room
    left: past 300 the clubs, people and organisations come first, the others are left out.

@@ -285,8 +285,8 @@ export const EntityService = {
     // - 'linked': Wikidata has one item for it, item {qid, label, description} (the ones called exactly so, then
     //   the ones named so at the start; the pages of a family or given name left aside); or several and one
     //   stands out by far, in Wikipedias (see dominantOf), and is called with that name, told by famous: true;
-    // - 'choose': several and none stands out, items [..] (8 at most, the ones called exactly so first, then in
-    //   Wikidata's order): the reader says which, or none;
+    // - 'choose': several and none stands out, items [..] (8 at most, the best known in Wikipedias first, the ones
+    //   found only by an alias counting half): the reader says which, or none;
     // - 'word': none, to follow as written;
     // - 'invalid': 2 to 60 characters are a name.
     // 'names': CHECK_MAX at most a request
@@ -334,11 +334,18 @@ export const EntityService = {
         }
         const results = entries.map(({pool, ...entry}) => {
             if (!pool) return entry;
-            const standing = dominantOf(pool.filter(item => links.has(item.qid)).map(item => ({qid: item.qid, links: links.get(item.qid)})));
             // it must be called what the reader wrote, not only known by it: "LFF" is an alias of a league of Lithuania
-            // far ahead of the others in Wikipedias, and no name of it
-            const item = pool.find(candidate => candidate.qid === standing && mentionKey(candidate.label).includes(mentionKey(entry.name)));
-            return item ? {...entry, status: 'linked', item, famous: true} : {...entry, items: pool.slice(0, CHOICES_MAX)};
+            // far ahead of the others in Wikipedias, and no name of it. An item found only by an alias counts for half
+            // its Wikipedias against the others: "Pep Guardiola" (95) is an alias of Néstor Gorosito (49), called
+            // otherwise, and must not stand in the way of the coach
+            const called = (item) => mentionKey(item.label).includes(mentionKey(entry.name));
+            const weighed = pool.filter(item => links.has(item.qid)).map(item => ({qid: item.qid, links: links.get(item.qid) * (called(item) ? 1 : 0.5)}));
+            const standing = dominantOf(weighed);
+            const item = pool.find(candidate => candidate.qid === standing && called(candidate));
+            // the ones to choose from, the best known first
+            const weight = new Map(weighed.map(found => [found.qid, found.links]));
+            return item ? {...entry, status: 'linked', item, famous: true}
+                : {...entry, items: [...pool].sort((a, b) => (weight.get(b.qid) ?? 0) - (weight.get(a.qid) ?? 0)).slice(0, CHOICES_MAX)};
         });
         return {results};
     },
