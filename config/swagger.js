@@ -732,7 +732,7 @@ const options = {
                     },
                     "responses": {
                         "200": {
-                            "description": "{translations: [{url, language, title, description}]}: only the news with a translation; language is the one they are written in, description null when not asked or not translated."
+                            "description": "{translations: [{url, language, title, description}]}: only the news with a translation; language is the one they are written in, description null when not asked or not translated. Then, for each passage asked in `excerpts` [{url, text}] (the words of a description around a name followed, with the dots at its ends, 30 at most) that is in the description of that news and is written in another language: {url, text, language, excerpt}, the translation with the same dots."
                         },
                         "400": {"description": "No url, too many, an url not found in the news cache, or an unknown language"},
                         "403": {"description": "Invalid or expired token"}

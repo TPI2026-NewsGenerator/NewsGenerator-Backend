@@ -937,17 +937,27 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
 // relevance, from every feed (the ones the thumbs left out too): the reader asked for all of them. One
 // line per story, its newest news, with how many media told it, the 'limit' newest kept (the reader's
 // choice since 1.11.2026, 100 by default as the user chose on 8.10.2026), all counted over the window.
-// [{term, count, news: [{storyId, title, url, link, source, language, publishedAt, media, excerpt}]}]
+// [{term, count, news: [{storyId, title, url, link, source, language, publishedAt, media, excerpt}]}], excerpt:
+// the words of its description (see excerptOf)
 const WATCHED_PER_TERM = 100;
 
-// The words of the description around the term, when the title does not name it: the line would not
-// say why it is there. null when the title names it, or the description does not
+// The words of the description a line shows (the user, 2.11.2026: every description, not only the ones that
+// say why the news is there): around the term when the description names it, whether the title does or not;
+// else its beginning. null without a description, or when it only repeats the title. A passage of the
+// description as it is, cut between two words, "…" where it is cut: what the translation of the line is
+// asked for, and checked against (see NewsService.translateNews)
 const EXCERPT_BEFORE = 90;
 const EXCERPT_AFTER = 110;
+const EXCERPT_FIRST = 200;
+const plain = (text) => String(text ?? '').toLowerCase().replace(/\s+/g, ' ').replace(/[\s.!?:;…]+$/, '').trim();
 export const excerptOf = (title, description, term) => {
-    if (!description || Filter.highlights(title, [term]).length > 0) return null;
+    if (!description || !description.trim() || plain(description) === plain(title)) return null;
     const [first] = Filter.highlights(description, [term]);
-    if (!first) return null;
+    if (!first) {
+        if (description.trim().length <= EXCERPT_FIRST) return description.trim();
+        const end = description.lastIndexOf(' ', EXCERPT_FIRST);
+        return `${description.slice(0, end > 0 ? end : EXCERPT_FIRST).trim()}…`;
+    }
     let start = Math.max(0, first[0] - EXCERPT_BEFORE);
     let end = Math.min(description.length, first[1] + EXCERPT_AFTER);
     // cut between two words

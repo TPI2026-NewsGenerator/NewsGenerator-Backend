@@ -74,14 +74,18 @@ also has a page of its own with its news, and the names met card after card are 
     whole word read as written: the tagger meets "VAR" in a quarter of its news and under three kinds (a place, a
     body, a person), and its key forgets the capitals; with the names the tagger never met, 30 words at most, in
     lots of 10, 3 lots at once. A generic word beyond them is searched by the tagger's names.
-- **Translated.** A news written in another language than the reader's has its title translated when its row
-  comes near the screen (`useTranslation` and `createTranslator` of the search, `POST /api/news/translations`,
-  `NewsService.translateNews`: the AI translates cached articles only, 20 titles a call, the translations kept in
-  memory), shown marked "translated from German" with the title as written under it in italics, the terms
-  marked there. The rows are asked by the `link` of each news (the address of the feed; the `url` shown can be
-  the decoded address of a Google News link, which the cache does not know). Titles only: the excerpt around
-  the term stays as written. Measured for the profile following Čeferin (reader in English): the first 8 news,
-  in 5 languages, translated in 2.2 s. Only the rows shown are asked ("show the N others" asks the rest).
+- **Translated.** A news written in another language than the reader's has its title, and the words of its
+  description a row shows (the excerpt: around the name when the description names it, else its beginning; none
+  when it only repeats the title), translated when
+  its row comes near the screen (`useTranslation` and `createTranslator` of the search, `POST /api/news/translations`,
+  `NewsService.translateNews`: the AI translates cached articles only, 20 texts a call, the translations kept in
+  memory), shown marked "translated from German" with the title and the words as written under them in italics,
+  the terms marked there. The rows are asked by the `link` of each news (the address of the feed; the `url` shown
+  can be the decoded address of a Google News link, which the cache does not know). The excerpt is asked as the
+  page shows it (`excerpts: [{url, text}]`, its "…" at the ends kept): the server translates it only when it is a
+  passage of the description of that news, so the AI is still no translator for any text. Measured for the profile
+  following Čeferin (reader in English): the first 8 news, in 5 languages, 2.2 s for the titles, and 8 excerpts
+  in 3.3 s. Only the rows shown are asked ("show the N others" asks the rest).
 - **Noted for the directory.** The directory takes out the feeds that serve no reader, and a medium shown in a
   briefing of the last 14 days serves one (`DirectoryModel.usage`, which reads `briefings.watched`). The news
   shown in the tab are written to `briefings.watched` of the last ready briefing of the profile

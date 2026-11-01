@@ -13,6 +13,8 @@ import {FeedService} from '../services/feed-service.js';
 // the cards and the facts of their affairs translated in one request, as the reader reaches them
 const MAX_TRANSLATED_NEWS = 30;
 const MAX_TRANSLATED_TITLES = 60;
+const MAX_TRANSLATED_EXCERPTS = 30;
+const MAX_EXCERPT_LENGTH = 500;
 
 export const NewsController = {
     getNews: async (req, res) => {
@@ -94,20 +96,23 @@ export const NewsController = {
         });
     },
 
-    // body: {news: [url], titles: [url], language}: the cards the reader reaches, their title and
-    // description translated, and the facts of their affairs, their title only
+    // body: {news: [url], titles: [url], excerpts: [{url, text}], language}: the cards the reader reaches, their
+    // title and description translated, and the facts of their affairs, their title only; the words of a
+    // description around a name followed (what the page of what a profile follows shows)
     translateNews: async (req, res) => {
-        const {news = [], titles = [], language} = req.body;
+        const {news = [], titles = [], excerpts = [], language} = req.body;
         const urls = (list, max) => Array.isArray(list) && list.length <= max && list.every(url => typeof url === 'string');
-        if (!urls(news, MAX_TRANSLATED_NEWS) || !urls(titles, MAX_TRANSLATED_TITLES) || news.length + titles.length === 0) {
-            return res.status(400).json({error: `Up to ${MAX_TRANSLATED_NEWS} news and ${MAX_TRANSLATED_TITLES} titles at once.`});
+        const passages = Array.isArray(excerpts) && excerpts.length <= MAX_TRANSLATED_EXCERPTS
+            && excerpts.every(excerpt => typeof excerpt?.url === 'string' && typeof excerpt?.text === 'string' && excerpt.text.length <= MAX_EXCERPT_LENGTH);
+        if (!urls(news, MAX_TRANSLATED_NEWS) || !urls(titles, MAX_TRANSLATED_TITLES) || !passages || news.length + titles.length + excerpts.length === 0) {
+            return res.status(400).json({error: `Up to ${MAX_TRANSLATED_NEWS} news, ${MAX_TRANSLATED_TITLES} titles and ${MAX_TRANSLATED_EXCERPTS} passages at once.`});
         }
         if (typeof language !== 'string' || !FeedService.languages().includes(language)) {
             return res.status(400).json({error: `Unknown language: ${language}`});
         }
 
         try {
-            res.status(200).json({translations: await NewsService.translateNews({news, titles, language})});
+            res.status(200).json({translations: await NewsService.translateNews({news, titles, excerpts, language})});
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? error});
         }

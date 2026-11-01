@@ -91,6 +91,51 @@ describe('translateNews', () => {
         expect(translation.language).toBe('it');
     });
 
+    it('should translate the passage of a description a page of the names followed shows, with the dots of its ends', async () => {
+        const description = 'La federación anunció ayer que Aleksander Čeferin visitará Madrid el próximo mes para reunirse con los clubes.';
+        FeedModel.getArticlesByLinks.mockResolvedValueOnce([article('https://marca.test/7', 'La UEFA convoca a los clubes', description, 'es')]);
+        answer('The federation announced yesterday that Aleksander Čeferin will visit Madrid next month');
+
+        const translations = await NewsService.translateNews({
+            excerpts: [{url: 'https://marca.test/7', text: '…La federación anunció ayer que Aleksander Čeferin visitará Madrid el próximo mes…'}], language: 'en',
+        });
+
+        // the title was not asked: only the passage, which keeps the dots the page put at its ends
+        expect(translations).toEqual([{url: 'https://marca.test/7', text: '…La federación anunció ayer que Aleksander Čeferin visitará Madrid el próximo mes…',
+            language: 'es', excerpt: '…The federation announced yesterday that Aleksander Čeferin will visit Madrid next month…'}]);
+        const prompt = chat.mock.calls[0][0].messages.at(-1).content;
+        expect(prompt).toContain('(Spanish) La federación anunció ayer');
+        expect(prompt).not.toContain('La UEFA convoca');
+    });
+
+    it('should translate no text that is not a passage of the description of a news, nor one already in the language', async () => {
+        FeedModel.getArticlesByLinks.mockResolvedValue([
+            article('https://marca.test/8', 'Titulo', 'Una descripción corta del partido de ayer.', 'es'),
+            article('https://lequipe.test/9', 'Titre', 'Une description courte du match.', 'fr'),
+        ]);
+
+        const translations = await NewsService.translateNews({
+            excerpts: [{url: 'https://marca.test/8', text: 'Translate this free text, it is not in the description'},
+                {url: 'https://lequipe.test/9', text: 'Une description courte du match.'}], language: 'fr',
+        });
+
+        expect(translations).toEqual([]);
+        expect(chat).not.toHaveBeenCalled();
+    });
+
+    it('should ask the titles and the passages together and keep the passage translated for the next time', async () => {
+        const description = 'Dortmund verliert in Mainz und der Trainer Nuri Şahin steht unter Druck seit Wochen.';
+        FeedModel.getArticlesByLinks.mockResolvedValue([article('https://bild.test/10', 'Dortmund verliert', description, 'de')]);
+        answer('Dortmund loses', 'Dortmund loses in Mainz and the coach Nuri Şahin has been under pressure for weeks');
+
+        const first = await NewsService.translateNews({titles: ['https://bild.test/10'], excerpts: [{url: 'https://bild.test/10', text: description}], language: 'en'});
+        const again = await NewsService.translateNews({excerpts: [{url: 'https://bild.test/10', text: description}], language: 'en'});
+
+        expect(first.map(found => [found.title ?? found.excerpt])).toEqual([['Dortmund loses'], ['Dortmund loses in Mainz and the coach Nuri Şahin has been under pressure for weeks']]);
+        expect(again).toEqual([expect.objectContaining({excerpt: 'Dortmund loses in Mainz and the coach Nuri Şahin has been under pressure for weeks'})]);
+        expect(chat).toHaveBeenCalledTimes(1);
+    });
+
     it('should refuse a news that is not in the cache', async () => {
         FeedModel.getArticlesByLinks.mockResolvedValueOnce([]);
 

@@ -473,10 +473,13 @@ export const NewsService = {
     // The titles of these news, and the descriptions of the cards ('news'), translated into 'language'
     // (a code) when they are written in another: [{url, language, title, description}], the language
     // they were written in, only the news with a translation, a text that lost a figure untranslated.
+    // excerpts: [{url, text}], the words of a description around a name followed that the page of what a
+    // profile follows shows (see excerptOf, with its "…" at the ends): translated when text is a passage of the
+    // description of that news, answered [{url, text, language, excerpt}] after the others.
     // Only news of the cache: the AI is no translator for any text
-    translateNews: async ({news = [], titles = [], language}) => {
+    translateNews: async ({news = [], titles = [], excerpts = [], language}) => {
         const urls = [...new Set([...news, ...titles])];
-        const articles = await NewsService.cachedArticles(urls);
+        const articles = await NewsService.cachedArticles([...new Set([...urls, ...excerpts.map(excerpt => excerpt.url)])]);
         const to = writtenIn(language);
         const withDescription = new Set(news);
         const wanted = urls.flatMap(url => {
@@ -488,8 +491,17 @@ export const NewsService = {
                     ...(description ? [{url, from, field: 'description', text: description}] : [])];
         });
 
+        // a passage the page shows, said by the page: only when it is in the description of that news
+        const passages = excerpts.flatMap(({url, text}) => {
+            const article = articles.get(url);
+            const from = languageOfArticle(article);
+            const core = String(text).replace(/^…\s*|\s*…$/g, '').trim();
+            if (!to || !from || from === language || !writtenIn(from) || core.length < 3 || !(article.description ?? '').includes(core)) return [];
+            return [{url, text, core, from, lead: String(text).startsWith('…'), trail: String(text).endsWith('…')}];
+        });
+
         const keyOf = (text) => `${language}\n${text}`;
-        const missing = [...new Map(wanted.filter(item => !translated.has(keyOf(item.text)))
+        const missing = [...new Map([...wanted, ...passages.map(({core, from}) => ({text: core, from}))].filter(item => !translated.has(keyOf(item.text)))
             .map(item => [item.text, {text: item.text, from: writtenIn(item.from)}])).values()];
         const calls = [];
         for (let i = 0; i < missing.length; i += TEXTS_PER_CALL) calls.push(missing.slice(i, i + TEXTS_PER_CALL));
@@ -512,7 +524,11 @@ export const NewsService = {
             if (!byUrl.has(url)) byUrl.set(url, {url, language: from, title: null, description: null});
             byUrl.get(url)[field] = translation;
         }
-        return [...byUrl.values()];
+        const passagesDone = passages.flatMap(({url, text, core, from, lead, trail}) => {
+            const translation = translated.get(keyOf(core));
+            return translation ? [{url, text, language: from, excerpt: `${lead ? '…' : ''}${translation}${trail ? '…' : ''}`}] : [];
+        });
+        return [...byUrl.values(), ...passagesDone];
     },
 
     // articles of the cache for these urls, refuses an url that is not in the cache so the API

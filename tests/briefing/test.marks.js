@@ -23,10 +23,30 @@ describe('excerptOf', () => {
         expect(excerpt.length).toBeLessThan(230);
     });
 
-    it('should give none when the title names the term, or the description does not', () => {
-        expect(excerptOf('La VAR annule le but', 'La VAR a annulé le but.', 'VAR')).toBeNull();
-        expect(excerptOf('Un match nul', 'Rien à signaler.', 'VAR')).toBeNull();
+    it('should give the description whether the title names the term or not', () => {
+        expect(excerptOf('La VAR annule le but', 'La VAR a annulé le but de Lens à la 80e minute.', 'VAR')).toBe('La VAR a annulé le but de Lens à la 80e minute.');
+        const long = `${'Le match a commencé sous la pluie devant un public nombreux. '.repeat(4)}Puis la VAR a annulé le but. ${'Fin. '.repeat(30)}`;
+        const excerpt = excerptOf('La VAR annule le but', long, 'VAR');
+        expect(excerpt).toContain('la VAR a annulé le but');
+        expect(excerpt.length).toBeLessThan(230);
+    });
+
+    it('should give the beginning of the description when it does not name the term, cut between two words', () => {
+        expect(excerptOf('Un match nul', 'Rien à signaler.', 'VAR')).toBe('Rien à signaler.');
+        const description = 'Le match a commencé sous la pluie devant un public nombreux et bruyant, les deux équipes prudentes. '.repeat(5);
+        const excerpt = excerptOf('Un match nul', description, 'VAR');
+        expect(excerpt.startsWith('Le match a commencé')).toBe(true);
+        expect(excerpt).toMatch(/\S…$/);
+        expect(excerpt.length).toBeLessThanOrEqual(201);
+        // a passage of the description as it is: what a translation of the line is checked against
+        expect(description).toContain(excerpt.replace(/…$/, ''));
+    });
+
+    it('should give none without a description, or when it only repeats the title', () => {
         expect(excerptOf('Un match nul', null, 'VAR')).toBeNull();
+        expect(excerptOf('Un match nul', '   ', 'VAR')).toBeNull();
+        expect(excerptOf('La VAR annule le but', 'La VAR annule le but.', 'VAR')).toBeNull();
+        expect(excerptOf('La VAR annule le but !', '  la var   annule le but', 'VAR')).toBeNull();
     });
 
     it('should keep a short description whole', () => {
