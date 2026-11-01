@@ -57,6 +57,10 @@ const SUGGESTED_READ = 40;
 // answers one call every 0.4 s whoever asks, 300 names are two minutes), then followed in one request
 const CHECK_MAX = 10;
 const CHOICES_MAX = 8;
+// A request ends after this long even with names left: behind the server stand Caddy and the tunnel of
+// Cloudflare, which answer with a page of HTML after about 100 s (524), and a name takes up to 30 s when Wikidata
+// is slow (two searches of 15 s). The answer tells the first names only, the client asks the others again
+const CHECK_BUDGET_MS = 30e3;
 
 // Of several items a name may be, the one that stands out: in at least PERSON_SITELINKS Wikipedias and in
 // SITELINKS_AHEAD times more than any other, whatever it is (a person, a club, a place); null when none does.
@@ -289,8 +293,9 @@ export const EntityService = {
     //   found only by an alias counting half): the reader says which, or none;
     // - 'word': none, to follow as written;
     // - 'invalid': 2 to 60 characters are a name.
-    // 'names': CHECK_MAX at most a request
-    checkNames: async (profileId, names) => {
+    // 'names': CHECK_MAX at most a request; the ones left when the request has taken CHECK_BUDGET_MS are not
+    // looked for: the results are those of the first names, at least one
+    checkNames: async (profileId, names, {budgetMs = CHECK_BUDGET_MS} = {}) => {
         if (profileId === null) throw fail(400, 'Write your profile first.');
         if (!Array.isArray(names) || names.length === 0 || names.length > CHECK_MAX || !names.every(name => typeof name === 'string')) {
             throw fail(400, `names: 1 to ${CHECK_MAX} names.`);
@@ -300,7 +305,9 @@ export const EntityService = {
         const known = new Set([...rows.flatMap(row => namesFor(row, row)), ...words].map(mentionKey).filter(Boolean));
         // each name looked for, one after the other (a call every 0.4 s, whoever asks)
         const entries = [];
+        const started = Date.now();
         for (const name of names) {
+            if (entries.length > 0 && Date.now() - started > budgetMs) break;
             const written = cleanName(name);
             if (written.length < 2 || written.length > MAX_NAME) {
                 entries.push({name: written.slice(0, MAX_NAME), status: 'invalid'});

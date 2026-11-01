@@ -424,6 +424,22 @@ describe('a list of names followed at once', () => {
         expect(league.results[0].items.map(item => item.qid)).toEqual(['Q209008', 'Q7']);
     });
 
+    it('should stop looking after the time it has, telling the first names only, at least one, for the client to ask the others', async () => {
+        candidatesFor.mockImplementation(async (name) => {
+            await new Promise(resolve => setTimeout(resolve, 15));
+            return {exact: [], others: []};
+        });
+        // a request that has used its time: the first name is looked for all the same, none after
+        const late = await EntityService.checkNames(8, ['Alpha One', 'Beta Two', 'Gamma Three'], {budgetMs: 0});
+        expect(late.results.map(result => result.name)).toEqual(['Alpha One']);
+        expect(candidatesFor).toHaveBeenCalledTimes(1);
+
+        // time enough: every name
+        candidatesFor.mockClear();
+        const all = await EntityService.checkNames(8, ['Alpha One', 'Beta Two', 'Gamma Three']);
+        expect(all.results.map(result => result.name)).toEqual(['Alpha One', 'Beta Two', 'Gamma Three']);
+    });
+
     it('should refuse no name, more than ten, a name that is not text, and a profile that is not written', async () => {
         await expect(EntityService.checkNames(8, [])).rejects.toMatchObject({status: 400});
         await expect(EntityService.checkNames(8, Array.from({length: 11}, (_, i) => `Name ${i}`))).rejects.toMatchObject({status: 400});

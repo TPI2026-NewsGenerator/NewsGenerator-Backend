@@ -22,6 +22,11 @@ and none stands out, and the others are followed as written. A profile follows 3
    is asked of Wikidata.
 2. **Look up** (`checkNames`), 10 names a request, the client sending the lots one after the other with a
    progress bar (Wikidata answers a call every 0.4 s whoever asks, 300 names are about two minutes). A request
+   ends after 30 s even with names left (`CHECK_BUDGET_MS`): behind the server stand Caddy and the tunnel of
+   Cloudflare, which answer with a page of HTML after about 100 s (524); the answer tells the first names, at
+   least one, and the client asks the others with the next lot. An answer that is HTML (a restart, a timeout, a
+   refusal of the tunnel) is told as such by the client (`readAnswer`: "The server answered 524 with a page, not
+   data") and not as "Unexpected token '<'". A request
    that fails (Wikidata asking to wait) stops the loop with the message and "Try again" carries on from the lot that
    failed. Each name is, in this order:
    - `invalid`: not 2 to 60 characters;
