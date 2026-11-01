@@ -20,6 +20,15 @@ const article = (id, story, title, changes = {}) => ({
 });
 
 describe('watchedNews', () => {
+    it('should list the news wanted, fewer than the 100 by default, and still count them all', async () => {
+        searchArticles.mockResolvedValue(Array.from({length: 130}, (_, i) => article(i + 1, i + 1, `Dario Amodei speaks, part ${i + 1}`)));
+
+        const [group] = await watchedNews(['Dario Amodei'], {feedUrls: [], since: new Date(at - 864e5), limit: 20});
+
+        expect(group.count).toBe(130);
+        expect(group.news).toHaveLength(20);
+    });
+
     it('should list one line per story, the 100 newest, and count them all', async () => {
         // the newest first, as the search answers them
         searchArticles.mockResolvedValue(Array.from({length: 130}, (_, i) => article(i + 1, i + 1, `Dario Amodei speaks, part ${i + 1}`)));

@@ -1,8 +1,8 @@
 # Following > Names and words
 
 Next to the items of Wikidata, a profile follows names or words exactly as written, 20 at most: a name Wikidata
-does not have as one item ("LFF", "Vadims Ļašenko"), a product, a term. Every news of the window that writes one,
-from every feed and whatever its relevance, is in the briefing, in the tab of what the profile follows. A name
+does not have as one item ("LFF", "Vadims Ļašenko"), a product, a term. Every news of the last 30 days that writes
+one, from every feed and whatever its relevance, is in the briefing, in the tab of what the profile follows. A name
 also has a page of its own with its news, and the names met card after card are suggested.
 
 ## Where
@@ -36,12 +36,31 @@ also has a page of its own with its news, and the names met card after card are 
   the names met on 2 cards at least, 8 at most, the most met first, neither an item followed nor a writing of a
   word followed ("Infantino" of "Gianni Infantino"). The client follows an item by its qid, a name without one
   as a word.
-- **In the briefing.** `watchedNews` (`services/briefing-service.js`) asks `FeedModel.searchArticles` for the
-  words as exact phrases, on every feed of the window, then `newsOfTerms` keeps the news naming one as a whole
-  word, one per story, the 100 newest per word (`WATCHED_PER_TERM`), all counted; they are stored in the
-  briefing (`briefings.watched`). When the briefing is read, `followTerms` gives the items in the briefing and
-  the words, and `withMarks` marks them in the cards (a card naming one, or only one of its other angles, is
-  "found").
+- **In the briefing.** The reader chooses how many news each name should have, on a bar of 10 to 100 beside the
+  days of the briefing (`watchLimit` of `POST /api/briefing`, `WATCH_LIMITS`, 100 by default), and the search goes
+  back until it finds them (`followedNews`, `untilEnough` in `services/briefing-service.js`): 1, 2, 4, 8, 16 then
+  30 days (`WATCH_STEPS`, the retention), each name read again over the next window only while it has fewer
+  stories than wanted. A frequent name is done in a day or two, a rare one takes the month; the window of the
+  briefing (1 to 7 days) is another choice. For the words, `watchedNews` asks `FeedModel.searchArticles` for the
+  exact phrases of the names still open, on every feed, then `newsOfTerms` keeps the news naming one as a whole
+  word, one per story, the newest `limit` per word, all counted over the window read. They are stored in the
+  briefing (`briefings.watched`, each group with the `hours` it was last read over and the `limit`; both absent
+  from the briefings before 1.11.2026, which read the window of the briefing). The search starts with the
+  briefing, not at its last step, and is read while the cards are written. When the briefing is read,
+  `followTerms` gives the items in the briefing and the words, and `withMarks` marks them in the cards (a card
+  naming one, or only one of its other angles, is "found").
+- **What the tab says.** The count is the stories of the window read, not of the month: "137 stories in 2 days"
+  for a word that had its 100 in two days, "90 stories in 30 days" for a person. When more stories name it than
+  are listed, "The 20 newest are listed, back to 28 Oct". The bar is shown to a profile that follows an item in
+  its briefing or a word (`EntityApi.list`); `FollowLimit.jsx` is the Slider of shadcn (Radix), as the days.
+- **Why a number of news and not a second bar of days** (the user's idea, 1.11.2026): one choice for the reader,
+  and the cost follows the name. Measured on 3.9 million news (`bench/watched-window.mjs`, `bench/watched-steps.mjs`),
+  the same names ("VAR", "UEFA", "Dario Amodei", the items Čeferin and Rosetti): 30 days for all took 73 s
+  (the items 1 to 2 s, a word about 2 s, but "VAR" alone 72 s, the trigrams of the index cutting nothing on three
+  letters: 6 s on 2 days, 21 s on 7); 100 news wanted took 11.5 s ("VAR" 105 stories in 1 day, "UEFA" 137 in 2,
+  Čeferin 90 and Dario Amodei 59 over the 30 days, Rosetti 2); 20 news wanted 6.6 s. Grouping 15,905 news by
+  story in JavaScript is 1.3 s: it is not the cost. Not built: a full-text index (whole words, exact), or
+  matching each new news against the words at ingestion, which a rare word of three letters would still need.
 
 ## Diagrams
 

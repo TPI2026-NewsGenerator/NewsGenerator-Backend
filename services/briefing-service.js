@@ -64,6 +64,18 @@ import {wholeTitle} from "./utils/titles.js";
 // oldest would be leaving as it is written
 const WINDOWS = [1, 2, 3, 4, 5, 6, 7].map(days => days * 24);
 const DEFAULT_HOURS = 48;
+// The news of what the profile follows are not read over the window of the briefing (the user,
+// 1.11.2026): a person or an organisation named now and then had no news in a window of 2 days (Čeferin:
+// 0 in 2 days, 4 in 7, 90 in 30). The reader chooses how many news each name should have, on a bar of
+// 10 to 100 (100 by default, as before), and the search goes back until it finds them: day by day up to
+// 30 days, the retention of the news (see feed-service.js). A frequent name is satisfied in a day or
+// two, a rare one takes the month. Measured on 3.9 million news: the items of Wikidata answer by their
+// names in 1 to 2 s, the words by their text in 2 s, 70 s for a word of three letters on 30 days ("VAR":
+// the trigrams of the index cut nothing, 6 s on 2 days), which is why the search stops as soon as it
+// has enough, and starts with the briefing (see write)
+export const WATCH_STEPS = [1, 2, 4, 8, 16, 30].map(days => days * 24);
+export const WATCH_LIMITS = Array.from({length: 10}, (_, i) => (i + 1) * 10);
+export const WATCH_LIMIT = 100;
 // From this many hours a briefing is one of several days. The 40 closest stories of a week were 34
 // affairs of several days (threads, db/add_threads.sql), and guides of no day rose among them: one
 // candidate per thread, and the AI is told how many media told each to prefer what mattered (see
@@ -598,9 +610,10 @@ export const readerText = (text, projects = []) => projects.length === 0 ? text 
 En ce moment, il prépare aussi ${projects.length === 1 ? 'un projet, dont il veut les nouvelles' : 'des projets, dont il veut les nouvelles'} tant qu'${projects.length === 1 ? 'il dure' : 'ils durent'} :
 ${projects.map(project => `- « ${project.name} » : ${project.text.replace(/\s+/g, ' ').trim()}`).join('\n')}`;
 
-// hours: of news it is written from, one of WINDOWS; size: its cards, one of BRIEFING_SIZES. Exported for the benches, which write a briefing
-// without saving it (bench/briefing-relevance.mjs)
-export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) => {
+// hours: of news it is written from, one of WINDOWS; size: its cards, one of BRIEFING_SIZES; watchLimit:
+// the news each name or word followed should have, one of WATCH_LIMITS. Exported for the benches, which
+// write a briefing without saving it (bench/briefing-relevance.mjs)
+export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING, watchLimit = WATCH_LIMIT) => {
     // the stories ranked and given to the AI grow with the cards wanted
     const scale = size / MAX_BRIEFING;
     const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage()};
@@ -634,6 +647,14 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     const refused = new Set(feedback.refused);
     const allFeeds = await feedsOf(profileId);
     const feedUrls = allFeeds.filter(url => !refused.has(url));
+    // the news of what the profile follows, from every feed (the ones the thumbs left out too: the reader
+    // asked for all of them), the items followed first, then the names and words as written. Started
+    // here, it is read while the briefing is written: a word of three letters takes a minute. The
+    // briefing never waits on it failing
+    const following = followedNews(profileId, profile.watch_terms ?? [], {feedUrls: allFeeds, limit: watchLimit}).catch(err => {
+        console.error(`Briefing: the news of what the profile follows were not looked for (${err.message})`);
+        return null;
+    });
     // the media the reader trusts: their stories among the TRUST_POOL closest are candidates too
     const trusted = new Set(await FeedModel.trustedMedia(profileId));
     const ranked = shareOut(await StoryModel.rank({
@@ -784,12 +805,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             console.error(`Briefing: no official source looked for (${err.message})`);
             return new Map();
         }),
-        // from every feed, the ones the thumbs left out too: the reader asked for all of them. The items
-        // followed first, then the names and words as written
-        followedNews(profileId, profile.watch_terms ?? [], {feedUrls: allFeeds, since, hours}).catch(err => {
-            console.error(`Briefing: the news of what the profile follows were not looked for (${err.message})`);
-            return null;
-        }),
+        following,
         namesAndCountriesOfCards(stories.map((story, i) => ({storyId: story.storyId, ids: story.members.map(article => article.id),
             media: [...new Set(story.members.map(mediumOfArticle))], topic: summaryOf(i)?.topic ?? null,
             titles: [...new Set(story.members.map(article => article.title).filter(Boolean))],
@@ -925,12 +941,12 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     return items;
 };
 
-// The news of the terms the profile follows (names or words, see cleanWatchTerms): every news of the
-// window its feeds gave that names one in its title or description, as a whole word, its accents and
+// The news of the terms the profile follows (names or words, see cleanWatchTerms): every news since
+// 'since' its feeds gave that names one in its title or description, as a whole word, its accents and
 // case aside (as the exact words of a search, see Filter). Not chosen by the AI nor read, whatever their
 // relevance, from every feed (the ones the thumbs left out too): the reader asked for all of them. One
-// line per story, its newest news, with how many media told it, the WATCHED_PER_TERM newest kept (the
-// user's choice, 8.10.2026: 100), all counted.
+// line per story, its newest news, with how many media told it, the 'limit' newest kept (the reader's
+// choice since 1.11.2026, 100 by default as the user chose on 8.10.2026), all counted since 'since'.
 // [{term, count, news: [{storyId, title, url, source, language, publishedAt, media, excerpt}]}]
 const WATCHED_PER_TERM = 100;
 
@@ -950,21 +966,43 @@ export const excerptOf = (title, description, term) => {
     if (end < description.length) end = Math.max(first[1], description.lastIndexOf(' ', end));
     return `${start > 0 ? '…' : ''}${description.slice(start, end).trim()}${end < description.length ? '…' : ''}`;
 };
-export const watchedNews = async (terms, {feedUrls, since}) => {
+export const watchedNews = async (terms, {feedUrls, since, limit = WATCHED_PER_TERM}) => {
     if (terms.length === 0) return [];
     const articles = await FeedModel.searchArticles({
         feedUrls, keywords: Filter.parse([terms.map(term => `"${term}"`).join(', ')]), timeframe: {start: since},
     });
-    return newsOfTerms(terms, articles);
+    return newsOfTerms(terms, articles, {limit});
+};
+
+// Each key read over a window growing step by step, until it has 'limit' stories or the longest is read:
+// the ones with enough are not read again over the next, a frequent word is done in a day when a rare name
+// takes the month. read(keys, hours): a Map key -> {count, ...}; keys null: all of them, the first read
+// gives them. [{...group, hours, limit}] in the order they were first read, hours: the window each was
+// last read over, for the page to say how far back its count goes (the briefings before 1.11.2026 have
+// none: the window of the briefing)
+export const untilEnough = async (keys, read, limit, steps = WATCH_STEPS) => {
+    const groups = new Map();
+    let open = keys;
+    for (const hours of steps) {
+        if (open !== null && open.length === 0) break;
+        for (const [key, group] of await read(open, hours)) groups.set(key, {...group, hours, limit});
+        open = [...groups].filter(([, group]) => group.count < limit).map(([key]) => key);
+    }
+    return [...groups.values()];
 };
 
 // The news of what the profile follows (see EntityService): the items of Wikidata it wants in its
-// briefing, by the names the tagger found in each news, in any language, then its words, by their text.
-// [{term, qid, count, news}], qid null for a word
-const followedNews = async (profileId, words, {feedUrls, since, hours}) => [
-    ...await EntityService.briefingGroups(profileId, hours),
-    ...(await watchedNews(words, {feedUrls, since})).map(group => ({...group, qid: null})),
-];
+// briefing, by the names the tagger found in each news, in any language, and its words, by their text, each
+// with the 'limit' news wanted (see untilEnough). [{term, qid, count, news, hours, limit}], qid null for a word
+export const followedNews = async (profileId, words, {feedUrls, limit}) => {
+    const [items, terms] = await Promise.all([
+        untilEnough(null, async (qids, hours) => new Map((await EntityService.briefingGroups(profileId, hours, {limit, only: qids}))
+            .map(group => [group.qid, group])), limit),
+        untilEnough(words, async (open, hours) => new Map((await watchedNews(open, {feedUrls, since: new Date(Date.now() - hours * 3600e3), limit}))
+            .map(group => [group.term, group])), limit),
+    ]);
+    return [...items, ...terms.map(group => ({...group, qid: null}))];
+};
 
 // the articles whose title or description names a term as a whole word
 export const namingTerm = (term) => {
@@ -1470,18 +1508,20 @@ export const BriefingService = {
     // a new briefing, written in background from the news of the last 'hours' (one of WINDOWS): the
     // answer is the briefing still running, the client asks for it again until it is ready. Only one
     // at a time per user
-    // 'size': its cards, one of BRIEFING_SIZES
-    start: async (userId, profileId, hours = DEFAULT_HOURS, size = MAX_BRIEFING) => {
+    // 'size': its cards, one of BRIEFING_SIZES; 'watchLimit': the news each name or word followed should
+    // have, one of WATCH_LIMITS
+    start: async (userId, profileId, hours = DEFAULT_HOURS, size = MAX_BRIEFING, watchLimit = WATCH_LIMIT) => {
         if (profileId === null) throw Object.assign(new Error('Write your profile first.'), {status: 400});
         if (!WINDOWS.includes(hours)) throw Object.assign(new Error(`hours: 1 to 7 days (${WINDOWS.join(', ')}).`), {status: 400});
         if (!BRIEFING_SIZES.includes(size)) throw Object.assign(new Error(`size: ${BRIEFING_SIZES.join(', ')}.`), {status: 400});
+        if (!WATCH_LIMITS.includes(watchLimit)) throw Object.assign(new Error(`watchLimit: ${WATCH_LIMITS.join(', ')}.`), {status: 400});
         await BriefingModel.failAbandoned(new Date(Date.now() - ABANDONED_MINUTES * 60 * 1000));
         if (running.has(profileId)) return toBriefing(await BriefingModel.running(profileId));
 
         const briefing = await BriefingModel.create(userId, profileId, hours, size);
         running.add(profileId);
 
-        write(briefing.id, profileId, hours, size)
+        write(briefing.id, profileId, hours, size, watchLimit)
             .then(items => BriefingModel.finish(briefing.id, items))
             .catch(err => {
                 console.error(`Briefing ${briefing.id} failed: ${err.stack ?? err}`);

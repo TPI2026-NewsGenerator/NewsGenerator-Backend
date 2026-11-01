@@ -150,9 +150,11 @@ describe('EntityService.page', () => {
     });
 
     it('should search the texts of the news the tagger has not read only', async () => {
-        articlesHolding.mockResolvedValueOnce([{...article(5, 'PSG gagne', 50), entities_at: new Date()}, article(6, 'PSG perd', 60)]);
+        articlesHolding.mockResolvedValueOnce([article(6, 'PSG perd', 60)]);
         const page = await EntityService.page(13, 'Q483020', 72);
         expect(page.news.map(news => news.storyId)).toEqual([60]);
+        // asked of the database, where an index holds them: the ones read are millions in a month
+        expect(articlesHolding).toHaveBeenCalledWith(expect.objectContaining({untagged: true}));
     });
 
     it('should count every story naming it, not only the news kept per name', async () => {
@@ -243,6 +245,28 @@ describe('the news of what the profile follows in its briefing', () => {
             {label: 'PSG', qid: 'Q483020', names: ['Paris Saint-Germain', 'PSG']},
             {label: 'VAR', qid: null, names: ['VAR']},
         ]);
+        MentionModel.anyUntagged.mockResolvedValue(true);
+        EntityModel.followed.mockResolvedValue([]);
+    });
+
+    it('should read the window it is given, keep the news wanted and count them all, and read only the items asked for', async () => {
+        const rows = [
+            {...PSG, added_names: [], removed_names: [], in_briefing: true},
+            {...PSG, id: 5, qid: 'Q35572', label: 'UEFA', names: ['UEFA'], added_names: [], removed_names: [], in_briefing: true},
+        ];
+        EntityModel.followed.mockResolvedValue(rows);
+        MentionModel.anyUntagged.mockResolvedValue(false);
+        MentionModel.articlesNamed.mockResolvedValue(Array.from({length: 30}, (_, i) => ({...article(i + 10, `Le PSG gagne ${i}`, 100 + i, `2026-10-08T10:${String(i).padStart(2, '0')}:00.000Z`), keys: ['psg'], qids: ['Q483020']})));
+
+        const [group] = await EntityService.briefingGroups(14, 30 * 24, {limit: 20, only: ['Q483020']});
+        expect(group).toMatchObject({qid: 'Q483020', count: 30});
+        expect(group.news).toHaveLength(20);
+        // the other item was not asked for
+        expect(await EntityService.briefingGroups(14, 30 * 24, {limit: 20, only: ['Q483020']})).toHaveLength(1);
+        const {since} = MentionModel.articlesNamed.mock.calls.at(-1)[0];
+        expect(Date.now() - since.getTime()).toBeGreaterThanOrEqual(30 * 24 * 3600e3);
+
+        MentionModel.articlesNamed.mockReset().mockResolvedValue([]);
         MentionModel.anyUntagged.mockResolvedValue(true);
         EntityModel.followed.mockResolvedValue([]);
     });

@@ -880,9 +880,11 @@ const options = {
                 "post": {
                     "tags": ["Briefing"],
                     "summary": "Write a new briefing",
-                    "description": "In background: answers the briefing running, GET /briefing until its status is 'ready' or 'failed'. One at a time per user. A story already shown can be chosen again; two stories telling the same news are one card.\n\n`hours`: of news it is written from, 48 when not given. A briefing of 168 hours (the week) gives one card per affair followed over the days, and prefers the news told by several media.",
-                    "requestBody": {"required": false, "content": {"application/json": {"schema": {"type": "object", "properties": {"hours": {"type": "integer", "enum": [24, 48, 168], "default": 48}}}}}},
-                    "responses": {"202": {"description": "{briefing: Briefing} running"}, "400": {"description": "hours is not 24, 48 or 168"}}
+                    "description": "In background: answers the briefing running, GET /briefing until its status is 'ready' or 'failed'. One at a time per user. A story already shown can be chosen again; two stories telling the same news are one card.\n\n`hours`: of news it is written from, 48 when not given. A briefing of 168 hours (the week) gives one card per affair followed over the days, and prefers the news told by several media.\n\n`watchLimit`: the news each name, word or item followed should have in the tab of what the profile follows, 100 when not given. Independent of `hours`: the search goes back 1, 2, 4, 8, 16 then 30 days, only for the names that do not have that many yet.",
+                    "requestBody": {"required": false, "content": {"application/json": {"schema": {"type": "object", "properties": {
+                        "hours": {"type": "integer", "minimum": 24, "maximum": 168, "multipleOf": 24, "default": 48},
+                        "watchLimit": {"type": "integer", "minimum": 10, "maximum": 100, "multipleOf": 10, "default": 100}}}}}},
+                    "responses": {"202": {"description": "{briefing: Briefing} running"}, "400": {"description": "hours is not 1 to 7 days, or watchLimit is not 10 to 100 by tens"}}
                 }
             },
             "/briefing/{id}/vote": {

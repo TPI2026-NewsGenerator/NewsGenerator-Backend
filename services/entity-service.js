@@ -50,7 +50,8 @@ const fail = (status, message) => Object.assign(new Error(message), {status});
 // compared (see mentions.js): "LFF", "Gianni Infantino". While news of the window wait for it (a
 // backlog, the tagger off), the ones it has not read are looked for in their texts, the names with and
 // without their accents, checked as whole words (see FeedModel.articlesHolding: 11 s for a club and its
-// people on 48 hours, 30 s on a week); the news of its last minutes are left to it. qids: items of
+// people on 48 hours, 30 s on a week; only the news it has not read are asked for, 28 of the 12,683 news
+// naming the UEFA in 30 days); the news of its last minutes are left to it. qids: items of
 // Wikidata whose news are those naming any name the tagger linked to them, in any language, under the
 // term "@<qid>". Kept a few minutes: the page is opened, then a link, then back
 const NEWS_KEPT_MS = 10 * 60e3;
@@ -70,8 +71,7 @@ const namedNews = async (profileId, names, hours, qids = []) => {
     const [tagged, untagged] = await Promise.all([
         MentionModel.articlesNamed({keys: [...new Set(keyOf.values())].filter(Boolean), qids, feedUrls, since}),
         MentionModel.anyUntagged(since, new Date(Date.now() - TAGGER_LATE_MS))
-            .then(waiting => waiting ? FeedModel.articlesHolding({feedUrls, texts, since}) : [])
-            .then(articles => articles.filter(article => !article.entities_at)),
+            .then(waiting => waiting ? FeedModel.articlesHolding({feedUrls, texts, since, untagged: true}) : []),
     ]);
     const articles = [...tagged, ...untagged]
         .sort((a, b) => (b.published_at ?? b.created_at) - (a.published_at ?? a.created_at));
@@ -240,13 +240,15 @@ export const EntityService = {
     },
 
     // The news of the items whose news the profile wants in its briefing, one group each: [{term (the
-    // name it is shown by), qid, count, news}], as the words' (see watchedNews), BRIEFING_NEWS kept, all counted
-    briefingGroups: async (profileId, hours) => {
-        const rows = await EntityModel.followed(profileId, {inBriefing: true});
+    // name it is shown by), qid, count, news}], as the words' (see watchedNews), 'limit' news kept (BRIEFING_NEWS
+    // by default), all counted over the last 'hours'. only: the qids of the items to read, all of them when null
+    // (the briefing reads those with too few news again over a longer window, see untilEnough)
+    briefingGroups: async (profileId, hours, {limit = BRIEFING_NEWS, only = null} = {}) => {
+        const rows = (await EntityModel.followed(profileId, {inBriefing: true})).filter(row => only === null || only.includes(row.qid));
         const done = await mapWithConcurrency(rows, BRIEFING_CONCURRENCY, async (row) => {
             const names = namesFor(row, row);
             const found = new Map((await namedNews(profileId, names, hours, [row.qid])).map(group => [group.term, group]));
-            return {term: shortName(row.label, row.names), qid: row.qid, ...mergeNews([...names, itemTerm(row.qid)].map(term => found.get(term)), BRIEFING_NEWS)};
+            return {term: shortName(row.label, row.names), qid: row.qid, ...mergeNews([...names, itemTerm(row.qid)].map(term => found.get(term)), limit)};
         });
         return done.filter(result => result.status === 'fulfilled').map(result => result.value);
     },

@@ -43,10 +43,15 @@ tab of what the profile follows, unless the reader unticks it.
   (`feedsOf`) naming its names or its qid: `MentionModel.articlesNamed` by the names the tagger found and the
   ones it linked to the item, in any language; while news of the window wait for the tagger
   (`anyUntagged`, older than 10 minutes), `FeedModel.articlesHolding` looks for the names with and without
-  their accents in their texts (trigram index), checked as whole words. `newsOfTerms` and `mergeNews`: one
+  their accents in the texts of those it has not read (`untagged`, the index `i_articles_untagged`; 28 news
+  instead of 12,683 for the UEFA on 30 days), checked as whole words. `newsOfTerms` and `mergeNews`: one
   news per story, the newest first, every story counted, 30 news kept per link. The result is kept 10 minutes.
-- **In the briefing.** `briefingGroups`: the items with `in_briefing`, 3 at a time, each its 100 newest news,
-  all counted; the tab shows them under the item's short name (`shortName`: "UEFA").
+- **In the briefing.** `briefingGroups(profileId, hours, {limit, only})`: the items with `in_briefing`, 3 at a
+  time, each its `limit` newest news (100 by default), all counted over the last `hours`; the briefing calls it
+  for 1, 2, 4, 8, 16 then 30 days and reads again only the items (`only`: their qids) with fewer stories than the
+  reader wants (see [Names and words](../names-and-words/README.md), `untilEnough`). The tab shows them under the
+  item's short name (`shortName`: "UEFA"). Measured for the profile following Čeferin and Rosetti: 90 and 2
+  stories in 30 days (4 and 0 in 7, 0 and 0 in 2), 0.8 s, 44 KB.
 
 ## Measured
 
