@@ -1,7 +1,7 @@
 # Following > Names and words
 
-Next to the items of Wikidata, a profile follows names or words exactly as written, 20 at most: a name Wikidata
-does not have as one item ("LFF", "Vadims Ļašenko"), a product, a term. Every news of the last 30 days that writes
+Next to the items of Wikidata, a profile follows names or words exactly as written, 300 in all with the items: a
+name Wikidata does not have as one item ("LFF", "Vadims Ļašenko"), a product, a term. Every news of the last 30 days that writes
 one, from every feed and whatever its relevance, is in the briefing, in the tab of what the profile follows. A name
 also has a page of its own with its news, and the names met card after card are suggested.
 
@@ -19,8 +19,8 @@ also has a page of its own with its news, and the names met card after card are 
 ## How it works
 
 - **Followed as written.** `EntityService.addWord` (`services/entity-service.js`): quotes and commas taken out
-  (`cleanName`); a word already followed, whatever its case, is answered as it is; 20 at most
-  (`MAX_WATCH_TERMS`), each 2 to 60 characters (`cleanWatchTerms`, `services/utils/watch-terms.js`); saved
+  (`cleanName`); a word already followed, whatever its case, is answered as it is; 300 in all
+  with the items (`MAX_FOLLOWED`; `MAX_WATCH_TERMS`, 300, for the words alone), each 2 to 60 characters (`cleanWatchTerms`, `services/utils/watch-terms.js`); saved
   in `user_profiles.watch_terms` (`ProfileModel.setWatchTerms`). `removeWord`: 404 when not followed. A word
   that was a name of an item followed was taken out of the words by `db/add_follow_in_briefing.sql`: the item
   brings its news now.
@@ -44,13 +44,44 @@ also has a page of its own with its news, and the names met card after card are 
   search goes back until it finds them (`followedNews`, `untilEnough`): 1, 2, 4, 8, 16 then 30 days
   (`WATCH_STEPS`, the retention), each name read again over the next window only while it has fewer stories than
   wanted. A frequent name is done in a day or two, a rare one takes the month; the window of the briefing (1 to 7
-  days) is another choice. For the words, `watchedNews` asks `FeedModel.searchArticles` for the exact phrases of
-  the names still open, on every feed, then `newsOfTerms` keeps the news naming one as a whole word, one per
-  story, the newest `limit` per word, all counted over the window read. The answer is `{limit, groups: [{term,
-  qid, count, hours, limit, news: [..., marks]}]}`, kept 10 minutes for the profile, what it follows and the
-  number; `marks` are the places of the terms in the titles and excerpts (`marksOf`). The client asks when the
-  tab is opened (`useFollowing`, `FollowingNews`, `FollowLimit`, the Slider of shadcn on Radix) and again when
-  the bar moves.
+  days) is another choice. The items and the words are searched at the same time (see below). The answer is
+  `{status, limit, partial, groups: [{term, qid, count, hours, limit, news: [..., marks]}]}`; `marks` are the
+  places of the terms in the titles and excerpts (`marksOf`). The client asks when the tab is opened
+  (`useFollowing`, `FollowingNews`, `FollowLimit`, the Slider of shadcn on Radix) and again when the bar moves.
+- **In background (300 names).** A long list takes minutes: the search runs as a briefing is written. The call
+  answers `status: 'ready'` when it ends within 2.5 s (a short list, or one kept 10 minutes for the profile, what
+  it follows and the number), else `'running'` with `progress: {finished, total}` (the names done) and the page
+  asks again every 2 s. Several tabs or reloads share one search; 4 run at most (503 after). It stops at 170 s
+  (`FOLLOWING_BUDGET_MS`, the user: 3 minutes at most for about 300 names): the next window is not started when the
+  last took so long that the next, about twice as long, would end after it, and the answer says `partial`, what
+  was found kept (each name tells the days it went back). Measured on the real data (3.9 million news,
+  `bench/following-scale.mjs`): 200 items and 100 words (ten surnames, ten generic words) with 100 news each,
+  **49 s**, 287 of the 300 names went back the month, "VAR" 101 stories in one day. The tab of 300 names is a
+  list to pick from with a field to find a name (`Picker` of `WatchedNews.jsx`), tabs up to 12.
+- **The items, in one search.** `briefingGroups` searches all the items at once (`namedNews` of all their names and
+  qids), not one search each. The links of the names the tagger found are read from the first news of the window
+  (`MentionModel.articlesNamed`, the ids grow with the days): 100 names on a day, 14 s before and 0.16 s after,
+  on 30 days 0.8 s (`bench/mentions-window.mjs`). The news the tagger has not read yet (it is hours late at
+  times) are asked by their texts for a few names, from 30 names all read once and filtered in memory by the
+  longest word of each name (`mayName` of `name-prefilter.js`).
+- **The words, by the way that suits them** (`EntityService.wordsGroups`). The texts of the news are answered by
+  the trigram index in 0.3 to 0.6 s per word and per window, whatever the window and the rarity of the word
+  (25 names: 15 s on a day and 31 s on a month; the exact phrases of the first version of this tab, with their
+  accents in classes, took over 270 s for 100 words on a day). So the texts are asked for few words:
+  - the names (several words, or a surname alone) by the names the tagger found, accents and case aside, as for an
+    item, and the news it has not read yet by their texts;
+  - the generic words and the acronyms (one word in lower case or in capitals: "VAR", "derby") by the texts, as a
+    whole word read as written: the tagger meets "VAR" in a quarter of its news and under three kinds (a place, a
+    body, a person), and its key forgets the capitals; with the names the tagger never met, 30 words at most, in
+    lots of 10, 3 lots at once. A generic word beyond them is searched by the tagger's names.
+- **Translated.** A news written in another language than the reader's has its title translated when its row
+  comes near the screen (`useTranslation` and `createTranslator` of the search, `POST /api/news/translations`,
+  `NewsService.translateNews`: the AI translates cached articles only, 20 titles a call, the translations kept in
+  memory), shown marked "translated from German" with the title as written under it in italics, the terms
+  marked there. The rows are asked by the `link` of each news (the address of the feed; the `url` shown can be
+  the decoded address of a Google News link, which the cache does not know). Titles only: the excerpt around
+  the term stays as written. Measured for the profile following Čeferin (reader in English): the first 8 news,
+  in 5 languages, translated in 2.2 s. Only the rows shown are asked ("show the N others" asks the rest).
 - **Noted for the directory.** The directory takes out the feeds that serve no reader, and a medium shown in a
   briefing of the last 14 days serves one (`DirectoryModel.usage`, which reads `briefings.watched`). The news
   shown in the tab are written to `briefings.watched` of the last ready briefing of the profile

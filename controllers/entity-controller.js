@@ -27,6 +27,10 @@ export const EntityController = {
     suggestions: (req, res) => respond(res, async () => ({names: await EntityService.suggestions(req.profileId)})),
     // ?name=&hours=: the page of a name as written
     namePage: (req, res) => respond(res, () => EntityService.namePage(req.profileId, req.query.name, Number(req.query.hours ?? 48))),
+    // {names}: a list of names looked for in Wikidata by lots, {results}
+    importCheck: (req, res) => respond(res, () => EntityService.checkNames(req.profileId, req.body?.names)),
+    // {qids, words}: a list of names followed at once, {added, left, entities, words, limits}
+    importNames: (req, res) => respond(res, () => EntityService.importNames(req.profileId, req.body ?? {})),
     // {word}: followed as written, {words}
     addWord: (req, res) => respond(res, () => EntityService.addWord(req.profileId, req.body?.word), 201),
     removeWord: (req, res) => respond(res, () => EntityService.removeWord(req.profileId, req.params.word)),

@@ -1,6 +1,6 @@
 # Following > Wikidata items
 
-A profile follows clubs, people and organisations as Wikidata knows them, 30 at most. Each item brings its names
+A profile follows clubs, people and organisations as Wikidata knows them, 300 in all with the names followed as written. Each item brings its names
 in the languages read (an alias of one common word left out, a club also without its "FC"), its links still
 true (the players and the coach of a club, the team of a player, the chair of a body), and a page with the news
 of the window naming it or its links, from every feed, with no relevance. Its news are in the briefing, in the
@@ -23,7 +23,7 @@ tab of what the profile follows, unless the reader unticks it.
 - **Search.** `EntityService.search` (`services/entity-service.js`) asks `searchItems`
   (`services/utils/wikidata.js`): `wbsearchentities` in the language of the reader, 8 items at most. The
   client asks 400 ms after the last key, from 2 letters. Wikidata down: 502.
-- **Follow.** 30 items at most (`MAX_FOLLOWED`). `loaded` takes the row of `entities` when it was read in
+- **Follow.** 300 names at most with the words (`MAX_FOLLOWED`, 30 items before 2.11.2026). `loaded` takes the row of `entities` when it was read in
   full in the last 7 days (`REFRESH_DAYS`), else `readItem`: `wbgetentities` (labels, aliases, descriptions,
   claims in en, fr, de, es, it, pt, nl and the reader's language), the kind from P31 (`kindOf`), the short
   name P1813, the family name of a person (P734, 4 letters at least), and a SPARQL query of its links without
@@ -46,12 +46,15 @@ tab of what the profile follows, unless the reader unticks it.
   their accents in the texts of those it has not read (`untagged`, the index `i_articles_untagged`; 28 news
   instead of 12,683 for the UEFA on 30 days), checked as whole words. `newsOfTerms` and `mergeNews`: one
   news per story, the newest first, every story counted, 30 news kept per link. The result is kept 10 minutes.
-- **In its tab.** `briefingGroups(profileId, hours, {limit, only})`: the items with `in_briefing`, 3 at a
-  time, each its `limit` newest news (100 by default), all counted over the last `hours`; the tab calls it for 1,
-  2, 4, 8, 16 then 30 days and reads again only the items (`only`: their qids) with fewer stories than the
-  reader wants (see [Names and words](../names-and-words/README.md), `untilEnough`). The tab shows them under the
+- **In its tab.** `briefingGroups(profileId, hours, {limit, only})`: the items with `in_briefing`, all in one search
+  (see [Names and words](../names-and-words/README.md)), each its `limit` newest news (100 by default), all
+  counted over the last `hours`; the tab calls it for 1, 2, 4, 8, 16 then 30 days and reads again only the items
+  (`only`: their qids) with fewer stories than the reader wants (`untilEnough`). The tab shows them under the
   item's short name (`shortName`: "UEFA"). Measured for the profile following Čeferin and Rosetti: 90 and 2
   stories in 30 days (4 and 0 in 7, 0 and 0 in 2), 0.8 s, 44 KB.
+- **From a list.** An item followed from an imported list has its row with its label alone (`EntityModel.addNamed`,
+  `fetched_at` null, as a link only met): read in full in background, one after the other
+  (`fillItems`, three calls each), so that its names, kind and links come in minutes. See [Import](../import/README.md).
 
 ## Measured
 

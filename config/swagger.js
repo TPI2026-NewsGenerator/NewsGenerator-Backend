@@ -890,9 +890,9 @@ const options = {
                 "get": {
                     "tags": ["Briefing"],
                     "summary": "The news of what the profile follows, read now",
-                    "description": "The tab of what the profile follows, searched when it is opened and not part of a briefing: the items of Wikidata in its briefing and the names or words as written, from every feed, with no relevance. `limit`: the news each should have, 100 when not given. The search goes back 1, 2, 4, 8, 16 then 30 days, only for the names that do not have that many yet; each group tells the `hours` it was last read over. Kept 10 minutes.",
+                    "description": "The tab of what the profile follows, searched when it is opened and not part of a briefing: the items of Wikidata in its briefing and the names or words as written, from every feed, with no relevance. `limit`: the news each should have, 100 when not given. The search goes back 1, 2, 4, 8, 16 then 30 days, only for the names that do not have that many yet; each group tells the `hours` it was last read over, each news its `link` (the address of the feed), which the translation of its title is asked by (POST /news/translations).\n\nA long list takes minutes (300 names: under a minute to three), so the search runs in background: the answer is `status: 'ready'` when it ends within a moment (a short list, one kept 10 minutes), else `status: 'running'` with `progress: {finished, total}` and the page asks again every few seconds. It stops after 170 seconds at most: `partial: true`, what it found kept. A search failed answers 502, too many running at once 503.",
                     "parameters": [{"name": "limit", "in": "query", "schema": {"type": "integer", "minimum": 10, "maximum": 100, "multipleOf": 10, "default": 100}}],
-                    "responses": {"200": {"description": "{limit, groups: [{term, qid, count, hours, limit, news: [{storyId, title, url, source, language, publishedAt, media, excerpt, marks}]}]}"}, "400": {"description": "limit is not 10 to 100 by tens"}}
+                    "responses": {"200": {"description": "{status: 'ready', limit, partial, groups: [{term, qid, count, hours, limit, news: [{storyId, title, url, link, source, language, publishedAt, media, excerpt, marks}]}]} or {status: 'running', limit, progress: {finished, total} | null}"}, "400": {"description": "limit is not 10 to 100 by tens"}, "502": {"description": "The search failed"}, "503": {"description": "Many searches are running"}}
                 }
             },
             "/briefing/{id}/vote": {
@@ -943,9 +943,27 @@ const options = {
                 "post": {
                     "tags": ["Entities"],
                     "summary": "Follow an item of Wikidata",
-                    "description": "Read from Wikidata (its names in the languages read, an alias of one common word left out, and its links still true: the players and coach of a club, the team of a player, the chair of a body...), kept a week. 30 at most per profile.",
+                    "description": "Read from Wikidata (its names in the languages read, an alias of one common word left out, and its links still true: the players and coach of a club, the team of a player, the chair of a body...), kept a week. 300 at most per profile, the names followed as written counted with the items.",
                     "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["qid"], "properties": {"qid": {"type": "string", "example": "Q483020"}}}}}},
-                    "responses": {"201": {"description": "{entities}"}, "400": {"description": "Not a Wikidata id, no profile, or 30 followed already"}, "404": {"description": "Wikidata has no such item"}, "502": {"description": "Wikidata could not be read"}}
+                    "responses": {"201": {"description": "{entities}"}, "400": {"description": "Not a Wikidata id, no profile, or 300 followed already"}, "404": {"description": "Wikidata has no such item"}, "502": {"description": "Wikidata could not be read"}}
+                }
+            },
+            "/entities/import/check": {
+                "post": {
+                    "tags": ["Entities"],
+                    "summary": "Look a list of names up in Wikidata",
+                    "description": "The first step of the import of a list of names (an Excel file read by the page). The names are looked for one after the other in the language of the profile (Wikidata answers a call every 0.4 s whoever asks): 10 at most a request, so a list of 300 is 30 requests. Each answer: `known` (already followed, as an item by one of its names or as written), `linked` (one item, `item`; or several and one stands out by far in Wikipedias and is called with that name, `famous: true`), `choose` (several, none standing out: `items`, 8 at most, the reader says which or none), `word` (none: to follow as written), `invalid` (2 to 60 characters).",
+                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "required": ["names"], "properties": {"names": {"type": "array", "maxItems": 10, "items": {"type": "string"}}}}}}},
+                    "responses": {"200": {"description": "{results: [{name, status, item?, items?, famous?}]}, in the order given"}, "400": {"description": "No profile, or not 1 to 10 names"}, "429": {"description": "Too many names imported"}, "502": {"description": "Wikidata could not be searched"}}
+                }
+            },
+            "/entities/import": {
+                "post": {
+                    "tags": ["Entities"],
+                    "summary": "Follow a list of names at once",
+                    "description": "The last step of the import: `qids`, the items of Wikidata (the ones the database does not know are described, 50 a call, and followed with their label alone; they are read in full in background, minutes for a list), `words`, the names to follow as written. A profile follows 300 names at most: what does not fit is left out, the items first.",
+                    "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"qids": {"type": "array", "items": {"type": "string", "example": "Q483020"}}, "words": {"type": "array", "items": {"type": "string"}}}}}}},
+                    "responses": {"200": {"description": "{added: {items, words}, left: {full, missing, invalid}, entities, words, limits: {total}}"}, "400": {"description": "No profile, not a list, or 300 followed already"}, "429": {"description": "Too many names imported"}, "502": {"description": "Wikidata could not be read"}}
                 }
             },
             "/entities/search": {

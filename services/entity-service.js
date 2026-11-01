@@ -19,16 +19,19 @@ import {FeedModel} from "../models/feed-model.js";
 import {MentionModel} from "../models/mention-model.js";
 import {feedsOf, namingTerm, newsOfTerms} from "./briefing-service.js";
 import {mentionKey} from "./utils/mentions.js";
-import {isQid, readItem, searchItems} from "./utils/wikidata.js";
+import {candidatesFor, describeItems, isQid, PERSON_SITELINKS, readItem, searchItems, SITELINKS_AHEAD} from "./utils/wikidata.js";
 import {readerLanguage} from "./utils/language.js";
 import {Filter} from "./utils/filter.js";
-import {cleanWatchTerms, MAX_WATCH_TERMS} from "./utils/watch-terms.js";
+import {cleanWatchTerms} from "./utils/watch-terms.js";
+import {mayName} from "./utils/name-prefilter.js";
 import {namesOfCards, shortName, suggestedNames} from "./utils/card-names.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 
 // Wikidata changes slowly: a squad between two windows of transfers, a coach now and then
 const REFRESH_DAYS = 7;
-const MAX_FOLLOWED = 30;
+// what a profile follows in all, the items of Wikidata and the names or words as written (300 since 2.11.2026,
+// 30 items and 20 words before): the briefing reads them by lots, see briefingGroups
+export const MAX_FOLLOWED = 300;
 const MAX_ADDED_NAMES = 10;
 const MAX_NAME = 60;
 // the windows of a briefing, 1 to 7 days
@@ -38,10 +41,32 @@ const MAX_LINKS_SEARCHED = 60;
 const NEWS_PER_LINK = 30;
 // in the briefing, as for a word (see watchedNews): the newest of each kept, all counted
 const BRIEFING_NEWS = 100;
-const BRIEFING_CONCURRENCY = 3;
+// from this many names the news the tagger has not read are not asked of the database by their texts (one
+// ILIKE each: 2,400 for 300 names), they are all read and the names looked for in memory (see untaggedNaming)
+const TEXT_ASKED_MAX = 30;
+// The words searched in the texts of the news (see wordsGroups) are few: the database answers each in 0.3 to
+// 0.6 s whatever its window (25 names, 15 s on a day and 31 s on a month, even for names met once), the
+// window being read again at each step. Lots of this many at once, this many at most
+const WORDS_PER_SEARCH = 10;
+const TEXT_WORDS_MAX = 30;
 // the cards of these last days the names to follow are taken from, those without names read again
 const SUGGESTED_DAYS = 14;
 const SUGGESTED_READ = 40;
+
+// A list of names to follow (an Excel file, see the client): checked by lots, a few names a request (Wikidata
+// answers one call every 0.4 s whoever asks, 300 names are two minutes), then followed in one request
+const CHECK_MAX = 10;
+const CHOICES_MAX = 8;
+
+// Of several items a name may be, the one that stands out: in at least PERSON_SITELINKS Wikipedias and in
+// SITELINKS_AHEAD times more than any other, whatever it is (a person, a club, a place); null when none does.
+// items: [{qid, links}]. "Kylian Mbappé" has a book and a character beside the footballer, "Real Madrid" a small
+// Argentine club called so beside the club of Madrid, "Michael Oliver" a referee, an actor and an academic of the
+// same weight
+export const dominantOf = (items) => {
+    const [first, second] = [...items].sort((a, b) => b.links - a.links);
+    return first && first.links >= PERSON_SITELINKS && first.links >= SITELINKS_AHEAD * (second?.links ?? 0) ? first.qid : null;
+};
 
 const fail = (status, message) => Object.assign(new Error(message), {status});
 
@@ -57,6 +82,16 @@ const fail = (status, message) => Object.assign(new Error(message), {status});
 const NEWS_KEPT_MS = 10 * 60e3;
 const TAGGER_LATE_MS = 10 * 60e3;
 const kept = new Map();         // `${profileId} ${hours} ${names} ${qids}` -> {at, groups}
+
+// the news of the window the tagger has not read that may name one of these names, as articlesHolding
+// gives them: asked by their texts for a few names, all read and filtered in memory for many
+const untaggedNaming = async (feedUrls, names, since) => {
+    if (names.length <= TEXT_ASKED_MAX) {
+        const texts = [...new Set(names.flatMap(name => [name, Filter.withoutAccents(name)]))];
+        return FeedModel.articlesHolding({feedUrls, texts, since, untagged: true});
+    }
+    return (await FeedModel.untaggedArticles({feedUrls, since})).filter(mayName(names));
+};
 export const itemTerm = (qid) => `@${qid}`;
 const namedNews = async (profileId, names, hours, qids = []) => {
     const key = `${profileId} ${hours} ${names.join('|')} ${qids.join('|')}`;
@@ -67,11 +102,10 @@ const namedNews = async (profileId, names, hours, qids = []) => {
     const feedUrls = await feedsOf(profileId);
     const since = new Date(Date.now() - hours * 3600e3);
     const keyOf = new Map(names.map(name => [name, mentionKey(name)]));
-    const texts = [...new Set(names.flatMap(name => [name, Filter.withoutAccents(name)]))];
     const [tagged, untagged] = await Promise.all([
         MentionModel.articlesNamed({keys: [...new Set(keyOf.values())].filter(Boolean), qids, feedUrls, since}),
         MentionModel.anyUntagged(since, new Date(Date.now() - TAGGER_LATE_MS))
-            .then(waiting => waiting ? FeedModel.articlesHolding({feedUrls, texts, since, untagged: true}) : []),
+            .then(waiting => waiting ? untaggedNaming(feedUrls, names, since) : []),
     ]);
     const articles = [...tagged, ...untagged]
         .sort((a, b) => (b.published_at ?? b.created_at) - (a.published_at ?? a.created_at));
@@ -135,6 +169,46 @@ const summary = (row, following) => ({
     inBriefing: Boolean(following?.in_briefing),
 });
 
+// The news naming these words in their texts over the last 'hours', by lots: [{term, count, news}], all
+// counted. A news is a candidate when its text holds the word as it is or without its accents, and kept when it
+// names it as a whole word (see newsOfTerms)
+const textNews = async (profileId, words, hours) => {
+    if (words.length === 0) return [];
+    const feedUrls = await feedsOf(profileId);
+    const since = new Date(Date.now() - hours * 3600e3);
+    const lots = Array.from({length: Math.ceil(words.length / WORDS_PER_SEARCH)}, (_, i) => words.slice(i * WORDS_PER_SEARCH, (i + 1) * WORDS_PER_SEARCH));
+    const done = await mapWithConcurrency(lots, 3, async (lot) => {
+        const texts = [...new Set(lot.flatMap(word => [word, Filter.withoutAccents(word)]))];
+        return newsOfTerms(lot, await FeedModel.articlesHolding({feedUrls, texts, since}), {limit: Infinity});
+    });
+    const failed = done.find(result => result.status === 'rejected');
+    if (failed) throw failed.reason;
+    return done.flatMap(result => result.value);
+};
+
+// The items followed from a list are rows with their label alone: read in full from Wikidata one after the
+// other, behind the one running (a call every 0.4 s whoever asks, the readers' searches go between), so that
+// their names, kind and links come in minutes. Wikidata asking to wait, the same item is asked again after
+// it, twice at most. Lost with a restart of the server: the item is read in full when its page is opened
+let filling = Promise.resolve();
+const fillItems = (qids, language) => {
+    filling = filling.then(async () => {
+        for (const qid of qids) {
+            for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                    const item = await readItem(qid, language);
+                    if (item) await EntityModel.save(item);
+                    break;
+                } catch (err) {
+                    console.error(`Entities: ${qid} not read from Wikidata (${err.message})`);
+                    if (!err.paused) break;
+                    await new Promise(resolve => setTimeout(resolve, Math.min(err.retryIn || 30e3, 120e3)));
+                }
+            }
+        }
+    }).catch(err => console.error(`Entities: the items followed were not read (${err.message})`));
+};
+
 const wordsOf = async (profileId) => (await ProfileModel.get(profileId))?.watch_terms ?? [];
 const sameWord = (a, b) => a.toLowerCase() === b.toLowerCase();
 
@@ -175,7 +249,7 @@ export const EntityService = {
     all: async (profileId) => ({
         entities: await EntityService.list(profileId),
         words: profileId === null ? [] : await wordsOf(profileId),
-        limits: {entities: MAX_FOLLOWED, words: MAX_WATCH_TERMS},
+        limits: {total: MAX_FOLLOWED},
     }),
 
     // a name or a word followed as written: every news writing it is in the briefing. {words}
@@ -183,7 +257,7 @@ export const EntityService = {
         const words = await wordsOf(profileId);
         const written = cleanName(word);
         if (words.some(other => sameWord(other, written))) return {words};
-        if (words.length >= MAX_WATCH_TERMS) throw fail(400, `You follow ${MAX_WATCH_TERMS} names or words at most.`);
+        if (words.length + await EntityModel.count(profileId) >= MAX_FOLLOWED) throw fail(400, `You follow ${MAX_FOLLOWED} names at most.`);
         const kept = cleanWatchTerms([...words, written]);
         await ProfileModel.setWatchTerms(profileId, kept);
         return {words: kept};
@@ -203,6 +277,123 @@ export const EntityService = {
         const row = isQid(qid) ? await EntityModel.byQid(qid) : null;
         if (!row || await EntityModel.setInBriefing(profileId, row.id, on) === 0) throw fail(404, 'You do not follow it.');
         return summary(row, await EntityModel.following(profileId, row.id));
+    },
+
+    // What a list of names makes: each name, one after the other, looked for in Wikidata in the language of the
+    // reader. [{name, status, item?, items?}] in the order given, status:
+    // - 'known': already followed, as an item (by one of its names) or as written;
+    // - 'linked': Wikidata has one item for it, item {qid, label, description} (the ones called exactly so, then
+    //   the ones named so at the start; the pages of a family or given name left aside); or several and one
+    //   stands out by far, in Wikipedias (see dominantOf), and is called with that name, told by famous: true;
+    // - 'choose': several and none stands out, items [..] (8 at most, the ones called exactly so first, then in
+    //   Wikidata's order): the reader says which, or none;
+    // - 'word': none, to follow as written;
+    // - 'invalid': 2 to 60 characters are a name.
+    // 'names': CHECK_MAX at most a request
+    checkNames: async (profileId, names) => {
+        if (profileId === null) throw fail(400, 'Write your profile first.');
+        if (!Array.isArray(names) || names.length === 0 || names.length > CHECK_MAX || !names.every(name => typeof name === 'string')) {
+            throw fail(400, `names: 1 to ${CHECK_MAX} names.`);
+        }
+        const language = await languageOf(profileId);
+        const [rows, words] = await Promise.all([EntityModel.followed(profileId), wordsOf(profileId)]);
+        const known = new Set([...rows.flatMap(row => namesFor(row, row)), ...words].map(mentionKey).filter(Boolean));
+        // each name looked for, one after the other (a call every 0.4 s, whoever asks)
+        const entries = [];
+        for (const name of names) {
+            const written = cleanName(name);
+            if (written.length < 2 || written.length > MAX_NAME) {
+                entries.push({name: written.slice(0, MAX_NAME), status: 'invalid'});
+            } else if (known.has(mentionKey(written))) {
+                entries.push({name: written, status: 'known'});
+            } else {
+                let found;
+                try {
+                    found = await candidatesFor(written, language);
+                } catch (err) {
+                    console.error(`Entities: "${written}" not looked for in Wikidata (${err.message})`);
+                    throw fail(502, 'Wikidata could not be searched, try again in a moment.');
+                }
+                const pool = [...found.exact, ...found.others];
+                entries.push(pool.length === 0 ? {name: written, status: 'word'}
+                    : pool.length === 1 ? {name: written, status: 'linked', item: pool[0]}
+                    : {name: written, status: 'choose', pool});
+            }
+        }
+        // a doubt: the item that stands out settles it. The Wikipedias of the items of all the doubts are counted
+        // together, 50 items a call; one that cannot be counted leaves the doubt to the reader
+        const doubts = entries.filter(entry => entry.status === 'choose');
+        const links = new Map();
+        const qids = [...new Set(doubts.flatMap(entry => entry.pool.map(item => item.qid)))];
+        for (let i = 0; i < qids.length; i += 50) {
+            try {
+                (await describeItems(qids.slice(i, i + 50), {batch: 50})).forEach(item => links.set(item.qid, item.links));
+            } catch (err) {
+                console.error(`Entities: the namesakes were not told apart (${err.message})`);
+            }
+        }
+        const results = entries.map(({pool, ...entry}) => {
+            if (!pool) return entry;
+            const standing = dominantOf(pool.filter(item => links.has(item.qid)).map(item => ({qid: item.qid, links: links.get(item.qid)})));
+            // it must be called what the reader wrote, not only known by it: "LFF" is an alias of a league of Lithuania
+            // far ahead of the others in Wikipedias, and no name of it
+            const item = pool.find(candidate => candidate.qid === standing && mentionKey(candidate.label).includes(mentionKey(entry.name)));
+            return item ? {...entry, status: 'linked', item, famous: true} : {...entry, items: pool.slice(0, CHOICES_MAX)};
+        });
+        return {results};
+    },
+
+    // A list of names followed at once: qids, the items of Wikidata (300 at most), words, the names to follow as
+    // written. What does not fit in MAX_FOLLOWED is left out, the items first. The items Wikidata has are
+    // followed with their label alone (their row is complete once read in full, in background: three calls
+    // each, minutes for a list, see fillItems); the ones it does not have are left out.
+    // {added: {items, words}, left: {full, missing, invalid}, entities, words, limits}
+    importNames: async (profileId, {qids = [], words = []} = {}) => {
+        if (profileId === null) throw fail(400, 'Write your profile first.');
+        if (!Array.isArray(qids) || !Array.isArray(words) || qids.length + words.length > 2 * MAX_FOLLOWED
+            || !qids.every(qid => isQid(qid)) || !words.every(word => typeof word === 'string')) {
+            throw fail(400, 'qids: items of Wikidata, words: names, 600 at most.');
+        }
+        const [rows, current] = await Promise.all([EntityModel.followed(profileId), wordsOf(profileId)]);
+        const room = MAX_FOLLOWED - rows.length - current.length;
+        if (room <= 0) throw fail(400, `You follow ${MAX_FOLLOWED} names at most.`);
+
+        const followedQids = new Set(rows.map(row => row.qid));
+        const newQids = [...new Set(qids)].filter(qid => !followedQids.has(qid));
+        const written = words.map(cleanName);
+        const valid = written.filter(word => word.length >= 2 && word.length <= MAX_NAME);
+        const taken = new Set(current.map(word => word.toLowerCase()));
+        const newWords = valid.filter(word => !taken.has(word.toLowerCase()) && taken.add(word.toLowerCase()));
+
+        const itemsTaken = newQids.slice(0, room);
+        const wordsTaken = newWords.slice(0, room - itemsTaken.length);
+        // the items Wikidata has, with their label: the ones the database does not know yet are described, 50 a call
+        const knownRows = await EntityModel.byQids(itemsTaken);
+        const known = new Set(knownRows.map(row => row.qid));
+        const unknown = itemsTaken.filter(qid => !known.has(qid));
+        const described = [];
+        for (let i = 0; i < unknown.length; i += 50) {
+            try {
+                described.push(...await describeItems(unknown.slice(i, i + 50), {batch: 50}));
+            } catch (err) {
+                console.error(`Entities: items not described by Wikidata (${err.message})`);
+                throw fail(502, 'Wikidata could not be read, try again in a moment.');
+            }
+        }
+        await EntityModel.addNamed(described.map(item => ({qid: item.qid, label: item.label, description: item.description || null})));
+        const existing = [...known, ...described.map(item => item.qid)];
+        await EntityModel.followMany(profileId, existing);
+        if (wordsTaken.length > 0) await ProfileModel.setWatchTerms(profileId, cleanWatchTerms([...current, ...wordsTaken]));
+
+        // the rows only named are read in full, one after the other, behind the reader
+        const unread = [...knownRows.filter(row => !row.fetched_at).map(row => row.qid), ...described.map(item => item.qid)];
+        if (unread.length > 0) fillItems(unread, await languageOf(profileId));
+        return {
+            added: {items: existing.length, words: wordsTaken.length},
+            left: {full: newQids.length - itemsTaken.length + newWords.length - wordsTaken.length, missing: itemsTaken.length - existing.length,
+                invalid: written.length - valid.length},
+            ...await EntityService.all(profileId),
+        };
     },
 
     // The names met on several cards of the reader's briefings of the last days that they follow neither
@@ -228,13 +419,14 @@ export const EntityService = {
         if (!ENTITY_HOURS.includes(hours)) throw fail(400, `hours: ${ENTITY_HOURS.join(', ')}.`);
         const written = cleanName(name);
         if (written.length < 2 || written.length > MAX_NAME) throw fail(400, `A name of 2 to ${MAX_NAME} characters.`);
-        const [qids, words] = await Promise.all([MentionModel.qidsOfKey(mentionKey(written)), profileId === null ? [] : wordsOf(profileId),
+        const [qids, words, items] = await Promise.all([MentionModel.qidsOfKey(mentionKey(written)), profileId === null ? [] : wordsOf(profileId),
+            profileId === null ? 0 : EntityModel.count(profileId),
             // opened, it is looked for in Wikidata before the others: next time it may be an item
             MentionModel.want({key: mentionKey(written)}).catch(() => 0)]);
         const [group] = await namedNews(profileId, [written], hours);
         return {
             name: written, qid: qids.length === 1 ? qids[0] : null,
-            followed: words.some(word => sameWord(word, written)), wordsLeft: Math.max(0, MAX_WATCH_TERMS - words.length),
+            followed: words.some(word => sameWord(word, written)), wordsLeft: Math.max(0, MAX_FOLLOWED - items - words.length),
             hours, count: group?.count ?? 0, news: group?.news ?? [],
         };
     },
@@ -245,12 +437,34 @@ export const EntityService = {
     // (the briefing reads those with too few news again over a longer window, see untilEnough)
     briefingGroups: async (profileId, hours, {limit = BRIEFING_NEWS, only = null} = {}) => {
         const rows = (await EntityModel.followed(profileId, {inBriefing: true})).filter(row => only === null || only.includes(row.qid));
-        const done = await mapWithConcurrency(rows, BRIEFING_CONCURRENCY, async (row) => {
-            const names = namesFor(row, row);
-            const found = new Map((await namedNews(profileId, names, hours, [row.qid])).map(group => [group.term, group]));
-            return {term: shortName(row.label, row.names), qid: row.qid, ...mergeNews([...names, itemTerm(row.qid)].map(term => found.get(term)), limit)};
-        });
-        return done.filter(result => result.status === 'fulfilled').map(result => result.value);
+        if (rows.length === 0) return [];
+        // all the items in one search: 300 of them, one each, were 300 searches of the database
+        const namesOf = new Map(rows.map(row => [row.qid, namesFor(row, row)]));
+        const found = new Map((await namedNews(profileId, [...new Set([...namesOf.values()].flat())], hours, rows.map(row => row.qid)))
+            .map(group => [group.term, group]));
+        return rows.map(row => ({term: shortName(row.label, row.names), qid: row.qid,
+            ...mergeNews([...namesOf.get(row.qid), itemTerm(row.qid)].map(term => found.get(term)), limit)}));
+    },
+
+    // The news of the names or words as written the profile follows: [{term, count, news}], one group each,
+    // 'limit' news kept, all counted over the last 'hours'. Two ways, for what each does well:
+    // - by the names the tagger found in the news (accents and case aside, as for an item), and the news it
+    //   has not read yet by their texts: the names of persons, bodies and places;
+    // - by the texts of every news, as a whole word, for the generic words and the acronyms ("VAR", "derby":
+    //   one word in lower case or in capitals), which the tagger meets in a quarter of their news and under
+    //   three kinds ("var" is a place, a body and a person, and the key forgets the capitals of an acronym), and
+    //   for the names it never met, TEXT_WORDS_MAX at most, the first in the order they are followed.
+    // A generic word beyond them is searched by the tagger's names
+    wordsGroups: async (profileId, words, hours, {limit = BRIEFING_NEWS} = {}) => {
+        if (words.length === 0) return [];
+        const generic = (word) => !/\s/.test(word) && (word === word.toLowerCase() || word === word.toUpperCase());
+        const seen = await MentionModel.seenOf([...new Set(words.filter(word => !generic(word)).map(mentionKey))]);
+        const texted = new Set([...words.filter(generic), ...words.filter(word => !generic(word) && !seen.has(mentionKey(word)))].slice(0, TEXT_WORDS_MAX));
+        const named = words.filter(word => !(generic(word) && texted.has(word)));
+        const [tagged, text] = await Promise.all([named.length > 0 ? namedNews(profileId, named, hours) : [], textNews(profileId, [...texted], hours)]);
+        const byTerm = new Map(tagged.map(group => [group.term, group]));
+        const byText = new Map(text.map(group => [group.term, group]));
+        return words.map(word => ({term: word, ...mergeNews([byTerm.get(word), byText.get(word)], limit)}));
     },
 
     // What the profile follows as the briefing marks it: [{label, qid, names}], the items in its
@@ -263,7 +477,7 @@ export const EntityService = {
 
     follow: async (profileId, qid) => {
         if (profileId === null) throw fail(400, 'Write your profile first.');
-        if (await EntityModel.count(profileId) >= MAX_FOLLOWED) throw fail(400, `You follow ${MAX_FOLLOWED} at most.`);
+        if (await EntityModel.count(profileId) + (await wordsOf(profileId)).length >= MAX_FOLLOWED) throw fail(400, `You follow ${MAX_FOLLOWED} names at most.`);
         const row = await loaded(qid, await languageOf(profileId));
         await EntityModel.follow(profileId, row.id);
         return EntityService.list(profileId);

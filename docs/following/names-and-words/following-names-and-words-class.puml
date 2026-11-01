@@ -69,7 +69,7 @@ end note
 package "utils" {
     class watchTerms {
         + cleanWatchTerms(terms)
-        + MAX_WATCH_TERMS = 20
+        + MAX_WATCH_TERMS = 300
     }
     class mentions {
         + mentionKey(name)

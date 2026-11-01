@@ -18,7 +18,13 @@ const router = express.Router();
 const wikidataLimit = rateLimit({windowMs: 60e3, max: 30, key: req => `user ${req.user.id}`,
     message: 'Too many searches of Wikidata, try again in a minute.'});
 
+// a list of names: ten names looked for a request, 300 names are 30 requests, then one to follow them
+const importLimit = rateLimit({windowMs: 10 * 60e3, max: 120, key: req => `import ${req.user.id}`,
+    message: 'Too many names imported, try again in a few minutes.'});
+
 router.get('', authenticateToken, activeProfile, EntityController.list);
+router.post('/import/check', authenticateToken, importLimit, activeProfile, needsProfile, EntityController.importCheck);
+router.post('/import', authenticateToken, importLimit, activeProfile, needsProfile, EntityController.importNames);
 router.get('/search', authenticateToken, wikidataLimit, activeProfile, EntityController.search);
 router.get('/suggestions', authenticateToken, activeProfile, needsProfile, EntityController.suggestions);
 router.get('/name', authenticateToken, activeProfile, needsProfile, EntityController.namePage);

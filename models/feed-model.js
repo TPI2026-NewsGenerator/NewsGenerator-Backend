@@ -131,6 +131,16 @@ export const FeedModel = {
           AND (${texts.map((_, i) => `a.search_text ILIKE $${i + 3}`).join(' OR ')})
         ORDER BY COALESCE(a.published_at, a.created_at) DESC`,
         feedUrls, since, ...texts.map(text => `%${text.replace(/[\\%_]/g, char => `\\${char}`)}%`)),
+    // The news of these feeds since 'since' the tagger has not read, the newest first, 'limit' at most (the
+    // index i_articles_untagged answers): what a long list of names looks for in the texts, in memory, when
+    // the tagger is late (see EntityService.namedNews). entities_at: null
+    untaggedArticles: async ({feedUrls, since, limit = 60000}) => prisma.$queryRawUnsafe(`
+        SELECT a.id, a.id_feed, a.link, a.title, a.description, a.published_at, a.created_at, a.id_story,
+               a.source_url, a.resolved_link, a.medium, a.lang, a.entities_at
+        FROM articles a
+        JOIN feeds f ON f.id = a.id_feed
+        WHERE a.entities_at IS NULL AND f.url = ANY($1::text[]) AND COALESCE(a.published_at, a.created_at) >= $2::timestamptz
+        ORDER BY a.created_at DESC LIMIT $3`, feedUrls, since, limit),
     // The articles of these feeds closest to a sentence, for the AI to choose from: the byMeaning closest
     // by dense + sparse_weight * sparse (as the interests of a profile, see rank_stories), and the
     // byWords with the most words of it (the sparse vector alone), which keeps the news naming what the

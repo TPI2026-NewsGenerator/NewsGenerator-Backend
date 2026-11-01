@@ -188,7 +188,10 @@ export const MentionModel = {
         ORDER BY o.centroid <#> c.centroid LIMIT $8`, mentionIds, qids, feedUrls, since, excluded, storyId, likeness, limit),
 
     // The news of these feeds since 'since' naming one of these names (their keys) or an item of
-    // Wikidata of these: the article with the keys and the items it names of them, the newest first
+    // Wikidata of these: the article with the keys and the items it names of them, the newest first. The
+    // links of a name are read from the first news of the window (the ids grow with the days, a day of
+    // margin): without it the links of a famous name of the whole month were read for one day, 100 names
+    // of a day took 14 s and took 0.16 s with it (bench/mentions-window.mjs)
     articlesNamed: async ({keys, qids, feedUrls, since}) => keys.length === 0 && qids.length === 0 ? [] : prisma.$queryRawUnsafe(`
         SELECT ${ARTICLE}, array_agg(DISTINCT m.key) AS keys,
                COALESCE(array_agg(DISTINCT m.qid) FILTER (WHERE m.qid IS NOT NULL), '{}') AS qids
@@ -197,9 +200,18 @@ export const MentionModel = {
         JOIN articles a ON a.id = am.id_article
         JOIN feeds f ON f.id = a.id_feed
         WHERE (m.key = ANY($1::text[]) OR m.qid = ANY($2::text[]))
+          AND am.id_article >= COALESCE((SELECT first.id FROM articles first
+                                         WHERE first.created_at >= $4::timestamptz - interval '1 day'
+                                         ORDER BY first.created_at LIMIT 1), 0)
           AND f.url = ANY($3::text[]) AND COALESCE(a.published_at, a.created_at) >= $4::timestamptz
         GROUP BY a.id
         ORDER BY COALESCE(a.published_at, a.created_at) DESC`, keys, qids, feedUrls, since),
+
+    // How many times the tagger met each of these names (their keys), all kinds together: Map key -> seen. A
+    // name it never met is not in it
+    seenOf: async (keys) => new Map(keys.length === 0 ? [] : (await prisma.$queryRawUnsafe(`
+        SELECT key, sum(seen)::int AS seen FROM mentions WHERE key = ANY($1::text[]) GROUP BY key`, keys))
+        .map(row => [row.key, row.seen])),
 
     // [qid]: the items of Wikidata the names written so (their key, see mentionKey) were linked to
     qidsOfKey: async (key) => (await prisma.$queryRawUnsafe(`

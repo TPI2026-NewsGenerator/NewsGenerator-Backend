@@ -58,6 +58,23 @@ export const EntityModel = {
         FROM profile_entities p JOIN entities e ON e.id = p.id_entity
         WHERE p.id_profile = $1 AND (p.in_briefing OR NOT $2) ORDER BY p.created_at DESC`, profileId, inBriefing),
 
+    // The rows of these items: [{id, qid, label, description, kind, names, fetched_at}], the ones known only
+    byQids: async (qids) => qids.length === 0 ? [] : prisma.$queryRawUnsafe(`SELECT ${ENTITY} FROM entities e WHERE e.qid = ANY($1::text[])`, qids),
+
+    // Items only named, as a list of names gives them: [{qid, label, description}] written with their label alone
+    // (read in full later, fetched_at stays null) when new, the ones known kept as they are
+    addNamed: async (items) => items.length === 0 ? 0 : prisma.$executeRawUnsafe(`
+        INSERT INTO entities (qid, label, description, kind, names)
+        SELECT i.qid, i.label, i.description, 'other', ARRAY[i.label]
+        FROM jsonb_to_recordset($1::jsonb) AS i(qid text, label text, description text)
+        ON CONFLICT (qid) DO NOTHING`, JSON.stringify(items)),
+
+    // these items followed by a profile at once, the ones already followed left as they are: how many were new
+    followMany: async (profileId, qids) => qids.length === 0 ? 0 : prisma.$executeRawUnsafe(`
+        INSERT INTO profile_entities (id_profile, id_entity)
+        SELECT $1, e.id FROM entities e WHERE e.qid = ANY($2::text[])
+        ON CONFLICT DO NOTHING`, profileId, qids),
+
     // {added_names, removed_names, in_briefing} of an item a profile follows, null when it does not follow it
     following: async (profileId, id) => (await prisma.$queryRawUnsafe(`
         SELECT added_names, removed_names, in_briefing FROM profile_entities WHERE id_profile = $1 AND id_entity = $2`, profileId, id))[0] ?? null,

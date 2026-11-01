@@ -8,23 +8,25 @@
 //               the briefing
 //
 
-import {beforeEach, describe, expect, it, jest} from '@jest/globals';
+import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const EntityModel = {
     byQid: jest.fn(), save: jest.fn(async () => 1), links: jest.fn(async () => []), following: jest.fn(async () => null),
     followed: jest.fn(async () => []), count: jest.fn(async () => 0), follow: jest.fn(), unfollow: jest.fn(async () => 1), setNames: jest.fn(),
-    setInBriefing: jest.fn(async () => 1),
+    setInBriefing: jest.fn(async () => 1), byQids: jest.fn(async () => []), addNamed: jest.fn(async () => 0), followMany: jest.fn(async () => 0),
 };
 const articlesHolding = jest.fn(async () => []);
+const untaggedArticles = jest.fn(async () => []);
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 jest.unstable_mockModule('../../models/entity-model.js', () => ({EntityModel}));
-jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {articlesHolding}}));
+jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {articlesHolding, untaggedArticles}}));
 const ProfileModel = {get: jest.fn(), setWatchTerms: jest.fn()};
 const BriefingModel = {recentCards: jest.fn(async () => [])};
 jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel}));
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel}));
 // the news the tagger read, and how many it has not (some: their texts are searched)
-const MentionModel = {articlesNamed: jest.fn(async () => []), personsEndingWith: jest.fn(async () => []), anyUntagged: jest.fn(async () => true), qidsOfKey: jest.fn(async () => []),
+const seenOf = jest.fn(async () => new Map());
+const MentionModel = {seenOf, articlesNamed: jest.fn(async () => []), personsEndingWith: jest.fn(async () => []), anyUntagged: jest.fn(async () => true), qidsOfKey: jest.fn(async () => []),
     articlesOfStories: jest.fn(async () => []), namesOfArticles: jest.fn(async () => []), want: jest.fn(async () => 0)};
 jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel}));
 const inTitle = (term) => (article) => article.title.includes(term);
@@ -40,9 +42,11 @@ jest.unstable_mockModule('../../services/briefing-service.js', () => ({
 }));
 const readItem = jest.fn();
 const searchItems = jest.fn();
+const candidatesFor = jest.fn(async () => ({exact: [], others: []}));
+const describeItems = jest.fn(async () => []);
 jest.unstable_mockModule('../../services/utils/wikidata.js', async () => ({
     ...await import('../../services/utils/wikidata-names.js'),
-    readItem, searchItems, readCountries: async () => new Map(), describeItems: async () => [], exactItems: async () => [], wikimediaHeaders: () => ({}), isQid: (value) => /^Q\d+$/.test(value ?? ''),
+    readItem, searchItems, candidatesFor, describeItems, PERSON_SITELINKS: 10, SITELINKS_AHEAD: 3, readCountries: async () => new Map(), exactItems: async () => [], wikimediaHeaders: () => ({}), isQid: (value) => /^Q\d+$/.test(value ?? ''),
 }));
 
 const {EntityService, mergeNews, namesFor} = await import('../../services/entity-service.js');
@@ -171,9 +175,10 @@ describe('EntityService.page', () => {
 });
 
 describe('EntityService.follow and setNames', () => {
-    it('should follow 30 at most', async () => {
-        EntityModel.count.mockResolvedValueOnce(30);
-        await expect(EntityService.follow(8, 'Q483020')).rejects.toMatchObject({status: 400});
+    it('should follow 300 names at most, the items and the words together', async () => {
+        EntityModel.count.mockResolvedValueOnce(250);
+        ProfileModel.get.mockResolvedValueOnce({text: 'Le football', languages: ['fr'], watch_terms: Array.from({length: 50}, (_, i) => `terme ${i}`)});
+        await expect(EntityService.follow(8, 'Q483020')).rejects.toMatchObject({status: 400, message: expect.stringContaining('300')});
         await EntityService.follow(8, 'Q483020');
         expect(EntityModel.follow).toHaveBeenCalledWith(8, 1);
     });
@@ -190,7 +195,7 @@ describe('EntityService.follow and setNames', () => {
 });
 
 describe('the names and words followed as written', () => {
-    it('should follow a word once whatever its case, 20 at most, and take one out', async () => {
+    it('should follow a word once whatever its case, 300 names at most with the items, and take one out', async () => {
         ProfileModel.get.mockResolvedValue({watch_terms: ['VAR']});
         expect(await EntityService.addWord(8, ' "Roberto Rosetti" ')).toEqual({words: ['VAR', 'Roberto Rosetti']});
         expect(ProfileModel.setWatchTerms).toHaveBeenCalledWith(8, ['VAR', 'Roberto Rosetti']);
@@ -198,8 +203,12 @@ describe('the names and words followed as written', () => {
         expect(await EntityService.addWord(8, 'var')).toEqual({words: ['VAR']});
         expect(ProfileModel.setWatchTerms).not.toHaveBeenCalled();
 
-        ProfileModel.get.mockResolvedValue({watch_terms: Array.from({length: 20}, (_, i) => `terme ${i}`)});
+        ProfileModel.get.mockResolvedValue({watch_terms: Array.from({length: 299}, (_, i) => `terme ${i}`)});
+        EntityModel.count.mockResolvedValueOnce(1);
         await expect(EntityService.addWord(8, 'PSG')).rejects.toMatchObject({status: 400});
+        // the last place is free when the items leave it
+        EntityModel.count.mockResolvedValueOnce(0);
+        expect((await EntityService.addWord(8, 'PSG')).words).toHaveLength(300);
 
         ProfileModel.get.mockResolvedValue({watch_terms: ['VAR', 'PSG']});
         expect(await EntityService.removeWord(8, 'psg')).toEqual({words: ['VAR']});
@@ -212,7 +221,7 @@ describe('the names and words followed as written', () => {
         const all = await EntityService.all(8);
         expect(all.entities).toEqual([expect.objectContaining({qid: 'Q483020', followed: true, inBriefing: false, links: 3})]);
         expect(all.words).toEqual(['VAR']);
-        expect(all.limits).toEqual({entities: 30, words: 20});
+        expect(all.limits).toEqual({total: 300});
     });
 });
 
@@ -272,13 +281,220 @@ describe('the news of what the profile follows in its briefing', () => {
     });
 });
 
+describe('many names followed', () => {
+    const item = (n, label = `Person ${n}`) => ({id: 100 + n, qid: `Q${1000 + n}`, label, description: null, kind: 'person', names: [label], added_names: [], removed_names: [], in_briefing: true, links: 0});
+    // whatever a test set is put back, even when it failed
+    afterEach(() => {
+        MentionModel.articlesNamed.mockReset().mockResolvedValue([]);
+        MentionModel.anyUntagged.mockResolvedValue(true);
+        EntityModel.followed.mockResolvedValue([]);
+        seenOf.mockReset().mockResolvedValue(new Map());
+        articlesHolding.mockReset().mockResolvedValue([]);
+        untaggedArticles.mockReset().mockResolvedValue([]);
+    });
+
+    it('should search all the items of the briefing at once, not one search each', async () => {
+        EntityModel.followed.mockResolvedValue([item(1), item(2), item(3)]);
+        MentionModel.anyUntagged.mockResolvedValue(false);
+        MentionModel.articlesNamed.mockResolvedValueOnce([
+            {...article(6, 'Person 1 wins', 61), keys: ['person 1'], qids: []},
+            {...article(7, 'Person 3 loses', 71), keys: ['person 3'], qids: ['Q1003']},
+        ]);
+        const groups = await EntityService.briefingGroups(21, 24, {limit: 10});
+
+        expect(MentionModel.articlesNamed).toHaveBeenCalledTimes(1);
+        const asked = MentionModel.articlesNamed.mock.calls[0][0];
+        expect(asked.keys).toEqual(expect.arrayContaining(['person 1', 'person 2', 'person 3']));
+        expect(asked.qids).toEqual(['Q1001', 'Q1002', 'Q1003']);
+        expect(groups.map(group => [group.term, group.count])).toEqual([['Person 1', 1], ['Person 2', 0], ['Person 3', 1]]);
+    });
+
+    it('should read the news the tagger has not read once and look for the names in memory, from many names', async () => {
+        const rows = Array.from({length: 40}, (_, i) => item(i + 1));
+        EntityModel.followed.mockResolvedValue(rows);
+        untaggedArticles.mockResolvedValue([
+            article(8, 'Person 7 signs', 81), article(9, 'The weather in Lyon', 91), article(5, 'Person 12 and Person 13', 51),
+        ]);
+        const groups = await EntityService.briefingGroups(22, 48, {limit: 10});
+
+        expect(untaggedArticles).toHaveBeenCalledTimes(1);
+        // 80 texts of an ILIKE each were not asked of the database
+        expect(articlesHolding).not.toHaveBeenCalled();
+        expect(groups.find(group => group.term === 'Person 7').count).toBe(1);
+        expect(groups.find(group => group.term === 'Person 12').count).toBe(1);
+        expect(groups.find(group => group.term === 'Person 13').count).toBe(1);
+        expect(groups.find(group => group.term === 'Person 8').count).toBe(0);
+    });
+
+    it('should search a generic word in the texts and a name by what the tagger found, the ones it never met in the texts too', async () => {
+        seenOf.mockResolvedValue(new Map([['roberto rosetti', 12], ['ceferin', 4]]));
+        MentionModel.anyUntagged.mockResolvedValue(false);
+        MentionModel.articlesNamed.mockResolvedValue([{...article(6, 'Roberto Rosetti retires', 61), keys: ['roberto rosetti'], qids: []}]);
+        articlesHolding.mockResolvedValue([article(7, 'La VAR a annulé le but', 71), article(8, 'Mystery Person wins', 81)]);
+        const groups = await EntityService.wordsGroups(23, ['VAR', 'Roberto Rosetti', 'Mystery Person', 'Ceferin'], 24, {limit: 10});
+
+        // asked of the tagger: the names, not the acronym ("var" is a place, a body and a person to it)
+        const keys = MentionModel.articlesNamed.mock.calls[0][0].keys;
+        expect(keys).toEqual(expect.arrayContaining(['roberto rosetti', 'ceferin', 'mystery person']));
+        expect(keys).not.toContain('var');
+        // asked of the texts: the acronym and the name never met
+        const texts = articlesHolding.mock.calls.flatMap(([asked]) => asked.texts);
+        expect(texts).toEqual(expect.arrayContaining(['VAR', 'Mystery Person']));
+        expect(texts).not.toContain('Roberto Rosetti');
+        expect(groups.map(group => [group.term, group.count])).toEqual([['VAR', 1], ['Roberto Rosetti', 1], ['Mystery Person', 1], ['Ceferin', 0]]);
+    });
+
+    it('should search the texts for thirty words at most, in lots, the others by the names the tagger found', async () => {
+        MentionModel.anyUntagged.mockResolvedValue(false);
+        const words = Array.from({length: 40}, (_, i) => `word${i}`);
+        await EntityService.wordsGroups(24, words, 24);
+
+        expect(articlesHolding).toHaveBeenCalledTimes(3);
+        const texts = new Set(articlesHolding.mock.calls.flatMap(([asked]) => asked.texts));
+        expect(texts.size).toBe(30);
+        expect(texts.has('word29')).toBe(true);
+        expect(texts.has('word30')).toBe(false);
+        expect(MentionModel.articlesNamed.mock.calls[0][0].keys).toEqual(expect.arrayContaining(['word30', 'word39']));
+        expect(MentionModel.articlesNamed.mock.calls[0][0].keys).not.toContain('word0');
+    });
+
+    it('should search nothing for no word', async () => {
+        expect(await EntityService.wordsGroups(25, [], 24)).toEqual([]);
+        expect(MentionModel.articlesNamed).not.toHaveBeenCalled();
+        expect(articlesHolding).not.toHaveBeenCalled();
+    });
+});
+
+describe('a list of names followed at once', () => {
+    const found = (qid, label, description = null) => ({qid, label, description});
+    const kept = (word) => ({watch_terms: word, text: 'Le football', languages: ['fr']});
+    afterEach(() => {
+        EntityModel.followed.mockResolvedValue([]);
+        EntityModel.count.mockResolvedValue(0);
+        EntityModel.byQids.mockReset().mockResolvedValue([]);
+        candidatesFor.mockReset().mockResolvedValue({exact: [], others: []});
+        describeItems.mockReset().mockResolvedValue([]);
+        readItem.mockReset();
+    });
+
+    it('should tell each name: known, linked to its only item, linked to the one that stands out, to choose, as written, or invalid', async () => {
+        EntityModel.followed.mockResolvedValue([{...PSG, added_names: [], removed_names: [], in_briefing: true}]);
+        ProfileModel.get.mockResolvedValue(kept(['VAR']));
+        candidatesFor.mockImplementation(async (name) => ({
+            'Gianni Infantino': {exact: [found('Q124138', 'Gianni Infantino')], others: []},
+            'Real Madrid': {exact: [found('Q2469894', 'Real Madrid', 'Argentine club')], others: [found('Q8682', 'Real Madrid CF', 'Spanish club')]},
+            'Michael Oliver': {exact: [found('Q1', 'Michael Oliver', 'referee'), found('Q2', 'Michael Oliver', 'actor')], others: []},
+            'Paris': {exact: [found('Q90', 'Paris'), found('Q3', 'Paris')], others: []},
+            'Lise Klaveness': {exact: [], others: [found('Q5', 'Lise Klaveness')]},
+            // an acronym that is the alias of a league far ahead of the others: not its name, the reader chooses
+            'LFF': {exact: [found('Q209008', 'First League'), found('Q7', 'Liburnia Film Festival')], others: []},
+        }[name] ?? {exact: [], others: []}));
+        // the Wikipedias each item is in: the club of Madrid far ahead of the Argentine one, Paris of the others, the namesakes level
+        const inWikipedias = {Q2469894: 2, Q8682: 200, Q90: 300, Q3: 20, Q1: 25, Q2: 22, Q209008: 40, Q7: 5};
+        describeItems.mockImplementation(async (qids) => qids.filter(qid => qid in inWikipedias).map(qid => ({qid, label: qid, description: '', links: inWikipedias[qid]})));
+
+        const {results} = await EntityService.checkNames(8, ['psg', 'var', 'x', 'Gianni Infantino', 'Real Madrid', 'Michael Oliver', 'Paris', 'Lise Klaveness', 'Vadims Ļašenko']);
+
+        expect(results.map(result => [result.name, result.status])).toEqual([
+            ['psg', 'known'], ['var', 'known'], ['x', 'invalid'], ['Gianni Infantino', 'linked'], ['Real Madrid', 'linked'],
+            ['Michael Oliver', 'choose'], ['Paris', 'linked'], ['Lise Klaveness', 'linked'], ['Vadims Ļašenko', 'word'],
+        ]);
+        // the item that stands out settles it, whatever the one called exactly so: the club of Madrid, not the Argentine one
+        expect(results[4]).toMatchObject({item: {qid: 'Q8682'}, famous: true});
+        expect(results[3].famous).toBeUndefined();
+        // several of the same weight: the reader chooses, the ones called so first
+        expect(results[5].items.map(item => item.qid)).toEqual(['Q1', 'Q2']);
+        // looked for in the language of the profile
+        expect(candidatesFor).toHaveBeenCalledWith('Gianni Infantino', 'fr');
+        // a name known or invalid is not looked for, nor is one with a single item asked to be told from others
+        expect(candidatesFor).toHaveBeenCalledTimes(6);
+        // the items of the three doubts counted in one call, not one call each
+        expect(describeItems).toHaveBeenCalledTimes(1);
+        expect(describeItems.mock.calls[0][0]).toEqual(expect.arrayContaining(['Q2469894', 'Q8682', 'Q1', 'Q2', 'Q90', 'Q3']));
+
+        // far ahead in Wikipedias but not called "LFF": left to the reader
+        const league = await EntityService.checkNames(8, ['LFF']);
+        expect(league.results[0]).toMatchObject({status: 'choose'});
+        expect(league.results[0].items.map(item => item.qid)).toEqual(['Q209008', 'Q7']);
+    });
+
+    it('should refuse no name, more than ten, a name that is not text, and a profile that is not written', async () => {
+        await expect(EntityService.checkNames(8, [])).rejects.toMatchObject({status: 400});
+        await expect(EntityService.checkNames(8, Array.from({length: 11}, (_, i) => `Name ${i}`))).rejects.toMatchObject({status: 400});
+        await expect(EntityService.checkNames(8, [42])).rejects.toMatchObject({status: 400});
+        await expect(EntityService.checkNames(null, ['A name'])).rejects.toMatchObject({status: 400});
+    });
+
+    it('should say when Wikidata could not be asked, and settle a doubt it could not decide by the reader', async () => {
+        const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        candidatesFor.mockRejectedValueOnce(Object.assign(new Error('Wikidata asked to wait.'), {paused: true}));
+        await expect(EntityService.checkNames(8, ['Gianni Infantino'])).rejects.toMatchObject({status: 502});
+
+        candidatesFor.mockResolvedValue({exact: [found('Q1', 'Al'), found('Q2', 'Al')], others: []});
+        describeItems.mockRejectedValue(new Error('Wikidata lags behind.'));
+        const {results} = await EntityService.checkNames(8, ['Al']);
+        expect(results[0].status).toBe('choose');
+        spy.mockRestore();
+    });
+
+    it('should follow the items and the words at once, the items Wikidata has with their label, and read them in full after', async () => {
+        EntityModel.followed.mockResolvedValue([{...PSG, added_names: [], removed_names: [], in_briefing: true}]);
+        ProfileModel.get.mockResolvedValue(kept(['VAR']));
+        // Q10 is known and read, Q11 known by its label only, Q12 new, Q13 not in Wikidata any more
+        EntityModel.byQids.mockResolvedValue([{id: 10, qid: 'Q10', fetched_at: new Date()}, {id: 11, qid: 'Q11', fetched_at: null}]);
+        describeItems.mockResolvedValue([{qid: 'Q12', label: 'Gianni Infantino', description: 'administrator'}]);
+        readItem.mockImplementation(async (qid) => ({qid, label: `Item ${qid}`, description: null, kind: 'person', names: [`Item ${qid}`], links: []}));
+
+        const answer = await EntityService.importNames(8, {qids: ['Q483020', 'Q10', 'Q11', 'Q12', 'Q13', 'Q10'], words: ['VAR', 'Vadims  Ļašenko', 'x', ' "LFF" ', 'lff']});
+
+        // Q483020 is followed already; Q13 is described by nobody
+        expect(describeItems).toHaveBeenCalledWith(['Q12', 'Q13'], {batch: 50});
+        expect(EntityModel.addNamed).toHaveBeenCalledWith([{qid: 'Q12', label: 'Gianni Infantino', description: 'administrator'}]);
+        expect(EntityModel.followMany).toHaveBeenCalledWith(8, ['Q10', 'Q11', 'Q12']);
+        expect(ProfileModel.setWatchTerms).toHaveBeenCalledWith(8, ['VAR', 'Vadims Ļašenko', 'LFF']);
+        expect(answer.added).toEqual({items: 3, words: 2});
+        expect(answer.left).toEqual({full: 0, missing: 1, invalid: 1});
+        expect(answer.limits).toEqual({total: 300});
+
+        // the rows only named are read in full one after the other, in background: Q11 and Q12
+        await new Promise(resolve => setTimeout(resolve, 20));
+        expect(readItem.mock.calls.map(([qid]) => qid)).toEqual(['Q11', 'Q12']);
+        expect(EntityModel.save).toHaveBeenCalledTimes(2);
+    });
+
+    it('should follow the room left, the items first, and say how many were left out', async () => {
+        EntityModel.count.mockResolvedValue(297);
+        EntityModel.followed.mockResolvedValue(Array.from({length: 297}, (_, i) => ({...PSG, id: 500 + i, qid: `Q${5000 + i}`, added_names: [], removed_names: [], in_briefing: true})));
+        ProfileModel.get.mockResolvedValue(kept([]));
+        EntityModel.byQids.mockResolvedValue(['Q1', 'Q2'].map((qid, i) => ({id: i + 1, qid, fetched_at: new Date()})));
+        describeItems.mockResolvedValue([{qid: 'Q3', label: 'Third', description: ''}]);
+
+        const answer = await EntityService.importNames(8, {qids: ['Q1', 'Q2', 'Q3'], words: ['Word one', 'Word two']});
+        expect(EntityModel.followMany).toHaveBeenCalledWith(8, ['Q1', 'Q2', 'Q3']);
+        expect(ProfileModel.setWatchTerms).not.toHaveBeenCalled();
+        expect(answer.added).toEqual({items: 3, words: 0});
+        expect(answer.left.full).toBe(2);
+    });
+
+    it('should refuse a list that is not one, and a profile that follows all it can', async () => {
+        await expect(EntityService.importNames(8, {qids: ['DROP TABLE'], words: []})).rejects.toMatchObject({status: 400});
+        await expect(EntityService.importNames(8, {qids: [], words: [42]})).rejects.toMatchObject({status: 400});
+        await expect(EntityService.importNames(8, {qids: 'Q1', words: []})).rejects.toMatchObject({status: 400});
+        await expect(EntityService.importNames(null, {qids: [], words: []})).rejects.toMatchObject({status: 400});
+
+        ProfileModel.get.mockResolvedValue(kept(Array.from({length: 300}, (_, i) => `word ${i}`)));
+        EntityModel.followed.mockResolvedValue([]);
+        await expect(EntityService.importNames(8, {qids: ['Q1'], words: []})).rejects.toMatchObject({status: 400, message: expect.stringContaining('300')});
+    });
+});
+
 describe('EntityService.namePage', () => {
     it('should give the news of a name as written, the item the tagger linked it to, and whether it is followed', async () => {
         MentionModel.qidsOfKey.mockResolvedValueOnce(['Q99']);
         ProfileModel.get.mockResolvedValue({watch_terms: ['lff']});
         articlesHolding.mockResolvedValueOnce([article(8, 'La LFF soutient Infantino', 80)]);
         const page = await EntityService.namePage(10, 'LFF', 72);
-        expect(page).toMatchObject({name: 'LFF', qid: 'Q99', followed: true, wordsLeft: 19, count: 1});
+        expect(page).toMatchObject({name: 'LFF', qid: 'Q99', followed: true, wordsLeft: 299, count: 1});
         expect(MentionModel.qidsOfKey).toHaveBeenCalledWith('lff');
         expect(MentionModel.want).toHaveBeenCalledWith({key: 'lff'});
 

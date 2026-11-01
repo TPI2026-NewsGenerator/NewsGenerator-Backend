@@ -931,13 +931,13 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     return items;
 };
 
-// The news of the terms the profile follows (names or words, see cleanWatchTerms): every news since
-// 'since' its feeds gave that names one in its title or description, as a whole word, its accents and
-// case aside (as the exact words of a search, see Filter). Not chosen by the AI nor read, whatever their
+// The news of the terms the profile follows (names or words, see cleanWatchTerms and EntityService): the
+// news of the window its feeds gave that name one in their title or description, as a whole word, its accents
+// and case aside (as the exact words of a search, see Filter). Not chosen by the AI nor read, whatever their
 // relevance, from every feed (the ones the thumbs left out too): the reader asked for all of them. One
 // line per story, its newest news, with how many media told it, the 'limit' newest kept (the reader's
-// choice since 1.11.2026, 100 by default as the user chose on 8.10.2026), all counted since 'since'.
-// [{term, count, news: [{storyId, title, url, source, language, publishedAt, media, excerpt}]}]
+// choice since 1.11.2026, 100 by default as the user chose on 8.10.2026), all counted over the window.
+// [{term, count, news: [{storyId, title, url, link, source, language, publishedAt, media, excerpt}]}]
 const WATCHED_PER_TERM = 100;
 
 // The words of the description around the term, when the title does not name it: the line would not
@@ -956,42 +956,56 @@ export const excerptOf = (title, description, term) => {
     if (end < description.length) end = Math.max(first[1], description.lastIndexOf(' ', end));
     return `${start > 0 ? '…' : ''}${description.slice(start, end).trim()}${end < description.length ? '…' : ''}`;
 };
-export const watchedNews = async (terms, {feedUrls, since, limit = WATCHED_PER_TERM}) => {
-    if (terms.length === 0) return [];
-    const articles = await FeedModel.searchArticles({
-        feedUrls, keywords: Filter.parse([terms.map(term => `"${term}"`).join(', ')]), timeframe: {start: since},
-    });
-    return newsOfTerms(terms, articles, {limit});
-};
-
 // Each key read over a window growing step by step, until it has 'limit' stories or the longest is read:
 // the ones with enough are not read again over the next, a frequent word is done in a day when a rare name
 // takes the month. read(keys, hours): a Map key -> {count, ...}; keys null: all of them, the first read
 // gives them. [{...group, hours, limit}] in the order they were first read, hours: the window each was
 // last read over, for the page to say how far back its count goes (the briefings before 1.11.2026 have
-// none: the window of the briefing)
-export const untilEnough = async (keys, read, limit, steps = WATCH_STEPS) => {
+// none: the window of the briefing). onStep(groups) after each window; stopAt: the time (ms) the search
+// must be over by, the next window is not read when the last took so long that it would end after it
+// (onStop() then): the groups hold what was found
+export const untilEnough = async (keys, read, limit, steps = WATCH_STEPS, {onStep = null, stopAt = null, onStop = null} = {}) => {
     const groups = new Map();
     let open = keys;
+    let lastMs = 0;
     for (const hours of steps) {
         if (open !== null && open.length === 0) break;
+        // the windows are longer and longer to read: the next takes about twice the last
+        if (stopAt !== null && lastMs > 0 && Date.now() + lastMs * 2 > stopAt) {
+            onStop?.();
+            break;
+        }
+        const started = Date.now();
         for (const [key, group] of await read(open, hours)) groups.set(key, {...group, hours, limit});
+        lastMs = Date.now() - started;
         open = [...groups].filter(([, group]) => group.count < limit).map(([key]) => key);
+        onStep?.([...groups.values()]);
     }
     return [...groups.values()];
 };
 
 // The news of what the profile follows (see EntityService): the items of Wikidata it wants in its
-// briefing, by the names the tagger found in each news, in any language, and its words, by their text, each
-// with the 'limit' news wanted (see untilEnough). [{term, qid, count, news, hours, limit}], qid null for a word
-export const followedNews = async (profileId, words, {feedUrls, limit}) => {
+// briefing, by the names the tagger found in each news, in any language, and its words, by the names the tagger
+// found and, for the ones it knows little, their texts, each with the 'limit' news wanted (see untilEnough).
+// The items and the words are searched at the same time. {groups: [{term, qid, count, news, hours, limit}], partial}:
+// qid null for a word; partial: the search stopped at 'stopAt' with names that might have more news
+// further back. onProgress({finished, total}): the names that have their news or went back the month
+export const followedNews = async (profileId, words, {limit, onProgress = null, stopAt = null}) => {
+    const longest = WATCH_STEPS.at(-1);
+    const parts = {items: {finished: 0, total: 0}, words: {finished: 0, total: words.length}};
+    let partial = false;
+    const step = (part) => (groups) => {
+        parts[part] = {finished: groups.filter(group => group.count >= limit || group.hours === longest).length, total: groups.length};
+        onProgress?.({finished: parts.items.finished + parts.words.finished, total: parts.items.total + parts.words.total});
+    };
+    const options = (part) => ({onStep: step(part), stopAt, onStop: () => { partial = true; }});
     const [items, terms] = await Promise.all([
         untilEnough(null, async (qids, hours) => new Map((await EntityService.briefingGroups(profileId, hours, {limit, only: qids}))
-            .map(group => [group.qid, group])), limit),
-        untilEnough(words, async (open, hours) => new Map((await watchedNews(open, {feedUrls, since: new Date(Date.now() - hours * 3600e3), limit}))
-            .map(group => [group.term, group])), limit),
+            .map(group => [group.qid, group])), limit, WATCH_STEPS, options('items')),
+        untilEnough(words, async (open, hours) => new Map((await EntityService.wordsGroups(profileId, open, hours, {limit}))
+            .map(group => [group.term, group])), limit, WATCH_STEPS, options('words')),
     ]);
-    return [...items, ...terms.map(group => ({...group, qid: null}))];
+    return {groups: [...items, ...terms.map(group => ({...group, qid: null}))], partial};
 };
 
 // What the reader was shown in the tab is noted on the last briefing of the profile (briefings.watched):
@@ -1008,29 +1022,70 @@ const rememberShown = async (profileId, groups) => {
     }
 };
 
-// The news of what the profile follows, read when the tab of the page is opened: {limit, groups: [{term,
-// qid, count, news: [{..., marks}], hours, limit}]}, from every feed (the ones the thumbs left out too: the
-// reader asked for all of them), the items followed first, then the names and words as written, the
-// terms marked in the titles and the words around them. Kept 10 minutes for what the profile follows
-// and the number wanted: the tab is opened again, the page reloaded
+// The news of what the profile follows, searched when the tab of the page is opened: {status, limit, groups:
+// [{term, qid, count, news: [{..., marks}], hours, limit}], partial, progress}, from every feed (the ones the
+// thumbs left out too: the reader asked for all of them), the items followed first, then the names and words
+// as written, the terms marked in the titles and the words around them. A long list takes minutes (300
+// names: see bench/following-scale.mjs), so the search runs in background as a briefing is written: the
+// answer is 'ready' when it ends within a moment (a short list, one kept), else 'running' with the names done
+// ({finished, total}) and the page asks again until it is 'ready'. It stops at FOLLOWING_BUDGET_MS, what it
+// found kept, partial. Kept 10 minutes for the profile, what it follows and the number wanted: the tab is
+// opened again, the page reloaded
 const FOLLOWING_KEPT_MS = 10 * 60e3;
-const followingKept = new Map();        // `${profileId} ${limit} ${follows}` -> {at, answer}
-export const followingNews = async (profileId, limit = WATCH_LIMIT) => {
+const FOLLOWING_WAIT_MS = 2500;
+export const FOLLOWING_BUDGET_MS = 170e3;
+const MAX_FOLLOWING_JOBS = 4;
+const followingJobs = new Map();        // `${profileId} ${limit} ${follows}` -> {status, progress, answer, error, endedAt, done}
+
+const followingJob = (profileId, words, follows, limit) => {
+    const job = {status: 'running', progress: null, answer: null, error: null, endedAt: null};
+    job.done = (async () => {
+        try {
+            const {groups, partial} = await followedNews(profileId, words, {limit, onProgress: progress => { job.progress = progress; },
+                stopAt: Date.now() + FOLLOWING_BUDGET_MS});
+            await rememberShown(profileId, groups);
+            const terms = [...new Set(follows.flatMap(follow => follow.names))];
+            job.answer = {limit, partial, groups: groups.map(group => ({...group, news: group.news.map(news => ({...news, marks: marksOf({title: news.title, excerpt: news.excerpt}, terms)}))}))};
+            job.status = 'ready';
+        } catch (err) {
+            console.error(`Briefing: the news of what the profile follows were not searched (${err.message})`);
+            job.error = err.message ?? String(err);
+            job.status = 'failed';
+        } finally {
+            job.endedAt = Date.now();
+        }
+    })();
+    return job;
+};
+
+export const followingNews = async (profileId, limit = WATCH_LIMIT, {waitMs = FOLLOWING_WAIT_MS} = {}) => {
     if (!WATCH_LIMITS.includes(limit)) throw Object.assign(new Error(`limit: ${WATCH_LIMITS.join(', ')}.`), {status: 400});
-    if (profileId === null) return {limit, groups: []};
+    if (profileId === null) return {status: 'ready', limit, partial: false, groups: []};
     const words = (await ProfileModel.get(profileId))?.watch_terms ?? [];
     const follows = await EntityService.followTerms(profileId, words);
-    const key = `${profileId} ${limit} ${JSON.stringify(follows)}`;
-    const known = followingKept.get(key);
-    if (known && Date.now() - known.at < FOLLOWING_KEPT_MS) return known.answer;
-    for (const [other, entry] of followingKept) if (Date.now() - entry.at >= FOLLOWING_KEPT_MS) followingKept.delete(other);
+    if (follows.length === 0) return {status: 'ready', limit, partial: false, groups: []};
 
-    const groups = follows.length === 0 ? [] : await followedNews(profileId, words, {feedUrls: await feedsOf(profileId), limit});
-    await rememberShown(profileId, groups);
-    const terms = [...new Set(follows.flatMap(follow => follow.names))];
-    const answer = {limit, groups: groups.map(group => ({...group, news: group.news.map(news => ({...news, marks: marksOf({title: news.title, excerpt: news.excerpt}, terms)}))}))};
-    followingKept.set(key, {at: Date.now(), answer});
-    return answer;
+    const key = `${profileId} ${limit} ${JSON.stringify(follows)}`;
+    for (const [other, job] of followingJobs) if (job.endedAt !== null && Date.now() - job.endedAt >= FOLLOWING_KEPT_MS) followingJobs.delete(other);
+    let job = followingJobs.get(key);
+    if (job?.status === 'failed') {
+        followingJobs.delete(key);
+        throw Object.assign(new Error(job.error), {status: 502});
+    }
+    if (!job) {
+        if ([...followingJobs.values()].filter(other => other.status === 'running').length >= MAX_FOLLOWING_JOBS) {
+            throw Object.assign(new Error('Many searches of the news followed are running, try again in a minute.'), {status: 503});
+        }
+        job = followingJob(profileId, words, follows, limit);
+        followingJobs.set(key, job);
+    }
+    // a short list, or one kept, answers at once
+    await Promise.race([job.done, new Promise(resolve => setTimeout(resolve, waitMs))]);
+    if (job.status === 'failed') {
+        followingJobs.delete(key);
+        throw Object.assign(new Error(job.error), {status: 502});
+    }
+    return job.status === 'ready' ? {status: 'ready', ...job.answer} : {status: 'running', limit, progress: job.progress};
 };
 
 // the articles whose title or description names a term as a whole word
@@ -1060,6 +1115,9 @@ export const newsOfTerms = (terms, articles, {limit = WATCHED_PER_TERM, holds = 
                 storyId: article.id_story ?? null,
                 title: article.title,
                 url: addressOf(article),
+                // its address as the feed gave it, which the translation of its title asks for (a link of
+                // Google News decoded has another url, see NewsService.translateNews)
+                link: article.link,
                 source: siteOf(article),
                 language: article.lang ?? null,
                 publishedAt: (article.published_at ?? article.created_at)?.toISOString?.() ?? null,

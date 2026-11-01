@@ -67,7 +67,9 @@ package "Business" {
     }
 }
 note right of entityService
-    30 items and 20 names or words per profile.
+    300 items, names or words per profile.
+    The news of a long list: a search in
+    background, 3 minutes at most.
     An item is read again from Wikidata when
     opened or followed 7 days after (its names,
     its links still true); a reader adds 10 names

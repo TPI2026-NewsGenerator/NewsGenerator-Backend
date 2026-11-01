@@ -178,6 +178,19 @@ const searchNamed = async (name, language) => {
     return (answer.search ?? []).filter(item => isQid(item.id) && !NOT_NAMED.test(item.description ?? ''));
 };
 
+// The items Wikidata finds for a name as a reader writes it (a list to import), the pages of Wikimedia, of a
+// family or given name aside, in its order: {exact, others}, [{qid, label, description}] each (described in
+// English). exact: the ones called so, by a label or an alias, whatever the case and the accents; others: the
+// ones whose name only starts so
+export const candidatesFor = async (name, language = 'en') => {
+    const key = mentionKey(name);
+    if (key.length < 2) return {exact: [], others: []};
+    const items = await searchNamed(name, language);
+    const exact = (item) => mentionKey(item.match?.text ?? item.label ?? '') === key || mentionKey(item.label ?? '') === key;
+    const described = (item) => ({qid: item.id, label: item.label ?? item.id, description: item.description ?? null});
+    return {exact: items.filter(exact).map(described), others: items.filter(item => !exact(item)).map(described)};
+};
+
 // A person named as several items are: the one of them who is a human (P31 Q5) and is in far more
 // Wikipedias than any other (sitelinks), the famous one. A famous name has the most namesakes: "David
 // Beckham" a Canadian candidate, "Donald Trump" songs. On 40 names often met and never linked (18.10.2026)

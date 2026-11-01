@@ -73,7 +73,7 @@ package "Business" {
     }
 }
 note bottom of entityService
-    30 items per profile; read again from
+    300 names per profile; read again from
     Wikidata 7 days after; 10 names of the
     reader; 60 links searched, 30 news each;
     the news kept 10 minutes

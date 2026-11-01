@@ -8,7 +8,8 @@
 
 "use strict"
 
-export const MAX_WATCH_TERMS = 20;
+// the words alone: the items count too in what a profile follows (see MAX_FOLLOWED in entity-service.js)
+export const MAX_WATCH_TERMS = 300;
 // searched as a whole word: one letter would find everything, a sentence nothing
 const TERM_CHARS = [2, 60];
 
