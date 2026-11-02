@@ -593,7 +593,7 @@ const options = {
                 "post": {
                     "tags": ["Feeds"],
                     "summary": "Add recommended sources",
-                    "description": "Only ids are sent: each is checked to be recommended to this reader right now, so every address added is one the server already reads, never one the client names. They are added as if by hand: counted in the limit of 800, never removed without the reader.",
+                    "description": "Only ids are sent: each is checked to be recommended to this reader right now, so every address added is one the server already reads, never one the client names. They are added as if by hand: counted in the limit of 2500, never removed without the reader.",
                     "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "properties": {"ids": {"type": "array", "items": {"type": "integer"}, "maxItems": 20}}, "required": ["ids"]}}}},
                     "responses": {
                         "200": {"description": "{feeds, errors}: the sources added, and why the others were not ({id, site, error})"},

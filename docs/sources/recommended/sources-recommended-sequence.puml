@@ -48,7 +48,7 @@ Service -> Service : 1 to 20 integer ids (else 400)
 Service -> Service : recommended(profileId) again:\nonly an id still offered is added
 Service -> Models : countUserFeeds, userFeedUrls
 loop each id
-    alt not offered any more, 800 sources, no room on the bridge
+    alt not offered any more, 2500 sources, no room on the bridge
         Service -> Service : an error for this id
     else
         Service -> Models : addUserFeed(url of the server's row,\nsite, category, language): origin 'user'

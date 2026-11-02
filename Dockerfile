@@ -13,5 +13,10 @@ COPY . .
 # the client of Prisma is generated from the schema, no database is read
 RUN DATABASE_URL=postgresql://build@localhost/build pnpm exec prisma generate
 ENV TZ=Europe/Zurich
+# Each address read looks up its name first (dns.lookup, in the 4 threads Node keeps for it), and a list of
+# sites checks 6 sites at a time, 14 addresses each: a slow name can hold up the others. A list of 437 sites
+# took 256 s and lost 5 to slowness with 4 threads, 219 s and none with 32 (2.11.2026, one run each: the
+# cause is the likeliest, not proven)
+ENV UV_THREADPOOL_SIZE=32
 EXPOSE 3001
 CMD ["node", "server.js"]

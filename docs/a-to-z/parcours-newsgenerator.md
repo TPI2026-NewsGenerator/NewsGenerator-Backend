@@ -116,7 +116,7 @@ En arrière-plan, juste après l'inscription. Pour chaque intérêt et chaque la
 - Media Cloud répond à 2 recherches par minute : toutes sont posées dès le départ et gardées un jour ; une seule par langue hors celle du lecteur et l'anglais (file de 27 à 13 min sur 5 profils).
 - Une découverte arrêtée par un redémarrage reprend d'elle-même.
 - Au plus 20 flux par découverte, 60 au total. Un flux qui n'apporte plus rien sur le profil en 14 jours est retiré ; le lecteur peut aussi en retirer un lui-même (il n'est alors plus jamais retrouvé, ni lu pour ses briefings même si un autre lecteur l'a) et le ramener.
-- Le lecteur ajoute aussi ses propres sources, 800 au plus : un site, une recherche dans l'annuaire et sur le web, un fichier (OPML, CSV, Excel), ou une source que d'autres lecteurs lisent sur ses intérêts, confirmée par l'IA.
+- Le lecteur ajoute aussi ses propres sources, 2500 au plus : un site, une recherche dans l'annuaire et sur le web, un fichier (OPML, CSV, Excel), ou une source que d'autres lecteurs lisent sur ses intérêts, confirmée par l'IA.
 - Les sources de chaque lecteur sont lues pour tous les briefings et toutes les recherches (depuis le 8 octobre). Seules restent à part les adresses qui portent une clé et celles de notre RSS-Bridge.
 
 *Technologies :* Google News RSS · Feedly · RSS-Bridge · Media Cloud · bge-m3 · gemma4:31b

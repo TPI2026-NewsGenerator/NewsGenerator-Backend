@@ -63,7 +63,7 @@ package "utils" {
     class feedLimits {
         + looksPrivate(url)
         + bridgeRoom(urls)
-        + MAX_USER_FEEDS = 800
+        + MAX_USER_FEEDS = 2500
     }
     class publicUrl {
         + isBridgeUrl(url)

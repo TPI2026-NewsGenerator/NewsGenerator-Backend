@@ -17,9 +17,9 @@ participant ingestService as Ingest
 Reader -> Page : "Add"
 Page -> Router : POST /feeds {site, category, language}
 Router -> Controller : addUserFeed(req) (needsProfile: 400 without a profile)
-Controller -> Model : countUserFeeds(profileId): 800 at most (else 400)
+Controller -> Model : countUserFeeds(profileId): 2500 at most (else 400)
 Controller -> Finder : findFeeds(site, {language})
-Finder -> Web : the page (public address only, 3 redirects),\nits declared feeds, else the 13 usual paths
+Finder -> Web : the page (public address only, 3 redirects),\nits declared feeds, else the 14 usual paths
 opt no feed answers with news
     Finder -> Web : Feedly (feeds of this same medium),\nthen its news sitemap
 end
@@ -61,7 +61,7 @@ end note
 
 == A file of sites (Excel, CSV, OPML, text) ==
 
-Page -> Page : addressesOfFile: read in the browser,\n1000 addresses at most
+Page -> Page : openFile: read in the browser, an Excel file's\nsheet and column chosen, 2000 addresses at most
 loop 25 addresses a request, until done, stopped or paused
     Page -> Router : POST /feeds/check {sites, language}
     alt over 2000 sites this hour (account) or 4000 (address)
@@ -77,7 +77,7 @@ loop 50 sources a request
     Router -> Controller : importSources(req)
     Controller -> Web : Crawlers.Xml: each feed sent read once\n(not the ones read from a page)
     loop each source
-        alt 800 sources, unknown category, dead or empty feed
+        alt 2500 sources, unknown category, dead or empty feed
             Controller -> Controller : an error for this source
         else no address (a site read from its page)
             Controller -> Finder : findFeeds(site, {language, subject}):\nits feed built again by the server

@@ -18,9 +18,10 @@ import {feedLanguage} from './language.js';
 
 // paths tried when the page declares no feed. The last two are the ones of two publishing systems
 // many newspapers use and never declare: Arc (inquirer.com, washingtonpost.com) and the one of
-// Reach (mirror.co.uk, nottinghampost.com)
+// Reach (mirror.co.uk, nottinghampost.com). "/feed/" with its slash is the address WordPress gives its
+// feed: ahoraeg.com and iraqinews.com refuse "/feed" with a 403 and answer "/feed/"
 const COMMON_PATHS = [
-    '/rss', '/rss.xml', '/feed', '/feed.xml', '/feeds', '/atom.xml', '/index.xml',
+    '/rss', '/rss.xml', '/feed', '/feed/', '/feed.xml', '/feeds', '/atom.xml', '/index.xml',
     '/rss/news', '/news/rss', '/feeds/rss', '/rss/index.xml',
     '/arc/outboundfeeds/rss/?outputType=xml', '/?service=rss',
 ];
@@ -32,6 +33,7 @@ const MIN_ON_SUBJECT = 2;       // one news on the subject in a whole feed is ch
 // Without a subject, the feed with the most news of these days: rts.ch declares no news feed on its
 // home, and the one with the most items was a list of 100 old files (the newest three weeks old)
 const RECENT_DAYS = 7;
+const MIN_RECENT = 3;           // news of those days: under this a feed is asleep (as in source-service.js)
 const DAY_MS = 24 * 3600e3;
 
 // the feed of the comments a WordPress site declares next to its news: justarsenal.com/comments/feed
@@ -92,9 +94,11 @@ export const newsSitemaps = async (siteUrl) => {
     const robots = await textOf(`${origin}/robots.txt`);
     const declared = [...robots.matchAll(/^\s*sitemap:\s*(\S+)/gim)].map(match => match[1]).filter(url => /news/i.test(url));
     const candidates = declared.length > 0 ? declared : SITEMAP_PATHS.map(path => origin + path);
+    // Read together, not one after the other: 6 sites, 0.4 to 4.9 s one after the other, 0.15 to 1.0 s together
+    // (2.11.2026). A site with no feed, most of a list, always went through all of them
+    const texts = await Promise.all(candidates.slice(0, MAX_SITEMAPS + 2).map(async url => [url, await textOf(url)]));
     const found = [];
-    for (const url of candidates.slice(0, MAX_SITEMAPS + 2)) {
-        const xml = await textOf(url);
+    for (const [url, xml] of texts) {
         if (/<news:news/i.test(xml)) found.push(url);
         // an index: the sitemaps of news it lists
         else if (/<sitemapindex/i.test(xml)) {
@@ -236,11 +240,26 @@ export const findFeeds = async (site, {language = null, subject = null, judge = 
         return findFeeds(root, {language, subject, judge, languages, known, bridge});
     }
 
+    // The bare domain refuses the page and www. serves it (enabbaladi.net answers 403 to the first, the
+    // feed on the second): the site is read there when the www. page answers. When it is refused too
+    // (iraqinews.com refuses both to us, and serves the feed of www.), the usual paths of both are tried
+    let withWww = null;
+    if (home.dead && !new URL(home.url).hostname.startsWith('www.')) {
+        withWww = new URL(home.url);
+        withWww.hostname = `www.${withWww.hostname}`;
+        const answers = await readPage(withWww.href).then(page => !page.dead, () => false);
+        if (answers) return findFeeds(withWww.href, {language, subject, judge, languages, known, bridge});
+    }
+
     const host = hostOf(siteUrl);
     const words = subject ? subjectWords(subject) : [];
     const judgeSubject = judge ?? (subject ? keywordJudge(subject) : null);
 
-    let candidates = home.feeds.length > 0 ? home.feeds : COMMON_PATHS.map(path => new URL(path, siteUrl).href);
+    // The usual paths of the site where it lives: iraqinews.com sends its readers to www.iraqinews.com, and
+    // only the second answers the feed (the first refuses it)
+    const usualPaths = [home.url, withWww?.href].filter(Boolean)
+        .flatMap(base => COMMON_PATHS.map(path => new URL(path, base).href));
+    let candidates = home.feeds.length > 0 ? home.feeds : usualPaths;
     if (judgeSubject) {
         candidates = [...new Set([...candidates, ...await subjectCandidates(home, words, host), ...known])].slice(0, MAX_CHECKED);
     } else if (known.length > 0) {
@@ -250,7 +269,22 @@ export const findFeeds = async (site, {language = null, subject = null, judge = 
     const best = (a, b) => (judgeSubject ? subjectScore(b) - subjectScore(a) : (b.recent ?? 0) - (a.recent ?? 0)) || b.items - a.items;
     // a feed whose language can't be told is kept: its titles may be too short to tell it
     const readable = (feed) => !languages || !feed.language || languages.includes(feed.language);
-    const feeds = (await checkFeeds(candidates, judgeSubject)).filter(readable).sort(best);
+    let feeds = (await checkFeeds(candidates, judgeSubject)).filter(readable).sort(best);
+
+    // the page declares feeds and none answers with news (cookislandsnews.com declares two that do not, and
+    // serves its feed on /feed): the usual paths are tried as if it declared none
+    if (feeds.length === 0 && home.feeds.length > 0) {
+        const tried = new Set(candidates);
+        feeds = (await checkFeeds(usualPaths.filter(url => !tried.has(url)), judgeSubject)).filter(readable).sort(best);
+    }
+
+    // the best feed found is asleep: sdna.gr declares an rss.xml with no news of the week, and has a latest.xml
+    // with 20 that the directory knows. What else the site and the directory offer is read, the best of all wins
+    if (!judgeSubject && feeds.length > 0 && (feeds[0].recent ?? 0) < MIN_RECENT) {
+        const tried = new Set([...candidates, ...feeds.map(feed => feed.url)]);
+        const others = [...usualPaths, ...(host ? await directoryFeeds(host).catch(() => []) : [])].filter(url => !tried.has(url));
+        feeds = [...feeds, ...(await checkFeeds([...new Set(others)])).filter(readable)].sort(best);
+    }
 
     if (feeds.length > 0 && (!judgeSubject || isOnSubject(feeds[0]))) return feeds;
     if (!host) return feeds;

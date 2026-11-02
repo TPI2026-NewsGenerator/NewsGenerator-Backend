@@ -25,8 +25,9 @@ package "Client (React)" as Client {
 }
 note right of ImportSources
     .xlsx, CSV, OPML or text read in the
-    browser (1000 addresses at most, the feed
-    of a line rather than its site); 25 sites
+    browser (2000 addresses at most, the feed
+    of a line rather than its site; an Excel
+    file: the sheet and column chosen); 25 sites
     a request to /check, 50 a request to
     /import; ready ones ticked
 end note
@@ -93,7 +94,7 @@ package "The feed of a site" as OnSite {
 }
 note right of feedFinder
     The page (its <link rel=alternate>), else
-    13 usual paths; with a subject also its
+    14 usual paths; with a subject also its
     sections, its page of feeds and Feedly;
     without, Feedly when none answers; then its
     news sitemap; RSS-Bridge last. A dead page:
@@ -102,7 +103,7 @@ end note
 
 package "Limits and safety" as Limits {
     class feedLimits {
-        + MAX_USER_FEEDS = 800
+        + MAX_USER_FEEDS = 2500
         + MAX_BRIDGE_FEEDS = 50
         + MAX_FEED_ITEMS = 300
         + bridgeRoom(urls)

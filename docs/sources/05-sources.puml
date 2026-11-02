@@ -184,7 +184,7 @@ package "Thumbs and AI" as Judging {
     }
 }
 note bottom of feedLimits
-    800 sources by hand, 50 sites read
+    2500 sources by hand, 50 sites read
     through the bridge, a feed of 300
     news at once is a flood
 end note

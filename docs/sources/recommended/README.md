@@ -37,7 +37,7 @@ added is one the server already reads.
   bridge feed), `url` (null on our RSS-Bridge), category, language, news, relevant, 2 samples.
 - **Added** (`add`): 1 to 20 integer ids (400 otherwise). The list is computed again and only an id still
   recommended is added, with the server's own url, as a source added by hand (`origin 'user'`, never
-  removed by the server), within 800 sources and 50 on the bridge. `{feeds, errors}`. They are not read at
+  removed by the server), within 2500 sources and 50 on the bridge. `{feeds, errors}`. They are not read at
   once: they are already read for their other reader.
 
 ## Measured

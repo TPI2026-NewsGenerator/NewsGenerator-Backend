@@ -25,7 +25,7 @@ client `client/src/features/briefing/components/` (`SourceList`, `AddSources`, `
 - [Discovery](discovery/README.md) — the media Google News then Media Cloud name for each interest, the feed
   of their section confirmed by the vectors and the AI; 60 per profile, pruned after 14 days with nothing.
 - [Added by hand](added-by-hand/README.md) — a site, a search of Feedly and of the web, a file of sites
-  checked 25 at a time; the feed finder, RSS-Bridge, the limits (800 sources, 50 through the bridge).
+  checked 25 at a time; the feed finder, RSS-Bridge, the limits (2500 sources, 50 through the bridge).
 - [Recommended](recommended/README.md) — the feeds of the other profiles with 3 news and 2% on the interests
   in 7 days, confirmed by the AI (`confirmOnSubject`), added by their id.
 - [Missing sources](missing-sources/README.md) — after a search, `POST /feeds/suggestions`: Google News and
