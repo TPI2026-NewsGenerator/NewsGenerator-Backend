@@ -9,6 +9,8 @@
 
 import {FeedModel} from '../models/feed-model.js';
 import {FeedService} from '../services/feed-service.js';
+import {ProfileService} from '../services/profile-service.js';
+import {RELEVANCE_DAYS} from '../services/discovery-service.js';
 import {SourceService} from '../services/source-service.js';
 import {RecommendationService} from '../services/recommendation-service.js';
 import {findFeeds} from '../services/utils/feed-finder.js';
@@ -50,9 +52,15 @@ const toFeed = (feed) => ({
 });
 
 export const FeedController = {
+    // the sources of the profile. The ones added by hand come with their news of the last RELEVANCE_DAYS and how many
+    // are on the interests (news, relevant), counted in the background: relevance.ready is false until then and
+    // the page asks again; a source added since the count has none
     getUserFeeds: async (req, res) => {
-        const feeds = await FeedModel.listUserFeeds(req.profileId);
-        res.status(200).json({feeds: feeds.map(toFeed)});
+        const [feeds, relevance] = await Promise.all([FeedModel.listUserFeeds(req.profileId), ProfileService.ownRelevance(req.profileId).catch(() => null)]);
+        res.status(200).json({
+            feeds: feeds.map(feed => ({...toFeed(feed), ...(feed.origin === 'user' ? relevance?.get(feed.id) : undefined)})),
+            relevance: {ready: relevance !== null, days: RELEVANCE_DAYS},
+        });
     },
 
     // the user gives a site ("fortune.com") or a feed, the server finds the feed and checks it answers

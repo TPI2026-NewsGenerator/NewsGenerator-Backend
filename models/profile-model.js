@@ -241,8 +241,9 @@ export const ProfileModel = {
     // whatever their language: the reader reads them all. On the title alone, phoronix.com was found for
     // low-level code and removed the same day, its titles at 0.44 at best (bench/prune-text.mjs: 3 of
     // 113 feeds found removed on the title, none on the text)
-    // [{id, url, site, created_at, news, relevant}]
-    profileFeedRelevance: async (profileId, {since, threshold}) => prisma.$queryRawUnsafe(`
+    // [{id, url, site, created_at, news, relevant}]. origin: the sources found for the profile ('profile', the
+    // ones the discovery prunes), or the ones the reader added ('user', counted for them to see, never pruned)
+    profileFeedRelevance: async (profileId, {since, threshold, origin = 'profile'}) => prisma.$queryRawUnsafe(`
         SELECT uf.id, uf.url, uf.site, uf.created_at,
                count(a.id)::int AS news,
                count(a.id) FILTER (WHERE EXISTS (
@@ -252,9 +253,9 @@ export const ProfileModel = {
         FROM user_feeds uf
         LEFT JOIN feeds f ON f.url = uf.url
         LEFT JOIN articles a ON a.id_feed = f.id AND a.embedded_at IS NOT NULL AND a.created_at >= $2::timestamptz
-        WHERE uf.id_profile = $1::int AND uf.origin = 'profile'
+        WHERE uf.id_profile = $1::int AND uf.origin = $4::text
         GROUP BY uf.id`,
-        profileId, since, threshold),
+        profileId, since, threshold, origin),
 
     // only feeds found for this profile, never one added by hand
     deleteProfileFeeds: async (profileId, ids) => {

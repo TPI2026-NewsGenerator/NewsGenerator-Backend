@@ -302,8 +302,8 @@ const options = {
                 "get": {
                     "tags": ["Feeds"],
                     "summary": "Sources added by the user",
-                    "description": "Private: the user comes from the token, a user only sees their own sources.",
-                    "responses": {"200": {"description": "List of the sources of this user"}}
+                    "description": "Private: the user comes from the token, a user only sees their own sources. The ones added by hand (`origin: user`) come with `news`, their news of the last `relevance.days` days that got vectors, and `relevant`, how many of them are on an interest of the profile (the same level as the sources found for it). They are counted in the background (about 50 s for 1500 sources, kept an hour): `relevance.ready` is false until then, with no `news` and no `relevant`, and the page asks again. A source added since the count has none.",
+                    "responses": {"200": {"description": "List of the sources of this profile, and `relevance: {ready, days}`"}}
                 },
                 "post": {
                     "tags": ["Feeds"],

@@ -6,7 +6,7 @@
 //
 
 import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
-import {keptResult} from '../../services/utils/kept-result.js';
+import {keptResult, soonOrNull} from '../../services/utils/kept-result.js';
 
 beforeEach(() => jest.useFakeTimers());
 afterEach(() => jest.useRealTimers());
@@ -69,5 +69,22 @@ describe('a result kept and read again in the background', () => {
         const reads = read.mock.calls.length;
         await jest.advanceTimersByTimeAsync(60 * 60e3);
         expect(read.mock.calls.length).toBe(reads);
+    });
+});
+
+describe('a read that is not waited for', () => {
+    it('should give the value when it comes at once, and null while it goes on', async () => {
+        const slow = new Promise(resolve => setTimeout(() => resolve('late'), 5000));
+        const waiting = soonOrNull(slow, 400);
+        jest.advanceTimersByTime(400);
+        expect(await waiting).toBeNull();
+        // the read went on: it is there for the next request
+        jest.advanceTimersByTime(5000);
+        expect(await slow).toBe('late');
+        expect(await soonOrNull(Promise.resolve('now'), 400)).toBe('now');
+    });
+
+    it('should give null, not an error, when the read fails', async () => {
+        expect(await soonOrNull(Promise.reject(new Error('database down')), 400)).toBeNull();
     });
 });

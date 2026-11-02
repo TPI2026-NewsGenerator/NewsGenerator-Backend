@@ -61,3 +61,11 @@ export const keptResult = (read, {minutes, forgetDays = 7}) => {
         return load(key, version, args);
     };
 };
+
+// The value of a read that is not waited for: what it gives within 'ms', else null while it goes on (a kept
+// result goes on loading, the next request has it), and null too when it fails
+export const soonOrNull = (promise, ms = 400) => {
+    let timer;
+    const late = new Promise(resolve => { timer = setTimeout(() => resolve(null), ms); });
+    return Promise.race([Promise.resolve(promise).catch(() => null), late]).finally(() => clearTimeout(timer));
+};

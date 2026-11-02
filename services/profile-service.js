@@ -23,7 +23,7 @@ import {readerLanguage} from "./utils/language.js";
 import {forClient, sourceKey} from "./utils/public-url.js";
 import {MAX_WATCH_TERMS} from "./utils/watch-terms.js";
 import {isAdmin} from "./utils/admin.js";
-import {keptResult} from "./utils/kept-result.js";
+import {keptResult, soonOrNull} from "./utils/kept-result.js";
 
 const MIN_TEXT = 20;            // "rugby" says too little to split into interests
 const MAX_TEXT = 3000;
@@ -47,6 +47,15 @@ const relevanceOf = (profileId, interests, feeds) => keptRelevance(profileId, JS
     interests.map(({id, text}) => [id, text]),
     feeds.filter(feed => feed.origin === 'profile').map(feed => feed.id).sort((a, b) => a - b),
 ]), profileId);
+
+// The same for the sources the reader added by hand, a thousand and a half for one of them: 49 s for 640 k
+// news of 1497 sources (2.11.2026). Never waited for: counted in the background, kept an hour, and null until
+// it is there, the page asks again. Its version is the interests: others, another count
+const keptOwnRelevance = keptResult((profileId) => ProfileModel.profileFeedRelevance(profileId, {
+    since: new Date(Date.now() - RELEVANCE_DAYS * 24 * 3600e3),
+    threshold: JUDGE_THRESHOLD,
+    origin: 'user',
+}), {minutes: 60, forgetDays: 2});
 
 const badRequest = (message) => Object.assign(new Error(message), {status: 400});
 const notFound = (message) => Object.assign(new Error(message), {status: 404});
@@ -149,6 +158,15 @@ export const ProfileService = {
     // the profiles of the user, to choose the one read: [{id, name}]
     list: async (userId) => (await ProfileModel.ofUser(userId)).map(row => ({id: row.id, name: row.name})),
 
+    // For each source the reader added, its news of the last RELEVANCE_DAYS and how many are on the interests
+    // of the profile: a Map id -> {news, relevant}, or null while it is counted (see keptOwnRelevance). A source
+    // added since the last count is not in it
+    ownRelevance: async (profileId) => {
+        const interests = await ProfileModel.interests(profileId);
+        const rows = await soonOrNull(keptOwnRelevance(profileId, JSON.stringify(interests.map(({id, text}) => [id, text])), profileId));
+        return rows ? new Map(rows.map(row => [row.id, {news: row.news, relevant: row.relevant}])) : null;
+    },
+
     // profileId: the profile shown, null when the user has none yet
     get: async (userId, profileId) => {
         if (profileId === null || profileId === undefined) {
@@ -170,7 +188,7 @@ export const ProfileService = {
             ProfileModel.projects(profileId),
             ProfileModel.projectInterests(profileId),
         ]);
-        const relevant = new Map(relevance.map(row => [row.id, row.relevant]));
+        const counted = new Map(relevance.map(row => [row.id, row]));
 
         return {
             profile: toProfile(profile),
@@ -188,8 +206,9 @@ export const ProfileService = {
                 error: feed.last_error ?? null,
                 newsPerDay: feed.news_per_day ?? 0,
                 flood: isFlood(feed.news_per_day),
-                // its news of the last RELEVANCE_DAYS on the interests: at 0 it is removed, once it had the time
-                relevant: relevant.get(feed.id) ?? 0,
+                // its news of the last RELEVANCE_DAYS, and how many are on the interests: at 0 it is removed, once it had the time
+                news: counted.get(feed.id)?.news ?? 0,
+                relevant: counted.get(feed.id)?.relevant ?? 0,
             })),
             limits: {profileFeeds: MAX_PROFILE_FEEDS, relevanceDays: RELEVANCE_DAYS, profiles: MAX_PROFILES, watchTerms: MAX_WATCH_TERMS, projects: MAX_PROJECTS},
             // what the reader prepares for a time, read with the profile until it ends (see toProject)

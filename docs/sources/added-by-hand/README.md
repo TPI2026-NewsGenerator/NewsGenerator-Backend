@@ -67,6 +67,17 @@ by the server.
 - **Afterwards**: the sources added are listed by `SourceList` as "added by you"; `DELETE /feeds/:id` removes
   one. Every reader's sources are read for every reader (since 8.10.2026), those whose address may hold a
   key aside (`looksPrivate`).
+- **Which one to keep**: `GET /feeds` gives each source added by hand its `news` of the last 14 days that got
+  vectors and how many are `relevant`, on an interest of the profile (`ProfileModel.profileFeedRelevance` with
+  `origin: 'user'`, the level of the sources found for the profile). `SourceList` writes "126 of 1,064 news on
+  your interests (11.8%)" (the sources found for the profile, which come with `news` since 2.11.2026, and the
+  recommended ones say it the same way) and can sort by it, to choose between two feeds of one site or to see
+  the ones that bring nothing; the route of each feed is under its name. Nothing is removed by it. The count is slow (49 s for
+  640 k news of 1497 sources, 2.11.2026) so it is never waited for: `ProfileService.ownRelevance` reads it in
+  the background, kept an hour (`keptResult`), and answers `relevance.ready: false` until it is there; the
+  page asks again every 15 s, 12 times at most. agenzianova.com, two feeds of the profile of Enzo: 126 of 1064
+  news on the interests for `/news/feed/`, 1403 of 13808 for `/rss/news`, and only 59 of the 126 are in the
+  second (845 titles in both, with other addresses): the first brings 67 that the second does not carry.
 
 ## Measured
 
