@@ -36,7 +36,8 @@ saved in `briefings.step` and shown on the page while it runs:
    [key passages](key-passages/README.md) with the [summary](summary/README.md) and the
    [bullet points](bullet-points/README.md) of the same sentences, translated; and the [denials](denials/README.md)
    its articles report. Then a cut title is taken whole from its
-   page, the cards are read again with their passages to leave out the ones on what the reader refuses
+   page, the titles lose the bait of their medium ([neutral titles](#neutral-titles)), the cards are read
+   again with their passages to leave out the ones on what the reader refuses
    (`reviewCards`), and the titles in another language are translated. A card that can't be read takes the next
    story of the reserve, 2 more rounds at most (`readable-cards.js`).
 6. **angles**: five parts together, none of which can fail the briefing: the [other angles](other-angles/README.md),
@@ -103,3 +104,34 @@ What the reader does with it:
 - [Ingestion](../ingestion/README.md): the stories it reads, built in background
 - [Following](../following/README.md): the news of what the profile follows, beside the cards
 - [the former README](../archive/readme-features-2026-10-24.md), "The briefing" and "Key passages"
+
+## Neutral titles
+
+A card shows its title without the bait of its medium ("Information incroyable !", "Bomba zilei!", "Êtes-vous d'accord
+avec lui ?") when it has some (the user, 03.11.2026). The AI is asked once for all the titles (`neutralTitles`,
+`services/utils/neutral-titles.js`) which teaser each one starts or ends with, copied as it is; it never rewrites.
+The code takes a teaser out only when it is a whole sentence apart from the rest by its punctuation, at most 6 words,
+with no figure, no negation, no acronym nor capitalized name (the fact of the title), not in a quotation and not
+a word of status ("Official"); and leaves the title as it was when fewer than 3 words or less than half remain. It
+also takes out the exclamation mark at the end of a title and turns the ones between two sentences into full stops
+(not in a quotation, not "Yahoo!"). The title as published stays in `item.titleAsPublished`: the card says "Title
+shortened" and shows it on demand, as the original of a translated title.
+
+Measured on 320 titles of the cards of 14 days (`bench/neutral-titles.mjs`): taking out any passage the model found
+(adjectives, verbs) changed half of them and broke or emptied many ("Real Madrid's 'Negreira bubble' believes
+Barcelona will fall" -> "Real Madrid's believes...", "l'affaire du but fantôme" -> "l'affaire du but"); whole
+teasers only, about 1 title in 20 changes, almost all right, one label lost ("¡Habla el árbitro!:"). A call of the AI of
+about 1 300 tokens for 40 titles; if it fails, the titles stay as they are.
+
+## Cards of one news
+
+Two cards of one news that were not joined (the user, 03.11.2026: cards 1 and 2 of a briefing of Enzo's profile,
+"Official: Galliani backed by Players and Coaches" and "FIGC Presidency: Italian football on the brink of a major
+shift!"). No threshold of the vectors separates them: on 25 briefings of 12 days, the centroids of the two cards
+that were the same news are at 0.695 and 0.879, while two different facts of one affair (UEFA's 42 questions and
+FIFA's answer) are at 0.92 and 0.86, and 8 of 9 pairs between 0.68 and 0.70 are different facts. Lowering the
+threshold of the stories (0.70) would join more of them than it should. The step that decides is the AI
+`mergeStories` (the later card joins the first when it tells the same fact; "in doubt, no": joining wrongly hides a
+news). Replayed on 8 briefings (`bench/merge-replay.mjs`): the prompt of now joins none, a variant that asks whether
+the card above already answers it (`redundant`) joins the 2 duplicates found and 5 more, 4 of them other
+developments of the same affair (a question and its answer, a candidacy and the election calendar). Not changed.

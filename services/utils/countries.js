@@ -19,13 +19,18 @@ const SHARE_OF_FIRST = 0.5;
 
 // The codes ISO 3166-1 of the countries of a card ("ZM"), the main first. items: [{qid, weight, person}],
 // who and where it names, weight the news of the card naming them; of: Map qid -> {country,
-// international, bodies}. Each item counts once, with its weight; a country is shown when it weighs half
+// international, bodies, media}. Each item counts once, with its weight; a country is shown when it weighs half
 // the first at least: a card on Trump and Xi is of the United States and China, a card on Hichilema in
 // Lusaka of Zambia only. The people of an international body the card names are not of their country:
 // Infantino of FIFA, Motsepe of the CAF are no Swiss nor South African news. The other people are: the
 // Romanian referee of a UEFA match, Wenger running against Infantino (measured 19.10.2026 on 173 cards
 // naming such a body, bench/international-people: 79 right of 84 where it changes something, 46 when
-// every person of these cards was left out)
+// every person of these cards was left out). A news medium it names is its source, not what it is about:
+// "L'Équipe: Burleanu could be UEFA's candidate", told by Romanian media, is a card of Romania, not of
+// France (the user, 03.11.2026). Its country counts only when nothing else gives one: a card of the
+// Tunisian press naming "La Presse de Tunisie" only keeps Tunisia (measured on 529 cards of 14 days: of the
+// 12 naming a medium, 3 showed the country of the medium and it was not the card's, 2 (one card in two
+// briefings) lose an Italian one that was right, said by Corriere dello Sport)
 export const cardCountries = (items, of) => {
     const weights = new Map();
     for (const {qid, weight, person} of items) {
@@ -34,11 +39,14 @@ export const cardCountries = (items, of) => {
     const international = new Set([...weights.keys()].filter(qid => of.get(qid)?.international));
     const ofBody = (qid) => (of.get(qid)?.bodies ?? []).some(body => international.has(body));
     const scores = new Map();
+    const ofMedia = new Map();
     for (const [qid, {weight, person}] of weights) {
         const code = of.get(qid)?.country;
-        if (code && !(person && ofBody(qid))) scores.set(code, (scores.get(code) ?? 0) + weight);
+        if (!code || (person && ofBody(qid))) continue;
+        const into = of.get(qid)?.media ? ofMedia : scores;
+        into.set(code, (into.get(code) ?? 0) + weight);
     }
-    const ranked = [...scores].sort((a, b) => b[1] - a[1]);
+    const ranked = [...(scores.size > 0 ? scores : ofMedia)].sort((a, b) => b[1] - a[1]);
     return ranked.filter(([, score]) => score >= ranked[0][1] * SHARE_OF_FIRST).slice(0, MAX_COUNTRIES).map(([code]) => code);
 };
 
@@ -49,15 +57,16 @@ const ITEMS_AT_ONCE = 40;
 const MAX_WAIT_MS = 30e3;
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Map qid -> {country, international, bodies} of these items (see readCountries): the ones read before
+// Map qid -> {country, international, bodies, media} of these items (see readCountries): the ones read before
 // from the database, the others from Wikidata now, kept. The ones read before their bodies were
-// (19.10.2026) are read again, kept as they were until then. Wikidata refusing for longer, or failing:
+// (19.10.2026), or before we knew whether they are news media (3.11.2026), are read again, kept as they were
+// until then (not while db/add_item_media.sql is not applied: the rows have no media then). Wikidata refusing for longer, or failing:
 // the ones read so far only. background: read ahead, no reader waiting (see wikidata.js MAX_LAG_S)
 export const countriesOfItems = async (qids, {background = false} = {}) => {
     const asked = [...new Set(qids.filter(Boolean))];
     const rows = await MentionModel.countriesOf(asked);
-    const known = new Map(rows.map(row => [row.qid, {country: row.country, international: row.international, bodies: row.bodies ?? []}]));
-    const current = new Set(rows.filter(row => row.bodies).map(row => row.qid));
+    const known = new Map(rows.map(row => [row.qid, {country: row.country, international: row.international, bodies: row.bodies ?? [], media: Boolean(row.media)}]));
+    const current = new Set(rows.filter(row => row.bodies && row.media !== null).map(row => row.qid));
     const missing = asked.filter(qid => !current.has(qid));
     let waited = 0;
     for (let i = 0; i < missing.length;) {

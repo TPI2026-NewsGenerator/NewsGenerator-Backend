@@ -28,6 +28,13 @@ The cards sent count as read: their stories are left out of the next briefings f
 
 - `BriefingController.latest` answers `mail: mailEnabled() && isAdmin(user)`: the server has an SMTP
   account (`SMTP_USER`, `SMTP_PASS`, `services/utils/mailer.js`) and the reader the role `Admin`.
+- The news of the names followed can be put in the e-mail from their tab (the user, 03.11.2026): each one has
+  a button "Add to the e-mail" that adds it like a news added by its link (`POST /api/briefing/:id/news`, see
+  [news by link](../news-by-link/README.md): its page is read, its key passages chosen), or, when a card of the
+  briefing already tells it, "Tick it for the e-mail" (`client/src/features/briefing/mailAdd.js`). Only for a
+  reader who can send e-mails.
+- The countries of a card are chosen in the editor of the e-mail: the ones found ticked or not, and any other country of
+  the world found by typing a few letters of its name (accents and case aside; Enter takes the first).
 - The pictures of a card (`BriefingService.pictures`, `services/utils/mail-pictures.js` `storyPictures`):
   the card's own first, then the ones measured when it was written (`item.pictures`, since 29.10.2026: the
   page and feed pictures of all its articles that load), then the thumbnails the feeds gave its story's articles

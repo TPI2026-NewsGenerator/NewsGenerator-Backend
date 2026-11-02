@@ -105,8 +105,14 @@ on the page ("Zambia", "United States · China") and next to its topic in the e-
   referee of a card naming UEFA, Wenger or Beckham running against Infantino keep theirs.
 - **Which are shown.** `cardCountries` (`countries.js`): every country weighing half the first at least, 3 at
   most; none when the title names them all already ("La Zambie limoge...", "le président zambien...").
-- **Read once.** `item_countries` (`db/add_item_countries.sql`, `bodies` by `db/add_item_bodies.sql`: the
-  rows read before it have none and are read again) keeps the country of each item. A card asks
+- **A medium is a source, not a subject.** A news medium a card names (Wikidata: a newspaper, an agency, a
+  channel, a news website, `MEDIA_KINDS` in `wikidata.js`) gives its country only when nothing else on the card
+  gives one: "Bomb of the day! L'Équipe: Burleanu could be UEFA's candidate", told by three Romanian media, is
+  a card of Romania, not of France (the user, 03.11.2026). Measured on 529 cards of 14 days: of the 12 naming a
+  medium, 3 showed the country of the medium and it was not the card's (L'Équipe twice, the BBC); one card (in two
+  briefings) lost an Italian country that was right, said by Corriere dello Sport.
+- **Read once.** `item_countries` (`db/add_item_countries.sql`, `bodies` by `db/add_item_bodies.sql` and `media`
+  by `db/add_item_media.sql`: the rows read before them have none and are read again) keeps the country of each item. A card asks
   Wikidata for the ones never read, 40 at a time, waiting up to 30 s for a pause it asks for; the tagging
   service reads the others ahead, 40 a minute, the most named first (`locate`), with `maxlag=10` (work no
   reader waits for).

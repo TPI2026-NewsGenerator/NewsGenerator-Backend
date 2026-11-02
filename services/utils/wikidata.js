@@ -344,6 +344,12 @@ const INTERNATIONAL = new Set(['Q484652', 'Q245065', 'Q1335818', 'Q1127126', 'Q4
 // operating areas (P2541) wider than a country: the world (Google, Microsoft), the continents, the Americas
 const WIDE_AREAS = new Set(['Q13780930', 'Q46', 'Q15', 'Q48', 'Q49', 'Q18', 'Q538', 'Q828', 'Q51']);
 const COUNTRY_CODE = /^[A-Z]{2}$/;
+// a news medium (it says the news, it is not what they are about): newspaper, daily, sports newspaper, online
+// newspaper, news website, website, magazine, periodical, news agency, television station and channel, radio
+// station, broadcaster, public broadcaster, media company
+const MEDIA_KINDS = new Set(['Q11032', 'Q1110794', 'Q11313190', 'Q1153191', 'Q17232649', 'Q35127', 'Q41298', 'Q1002697', 'Q192283',
+    'Q1616075', 'Q2001305', 'Q14350', 'Q15265344', 'Q1126006', 'Q1331793']);
+const isMedia = (claims) => (claims?.P31 ?? []).some(claim => claim.rank !== 'deprecated' && MEDIA_KINDS.has(claim.mainsnak?.datavalue?.value?.id));
 
 // The country an item is of: {code} for a country itself (P297, ISO 3166-1), {qid} for the rest, null
 // for none; international for a body of several countries or of the world, without country. A person:
@@ -392,9 +398,10 @@ const isHuman = (claims) => (claims?.P31 ?? []).some(claim => claim.mainsnak?.da
 const codes = new Map();
 const international = new Map();
 
-// Map qid -> {country, international, bodies} of each item: country the code ISO 3166-1 alpha-2 of its
+// Map qid -> {country, international, bodies, media} of each item: country the code ISO 3166-1 alpha-2 of its
 // country ("ZM"), null when none; international for a body of several countries (see countryOfClaims);
-// bodies the qids of the bodies a person is of (see bodiesOfClaims), none for anything else. A country
+// bodies the qids of the bodies a person is of (see bodiesOfClaims), none for anything else; media for a news
+// medium (see MEDIA_KINDS), which a card names as its source. A country
 // with no code of its own is part of one (England, Scotland: the United Kingdom): the code of that one.
 // Every item is answered, Wikidata asked a few times a card at most. background: see MAX_LAG_S
 export const readCountries = async (qids, {background = false} = {}) => {
@@ -428,6 +435,7 @@ export const readCountries = async (qids, {background = false} = {}) => {
         country: country?.code ?? (country?.qid ? codes.get(country.qid) ?? null : null),
         international: Boolean(country?.international),
         bodies: isHuman(claims.get(qid)) ? bodiesOfClaims(claims.get(qid)) : [],
+        media: isMedia(claims.get(qid)),
     }]));
 };
 

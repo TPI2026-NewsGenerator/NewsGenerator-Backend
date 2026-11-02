@@ -35,7 +35,12 @@ the news are stored anyway and get their vectors at a next run.
   of 32 characters at least.
 - **Language.** Told by the text (`languageOf`), the language of the feed kept unless another one has 3
   short words more (`FEED_MARGIN`), else `en`. A feed whose news are in several languages gives none: each of
-  its news is told by its own words (`severalLanguages`, `services/utils/language.js`). It is in several
+  its news is told by its own words (`severalLanguages`, `services/utils/language.js`). A word in small letters with a
+  ã, or ending in -ões, is Portuguese whatever the feed's language (not a name, "João", not a text with Vietnamese
+  letters, which has ã too: "đã"): a Portuguese news reached through a search of Google News in Italian, Spanish or
+  English was told that language 6 times in 10 (a poder360.com.br card on LaLiga's referees was told Italian,
+  3.11.2026), 3 in 10 now; Portuguese feeds 97.5 -> 99.2%, 1 of 15000 news of national media in five other languages
+  became Portuguese (`bench/language-pt-mark.mjs`). It is in several
   when, of its last 100 news of 7 days (`StoryModel.lastTexts`), the ones clearly in one language (the short
   words give it more than any other, and franc among those 9 languages says the same) are 3 and 20% or more
   in another language than most of them. Asked once a day per feed (`mixedOf`, kept in memory), only for the

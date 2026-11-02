@@ -60,6 +60,21 @@ const MIN_TRIGRAM_CHARS = 200;  // shorter, the short words are surer
 const NEAR_LANGUAGES = new Set(['hr', 'bs', 'sr', 'gl']);
 const COUNTRY_LANGUAGE = {hr: 'hr', ba: 'bs', rs: 'sr', me: 'sr', br: 'pt', pt: 'pt'};
 
+// A word of the text that only one of the languages writes, whatever its short words: a word in small
+// letters with a ã, or ending in -ões, is Portuguese ("farão", "avião", "televisões"). Not a name with
+// one (João, Simão: they are written in any language, capital first), nor a text with the letters of
+// Vietnamese, which has ã too ("đã"); õ alone is Estonian ("või", "õpetaja"). A Portuguese title reached
+// through a search in Italian, Spanish or English was told that language 6 times in 10 (a poder360.com.br
+// card of Brazil's press on LaLiga's referees was told Italian, 3.11.2026): with the rule 7 in 10, and the
+// Portuguese news of Portuguese feeds 97.5 -> 99.2%; 1 of 15000 news of national media in Spanish, Italian,
+// French, English or German became Portuguese (bench/language-pt-mark.mjs).
+// It decides: a text with one is Portuguese, whatever the language of its feed and the short words of the others
+const DECISIVE = 100;
+const MARKED = {pt: /^\p{Ll}*(ã|ões$)/u};
+const VIETNAMESE = /[đĐơƠưƯẠ-ỹ]/u;
+const markedWords = (language, text) => !MARKED[language] || VIETNAMESE.test(text ?? '') ? 0
+    : ((text ?? '').match(/[\p{L}]+/gu) ?? []).some(word => MARKED[language].test(word)) ? DECISIVE : 0;
+
 // the language its short words tell, null under MIN_HITS. 'preferred' (the language of the feed) is
 // kept unless another one has FEED_MARGIN more: a Spanish title of a Spanish search with three "la"
 // and no other short word counts as much French as Spanish, and was told French
@@ -70,7 +85,7 @@ const wordsLanguage = (text, preferred = null) => {
     let preferredHits = 0;
 
     for (const [language, set] of Object.entries(SETS)) {
-        const hits = words.reduce((count, word) => count + (set.has(word) ? 1 : 0), 0);
+        const hits = words.reduce((count, word) => count + (set.has(word) ? 1 : 0), 0) + markedWords(language, text);
         if (language === preferred) preferredHits = hits;
         if (hits > bestHits) {
             best = language;

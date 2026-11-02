@@ -302,6 +302,32 @@ describe('languageOf', () => {
     });
 });
 
+describe('languageOf, the words only Portuguese writes', () => {
+    // a poder360.com.br title reached through a search in Italian was told Italian (3.11.2026)
+    const title = 'La Liga: árbitros farão entrevistas televisionadas pós-jogo pela 1ª vez';
+
+    it('should tell a Portuguese title from a search in another language, whatever that language', () => {
+        expect(languageOf(title, 'it')).toBe('pt');
+        expect(languageOf(title, 'es')).toBe('pt');
+        expect(languageOf(title, 'en')).toBe('pt');
+        expect(languageOf(title)).toBe('pt');
+        expect(languageOf('Entenda o que se sabe da queda de avião na Flórida', 'es')).toBe('pt');
+    });
+
+    it('should not take a name with a ã or a õ for Portuguese', () => {
+        // João and Simão are written in any language, with a capital
+        expect(languageOf('João Cancelo deserved a yellow card but there was no mention of it in the report of the referee', 'en')).toBe('en');
+        expect(languageOf('El Madrid ficha a João Félix y a Simão para la próxima temporada, dice el diario', 'es')).toBe('es');
+        expect(languageOf('Juventus, João Mário ha segnato il gol più importante della stagione per la squadra', 'it')).toBe('it');
+    });
+
+    it('should not take Vietnamese (đã) nor Estonian (õ) for Portuguese', () => {
+        expect(languageOf('Tuy nhiên, dự án đã bị dừng lại sau khi vấp phải phản đối.', 'en')).toBe('en');
+        expect(languageOf('Dự án đã bị dừng lại')).not.toBe('pt');
+        expect(languageOf('Eesti jalgpalliliit sai trahvi sõnumite eest, õpetaja ütles et see või teine')).not.toBe('pt');
+    });
+});
+
 describe('ownLanguage', () => {
     // passages of a vietnam.vn card (17.10.2026): its page, an English lead and side links, was told English
     const vietnamese = 'Dù vậy, lời xin lỗi chưa thuyết phục được một số quan chức Châu Âu về khả năng tiếp tục lãnh đạo của ông. '

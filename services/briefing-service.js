@@ -52,6 +52,7 @@ import {EntityService} from "./entity-service.js";
 import {namesAndCountriesOfCards} from "./utils/card-names.js";
 import {isCountry} from "./utils/country-names.js";
 import {wholeTitle} from "./utils/titles.js";
+import {neutralTitles} from "./utils/neutral-titles.js";
 
 // Measured on four profiles and 249 stories judged by hand:
 //  - one vector per interest, dense + half the sparse: 88% of relevant cards (one vector for the
@@ -626,7 +627,7 @@ ${projects.map(project => `- « ${project.name} » : ${project.text.replace(/\s+
 export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) => {
     // the stories ranked and given to the AI grow with the cards wanted
     const scale = size / MAX_BRIEFING;
-    const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage()};
+    const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage(), titling: newUsage()};
     // the interests of the profile and of the projects it runs: each gets its share of the cards
     const [profile, interests, projects] = await Promise.all([ProfileModel.get(profileId), ProfileModel.briefingInterests(profileId),
         ProfileModel.projects(profileId)]);
@@ -751,6 +752,9 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     // briefing never waits on the review failing
     const content = new Map();
     const titleTranslation = new Map();
+    // lead -> its title without the bait of its medium (see neutral-titles.js), the title as published when
+    // nothing was taken out; the card shows it, the lead article keeps the title as published
+    const neutralTitle = new Map();
     // lead -> {glossary, names}: how the card spells its names, from Wikidata and from its translated text
     const spellings = new Map();
     let rounds = 0;
@@ -768,6 +772,11 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             const text = [result.summary?.translation, result.summary?.pointsTranslation, result.summary?.digestTranslation].filter(Boolean).join('\n');
             spellings.set(lead, {glossary: result.glossary ?? [], names: [...new Set([...(result.names ?? []), ...namesIn(text)])]});
         }
+        // the titles without the bait of their medium ("Information incroyable !", the user, 03.11.2026): one call
+        // for all, before they are translated, a translation is of the title shown. Never fails the briefing
+        const published = [...leads.values()];
+        (await neutralTitles(published.map(lead => lead.title), usage.titling)).forEach((title, i) => neutralTitle.set(published[i], title));
+        const shownTitle = (lead) => neutralTitle.get(lead) ?? lead.title;
         // and the titles written in another language than the reader's translated, as their passages
         const foreign = [...leads.values()].filter(lead => lead.lang && lead.lang !== language && writtenIn(lead.lang) && writtenIn(language));
         const [leftOut, translations] = await Promise.all([
@@ -779,7 +788,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
                 console.error(`Briefing: the cards were not read again (${err.message})`);
                 return new Map();
             }),
-            foreign.length === 0 ? [] : translateTexts(foreign.map(lead => ({text: lead.title, from: writtenIn(lead.lang), ...spellings.get(lead)})),
+            foreign.length === 0 ? [] : translateTexts(foreign.map(lead => ({text: shownTitle(lead), from: writtenIn(lead.lang), ...spellings.get(lead)})),
                 writtenIn(language), usage.summarizing),
         ]);
         foreign.forEach((lead, i) => titleTranslation.set(lead, translations[i]));
@@ -871,7 +880,10 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             // the feeds its articles came from: a refused card is blamed on them (utils/feedback.js),
             // never on a search of Google News, which is the interest itself
             feedUrls: [...new Set(story.members.map(article => article.feed_url).filter(url => url && !isGoogleNewsUrl(url)))],
-            title: lead.title,
+            // without the bait of its medium when it had some (see neutral-titles.js), the title of the lead article
+            // as published then in titleAsPublished; absent from the briefings made before 03.11.2026
+            title: neutralTitle.get(lead) ?? lead.title,
+            titleAsPublished: neutralTitle.has(lead) && neutralTitle.get(lead) !== lead.title ? lead.title : null,
             // the article of the title and of the passages, the one the card sends to read: the reader
             // could not tell which of its articles the passages were of
             lead: toArticle(lead, trusted),

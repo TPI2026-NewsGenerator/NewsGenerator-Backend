@@ -21,8 +21,12 @@ countryOf.set('Q35572', {country: null, international: true});
 // Infantino of FIFA (Swiss), Ramon Vega running against him (Swiss too), Horatiu Fesnic a Romanian referee
 countryOf.set('Q124138', {country: 'CH', international: false, bodies: ['Q253414', 'Q40970']});
 countryOf.set('Q2135316', {country: 'CH', international: false, bodies: []});
-countryOf.set('Q42907713', {country: 'RO', international: false, bodies: []});
+countryOf.set('Q42907713', {country: 'RO', international: false, bodies: [], media: false});
 countryOf.set('Q490', {country: 'IT', international: false});
+// L'Équipe (a French sports newspaper), the Romanian federation, La Presse de Tunisie
+countryOf.set('Q815748', {country: 'FR', international: false, media: true});
+countryOf.set('Q631999', {country: 'RO', international: false, media: false});
+countryOf.set('Q375527', {country: 'TN', international: false, media: true});
 
 describe('cardCountries', () => {
     it('should show the main countries of a card naming people of several, the main first', () => {
@@ -54,6 +58,19 @@ describe('cardCountries', () => {
             countryOf)).toEqual(['US']);
     });
 
+    it('should not give a card the country of a news medium it names as its source', () => {
+        // "Bomb of the day! L'Équipe: Burleanu could be UEFA's candidate": told by Romanian media, a card of Romania
+        expect(cardCountries([{qid: 'Q815748', weight: 3}, {qid: 'Q253414', weight: 3}, {qid: 'Q631999', weight: 2}], countryOf)).toEqual(['RO']);
+        // even when the medium is named by more of its news than the federation is
+        expect(cardCountries([{qid: 'Q815748', weight: 9}, {qid: 'Q631999', weight: 1}], countryOf)).toEqual(['RO']);
+    });
+
+    it('should keep the country of a medium when nothing else gives one', () => {
+        expect(cardCountries([{qid: 'Q375527', weight: 2}], countryOf)).toEqual(['TN']);
+        // a card naming only an international body besides it
+        expect(cardCountries([{qid: 'Q375527', weight: 2}, {qid: 'Q253414', weight: 4}], countryOf)).toEqual(['TN']);
+    });
+
     it('should count an item once, and a match of two clubs of one country as that country', () => {
         expect(cardCountries([{qid: 'Q9617', weight: 4}, {qid: 'Q9616', weight: 4}, {qid: 'Q9617', weight: 4}], countryOf)).toEqual(['GB']);
         expect(cardCountries([{qid: 'Q1076', weight: 4}, {qid: 'Q1076', weight: 4}, {qid: 'Q22686', weight: 3}], countryOf)).toEqual(['ZM', 'US']);
@@ -75,20 +92,33 @@ describe('readCountries', () => {
         Q1388490: {P31: [value('Q43229')], P361: [value('Q253414')], P17: [value('Q39')]},
         Q253414: {P31: [value('Q11422536')], P17: [value('Q39')]},
         Q35572: {P31: [value('Q11422536')], P17: [value('Q39')]},
+        // L'Équipe, a sports newspaper; Marca, a newspaper and a website
+        Q815748: {P31: [value('Q11313190')], P17: [value('Q142')]},
+        Q917580: {P31: [value('Q11032'), value('Q35127')], P17: [value('Q29')]},
         Q39: {P297: [code('CH')]}, Q215: {P297: [code('SI')]}, Q218: {P297: [code('RO')]}, Q142: {P297: [code('FR')]},
     };
     const answer = (url) => ({ok: true, status: 200, headers: new Headers(), json: async () => ({entities: Object.fromEntries(
         new URL(url).searchParams.get('ids').split('|').map(qid => [qid, {id: qid, claims: ITEMS[qid]}]))})});
 
+    it('should tell a news medium from the rest', async () => {
+        const fetch = jest.spyOn(globalThis, 'fetch').mockImplementation(async (url) => answer(url));
+        const read = await readCountries(['Q815748', 'Q917580', 'Q244750']);
+        expect(read.get('Q815748').media).toBe(true);
+        expect(read.get('Q917580').media).toBe(true);
+        expect(read.get('Q244750').media).toBe(false);
+        expect(read.get('Q815748').country).toBe('FR');
+        fetch.mockRestore();
+    });
+
     it('should tell the bodies a person is of still, and a national federation of its country', async () => {
         const fetch = jest.spyOn(globalThis, 'fetch').mockImplementation(async (url) => answer(url));
         const read = await readCountries(['Q124138', 'Q26819142', 'Q42907713', 'Q244750', 'Q1388490', 'Q35572']);
-        expect(read.get('Q124138')).toEqual({country: 'CH', international: false, bodies: ['Q253414']});
-        expect(read.get('Q26819142')).toEqual({country: 'SI', international: false, bodies: ['Q35572']});
-        expect(read.get('Q42907713')).toEqual({country: 'RO', international: false, bodies: []});
-        expect(read.get('Q244750')).toEqual({country: 'FR', international: false, bodies: []});
-        expect(read.get('Q1388490')).toEqual({country: null, international: true, bodies: []});
-        expect(read.get('Q35572')).toEqual({country: null, international: true, bodies: []});
+        expect(read.get('Q124138')).toEqual({country: 'CH', international: false, bodies: ['Q253414'], media: false});
+        expect(read.get('Q26819142')).toEqual({country: 'SI', international: false, bodies: ['Q35572'], media: false});
+        expect(read.get('Q42907713')).toEqual({country: 'RO', international: false, bodies: [], media: false});
+        expect(read.get('Q244750')).toEqual({country: 'FR', international: false, bodies: [], media: false});
+        expect(read.get('Q1388490')).toEqual({country: null, international: true, bodies: [], media: false});
+        expect(read.get('Q35572')).toEqual({country: null, international: true, bodies: [], media: false});
         fetch.mockRestore();
     });
 });

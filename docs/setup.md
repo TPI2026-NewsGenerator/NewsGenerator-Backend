@@ -202,6 +202,9 @@ second. The `.env` of the server lists the taggers in `NER_URL`, separated by co
     among them)
 38. Do the same with "add_mail_labels.sql" (the words of the e-mail translated for a language, kept so that
     the e-mail says the same words from one session of the server to the next, see [E-mail](briefing/email/README.md))
+39. Do the same with "add_item_media.sql" (whether an item a card names is a news medium: "L'Équipe: ..." in a
+    card told by Romanian media is no news of France). A server started before it works as it did, and takes the
+    column up when it is restarted after it
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.

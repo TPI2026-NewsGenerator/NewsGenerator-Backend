@@ -254,6 +254,7 @@ tagger (`ner/server.py`, GLiNER) reads in the title and the start of each news.
 | country | text | null — its code ISO 3166-1 alpha-2 ("ZM"); null for an international body, a continent, a person without citizenship in Wikidata |
 | international | boolean | NOT NULL, default false — a body of several countries or of the world (FIFA, the UN, Google): the people of a card naming one are not of its country |
 | bodies | text[] | null — the qids of the bodies a person works for, is a member of or holds a position of, still (`db/add_item_bodies.sql`); empty for anything else, null for a row read before 19.10.2026, read again |
+| media | boolean | null — a news medium (newspaper, agency, channel: `db/add_item_media.sql`), which a card names as its source: its country counts only when nothing else gives one; null for a row read before 03.11.2026, read again when a card names it |
 | looked_at | timestamptz | NOT NULL, default `now()` |
 
 Filled by `services/utils/countries.js` (a card asks for the ones never read, 40 at a time) and by the tagging

@@ -13,6 +13,21 @@ import {prisma} from '../config/db.js';
 const ARTICLE = `a.id, a.id_feed, a.link, a.title, a.description, a.published_at, a.created_at, a.id_story,
        a.source_url, a.resolved_link, a.medium, a.lang`;
 
+// Whether item_countries has its media column (db/add_item_media.sql): asked once, kept once it has answered,
+// so a server started before the migration works as it did and takes it up when it is restarted after it
+let mediaColumn = null;
+const hasMediaColumn = async () => {
+    if (mediaColumn !== null) return mediaColumn;
+    try {
+        const rows = await prisma.$queryRawUnsafe(`
+            SELECT 1 FROM information_schema.columns WHERE table_name = 'item_countries' AND column_name = 'media'`);
+        mediaColumn = rows.length > 0;
+    } catch {
+        return false;
+    }
+    return mediaColumn;
+};
+
 export const MentionModel = {
     // [{id, title, description, lang}]: the news created since 'since' the tagger has not read, the
     // newest first, none of 'taken' (the ones another tagger is reading)
@@ -230,10 +245,12 @@ export const MentionModel = {
     articlesOfStories: async (storyIds) => storyIds.length === 0 ? [] : prisma.$queryRawUnsafe(`
         SELECT id_story, array_agg(id) AS ids FROM articles WHERE id_story = ANY($1::int[]) GROUP BY id_story`, storyIds),
 
-    // [{qid, country, international}]: the countries of these items already read
-    // (db/add_item_countries.sql), country null for an item that has none
+    // [{qid, country, international, bodies, media}]: the countries of these items already read
+    // (db/add_item_countries.sql), country null for an item that has none; media null for one read
+    // before db/add_item_media.sql, and absent while that migration is not applied (the rows are then
+    // taken as read: the countries are those of before)
     countriesOf: async (qids) => qids.length === 0 ? [] : prisma.$queryRawUnsafe(`
-        SELECT qid, country, international, bodies FROM item_countries WHERE qid = ANY($1::text[])`, qids),
+        SELECT qid, country, international, bodies${await hasMediaColumn() ? ', media' : ''} FROM item_countries WHERE qid = ANY($1::text[])`, qids),
 
     // [qid]: the items names were linked to whose country was never read, or before their bodies were
     // (db/add_item_bodies.sql), of the most met names first
@@ -242,14 +259,18 @@ export const MentionModel = {
         WHERE m.qid IS NOT NULL AND NOT EXISTS (SELECT 1 FROM item_countries c WHERE c.qid = m.qid AND c.bodies IS NOT NULL)
         GROUP BY m.qid ORDER BY max(m.seen) DESC LIMIT $1`, limit)).map(row => row.qid),
 
-    // countries: [{qid, country, international, bodies}] read from Wikidata, kept
-    saveCountries: async (countries) => countries.length === 0 ? 0 : prisma.$executeRawUnsafe(`
-        INSERT INTO item_countries (qid, country, international, bodies)
-        SELECT qid, country, international, COALESCE(bodies, '{}')
-        FROM jsonb_to_recordset($1::jsonb) AS x(qid text, country text, international boolean, bodies text[])
+    // countries: [{qid, country, international, bodies, media}] read from Wikidata, kept
+    saveCountries: async (countries) => {
+        if (countries.length === 0) return 0;
+        const withMedia = await hasMediaColumn();
+        return prisma.$executeRawUnsafe(`
+        INSERT INTO item_countries (qid, country, international, bodies${withMedia ? ', media' : ''})
+        SELECT qid, country, international, COALESCE(bodies, '{}')${withMedia ? ', COALESCE(media, false)' : ''}
+        FROM jsonb_to_recordset($1::jsonb) AS x(qid text, country text, international boolean, bodies text[], media boolean)
         ON CONFLICT (qid) DO UPDATE SET country = EXCLUDED.country, international = EXCLUDED.international,
-            bodies = EXCLUDED.bodies, looked_at = now()`,
-        JSON.stringify(countries.map(({qid, country, international, bodies}) => ({qid, country, international, bodies})))),
+            bodies = EXCLUDED.bodies, ${withMedia ? 'media = EXCLUDED.media, ' : ''}looked_at = now()`,
+        JSON.stringify(countries.map(({qid, country, international, bodies, media}) => ({qid, country, international, bodies, media}))));
+    },
 
     // the names no news names any more, never looked for in Wikidata: the item of the others is kept on
     // purpose (the user, 17.10.2026), so a name that comes back is not looked for again in Wikidata,
