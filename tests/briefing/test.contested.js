@@ -10,7 +10,7 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const chat = jest.fn();
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
-const {contestedOf, hasDenial, withoutDenied} = await import('../../services/utils/contested.js');
+const {MAX_SHOWN, contestedOf, hasDenial, shownDenials, withoutDenied} = await import('../../services/utils/contested.js');
 const {newUsage} = await import('../../services/utils/ollama.js');
 
 const json = (value) => ({message: {content: JSON.stringify(value)}, prompt_eval_count: 10, eval_count: 5});
@@ -110,6 +110,22 @@ describe('contestedOf', () => {
             .mockResolvedValueOnce(json({sentences: [{n: 1, denied_by: 'Iran', self: false, about: 'main', denial: true}]}));
         expect(await contestedOf('A drone over RAF Fairford', texts)).toEqual([]);
         expect(await contestedOf('A drone over RAF Fairford', texts)).toEqual([]);
+    });
+});
+
+describe('contestedOf and the denials a card shows', () => {
+    const named = (n, by) => ({n, denied_by: by, self: true, about: 'main', denial: true});
+    const many = [
+        {source: 'a.com', url: 'https://a.com/1', publishedAt: null, page: page(...['One', 'Two', 'Three', 'Four', 'Five'].map(name => `${name} has denied the report.`))},
+    ];
+
+    it('should keep four deniers by name, the card chooses two once Wikidata has told which are one body', async () => {
+        chat.mockResolvedValueOnce(json({sentences: [named(1, 'FIFA'), named(2, 'Fédération internationale de football association'), named(3, 'UEFA'), named(4, 'CAF'), named(5, 'AFC')]}));
+        const found = await contestedOf('A report', many, {language: 'en'});
+        expect(found.map(denial => denial.by)).toEqual(['FIFA', 'Fédération internationale de football association', 'UEFA', 'CAF']);
+        expect(shownDenials(found).map(denial => denial.by)).toEqual(['FIFA', 'Fédération internationale de football association']);
+        expect(shownDenials(undefined)).toEqual([]);
+        expect(MAX_SHOWN).toBe(2);
     });
 });
 

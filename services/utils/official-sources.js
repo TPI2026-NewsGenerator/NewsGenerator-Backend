@@ -317,7 +317,7 @@ export const confirmedOf = (first, second, candidates) => {
 // language}]; parties: the ones of each card, [{name, names}]. At most NAME_SEARCHES searches, one at a
 // time, none more at the first refusal: the next briefing asks again. The answers are kept while the
 // server runs. lookup(name, language): [qid], exactItems
-const NAME_SEARCHES = 12;
+const NAME_SEARCHES = 20;
 const namedItems = new Map();
 export const itemsOfNamed = async (statements, parties, lookup = exactItems) => {
     const found = new Map();
@@ -377,6 +377,13 @@ export const withPartiesNamed = (statements, parties, called = new Map()) => {
     });
 };
 
+// The denials of a card (see contested.js), named as its statements are (see withPartiesNamed): the denier is
+// the party the card shows by the name it shows it by, and two names of one body are one denier (the user,
+// 2.11.2026: Wikidata knows). Each denial keeps its fields, only 'by' changes
+export const withDenialsNamed = (denials, parties, called = new Map()) =>
+    withPartiesNamed((denials ?? []).map(denial => ({...denial, party: denial.by})), parties, called)
+        .map(({party, ...denial}) => ({...denial, by: party}));
+
 // The posts of a card's parties first, then the statements its articles report of the parties with no
 // post (see statements.js), MAX_OFFICIAL at most
 export const withStatements = (posts, statements) => {
@@ -397,13 +404,15 @@ export const withSiteLinks = async (items, decode = decodeLinks, save = FeedMode
         console.error(`Official sources: the addresses of Google News were not saved (${err.message})`));
 };
 
-// cards: [{id, title, titleTranslation, titles, text, first, texts}], first the date of its first news,
-// texts its articles read [{source, url, publishedAt, page}]. language: the reader's, a statement quoted
-// in another one translated. Answers a Map id -> [{party, title, url, channel, publishedAt}], the posts
+// cards: [{id, title, titleTranslation, titles, text, first, texts, denials}], first the date of its first news,
+// texts its articles read [{source, url, publishedAt, page}], denials the ones its articles report (see
+// contested.js). language: the reader's, a statement quoted in another one translated. denied: a Map the
+// denials of the cards are put in, id -> the denials as withDenialsNamed gives them, none put for a card
+// when the sources of the cards are not read. Answers a Map id -> [{party, title, url, channel, publishedAt}], the posts
 // where a party said the card's fact itself, and the statements its articles report: channel
 // 'reported', title the sentence quoted, translation, source the medium reporting it, url its article;
 // a card the AI failed on has none
-export const officialSourcesOf = async (cards, usage = null, {language = 'en'} = {}) => {
+export const officialSourcesOf = async (cards, usage = null, {language = 'en', denied = new Map()} = {}) => {
     // the seconds of each part, logged: a slow briefing says where its time went
     const seconds = {};
     let started = Date.now();
@@ -484,7 +493,11 @@ export const officialSourcesOf = async (cards, usage = null, {language = 'en'} =
         publishedAt: statement.publishedAt,
     })));
     const cardParties = cards.map((card, i) => [...linkedOf[i], ...partiesOf[i].map(party => ({name: party.name, names: [party.name, ...(party.other ?? [])]}))]);
-    const called = await itemsOfNamed(reported, cardParties).catch(() => new Map());
+    // the names of the denials are asked with the ones of the statements: one budget of searches
+    const denials = cards.map(card => card.denials ?? []);
+    const called = await itemsOfNamed(cards.map((card, i) => [...reported[i], ...denials[i].map(denial => ({party: denial.by, language: denial.language}))]), cardParties)
+        .catch(() => new Map());
+    cards.forEach((card, i) => denied.set(card.id, withDenialsNamed(denials[i], cardParties[i], called)));
     done('statement names');
     const shown = cards.map((card, i) => withStatements(judged[i].status === 'fulfilled' ? judged[i].value : [],
         withPartiesNamed(reported[i], cardParties[i], called)));

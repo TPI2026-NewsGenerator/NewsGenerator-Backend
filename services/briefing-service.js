@@ -26,7 +26,7 @@ import {languageOf} from "./utils/language.js";
 import {BRIEFING_SIZES, MAX_BRIEFING, balanceSelection, checkStories, mergeStories, reviewCards, selectStories, shareOut} from "./utils/profile-ai.js";
 import {corroborationOf} from "./utils/corroboration.js";
 import {hedgedBy} from "./utils/hedging.js";
-import {contestedOf, withoutDenied} from "./utils/contested.js";
+import {contestedOf, shownDenials, withoutDenied} from "./utils/contested.js";
 import {nearCardsOf, otherAnglesOf, placeAngles, sameFactsOut} from "./utils/other-angles.js";
 import {AFFAIR_DAYS, storiesOfSameNames} from "./utils/affair-names.js";
 import {officialSourcesOf} from "./utils/official-sources.js";
@@ -796,6 +796,8 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     // read here: the tab of the page asks for them when it is opened (see BriefingService.following).
     // The briefing never waits on any of them failing
     await step('angles');
+    // the denials of the cards, named as their official sources are (see withDenialsNamed)
+    const denied = new Map();
     const [angles, official, named, ais] = await Promise.all([
         anglesOf(stories, leads.map(lead => lead.title), {language, feedUrls, hours, trusted, usage: usage.angles}).catch(err => {
             console.error(`Briefing: no other angle looked for (${err.message})`);
@@ -811,7 +813,8 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             // its articles read, for the statements of its parties they report (see statements.js)
             texts: [leads[i], ...story.members.filter(article => article !== leads[i])].filter(article => content.has(article.link))
                 .map(article => ({...toArticle(article), page: content.get(article.link), lead: article === leads[i]})),
-        })), usage.official, {language}).catch(err => {
+            denials: summaryOf(i)?.contested ?? [],
+        })), usage.official, {language, denied}).catch(err => {
             console.error(`Briefing: no official source looked for (${err.message})`);
             return new Map();
         }),
@@ -853,6 +856,9 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     const items = stories.map((story, i) => {
         const summary = summaryOf(i);
         const lead = leads[i];
+        // two deniers at most, the ones of two different bodies (see withDenialsNamed); as found when the official
+        // sources were not read
+        const denials = shownDenials(denied.get(story.storyId) ?? summary?.contested);
         const members = [...story.members].sort((a, b) => b.at - a.at);
 
         return {
@@ -900,7 +906,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             hedged: hedgedBy(lead.title, lead.description),
             // someone named who denies the news, in the words of one of its articles:
             // [{by, sentence, translation, language, source, url, publishedAt}]
-            contested: summary?.contested ?? [],
+            contested: denials,
             // news of the same affair telling something the card does not, the closest first (see
             // anglesOf): [{title, titleTranslation, url, source, language, publishedAt, media, ...}]
             angles: angles.get(story.storyId) ?? [],
@@ -909,7 +915,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             // statements one of the card's articles reports (channel 'reported': title the sentence,
             // translation, language, source the medium). Absent from the briefings made before 12.10.2026.
             // A statement the denials of the card quote already is left out (see withoutDenied)
-            official: withoutDenied(official.get(story.storyId) ?? [], summary?.contested),
+            official: withoutDenied(official.get(story.storyId) ?? [], denials),
             // the people and organisations most of its articles name, each opening its page (see
             // card-names.js): [{name, qid, kind}], qid null for a name Wikidata does not have as one item.
             // Absent from the briefings made before 13.10.2026

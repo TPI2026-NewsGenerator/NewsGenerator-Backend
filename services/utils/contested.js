@@ -20,7 +20,12 @@ import {ollamaJson} from './ollama.js';
 // two writings, 47% and 47.06%, "6-0" and "0-6", given as two). A denial is said by the article
 // itself, so the AI only has to read it, about 300 tokens a card.
 const MAX_CANDIDATES = 25;          // sentences with a verb of denial read by the AI, the lead's first
-const MAX_SHOWN = 2;                // denials shown on a card, of two different deniers
+// Denials shown on a card, of two different deniers. contestedOf keeps MAX_FOUND of them, by name: two names
+// of one body ("FIFA", "Fédération internationale de football association") would take both places, and
+// Wikidata says which names are one (see withDenialsNamed in official-sources.js) before the card keeps two
+export const MAX_SHOWN = 2;
+const MAX_FOUND = 4;
+export const shownDenials = (denials) => (denials ?? []).slice(0, MAX_SHOWN);
 
 // the words of a denial, as a whole word: \b does not know the accented letters ("nié")
 const word = (pattern) => String.raw`(?<![\p{L}\p{N}])(?:${pattern})`;
@@ -99,7 +104,7 @@ export const contestedOf = async (title, texts, {language = 'en', usage = null} 
         if (!candidate || read.denial !== true || read.self !== true || read.about !== 'main' || !by || deniers.has(by.toLowerCase())) continue;
         deniers.add(by.toLowerCase());
         shown.push({by, ...candidate});
-        if (shown.length === MAX_SHOWN) break;
+        if (shown.length === MAX_FOUND) break;
     }
 
     // the quotes in another language than the reader's translated, as the passages are

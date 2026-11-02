@@ -13,7 +13,7 @@ jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat: jest.fn
 jest.unstable_mockModule('../../models/official-model.js', () => ({OfficialModel: {}}));
 jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {saveResolvedLinks: jest.fn()}}));
 jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel: {}}));
-const {MAX_OFFICIAL, candidatesOf, confirmedOf, itemsOfNamed, normalizeParties, partyName, withPartiesNamed, withSiteLinks, withStatements} = await import('../../services/utils/official-sources.js');
+const {MAX_OFFICIAL, candidatesOf, confirmedOf, itemsOfNamed, normalizeParties, partyName, withDenialsNamed, withPartiesNamed, withSiteLinks, withStatements} = await import('../../services/utils/official-sources.js');
 
 describe('withStatements', () => {
     const post = (party) => ({party, channel: 'site'});
@@ -86,6 +86,30 @@ describe('withPartiesNamed with what Wikidata says of the names', () => {
         expect(withPartiesNamed([said('Confédération Africaine de Football')], [{name: 'CAF', names: ['CAF']}], new Map([['confederation africaine de football', []]])))
             .toEqual([said('CAF')]);
         expect(withPartiesNamed([said('Confédération Africaine de Football')], [{name: 'CAF', names: ['CAF']}])).toEqual([said('CAF')]);
+    });
+});
+
+// the denials of a card are named as its statements are (the user, 2.11.2026: Wikidata knows which names are one body)
+describe('withDenialsNamed', () => {
+    const caf = {qid: 'Q168360', name: 'CAF', names: ['CAF', 'Confederation of African Football']};
+    const denial = (by, extra = {}) => ({by, sentence: `${by} denies.`, source: 'bbc.com', url: 'https://bbc.com/a', publishedAt: null, language: 'fr', translation: null, ...extra});
+
+    it('should show a denier under the name the card shows its party by, every other field of the denial kept', () => {
+        const called = new Map([['confederation africaine de football', ['Q168360']]]);
+        const [named] = withDenialsNamed([denial('Confédération Africaine de Football', {translation: 'CAF denies.'})], [caf], called);
+        expect(named).toEqual(denial('CAF', {sentence: 'Confédération Africaine de Football denies.', translation: 'CAF denies.'}));
+    });
+
+    it('should make one denier of two names Wikidata gives one item, the first one kept', () => {
+        const called = new Map([['fifa', ['Q790']], ['federation internationale de football association', ['Q790']]]);
+        expect(withDenialsNamed([denial('FIFA'), denial('Fédération internationale de football association'), denial('UEFA')], [], called).map(one => one.by))
+            .toEqual(['FIFA', 'UEFA']);
+    });
+
+    it('should keep the denials as they are for a card with no party, and none for none', () => {
+        const denials = [denial('Iran'), denial('Tehran')];
+        expect(withDenialsNamed(denials, [])).toEqual(denials);
+        expect(withDenialsNamed(undefined, [caf])).toEqual([]);
     });
 });
 
