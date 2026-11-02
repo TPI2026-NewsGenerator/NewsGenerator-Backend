@@ -80,7 +80,7 @@ Le lecteur choisit un nom, un e-mail, un mot de passe et la langue dans laquelle
 - Le compte n'est créé qu'une fois le profil compris (étape A2). Si l'IA ou les vecteurs échouent, aucun compte ne reste.
 - Au plus 5 inscriptions par heure et 10 connexions par quart d'heure par adresse IP.
 - Connexion : le nom quelle que soit sa casse, le mot de passe vérifié par bcrypt ; un nom inconnu et un mauvais mot de passe reçoivent la même réponse, dans le même temps (17 octobre). Session dans un cookie que la page ne peut pas lire (HttpOnly), valable 7 jours et renouvelée chaque jour d'usage.
-- Compte : nom d'utilisateur, e-mail et mot de passe changés depuis la page Settings ou la section « Your account » du profil, chacun avec le mot de passe actuel ; un nouveau mot de passe ferme les sessions des autres appareils.
+- Compte : nom d'utilisateur, e-mail et mot de passe changés depuis la page Settings, chacun avec le mot de passe actuel ; un nouveau mot de passe ferme les sessions des autres appareils.
 - Plusieurs profils (« Travail », « Loisirs ») pour les administrateurs, 15 au plus : chacun a ses intérêts, ses projets, ses sources, ses votes, ce qu'il suit et ses briefings. La page envoie le profil choisi avec chaque demande (en-tête `X-Profile`).
 - Projets (13 octobre) : ce que le lecteur prépare pour un temps (un voyage, un achat, un rapport), 5 au plus par profil, écrits avec les questions de l'IA comme un profil, avec un dernier jour dans l'année ou aucun. Leurs intérêts entrent dans le classement du briefing jusqu'à ce jour ; aucune source n'est cherchée pour eux.
 
