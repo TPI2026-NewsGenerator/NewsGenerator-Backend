@@ -286,11 +286,16 @@ export const candidatesOf = (card, parties, posts) => {
 // the label only says it longer ("Real Madrid" for "Real Madrid Club de Fútbol", "Chelsea"), else its
 // English label ("Portuguese Football Federation" for "Federação Portuguesa de Futebol", "Arsène Wenger"
 // for "Arsene Wenger"). Of the 174 names searched by 14.10.2026 (bench/official-party-names.mjs), the
-// AI's kept 111 times, the 63 others all right. An item without an English label keeps the AI's name
-export const partyName = (name, label, names = []) => {
+// AI's kept 111 times, the 63 others all right. An item without an English label keeps the AI's name.
+// names: the other names the AI gave; official: the names of the item itself (see readChannels: its labels in
+// the languages of the news, its aliases, its short name), which give its acronym only when it is the
+// initials of its label ("CAF" for the "Confederation of African Football"), whatever the AI called it
+export const partyName = (name, label, names = [], official = []) => {
     if (!label || /^Q\d+$/.test(label)) return name;
     const short = shortName(label, [name, ...names]);
     if (short !== label) return short;
+    const initials = shortName(label, official, {strict: true});
+    if (initials !== label) return initials;
     const [key, labelKey] = [mentionKey(name), mentionKey(label)];
     return key !== labelKey && ` ${labelKey} `.includes(` ${key} `) ? name : label;
 };
@@ -456,7 +461,7 @@ export const officialSourcesOf = async (cards, usage = null, {language = 'en', d
             const item = items.get(qidOf.get(keyOf(party)));
             if (!item) continue;
             linked.set(item.qid, {qid: item.qid, label: item.label, site: item.channels?.site ?? [],
-                name: partyName(party.name, item.label, [...(party.other ?? []), ...(item.names ?? [])]),
+                name: partyName(party.name, item.label, party.other ?? [], item.names ?? []),
                 names: [...(linked.get(item.qid)?.names ?? []), party.name, ...(party.other ?? []), item.label, ...(item.names ?? [])]});
         }
         return [...linked.values()];

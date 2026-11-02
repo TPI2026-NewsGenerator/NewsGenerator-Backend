@@ -7,7 +7,7 @@ on 16.10.2026; what was added after that day (`item_countries` on 18.10, its col
 `30-database.puml` (and `.png`), next to this file.
 
 Some tables are not in `prisma/schema.prisma`: `entities`, `entity_links`, `profile_entities`,
-`mentions`, `article_mentions`, `item_countries`, `party_names` and `sent_mails` are read and written in SQL
+`mentions`, `article_mentions`, `item_countries`, `party_names`, `mail_labels` and `sent_mails` are read and written in SQL
 only (`$queryRawUnsafe`), by `models/entity-model.js`, `mention-model.js`, `official-model.js` and
 `sent-mail-model.js`.
 
@@ -36,6 +36,7 @@ only (`$queryRawUnsafe`), by `models/entity-model.js`, `mention-model.js`, `offi
 | `article_mentions` | the names of each news |
 | `item_countries` | the country of each item of Wikidata a card names, and the bodies of a person, read once: a card shows the countries of who it is about |
 | `party_names` | the item of Wikidata a party of a card is, as the AI named it ("CONI"), searched once |
+| `mail_labels` | the words of the e-mail of a briefing translated by the AI for a language, kept so that the e-mail says the same words from one session of the server to the next |
 | `sent_mails` | the copies of the e-mails of a briefing sent before 13.10.2026, read by their link |
 
 **Two tables to remove** — `filters` and `users_has_last_filters`. They belonged to the "last filter
@@ -382,6 +383,16 @@ Index `i_entity_links_to` on `id_to`.
 | checked_at | timestamptz | NOT NULL, default `now()` |
 
 Points to `entities` by its `qid`, not by a key: the item may not be read yet.
+
+#### mail_labels
+| Column | Type | |
+|---|---|---|
+| language | text | PK (with source) — a code: `fr` |
+| source | text | PK — the word of the e-mail in English ("Key points", "{by} denies:"): a word the code changes is another row |
+| translation | text | NOT NULL — the AI's translation, with its `{places}` (`db/add_mail_labels.sql`) |
+| created_at | timestamptz | NOT NULL, default `now()` |
+
+A row is never replaced: a translation corrected by hand stays. Read by `labelsFor` (`mail-labels.js`).
 
 ### Briefings and e-mails
 

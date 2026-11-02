@@ -282,21 +282,30 @@ const CHANNELS = {site: 'P856', x: 'P2002', instagram: 'P2003', facebook: 'P2013
     mastodon: 'P4033', bluesky: 'P12361', telegram: 'P3789'};
 const ITEMS_PER_CALL = 40;
 
-// [{qid, label, description, channels: {site: [...], bluesky: [...], ...}}] of these items, in English,
-// the ones Wikidata does not have left out
+// [{qid, label, description, names, channels: {site: [...], bluesky: [...], ...}}] of these items, in English, the
+// ones Wikidata does not have left out. names: what the item is called, as the page of a followed item has them
+// (see namesOf): its labels in the languages of the news, its aliases and its short name (P1813: "CAF"), so
+// that the name an article gives a party ("Confédération Africaine de Football") is known without a search
+// (the user, 2.11.2026: Wikidata knows)
 export const readChannels = async (qids) => {
     const found = [];
     const asked = qids.filter(isQid);
     for (let i = 0; i < asked.length; i += ITEMS_PER_CALL) {
         const params = new URLSearchParams({action: 'wbgetentities', ids: asked.slice(i, i + ITEMS_PER_CALL).join('|'),
-            props: 'labels|descriptions|claims', languages: 'en', format: 'json'});
+            props: 'labels|aliases|descriptions|claims', languages: languagesOf('en').join('|'), format: 'json'});
         for (const [qid, item] of Object.entries((await ask(`${API}?${params}`)).entities ?? {})) {
             if (item.missing !== undefined) continue;
             const channels = Object.fromEntries(Object.entries(CHANNELS)
                 .map(([name, property]) => [name, (item.claims?.[property] ?? []).filter(claim => claim.rank !== 'deprecated')
                     .map(claim => claim.mainsnak?.datavalue?.value).filter(value => typeof value === 'string')])
                 .filter(([, values]) => values.length > 0));
-            found.push({qid, label: item.labels?.en?.value ?? qid, description: item.descriptions?.en?.value ?? null, channels});
+            const claimed = (property) => (item.claims?.[property] ?? []).map(claim => claim.mainsnak?.datavalue?.value);
+            const kind = kindOf(claimed('P31').map(value => value?.id).filter(isQid));
+            const label = item.labels?.en?.value ?? qid;
+            found.push({qid, label, description: item.descriptions?.en?.value ?? null, channels,
+                names: namesOf([label, ...valuesOf(item.labels, 'en')],
+                    languagesOf('en').flatMap(code => (item.aliases?.[code] ?? []).map(alias => alias.value)),
+                    claimed('P1813').map(value => value?.text).filter(Boolean), {club: kind === 'club' || kind === 'team'})});
         }
     }
     return found;

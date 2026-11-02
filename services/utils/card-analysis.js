@@ -327,6 +327,22 @@ export const withCleanNext = (analysis) => !analysis?.cards || typeof analysis.c
         [storyId, Array.isArray(lines?.next) ? {...lines, next: lines.next.map(cleanNext)} : lines])),
 };
 
+// A "why" line that says again what the card shows. The prompt asks the AI to leave such a line out, and it does
+// not always: of the 312 "why" lines judged blind (bench/data/card-analysis, judge-v2 and judge-v3, 2.11.2026),
+// 43 were "no use" to the reader, 5 of them lines whose words were 75% or more in the card (its title and its
+// key passages) and, of the 6 lines so, none a "useful" one. A lower share dropped useful ones (70%: 2 useful and 5
+// "some" of 13), so the bound is high and the line long enough to tell: most useless lines are padding or
+// trivial, not repeats, and are left to the prompt. Words of 4 letters or more, accents and case aside
+const REPEAT_SHARE = 0.75;
+const REPEAT_MIN_WORDS = 8;
+const wordsOf = (text) => strip(text).split(' ').filter(word => word.length >= 4);
+export const repeatsCard = (text, card) => {
+    const mine = wordsOf(text);
+    if (mine.length < REPEAT_MIN_WORDS) return false;
+    const shown = new Set(wordsOf([card.title, card.titleTranslation, passagesOf(card)].join(' ')));
+    return mine.filter(word => shown.has(word)).length / mine.length >= REPEAT_SHARE;
+};
+
 // The lines of an answer the checks keep, as shown: {why: ['...'], next: [{if, then}], dropped}
 export const checkedLines = async (answer, card) => {
     const sources = new Map(sourcesOf(card).map(source => [source.id, source]));
@@ -350,6 +366,8 @@ export const checkedLines = async (answer, card) => {
     const kept = lines.filter((line, i) => {
         const valid = line.cites.filter(id => sources.has(id));
         if (valid.length === 0) return false;
+        // a line that only says again what the card shows is useless to the reader (see repeatsCard)
+        if (line.part === 'why' && repeatsCard(line.text, card)) return false;
         // a cited sentence stands for its whole article: the actor is often named in the sentence before
         const articles = new Set(valid.filter(id => id.startsWith('A')).map(id => id.split(' ')[0]));
         const cited = [...sources.keys()].filter(id => valid.includes(id) || articles.has(id.split(' ')[0])).map(citedText).join('\n');

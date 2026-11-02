@@ -59,10 +59,12 @@ const initials = (key) => key.split(/[\s-]+/).filter(word => word && !LINKING.ha
 // its initials first ("Union of European Football Associations" is the UEFA), else its label
 const ACRONYM = /^[\p{Lu}][\p{Lu}\p{N}&]{1,6}$/u;
 const LONG_LABEL = 20;
-export const shortName = (label, names = []) => {
+// strict: only the acronym that is the initials of the label counts, not the first acronym met (the names of an
+// item of Wikidata are in many languages: "FGF" is the Guinean federation in French, not for a reader of English)
+export const shortName = (label, names = [], {strict = false} = {}) => {
     if (String(label).length <= LONG_LABEL) return label;
     const acronyms = names.filter(name => ACRONYM.test(name));
-    return acronyms.find(name => initials(mentionKey(label)) === mentionKey(name)) ?? acronyms[0] ?? label;
+    return acronyms.find(name => initials(mentionKey(label)) === mentionKey(name)) ?? (strict ? undefined : acronyms[0]) ?? label;
 };
 
 // a key without its article: "la caf" is the "caf"

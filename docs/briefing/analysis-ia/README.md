@@ -41,7 +41,10 @@ and the code drops a line whose figure or name those sources do not give.
   ("A1" becomes the medium); a line is dropped when it cites no source of the card, or when one of its
   figures or names is in none of its cited sources (a cited sentence counts with its whole article). The
   names are read by the NER tagger (`tagger.js`, the first of `NER_URL` that answers); with none, the
-  words in capitals stand for the names. One missing name found elsewhere in the card passes.
+  words in capitals stand for the names. One missing name found elsewhere in the card passes. A "why" line of 8
+  words or more whose words (4 letters or more) are 75% or more in the card's title and key passages is
+  dropped too (`repeatsCard`, 2.11.2026): it says again what the reader sees. Measured on the 312 "why" lines
+  judged blind, 6 lines so, 5 of them judged no use and none useful; at 70% it dropped 2 useful lines of 13.
 - Saved `{status: 'ready', model, picked, dropped, cards: {storyId: {why, next, timeline}}}`. A card the
   AI fails on, or whose lines are all dropped, has none. A call of this model never goes to Gemini
   (`ollama.js`): a failure is no analysis. An error of the whole run saves `{status: 'failed'}`.

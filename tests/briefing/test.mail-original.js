@@ -74,7 +74,7 @@ describe('GET /api/mails/:token', () => {
 
 describe('POST /api/briefing/:id/email', () => {
     it('should give the service what the reader sent, and no address of the site: the e-mail has no link to a copy any more', async () => {
-        await request('POST', '/api/briefing/7/email', {headers: {Host: 'news.example'}, body: {storyIds: [1], format: 'points', ai: [1], texts: {1: ['My point.']}, countries: {1: ['FR']}, theme: 'dark'}});
-        expect(email).toHaveBeenCalledWith(4, '7', [1], undefined, undefined, undefined, undefined, 'points', [1], {1: ['My point.']}, {1: ['FR']}, 'dark');
+        await request('POST', '/api/briefing/7/email', {headers: {Host: 'news.example'}, body: {storyIds: [1], format: 'points', ai: [1], texts: {1: ['My point.']}, countries: {1: ['FR']}, theme: 'dark', timeZone: 'Europe/Paris'}});
+        expect(email).toHaveBeenCalledWith(4, '7', [1], undefined, undefined, undefined, undefined, 'points', [1], {1: ['My point.']}, {1: ['FR']}, 'dark', 'Europe/Paris');
     });
 });

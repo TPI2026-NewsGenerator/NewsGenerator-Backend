@@ -6,7 +6,8 @@ key points or the summary), the AI version of a card's points or summary, the pi
 their own title, the text of its key passages, points or summary as they write it (since 20.10.2026),
 and take out the lines they do not want (a denial, an angle, an official source, a line
 of the AI analysis). The e-mail lays out what the briefing wrote, as the page shows it, all of it in the
-reader's language: only its own words are translated when it is sent, once per language.
+reader's language: only its own words are translated when it is sent, once per language and kept
+(`mail_labels`).
 The cards sent count as read: their stories are left out of the next briefings for 48 hours.
 
 ## Where
@@ -33,7 +34,8 @@ The cards sent count as read: their stories are left out of the next briefings f
   (`BriefingModel.articlePictures`, 30 at most). The browser measures them (`mailPictures.js`): one under 560 px wide (`MIN_PICTURE_WIDTH`,
   the width of the picture in the e-mail) is put aside, a card whose own is too small gets the best other
   of its story, else none.
-- `POST /api/briefing/:id/email {storyIds, to, pictures, titles, removed, format, ai, texts}`: 10 an hour per
+- `POST /api/briefing/:id/email {storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme,
+  timeZone}`: 10 an hour per
   IP address and 30 a day per account (`rateLimit`); the body up to 9 MB (`app.js`), for the reader's files in
   base64.
 - `BriefingService.email`: `storyIds` one at least, `format` one of `MAIL_FORMATS` (`points`, `digest`,
@@ -48,8 +50,12 @@ The cards sent count as read: their stories are left out of the next briefings f
   its first bytes, 2 MB each, 6 MB per e-mail, joined as `cid:`).
 - Sent to another address than the account's: the "why" of each card is left out (it is written to the
   reader) and the answers go to the reader (`Reply-To`).
-- `briefingMail` (`services/utils/briefing-mail.js`): a table with inline styles, the colours and fonts of
-  the page, dark where the mail app follows the system; per card its number, countries (not its topic: the
+- `briefingMail` (`services/utils/briefing-mail.js`): a table with inline styles in the design of the page
+  (Inter, white and one grey, blue links, rounded boxes), light unless the sender chooses dark (`theme`, a
+  switch in the bar, fixed whatever the system of who reads it), its hours in the time zone of the sender's
+  browser (`timeZone`, Zurich without one); per card its number, countries (the ones the sender chose in the
+  bar, `withOwnCountries`, `countries: {storyId: [code]}`, 10 at most; else the ones found, none when the title
+  names them; not its topic: the
   same card after card, the user, 18.10.2026), date and language,
   title, why, picture, its sentences in the way chosen (or the AI's, without saying so), its official
   sources boxed right under them, its analysis, denials, angles, where to read it, and the notes of its
@@ -57,8 +63,11 @@ The cards sent count as read: their stories are left out of the next briefings f
   ("Roberto’s Briefing · 13 October 2026"), the subject adds the number of stories.
 - In the reader's language (`readerLanguage` of the profile, `services/utils/mail-labels.js`): `labelsFor`
   translates `LABELS` (`briefing-mail.js`, "Key points", "Contested", "{by} denies:"...) with
-  `translateTexts`, once per language while the server runs; a translation that lost a `{place}` keeps
-  its English. The AI not answering, the e-mail is in English, its dates too. `withHedgedTranslated`
+  `translateTexts`, once per word and language: the translation is kept in `mail_labels`
+  (`MailLabelModel`, `db/add_mail_labels.sql`), so the e-mail says the same words from one session of the
+  server to the next, the AI is asked only for the words with none kept, and a translation kept is never
+  replaced (one corrected by hand stays); a translation that lost a `{place}` keeps its English and is not
+  kept. The database not answering, the AI translates them all. The AI not answering, the e-mail is in English, its dates too. `withHedgedTranslated`
   translates the words of an article saying it has no confirmation ("selon nos informations"). Dates
   and names of languages in that language (`Intl`). Written by the briefing since 18.10.2026: who denies
   in that language (`contested.js`), the titles of the official posts translated (`official-sources.js`).

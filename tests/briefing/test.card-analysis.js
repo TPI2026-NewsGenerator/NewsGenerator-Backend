@@ -18,7 +18,7 @@ jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 // no tagger: the names are the words in capitals; no Gemini
 process.env.NER_URL = '';
 delete process.env.AISTUDIO_API_KEY;
-const {ANALYSIS_MODEL, analysesOf, checkedLines, cleanNext, fittedArticles, pickedCards, withCleanNext} = await import('../../services/utils/card-analysis.js');
+const {ANALYSIS_MODEL, analysesOf, checkedLines, cleanNext, fittedArticles, pickedCards, repeatsCard, withCleanNext} = await import('../../services/utils/card-analysis.js');
 
 const card = (n, storyId, extra = {}) => ({
     n, storyId, title: `Card ${n}`, titleTranslation: null, medium: 'rts.ch', summary: 'The FIFA Council will vote on 18 March in Rabat.',
@@ -110,6 +110,44 @@ describe('the "If X, then Y" lines of an analysis', () => {
     it('should show a written line once, as checked', async () => {
         const lines = await checkedLines({next: [{...repeated, if: 'If the Council refuses, then the plan is dropped.', then: 'the plan is dropped.', cites: ['A2 s2']}]}, card(1, 11));
         expect(lines.next).toEqual([{if: 'the Council refuses', then: 'the plan is dropped.'}]);
+    });
+});
+
+describe('a "why" line that says again what the card shows', () => {
+    const shown = card(1, 11, {
+        title: 'City appeal against 114 upheld charges', titleTranslation: null,
+        summary: 'An independent commission upheld 114 of 115 Premier League charges against Manchester City for financial breaches from 2009-10 to 2017-18.',
+    });
+
+    it('should tell a line whose words are in the title and the key passages of the card', () => {
+        // the line of the judged data that was no use: the key passage, as it stands
+        expect(repeatsCard('An independent commission upheld 114 of 115 Premier League charges against Manchester City for financial breaches.', shown)).toBe(true);
+        // its words, other ones around them
+        expect(repeatsCard('Premier League charges against Manchester City were upheld by an independent commission for financial breaches in 2009-10.', shown)).toBe(true);
+    });
+
+    it('should keep a line that tells more than the card, a short one, and a line of an empty card', () => {
+        expect(repeatsCard('The league boss calls the case a warning to every club about hiding the money of an owner, and a sanction of nine years is asked.', shown)).toBe(false);
+        expect(repeatsCard('An independent commission upheld the charges.', shown)).toBe(false);
+        expect(repeatsCard('An independent commission upheld 114 of 115 Premier League charges against Manchester City.', {title: 'Other', summary: ''})).toBe(false);
+    });
+
+    it('should read the title and the passages in the language of the reader', () => {
+        const french = card(1, 11, {title: 'Zetchi', titleTranslation: 'Le procès de Zetchi s’ouvre', summary: 'Le procès s’ouvre après six reports et près de deux ans de détention provisoire pour Zetchi.',
+            translation: 'Le procès s’ouvre après six reports et près de deux ans de détention provisoire pour Zetchi.'});
+        expect(repeatsCard('Le procès de Zetchi s’ouvre enfin après six reports et près de deux ans de détention provisoire.', french)).toBe(true);
+    });
+
+    it('should drop such a line from the analysis, and leave the others, a "next" line included', async () => {
+        // a line its sources support in every way, but the card says it already
+        const again = 'The FIFA Council will vote on 18 March in Rabat. Gianni Infantino seeks another term, the BBC says.';
+        const lines = await checkedLines({
+            why: [{text: again, cites: ['A1 s1', 'A1 s2']}, {text: 'UEFA says the plan of Infantino lacks support.', cites: ['A2 s1']}],
+            next: [{if: 'the Council refuses', then: 'the plan is dropped', cites: ['A2 s2']}],
+        }, card(1, 11, {summary: again, titleTranslation: null}));
+        expect(lines.why).toEqual(['UEFA says the plan of Infantino lacks support.']);
+        expect(lines.next).toEqual([{if: 'the Council refuses', then: 'the plan is dropped'}]);
+        expect(lines.dropped).toBe(1);
     });
 });
 

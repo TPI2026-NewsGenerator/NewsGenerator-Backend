@@ -671,6 +671,50 @@ describe('briefingMail, the name of the profile and the design of the page', () 
     });
 });
 
+// the hours of the e-mail are the ones of the reader, not always the ones of Zurich (the user, 2.11.2026)
+describe('briefingMail in the time zone of the reader', () => {
+    // 23:30 UTC the 8th: 01:30 the 9th in Zurich (summer time), 19:30 the 8th in New York
+    const late = {hours: 24, finishedAt: '2026-10-08T23:30:00.000Z', items: [card(1, 'First story', {publishedAt: '2026-10-08T23:30:00.000Z'})]};
+
+    it('should write the hours and the day in Zurich when no time zone is given, or one that is none', () => {
+        for (const options of [{}, {timeZone: 'Mars/Phobos'}, {timeZone: ''}, {timeZone: null}]) {
+            const mail = briefingMail(late, {profile: 'Football', ...options});
+            expect(mail.subject).toBe('Football’s Briefing · 9 October 2026 · 1 story');
+            expect(mail.html).toContain('9 Oct, 01:30');
+        }
+    });
+
+    it('should write them in the time zone of the reader', () => {
+        const mail = briefingMail(late, {profile: 'Football', timeZone: 'America/New_York'});
+        expect(mail.subject).toBe('Football’s Briefing · 8 October 2026 · 1 story');
+        expect(mail.html).toContain('>Football’s Briefing · 8 October 2026<');
+        expect(mail.html).toContain('8 Oct, 19:30');
+        expect(mail.html).not.toContain('01:30');
+        expect(briefingMail(late, {timeZone: 'Asia/Tokyo'}).html).toContain('9 Oct, 08:30');
+    });
+});
+
+describe('BriefingService.email in the time zone of the reader', () => {
+    const sent = () => sendMail.mock.calls.at(-1)[0];
+
+    it('should send the hours of the time zone given, and refuse a name that is none before reading the briefing', async () => {
+        ofUser.mockResolvedValue({...row, finished_at: new Date('2026-10-08T23:30:00Z'), items: [card(1, 'First story', {publishedAt: '2026-10-08T23:30:00.000Z'})]});
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'passages', [], undefined, undefined, 'light', 'America/New_York');
+        expect(sent().html).toContain('8 Oct, 19:30');
+        expect(sent().subject).toContain('8 October 2026');
+        await BriefingService.email(4, 7, [1]);
+        expect(sent().html).toContain('9 Oct, 01:30');
+
+        ofUser.mockClear();
+        sendMail.mockClear();
+        for (const zone of ['Mars/Phobos', '', 'x'.repeat(65), 3, {name: 'Europe/Paris'}]) {
+            await expect(BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'passages', [], undefined, undefined, 'light', zone)).rejects.toMatchObject({status: 400});
+        }
+        expect(ofUser).not.toHaveBeenCalled();
+        expect(sendMail).not.toHaveBeenCalled();
+    });
+});
+
 describe('BriefingService.email in the theme the reader chose', () => {
     const sent = () => sendMail.mock.calls.at(-1)[0];
 

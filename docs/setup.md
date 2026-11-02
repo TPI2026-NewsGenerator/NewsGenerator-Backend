@@ -200,6 +200,8 @@ second. The `.env` of the server lists the taggers in `NER_URL`, separated by co
     body a card names lose their country, the others do not)
 37. Do the same with "add_mention_candidates.sql" (the items a name may be, kept for a card to choose
     among them)
+38. Do the same with "add_mail_labels.sql" (the words of the e-mail translated for a language, kept so that
+    the e-mail says the same words from one session of the server to the next, see [E-mail](briefing/email/README.md))
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.

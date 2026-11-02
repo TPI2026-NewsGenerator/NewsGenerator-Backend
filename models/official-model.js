@@ -40,13 +40,18 @@ export const OfficialModel = {
                site_feed, site_feed_at > now() - make_interval(days => ${SITE_FEED_DAYS}) AS site_feed_fresh
         FROM entities WHERE qid = ANY($1::text[])`, qids),
 
-    // [{qid, label, description, channels}] read from Wikidata: an item new to us gets a row of its
-    // own, its label alone for its names, as a linked item does (see EntityModel.save)
+    // [{qid, label, description, names, channels}] read from Wikidata: an item new to us gets a row of its own, its
+    // names the ones read (its label alone without any, as a linked item does, see EntityModel.save). An item
+    // that has its label alone gets the names read; one that has more (a followed item, read for its page) keeps
+    // its own
     saveChannels: async (items) => items.length === 0 ? 0 : prisma.$executeRawUnsafe(`
         INSERT INTO entities (qid, label, description, names, channels, channels_at)
-        SELECT i.qid, i.label, i.description, ARRAY[i.label], i.channels, now()
-        FROM jsonb_to_recordset($1::jsonb) AS i(qid text, label text, description text, channels jsonb)
-        ON CONFLICT (qid) DO UPDATE SET channels = EXCLUDED.channels, channels_at = now()`, JSON.stringify(items)),
+        SELECT i.qid, i.label, i.description,
+               COALESCE(NULLIF(ARRAY(SELECT jsonb_array_elements_text(i.names)), '{}'), ARRAY[i.label]), i.channels, now()
+        FROM jsonb_to_recordset($1::jsonb) AS i(qid text, label text, description text, names jsonb, channels jsonb)
+        ON CONFLICT (qid) DO UPDATE SET channels = EXCLUDED.channels, channels_at = now(),
+            names = CASE WHEN COALESCE(cardinality(entities.names), 0) <= 1 THEN EXCLUDED.names ELSE entities.names END`,
+        JSON.stringify(items)),
 
     // the feed of the website of an item, '' when it has none
     saveSiteFeed: async (qid, url) => prisma.$executeRawUnsafe(`

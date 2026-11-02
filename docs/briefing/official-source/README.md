@@ -44,6 +44,17 @@ read, and the sites of most big clubs publish no feed.
   never a sentence of the lead article that only retells its news (`retellsLead`), 25 at most; asked
   twice, the sentences reversed the second time; kept when both answers say the party itself said the
   card's own fact (`confirmingOf`).
+- The names (the user, 2.11.2026: Wikidata knows which names are one body, not the look of the names):
+  `readChannels` also reads the labels of an item in the languages of the news, its aliases and its short
+  name (P1813) into `entities.names` (`namesOf`; `bench/entity-names-backfill.mjs` does it for the items read
+  before). A statement and a denial are said by a name as the article writes it (`withPartiesNamed`,
+  `withDenialsNamed`): it is the party of the card that has that name; else the one whose item Wikidata gives
+  for it (`itemsOfNamed`: `exactItems`, the items called so in the language of the article, 20 searches a
+  briefing at most, none more at the first refusal, kept while the server runs); only a name Wikidata has no
+  item for is compared by its look (`sameName`: acronym, words held). Two statements, or two denials, are one
+  party only when Wikidata gives their names one same item ("CAF" is seven items: no one). The party is shown
+  under one name (`partyName`): its acronym when its label is long, the one the AI gave or the one of the
+  names of the item that is the initials of its label.
 - `withStatements`: the posts first, then the statements of the parties with no post, 2 at most
   (`MAX_OFFICIAL`). A statement in another language than the reader's is translated, and since 18.10.2026 the
   title of a post too (its language told by its title, `languageOf`), shown in place of it in the e-mail; a post read through

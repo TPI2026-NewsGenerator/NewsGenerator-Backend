@@ -11,7 +11,8 @@
 //               In the design of the page since 2.11.2026 (the user: "Apple minimal"): Inter, white and
 //               one grey, one blue for the links, hairlines, rounded boxes. Light, or dark when the reader
 //               chooses it for the e-mail (the user, 2.11.2026): the e-mail is one or the other, the
-//               system of who reads it does not change it
+//               system of who reads it does not change it. Its hours are the ones of the time zone of the
+//               reader's browser, Zurich when it is not given
 //
 
 "use strict"
@@ -26,6 +27,18 @@ import {ORIGINAL_END, ORIGINAL_START, withoutOriginalMarks} from './original-mar
 const LIGHT = {paper: '#FFFFFF', deep: '#F5F5F7', ink: '#1D1D1F', mute: '#6E6E73', rule: '#D2D2D7', action: '#0066CC', accent: '#BF4800', number: '#BEBEC1'};
 const DARK = {paper: '#1C1C1E', deep: '#2C2C2E', ink: '#F5F5F7', mute: '#98989D', rule: '#3A3A3C', action: '#2997FF', accent: '#FF9F0A', number: '#545456'};
 export const THEMES = ['light', 'dark'];
+// the hours of the e-mail are the ones of the reader's time zone (the browser tells it, see BriefingApi.email),
+// the ones of Zurich when it does not
+export const DEFAULT_TIME_ZONE = 'Europe/Zurich';
+export const isTimeZone = (name) => {
+    if (typeof name !== 'string' || name.length === 0 || name.length > 64) return false;
+    try {
+        new Intl.DateTimeFormat('en', {timeZone: name});
+        return true;
+    } catch {
+        return false;
+    }
+};
 const PALETTES = {light: LIGHT, dark: DARK};
 const FONT = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
 const FONTS = 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&display=swap';
@@ -85,9 +98,9 @@ const stylesOf = (c) => ({
 });
 
 // t: the words of the e-mail in the reader's language (labels, see mail-labels.js), the language the
-// names of languages are written in, the locale of its dates, and its theme: its name, its colours c and the
-// styles s made of them
-const toldIn = (language = 'en', labels = LABELS, theme = 'light') => {
+// names of languages are written in, the locale and the time zone of its dates, and its theme: its name, its
+// colours c and the styles s made of them
+const toldIn = (language = 'en', labels = LABELS, theme = 'light', timeZone = DEFAULT_TIME_ZONE) => {
     let locale = 'en-GB';
     try {
         if (language !== 'en') locale = Intl.DateTimeFormat.supportedLocalesOf([language])[0] ?? 'en-GB';
@@ -95,14 +108,14 @@ const toldIn = (language = 'en', labels = LABELS, theme = 'light') => {
         // not a language code: in English
     }
     const named = PALETTES[theme] ? theme : 'light';
-    return {labels, language, locale, theme: named, c: PALETTES[named], s: stylesOf(PALETTES[named])};
+    return {labels, language, locale, timeZone: isTimeZone(timeZone) ? timeZone : DEFAULT_TIME_ZONE, theme: named, c: PALETTES[named], s: stylesOf(PALETTES[named])};
 };
 const ENGLISH = toldIn();
 // a label with its {places} filled: the values are HTML already, the label is escaped
 const fill = (template, values = {}) => escape(template).replace(/\{(\w+)\}/g, (place, name) => values[name] ?? place);
 const fillText = (template, values = {}) => template.replace(/\{(\w+)\}/g, (place, name) => values[name] ?? place);
-const when = (iso, t = ENGLISH) => iso ? new Date(iso).toLocaleString(t.locale, {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich'}) : '';
-const day = (iso, t = ENGLISH) => iso ? new Date(iso).toLocaleDateString(t.locale, {day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Zurich'}) : '';
+const when = (iso, t = ENGLISH) => iso ? new Date(iso).toLocaleString(t.locale, {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: t.timeZone}) : '';
+const day = (iso, t = ENGLISH) => iso ? new Date(iso).toLocaleDateString(t.locale, {day: 'numeric', month: 'long', year: 'numeric', timeZone: t.timeZone}) : '';
 // a sentence the translation left in its own language (see extract.js) is in italics, between its parentheses
 const italicOriginals = (html) => html.replaceAll(ORIGINAL_START, '<i>').replaceAll(ORIGINAL_END, '</i>');
 const paragraphsOf = (text) => String(text ?? '').split(/\n\s*\n/).map(paragraph => paragraph.trim()).filter(Boolean);
@@ -328,9 +341,10 @@ const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH) =>
 // the subject (the user, 16.10.2026); nothing under the title (the user, 14.10.2026: no "N stories
 // shared" line, the title alone). language: the reader's, a code: its dates and the names of languages
 // are written in it; labels: the words of the e-mail in it (see labelsFor), English when not given; theme: 'light'
-// (the default) or 'dark', one of THEMES. {subject, html, text}
-export const briefingMail = (briefing, {profile = null, sender = null, format = 'passages', language = 'en', labels = LABELS, theme = 'light'} = {}) => {
-    const t = toldIn(language, labels, theme);
+// (the default) or 'dark', one of THEMES; timeZone: the one of the reader ("Europe/Paris"), the hours of its cards
+// are written in it. {subject, html, text}
+export const briefingMail = (briefing, {profile = null, sender = null, format = 'passages', language = 'en', labels = LABELS, theme = 'light', timeZone = DEFAULT_TIME_ZONE} = {}) => {
+    const t = toldIn(language, labels, theme, timeZone);
     const L = t.labels;
     const cards = briefing.items ?? [];
     const finished = briefing.finishedAt ?? briefing.createdAt;

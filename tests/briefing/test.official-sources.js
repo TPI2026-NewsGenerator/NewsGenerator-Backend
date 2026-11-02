@@ -254,6 +254,18 @@ describe('partyName', () => {
         expect(partyName('Arsene Wenger', 'Arsène Wenger')).toBe('Arsène Wenger');
     });
 
+    // the names read from Wikidata for the item (aliases in many languages, see readChannels): its acronym only when
+    // it is the initials of its label
+    it('should show the acronym of the names of the item when it is the initials of its label, and none of its other acronyms', () => {
+        const caf = ['CAF', 'Confédération africaine de football', 'African Football Confederation'];
+        expect(partyName('Confédération Africaine de Football', 'Confederation of African Football', [], caf)).toBe('CAF');
+        // "FGF" is the French acronym of the Guinean federation: an English reader reads its English label
+        expect(partyName('Guinean Football Federation', 'Guinean Football Federation', [], ['Fédération guinéenne de football', 'FGF']))
+            .toBe('Guinean Football Federation');
+        // the acronym the AI gives still counts, whatever the initials
+        expect(partyName('Guinean Football Federation', 'Guinean Football Federation', ['GFF'], ['FGF'])).toBe('GFF');
+    });
+
     it("should keep the AI's name when the label only says it longer, or there is no English label", () => {
         expect(partyName('Real Madrid', 'Real Madrid Club de Fútbol')).toBe('Real Madrid');
         expect(partyName('Chelsea', 'Chelsea F.C.')).toBe('Chelsea');

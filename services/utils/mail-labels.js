@@ -12,23 +12,41 @@
 import {translateTexts} from './extract.js';
 import {writtenIn} from './language.js';
 import {LABELS} from './briefing-mail.js';
+import {MailLabelModel} from '../../models/mail-label-model.js';
 
 const placesOf = (text) => [...text.matchAll(/\{\w+\}/g)].map(match => match[0]).sort().join();
 
 // the ones translated in each language, kept while the server runs: a few words, asked once
 const known = new Map();
 
-// The labels in the reader's language (a code: 'fr', 'en'...): LABELS as they are in English, or when
-// the AI does not answer; a translation that lost one of its {places} is left in English
+// The labels in the reader's language (a code: 'fr', 'en'...): LABELS as they are in English, or when the AI does
+// not answer; a translation that lost one of its {places} is left in English. The AI translates a word once:
+// the translation is kept in the database (see MailLabelModel), so that the e-mail says the same words from one
+// session of the server to the next, and the AI is asked only for the words that have none, a new one of the
+// code or one it failed on (the user, 2.11.2026). The database not answering, the AI translates them all
 export const labelsFor = async (language, usage = null) => {
     const to = writtenIn(language);
     if (!to || language === 'en') return LABELS;
     if (known.has(language)) return known.get(language);
     const keys = Object.keys(LABELS);
-    const translations = await translateTexts(keys.map(key => ({text: LABELS[key], from: 'English'})), to, usage).catch(() => keys.map(() => null));
-    if (translations.every(translation => !translation)) return LABELS;
-    const labels = Object.fromEntries(keys.map((key, i) => [key,
-        translations[i] && placesOf(translations[i]) === placesOf(LABELS[key]) ? translations[i] : LABELS[key]]));
+    const good = (key, translation) => Boolean(translation) && placesOf(translation) === placesOf(LABELS[key]);
+    const saved = await MailLabelModel.of(language).catch(err => {
+        console.error(`Mail labels: the words translated before were not read (${err.message})`);
+        return new Map();
+    });
+    const translated = new Map(keys.filter(key => good(key, saved.get(LABELS[key]))).map(key => [key, saved.get(LABELS[key])]));
+    const missing = keys.filter(key => !translated.has(key));
+    if (missing.length > 0) {
+        const answers = await translateTexts(missing.map(key => ({text: LABELS[key], from: 'English'})), to, usage).catch(() => missing.map(() => null));
+        const fresh = missing.map((key, i) => [key, answers[i]]).filter(([key, translation]) => good(key, translation));
+        fresh.forEach(([key, translation]) => translated.set(key, translation));
+        if (fresh.length > 0) {
+            await MailLabelModel.save(language, fresh.map(([key, translation]) => ({source: LABELS[key], translation}))).catch(err =>
+                console.error(`Mail labels: the words translated were not kept (${err.message})`));
+        }
+    }
+    if (translated.size === 0) return LABELS;
+    const labels = Object.fromEntries(keys.map(key => [key, translated.get(key) ?? LABELS[key]]));
     known.set(language, labels);
     return labels;
 };

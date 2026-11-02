@@ -9,6 +9,9 @@
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const translateTexts = jest.fn();
+const kept = jest.fn(async () => new Map());
+const keep = jest.fn(async () => 0);
+jest.unstable_mockModule('../../models/mail-label-model.js', () => ({MailLabelModel: {of: kept, save: keep}}));
 const extract = await import('../../services/utils/extract.js');
 jest.unstable_mockModule('../../services/utils/extract.js', () => ({...extract, translateTexts}));
 const {labelsFor, withHedgedTranslated} = await import('../../services/utils/mail-labels.js');
@@ -16,7 +19,11 @@ const {LABELS} = await import('../../services/utils/briefing-mail.js');
 
 const FRENCH = {'Contested': 'Contesté', '{by} denies:': '{by} dément :', 'told by {count} media': 'raconté par des médias'};
 
-beforeEach(() => translateTexts.mockReset());
+beforeEach(() => {
+    translateTexts.mockReset();
+    kept.mockReset().mockResolvedValue(new Map());
+    keep.mockReset().mockResolvedValue(0);
+});
 
 describe('labelsFor', () => {
     it('should ask the AI nothing for an English reader', async () => {
@@ -38,6 +45,64 @@ describe('labelsFor', () => {
         expect(await labelsFor('de')).toBe(LABELS);
         expect(await labelsFor('de')).toBe(LABELS);
         expect(translateTexts).toHaveBeenCalledTimes(2);
+    });
+});
+
+// the words the AI translated are kept: the e-mail says the same ones from one session to the next (the user, 2.11.2026)
+describe('labelsFor and the translations kept', () => {
+    it('should keep the good translations, and not the one that lost its values', async () => {
+        translateTexts.mockImplementation(async (texts) => texts.map(({text}) => FRENCH[text] ?? null));
+        await labelsFor('it');
+        expect(keep).toHaveBeenCalledTimes(1);
+        expect(keep.mock.calls[0][0]).toBe('it');
+        expect(keep.mock.calls[0][1]).toEqual([{source: 'Contested', translation: 'Contesté'}, {source: '{by} denies:', translation: '{by} dément :'}]);
+    });
+
+    it('should ask the AI only for the words that have no translation kept, and use the others as they were kept', async () => {
+        const keys = Object.keys(LABELS);
+        // all kept but two: a word of the code the AI never translated, and "Contested", which the AI lost last time
+        const saved = new Map(keys.filter(key => !['contested', 'otherAngle'].includes(key)).map(key => [LABELS[key], `fr: ${LABELS[key]}`]));
+        // a kept translation that lost a value is not used
+        saved.set(LABELS.denies, 'dément');
+        kept.mockResolvedValue(saved);
+        translateTexts.mockImplementation(async (texts) => texts.map(({text}) => FRENCH[text] ?? null));
+
+        const labels = await labelsFor('es');
+        expect(translateTexts.mock.calls[0][0].map(({text}) => text).sort()).toEqual(['Contested', 'Other angle:', '{by} denies:'].sort());
+        expect(labels.keyPoints).toBe('fr: Key points');
+        expect(labels.contested).toBe('Contesté');
+        expect(labels.denies).toBe('{by} dément :');
+        expect(labels.otherAngle).toBe('Other angle:');
+        // only the words translated now are kept
+        expect(keep.mock.calls[0][1].map(row => row.source).sort()).toEqual(['Contested', '{by} denies:']);
+    });
+
+    it('should not ask the AI at all when every word has its translation kept', async () => {
+        kept.mockResolvedValue(new Map(Object.values(LABELS).map(text => [text, `pt: ${text}`])));
+        const labels = await labelsFor('pt');
+        expect(translateTexts).not.toHaveBeenCalled();
+        expect(keep).not.toHaveBeenCalled();
+        expect(labels.keyPoints).toBe('pt: Key points');
+        expect(labels.briefingOf).toBe('pt: {name}’s Briefing');
+    });
+
+    it('should translate them all when the database does not answer, and say the same when it will not keep them', async () => {
+        const quiet = jest.spyOn(console, 'error').mockImplementation(() => {});
+        kept.mockRejectedValue(new Error('database down'));
+        keep.mockRejectedValue(new Error('database down'));
+        translateTexts.mockImplementation(async (texts) => texts.map(({text}) => FRENCH[text] ?? null));
+        const labels = await labelsFor('nl');
+        expect(translateTexts.mock.calls[0][0]).toHaveLength(Object.keys(LABELS).length);
+        expect(labels.contested).toBe('Contesté');
+        quiet.mockRestore();
+    });
+
+    it('should leave them in English, nothing kept, when none is translated, and ask again next time', async () => {
+        translateTexts.mockImplementation(async (texts) => texts.map(() => null));
+        expect(await labelsFor('sv')).toBe(LABELS);
+        expect(await labelsFor('sv')).toBe(LABELS);
+        expect(translateTexts).toHaveBeenCalledTimes(2);
+        expect(keep).not.toHaveBeenCalled();
     });
 });
 

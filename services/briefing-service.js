@@ -42,7 +42,7 @@ import {Filter} from "./utils/filter.js";
 import {UserModel} from "../models/user-model.js";
 import {EMAIL_RULE, isEmail} from "./utils/account-rules.js";
 import {sendMail} from "./utils/mailer.js";
-import {briefingMail, LABELS, MAIL_FORMATS, THEMES} from "./utils/briefing-mail.js";
+import {briefingMail, isTimeZone, LABELS, MAIL_FORMATS, THEMES} from "./utils/briefing-mail.js";
 import {storyPictures, withChosenPictures} from "./utils/mail-pictures.js";
 import {labelsFor, withHedgedTranslated} from "./utils/mail-labels.js";
 import {illustrationsOf} from "./utils/illustrations.js";
@@ -1500,9 +1500,10 @@ export const BriefingService = {
     // storyIds of the cards sent in their AI version of that way (item.ai, see ai-ways.js), the others as
     // published; texts: {storyId: [paragraph]}, the sentences the reader wrote instead (see withOwnTexts);
     // countries: {storyId: [code]}, the countries the reader chose for some cards (see withOwnCountries);
-    // theme: 'light' (the default) or 'dark', the colours of the e-mail (one of THEMES, the user, 2.11.2026).
-    // No copy is kept any more: the e-mail has no link to one (the user, 13.10.2026)
-    email: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = [], texts = undefined, countries = undefined, theme = 'light') => {
+    // theme: 'light' (the default) or 'dark', the colours of the e-mail (one of THEMES, the user, 2.11.2026);
+    // timeZone: the one of the reader's browser ("Europe/Paris"), the hours of the e-mail are written in it (Zurich
+    // when not given). No copy is kept any more: the e-mail has no link to one (the user, 13.10.2026)
+    email: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = [], texts = undefined, countries = undefined, theme = 'light', timeZone = undefined) => {
         if (!Array.isArray(storyIds) || storyIds.length === 0 || !storyIds.every(storyId => Number.isInteger(storyId) && storyId !== 0)) {
             throw Object.assign(new Error('storyIds: the cards ticked, one at least.'), {status: 400});
         }
@@ -1513,6 +1514,7 @@ export const BriefingService = {
         if (!MAIL_FORMATS.includes(format)) throw Object.assign(new Error(`format: one of ${MAIL_FORMATS.join(', ')}.`), {status: 400});
         if (theme === null || theme === undefined) theme = 'light';
         if (!THEMES.includes(theme)) throw Object.assign(new Error(`theme: one of ${THEMES.join(', ')}.`), {status: 400});
+        if (timeZone !== null && timeZone !== undefined && !isTimeZone(timeZone)) throw Object.assign(new Error('timeZone: a time zone, like Europe/Paris.'), {status: 400});
         const asked = typeof to === 'string' ? to.trim() : to ?? '';
         if (asked !== '' && !isEmail(asked)) throw Object.assign(new Error(EMAIL_RULE), {status: 400});
         const {row, briefing} = await readyBriefing(userId, briefingId);
@@ -1540,7 +1542,7 @@ export const BriefingService = {
         const [labels, told] = await Promise.all([labelsFor(language), withHedgedTranslated(items, language)]);
         // its words left in English when the AI did not answer: its dates too, not half of it in English
         const mail = briefingMail({...briefing, items: told.map(item => inAi.has(item.storyId) ? {...item, aiVersion: true} : item)},
-            {profile: profile?.name ?? null, sender, format, language: labels === LABELS ? 'en' : language, labels, theme});
+            {profile: profile?.name ?? null, sender, format, language: labels === LABELS ? 'en' : language, labels, theme, timeZone: timeZone ?? undefined});
         await sendMail({to: address, replyTo: toOther && user?.email ? user.email : undefined, ...mail, attachments});
         // sent, they are read: their stories are left out of the next briefings (see notShownBefore). The
         // e-mail is gone already, a failure here only lets them come back

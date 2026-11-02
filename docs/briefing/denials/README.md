@@ -32,7 +32,10 @@ at most, of two different deniers; most cards have none.
   "main" or "side") and whether the sentence reports a denial as a fact ("did not deny", a refusal, an opinion,
   a journalist's analysis are not).
 - The code keeps a sentence only when `denial` and `self` are true, `about` is "main" and a name is given, each
-  denier once, 2 at most (`MAX_SHOWN`).
+  denier once by name, 4 at most (`MAX_FOUND`). The card shows 2 (`shownDenials`, `MAX_SHOWN`) once Wikidata has
+  told which names are one body, and under the name its official sources give that party
+  (`withDenialsNamed`, see [official source](../official-source/README.md)); without the official sources, the
+  first two.
 - A quote in another language than the reader's is translated (`translateTexts` of `extract.js`, gemma4:31b,
   checked: a translation that loses a figure is left out, and the quote is shown alone).
 - A failure (the AI, no JSON) gives no denial, never a failed card. Saved in the card as `contested`:

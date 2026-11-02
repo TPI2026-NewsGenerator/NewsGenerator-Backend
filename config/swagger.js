@@ -926,7 +926,8 @@ const options = {
                         "countries": {"type": "object", "description": "The countries the reader chose for some cards, by storyId: codes ISO 3166-1 (FR, CH...), 10 at most, shown as they are (never left out because the title names them). An empty list shows none; a card not listed keeps the countries the server found for it.",
                             "additionalProperties": {"type": "array", "maxItems": 10, "items": {"type": "string", "pattern": "^[A-Z]{2}$"}},
                             "example": {"12": ["FR", "CH"], "15": []}},
-                        "theme": {"type": "string", "enum": ["light", "dark"], "default": "light", "description": "The colours of the e-mail: light (the default) or dark. Fixed, whatever the system of who reads it."}
+                        "theme": {"type": "string", "enum": ["light", "dark"], "default": "light", "description": "The colours of the e-mail: light (the default) or dark. Fixed, whatever the system of who reads it."},
+                        "timeZone": {"type": "string", "example": "Europe/Paris", "description": "The time zone of the reader (a name of the IANA database): the hours and days of the e-mail are written in it. The client sends the one of the browser; Europe/Zurich when not given."}
                     }}}}},
                     "responses": {
                         "204": {"description": "Sent"},
