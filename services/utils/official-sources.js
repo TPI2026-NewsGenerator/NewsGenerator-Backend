@@ -12,7 +12,7 @@
 
 import {ollamaJson} from './ollama.js';
 import {mapWithConcurrency} from './concurrency.js';
-import {readChannels, searchItems} from './wikidata.js';
+import {exactItems, readChannels, searchItems} from './wikidata.js';
 import {findFeeds} from './feed-finder.js';
 import {Crawlers} from './crawlers.js';
 import {hostOf, mediumOf} from './public-url.js';
@@ -22,7 +22,7 @@ import {languageOf, writtenIn} from './language.js';
 import {OfficialModel} from '../../models/official-model.js';
 import {FeedModel} from '../../models/feed-model.js';
 import {decodeLinks, isGoogleNewsUrl} from './google-news.js';
-import {shortName} from './card-names.js';
+import {sameName, shortName} from './card-names.js';
 import {mentionKey} from './mentions.js';
 
 // Measured on 163 cards of four readers over 7 days (bench/official-badge.mjs, judged by hand): 19
@@ -309,6 +309,74 @@ export const confirmedOf = (first, second, candidates) => {
         .slice(0, MAX_OFFICIAL);
 };
 
+// The items of Wikidata a name a statement is said by may be, asked of Wikidata: it knows that "CAF" and
+// "Confédération Africaine de Football" are one body (the user, 2.11.2026: it, not the look of the names).
+// The items called so, a label or an alias, in the language of the article (see exactItems), for each name
+// that is not one the card knows its party by already. Answers a Map mentionKey(name) -> [qid], a name
+// Wikidata was not asked for or did not answer left out. statements: the ones of each card, [{party,
+// language}]; parties: the ones of each card, [{name, names}]. At most NAME_SEARCHES searches, one at a
+// time, none more at the first refusal: the next briefing asks again. The answers are kept while the
+// server runs. lookup(name, language): [qid], exactItems
+const NAME_SEARCHES = 12;
+const namedItems = new Map();
+export const itemsOfNamed = async (statements, parties, lookup = exactItems) => {
+    const found = new Map();
+    let searches = 0;
+    for (const [i, list] of statements.entries()) {
+        const known = new Set((parties[i] ?? []).flatMap(one => [one.name, ...(one.names ?? [])]).map(mentionKey));
+        for (const statement of list) {
+            const key = mentionKey(statement.party);
+            if (!key || known.has(key) || found.has(key)) continue;
+            const kept = namedItems.get(`${statement.language ?? 'en'}|${key}`);
+            if (kept) {
+                found.set(key, kept);
+                continue;
+            }
+            if (searches >= NAME_SEARCHES) return found;
+            searches++;
+            try {
+                await pause(SEARCH_PAUSE_MS);
+                const qids = await lookup(statement.party, statement.language ?? 'en');
+                // an answer with no item is not kept: Wikidata may have it tomorrow
+                if (qids.length > 0) namedItems.set(`${statement.language ?? 'en'}|${key}`, qids);
+                found.set(key, qids);
+            } catch (err) {
+                console.error(`Official sources: the party of a statement was not looked for in Wikidata (${err.message})`);
+                return found;
+            }
+        }
+    }
+    return found;
+};
+
+// The statements its articles report, each under the name the card shows its party by. The AI names who said
+// it as the article does ("Confédération Africaine de Football") when the card shows the post of the same
+// party under another name ("CAF", see partyName), and the party was listed twice (the user, 2.11.2026).
+// parties: [{name, names, qid}] the card's parties, name the one shown, names all the ones it is known by
+// (the AI's, the item's), qid its item of Wikidata when it has one; called: what Wikidata says of the names
+// (see itemsOfNamed). A statement is of the party that has the name it is said by; else of the one whose item
+// is one Wikidata calls so; and only when Wikidata knows no item of that name, of the one whose name looks
+// like it ("Fédération X" and its acronym). A statement of a party none of them is keeps its name; two
+// statements of one party are one
+export const withPartiesNamed = (statements, parties, called = new Map()) => {
+    const seen = new Set();
+    return statements.flatMap(statement => {
+        const key = mentionKey(statement.party);
+        const namesOf = (one) => [one.name, ...(one.names ?? [])].map(mentionKey).filter(Boolean);
+        const qids = called.get(key) ?? [];
+        const party = !key ? null
+            : parties.find(one => namesOf(one).includes(key))
+            ?? (qids.length > 0 ? parties.find(one => one.qid && qids.includes(one.qid))
+                : parties.find(one => namesOf(one).some(other => sameName(key, other) || sameName(other, key))));
+        // the party shown, else the item Wikidata gave the name when it gave one only (two names of one body are
+        // one; "CAF" is seven items, no one of them), else the name
+        const id = party ? `party ${party.name.toLowerCase()}` : qids.length === 1 ? `item ${qids[0]}` : `name ${statement.party.toLowerCase()}`;
+        if (seen.has(id)) return [];
+        seen.add(id);
+        return [party ? {...statement, party: party.name} : statement];
+    });
+};
+
 // The posts of a card's parties first, then the statements its articles report of the parties with no
 // post (see statements.js), MAX_OFFICIAL at most
 export const withStatements = (posts, statements) => {
@@ -371,12 +439,21 @@ export const officialSourcesOf = async (cards, usage = null, {language = 'en'} =
     const statements = await reading;
     done('statements');
 
+    // The parties of each card with an item of Wikidata: the first name the AI gave an item, when it gave it
+    // two ("UEFA", "Union of European..."), shown as partyName says, every name it is known by with it
+    const linkedOf = partiesOf.map(list => {
+        const linked = new Map();
+        for (const party of [...list].reverse()) {
+            const item = items.get(qidOf.get(keyOf(party)));
+            if (!item) continue;
+            linked.set(item.qid, {qid: item.qid, label: item.label, site: item.channels?.site ?? [],
+                name: partyName(party.name, item.label, [...(party.other ?? []), ...(item.names ?? [])]),
+                names: [...(linked.get(item.qid)?.names ?? []), party.name, ...(party.other ?? []), item.label, ...(item.names ?? [])]});
+        }
+        return [...linked.values()];
+    });
     const judged = await mapWithConcurrency(cards, AI_CONCURRENCY, async (card, i) => {
-        // the first name the AI gave an item, when it gave it two ("UEFA", "Union of European..."), shown
-        // as partyName says
-        const parties = [...new Map(partiesOf[i].map(party => [party, items.get(qidOf.get(keyOf(party)))]).filter(([, item]) => item)
-            .reverse().map(([party, item]) => [item.qid, {qid: item.qid, label: item.label, site: item.channels?.site ?? [],
-                name: partyName(party.name, item.label, [...(party.other ?? []), ...(item.names ?? [])])}])).values()];
+        const parties = linkedOf[i];
         const candidates = candidatesOf(card, parties, posts);
         if (candidates.length === 0) return [];
         const first = await ollamaJson(checkPrompt(card, candidates), usage);
@@ -393,17 +470,24 @@ export const officialSourcesOf = async (cards, usage = null, {language = 'en'} =
     const failed = judged.filter(result => result.status !== 'fulfilled').length + statements.filter(result => result.status !== 'fulfilled').length;
     if (failed > 0) console.error(`Official sources: ${failed} cards were not judged`);
 
+    // a statement is of the party the card shows, under the name it shows it by: Wikidata tells whether the
+    // name it is said by is the item of a party of the card (see withPartiesNamed); the parties the AI named
+    // that Wikidata has no item for count as well
+    const reported = cards.map((card, i) => (statements[i].status === 'fulfilled' ? statements[i].value : []).map(statement => ({
+        party: statement.by,
+        title: statement.sentence,
+        translation: null,
+        language: statement.language,
+        url: statement.url,
+        source: statement.source,
+        channel: 'reported',
+        publishedAt: statement.publishedAt,
+    })));
+    const cardParties = cards.map((card, i) => [...linkedOf[i], ...partiesOf[i].map(party => ({name: party.name, names: [party.name, ...(party.other ?? [])]}))]);
+    const called = await itemsOfNamed(reported, cardParties).catch(() => new Map());
+    done('statement names');
     const shown = cards.map((card, i) => withStatements(judged[i].status === 'fulfilled' ? judged[i].value : [],
-        (statements[i].status === 'fulfilled' ? statements[i].value : []).map(statement => ({
-            party: statement.by,
-            title: statement.sentence,
-            translation: null,
-            language: statement.language,
-            url: statement.url,
-            source: statement.source,
-            channel: 'reported',
-            publishedAt: statement.publishedAt,
-        }))));
+        withPartiesNamed(reported[i], cardParties[i], called)));
     // the statements quoted and the titles of the posts in another language than the reader's
     // translated, as the denials are (the user, 18.10.2026: the posts too). A post's language told by
     // its title

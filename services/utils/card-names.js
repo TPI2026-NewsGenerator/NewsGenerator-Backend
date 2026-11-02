@@ -74,7 +74,7 @@ const bare = (key) => {
 // infantino" starts as "gianni infant" (a text cut by the tagger, inside a word), "psg" are the initials
 // of "paris saint-germain", "man city" a shorter "manchester city", "giannijem infantinom" the same
 // declined. "fifa-prasidentschaftswahl" is another thing than the "fifa": a word joined to it
-const sameName = (longer, shorter) => {
+export const sameName = (longer, shorter) => {
     const [a, b] = [bare(longer), bare(shorter)];
     if (a === b || ` ${a} `.includes(` ${b} `)) return true;
     if (b.includes(' ') && a.startsWith(b) && /\p{L}/u.test(a[b.length] ?? '')) return true;
