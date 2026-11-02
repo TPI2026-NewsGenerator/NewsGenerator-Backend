@@ -9,6 +9,7 @@
 
 import {XMLParser} from 'fast-xml-parser';
 import {parseHTML} from 'linkedom';
+import {repairMojibake} from './mojibake.js';
 
 // tags that must always be arrays, even when the feed contains only one of them
 // (not 'url': the attributes are read under their own name, the url of a thumbnail would be one)
@@ -53,11 +54,13 @@ const stripHtml = (value) => value
 // and stripHtml took it for a tag: every title of the feed was empty
 const unwrapCdata = (value) => value.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1');
 
-// get the text of a node which can be a string or an object with attributes ({ "#text": ... })
+// get the text of a node which can be a string or an object with attributes ({ "#text": ... }). Text a site
+// wrote in UTF-8 twice over ("Ghanaâ\u0080\u0099s", 306 titles of ghanasoccernet.com, whose feed has it
+// so, 2.11.2026) is put back as it was (see mojibake.js)
 const text = (node) => {
     if (node === undefined || node === null) return '';
     const value = typeof node === 'object' ? String(node["#text"] ?? '') : String(node);
-    return stripHtml(unwrapCdata(decodeEntities(value))).trim();
+    return repairMojibake(stripHtml(unwrapCdata(decodeEntities(value))).trim());
 };
 
 // Some feeds give no title and put it in the description (uol.com.br, 984 of its 1181 news): the
