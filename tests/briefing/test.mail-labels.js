@@ -48,4 +48,11 @@ describe('withHedgedTranslated', () => {
         expect(await withHedgedTranslated(items, 'fr')).toEqual([{...items[0], hedgedTranslation: 'selon des sources'}, items[1], items[2]]);
         expect(translateTexts).toHaveBeenCalledWith([{text: 'reportedly', from: 'English'}], 'French', null);
     });
+
+    // translated when the briefing is written (the page shows it too): not asked again when its e-mail is sent
+    it('should not translate again the words a card has translated already', async () => {
+        const items = [{storyId: 1, hedged: 'reportedly', language: 'en', hedgedTranslation: 'selon des sources'}];
+        expect(await withHedgedTranslated(items, 'fr')).toEqual(items);
+        expect(translateTexts).not.toHaveBeenCalled();
+    });
 });

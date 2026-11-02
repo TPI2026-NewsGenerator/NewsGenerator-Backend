@@ -922,7 +922,11 @@ const options = {
                             "additionalProperties": {"type": "object", "properties": {
                                 "contested": {"type": "array", "items": {"type": "integer", "minimum": 0}},
                                 "angles": {"type": "array", "items": {"type": "integer", "minimum": 0}}}, "additionalProperties": false},
-                            "example": {"12": {"angles": [0, 2]}, "15": {"contested": [0]}}}
+                            "example": {"12": {"angles": [0, 2]}, "15": {"contested": [0]}}},
+                        "countries": {"type": "object", "description": "The countries the reader chose for some cards, by storyId: codes ISO 3166-1 (FR, CH...), 10 at most, shown as they are (never left out because the title names them). An empty list shows none; a card not listed keeps the countries the server found for it.",
+                            "additionalProperties": {"type": "array", "maxItems": 10, "items": {"type": "string", "pattern": "^[A-Z]{2}$"}},
+                            "example": {"12": ["FR", "CH"], "15": []}},
+                        "theme": {"type": "string", "enum": ["light", "dark"], "default": "light", "description": "The colours of the e-mail: light (the default) or dark. Fixed, whatever the system of who reads it."}
                     }}}}},
                     "responses": {
                         "204": {"description": "Sent"},

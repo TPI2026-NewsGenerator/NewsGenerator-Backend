@@ -40,6 +40,10 @@ export const countryNames = (countries = [], {titles = [], languages = [], local
     return countries.every(named) ? [] : countries.map(code => countryName(code, locale));
 };
 
+// Whether a code is the one of a country the e-mail can name: two capital letters, known to Intl (an unknown
+// code is its own name), not the European Union or a pseudo-locale
+export const isCountry = (code) => typeof code === 'string' && /^[A-Z]{2}$/.test(code) && !NOT_COUNTRIES.has(code) && countryName(code, 'en') !== code;
+
 // the languages the names of countries are known in: the ones of the news, about
 const NAMED_IN = ['en', 'fr', 'de', 'es', 'it', 'pt', 'nl', 'pl', 'cs', 'sk', 'sl', 'hr', 'sr', 'bs', 'hu', 'ro', 'bg', 'el',
     'ru', 'uk', 'tr', 'sv', 'da', 'nb', 'fi', 'et', 'lv', 'lt', 'sq', 'ar', 'he', 'ja', 'zh', 'ko', 'vi', 'id', 'ms'];

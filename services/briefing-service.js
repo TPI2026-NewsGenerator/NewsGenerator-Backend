@@ -21,7 +21,7 @@ import {canSummarize, extractArticle, passagesText, sentencesOf, splitSentences,
 import {glossariesOfStories} from "./utils/card-spellings.js";
 import {alignNames, namesIn, spellingsOf} from "./utils/spellings.js";
 import {aiWaysOf} from "./utils/ai-ways.js";
-import {ANALYSIS_MODEL, TIMELINE_MAX, analysesOf, fittedArticles} from "./utils/card-analysis.js";
+import {ANALYSIS_MODEL, TIMELINE_MAX, analysesOf, fittedArticles, withCleanNext} from "./utils/card-analysis.js";
 import {languageOf} from "./utils/language.js";
 import {BRIEFING_SIZES, MAX_BRIEFING, balanceSelection, checkStories, mergeStories, reviewCards, selectStories, shareOut} from "./utils/profile-ai.js";
 import {corroborationOf} from "./utils/corroboration.js";
@@ -42,7 +42,7 @@ import {Filter} from "./utils/filter.js";
 import {UserModel} from "../models/user-model.js";
 import {EMAIL_RULE, isEmail} from "./utils/account-rules.js";
 import {sendMail} from "./utils/mailer.js";
-import {briefingMail, LABELS, MAIL_FORMATS} from "./utils/briefing-mail.js";
+import {briefingMail, LABELS, MAIL_FORMATS, THEMES} from "./utils/briefing-mail.js";
 import {storyPictures, withChosenPictures} from "./utils/mail-pictures.js";
 import {labelsFor, withHedgedTranslated} from "./utils/mail-labels.js";
 import {illustrationsOf} from "./utils/illustrations.js";
@@ -50,6 +50,7 @@ import {sizesOf} from "./utils/picture-sizes.js";
 import {SentMailModel} from "../models/sent-mail-model.js";
 import {EntityService} from "./entity-service.js";
 import {namesAndCountriesOfCards} from "./utils/card-names.js";
+import {isCountry} from "./utils/country-names.js";
 import {wholeTitle} from "./utils/titles.js";
 
 // Measured on four profiles and 249 stories judged by hand:
@@ -946,7 +947,8 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     // briefing is shown (it reasons for a minute or more a card, see card-analysis.js), never awaited
     if (briefingId) analyze(briefingId, items, analysisArticles(stories, {lead: (i) => leads[i], summary: (i) => summaryOf(i)?.summary,
         readOf: (article) => content.get(article.link)}), language);
-    return items;
+    // the words an article of another language says it has no confirmation with, in the reader's language
+    return withHedgedTranslated(items, language, usage.summarizing).catch(() => items);
 };
 
 // The news of the terms the profile follows (names or words, see cleanWatchTerms and EntityService): the
@@ -1255,7 +1257,7 @@ const toBriefing = (row) => row && ({
     error: row.error,
     items: row.items ?? [],
     // the analysis of its cards that merit one (see analyze), null for a briefing written before 15.10.2026
-    analysis: analysisOfRow(row.analysis),
+    analysis: withCleanNext(analysisOfRow(row.analysis)),
     size: row.size ?? MAX_BRIEFING,  // the cards asked for
     hours: row.hours,               // of news it was written from
     createdAt: row.created_at,
@@ -1329,6 +1331,24 @@ export const withOwnTexts = (items, texts) => {
             throw Object.assign(new Error(`A text has ${MAX_OWN_PARAGRAPHS} paragraphs of ${MAX_OWN_PARAGRAPH} characters at most.`), {status: 400});
         }
         return own.length > 0 ? {...item, ownText: own} : item;
+    });
+};
+
+// the cards with the countries the reader chose for the e-mail, {storyId: [code]}: their ISO 3166-1 codes,
+// the ones of the card ticked or put back, others added (the user, 2.11.2026: the countries of a card are
+// still wrong now and then). An empty list sends no country; a card not in it keeps its own (see
+// briefing-mail.js countriesOf)
+const MAX_OWN_COUNTRIES = 10;
+export const withOwnCountries = (items, countries) => {
+    if (countries === undefined || countries === null) return items;
+    if (typeof countries !== 'object' || Array.isArray(countries) || !Object.values(countries).every(codes => Array.isArray(codes) && codes.every(isCountry))) {
+        throw Object.assign(new Error('countries: {storyId: [code]}, the codes ISO 3166-1 of countries (FR, CH...).'), {status: 400});
+    }
+    return items.map(item => {
+        const own = countries[String(item.storyId)];
+        if (own === undefined) return item;
+        if (new Set(own).size > MAX_OWN_COUNTRIES) throw Object.assign(new Error(`A card has ${MAX_OWN_COUNTRIES} countries at most.`), {status: 400});
+        return {...item, ownCountries: [...new Set(own)]};
     });
 };
 
@@ -1472,9 +1492,11 @@ export const BriefingService = {
     // angles, the official sources and the lines of the AI analysis they took out (see withoutTakenOut); format: the way the
     // sentences of the cards are shown, one of MAIL_FORMATS, the key passages when not given; ai: the
     // storyIds of the cards sent in their AI version of that way (item.ai, see ai-ways.js), the others as
-    // published; texts: {storyId: [paragraph]}, the sentences the reader wrote instead (see withOwnTexts).
+    // published; texts: {storyId: [paragraph]}, the sentences the reader wrote instead (see withOwnTexts);
+    // countries: {storyId: [code]}, the countries the reader chose for some cards (see withOwnCountries);
+    // theme: 'light' (the default) or 'dark', the colours of the e-mail (one of THEMES, the user, 2.11.2026).
     // No copy is kept any more: the e-mail has no link to one (the user, 13.10.2026)
-    email: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = [], texts = undefined) => {
+    email: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = [], texts = undefined, countries = undefined, theme = 'light') => {
         if (!Array.isArray(storyIds) || storyIds.length === 0 || !storyIds.every(storyId => Number.isInteger(storyId) && storyId !== 0)) {
             throw Object.assign(new Error('storyIds: the cards ticked, one at least.'), {status: 400});
         }
@@ -1483,6 +1505,8 @@ export const BriefingService = {
             throw Object.assign(new Error('ai: the storyIds of the cards sent in their AI version.'), {status: 400});
         }
         if (!MAIL_FORMATS.includes(format)) throw Object.assign(new Error(`format: one of ${MAIL_FORMATS.join(', ')}.`), {status: 400});
+        if (theme === null || theme === undefined) theme = 'light';
+        if (!THEMES.includes(theme)) throw Object.assign(new Error(`theme: one of ${THEMES.join(', ')}.`), {status: 400});
         const asked = typeof to === 'string' ? to.trim() : to ?? '';
         if (asked !== '' && !isEmail(asked)) throw Object.assign(new Error(EMAIL_RULE), {status: 400});
         const {row, briefing} = await readyBriefing(userId, briefingId);
@@ -1501,7 +1525,7 @@ export const BriefingService = {
         // a picture of the story chosen is credited to its medium
         const changed = ticked.filter(item => pictures && typeof pictures === 'object' && typeof pictures[String(item.storyId)]?.url === 'string');
         const known = new Map((await Promise.all(changed.map(picturesOfItem))).flat().map(picture => [picture.url, picture.source]));
-        const {items, attachments} = await withChosenPictures(withOwnTexts(withoutTakenOut(withOwnTitles(ticked, titles), removed), texts), pictures, {sender, known});
+        const {items, attachments} = await withChosenPictures(withOwnCountries(withOwnTexts(withoutTakenOut(withOwnTitles(ticked, titles), removed), texts), countries), pictures, {sender, known});
         // the AI version asked for a card: sent when the card has one in that way, else the card as published
         const inAi = new Set(ai);
         // all of it in the reader's language: the words around the cards and the ones of an article saying
@@ -1510,7 +1534,7 @@ export const BriefingService = {
         const [labels, told] = await Promise.all([labelsFor(language), withHedgedTranslated(items, language)]);
         // its words left in English when the AI did not answer: its dates too, not half of it in English
         const mail = briefingMail({...briefing, items: told.map(item => inAi.has(item.storyId) ? {...item, aiVersion: true} : item)},
-            {profile: profile?.name ?? null, sender, format, language: labels === LABELS ? 'en' : language, labels});
+            {profile: profile?.name ?? null, sender, format, language: labels === LABELS ? 'en' : language, labels, theme});
         await sendMail({to: address, replyTo: toOther && user?.email ? user.email : undefined, ...mail, attachments});
         // sent, they are read: their stories are left out of the next briefings (see notShownBefore). The
         // e-mail is gone already, a failure here only lets them come back

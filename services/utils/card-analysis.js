@@ -310,6 +310,23 @@ export const shownText = (card, text) => String(text ?? '')
 const condition = (text) => String(text ?? '').trim().replace(/^(?:if|si|wenn|se|als)\s+/i, '').replace(/[,;:\s]+$/, '');
 const consequence = (text) => String(text ?? '').trim().replace(/^(?:then|alors|dann|allora|dan|entonces)\s+/i, '');
 
+// The AI sometimes writes the whole sentence in "if" ("FKF breaches these principles, then FIFA may refer
+// the matter to its competent bodies") and the consequence again in "then": "If X, then Y, then Y" on the
+// page (the user, 2.11.2026). What follows the "then" of the condition is the consequence "then" gives
+// already, so the condition stops there; it is the consequence only when "then" is empty
+const THEN = /[,;]\s+(?:then|alors|dann|allora|dan|entonces)\s+/i;
+export const cleanNext = (line) => {
+    const [first, ...rest] = String(line?.if ?? '').split(THEN);
+    return {if: condition(first), then: consequence(line?.then) || consequence(rest.join(', then '))};
+};
+
+// An analysis as saved, its "next" lines cleaned as above: the ones written before had the repetition
+export const withCleanNext = (analysis) => !analysis?.cards || typeof analysis.cards !== 'object' ? analysis : {
+    ...analysis,
+    cards: Object.fromEntries(Object.entries(analysis.cards).map(([storyId, lines]) =>
+        [storyId, Array.isArray(lines?.next) ? {...lines, next: lines.next.map(cleanNext)} : lines])),
+};
+
 // The lines of an answer the checks keep, as shown: {why: ['...'], next: [{if, then}], dropped}
 export const checkedLines = async (answer, card) => {
     const sources = new Map(sourcesOf(card).map(source => [source.id, source]));
@@ -326,7 +343,7 @@ export const checkedLines = async (answer, card) => {
     const lines = [
         ...list('why', MAX_WHY).map(line => ({part: 'why', cites: parseCites(line?.cites), text: shownText(card, line?.text)})),
         ...list('next', MAX_NEXT).map(line => ({part: 'next', cites: parseCites(line?.cites),
-            if: shownText(card, condition(line?.if)), then: shownText(card, consequence(line?.then))}))
+            if: shownText(card, cleanNext(line).if), then: shownText(card, cleanNext(line).then)}))
             .map(line => ({...line, text: line.if && line.then ? `${line.if} → ${line.then}` : ''})),
     ].filter(line => line.text);
     const tagged = await namesOf(lines.map(line => line.text));

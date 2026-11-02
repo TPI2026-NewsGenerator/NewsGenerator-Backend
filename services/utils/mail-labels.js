@@ -34,10 +34,12 @@ export const labelsFor = async (language, usage = null) => {
 };
 
 // The words an article used to say it has no confirmation (see hedging.js) of the cards in another
-// language than the reader's, translated: the cards with hedgedTranslation
+// language than the reader's, translated: the cards with hedgedTranslation. Done when the briefing is
+// written (the page shows them too, the user, 02.11.2026); the ones of a briefing written before are
+// translated when its e-mail is sent
 export const withHedgedTranslated = async (items, language, usage = null) => {
     const to = writtenIn(language);
-    const foreign = items.filter(item => item.hedged && item.language && item.language !== language && writtenIn(item.language));
+    const foreign = items.filter(item => item.hedged && !item.hedgedTranslation && item.language && item.language !== language && writtenIn(item.language));
     if (!to || foreign.length === 0) return items;
     const translations = await translateTexts(foreign.map(item => ({text: item.hedged, from: writtenIn(item.language)})), to, usage)
         .catch(() => foreign.map(() => null));

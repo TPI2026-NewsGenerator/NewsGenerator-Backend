@@ -18,7 +18,7 @@ jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 // no tagger: the names are the words in capitals; no Gemini
 process.env.NER_URL = '';
 delete process.env.AISTUDIO_API_KEY;
-const {ANALYSIS_MODEL, analysesOf, checkedLines, fittedArticles, pickedCards} = await import('../../services/utils/card-analysis.js');
+const {ANALYSIS_MODEL, analysesOf, checkedLines, cleanNext, fittedArticles, pickedCards, withCleanNext} = await import('../../services/utils/card-analysis.js');
 
 const card = (n, storyId, extra = {}) => ({
     n, storyId, title: `Card ${n}`, titleTranslation: null, medium: 'rts.ch', summary: 'The FIFA Council will vote on 18 March in Rabat.',
@@ -74,6 +74,42 @@ describe('the lines of a card analysis', () => {
         }, card(1, 11));
 
         expect([lines.why.length, lines.next.length]).toEqual([2, 2]);
+    });
+});
+
+describe('the "If X, then Y" lines of an analysis', () => {
+    // the AI wrote the whole sentence in "if" and the consequence again in "then" (the user, 2.11.2026)
+    const repeated = {
+        if: 'FKF breaches these principles, then FIFA may refer the matter to its competent bodies for consideration of appropriate measures under the FIFA Statutes.',
+        then: 'FIFA may refer the matter to its competent bodies for consideration of appropriate measures under the FIFA Statutes.',
+    };
+    const once = {if: 'FKF breaches these principles',
+        then: 'FIFA may refer the matter to its competent bodies for consideration of appropriate measures under the FIFA Statutes.'};
+
+    it('should stop the condition at its own "then", the consequence being the one of "then"', () => {
+        expect(cleanNext(repeated)).toEqual(once);
+        expect(cleanNext({if: 'If the Council refuses,', then: 'then the plan is dropped.'})).toEqual({if: 'the Council refuses', then: 'the plan is dropped.'});
+    });
+
+    it('should take the words after the "then" of the condition as the consequence when "then" is empty', () => {
+        expect(cleanNext({if: 'the Council refuses, alors le plan est abandonné.', then: ''})).toEqual({if: 'the Council refuses', then: 'le plan est abandonné.'});
+    });
+
+    it('should leave a line as it is when its condition has no "then"', () => {
+        expect(cleanNext(once)).toEqual(once);
+    });
+
+    it('should clean a line of an analysis saved with the repetition, and leave the rest', () => {
+        const saved = {status: 'ready', model: 'm', cards: {12: {why: ['A.'], next: [repeated], timeline: []}, 13: {why: ['B.'], next: [], timeline: []}}};
+        expect(withCleanNext(saved).cards[12].next).toEqual([once]);
+        expect(withCleanNext(saved).cards[13]).toEqual(saved.cards[13]);
+        expect(withCleanNext({status: 'running'})).toEqual({status: 'running'});
+        expect(withCleanNext(null)).toBe(null);
+    });
+
+    it('should show a written line once, as checked', async () => {
+        const lines = await checkedLines({next: [{...repeated, if: 'If the Council refuses, then the plan is dropped.', then: 'the plan is dropped.', cites: ['A2 s2']}]}, card(1, 11));
+        expect(lines.next).toEqual([{if: 'the Council refuses', then: 'the plan is dropped.'}]);
     });
 });
 

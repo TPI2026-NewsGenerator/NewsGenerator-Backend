@@ -7,24 +7,28 @@
 //               sentences in the way the reader chose (bullet points, summary or key passages), who
 //               its official source, who denies it, its analysis when it has one, its other angles, where
 //               to read it, and the note of its margin. Who tells it is left out: its sources say it
-//               already. Nothing says what is translated, by a machine or the AI (the user, 16.10.2026)
+//               already. Nothing says what is translated, by a machine or the AI (the user, 16.10.2026).
+//               In the design of the page since 2.11.2026 (the user: "Apple minimal"): Inter, white and
+//               one grey, one blue for the links, hairlines, rounded boxes. Light, or dark when the reader
+//               chooses it for the e-mail (the user, 2.11.2026): the e-mail is one or the other, the
+//               system of who reads it does not change it
 //
 
 "use strict"
 
 import {languageName} from './language.js';
-import {countryNames} from './country-names.js';
+import {countryName, countryNames} from './country-names.js';
 import {ORIGINAL_END, ORIGINAL_START, withoutOriginalMarks} from './original-marks.js';
 
-// The colours and fonts of the page (client styles/index.css). Mail apps keep inline styles and simple
-// tables only; the fonts of the page are asked from Google Fonts, which Apple Mail and Outlook for Mac
-// load and Gmail replaces by Georgia. The dark colours apply where the mail app follows the system
-const LIGHT = {paper: '#FBF9F4', ink: '#1A1815', mute: '#6B655C', rule: '#DAD3C7', accent: '#A6301F', secondary: '#F3EFE6'};
-const DARK = {paper: '#17150F', ink: '#ECE7DC', mute: '#9A9384', rule: '#35312A', accent: '#E0654F', secondary: '#221F18'};
-const DISPLAY = "Fraunces, Georgia, 'Times New Roman', serif";
-const TEXT = "'Source Serif 4', Georgia, 'Times New Roman', serif";
-const MONO = 'ui-monospace, Menlo, Consolas, monospace';
-const FONTS = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400&display=swap';
+// The colours and the font of the page (client styles/index.css). Mail apps keep inline styles and simple
+// tables only; Inter is asked from Google Fonts, which Apple Mail and Outlook for Mac load, and Gmail
+// replaces by the system's font. The colours are inline, the ones of the theme chosen
+const LIGHT = {paper: '#FFFFFF', deep: '#F5F5F7', ink: '#1D1D1F', mute: '#6E6E73', rule: '#D2D2D7', action: '#0066CC', accent: '#BF4800', number: '#BEBEC1'};
+const DARK = {paper: '#1C1C1E', deep: '#2C2C2E', ink: '#F5F5F7', mute: '#98989D', rule: '#3A3A3C', action: '#2997FF', accent: '#FF9F0A', number: '#545456'};
+export const THEMES = ['light', 'dark'];
+const PALETTES = {light: LIGHT, dark: DARK};
+const FONT = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+const FONTS = 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&display=swap';
 
 const escape = (value) => String(value ?? '').replace(/[&<>"']/g, char => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'})[char]);
 // an address of the web only: a link or a picture never runs anything
@@ -64,17 +68,34 @@ export const LABELS = {
     oneStory: '1 story',
     stories: '{count} stories',
 };
+// English writes the apostrophe alone after a name that ends in s: "Chris’ Briefing" (the user, 2.11.2026).
+// Not a label: the other languages say it with a word ("le briefing de {name}"), whatever the name ends in
+const BRIEFING_OF_S = '{name}’ Briefing';
+
+// The text styles of the page (kicker, caption, body-text, lede, link) and what the page puts on its one other
+// tone, a rounded box (the AI analysis, who denies, the official sources), in the colours c. A kicker is
+// small and quiet, in the case it is written, as on the page
+const stylesOf = (c) => ({
+    kicker: `font:500 13px/1.3 ${FONT};letter-spacing:0;color:${c.mute};margin:0`,
+    caption: `font:400 13px/1.45 ${FONT};color:${c.mute};margin:0`,
+    body: `font:400 17px/1.6 ${FONT};letter-spacing:-.005em;color:${c.ink};margin:0`,
+    lede: `font:400 19px/1.55 ${FONT};letter-spacing:-.005em;color:${c.ink};margin:0`,
+    link: `color:${c.action};text-decoration:none`,
+    box: `margin-top:24px;background:${c.deep};border-radius:18px;padding:16px 20px`,
+});
 
 // t: the words of the e-mail in the reader's language (labels, see mail-labels.js), the language the
-// names of languages are written in, and the locale of its dates
-const toldIn = (language = 'en', labels = LABELS) => {
+// names of languages are written in, the locale of its dates, and its theme: its name, its colours c and the
+// styles s made of them
+const toldIn = (language = 'en', labels = LABELS, theme = 'light') => {
     let locale = 'en-GB';
     try {
         if (language !== 'en') locale = Intl.DateTimeFormat.supportedLocalesOf([language])[0] ?? 'en-GB';
     } catch {
         // not a language code: in English
     }
-    return {labels, language, locale};
+    const named = PALETTES[theme] ? theme : 'light';
+    return {labels, language, locale, theme: named, c: PALETTES[named], s: stylesOf(PALETTES[named])};
 };
 const ENGLISH = toldIn();
 // a label with its {places} filled: the values are HTML already, the label is escaped
@@ -113,49 +134,28 @@ const wayOf = (card, format, t = ENGLISH) => {
     return {paragraphs: paragraphsOf(card[translation] || card[text]), title: t.labels[title], way};
 };
 
-// the text styles of the page (kicker, caption, body-text, link); the classes ng-* take the dark colours
-const KICKER = `font:600 14px/1.2 ${TEXT};font-variant:all-small-caps;letter-spacing:.1em;color:${LIGHT.mute};margin:0`;
-const CAPTION = `font:13px/1.4 ${TEXT};letter-spacing:.01em;color:${LIGHT.mute};margin:0`;
-const BODY = `font:17px/1.6 ${TEXT};color:${LIGHT.ink};margin:0`;
-const LINK = `color:${LIGHT.accent};text-decoration:underline;text-underline-offset:4px`;
-const DARK_STYLE = `
-:root{color-scheme:light dark;supported-color-schemes:light dark}
-@media (prefers-color-scheme: dark){
-  .ng-paper{background:${DARK.paper}!important}
-  .ng-ink{color:${DARK.ink}!important}
-  .ng-mute{color:${DARK.mute}!important}
-  .ng-accent{color:${DARK.accent}!important}
-  .ng-rule{border-color:${DARK.rule}!important}
-  .ng-box{border-color:${DARK.rule}!important;color:${DARK.mute}!important}
-  .ng-secondary{background:${DARK.secondary}!important}
-}`;
-
 // the language a source writes in, next to its name (client LanguageMark.jsx). Inline, not
 // inline-block: a mail app of the user put each mark on a line of its own, and the medium after it on
 // the next one (14.10.2026)
 const languageMark = (code, t = ENGLISH) => code
-    ? ` <span class="ng-box" title="${fill(t.labels.writtenIn, {language: escape(languageName(code, t.language))})}" style="border:1px solid ${LIGHT.rule};padding:0 4px;font:500 11px/1.35 ${MONO};letter-spacing:.04em;color:${LIGHT.mute};text-transform:uppercase;white-space:nowrap">${escape(code)}</span>`
+    ? ` <span title="${fill(t.labels.writtenIn, {language: escape(languageName(code, t.language))})}" style="border:1px solid ${t.c.rule};border-radius:5px;padding:0 4px;font:600 11px/1.35 ${FONT};letter-spacing:.04em;color:${t.c.mute};text-transform:uppercase;white-space:nowrap">${escape(code)}</span>`
     : '';
 // a medium and its marks kept together on one line
 const together = (html) => `<span style="white-space:nowrap">${html}</span>`;
-const kicker = (text, tone = 'mute') => `<p class="ng-${tone}" style="${KICKER}${tone === 'mute' ? '' : `;color:${LIGHT[tone]}`}">${escape(text)}</p>`;
+const kicker = (text, t, tone = 'mute') => `<p style="${t.s.kicker}${tone === 'mute' ? '' : `;color:${t.c[tone]}`}">${escape(text)}</p>`;
 
-// the passages, "[…]" between two of them; the first letter of the first card large, as on the page
-const passagesHtml = (paragraphs, lede) => paragraphs.map((paragraph, i) => {
-    const gap = i > 0 ? `<p class="ng-mute" style="${BODY};color:${LIGHT.mute};margin:12px 0">[…]</p>` : '';
-    const dropCap = lede && i === 0 && paragraph.length > 1 && paragraph[0] !== ORIGINAL_START;
-    const text = dropCap
-        ? `<span class="ng-accent" style="float:left;font:500 66px/0.8 ${DISPLAY};color:${LIGHT.accent};margin:6px 8px 0 0">${escape(paragraph[0])}</span>${italicOriginals(escape(paragraph.slice(1)))}`
-        : italicOriginals(escape(paragraph));
-    return `${gap}<p class="ng-ink" style="${BODY}">${text}</p>`;
+// the passages, "[…]" between two of them; the first one of the first card a little larger, as on the page
+const passagesHtml = (paragraphs, lede, t) => paragraphs.map((paragraph, i) => {
+    const gap = i > 0 ? `<p style="${t.s.body};color:${t.c.mute};margin:12px 0">[…]</p>` : '';
+    return `${gap}<p style="${lede && i === 0 ? t.s.lede : t.s.body}">${italicOriginals(escape(paragraph))}</p>`;
 }).join('');
 
 // the summary: the same in one paragraph, the gaps marked inside it
-const digestHtml = (paragraphs, lede) => passagesHtml([paragraphs.join(' […] ')], lede);
+const digestHtml = (paragraphs, lede, t) => passagesHtml([paragraphs.join(' […] ')], lede, t);
 
 // the bullet points, a sentence each, the most important first
-const pointsHtml = (paragraphs) => `<ul style="margin:0;padding-left:22px">${paragraphs
-    .map(paragraph => `<li class="ng-ink" style="${BODY};margin-top:8px">${italicOriginals(escape(paragraph))}</li>`).join('')}</ul>`;
+const pointsHtml = (paragraphs, lede, t) => `<ul style="margin:0;padding-left:22px">${paragraphs
+    .map(paragraph => `<li style="${t.s.body};margin-top:8px">${italicOriginals(escape(paragraph))}</li>`).join('')}</ul>`;
 const WAYS_HTML = {points: pointsHtml, digest: digestHtml, passages: passagesHtml};
 
 // the same in the text of the e-mail
@@ -167,11 +167,11 @@ const wayText = ({paragraphs: marked, way}) => {
 };
 
 const contestedHtml = (denials, t = ENGLISH) => denials.length === 0 ? '' : `
-<div class="ng-rule" style="margin-top:24px;border-left:2px solid ${LIGHT.accent};padding-left:18px">
-  ${kicker(t.labels.contested, 'accent')}
+<div style="${t.s.box}">
+  ${kicker(t.labels.contested, t, 'accent')}
   ${denials.map(denial => `
-  <p class="ng-ink" style="${BODY};margin-top:12px"><b>${fill(t.labels.denies, {by: escape(denial.by)})}</b> “${escape(denial.translation || denial.sentence)}”</p>
-  <p class="ng-mute" style="${CAPTION};margin-top:4px">— ${webUrl(denial.url) ? `<a href="${escape(denial.url)}" class="ng-mute" style="color:${LIGHT.mute}">${escape(denial.source)}</a>` : escape(denial.source)}${denial.publishedAt ? `, ${escape(when(denial.publishedAt, t))}` : ''}</p>`).join('')}
+  <p style="${t.s.body};margin-top:12px"><b>${fill(t.labels.denies, {by: escape(denial.by)})}</b> “${escape(denial.translation || denial.sentence)}”</p>
+  <p style="${t.s.caption};margin-top:4px">— ${webUrl(denial.url) ? `<a href="${escape(denial.url)}" style="color:${t.c.mute};text-decoration:underline;text-underline-offset:3px">${escape(denial.source)}</a>` : escape(denial.source)}${denial.publishedAt ? `, ${escape(when(denial.publishedAt, t))}` : ''}</p>`).join('')}
 </div>`;
 
 // The AI analysis of the card (see card-analysis.js), the lines the reader kept: why it matters, what
@@ -182,17 +182,17 @@ const analysisHtml = (analysis, t = ENGLISH) => {
     if (!analysis) return '';
     const why = analysis.why ?? [], next = analysis.next ?? [], timeline = (analysis.timeline ?? []).filter(item => item.title);
     if (why.length + next.length + timeline.length === 0) return '';
-    const list = (lines) => `<ul style="margin:0;padding-left:22px">${lines.map(line => `<li class="ng-ink" style="${BODY};margin-top:8px">${line}</li>`).join('')}</ul>`;
-    const part = (title, html, first) => `<div style="margin-top:${first ? 0 : 14}px">${kicker(title)}${html}</div>`;
+    const list = (lines) => `<ul style="margin:0;padding-left:22px">${lines.map(line => `<li style="${t.s.body};margin-top:8px">${line}</li>`).join('')}</ul>`;
+    const part = (title, html, first) => `<div style="margin-top:${first ? 0 : 16}px">${kicker(title, t)}${html}</div>`;
     const parts = [
         why.length > 0 && [t.labels.whyItMatters, list(why.map(escape))],
         next.length > 0 && [t.labels.whatNext, list(next.map(line => `<b>${escape(t.labels.if)}</b> ${escape(line.if)}, <b>${escape(t.labels.then)}</b> ${escape(line.then)}`))],
-        timeline.length > 0 && [t.labels.storySoFar, timeline.map(item => `<p class="ng-ink" style="${CAPTION};color:${LIGHT.ink};margin-top:6px"><span class="ng-mute" style="color:${LIGHT.mute}">${escape(dayOf(item.date, t))}</span> ${webUrl(item.url)
-            ? `<a href="${escape(item.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(item.titleTranslation ?? item.title)}</a>`
-            : escape(item.titleTranslation ?? item.title)}${item.medium ? ` <span class="ng-mute" style="color:${LIGHT.mute}">· ${escape(item.medium)}</span>` : ''}</p>`).join('')],
+        timeline.length > 0 && [t.labels.storySoFar, timeline.map(item => `<p style="${t.s.caption};color:${t.c.ink};margin-top:6px"><span style="color:${t.c.mute}">${escape(dayOf(item.date, t))}</span> ${webUrl(item.url)
+            ? `<a href="${escape(item.url)}" style="color:${t.c.ink};text-decoration:underline;text-decoration-color:${t.c.rule};text-underline-offset:3px">${escape(item.titleTranslation ?? item.title)}</a>`
+            : escape(item.titleTranslation ?? item.title)}${item.medium ? ` <span style="color:${t.c.mute}">· ${escape(item.medium)}</span>` : ''}</p>`).join('')],
     ].filter(Boolean);
     return `
-<div class="ng-rule" style="margin-top:24px;border-left:2px solid ${LIGHT.accent};padding-left:18px">
+<div style="${t.s.box}">
   ${parts.map(([title, html], i) => part(title, html, i === 0)).join('')}
 </div>`;
 };
@@ -210,11 +210,11 @@ const analysisText = (analysis, t = ENGLISH) => {
 const anglesHtml = (given, t = ENGLISH) => {
     const angles = given.filter(angle => webUrl(angle.url));
     return angles.length === 0 ? '' : `
-<div class="ng-rule" style="margin-top:28px;border-left:2px solid ${LIGHT.rule};padding-left:18px">
-  ${kicker(t.labels.otherAngles)}
+<div style="margin-top:36px">
+  ${kicker(t.labels.otherAngles, t)}
   ${angles.map(angle => `
-  <p style="margin:12px 0 0"><a href="${escape(angle.url)}" class="ng-ink" style="font:600 17px/1.45 ${TEXT};color:${LIGHT.ink};text-decoration:none">${escape(angle.titleTranslation ?? angle.title)}</a></p>
-  <p class="ng-mute" style="${CAPTION};margin-top:4px">${together(`${escape(angle.source)}${languageMark(angle.language, t)}`)}${angle.publishedAt ? ` · ${escape(when(angle.publishedAt, t))}` : ''}${angle.media > 1 ? ` · ${fill(t.labels.toldBy, {count: escape(angle.media)})}` : ''}</p>`).join('')}
+  <p style="margin:12px 0 0"><a href="${escape(angle.url)}" style="font:600 17px/1.45 ${FONT};letter-spacing:-.005em;color:${t.c.ink};text-decoration:none">${escape(angle.titleTranslation ?? angle.title)}</a></p>
+  <p style="${t.s.caption};margin-top:4px">${together(`${escape(angle.source)}${languageMark(angle.language, t)}`)}${angle.publishedAt ? ` · ${escape(when(angle.publishedAt, t))}` : ''}${angle.media > 1 ? ` · ${fill(t.labels.toldBy, {count: escape(angle.media)})}` : ''}</p>`).join('')}
 </div>`;
 };
 
@@ -226,9 +226,9 @@ const linksHtml = (card, t = ENGLISH) => {
     const seen = new Set([lead.source]);
     const others = (card.articles ?? []).filter(other => webUrl(other.url) && !seen.has(other.source) && seen.add(other.source));
     return `
-<p style="margin:28px 0 0;font:16px/1.4 ${TEXT}"><a href="${escape(lead.url)}" class="ng-accent" style="${LINK}">${fill(t.labels.readAt, {source: escape(lead.source)})}</a>${lead.trusted ? ` <span class="ng-accent" style="color:${LIGHT.accent}">★</span>` : ''}${languageMark(lead.language, t)}</p>
-${others.length > 0 ? `<p class="ng-mute" style="${CAPTION};margin-top:8px">${escape(t.labels.alsoCovered)} ${others.slice(0, SHOWN_OTHERS)
-        .map(other => together(`<a href="${escape(other.url)}" class="ng-mute" style="color:${LIGHT.mute};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(other.source)}</a>${other.trusted ? ' ★' : ''}${languageMark(other.language, t)}`))
+<p style="margin:32px 0 0;font:400 15px/1.4 ${FONT}"><a href="${escape(lead.url)}" style="${t.s.link}">${fill(t.labels.readAt, {source: escape(lead.source)})}</a>${lead.trusted ? ` <span style="color:${t.c.accent}">★</span>` : ''}${languageMark(lead.language, t)}</p>
+${others.length > 0 ? `<p style="${t.s.caption};margin-top:8px">${escape(t.labels.alsoCovered)} ${others.slice(0, SHOWN_OTHERS)
+        .map(other => together(`<a href="${escape(other.url)}" style="color:${t.c.mute};text-decoration:underline;text-decoration-color:${t.c.rule};text-underline-offset:4px">${escape(other.source)}</a>${other.trusted ? ' ★' : ''}${languageMark(other.language, t)}`))
         .join(', ')}${others.length > SHOWN_OTHERS ? ` ${fill(t.labels.andMore, {count: others.length - SHOWN_OTHERS})}` : ''}</p>` : ''}`;
 };
 
@@ -238,14 +238,14 @@ ${others.length > 0 ? `<p class="ng-mute" style="${CAPTION};margin-top:8px">${es
 // out, or none has a web address), no box
 // the title of a post in the reader's language when it was translated (briefings since 18.10.2026)
 const officialLine = (post, t = ENGLISH) => post.channel === 'reported'
-    ? `${fill(t.labels.saidItReported, {party: `<b>${escape(post.party)}</b>`, source: `<a href="${escape(post.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(post.source)}</a>`})} “${escape(post.translation ?? post.title)}”`
-    : `${fill(t.labels.saidIt, {party: `<b>${escape(post.party)}</b>`})} <a href="${escape(post.url)}" class="ng-ink" style="color:${LIGHT.ink};text-decoration:underline;text-decoration-color:${LIGHT.rule}">${escape(post.translation ?? post.title)}</a>${post.publishedAt ? `<span class="ng-mute" style="color:${LIGHT.mute}">, ${escape(when(post.publishedAt, t))}</span>` : ''}`;
+    ? `${fill(t.labels.saidItReported, {party: `<b>${escape(post.party)}</b>`, source: `<a href="${escape(post.url)}" style="color:${t.c.ink};text-decoration:underline;text-decoration-color:${t.c.rule};text-underline-offset:3px">${escape(post.source)}</a>`})} “${escape(post.translation ?? post.title)}”`
+    : `${fill(t.labels.saidIt, {party: `<b>${escape(post.party)}</b>`})} <a href="${escape(post.url)}" style="color:${t.c.ink};text-decoration:underline;text-decoration-color:${t.c.rule};text-underline-offset:3px">${escape(post.translation ?? post.title)}</a>${post.publishedAt ? `<span style="color:${t.c.mute}">, ${escape(when(post.publishedAt, t))}</span>` : ''}`;
 const officialHtml = (given, t = ENGLISH) => {
     const posts = given.filter(post => webUrl(post.url));
     return posts.length === 0 ? '' : `
-<div class="ng-secondary ng-rule" style="margin-top:24px;background:${LIGHT.secondary};border-left:3px solid ${LIGHT.ink};padding:14px 18px">
-  ${kicker(t.labels.officialSources, 'ink')}
-  ${posts.map(post => `<p class="ng-ink" style="${BODY};margin-top:8px">${officialLine(post, t)}</p>`).join('')}
+<div style="${t.s.box}">
+  ${kicker(t.labels.officialSources, t)}
+  ${posts.map(post => `<p style="${t.s.body};font-size:15px;line-height:1.5;margin-top:8px">${officialLine(post, t)}</p>`).join('')}
 </div>`;
 };
 
@@ -253,16 +253,20 @@ const officialHtml = (given, t = ENGLISH) => {
 // the words of the article translated when it is in another language than the reader's (see
 // withHedgedTranslated)
 const notesHtml = (card, t = ENGLISH) => !card.hedged ? '' : `
-<div class="ng-rule" style="margin-top:24px;border-top:1px solid ${LIGHT.rule}">
-  <div style="padding-top:12px">${kicker(t.labels.notConfirmed, 'accent')}<p class="ng-ink" style="${CAPTION};color:${LIGHT.ink};margin-top:4px">${fill(t.labels.unconfirmed, {words: escape(card.hedgedTranslation ?? card.hedged)})}</p></div>
+<div style="margin-top:24px;border-top:1px solid ${t.c.rule}">
+  <div style="padding-top:12px">${kicker(t.labels.notConfirmed, t, 'accent')}<p style="${t.s.caption};color:${t.c.ink};margin-top:4px">${fill(t.labels.unconfirmed, {words: escape(card.hedgedTranslation ?? card.hedged)})}</p></div>
 </div>`;
 
 // the title shown: the one the reader wrote for the e-mail (ownTitle), else the translated one
 const titleOf = (card) => card.ownTitle ?? card.titleTranslation ?? card.title;
-// the countries of who it names, in the reader's language; none when its title names them (see country-names.js)
-const countriesOf = (card, t = ENGLISH) => countryNames(card.countries ?? [], {
-    titles: [card.ownTitle, card.titleTranslation, card.title], languages: [card.language], locale: t.language,
-});
+// The countries of who it names, in the reader's language: the ones the reader chose for the e-mail
+// (ownCountries, codes, see withOwnCountries) as they are, else none when its title names them (see
+// country-names.js)
+const countriesOf = (card, t = ENGLISH) => Array.isArray(card.ownCountries)
+    ? card.ownCountries.map(code => countryName(code, t.language))
+    : countryNames(card.countries ?? [], {
+        titles: [card.ownTitle, card.titleTranslation, card.title], languages: [card.language], locale: t.language,
+    });
 
 // personal: the why of the card, written to the reader ("that you follow"), left out of an e-mail to
 // another; format: the way its sentences are shown (see wayOf)
@@ -280,31 +284,32 @@ const pictureWidth = (card) => {
 const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH) => {
     const sentences = wayOf(card, format, t);
     const credit = creditOf(card, t);
+    const countries = countriesOf(card, t);
     // the picture of Wikimedia Commons of who it names, not of the news: said so
     const illustration = Boolean(card.thumbnail) && card.thumbnail === card.illustration?.url;
     const width = pictureWidth(card);
     // or a file of the reader joined to the e-mail (see mail-pictures.js)
     const picture = webUrl(card.thumbnail) ?? (/^cid:[\w.@-]+$/.test(card.thumbnail ?? '') ? card.thumbnail : null);
     return `
-<tr><td class="ng-rule" style="border-top:1px solid ${LIGHT.rule};padding:26px 0 44px">
+<tr><td style="border-top:1px solid ${t.c.rule};padding:28px 0 44px">
   <!-- the number, countries, date and language above the title, not in a column of their own as on the
        page: on a phone the text keeps the whole width. No topic: the cards of one reader are of the same
        one, "sport" card after card (the user, 18.10.2026) -->
   <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:14px"><tr>
-    <td valign="bottom" style="padding-right:14px"><p class="ng-mute" style="margin:0;font:400 46px/1 ${DISPLAY};color:${LIGHT.mute}">${String(i + 1).padStart(2, '0')}</p></td>
-    <td valign="bottom" style="padding-bottom:4px"><p class="ng-mute" style="${CAPTION};font-weight:500">${[
-        countriesOf(card, t).length > 0 ? `<span class="ng-ink" style="color:${LIGHT.ink}">${escape(countriesOf(card, t).join(' · '))}</span>` : '',
+    <td valign="bottom" style="padding-right:14px"><p style="margin:0;font:600 44px/1 ${FONT};letter-spacing:-.04em;color:${t.c.number}">${String(i + 1).padStart(2, '0')}</p></td>
+    <td valign="bottom" style="padding-bottom:4px"><p style="${t.s.caption}">${[
+        countries.length > 0 ? `<span style="color:${t.c.ink};font-weight:500">${escape(countries.join(' · '))}</span>` : '',
         card.publishedAt ? escape(when(card.publishedAt, t)) : '',
         card.language ? languageMark(card.language, t).trim() : '',
     ].filter(Boolean).join(' · ')}</p></td>
   </tr></table>
-  <h2 class="ng-ink" style="margin:0;font:460 27px/1.12 ${DISPLAY};letter-spacing:-.005em;color:${LIGHT.ink}">${escape(titleOf(card))}</h2>
-  ${personal && card.why ? `<p class="ng-mute" style="margin:12px 0 0;font:italic 19px/1.4 ${TEXT};color:${LIGHT.mute}">${escape(card.why)}</p>` : ''}
-  ${picture ? `<img src="${escape(picture)}" alt="" width="${width}" style="display:block;width:100%;max-width:${width}px;height:auto;margin-top:20px;border:0;background:${LIGHT.secondary}">
-  ${credit ? `<p class="ng-mute" style="${CAPTION};margin-top:6px">${escape(illustration ? t.labels.illustration : t.labels.picture)} — ${escape(credit)}</p>` : ''}` : ''}
+  <h2 style="margin:0;font:600 28px/1.15 ${FONT};letter-spacing:-.022em;color:${t.c.ink}">${escape(titleOf(card))}</h2>
+  ${personal && card.why ? `<p style="margin:12px 0 0;font:400 20px/1.45 ${FONT};letter-spacing:-.01em;color:${t.c.mute}">${escape(card.why)}</p>` : ''}
+  ${picture ? `<img src="${escape(picture)}" alt="" width="${width}" style="display:block;width:100%;max-width:${width}px;height:auto;margin-top:20px;border:0;border-radius:18px;background:${t.c.deep}">
+  ${credit ? `<p style="${t.s.caption};margin-top:6px">${escape(illustration ? t.labels.illustration : t.labels.picture)} — ${escape(credit)}</p>` : ''}` : ''}
   ${sentences.paragraphs.length > 0 ? `
-  <div style="margin-top:24px">${kicker(sentences.title)}</div>
-  <div style="margin-top:12px;overflow:hidden">${WAYS_HTML[sentences.way](sentences.paragraphs, i === 0)}</div>` : ''}
+  <div style="margin-top:24px">${kicker(sentences.title, t)}</div>
+  <div style="margin-top:12px;overflow:hidden">${WAYS_HTML[sentences.way](sentences.paragraphs, i === 0, t)}</div>` : ''}
   ${officialHtml(card.official ?? [], t)}
   ${analysisHtml(card.analysis, t)}
   ${contestedHtml(card.contested ?? [], t)}
@@ -322,27 +327,28 @@ const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH) =>
 // one of MAIL_FORMATS. The day only, no hour, in its subject and its title, the day before the count in
 // the subject (the user, 16.10.2026); nothing under the title (the user, 14.10.2026: no "N stories
 // shared" line, the title alone). language: the reader's, a code: its dates and the names of languages
-// are written in it; labels: the words of the e-mail in it (see labelsFor), English when not given.
-// {subject, html, text}
-export const briefingMail = (briefing, {profile = null, sender = null, format = 'passages', language = 'en', labels = LABELS} = {}) => {
-    const t = toldIn(language, labels);
+// are written in it; labels: the words of the e-mail in it (see labelsFor), English when not given; theme: 'light'
+// (the default) or 'dark', one of THEMES. {subject, html, text}
+export const briefingMail = (briefing, {profile = null, sender = null, format = 'passages', language = 'en', labels = LABELS, theme = 'light'} = {}) => {
+    const t = toldIn(language, labels, theme);
     const L = t.labels;
     const cards = briefing.items ?? [];
     const finished = briefing.finishedAt ?? briefing.createdAt;
     const count = cards.length === 1 ? L.oneStory : fillText(L.stories, {count: cards.length});
-    // "Roberto’s Briefing · 13 October 2026"
-    const name = profile ? fillText(L.briefingOf, {name: profile}) : L.briefing;
+    // "Roberto’s Briefing · 13 October 2026", "Chris’ Briefing · 2 November 2026"
+    const possessive = language === 'en' && /s$/i.test(String(profile ?? '').trim()) ? BRIEFING_OF_S : L.briefingOf;
+    const name = profile ? fillText(possessive, {name: profile}) : L.briefing;
     const title = `${name} · ${day(finished, t)}`;
     const subject = `${name} · ${day(finished, t)} · ${count}`;
 
     const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark">
-<link rel="stylesheet" href="${FONTS}"><style>${DARK_STYLE}</style><title>${escape(subject)}</title></head>
-<body class="ng-paper" style="margin:0;padding:0;background:${LIGHT.paper}">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="ng-paper" style="background:${LIGHT.paper}"><tr><td align="center" style="padding:32px 16px">
+<meta name="color-scheme" content="${t.theme}"><meta name="supported-color-schemes" content="${t.theme}">
+<link rel="stylesheet" href="${FONTS}"><style>:root{color-scheme:${t.theme};supported-color-schemes:${t.theme}}</style><title>${escape(subject)}</title></head>
+<body style="margin:0;padding:0;background:${t.c.paper}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${t.c.paper}"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:680px;text-align:left">
 <tr><td style="padding-bottom:28px">
-  <h1 class="ng-ink" style="margin:0;font:460 40px/1.05 ${DISPLAY};color:${LIGHT.ink}">${escape(title)}</h1>
+  <h1 style="margin:0;font:600 38px/1.05 ${FONT};letter-spacing:-.035em;color:${t.c.ink}">${escape(title)}</h1>
 </td></tr>
 ${cards.map((card, i) => cardHtml(card, i, !sender, format, t)).join('')}
 </table></td></tr></table></body></html>`;
@@ -351,8 +357,9 @@ ${cards.map((card, i) => cardHtml(card, i, !sender, format, t)).join('')}
         `${title}\n`,
         ...cards.map((card, i) => {
             const lead = card.lead ?? card.articles?.[0];
+            const countries = countriesOf(card, t);
             return [
-                `${String(i + 1).padStart(2, '0')}. ${titleOf(card)}${countriesOf(card, t).length > 0 ? ` (${countriesOf(card, t).join(', ')})` : ''}`,
+                `${String(i + 1).padStart(2, '0')}. ${titleOf(card)}${countries.length > 0 ? ` (${countries.join(', ')})` : ''}`,
                 sender ? '' : card.why ?? '',
                 '',
                 wayText(wayOf(card, format, t)),

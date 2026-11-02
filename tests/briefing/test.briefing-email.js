@@ -24,7 +24,7 @@ jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: 
 jest.unstable_mockModule('../../services/utils/mailer.js', () => ({sendMail, mailEnabled: () => true}));
 const copies = {save: jest.fn(async () => 11), byToken: jest.fn(async () => null), remove: jest.fn(async () => 1)};
 jest.unstable_mockModule('../../models/sent-mail-model.js', () => ({SentMailModel: copies}));
-const {BriefingService, withOwnTexts, withOwnTitles, withoutTakenOut} = await import('../../services/briefing-service.js');
+const {BriefingService, withOwnCountries, withOwnTexts, withOwnTitles, withoutTakenOut} = await import('../../services/briefing-service.js');
 const {briefingMail, LABELS} = await import('../../services/utils/briefing-mail.js');
 
 const card = (storyId, title, changes = {}) => ({
@@ -293,7 +293,7 @@ describe('briefingMail', () => {
         ]})]});
         // a mail app put each inline-block mark on a line of its own (14.10.2026)
         expect(html).not.toContain('inline-block');
-        expect(html).toMatch(/<span style="white-space:nowrap"><a href="https:\/\/kicker\.de\/1"[^>]*>kicker\.de<\/a> <span class="ng-box"[^>]*>de<\/span><\/span>, <span style="white-space:nowrap"><a href="https:\/\/marca\.com\/1"/);
+        expect(html).toMatch(/<span style="white-space:nowrap"><a href="https:\/\/kicker\.de\/1"[^>]*>kicker\.de<\/a> <span title="[^"]*" style="[^"]*">de<\/span><\/span>, <span style="white-space:nowrap"><a href="https:\/\/marca\.com\/1"/);
     });
 
     it('should leave out the notes that tell nothing: the AI choosing the passages, one medium, the sources named', () => {
@@ -577,5 +577,122 @@ describe('BriefingService.email with the sentences the reader wrote', () => {
         }
         expect(sendMail).not.toHaveBeenCalled();
         expect(withOwnTexts([{storyId: 1}], undefined)).toEqual([{storyId: 1}]);
+    });
+});
+
+describe('BriefingService.email with the countries the reader chose', () => {
+    const sent = () => sendMail.mock.calls.at(-1)[0];
+    beforeEach(() => ofUser.mockResolvedValue({...row, items: [card(1, 'First story', {countries: ['FR', 'CH']}), card(2, 'Second story', {countries: ['ES']})]}));
+
+    it('should send the countries the reader chose instead of the ones found, the other cards as found (the user, 2.11.2026)', async () => {
+        await BriefingService.email(4, 7, [1, 2], undefined, undefined, undefined, undefined, 'passages', [], undefined, {1: ['DE', 'IT']});
+        expect(sent().html).toContain('Germany · Italy');
+        expect(sent().html).not.toContain('France');
+        expect(sent().html).toContain('Spain');
+        expect(sent().text).toContain('01. First story (Germany, Italy)');
+        expect(sent().text).toContain('02. Second story (Spain)');
+    });
+
+    it('should show a country the reader chose even when the title names it, and none when the list is empty', async () => {
+        ofUser.mockResolvedValue({...row, items: [card(1, 'Zambia sacks its coach', {countries: ['ZM']}), card(2, 'Second story', {countries: ['ES']})]});
+        await BriefingService.email(4, 7, [1, 2], undefined, undefined, undefined, undefined, 'passages', [], undefined, {1: ['ZM'], 2: []});
+        expect(sent().html).toContain('>Zambia<');
+        expect(sent().text).toContain('01. Zambia sacks its coach (Zambia)');
+        expect(sent().text).toContain('02. Second story\n');
+        expect(sent().html).not.toContain('Spain');
+    });
+
+    it('should refuse what is not a country code, or more than 10 countries, before sending', async () => {
+        sendMail.mockClear();
+        for (const countries of [['FR'], {1: 'FR'}, {1: ['france']}, {1: ['EU']}, {1: ['ZZ']}, {1: [3]}, {1: ['FR', 'CH', 'DE', 'IT', 'ES', 'PT', 'AT', 'BE', 'NL', 'PL', 'SE']}]) {
+            await expect(BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'passages', [], undefined, countries)).rejects.toMatchObject({status: 400});
+        }
+        expect(sendMail).not.toHaveBeenCalled();
+        expect(withOwnCountries([{storyId: 1}], undefined)).toEqual([{storyId: 1}]);
+        expect(withOwnCountries([{storyId: 1}], {1: ['FR', 'FR']})).toEqual([{storyId: 1, ownCountries: ['FR']}]);
+    });
+});
+
+describe('briefingMail, the name of the profile and the design of the page', () => {
+    const briefing = {hours: 24, finishedAt: '2026-11-02T06:01:00.000Z', items: [card(1, 'First story', {why: 'Why.', thumbnail: 'https://cdn.example/a.jpg'})]};
+
+    it('should write only the apostrophe after a name that ends in s: "Chris’ Briefing" (the user, 2.11.2026)', () => {
+        for (const [name, written] of [['Chris', 'Chris’ Briefing'], ['James', 'James’ Briefing'], ['CHRIS', 'CHRIS’ Briefing'], ['Enzo', 'Enzo’s Briefing'], ['Roberto', 'Roberto’s Briefing']]) {
+            const mail = briefingMail(briefing, {profile: name.trim()});
+            expect(mail.subject).toBe(`${written} · 2 November 2026 · 1 story`);
+            expect(mail.html).toContain(`>${written} · 2 November 2026<`);
+            expect(mail.text).toContain(`${written} · 2 November 2026`);
+        }
+        expect(briefingMail(briefing).subject).toBe('Briefing · 2 November 2026 · 1 story');
+    });
+
+    it('should keep the word of another language for a name that ends in s, whatever its letters', () => {
+        const french = {...LABELS, briefingOf: 'Le briefing de {name}'};
+        expect(briefingMail(briefing, {profile: 'Chris', language: 'fr', labels: french}).subject).toBe('Le briefing de Chris · 2 novembre 2026 · 1 story');
+    });
+
+    const full = {...briefing, items: [{...briefing.items[0], contested: [{by: 'Infantino', sentence: 'No.', source: 'bild.de', url: 'https://bild.de/a'}],
+        official: [{party: 'UEFA', title: 'A post', url: 'https://uefa.com/a', channel: 'site'}]}]};
+    const LIGHT_COLOURS = ['#FFFFFF', '#F5F5F7', '#1D1D1F', '#6E6E73', '#D2D2D7', '#0066CC', '#BF4800'];
+    const DARK_COLOURS = ['#1C1C1E', '#2C2C2E', '#F5F5F7', '#98989D', '#3A3A3C', '#2997FF', '#FF9F0A'];
+
+    it('should be in the design of the page: Inter, white and one grey, blue links, rounded boxes, no serif (the user, 2.11.2026)', () => {
+        const {html} = briefingMail(full);
+        expect(html).toContain('family=Inter');
+        expect(html).toContain('font:600 38px/1.05 Inter');
+        for (const colour of LIGHT_COLOURS) expect(html).toContain(colour);
+        expect(html).toContain('border-radius:18px');
+        for (const old of ['Fraunces', 'Source Serif', 'Georgia', '#FBF9F4', '#A6301F', 'float:left', 'font-variant:all-small-caps']) {
+            expect(html).not.toContain(old);
+        }
+    });
+
+    // light unless the reader chooses dark for the e-mail, fixed whatever the system of who reads it (the user, 2.11.2026)
+    it('should be light by default, with none of the dark colours and no wish to follow the system', () => {
+        for (const mail of [briefingMail(full), briefingMail(full, {theme: 'light'}), briefingMail(full, {theme: 'purple'})]) {
+            for (const colour of DARK_COLOURS.filter(colour => !LIGHT_COLOURS.includes(colour))) expect(mail.html).not.toContain(colour);
+            expect(mail.html).toContain('<meta name="color-scheme" content="light">');
+            expect(mail.html).not.toContain('prefers-color-scheme');
+            expect(mail.html).toContain('background:#FFFFFF');
+        }
+    });
+
+    it('should be dark when the reader chooses it, with none of the light colours', () => {
+        const {html} = briefingMail(full, {theme: 'dark'});
+        for (const colour of DARK_COLOURS) expect(html).toContain(colour);
+        for (const colour of LIGHT_COLOURS.filter(colour => !DARK_COLOURS.includes(colour))) expect(html).not.toContain(colour);
+        expect(html).toContain('<meta name="color-scheme" content="dark">');
+        expect(html).not.toContain('prefers-color-scheme');
+        // the page, the boxes, the title and the links
+        expect(html).toContain('<body style="margin:0;padding:0;background:#1C1C1E">');
+        expect(html).toContain('background:#2C2C2E;border-radius:18px');
+        expect(html).toContain('letter-spacing:-.035em;color:#F5F5F7');
+        expect(html).toContain('color:#2997FF;text-decoration:none');
+    });
+});
+
+describe('BriefingService.email in the theme the reader chose', () => {
+    const sent = () => sendMail.mock.calls.at(-1)[0];
+
+    it('should send in light colours unless dark is asked, and refuse any other theme before reading the briefing', async () => {
+        await BriefingService.email(4, 7, [1]);
+        expect(sent().html).toContain('background:#FFFFFF');
+        expect(sent().html).not.toContain('#1C1C1E');
+
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'passages', [], undefined, undefined, null);
+        expect(sent().html).toContain('background:#FFFFFF');
+
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'passages', [], undefined, undefined, 'dark');
+        expect(sent().html).toContain('<body style="margin:0;padding:0;background:#1C1C1E">');
+        expect(sent().html).not.toContain('#FFFFFF');
+        expect(sent().text).toContain('First story');
+
+        ofUser.mockClear();
+        sendMail.mockClear();
+        for (const theme of ['auto', 'Dark', 3, {}]) {
+            await expect(BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'passages', [], undefined, undefined, theme)).rejects.toMatchObject({status: 400});
+        }
+        expect(ofUser).not.toHaveBeenCalled();
+        expect(sendMail).not.toHaveBeenCalled();
     });
 });

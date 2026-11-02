@@ -23,14 +23,15 @@ export const BriefingController = {
         }
     },
 
-    // {storyIds, to?, pictures?, titles?, removed?, format?, ai?, texts?}: the cards of the briefing the
+    // {storyIds, to?, pictures?, titles?, removed?, format?, ai?, texts?, countries?, theme?}: the cards of the briefing the
     // reader ticked, sent to the address to, else to the one of their account, with the pictures and
     // titles they chose, without the denials and other angles they took out, their sentences in the way
-    // chosen (format), the ones they wrote instead (texts)
+    // chosen (format), the ones they wrote instead (texts), the countries they chose (countries), in light colours
+    // or dark (theme)
     email: async (req, res) => {
         try {
-            const {storyIds, to, pictures, titles, removed, format, ai, texts} = req.body ?? {};
-            await BriefingService.email(req.user.id, req.params.id, storyIds, to, pictures, titles, removed, format, ai, texts);
+            const {storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme} = req.body ?? {};
+            await BriefingService.email(req.user.id, req.params.id, storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme);
             res.status(204).end();
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});
