@@ -87,7 +87,7 @@ server (`EMBEDDER_URL`, `NER_URL`): [Vectors](ingestion/vectors/README.md), [31-
 | [Lucide](https://lucide.dev) | `lucide-react` | 1.8.0 | icons | `MailBar.jsx`, `MailPicture.jsx`, `ProfileSwitcher.jsx`, `LanguageMark.jsx`, `field.jsx` | |
 | [react-icons](https://react-icons.github.io/react-icons/) | `react-icons` | 5.6.0 | the icons of the thumbs and of the sources | `BriefingCard.jsx`, `SourceList.jsx` | |
 | [fflate](https://github.com/101arrowz/fflate) | `fflate` | 0.8.3 | reads an Excel file of sites in the browser, the file never sent | `client/src/features/briefing/importFile.js` | [Added by hand](sources/added-by-hand/README.md) |
-| Fraunces, Source Serif 4 | `@fontsource-variable/fraunces` | 5.3.0 | the fonts of the editorial design | `client/src/styles/index.css` | |
+| [Inter](https://rsms.me/inter/) | `@fontsource-variable/inter` | 5.3.0 | the font of the pages, variable, with its optical size (replaced Fraunces and Source Serif 4 in the minimal design of 1.11.2026) | `client/src/styles/index.css` | |
 
 ## Tests and quality
 
