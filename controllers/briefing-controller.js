@@ -88,6 +88,15 @@ export const BriefingController = {
         }
     },
 
+    // {title} or {title: null, reason}: a neutral title the AI proposes for a card, for the editor of the e-mail
+    neutralTitle: async (req, res) => {
+        try {
+            res.status(200).json(await BriefingService.neutralTitle(req.user.id, req.params.id, req.params.storyId));
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
     // {storyId, vote}: the thumb of the reader on a card, vote null takes it back
     vote: async (req, res) => {
         try {

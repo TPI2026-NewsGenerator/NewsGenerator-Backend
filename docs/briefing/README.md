@@ -38,7 +38,9 @@ saved in `briefings.step` and shown on the page while it runs:
    its articles report. Then a cut title is taken whole from its
    page, the titles lose the bait of their medium ([neutral titles](#neutral-titles)), the cards are read
    again with their passages to leave out the ones on what the reader refuses
-   (`reviewCards`), and the titles in another language are translated. A card that can't be read takes the next
+   (`reviewCards`), the titles of the cards kept with a judgment inside their sentences are rewritten by the AI when a
+   second opinion says they tell the same fact ([neutral by default](#neutral-by-default-evaluate-rewrite-verify)),
+   and the titles in another language are translated. A card that can't be read takes the next
    story of the reserve, 2 more rounds at most (`readable-cards.js`).
 6. **angles**: five parts together, none of which can fail the briefing: the [other angles](other-angles/README.md),
    the [official sources](official-source/README.md), the news of what the profile follows, the names shown
@@ -123,6 +125,65 @@ Barcelona will fall" -> "Real Madrid's believes...", "l'affaire du but fantôme"
 teasers only, about 1 title in 20 changes, almost all right, one label lost ("¡Habla el árbitro!:"). A call of the AI of
 about 1 300 tokens for 40 titles; if it fails, the titles stay as they are.
 
+### A neutral title on demand
+
+The judgment is also inside the sentences ("a shameful decision"), where the removal above cannot reach it without
+breaking the title. In the editor of the e-mail a button "Suggest a neutral title" asks the AI for a rewrite of the
+title the reader sees (`POST /api/briefing/:id/stories/:storyId/neutral-title`, `BriefingService.neutralTitle`,
+`rewrittenTitle` in `neutral-titles.js`; the administrators, 120 an hour). The proposal is shown against the title,
+word by word (what is taken out struck, what is put in underlined); the reader uses it, which puts it in the title
+field, or keeps the title (the user, 03.11.2026: "the AI proposes, the reader validates"). Nothing is changed without
+being read, because free rewriting changed the meaning of about 1 title in 10 (12.10.2026) and still does: "SFV reacts
+to Embolo case" became "SFV announces new guidelines" without thinking.
+
+The AI gets the title, 1 500 characters of the sentences of the card, and the language to write in (the reader's when
+the title was translated). The code refuses a proposal, and shows none ("changed what the title says"), that keeps an
+exclamation mark; adds a figure or a name the title and the sentences do not have; loses a figure, a name (a word that
+begins like it counts: Barca, Barcelona) or a quotation of the title (its punctuation aside); adds or loses a
+negation; turns a question into a statement; is more than two words longer than the title or keeps less than 40% of
+it. A title in capitals or in title case ("Friendship Allstar Crowned EBFA Champions") is checked for acronyms only.
+`{title: null, reason: 'same'}` says the title is neutral already.
+
+Measured on 45 real titles, half with a mark of the medium (`bench/neutral-rewrite.mjs`, the same sample each run):
+with thinking off 19 proposed, 12 neutral already, 14 refused by the checks (before they were loosened: a quotation
+closing the title, the first word after a "!", titles in title case); with thinking on it stays closer to the title
+(it keeps "in the VAR" in "Scandal in the VAR! Presence of outside people denounced...") and, with the checks as they
+are now, 22 proposed, 18 neutral already, 5 refused (a quotation without its "huge", "Nobody wants" made "Lack of
+candidates", a name dropped with its teaser). Thinking is on: it costs about 1.7k tokens a title instead of 25, for
+one title asked for by a click. Some proposals still drift in meaning ("UEFA raids FSS!" -> "UEFA intervenes in FSS"):
+that is what the reader reads it against the title for.
+
+### Neutral by default: evaluate, rewrite, verify
+
+The user asked (03.11.2026) whether the AI could judge first whether a title needs changing, and whether neutral
+titles could be the default in every briefing; measured, then built the same day (`aiRewrittenTitles` in
+`neutral-titles.js`, called by `read()` of `briefing-service.js` after the check of the cards, so only the cards kept are
+rewritten; `AI_NEUTRAL_TITLES=off` turns it off). The teaser removal above still runs first. The card says "Title
+rewritten by the AI" with a note and a button "Show the title as published", apart from the "Show original" of a
+translation (which shows the title of the card in its language, the rewritten one): `item.titleRewritten`, with
+`item.titleAsPublished` the title as the medium wrote it, in the briefing for every title changed. The log has each
+change (`title rewritten by the AI: "A" -> "B"`). Any failure leaves the title as it is. Three steps, `bench/neutral-gate.mjs`
+on 300 titles of the cards of 14 days: `judgedTitles` (one call for 40 titles, 10 s) says which have a judgment, an emphasis or a call to click; only
+those are rewritten (`rewrittenTitle`, thinking on); `sameFact` (the pairs 6 at a time) says whether the rewrite tells
+exactly the same fact. Results, the 59 rewrites read by hand (OK: same fact, the bait gone; mild: a detail or a
+shade lost; bad: a fact added, changed or the news itself lost):
+- Step 1 flags 78 titles of 300 (26%). It over-flags (« Alarm at Real Betis… », « Controversial goal »,
+  « Landmark… case » are facts or borderline) and misses a few mild ones (« Premier League explain 'unbelievable'…
+  Man Utd left gutted », « Even cases from Djibouti… are above Infantino »). The second opinion is the safety, so a false
+  alarm costs tokens only.
+- 78 rewrites: 59 proposed, 15 refused by the checks of the code, 4 failed (the AI did not answer, Gemini internal error:
+  the title stays as published). The 59: 31 OK, 14 mild, 14 bad (« Referees, trick or treat? » -> « Refereeing in
+  Juventus-Rennes? », « Financial services bet big… » -> « …increase sponsorship… », « The battle to take back the
+  controls… » -> « The election for the presidency… », « New scandal shakes FIFA » -> « New allegations against FIFA »).
+- The second opinion with thinking on accepted 22 of the 59, **all 22 OK; it stopped the 28 mild and bad ones**, and
+  also 9 OK ones (strict: « When money scores goals » taken out, « Congratulations to »). With thinking off it accepted
+  24: 20 OK and 4 mild, and stopped 11 OK ones. Thinking on cost 1.7k tokens a call of 6 pairs, off 0.2k.
+- So automatically: 22 titles of 300 (7%) would change, by hand all right (« Historic: from this matchday… », « vicious
+  attack », « world-class pitches », « Quietly Paid », « drags GFA to FIFA » -> « takes GFA to FIFA »). 22 right of 22 is
+  a small sample: it does not show the error is under about 12%.
+- Cost for a briefing of 25 cards: about 6 titles rewritten, 20 s each with thinking (5 of 78 calls timed out at 120 s and
+  went to Gemini), 21k tokens in all, a minute or two if the titles are done one after the other.
+
 ## Cards of one news
 
 Two cards of one news that were not joined (the user, 03.11.2026: cards 1 and 2 of a briefing of Enzo's profile,
@@ -135,3 +196,5 @@ threshold of the stories (0.70) would join more of them than it should. The step
 news). Replayed on 8 briefings (`bench/merge-replay.mjs`): the prompt of now joins none, a variant that asks whether
 the card above already answers it (`redundant`) joins the 2 duplicates found and 5 more, 4 of them other
 developments of the same affair (a question and its answer, a candidacy and the election calendar). Not changed.
+A flag on the card for the reader ("maybe the same news as card 1", from that variant, joining nothing) was proposed
+the same day and put aside by the user, to come back to later.

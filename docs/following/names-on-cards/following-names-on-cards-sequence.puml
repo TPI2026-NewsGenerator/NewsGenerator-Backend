@@ -76,6 +76,7 @@ else the names of the cards
         Countries -> Model : saveCountries
     end
     CardNames -> Countries : cardCountries: weighed by its articles,\nhalf the first at least, 3 at most; no people's\ncountry when it names an international body
+    CardNames -> AI : chooseCountries: one call for all the cards, which of the\ncandidates the news is about; none when in doubt, only a candidate\ncan be answered (the countries of the rules when the AI fails)
     CardNames --> Briefing : Map storyId -> {names: [{name, qid, kind}], countries}
 end
 alt failed

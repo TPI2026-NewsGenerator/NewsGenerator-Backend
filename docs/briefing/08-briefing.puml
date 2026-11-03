@@ -11,6 +11,7 @@ package "Presentation" {
         + POST /briefing/:id/news
         + DELETE /briefing/:id/news/:storyId
         + GET /briefing/:id/stories/:storyId/pictures
+        + POST /briefing/:id/stories/:storyId/neutral-title
     }
     class briefingController {
         + latest()
@@ -19,6 +20,7 @@ package "Presentation" {
         + importNews()
         + removeNews()
         + pictures()
+        + neutralTitle()
     }
 }
 note left of briefingRouter
@@ -51,6 +53,7 @@ package "Business" {
         + importNews()
         + removeNews()
         + pictures()
+        + neutralTitle()
     }
     class feedbackService {
         + of()

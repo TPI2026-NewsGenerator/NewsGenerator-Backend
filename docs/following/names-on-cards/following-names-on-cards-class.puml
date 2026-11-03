@@ -68,6 +68,10 @@ package "utils" {
         + cardCountries(items, of)
         + countriesOfItems(qids)
     }
+    class countryChoice {
+        + countryCandidates(items, of, labels)
+        + chooseCountries(cards, usage)
+    }
     class countryNames {
         + countryNamed(name)
         + countryNames(codes, options)

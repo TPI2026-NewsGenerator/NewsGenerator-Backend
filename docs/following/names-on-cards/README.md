@@ -105,6 +105,24 @@ on the page ("Zambia", "United States · China") and next to its topic in the e-
   referee of a card naming UEFA, Wenger or Beckham running against Infantino keep theirs.
 - **Which are shown.** `cardCountries` (`countries.js`): every country weighing half the first at least, 3 at
   most; none when the title names them all already ("La Zambie limoge...", "le président zambien...").
+- **The AI chooses among the candidates.** Rules found one case at a time (a medium, the seat of an international
+  body, the people of a body) leave the next case wrong: a card on the World Cup 2026 showed Qatar, "WLA demands
+  inclusion in FIFA governance review" Switzerland, a Greek referee's card France (the user, 03.11.2026: a wrong
+  country looks unprofessional, none is better). `countryCandidates` (`country-choice.js`) gives, for each card, the
+  countries Wikidata found for who and where it names, at most 6, each with what brought it ("L'Équipe (média)",
+  "UEFA (organisation internationale, son siège)", "Infantino (personne d'un organisme international)");
+  `chooseCountries` asks the AI once for all the cards of the briefing which of them the news is about, from its
+  titles and 350 characters of its sentences: the place it happens, its main actors' country, the country of the
+  person or team that is the subject of the title; not the medium that tells it, the seat of a body, a person named in
+  passing nor a namesake; none when in doubt, 3 at most. It can only answer a candidate (the code drops any other
+  code); a card it does not answer keeps the countries of the rules, and so do all of them when it fails
+  (`namesAndCountriesOfCards`, `choose: false` for the rules alone). One call of about 450 tokens per card.
+  Measured (`bench/card-countries.mjs`, 150 cards of 14 days, 117 with a candidate): 27 change, 9 to none, 16 to
+  fewer countries, 2 with another; read by hand about 20 are better (Qatar for the 2026 World Cup and for the
+  CAF president's support of Infantino, Switzerland for the WLA, France for a Greek referee, Belgium added for
+  Lens–Club Brugge, Ireland and Spain dropped from the Welsh FA's and Braga's cards), 4 worse (the United States of
+  the Fox CEO, Italy of a Corriere dello Sport columnist, France of Wenger's candidacy, the Tunisia of a card told
+  by a Tunisian newspaper only), the rest arguable (a player's nationality dropped for his club's country).
 - **A medium is a source, not a subject.** A news medium a card names (Wikidata: a newspaper, an agency, a
   channel, a news website, `MEDIA_KINDS` in `wikidata.js`) gives its country only when nothing else on the card
   gives one: "Bomb of the day! L'Équipe: Burleanu could be UEFA's candidate", told by three Romanian media, is

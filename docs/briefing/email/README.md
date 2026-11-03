@@ -20,7 +20,8 @@ The cards sent count as read: their stories are left out of the next briefings f
   from it), the address (the account's written in); `MailAside.jsx`: the
   analysis lines, denials, angles and official sources kept or taken out; `MailPicture.jsx` and
   `mailPictures.js`: the picture of a card, measured by the browser.
-- API: `GET /api/briefing/:id/stories/:storyId/pictures`, `POST /api/briefing/:id/email` (204), both
+- API: `GET /api/briefing/:id/stories/:storyId/pictures`, `POST /api/briefing/:id/stories/:storyId/neutral-title`,
+  `POST /api/briefing/:id/email` (204), all
   for the administrators (`adminOnly(MAIL_REFUSED)`, 403); `GET /api/mails/:token` (no account), the copy
   of an e-mail sent before 13.10.2026.
 
@@ -33,6 +34,9 @@ The cards sent count as read: their stories are left out of the next briefings f
   [news by link](../news-by-link/README.md): its page is read, its key passages chosen), or, when a card of the
   briefing already tells it, "Tick it for the e-mail" (`client/src/features/briefing/mailAdd.js`). Only for a
   reader who can send e-mails.
+- The title of a card can be changed in the editor, and the AI can propose a neutral one ("Suggest a neutral title",
+  `MailNeutralTitle.jsx`, `POST /api/briefing/:id/stories/:storyId/neutral-title`): shown against the title word by word,
+  used or kept by the reader, see [neutral titles](../README.md#a-neutral-title-on-demand).
 - The countries of a card are chosen in the editor of the e-mail: the ones found ticked or not, and any other country of
   the world found by typing a few letters of its name (accents and case aside; Enter takes the first).
 - The pictures of a card (`BriefingService.pictures`, `services/utils/mail-pictures.js` `storyPictures`):

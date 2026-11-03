@@ -52,7 +52,7 @@ import {EntityService} from "./entity-service.js";
 import {namesAndCountriesOfCards} from "./utils/card-names.js";
 import {isCountry} from "./utils/country-names.js";
 import {wholeTitle} from "./utils/titles.js";
-import {neutralTitles} from "./utils/neutral-titles.js";
+import {aiRewrittenTitles, neutralTitles, rewrittenTitle} from "./utils/neutral-titles.js";
 
 // Measured on four profiles and 249 stories judged by hand:
 //  - one vector per interest, dense + half the sparse: 88% of relevant cards (one vector for the
@@ -627,7 +627,7 @@ ${projects.map(project => `- « ${project.name} » : ${project.text.replace(/\s+
 export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) => {
     // the stories ranked and given to the AI grow with the cards wanted
     const scale = size / MAX_BRIEFING;
-    const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage(), titling: newUsage()};
+    const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage(), titling: newUsage(), titleRewriting: newUsage()};
     // the interests of the profile and of the projects it runs: each gets its share of the cards
     const [profile, interests, projects] = await Promise.all([ProfileModel.get(profileId), ProfileModel.briefingInterests(profileId),
         ProfileModel.projects(profileId)]);
@@ -755,6 +755,8 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     // lead -> its title without the bait of its medium (see neutral-titles.js), the title as published when
     // nothing was taken out; the card shows it, the lead article keeps the title as published
     const neutralTitle = new Map();
+    // the leads whose title the AI rewrote (not only shortened by the code): the card says so and shows the title as published
+    const titleRewritten = new Set();
     // lead -> {glossary, names}: how the card spells its names, from Wikidata and from its translated text
     const spellings = new Map();
     let rounds = 0;
@@ -777,20 +779,33 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
         const published = [...leads.values()];
         (await neutralTitles(published.map(lead => lead.title), usage.titling)).forEach((title, i) => neutralTitle.set(published[i], title));
         const shownTitle = (lead) => neutralTitle.get(lead) ?? lead.title;
+        const leftOut = await reviewCards(wanted, [...leads].map(([result, lead]) => ({
+            id: String(result.story.storyId),
+            title: lead.title,
+            summary: result.summary?.summary ?? null,
+        })), usage.reviewing, {interests: interests.map(interest => interest.text), refused: profile.refused ?? []}).catch(err => {
+            console.error(`Briefing: the cards were not read again (${err.message})`);
+            return new Map();
+        });
+        // The titles with a judgment of their medium inside the sentences rewritten by the AI, the cards kept only (the user,
+        // 03.11.2026): the AI judges which need it, rewrites them, and a second opinion keeps only the rewrites that tell
+        // exactly the same fact (see aiRewrittenTitles). The title as published stays in titleAsPublished. Never fails the briefing
+        const kept = [...leads].filter(([result]) => !leftOut.has(String(result.story.storyId)));
+        const rewrites = await aiRewrittenTitles(kept.map(([result, lead]) => ({title: shownTitle(lead), passages: textOf(result.summary?.summary), language: writtenIn(lead.lang)})),
+            {judging: usage.titling, rewriting: usage.titleRewriting, verifying: usage.titleRewriting}).catch(err => {
+            console.error(`Briefing: the titles were not rewritten (${err.message})`);
+            return new Map();
+        });
+        kept.forEach(([, lead], i) => {
+            if (!rewrites.has(i)) return;
+            console.log(`Briefing ${briefingId}: title rewritten by the AI: "${lead.title}" -> "${rewrites.get(i)}"`);
+            neutralTitle.set(lead, rewrites.get(i));
+            titleRewritten.add(lead);
+        });
         // and the titles written in another language than the reader's translated, as their passages
-        const foreign = [...leads.values()].filter(lead => lead.lang && lead.lang !== language && writtenIn(lead.lang) && writtenIn(language));
-        const [leftOut, translations] = await Promise.all([
-            reviewCards(wanted, [...leads].map(([result, lead]) => ({
-                id: String(result.story.storyId),
-                title: lead.title,
-                summary: result.summary?.summary ?? null,
-            })), usage.reviewing, {interests: interests.map(interest => interest.text), refused: profile.refused ?? []}).catch(err => {
-                console.error(`Briefing: the cards were not read again (${err.message})`);
-                return new Map();
-            }),
-            foreign.length === 0 ? [] : translateTexts(foreign.map(lead => ({text: shownTitle(lead), from: writtenIn(lead.lang), ...spellings.get(lead)})),
-                writtenIn(language), usage.summarizing),
-        ]);
+        const foreign = kept.map(([, lead]) => lead).filter(lead => lead.lang && lead.lang !== language && writtenIn(lead.lang) && writtenIn(language));
+        const translations = foreign.length === 0 ? [] : await translateTexts(foreign.map(lead => ({text: shownTitle(lead), from: writtenIn(lead.lang), ...spellings.get(lead)})),
+            writtenIn(language), usage.summarizing);
         foreign.forEach((lead, i) => titleTranslation.set(lead, translations[i]));
         if (leftOut.size > 0) console.log(`Briefing: ${leftOut.size} cards on what the reader refuses left out (${[...leftOut.values()].join(' / ')})`);
         return results.map(result => ({...result, leftOut: leftOut.get(String(result.story.storyId)) ?? null}));
@@ -884,6 +899,9 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
             // as published then in titleAsPublished; absent from the briefings made before 03.11.2026
             title: neutralTitle.get(lead) ?? lead.title,
             titleAsPublished: neutralTitle.has(lead) && neutralTitle.get(lead) !== lead.title ? lead.title : null,
+            // true when the AI rewrote the title (a judgment inside its sentences), after checking it tells the same fact; false
+            // when the code only took a teaser out of it. Absent from the briefings made before 03.11.2026
+            titleRewritten: titleRewritten.has(lead),
             // the article of the title and of the passages, the one the card sends to read: the reader
             // could not tell which of its articles the passages were of
             lead: toArticle(lead, trusted),
@@ -1648,6 +1666,24 @@ export const BriefingService = {
         const item = briefing.items.find(card => card.storyId === Number(storyId));
         if (!item) throw Object.assign(new Error('Unknown card.'), {status: 404});
         return picturesOfItem(item);
+    },
+
+    // A neutral title for a card, written by the AI when the reader asks for it in the editor of the e-mail and
+    // shown to them against the title they have (see rewrittenTitle): {title}, {title: null, reason: 'same'} for a title
+    // neutral already, {title: null, reason: 'unsafe'} when the AI changed what the title says. Of the title the reader
+    // reads (its translation when it has one), with the sentences of the card for the facts
+    neutralTitle: async (userId, briefingId, storyId) => {
+        const {row, briefing} = await readyBriefing(userId, briefingId);
+        const item = briefing.items.find(card => card.storyId === Number(storyId));
+        if (!item) throw Object.assign(new Error('Unknown card.'), {status: 404});
+        const usage = newUsage();
+        const sentences = Array.isArray(item.translation) && item.translation.length > 0 ? item.translation : item.summary;
+        // the title is written in the language of the reader when it was translated, else in its own
+        const profile = item.titleTranslation && row.id_profile ? await ProfileModel.get(row.id_profile) : null;
+        const language = item.titleTranslation ? readerLanguage(profile ?? {}) : item.language;
+        const proposal = await rewrittenTitle(item.titleTranslation ?? item.title, textOf(sentences), usage, {language: writtenIn(language)});
+        console.log(`Briefing ${briefingId}: neutral title asked for the card ${item.storyId}, ${proposal.title ? 'proposed' : `${proposal.reason}${proposal.problem ? ` (${proposal.problem}: ${proposal.proposal})` : ''}`}, tokens ${JSON.stringify(usage)}`);
+        return {title: proposal.title, ...(proposal.reason ? {reason: proposal.reason} : {})};
     },
 
     // the thumb of the reader on a card: 'up' (good for me), 'down' (not for me) or null (taken back).

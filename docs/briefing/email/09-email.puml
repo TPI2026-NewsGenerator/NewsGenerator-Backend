@@ -7,6 +7,7 @@ class "Anyone with the link" as Receiver
 package "Presentation" {
     class briefingRouter {
         + GET /briefing/:id/stories/:storyId/pictures
+        + POST /briefing/:id/stories/:storyId/neutral-title
         + POST /briefing/:id/news
         + DELETE /briefing/:id/news/:storyId
         + POST /briefing/:id/email
@@ -17,6 +18,7 @@ package "Presentation" {
     class briefingController {
         + latest()
         + pictures()
+        + neutralTitle()
         + importNews()
         + removeNews()
         + email()
@@ -39,6 +41,7 @@ end note
 package "Business" {
     class briefingService {
         + pictures()
+        + neutralTitle()
         + importNews()
         + removeNews()
         + email()

@@ -24,6 +24,10 @@ router.post('/:id/vote', authenticateToken, activeProfile, BriefingController.vo
 // the e-mail of the briefing is for the administrators only (see admin.js)
 const MAIL_REFUSED = 'Sending the briefing by e-mail is for the administrators.';
 router.get('/:id/stories/:storyId/pictures', authenticateToken, adminOnly(MAIL_REFUSED), BriefingController.pictures);
+// a neutral title the AI proposes for a card, asked for in the editor of the e-mail: a call of the AI each
+router.post('/:id/stories/:storyId/neutral-title', authenticateToken, adminOnly(MAIL_REFUSED),
+    rateLimit({windowMs: 3600e3, max: 120, key: req => `neutral-title ${req.user.id}`, message: 'Too many neutral titles asked, try again in an hour.'}),
+    BriefingController.neutralTitle);
 // a news added to the briefing by its link, for the e-mail: a page read and a call of the AI each
 router.post('/:id/news', authenticateToken, adminOnly(MAIL_REFUSED),
     rateLimit({windowMs: 3600e3, max: 30, key: req => `news ${req.user.id}`, message: 'Too many news added, try again in an hour.'}),

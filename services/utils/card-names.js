@@ -12,7 +12,8 @@
 import {MentionModel} from '../../models/mention-model.js';
 import {mentionKey} from './mentions.js';
 import {cardCountries, countriesOfItems} from './countries.js';
-import {countryNamed} from './country-names.js';
+import {chooseCountries, countryCandidates} from './country-choice.js';
+import {countryName, countryNamed} from './country-names.js';
 import {withNamesChecked, withNamesLinked} from './name-check.js';
 
 export const NAMES_PER_CARD = 4;
@@ -206,7 +207,7 @@ const readNames = async (cards) => {
 // {storyId -> {names, countries}} of these cards [{storyId, ids, media, titles}] (see namesOfCards): countries the codes ISO 3166-1 of
 // the countries of who and where it names, the main first (see countries.js), none when Wikidata does not
 // tell them
-export const namesAndCountriesOfCards = async (cards, {usage = null} = {}) => {
+export const namesAndCountriesOfCards = async (cards, {usage = null, choose = true} = {}) => {
     // a name is linked by its text for all its news: the card tells whether the item is the one it means, and
     // which of its candidates when it has none
     const read = await withNamesLinked(await withNamesChecked(await readNames(cards), cards, {usage}), cards, {usage});
@@ -220,9 +221,30 @@ export const namesAndCountriesOfCards = async (cards, {usage = null} = {}) => {
     // a country named: its own code (see country-names.js countryNamed)
     const named = read.map(card => card.countries.map(row => ({qid: `country:${row.code}`, weight: row.inCard})));
     named.flat().forEach(item => countryOf.set(item.qid, {country: item.qid.slice('country:'.length), international: false}));
+    // the rules of countries.js decide the countries of a card; the AI then chooses among the candidates Wikidata found
+    // (see country-choice.js) and its choice replaces them, a card it does not answer keeping the rules'. choose: false
+    // leaves the rules alone (bench/card-countries.mjs compares the two)
+    const byStory = new Map(cards.map(card => [card.storyId, card]));
+    const rules = read.map((card, i) => cardCountries([...items[i], ...named[i]], countryOf));
+    const asked = read.map((card, i) => {
+        const labels = new Map([...card.names, ...card.places].filter(row => row.qid).map(row => [row.qid, row.name]));
+        card.countries.forEach(row => labels.set(`country:${row.code}`, countryName(row.code)));
+        const given = byStory.get(card.storyId);
+        return {titles: given?.titles ?? [], text: given?.text ?? '', candidates: countryCandidates([...items[i], ...named[i]], countryOf, labels)};
+    });
+    // the cards with a candidate, asked together: the choice is by place in that list, back to the place in the cards here
+    const toAsk = asked.map((card, index) => ({...card, index})).filter(card => card.candidates.length > 0);
+    const answered = choose ? await chooseCountries(toAsk, usage).catch(err => {
+        console.error(`Names: the countries of the cards were not chosen by the AI (${err.message})`);
+        return new Map();
+    }) : new Map();
+    const chosen = new Map([...answered].map(([at, codes]) => [toAsk[at].index, codes]));
     return new Map(read.map((card, i) => [card.storyId, {
         names: card.names.map(group => ({name: group.name, qid: group.qid ?? null, kind: group.kind})),
-        countries: cardCountries([...items[i], ...named[i]], countryOf),
+        countries: chosen.get(i) ?? rules[i],
+        // for the bench: the rules' countries and the candidates asked
+        rules: rules[i],
+        candidates: asked[i].candidates,
     }]));
 };
 
