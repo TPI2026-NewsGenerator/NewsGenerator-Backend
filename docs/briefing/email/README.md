@@ -31,9 +31,11 @@ The cards sent count as read: their stories are left out of the next briefings f
   account (`SMTP_USER`, `SMTP_PASS`, `services/utils/mailer.js`) and the reader the role `Admin`.
 - The news of the names followed can be put in the e-mail from their tab (the user, 03.11.2026): each one has
   a button "Add to the e-mail" that adds it like a news added by its link (`POST /api/briefing/:id/news`, see
-  [news by link](../news-by-link/README.md): its page is read, its key passages chosen), or, when a card of the
+  [news by link](../news-by-link/README.md): made a card by the steps of a briefing, with its story, the media that tell it, its angles, sources and analysis since 03.11.2026), or, when a card of the
   briefing already tells it, "Tick it for the e-mail" (`client/src/features/briefing/mailAdd.js`). Only for a
-  reader who can send e-mails.
+  reader who can send e-mails, in the tab "What you follow" of the page of the briefing (not on the page of a club or
+  a person), and only when a briefing is written: the tab says so. The bar to send the e-mail shows in that tab as in
+  the one of the briefing, as soon as a story is ticked (the user, 03.11.2026: it showed nothing after the click).
 - The title of a card can be changed in the editor, and the AI can propose a neutral one ("Suggest a neutral title",
   `MailNeutralTitle.jsx`, `POST /api/briefing/:id/stories/:storyId/neutral-title`): shown against the title word by word,
   used or kept by the reader, see [neutral titles](../README.md#a-neutral-title-on-demand).

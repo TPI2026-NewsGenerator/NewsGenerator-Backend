@@ -51,7 +51,7 @@ import {SentMailModel} from "../models/sent-mail-model.js";
 import {EntityService} from "./entity-service.js";
 import {namesAndCountriesOfCards} from "./utils/card-names.js";
 import {isCountry} from "./utils/country-names.js";
-import {wholeTitle} from "./utils/titles.js";
+import {cleanTitle, wholeTitle} from "./utils/titles.js";
 import {aiRewrittenTitles, neutralTitles, rewrittenTitle} from "./utils/neutral-titles.js";
 
 // Measured on four profiles and 249 stories judged by hand:
@@ -255,7 +255,9 @@ const toRead = (story, trusted = new Set(), language = null) => {
     const members = fresh.length > 0 ? fresh : story.members;
     const best = members.includes(story.best) ? story.best : members[0];
     const newest = [...members].sort((a, b) => b.at - a.at);
-    const first = members.find(article => isTrusted(article, trusted) && !fromGoogle(article))
+    // story.lead: the news the reader added (see importedCardOf), which is the one they want read first
+    const first = (members.includes(story.lead) ? story.lead : null)
+        ?? members.find(article => isTrusted(article, trusted) && !fromGoogle(article))
         ?? members.find(article => isTrusted(article, trusted))
         ?? (inLanguage(best) ? best : null)
         ?? newest.find(article => inLanguage(article) && !fromGoogle(article))
@@ -396,10 +398,11 @@ const cardTitles = (story, title) => {
 // [{storyId, article, title, at, media, named}]}], the closest stories first, then the ones found by
 // the card's rare names only (named). Of each story its newest news of a feed (one of Google News must
 // be asked for its address), none of a link on a card
-export const angleCardsOf = async (stories, titles, {feedUrls, hours}) => {
+export const angleCardsOf = async (stories, titles, {feedUrls, hours, alsoShown = []}) => {
     const since = new Date(Date.now() - Math.max(hours, ANGLES_DAYS * 24) * 3600e3);
-    const shown = new Set(stories.flatMap(story => [story.storyId, ...(story.mergedStoryIds ?? []),
-        ...story.members.map(article => article.id_story)]).filter(Boolean));
+    // alsoShown: the stories of the other cards of the briefing a card is added to (see importedCardOf), not angles of it
+    const shown = new Set([...stories.flatMap(story => [story.storyId, ...(story.mergedStoryIds ?? []),
+        ...story.members.map(article => article.id_story)]), ...alsoShown].filter(Boolean));
     const links = new Set(stories.flatMap(story => story.members.map(article => article.link)));
     // each card compared with every story of the days apart (206 000 in 3 days on 8.10.2026, 1.4 s
     // a card): several at a time, a card failing leaves the others
@@ -457,8 +460,8 @@ export const angleCardsOf = async (stories, titles, {feedUrls, hours}) => {
 // language, titleTranslation, storyId, media}] by story id (see angleCardsOf, placeAngles); a story an
 // angle of two cards is shown below the first one. The titles in another language than the reader's
 // translated
-export const anglesOf = async (stories, titles, {language, feedUrls, hours, trusted, usage}) => {
-    const cards = await angleCardsOf(stories, titles, {feedUrls, hours});
+export const anglesOf = async (stories, titles, {language, feedUrls, hours, trusted, usage, alsoShown = []}) => {
+    const cards = await angleCardsOf(stories, titles, {feedUrls, hours, alsoShown});
     if (cards.length === 0) return new Map();
     const judged = await otherAnglesOf(cards, usage);
     // the likeness of the angles the AI says tell the same fact as an earlier one (see sameFactsOut)
@@ -622,6 +625,253 @@ export const readerText = (text, projects = []) => projects.length === 0 ? text 
 En ce moment, il prépare aussi ${projects.length === 1 ? 'un projet, dont il veut les nouvelles' : 'des projets, dont il veut les nouvelles'} tant qu'${projects.length === 1 ? 'il dure' : 'ils durent'} :
 ${projects.map(project => `- « ${project.name} » : ${project.text.replace(/\s+/g, ' ').trim()}`).join('\n')}`;
 
+// Steps 4 to 7 of a briefing: the stories read (their pages, key passages, translation), their cards read once more (see
+// reviewCards), the titles made neutral, the other angles, the official sources, the people and organisations named, their
+// countries, the pictures and the AI versions, then each story as a card of the briefing. 'main': the stories of the cards in
+// their order, 'spare': the next ones the AI chose, which take the places of the cards that can't be read. Shared by the
+// briefing and by a news the reader adds to it (see importedCardOf): review false, no spare. ctx: {briefingId (or label),
+// step, seconds, usage, wanted, interests, profile, language, trusted, feedUrls, hours, review, alsoShown (the stories of the
+// other cards of the briefing, which are no angle of these)}. Answers {items, articles}: the cards, and the articles of each read
+// whole for the analysis (see analysisArticles). The briefing never waits on any of the steps around the reading failing
+export const completeCards = async ({main, spare = []}, {briefingId = null, label = 'unsaved', step = async () => {}, seconds = {}, usage, wanted = '', interests = [],
+    profile = {}, language, trusted = new Set(), feedUrls = [], hours, review = true, alsoShown = []}) => {
+    // 4. and 5. the chosen stories read, then 6. their cards read once more with their summary, which
+    // says what a title may not: the ones on what the reader refuses are left out (see reviewCards).
+    // The ones of the reserve take the places of the stories that can't be read or are left out. The
+    // briefing never waits on the review failing
+    const content = new Map();
+    const titleTranslation = new Map();
+    // lead -> its title without the bait of its medium (see neutral-titles.js), the title as published when
+    // nothing was taken out; the card shows it, the lead article keeps the title as published
+    const neutralTitle = new Map();
+    // the leads whose title the AI rewrote (not only shortened by the code): the card says so and shows the title as published
+    const titleRewritten = new Set();
+    // lead -> {glossary, names}: how the card spells its names, from Wikidata and from its translated text
+    const spellings = new Map();
+    let rounds = 0;
+    const leadOf = (result) => result.story.members.find(article => article.link === result.summary?.from) ?? result.story.best;
+    const read = async (chosen) => {
+        const first = rounds++ === 0;
+        if (first) await step('reading');
+        const results = await readStories(chosen, {trusted, language, usage, content, first, step});
+        const leads = new Map(results.filter(result => !result.unreadable).map(result => [result, leadOf(result)]));
+        // a title its feed cut ("…raises…") whole from its page read, before it is translated or judged
+        for (const lead of leads.values()) lead.title = wholeTitle(lead.title, content.get(lead.link)?.title, mediumOfArticle(lead));
+        // the names the text of each card writes once translated, and how Wikidata spells them: a title is translated
+        // with them (a name alone in a title was guessed "Frapar", with its first name in the text "Frappart")
+        for (const [result, lead] of leads) {
+            const text = [result.summary?.translation, result.summary?.pointsTranslation, result.summary?.digestTranslation].filter(Boolean).join('\n');
+            spellings.set(lead, {glossary: result.glossary ?? [], names: [...new Set([...(result.names ?? []), ...namesIn(text)])]});
+        }
+        // the titles without the bait of their medium ("Information incroyable !", the user, 03.11.2026): one call
+        // for all, before they are translated, a translation is of the title shown. Never fails the briefing
+        const published = [...leads.values()];
+        (await neutralTitles(published.map(lead => lead.title), usage.titling)).forEach((title, i) => neutralTitle.set(published[i], title));
+        const shownTitle = (lead) => neutralTitle.get(lead) ?? lead.title;
+        const leftOut = !review ? new Map() : await reviewCards(wanted, [...leads].map(([result, lead]) => ({
+            id: String(result.story.storyId),
+            title: lead.title,
+            summary: result.summary?.summary ?? null,
+        })), usage.reviewing, {interests: interests.map(interest => interest.text), refused: profile.refused ?? []}).catch(err => {
+            console.error(`Briefing: the cards were not read again (${err.message})`);
+            return new Map();
+        });
+        // The titles with a judgment of their medium inside the sentences rewritten by the AI, the cards kept only (the user,
+        // 03.11.2026): the AI judges which need it, rewrites them, and a second opinion keeps only the rewrites that tell
+        // exactly the same fact (see aiRewrittenTitles). The title as published stays in titleAsPublished. Never fails the briefing
+        const kept = [...leads].filter(([result]) => !leftOut.has(String(result.story.storyId)));
+        const rewrites = await aiRewrittenTitles(kept.map(([result, lead]) => ({title: shownTitle(lead), passages: textOf(result.summary?.summary), language: writtenIn(lead.lang)})),
+            {judging: usage.titling, rewriting: usage.titleRewriting, verifying: usage.titleRewriting}).catch(err => {
+            console.error(`Briefing: the titles were not rewritten (${err.message})`);
+            return new Map();
+        });
+        kept.forEach(([, lead], i) => {
+            if (!rewrites.has(i)) return;
+            console.log(`Briefing ${briefingId}: title rewritten by the AI: "${lead.title}" -> "${rewrites.get(i)}"`);
+            neutralTitle.set(lead, rewrites.get(i));
+            titleRewritten.add(lead);
+        });
+        // and the titles written in another language than the reader's translated, as their passages
+        const foreign = kept.map(([, lead]) => lead).filter(lead => lead.lang && lead.lang !== language && writtenIn(lead.lang) && writtenIn(language));
+        const translations = foreign.length === 0 ? [] : await translateTexts(foreign.map(lead => ({text: shownTitle(lead), from: writtenIn(lead.lang), ...spellings.get(lead)})),
+            writtenIn(language), usage.summarizing);
+        foreign.forEach((lead, i) => titleTranslation.set(lead, translations[i]));
+        if (leftOut.size > 0) console.log(`Briefing: ${leftOut.size} cards on what the reader refuses left out (${[...leftOut.values()].join(' / ')})`);
+        return results.map(result => ({...result, leftOut: leftOut.get(String(result.story.storyId)) ?? null}));
+    };
+    const {cards, unreadable, leftOut} = await readableCards(main, spare, read);
+    if (unreadable + leftOut > 0) console.log(`Briefing: ${unreadable} chosen stories could not be read and ${leftOut} were left out, ${cards.filter(card => card.story.reserve).length} of the reserve took their place`);
+    const stories = cards.map(card => card.story);
+    const summaryOf = (i) => cards[i].summary;
+    const leads = cards.map(leadOf);
+    // 7. the other angles of the cards, their official sources, the people and organisations they name
+    // and the AI version of their points and summary. The news of what the profile follows are not
+    // read here: the tab of the page asks for them when it is opened (see BriefingService.following).
+    // The briefing never waits on any of them failing
+    await step('angles');
+    // the denials of the cards, named as their official sources are (see withDenialsNamed)
+    const denied = new Map();
+    const [angles, official, named, ais] = await Promise.all([
+        anglesOf(stories, leads.map(lead => lead.title), {language, feedUrls, hours, trusted, usage: usage.angles, alsoShown}).catch(err => {
+            console.error(`Briefing: no other angle looked for (${err.message})`);
+            return new Map();
+        }),
+        officialSourcesOf(stories.map((story, i) => ({
+            id: story.storyId,
+            title: leads[i].title,
+            titleTranslation: titleTranslation.get(leads[i]) ?? null,
+            titles: cardTitles(story, leads[i].title),
+            text: textOf(summaryOf(i)?.digest ?? summaryOf(i)?.summary ?? leads[i].description).slice(0, OFFICIAL_TEXT),
+            first: new Date(Math.min(...story.members.map(article => article.at?.getTime?.() ?? Date.now()))).toISOString(),
+            // its articles read, for the statements of its parties they report (see statements.js)
+            texts: [leads[i], ...story.members.filter(article => article !== leads[i])].filter(article => content.has(article.link))
+                .map(article => ({...toArticle(article), page: content.get(article.link), lead: article === leads[i]})),
+            denials: summaryOf(i)?.contested ?? [],
+        })), usage.official, {language, denied}).catch(err => {
+            console.error(`Briefing: no official source looked for (${err.message})`);
+            return new Map();
+        }),
+        namesAndCountriesOfCards(stories.map((story, i) => ({storyId: story.storyId, ids: story.members.map(article => article.id),
+            media: [...new Set(story.members.map(mediumOfArticle))], topic: summaryOf(i)?.topic ?? null,
+            titles: [...new Set(story.members.map(article => article.title).filter(Boolean))],
+            // what the card says, in the language of its lead: a name it spells out ("Fédération malgache de football
+            // (FMF)") tells a name the check sent away (see name-check.js)
+            text: [summaryOf(i)?.digest, summaryOf(i)?.summary, summaryOf(i)?.points].filter(Boolean).join('\n'), language: leads[i].lang ?? null,
+            sites: story.members.map(article => siteOf(article))})), {usage: usage.naming}).catch(err => {
+            console.error(`Briefing: the names of the cards were not read (${err.message})`);
+            return new Map();
+        }),
+        // asked for by the reader only (see ai-ways.js), two calls a card: of the cards kept only, not of
+        // every story read (the ones unreadable or left out by reviewCards were paid for too)
+        mapWithConcurrency(stories, AI_CONCURRENCY, (story, i) => summaryOf(i)
+            ? aiWaysOf(leads[i].title, content.get(summaryOf(i).from), {language, usage: usage.writing}).catch(() => null)
+            : null),
+    ]);
+    const names = new Map([...named].map(([storyId, card]) => [storyId, card.names]));
+    // the picture Wikimedia Commons has of who most of its articles name, for a card none of its articles
+    // gives one to, and as a choice in the e-mail (see illustrations.js). The briefing never waits on it
+    // failing
+    const illustrations = await illustrationsOf(names).catch(err => {
+        console.error(`Briefing: no illustration looked for (${err.message})`);
+        return new Map();
+    });
+    // the size of the pictures of every card's articles: the card shows the sharpest, the e-mail offers them
+    // all (see pictureOf). Never fails the briefing: without sizes a card keeps the order of its articles
+    const cardPictures = new Map(stories.map((story, i) => [story.storyId,
+        candidatePictures([leads[i], ...[...story.members].sort((a, b) => b.at - a.at)], content)]));
+    const pictureSizes = await sizesOf([...cardPictures.values()].flat().map(picture => picture.thumbnail)).catch(err => {
+        console.error(`Briefing: the pictures were not measured (${err.message})`);
+        return new Map();
+    });
+    await step(null);
+    console.log(`Briefing ${briefingId ?? label}: tokens ${JSON.stringify(usage)}, seconds ${JSON.stringify(seconds)}`);
+
+    const items = stories.map((story, i) => {
+        const summary = summaryOf(i);
+        const lead = leads[i];
+        // two deniers at most, the ones of two different bodies (see withDenialsNamed); as found when the official
+        // sources were not read
+        const denials = shownDenials(denied.get(story.storyId) ?? summary?.contested);
+        const members = [...story.members].sort((a, b) => b.at - a.at);
+
+        return {
+            storyId: story.storyId,
+            mergedStoryIds: story.mergedStoryIds ?? [],   // cards of the same news joined to this one
+            // a card of a briefing of the last days it follows (see repeats.js): {storyId, title, shownAt,
+            // evolved}, evolved when it is that story with news since, else a new step of its affair
+            followUp: story.followUp ?? null,
+            vote: null,                                    // the thumb of the reader, 'up' or 'down'
+            // the feeds its articles came from: a refused card is blamed on them (utils/feedback.js),
+            // never on a search of Google News, which is the interest itself
+            feedUrls: [...new Set(story.members.map(article => article.feed_url).filter(url => url && !isGoogleNewsUrl(url)))],
+            // without the bait of its medium when it had some (see neutral-titles.js), the title of the lead article
+            // as published then in titleAsPublished; absent from the briefings made before 03.11.2026
+            title: neutralTitle.get(lead) ?? lead.title,
+            titleAsPublished: neutralTitle.has(lead) && neutralTitle.get(lead) !== lead.title ? lead.title : null,
+            // true when the AI rewrote the title (a judgment inside its sentences), after checking it tells the same fact; false
+            // when the code only took a teaser out of it. Absent from the briefings made before 03.11.2026
+            titleRewritten: titleRewritten.has(lead),
+            // the article of the title and of the passages, the one the card sends to read: the reader
+            // could not tell which of its articles the passages were of
+            lead: toArticle(lead, trusted),
+            // the title in the language of the reader when it is written in another, and that language
+            titleTranslation: titleTranslation.get(lead) ?? null,
+            language: lead.lang ?? null,
+            // the sentence the choice wrote from the title as written: its names spelled as the card spells them
+            why: alignNames(story.why, spellingsOf(spellings.get(lead)), lead.title),
+            interest: story.interest,
+            // the project of the profile it was chosen for (see readerText), null for the profile itself
+            project: story.project ?? null,
+            // the key sentences of the article as published, a paragraph per passage (see extract.js)
+            summary: summary?.summary ?? null,
+            // a card is read (see readableCards): without passages, the AI failed on its article
+            summaryError: summary ? null : 'The passages of its article could not be chosen: the AI did not answer.',
+            // their machine translation, when the article is not in the language of the reader
+            translation: summary?.translation ?? null,
+            // the shorter ways the reader can choose, of the same sentences (see shorterWays): the most
+            // important ones a paragraph each, and the ones of 5 to 6 lines; with their translation.
+            // Absent from the briefings made before 12.10.2026
+            points: summary?.points ?? null,
+            pointsTranslation: summary?.pointsTranslation ?? null,
+            digest: summary?.digest ?? null,
+            digestTranslation: summary?.digestTranslation ?? null,
+            // the points and the summary written by the AI, in the reader's language, shown when the reader
+            // asks for them: {points: ['...'] | null, summary: '...' | null, model}, null when the AI could
+            // not write them (see ai-ways.js). Absent from the briefings made before 15.10.2026
+            ai: ais[i].status === 'fulfilled' ? ais[i].value ?? null : null,
+            topic: summary?.topic ?? null,
+            sourcing: summary?.sourcing ?? null,
+            // the words the article itself used to say it has no confirmation
+            hedged: hedgedBy(lead.title, lead.description),
+            // someone named who denies the news, in the words of one of its articles:
+            // [{by, sentence, translation, language, source, url, publishedAt}]
+            contested: denials,
+            // news of the same affair telling something the card does not, the closest first (see
+            // anglesOf): [{title, titleTranslation, url, source, language, publishedAt, media, ...}]
+            angles: angles.get(story.storyId) ?? [],
+            // the posts where a party of the news said it itself, on its website or an open account of
+            // its own (see official-sources.js): [{party, title, url, channel, publishedAt}]; then its
+            // statements one of the card's articles reports (channel 'reported': title the sentence,
+            // translation, language, source the medium). Absent from the briefings made before 12.10.2026.
+            // A statement the denials of the card quote already is left out (see withoutDenied)
+            official: withoutDenied(official.get(story.storyId) ?? [], denials),
+            // the people and organisations most of its articles name, each opening its page (see
+            // card-names.js): [{name, qid, kind}], qid null for a name Wikidata does not have as one item.
+            // Absent from the briefings made before 13.10.2026
+            names: names.get(story.storyId) ?? [],
+            // the countries of who and where it names, the main first (see countries.js): codes ISO 3166-1
+            // ("ZM"), for a reader who does not know them. Absent from the briefings made before 18.10.2026
+            countries: named.get(story.storyId)?.countries ?? [],
+            // the picture of its lead article when it has one, else of its newest article with one;
+            // and the site it is of, shown under it. None: its illustration, credited to its author
+            ...withIllustration(pictureOf([lead, ...members], content, pictureSizes), illustrations.get(story.storyId)),
+            // every picture of its articles that loads, with its size when known: [{url, source, width, height}],
+            // the ones the reader can choose among for the e-mail (see storyPictures). Absent from the
+            // briefings made before 29.10.2026
+            pictures: cardPictures.get(story.storyId).filter(picture => pictureSizes.get(picture.thumbnail) !== null)
+                .map(picture => ({url: picture.thumbnail, source: picture.thumbnailSource, ...pictureSizes.get(picture.thumbnail)})),
+            // the picture of Wikimedia Commons of who it names (see illustrations.js): {url, width,
+            // height, page, credit, name}, null without one. Absent from the briefings made before 18.10.2026
+            illustration: illustrations.get(story.storyId) ?? null,
+            publishedAt: members[0].at?.toISOString?.() ?? null,
+            corroboration: {
+                ...corroborationOf(story.members.map(article => ({
+                    medium: mediumOfArticle(article),
+                    text: content.get(article.link)?.content ?? null,
+                    byline: content.get(article.link)?.author ?? '',
+                }))),
+                mediaNames: [...new Set(members.map(mediumOfArticle))],
+            },
+            // the ones of a trusted source first: its star was sixth of eleven, behind "show all"
+            articles: onceEach([...members].sort((a, b) => isTrusted(b, trusted) - isTrusted(a, trusted)),
+                {medium: mediumOfArticle, fromGoogle})
+                .map(article => toArticle(article, trusted)),
+        };
+    });
+    return {items, articles: analysisArticles(stories, {lead: (i) => leads[i], summary: (i) => summaryOf(i)?.summary,
+        readOf: (article) => content.get(article.link)})};
+};
+
 // hours: of news it is written from, one of WINDOWS; size: its cards, one of BRIEFING_SIZES. Exported for the benches, which write a briefing
 // without saving it (bench/briefing-relevance.mjs)
 export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) => {
@@ -746,243 +996,10 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     main.push(...spare.splice(0, Math.max(0, picked.length - main.length)));
     console.log(`Briefing: the AI chose ${chosenByAi.length} of ${candidates.length} stories, ${main.length} for the cards and ${spare.length} in reserve once the same news joined`);
 
-    // 4. and 5. the chosen stories read, then 6. their cards read once more with their summary, which
-    // says what a title may not: the ones on what the reader refuses are left out (see reviewCards).
-    // The ones of the reserve take the places of the stories that can't be read or are left out. The
-    // briefing never waits on the review failing
-    const content = new Map();
-    const titleTranslation = new Map();
-    // lead -> its title without the bait of its medium (see neutral-titles.js), the title as published when
-    // nothing was taken out; the card shows it, the lead article keeps the title as published
-    const neutralTitle = new Map();
-    // the leads whose title the AI rewrote (not only shortened by the code): the card says so and shows the title as published
-    const titleRewritten = new Set();
-    // lead -> {glossary, names}: how the card spells its names, from Wikidata and from its translated text
-    const spellings = new Map();
-    let rounds = 0;
-    const leadOf = (result) => result.story.members.find(article => article.link === result.summary?.from) ?? result.story.best;
-    const read = async (chosen) => {
-        const first = rounds++ === 0;
-        if (first) await step('reading');
-        const results = await readStories(chosen, {trusted, language, usage, content, first, step});
-        const leads = new Map(results.filter(result => !result.unreadable).map(result => [result, leadOf(result)]));
-        // a title its feed cut ("…raises…") whole from its page read, before it is translated or judged
-        for (const lead of leads.values()) lead.title = wholeTitle(lead.title, content.get(lead.link)?.title, mediumOfArticle(lead));
-        // the names the text of each card writes once translated, and how Wikidata spells them: a title is translated
-        // with them (a name alone in a title was guessed "Frapar", with its first name in the text "Frappart")
-        for (const [result, lead] of leads) {
-            const text = [result.summary?.translation, result.summary?.pointsTranslation, result.summary?.digestTranslation].filter(Boolean).join('\n');
-            spellings.set(lead, {glossary: result.glossary ?? [], names: [...new Set([...(result.names ?? []), ...namesIn(text)])]});
-        }
-        // the titles without the bait of their medium ("Information incroyable !", the user, 03.11.2026): one call
-        // for all, before they are translated, a translation is of the title shown. Never fails the briefing
-        const published = [...leads.values()];
-        (await neutralTitles(published.map(lead => lead.title), usage.titling)).forEach((title, i) => neutralTitle.set(published[i], title));
-        const shownTitle = (lead) => neutralTitle.get(lead) ?? lead.title;
-        const leftOut = await reviewCards(wanted, [...leads].map(([result, lead]) => ({
-            id: String(result.story.storyId),
-            title: lead.title,
-            summary: result.summary?.summary ?? null,
-        })), usage.reviewing, {interests: interests.map(interest => interest.text), refused: profile.refused ?? []}).catch(err => {
-            console.error(`Briefing: the cards were not read again (${err.message})`);
-            return new Map();
-        });
-        // The titles with a judgment of their medium inside the sentences rewritten by the AI, the cards kept only (the user,
-        // 03.11.2026): the AI judges which need it, rewrites them, and a second opinion keeps only the rewrites that tell
-        // exactly the same fact (see aiRewrittenTitles). The title as published stays in titleAsPublished. Never fails the briefing
-        const kept = [...leads].filter(([result]) => !leftOut.has(String(result.story.storyId)));
-        const rewrites = await aiRewrittenTitles(kept.map(([result, lead]) => ({title: shownTitle(lead), passages: textOf(result.summary?.summary), language: writtenIn(lead.lang)})),
-            {judging: usage.titling, rewriting: usage.titleRewriting, verifying: usage.titleRewriting}).catch(err => {
-            console.error(`Briefing: the titles were not rewritten (${err.message})`);
-            return new Map();
-        });
-        kept.forEach(([, lead], i) => {
-            if (!rewrites.has(i)) return;
-            console.log(`Briefing ${briefingId}: title rewritten by the AI: "${lead.title}" -> "${rewrites.get(i)}"`);
-            neutralTitle.set(lead, rewrites.get(i));
-            titleRewritten.add(lead);
-        });
-        // and the titles written in another language than the reader's translated, as their passages
-        const foreign = kept.map(([, lead]) => lead).filter(lead => lead.lang && lead.lang !== language && writtenIn(lead.lang) && writtenIn(language));
-        const translations = foreign.length === 0 ? [] : await translateTexts(foreign.map(lead => ({text: shownTitle(lead), from: writtenIn(lead.lang), ...spellings.get(lead)})),
-            writtenIn(language), usage.summarizing);
-        foreign.forEach((lead, i) => titleTranslation.set(lead, translations[i]));
-        if (leftOut.size > 0) console.log(`Briefing: ${leftOut.size} cards on what the reader refuses left out (${[...leftOut.values()].join(' / ')})`);
-        return results.map(result => ({...result, leftOut: leftOut.get(String(result.story.storyId)) ?? null}));
-    };
-    const {cards, unreadable, leftOut} = await readableCards(main, spare, read);
-    if (unreadable + leftOut > 0) console.log(`Briefing: ${unreadable} chosen stories could not be read and ${leftOut} were left out, ${cards.filter(card => card.story.reserve).length} of the reserve took their place`);
-    const stories = cards.map(card => card.story);
-    const summaryOf = (i) => cards[i].summary;
-    const leads = cards.map(leadOf);
-    // 7. the other angles of the cards, their official sources, the people and organisations they name
-    // and the AI version of their points and summary. The news of what the profile follows are not
-    // read here: the tab of the page asks for them when it is opened (see BriefingService.following).
-    // The briefing never waits on any of them failing
-    await step('angles');
-    // the denials of the cards, named as their official sources are (see withDenialsNamed)
-    const denied = new Map();
-    const [angles, official, named, ais] = await Promise.all([
-        anglesOf(stories, leads.map(lead => lead.title), {language, feedUrls, hours, trusted, usage: usage.angles}).catch(err => {
-            console.error(`Briefing: no other angle looked for (${err.message})`);
-            return new Map();
-        }),
-        officialSourcesOf(stories.map((story, i) => ({
-            id: story.storyId,
-            title: leads[i].title,
-            titleTranslation: titleTranslation.get(leads[i]) ?? null,
-            titles: cardTitles(story, leads[i].title),
-            text: textOf(summaryOf(i)?.digest ?? summaryOf(i)?.summary ?? leads[i].description).slice(0, OFFICIAL_TEXT),
-            first: new Date(Math.min(...story.members.map(article => article.at?.getTime?.() ?? Date.now()))).toISOString(),
-            // its articles read, for the statements of its parties they report (see statements.js)
-            texts: [leads[i], ...story.members.filter(article => article !== leads[i])].filter(article => content.has(article.link))
-                .map(article => ({...toArticle(article), page: content.get(article.link), lead: article === leads[i]})),
-            denials: summaryOf(i)?.contested ?? [],
-        })), usage.official, {language, denied}).catch(err => {
-            console.error(`Briefing: no official source looked for (${err.message})`);
-            return new Map();
-        }),
-        namesAndCountriesOfCards(stories.map((story, i) => ({storyId: story.storyId, ids: story.members.map(article => article.id),
-            media: [...new Set(story.members.map(mediumOfArticle))], topic: summaryOf(i)?.topic ?? null,
-            titles: [...new Set(story.members.map(article => article.title).filter(Boolean))],
-            // what the card says, in the language of its lead: a name it spells out ("Fédération malgache de football
-            // (FMF)") tells a name the check sent away (see name-check.js)
-            text: [summaryOf(i)?.digest, summaryOf(i)?.summary, summaryOf(i)?.points].filter(Boolean).join('\n'), language: leads[i].lang ?? null,
-            sites: story.members.map(article => siteOf(article))})), {usage: usage.naming}).catch(err => {
-            console.error(`Briefing: the names of the cards were not read (${err.message})`);
-            return new Map();
-        }),
-        // asked for by the reader only (see ai-ways.js), two calls a card: of the cards kept only, not of
-        // every story read (the ones unreadable or left out by reviewCards were paid for too)
-        mapWithConcurrency(stories, AI_CONCURRENCY, (story, i) => summaryOf(i)
-            ? aiWaysOf(leads[i].title, content.get(summaryOf(i).from), {language, usage: usage.writing}).catch(() => null)
-            : null),
-    ]);
-    const names = new Map([...named].map(([storyId, card]) => [storyId, card.names]));
-    // the picture Wikimedia Commons has of who most of its articles name, for a card none of its articles
-    // gives one to, and as a choice in the e-mail (see illustrations.js). The briefing never waits on it
-    // failing
-    const illustrations = await illustrationsOf(names).catch(err => {
-        console.error(`Briefing: no illustration looked for (${err.message})`);
-        return new Map();
-    });
-    // the size of the pictures of every card's articles: the card shows the sharpest, the e-mail offers them
-    // all (see pictureOf). Never fails the briefing: without sizes a card keeps the order of its articles
-    const cardPictures = new Map(stories.map((story, i) => [story.storyId,
-        candidatePictures([leads[i], ...[...story.members].sort((a, b) => b.at - a.at)], content)]));
-    const pictureSizes = await sizesOf([...cardPictures.values()].flat().map(picture => picture.thumbnail)).catch(err => {
-        console.error(`Briefing: the pictures were not measured (${err.message})`);
-        return new Map();
-    });
-    await step(null);
-    console.log(`Briefing ${briefingId}: tokens ${JSON.stringify(usage)}, seconds ${JSON.stringify(seconds)}`);
-
-    const items = stories.map((story, i) => {
-        const summary = summaryOf(i);
-        const lead = leads[i];
-        // two deniers at most, the ones of two different bodies (see withDenialsNamed); as found when the official
-        // sources were not read
-        const denials = shownDenials(denied.get(story.storyId) ?? summary?.contested);
-        const members = [...story.members].sort((a, b) => b.at - a.at);
-
-        return {
-            storyId: story.storyId,
-            mergedStoryIds: story.mergedStoryIds ?? [],   // cards of the same news joined to this one
-            // a card of a briefing of the last days it follows (see repeats.js): {storyId, title, shownAt,
-            // evolved}, evolved when it is that story with news since, else a new step of its affair
-            followUp: story.followUp ?? null,
-            vote: null,                                    // the thumb of the reader, 'up' or 'down'
-            // the feeds its articles came from: a refused card is blamed on them (utils/feedback.js),
-            // never on a search of Google News, which is the interest itself
-            feedUrls: [...new Set(story.members.map(article => article.feed_url).filter(url => url && !isGoogleNewsUrl(url)))],
-            // without the bait of its medium when it had some (see neutral-titles.js), the title of the lead article
-            // as published then in titleAsPublished; absent from the briefings made before 03.11.2026
-            title: neutralTitle.get(lead) ?? lead.title,
-            titleAsPublished: neutralTitle.has(lead) && neutralTitle.get(lead) !== lead.title ? lead.title : null,
-            // true when the AI rewrote the title (a judgment inside its sentences), after checking it tells the same fact; false
-            // when the code only took a teaser out of it. Absent from the briefings made before 03.11.2026
-            titleRewritten: titleRewritten.has(lead),
-            // the article of the title and of the passages, the one the card sends to read: the reader
-            // could not tell which of its articles the passages were of
-            lead: toArticle(lead, trusted),
-            // the title in the language of the reader when it is written in another, and that language
-            titleTranslation: titleTranslation.get(lead) ?? null,
-            language: lead.lang ?? null,
-            // the sentence the choice wrote from the title as written: its names spelled as the card spells them
-            why: alignNames(story.why, spellingsOf(spellings.get(lead)), lead.title),
-            interest: story.interest,
-            // the project of the profile it was chosen for (see readerText), null for the profile itself
-            project: story.project ?? null,
-            // the key sentences of the article as published, a paragraph per passage (see extract.js)
-            summary: summary?.summary ?? null,
-            // a card is read (see readableCards): without passages, the AI failed on its article
-            summaryError: summary ? null : 'The passages of its article could not be chosen: the AI did not answer.',
-            // their machine translation, when the article is not in the language of the reader
-            translation: summary?.translation ?? null,
-            // the shorter ways the reader can choose, of the same sentences (see shorterWays): the most
-            // important ones a paragraph each, and the ones of 5 to 6 lines; with their translation.
-            // Absent from the briefings made before 12.10.2026
-            points: summary?.points ?? null,
-            pointsTranslation: summary?.pointsTranslation ?? null,
-            digest: summary?.digest ?? null,
-            digestTranslation: summary?.digestTranslation ?? null,
-            // the points and the summary written by the AI, in the reader's language, shown when the reader
-            // asks for them: {points: ['...'] | null, summary: '...' | null, model}, null when the AI could
-            // not write them (see ai-ways.js). Absent from the briefings made before 15.10.2026
-            ai: ais[i].status === 'fulfilled' ? ais[i].value ?? null : null,
-            topic: summary?.topic ?? null,
-            sourcing: summary?.sourcing ?? null,
-            // the words the article itself used to say it has no confirmation
-            hedged: hedgedBy(lead.title, lead.description),
-            // someone named who denies the news, in the words of one of its articles:
-            // [{by, sentence, translation, language, source, url, publishedAt}]
-            contested: denials,
-            // news of the same affair telling something the card does not, the closest first (see
-            // anglesOf): [{title, titleTranslation, url, source, language, publishedAt, media, ...}]
-            angles: angles.get(story.storyId) ?? [],
-            // the posts where a party of the news said it itself, on its website or an open account of
-            // its own (see official-sources.js): [{party, title, url, channel, publishedAt}]; then its
-            // statements one of the card's articles reports (channel 'reported': title the sentence,
-            // translation, language, source the medium). Absent from the briefings made before 12.10.2026.
-            // A statement the denials of the card quote already is left out (see withoutDenied)
-            official: withoutDenied(official.get(story.storyId) ?? [], denials),
-            // the people and organisations most of its articles name, each opening its page (see
-            // card-names.js): [{name, qid, kind}], qid null for a name Wikidata does not have as one item.
-            // Absent from the briefings made before 13.10.2026
-            names: names.get(story.storyId) ?? [],
-            // the countries of who and where it names, the main first (see countries.js): codes ISO 3166-1
-            // ("ZM"), for a reader who does not know them. Absent from the briefings made before 18.10.2026
-            countries: named.get(story.storyId)?.countries ?? [],
-            // the picture of its lead article when it has one, else of its newest article with one;
-            // and the site it is of, shown under it. None: its illustration, credited to its author
-            ...withIllustration(pictureOf([lead, ...members], content, pictureSizes), illustrations.get(story.storyId)),
-            // every picture of its articles that loads, with its size when known: [{url, source, width, height}],
-            // the ones the reader can choose among for the e-mail (see storyPictures). Absent from the
-            // briefings made before 29.10.2026
-            pictures: cardPictures.get(story.storyId).filter(picture => pictureSizes.get(picture.thumbnail) !== null)
-                .map(picture => ({url: picture.thumbnail, source: picture.thumbnailSource, ...pictureSizes.get(picture.thumbnail)})),
-            // the picture of Wikimedia Commons of who it names (see illustrations.js): {url, width,
-            // height, page, credit, name}, null without one. Absent from the briefings made before 18.10.2026
-            illustration: illustrations.get(story.storyId) ?? null,
-            publishedAt: members[0].at?.toISOString?.() ?? null,
-            corroboration: {
-                ...corroborationOf(story.members.map(article => ({
-                    medium: mediumOfArticle(article),
-                    text: content.get(article.link)?.content ?? null,
-                    byline: content.get(article.link)?.author ?? '',
-                }))),
-                mediaNames: [...new Set(members.map(mediumOfArticle))],
-            },
-            // the ones of a trusted source first: its star was sixth of eleven, behind "show all"
-            articles: onceEach([...members].sort((a, b) => isTrusted(b, trusted) - isTrusted(a, trusted)),
-                {medium: mediumOfArticle, fromGoogle})
-                .map(article => toArticle(article, trusted)),
-        };
-    });
+    const {items, articles} = await completeCards({main, spare}, {briefingId, step, seconds, usage, wanted, interests, profile, language, trusted, feedUrls, hours});
     // the analysis of the cards that merit one, from their articles read whole: written after the
     // briefing is shown (it reasons for a minute or more a card, see card-analysis.js), never awaited
-    if (briefingId) analyze(briefingId, items, analysisArticles(stories, {lead: (i) => leads[i], summary: (i) => summaryOf(i)?.summary,
-        readOf: (article) => content.get(article.link)}), language);
+    if (briefingId) analyze(briefingId, items, articles, language);
     // the words an article of another language says it has no confirmation with, in the reader's language
     return withHedgedTranslated(items, language, usage.summarizing).catch(() => items);
 };
@@ -1478,6 +1495,95 @@ export const importedCard = async (address, page, {language, usage}) => {
     };
 };
 
+// The days back the story of a news the reader adds is looked for in
+const IMPORT_DAYS = 7;
+
+// An address without what only tells where the reader came from (utm_source, fbclid...), and without its fragment: the same page.
+// A link pasted from a post carries them, our news have none. Other parameters can tell the page and stay. Exported for the tests
+const TRACKING = /^(utm_[a-z]+|fbclid|gclid|mc_cid|mc_eid|igshid|ocid|cmpid|xtor|at_medium|at_campaign)$/i;
+export const withoutTracking = (link) => {
+    try {
+        const url = new URL(link);
+        for (const name of [...url.searchParams.keys()]) if (TRACKING.test(name)) url.searchParams.delete(name);
+        url.hash = '';
+        return url.href;
+    } catch {
+        return link;
+    }
+};
+
+// A news the reader adds to a briefing (by its link, or from the tab of the names followed), made a card by the steps of
+// a briefing (the user, 03.11.2026: "ajoute le process complet de briefing", see completeCards): its page read, its key
+// passages chosen and translated, its title made neutral, the other angles, the official sources, the denials, the people and
+// organisations it names, their countries, the pictures, the AI versions. When we hold the news already (the ones of the names
+// followed are, and the pages of the media we read), it is read with the story it is in and the media that tell it, which the
+// angles, the people named and "who tells it" are made from; it is the lead of the card. A page of another site is a story of
+// its own page: no other media, no angle, no name stored for it. Not reviewed against what the reader refuses (they chose it).
+// links: its address as the reader gave it and as the page knows it; shown: the stories of the cards of the briefing, which are no
+// angle of it; feedUrls, trusted, hours: the profile's and the briefing's, as the briefing was written with.
+// Answers {card, item, articles}: the card (no id yet, of no story), the same with the id of its story (or -1) and the articles of
+// each read whole, for its analysis (see analyseAdded). 422 when the page could not be read
+export const importedCardOf = async ({address, links, language, usage, feedUrls = [], trusted = new Set(), hours = 48, shown = []}) => {
+    const since = new Date(Date.now() - IMPORT_DAYS * 24 * 3600e3);
+    links = [...new Set([...links, ...links.map(withoutTracking)])];
+    const held = await StoryModel.articlesOfLinks(links).catch(err => {
+        console.error(`Briefing: the news added was not looked for in our news (${err.message})`);
+        return [];
+    });
+    const known = held.find(article => links.includes(article.link) || links.includes(article.resolved_link)) ?? held[0] ?? null;
+    let lead = known;
+    let members = known ? [known] : [];
+    if (known?.id_story) {
+        const story = await StoryModel.storyArticles({storyIds: [known.id_story], feedUrls, since}).catch(() => []);
+        // the news added itself even when its feed is not one of the reader's
+        members = story.some(article => article.link === known.link) ? story : [known, ...story];
+        lead = members.find(article => article.link === known.link);
+    }
+    if (!lead) {
+        const [page] = await Crawlers.Pages([address]);
+        if (!page?.content || !canSummarize(page.content)) {
+            throw Object.assign(new Error('This page could not be read: no article in it, a paywall or a protected site.'), {status: 422});
+        }
+        const title = cleanTitle((page.title || page.description || address).replace(/\s+/g, ' ').trim(), mediumOf(hostOf(address) ?? ''));
+        lead = {id: null, id_story: null, link: address, resolved_link: null, source_url: null, feed_url: null, medium: mediumOf(hostOf(address) ?? ''),
+            title, description: page.description ?? '', thumbnail: /^https?:\/\//i.test(page.thumbnail ?? '') ? page.thumbnail : null,
+            lang: languageOf(`${title} ${page.content.slice(0, 2000)}`) ?? null, at: page.publishedAt ? new Date(page.publishedAt) : new Date()};
+        members = [lead];
+    }
+    const story = {storyId: known?.id_story ?? -1, best: lead, lead, members, mergedStoryIds: []};
+    const {items, articles} = await completeCards({main: [story]}, {label: 'news added', usage, language, trusted, feedUrls, hours, review: false, alsoShown: shown});
+    if (items.length === 0) {
+        throw Object.assign(new Error('This page could not be read: no article in it, a paywall or a protected site.'), {status: 422});
+    }
+    const [item] = await withHedgedTranslated(items, language, usage.summarizing).catch(() => items);
+    // what was for the briefing only (why chosen, the interest, the project, the follow-up, the thumb, the feeds blamed for a refusal) is not
+    // the card's, as for a card copied from another briefing (see transferredCard)
+    return {card: {...item, imported: true, mergedStoryIds: [], why: null, interest: null, project: null, followUp: null, vote: null, feedUrls: []}, item, articles};
+};
+
+// The cards of a briefing opened again for the analysis of a card added (see analyseAdded): the same full set of usage counters
+// as a briefing's, since completeCards counts the tokens of each of its steps
+const usageOfAdded = () => Object.fromEntries(['summarizing', 'contesting', 'reviewing', 'angles', 'official', 'naming', 'titling', 'titleRewriting', 'writing']
+    .map(step => [step, newUsage()]));
+
+// The analysis of a card added to a ready briefing (see cardAnalyses): written after the card is shown, as the briefing's own are
+// (it reasons for a minute or more), and saved on the briefing, which the page reads again while it runs. 'storyId': the id of the
+// card in the briefing, 'item' the card with the id of its story (the thread of its affair gives its timeline), 'articles' the
+// articles of each. The AI may find that it merits none, as for the cards of a briefing. Never fails: the card stays without it
+const analyseAdded = async (userId, briefingId, storyId, item, articles, language) => {
+    const usage = newUsage();
+    let lines = null;
+    try {
+        const analysis = await cardAnalyses([item], articles, language, {usage});
+        lines = analysis.cards[item.storyId] ?? null;
+    } catch (err) {
+        console.error(`Briefing ${briefingId}: no analysis of the news added (${err.message})`);
+    }
+    await BriefingModel.finishAnalysisOfAdded(userId, briefingId, storyId, lines).catch(err =>
+        console.error(`Briefing ${briefingId}: the analysis of the news added was not saved (${err.message})`));
+    console.log(`Briefing ${briefingId}: analysis of the news added ${storyId}: ${lines ? 'written' : 'none'}, tokens ${JSON.stringify(usage)}`);
+};
+
 // The card of a news the reader copied from another of their briefings (a link they pasted from a profile of
 // theirs): the card as that briefing shows it, with its angles, denials, official sources and the rest of its
 // analysis, as a card added by the reader. What was for the other profile only (why chosen, the interest,
@@ -1609,21 +1715,38 @@ export const BriefingService = {
         const elsewhere = await cardElsewhere(userId, row.id, [...links, ...links.map(link => link.endsWith('/') ? link.slice(0, -1) : `${link}/`)], language);
         let card;
         let lines = null;
+        // the card read and completed like a briefing's, and what its analysis is written from
+        let completed = null;
+        let articles = null;
         const usage = newUsage();
+        const usages = usageOfAdded();
         if (elsewhere) {
             card = transferredCard(elsewhere.card);
             lines = elsewhere.lines;
-            // all its articles: one of them already on a card of this briefing is this news there
-            links = [...new Set([...links, ...[card.lead, ...(card.articles ?? [])].map(article => article?.url).filter(Boolean)])];
-            const known = refused(briefing.items, links);
-            if (known) throw known;
         } else {
-            const [page] = await Crawlers.Pages([address]);
-            if (!page?.content || !canSummarize(page.content)) {
-                throw Object.assign(new Error('This page could not be read: no article in it, a paywall or a protected site.'), {status: 422});
+            const profileId = row.id_profile ?? null;
+            // the sources of the profile and the media it trusts, as the briefing was written with; a news is added without them if they can't be read
+            const [feedUrls, trusted] = profileId ? await Promise.all([feedsOf(profileId).catch(() => []), FeedModel.trustedMedia(profileId).catch(() => [])]) : [[], []];
+            try {
+                ({card, item: completed, articles} = await importedCardOf({address, links: [...links, ...links.map(link => link.endsWith('/') ? link.slice(0, -1) : `${link}/`)],
+                    language, usage: usages, feedUrls, trusted: new Set(trusted), hours: row.hours ?? DEFAULT_HOURS,
+                    shown: briefing.items.filter(item => item.storyId > 0).flatMap(item => [item.storyId, ...(item.mergedStoryIds ?? [])])}));
+            } catch (err) {
+                if (err.status) throw err;
+                // a step of the briefing failing must not lose the news: it is added as read from its page, as it was before the full steps
+                console.error(`Briefing ${row.id}: the news added was not completed like a card (${err.message}), added as read from its page`);
+                const [page] = await Crawlers.Pages([address]);
+                if (!page?.content || !canSummarize(page.content)) {
+                    throw Object.assign(new Error('This page could not be read: no article in it, a paywall or a protected site.'), {status: 422});
+                }
+                card = await importedCard(address, page, {language, usage});
+                completed = null;
             }
-            card = await importedCard(address, page, {language, usage});
         }
+        // all its articles: one of them already on a card of this briefing is this news there
+        links = [...new Set([...links, ...[card.lead, ...(card.articles ?? [])].map(article => article?.url).filter(Boolean)])];
+        const known = refused(briefing.items, links);
+        if (known) throw known;
         const storyId = await BriefingModel.addItem(userId, row.id, card, {max: MAX_IMPORTED, links});
         if (storyId === null) {
             // another news added meanwhile filled it or was this one, else the briefing is gone
@@ -1635,11 +1758,17 @@ export const BriefingService = {
             console.error(`Briefing ${row.id}: the analysis of the news copied was not saved (${err.message})`);
             return 0;
         });
+        // a news read like a card has its analysis written like one, after the answer: the page reads it again while it runs
+        const analysing = completed && !elsewhere ? await BriefingModel.startAnalysisOfAdded(userId, row.id, storyId).catch(err => {
+            console.error(`Briefing ${row.id}: the analysis of the news added was not started (${err.message})`);
+            return 0;
+        }) === 1 : false;
+        if (analysing) analyseAdded(userId, row.id, storyId, completed, articles, language);
         console.log(elsewhere
             ? `Briefing ${row.id}: news copied by its link from the card of the briefing ${elsewhere.briefingId}${analysed ? ', with its analysis' : ''}`
-            : `Briefing ${row.id}: news added by its link, tokens ${JSON.stringify(usage)}`);
+            : `Briefing ${row.id}: news added by its link, tokens ${JSON.stringify(completed ? usages : usage)}`);
         const [item] = withMarks({items: [{...card, storyId}]}, await EntityService.followTerms(row.id_profile ?? null, profile?.watch_terms)).items;
-        return {item, analysis: analysed ? lines : null};
+        return {item, analysis: analysed ? lines : null, analyzing: analysing};
     },
 
     // a news the reader added taken out of the briefing

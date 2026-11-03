@@ -25,7 +25,28 @@ jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 jest.unstable_mockModule('../../services/entity-service.js', () => ({EntityService: {
     followTerms: async (profileId, words) => (words ?? []).map(word => ({label: word, qid: null, names: [word]})),
 }}));
-jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel: {ofUser, addItem, removeItem, cardOfLinks, addAnalysisLines, articlePictures: jest.fn(async () => []), markSent: jest.fn(async () => 1)}}));
+const startAnalysisOfAdded = jest.fn(async () => 1);
+const finishAnalysisOfAdded = jest.fn(async () => 1);
+jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel: {ofUser, addItem, removeItem, cardOfLinks, addAnalysisLines, startAnalysisOfAdded, finishAnalysisOfAdded,
+    articlePictures: jest.fn(async () => []), markSent: jest.fn(async () => 1)}}));
+// the news we hold, and the steps of a briefing a news added goes through (see importedCardOf): the AI, Wikidata and the network are not asked
+const articlesOfLinks = jest.fn(async () => []);
+const storyArticles = jest.fn(async () => []);
+jest.unstable_mockModule('../../models/story-model.js', () => ({StoryModel: {articlesOfLinks, storyArticles, earlierInThreads: jest.fn(async () => [])}}));
+const ollama = await import('../../services/utils/ollama.js');
+jest.unstable_mockModule('../../services/utils/ollama.js', () => ({...ollama, ollamaJson: jest.fn(async () => ({}))}));
+jest.unstable_mockModule('../../services/utils/contested.js', () => ({contestedOf: jest.fn(async () => []), shownDenials: jest.fn(denials => denials ?? []), withoutDenied: jest.fn(posts => posts)}));
+jest.unstable_mockModule('../../services/utils/card-spellings.js', () => ({glossariesOfStories: jest.fn(async () => new Map())}));
+const namesAndCountriesOfCards = jest.fn(async (cards) => new Map(cards.map(card => [card.storyId, {names: [{name: 'SBB', qid: 'Q1', kind: 'organization'}], countries: ['CH']}])));
+jest.unstable_mockModule('../../services/utils/card-names.js', () => ({namesAndCountriesOfCards}));
+const officialSourcesOf = jest.fn(async (cards) => new Map(cards.map(card => [card.id, [{party: 'SBB', title: 'Statement', url: 'https://sbb.example/s', channel: 'website'}]])));
+jest.unstable_mockModule('../../services/utils/official-sources.js', () => ({officialSourcesOf}));
+jest.unstable_mockModule('../../services/utils/illustrations.js', () => ({illustrationsOf: jest.fn(async () => new Map())}));
+jest.unstable_mockModule('../../services/utils/picture-sizes.js', () => ({sizesOf: jest.fn(async () => new Map())}));
+const analysesOf = jest.fn(async (cards) => ({picked: cards.map(card => ({storyId: card.storyId, reason: 'a decisive news'})),
+    cards: Object.fromEntries(cards.map(card => [card.storyId, {why: ['Why it matters.'], next: [], dropped: 0}]))}));
+const cardAnalysis = await import('../../services/utils/card-analysis.js');
+jest.unstable_mockModule('../../services/utils/card-analysis.js', () => ({...cardAnalysis, analysesOf}));
 jest.unstable_mockModule('../../models/user-model.js', () => ({UserModel: {email: jest.fn(async () => ({email: 'reader@example.test', username: 'lecteur'}))}}));
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: {get: jest.fn(async () => ({name: 'Roberto', text: 'Je lis en français.', languages: ['fr'], watch_terms: ['SBB']}))}}));
 jest.unstable_mockModule('../../services/utils/mailer.js', () => ({sendMail, mailEnabled: () => true}));
@@ -34,16 +55,26 @@ const aiWaysOf = jest.fn(async () => null);
 jest.unstable_mockModule('../../services/utils/ai-ways.js', () => ({aiWaysOf}));
 const extract = await import('../../services/utils/extract.js');
 jest.unstable_mockModule('../../services/utils/extract.js', () => ({...extract, extractArticle, translateTexts}));
-const {BriefingService} = await import('../../services/briefing-service.js');
+const {BriefingService, withoutTracking} = await import('../../services/briefing-service.js');
 
+// the cards the people and organisations were asked for, from the last call
+const namesAndCardsAsked = () => namesAndCountriesOfCards.mock.calls.at(-1)[0];
 const card = (storyId, url) => ({storyId, title: `Story ${storyId}`, summary: 'A passage.', lead: {source: 'media.fr', url, language: 'fr'}, articles: []});
 const row = {id: 7, id_profile: 3, status: 'ready', hours: 24, finished_at: new Date('2026-10-13T06:00:00Z'), items: [card(1, 'https://media.fr/1')]};
 const page = {url: 'https://news.example/strike', title: 'SBB: train strike on Monday', description: 'Trains stop.', thumbnail: 'https://news.example/p.jpg',
-    publishedAt: '2026-10-13T05:00:00Z', content: 'word '.repeat(200), blocks: []};
+    publishedAt: '2026-10-13T05:00:00Z', blocks: [],
+    // a page in English, whose language the card is said to be written in
+    content: 'The trains of the Swiss railways will stop on Monday because of a strike by the staff of the company. '.repeat(10)};
 
 beforeEach(() => {
     ofUser.mockReset().mockResolvedValue(row);
     addItem.mockClear();
+    articlesOfLinks.mockReset().mockResolvedValue([]);
+    storyArticles.mockReset().mockResolvedValue([]);
+    namesAndCountriesOfCards.mockClear();
+    startAnalysisOfAdded.mockReset().mockResolvedValue(1);
+    finishAnalysisOfAdded.mockReset().mockResolvedValue(1);
+    analysesOf.mockClear();
     cardOfLinks.mockReset().mockResolvedValue(null);
     addAnalysisLines.mockClear();
     sendMail.mockClear();
@@ -70,17 +101,85 @@ describe('BriefingService.importNews', () => {
             imported: true, title: 'SBB: train strike on Monday', titleTranslation: 'Grève des trains', language: 'en',
             summary: 'Trains will stop on Monday.', translation: 'Les trains s’arrêteront lundi.', topic: 'transport',
             lead: {url: 'https://news.example/strike', source: 'news.example', publishedAt: '2026-10-13T05:00:00.000Z'},
-            thumbnail: 'https://news.example/p.jpg', thumbnailSource: 'news.example', why: null, contested: [], angles: [], official: [],
+            why: null, interest: null, contested: [], vote: null, followUp: null, feedUrls: [], mergedStoryIds: [],
         });
-        // no count of media: nothing compared it with others
-        expect(added.corroboration).toBeUndefined();
+        // the steps of a briefing: the people and organisations it names with their countries, the official sources of its parties, the
+        // media that tell it (one: a page of another site), the key passages of the page read
+        expect(added).toMatchObject({names: [{name: 'SBB', qid: 'Q1', kind: 'organization'}], countries: ['CH'],
+            official: [{party: 'SBB', title: 'Statement'}], corroboration: {media: 1}});
+        expect(added.angles).toEqual([]);
+        // a page of another site is the story of its own page: no story of ours, the id of the card is the next negative one
+        expect(namesAndCardsAsked().map(card => card.storyId)).toEqual([-1]);
         expect(item.storyId).toBe(-1);
         // the terms the profile follows marked in it
         expect(item.marks.title).toEqual([[0, 3]]);
-        // nothing was looked for in the other briefings but a card, and none came with an analysis
+        // nothing was looked for in the other briefings but a card, and none came with an analysis from there
         expect(cardOfLinks).toHaveBeenCalledWith(4, 7, ['https://news.example/strike', 'https://news.example/strike/'], 7);
         expect(analysis).toBeNull();
         expect(addAnalysisLines).not.toHaveBeenCalled();
+    });
+
+    it('should read the news with the story it is in, and the media that tell it, when we hold it', async () => {
+        const held = (id, link, extra = {}) => ({id, id_story: 55, link, title: `SBB strike ${id}`, description: 'Trains stop.', thumbnail: null, lang: 'en',
+            feed_url: 'https://feed.example/rss', medium: 'x', source_url: null, resolved_link: null, at: new Date('2026-10-13T05:00:00Z'), ...extra});
+        articlesOfLinks.mockResolvedValue([held(101, 'https://news.example/strike')]);
+        storyArticles.mockResolvedValue([held(102, 'https://other.example/sbb'), held(101, 'https://news.example/strike')]);
+        pages.mockImplementation(async (urls) => urls.map(url => ({...page, url})));
+
+        const {item} = await BriefingService.importNews(4, 7, 'https://news.example/strike');
+
+        // the story of the news at that address, over a week, in the feeds of the reader
+        expect(storyArticles).toHaveBeenCalledWith(expect.objectContaining({storyIds: [55]}));
+        const [, , added, conditions] = addItem.mock.calls[0];
+        // read first: the news added is the lead of the card; the card has the story's media and all its links looked for in the briefing
+        expect(added.lead.url).toBe('https://news.example/strike');
+        expect(added.articles.map(article => article.url).sort()).toEqual(['https://news.example/strike', 'https://other.example/sbb']);
+        expect(added.corroboration.mediaNames.sort()).toEqual(['news.example', 'other.example']);
+        expect(conditions.links).toEqual(expect.arrayContaining(['https://news.example/strike', 'https://other.example/sbb']));
+        // the people it names are those of its story, by its articles: both
+        expect(namesAndCardsAsked().map(asked => [asked.storyId, [...asked.ids].sort()])).toEqual([[55, [101, 102]]]);
+        expect(item.storyId).toBe(-1);
+    });
+
+    it('should refuse another article of a story that is a card of this briefing already', async () => {
+        articlesOfLinks.mockResolvedValue([{id: 101, id_story: 55, link: 'https://news.example/strike', title: 'SBB strike', description: '', thumbnail: null, lang: 'en',
+            feed_url: 'https://feed.example/rss', medium: 'x', source_url: null, resolved_link: null, at: new Date('2026-10-13T05:00:00Z')}]);
+        storyArticles.mockResolvedValue([{id: 102, id_story: 55, link: 'https://media.fr/1', title: 'The same strike', description: '', thumbnail: null, lang: 'fr',
+            feed_url: 'https://feed.example/rss', medium: 'x', source_url: null, resolved_link: null, at: new Date('2026-10-13T05:00:00Z')}]);
+        await expect(BriefingService.importNews(4, 7, 'https://news.example/strike')).rejects.toMatchObject({status: 409});
+        expect(addItem).not.toHaveBeenCalled();
+    });
+
+    it('should write its analysis after the answer, and tell the page to ask for it', async () => {
+        const answer = await BriefingService.importNews(4, 7, 'https://news.example/strike');
+
+        expect(answer.analyzing).toBe(true);
+        expect(startAnalysisOfAdded).toHaveBeenCalledWith(4, 7, -1);
+        // written after the answer, saved with the id of the card in the briefing
+        await new Promise(resolve => setTimeout(resolve, 20));
+        expect(analysesOf).toHaveBeenCalledTimes(1);
+        expect(finishAnalysisOfAdded).toHaveBeenCalledWith(4, 7, -1, {why: ['Why it matters.'], next: [], timeline: []});
+    });
+
+    it('should leave the card without analysis when the briefing is not ready for one, or the AI finds it merits none', async () => {
+        startAnalysisOfAdded.mockResolvedValueOnce(0);
+        expect((await BriefingService.importNews(4, 7, 'https://news.example/strike')).analyzing).toBe(false);
+        expect(finishAnalysisOfAdded).not.toHaveBeenCalled();
+
+        analysesOf.mockResolvedValueOnce({picked: [], cards: {}});
+        await BriefingService.importNews(4, 7, 'https://news.example/strike');
+        await new Promise(resolve => setTimeout(resolve, 20));
+        expect(finishAnalysisOfAdded).toHaveBeenCalledWith(4, 7, -1, null);
+    });
+
+    it('should add the news without the people it names when that step fails, rather than lose it', async () => {
+        const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+        namesAndCountriesOfCards.mockRejectedValueOnce(new Error('wikidata down'));
+        const {item} = await BriefingService.importNews(4, 7, 'https://news.example/strike');
+        expect(item.imported).toBe(true);
+        expect(item.names).toEqual([]);
+        expect(item.summary).toBe('Trains will stop on Monday.');
+        error.mockRestore();
     });
 
     it('should refuse a news already on a card, a private address, and a page with no article, adding nothing', async () => {
@@ -188,6 +287,21 @@ describe('BriefingService.importNews of a news another briefing of the reader ha
         const {item} = await BriefingService.importNews(4, 7, 'https://news.example/strike');
         expect(pages).toHaveBeenCalled();
         expect(item.imported).toBe(true);
+    });
+});
+
+describe('withoutTracking', () => {
+    it('should take out what only tells where the reader came from, and keep what tells the page', () => {
+        expect(withoutTracking('https://news.example/strike?utm_source=x&utm_medium=post&fbclid=abc#comments')).toBe('https://news.example/strike');
+        expect(withoutTracking('https://news.example/read?id=5&utm_campaign=y')).toBe('https://news.example/read?id=5');
+        expect(withoutTracking('https://news.example/strike')).toBe('https://news.example/strike');
+        expect(withoutTracking('not an address')).toBe('not an address');
+    });
+
+    it('should look for our news at the address without tracking too, so a link pasted from a post finds its story', async () => {
+        pages.mockImplementation(async (urls) => urls.map(url => ({...page, url})));
+        await BriefingService.importNews(4, 7, 'https://news.example/strike?utm_source=x');
+        expect(articlesOfLinks.mock.calls[0][0]).toEqual(expect.arrayContaining(['https://news.example/strike?utm_source=x', 'https://news.example/strike']));
     });
 });
 

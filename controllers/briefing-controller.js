@@ -59,8 +59,9 @@ export const BriefingController = {
         }
     },
 
-    // {url}: a news added to the briefing by its link, answered as its card and, when it was copied from
-    // another briefing of the reader with its analysis, that analysis (201): {item, analysis}
+    // {url}: a news added to the briefing by its link, answered as its card, read and completed like the cards of a briefing, and,
+    // when it was copied from another briefing of the reader with its analysis, that analysis (201): {item, analysis, analyzing},
+    // analyzing true when its own analysis is being written after the answer
     importNews: async (req, res) => {
         try {
             res.status(201).json(await BriefingService.importNews(req.user.id, req.params.id, req.body?.url));

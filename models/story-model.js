@@ -202,6 +202,20 @@ export const StoryModel = {
         WHERE s.id = ANY($1::int[]) AND s.id_thread IS NOT NULL
         ORDER BY o.created_at DESC`, storyIds, before),
 
+    // The news we hold at these addresses (the link of the feed or the real address of one of Google News), once per link,
+    // the ones in a story first, as storyArticles gives them: a news the reader adds to a briefing that we already read
+    // is made a card with the story it is in (see importedCardOf)
+    articlesOfLinks: async (links) => (await prisma.$queryRawUnsafe(`
+        SELECT DISTINCT ON (a.link)
+               a.id, a.id_story, a.link, a.title, a.description, a.thumbnail, a.lang, f.url AS feed_url,
+               a.medium, a.source_url, a.resolved_link,
+               COALESCE(a.published_at, a.created_at) AS at
+        FROM articles a
+        JOIN feeds f ON f.id = a.id_feed
+        WHERE a.link = ANY($1::text[]) OR a.resolved_link = ANY($1::text[])
+        ORDER BY a.link, (a.id_story IS NOT NULL) DESC, COALESCE(a.published_at, a.created_at) DESC`,
+        links)).map(article => ({...article, title: cleanTitle(article.title, article.medium)})),
+
     // the news of these stories the user can read, once per link, the newest first, their titles
     // without the name of their medium or a date at the end (see titles.js)
     storyArticles: async ({storyIds, feedUrls, since}) => (await prisma.$queryRawUnsafe(`

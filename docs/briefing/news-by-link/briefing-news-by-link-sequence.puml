@@ -1,6 +1,6 @@
 @startuml briefing-news-by-link-sequence
 !include ../../_style/sequence.iuml
-title Briefing > News by link — read, its key passages chosen, added last; taken out again
+title Briefing > News by link — read and completed like a card of the briefing, added last; taken out again
 
 actor "Reader (Admin)" as Reader
 participant "Client (React)\nAddNews, Briefing.jsx" as Client
@@ -8,6 +8,8 @@ participant "briefingRouter\n+ jwt, adminOnly, rateLimit" as Router
 participant briefingController as Controller
 participant briefingService as Briefing
 participant "publicUrl\n+ crawlers" as Read
+participant "completeCards\n(the steps of a briefing)" as Cards
+participant storyModel as Stories
 participant "extract + aiWays\n(ollama)" as AI
 participant "briefingModel\n+ profileModel" as Models
 database "PostgreSQL" as DB
@@ -24,31 +26,38 @@ note right : no address, not http(s), a private address: 400
 Briefing -> Models : ofUser(userId, briefingId)
 note right : not a ready briefing of this reader: 404
 Briefing -> Briefing : already the lead or an article of a card: 409;\n10 news added already (MAX_IMPORTED): 400
-Briefing -> Read : Crawlers.Pages([address])
-note right : a plain fetch, 20 s, 5 redirects, each one public
-alt no text, or under 60 words (canSummarize)
-    Briefing --> Client : 422 "This page could not be read"
+Briefing -> Briefing : importedCardOf(address): its address, without tracking, with or without its last slash
+Briefing -> Stories : articlesOfLinks(links), then storyArticles(story, 7 days, the feeds of the profile)
+note right : found in a story: read with the media that tell it, the news added is the lead;\nfound without a story (older than 48 h): that article alone
+opt not in our news
+    Briefing -> Read : Crawlers.Pages([address])
+    note right : a plain fetch, 20 s, 5 redirects, each one public
+    alt no text, or under 60 words (canSummarize)
+        Briefing --> Client : 422 "This page could not be read"
+    end
 end
-Briefing -> Models : ProfileModel.get(id_profile): the reader's language
-Briefing -> Briefing : importedCard(address, page, {language, usage})
-Briefing -> AI : extractArticle: the key passages, the points, the\nsummary, their translation, topic, sourcing (gemma4:31b)
+Briefing -> Cards : completeCards({main: [story]}, {review: false, alsoShown})
+Cards -> AI : the key passages, points, summary, translation, the denials,\nthe title made neutral (rewrite + second opinion), the AI version
+Cards -> Cards : the other angles, the official sources, the people and\norganisations named with their countries, the pictures
 alt no passage of a news
     Briefing --> Client : 422
 end
-Briefing -> AI : aiWaysOf: the AI version (deepseek-v4-pro:0813,\nthinking off), null when it fails
-opt the title in another language than the reader's
-    Briefing -> AI : translateTexts([title])
-end
-note right of Briefing : imported: true, no why, no story, no other media,\nno angle, denial nor official source; hedgedBy(title);\nits picture when the page gives one
+note right of Briefing : imported: true, no why, no interest, no thumb;\nthe rest as a card of the briefing. A step of the whole failing:\nthe news is added as its page alone gives it (importedCard)
 Briefing -> Models : addItem(userId, briefingId, card, {max: 10, links})
 Models -> DB : UPDATE briefings: items + the card, its storyId\nthe next negative one (-1, -2, ...), while fewer than\n10 added and none of its links (one statement)
 alt refused (another news added at the same time)
     Briefing -> Models : ofUser: read again
     Briefing --> Client : 409 (already in it), 400 (10 added) or 404
 end
+Briefing -> Models : startAnalysisOfAdded(userId, briefingId, storyId)
+note right : only when the analysis of the briefing is written;\nthe analysis is running again, the card among those picked
 Briefing -> Briefing : withMarks(card, followTerms(profile))
-Controller --> Client : 201 {item}
+Controller --> Client : 201 {item, analysis, analyzing}
 Client --> Reader : the card last, "Added by you", ticked for the e-mail
+Briefing -> AI : analyseAdded (after the answer): cardAnalyses of the card
+Briefing -> Models : finishAnalysisOfAdded(userId, briefingId, storyId, lines or null)
+Client -> Router : GET /briefing, while the analysis runs
+Client --> Reader : its analysis, when written
 
 == Taken out ==
 Reader -> Client : "Take it out"

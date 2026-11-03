@@ -104,6 +104,39 @@ export const BriefingModel = {
           AND jsonb_typeof(analysis->'cards') = 'object'`,
         briefingId, userId, storyId, JSON.stringify(lines)),
 
+    // The analysis of a ready briefing opened again for a card the reader added (the card is read and completed like the others,
+    // and its analysis is written after, see analyseImported): 'running', the card among the cards picked, 'importing' counting
+    // the cards added whose analysis is being written so that several added in a row are written together. Only when the analysis
+    // is written ('ready') or opened this way already; 1 when it is opened, 0 when it is not (the analysis of the cards of the
+    // briefing itself still running is saved whole by the server writing it, and would lose it)
+    startAnalysisOfAdded: async (userId, briefingId, storyId) => prisma.$transaction(async (tx) => {
+        const [row] = await tx.$queryRawUnsafe('SELECT analysis FROM briefings WHERE id = $1::int AND id_user = $2::int AND status = \'ready\' FOR UPDATE', briefingId, userId);
+        const analysis = row?.analysis;
+        if (!analysis || (analysis.status !== 'ready' && !(analysis.status === 'running' && analysis.importing > 0))) return 0;
+        const opened = {...analysis, status: 'running', importing: (analysis.importing ?? 0) + 1, beatAt: new Date().toISOString(),
+            picked: [...(analysis.picked ?? []), {storyId, reason: null}]};
+        await tx.$executeRawUnsafe('UPDATE briefings SET analysis = $2::jsonb WHERE id = $1::int', briefingId, JSON.stringify(opened));
+        return 1;
+    }),
+
+    // The analysis lines ({why, next, timeline}) written for such a card, or null when it merits none (taken off the cards picked);
+    // the analysis is 'ready' again once every card added has its answer. 0 when the briefing has no such analysis running
+    finishAnalysisOfAdded: async (userId, briefingId, storyId, lines) => prisma.$transaction(async (tx) => {
+        const [row] = await tx.$queryRawUnsafe('SELECT analysis, items FROM briefings WHERE id = $1::int AND id_user = $2::int FOR UPDATE', briefingId, userId);
+        const analysis = row?.analysis;
+        if (!analysis || analysis.status !== 'running' || !(analysis.importing > 0)) return 0;
+        const importing = analysis.importing - 1;
+        // the card taken out of the briefing meanwhile has no lines: the next one added would get its id and its lines
+        if (lines && !(Array.isArray(row.items) && row.items.some(card => card.storyId === storyId))) lines = null;
+        // a beat only while some are still written: an analysis ready has none (see analysisOfRow)
+        const {importing: _open, beatAt: _beat, ...rest} = analysis;
+        const done = {...rest, cards: {...(analysis.cards ?? {}), ...(lines ? {[storyId]: lines} : {})},
+            picked: (analysis.picked ?? []).filter(entry => lines || entry.storyId !== storyId),
+            ...(importing > 0 ? {status: 'running', importing, beatAt: new Date().toISOString()} : {status: 'ready'})};
+        await tx.$executeRawUnsafe('UPDATE briefings SET analysis = $2::jsonb WHERE id = $1::int', briefingId, JSON.stringify(done));
+        return 1;
+    }),
+
     // a briefing of this user, null when it is not theirs
     ofUser: async (userId, id) => prisma.briefings.findFirst({where: {id, id_user: userId}}),
 

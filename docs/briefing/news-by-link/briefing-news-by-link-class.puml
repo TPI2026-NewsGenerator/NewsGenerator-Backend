@@ -43,6 +43,9 @@ end note
 package "Business" {
     class briefingService {
         + importNews()
+        + importedCardOf()
+        + completeCards()
+        + analyseAdded()
         + importedCard()
         + removeNews()
         - readyBriefing()
