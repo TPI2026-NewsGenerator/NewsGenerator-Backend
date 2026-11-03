@@ -1,0 +1,2 @@
+# The scripts run on the Ubuntu servers: a carriage return at the end of a line (what core.autocrlf gives a Windows checkout) breaks them
+*.sh text eol=lf
