@@ -36,7 +36,9 @@ The cards sent count as read: their stories are left out of the next briefings f
   reader who can send e-mails, in the tab "What you follow" of the page of the briefing (not on the page of a club or
   a person), and only when a briefing is written: the tab says so. The bar to send the e-mail shows in that tab as in
   the one of the briefing, as soon as a story is ticked (the user, 03.11.2026: it showed nothing after the click).
-- The title of a card can be changed in the editor, and the AI can propose a neutral one ("Suggest a neutral title",
+- The title of a card is changed by default (its bait taken out, or rewritten by the AI): the editor shows the title as the medium
+  wrote it (`item.titleAsPublished`, in its language when the card is translated: it is not translated) with "Use the title as
+  published" (the user, 03.11.2026). The title can also be changed by hand, and the AI can propose a neutral one ("Suggest a neutral title",
   `MailNeutralTitle.jsx`, `POST /api/briefing/:id/stories/:storyId/neutral-title`): shown against the title word by word,
   used or kept by the reader, see [neutral titles](../README.md#a-neutral-title-on-demand).
 - The countries of a card are chosen in the editor of the e-mail: the ones found ticked or not, and any other country of
