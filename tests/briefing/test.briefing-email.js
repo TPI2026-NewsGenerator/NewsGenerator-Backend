@@ -1053,6 +1053,16 @@ describe('BriefingService.preview', () => {
         expect(markSent).not.toHaveBeenCalled();
     });
 
+    // the editor shows in it the story the reader chose, by this place (the user, 5.11.2026: a click on a story shows it)
+    it('should give each card a place of its own, which the e-mail sent does not have', async () => {
+        const {html} = await preview();
+        expect(html).toContain('<tr id="story-1">');
+        expect(html).toContain('<tr id="story-3">');
+        expect(html).not.toContain('id="story-2"');
+        await BriefingService.email(4, 7, [1, 3]);
+        expect(sendMail.mock.calls[0][0].html).not.toMatch(/id="story-/);
+    });
+
     it('should open its links in a tab of their own', async () => {
         const {html} = await preview();
         expect(html).toContain('<head><base target="_blank">');
@@ -1068,7 +1078,8 @@ describe('BriefingService.preview', () => {
         const args = [undefined, undefined, {1: 'A title of mine'}, undefined, 'points', [], undefined, undefined, 'dark', undefined, {1: {names: true}, 3: {coverage: true}}];
         const {html} = await preview(...args);
         await BriefingService.email(4, 7, [1, 3], ...args);
-        expect(previewHtml(sendMail.mock.calls[0][0].html)).toBe(html);
+        // but for the place of each card, which the editor shows the one chosen by
+        expect(previewHtml(sendMail.mock.calls[0][0].html)).toBe(html.replace(/ id="story-\d+"/g, ''));
         expect(html).toContain('A title of mine');
         expect(html).toContain('background:#1C1C1E');
     });

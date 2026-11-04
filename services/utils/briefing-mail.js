@@ -460,7 +460,7 @@ const pictureWidth = (card) => {
     const {width, height} = card.thumbnail && card.thumbnail === card.illustration?.url ? card.illustration : {};
     return width > 0 && height > width ? Math.min(560, Math.round(MAX_PICTURE_HEIGHT * width / height)) : 560;
 };
-const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH) => {
+const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH, anchor = false) => {
     const sentences = wayOf(card, format, t);
     const credit = creditOf(card, t);
     const countries = countriesOf(card, t);
@@ -470,7 +470,7 @@ const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH) =>
     // or a file of the reader joined to the e-mail (see mail-pictures.js)
     const picture = webUrl(card.thumbnail) ?? (/^cid:[\w.@-]+$/.test(card.thumbnail ?? '') ? card.thumbnail : null);
     return `
-<tr><td style="border-top:1px solid ${t.c.rule};padding:28px 0 44px">
+<tr${anchor ? ` id="story-${Number(card.storyId)}"` : ''}><td style="border-top:1px solid ${t.c.rule};padding:28px 0 44px">
   <!-- the number, countries, date and language above the title, not in a column of their own as on the
        page: on a phone the text keeps the whole width. No topic: the cards of one reader are of the same
        one, "sport" card after card (the user, 18.10.2026) -->
@@ -511,8 +511,8 @@ const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH) =>
 // shared" line, the title alone). language: the reader's, a code: its dates and the names of languages
 // are written in it; labels: the words of the e-mail in it (see labelsFor), English when not given; theme: 'light'
 // (the default) or 'dark', one of THEMES; timeZone: the one of the reader ("Europe/Paris"), the hours of its cards
-// are written in it. {subject, html, text}
-export const briefingMail = (briefing, {profile = null, sender = null, format = 'passages', language = 'en', labels = LABELS, theme = 'light', timeZone = DEFAULT_TIME_ZONE} = {}) => {
+// are written in it; anchors: each card has the id "story-<storyId>", for the preview of the editor to show the one chosen (the e-mail sent has none). {subject, html, text}
+export const briefingMail = (briefing, {profile = null, sender = null, format = 'passages', language = 'en', labels = LABELS, theme = 'light', timeZone = DEFAULT_TIME_ZONE, anchors = false} = {}) => {
     const t = toldIn(language, labels, theme, timeZone);
     const L = t.labels;
     const cards = briefing.items ?? [];
@@ -533,7 +533,7 @@ export const briefingMail = (briefing, {profile = null, sender = null, format = 
 <tr><td style="padding-bottom:28px">
   <h1 style="margin:0;font:600 38px/1.05 ${FONT};letter-spacing:-.035em;color:${t.c.ink}">${escape(title)}</h1>
 </td></tr>
-${cards.map((card, i) => cardHtml(card, i, !sender, format, t)).join('')}
+${cards.map((card, i) => cardHtml(card, i, !sender, format, t, anchors)).join('')}
 </table></td></tr></table></body></html>`;
 
     const text = [

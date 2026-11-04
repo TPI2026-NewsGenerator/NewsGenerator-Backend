@@ -1722,7 +1722,7 @@ const builtMail = async (userId, briefingId, storyIds, to, pictures, titles, rem
     const [labels, told] = await Promise.all([labelsFor(language), withHedgedTranslated(items, language)]);
     // its words left in English when the AI did not answer: its dates too, not half of it in English
     const mail = briefingMail({...briefing, items: told.map(item => inAi.has(item.storyId) ? {...item, aiVersion: true} : item)},
-        {profile: profile?.name ?? null, sender, format, language: labels === LABELS ? 'en' : language, labels, theme, timeZone: timeZone ?? undefined});
+        {profile: profile?.name ?? null, sender, format, language: labels === LABELS ? 'en' : language, labels, theme, timeZone: timeZone ?? undefined, anchors: preview});
     return {mail, attachments, address, toOther, user, row, ticked};
 };
 
