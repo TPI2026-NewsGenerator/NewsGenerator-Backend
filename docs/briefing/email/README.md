@@ -89,7 +89,7 @@ The cards sent count as read: their stories are left out of the next briefings f
 - Each card with its AI analysis when it is ready (`briefings.analysis`), in the order given, once each;
   `withOwnTitles` (300 characters at most), `withBlocks`, `withOwnTexts` (`texts: {storyId: [paragraph]}`, 20
   paragraphs of 2,000 characters at most, sent instead of the article's sentences and of the AI version
-  in the way chosen; left empty, the card's own), `withoutTakenOut` (`removed: {storyId: {contested, angles,
+  in the way chosen; left empty, the card's own), `withoutTakenOut` (`removed: {storyId: {contested, angles, names,
   official, why, next, timeline: [index]}}`; an analysis left empty is not sent), `withChosenPictures`
   (taken out, an address of the web checked by `assertPublicUrl`, or a JPEG, PNG, GIF or WebP file told by
   its first bytes, 2 MB each, 6 MB per e-mail, joined as `cid:`), then `withAffairs` (the affair of the cards that ask for it).

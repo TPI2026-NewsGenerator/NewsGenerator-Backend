@@ -349,6 +349,27 @@ describe('briefingMail', () => {
         }
     });
 
+    // "Who it is about": each name can be taken out, as the lines of the analysis and the angles are (the user, 05.11.2026)
+    it('should leave out the names of who it is about the reader took out, and the row once none is left', () => {
+        const named = card(1, 'Three names', {names: [{name: 'FIFA'}, {name: 'UEFA'}, {name: 'Infantino'}]});
+        const blocks = {1: {names: true}};
+        let {html, text} = briefingMail({...briefing, items: withBlocks(withoutTakenOut([named], {1: {names: [1]}}), blocks)});
+        expect(html).toContain('FIFA');
+        expect(html).toContain('Infantino');
+        expect(html).not.toContain('UEFA');
+        expect(text).not.toContain('UEFA');
+        expect(html).toContain('Who it is about');
+
+        ({html, text} = briefingMail({...briefing, items: withBlocks(withoutTakenOut([named], {1: {names: [0, 1, 2]}}), blocks)}));
+        for (const gone of ['Who it is about', 'FIFA', 'UEFA', 'Infantino']) {
+            expect(html).not.toContain(gone);
+            expect(text).not.toContain(gone);
+        }
+        // a card not named keeps all of them, a place that is not a number is refused
+        expect(withoutTakenOut([named], {2: {names: [0]}})[0].names).toHaveLength(3);
+        expect(() => withoutTakenOut([named], {1: {names: ['0']}})).toThrow(/names: \[index\]/);
+    });
+
     it("should write all of it in the reader's language: its words, its dates, the names of languages, what is translated", () => {
         const labels = {...LABELS, contested: 'Contesté', denies: '{by} dément :', 'topic.sport': 'sport', keyPassages: 'Passages clés',
             readAt: 'Lire l’article sur {source}', toldBy: 'raconté par {count} médias', notConfirmed: 'Non confirmé',

@@ -1413,11 +1413,11 @@ export const withOwnCountries = (items, countries) => {
     });
 };
 
-// the cards without the denials, the other angles, the official sources and the lines of their AI
-// analysis the reader took out of the e-mail, {storyId: {contested: [index], angles: [index], official:
-// [index], why: [index], next: [index], timeline: [index]}}, their places in the card (the last three in
-// item.analysis): a part left empty has no title, an analysis left empty is not sent
-const TAKEN_OUT = ['contested', 'angles', 'official'];
+// the cards without the denials, the other angles, the official sources, the names of who it is about and the lines
+// of their AI analysis the reader took out of the e-mail, {storyId: {contested: [index], angles: [index], official:
+// [index], names: [index], why: [index], next: [index], timeline: [index]}}, their places in the card (the last three
+// in item.analysis): a part left empty has no title, an analysis left empty is not sent
+const TAKEN_OUT = ['contested', 'angles', 'official', 'names'];
 const ANALYSIS_PARTS = ['why', 'next', 'timeline'];
 export const withoutTakenOut = (items, removed) => {
     if (removed === undefined || removed === null) return items;
@@ -1425,7 +1425,7 @@ export const withoutTakenOut = (items, removed) => {
     if (typeof removed !== 'object' || Array.isArray(removed) || !Object.values(removed).every(parts =>
         parts && typeof parts === 'object' && !Array.isArray(parts)
         && Object.entries(parts).every(([part, list]) => (TAKEN_OUT.includes(part) || ANALYSIS_PARTS.includes(part)) && places(list)))) {
-        throw Object.assign(new Error('removed: {storyId: {contested: [index], angles: [index], official: [index], why: [index], next: [index], timeline: [index]}}.'), {status: 400});
+        throw Object.assign(new Error('removed: {storyId: {contested: [index], angles: [index], official: [index], names: [index], why: [index], next: [index], timeline: [index]}}.'), {status: 400});
     }
     const kept = (list, out) => (list ?? []).filter((entry, index) => !(out ?? []).includes(index));
     return items.map(item => {
