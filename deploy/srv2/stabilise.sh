@@ -29,11 +29,12 @@ do_it() { if [ "$CHECK" = 1 ]; then say "   would: $*"; else say "   $*"; eval "
 
 if [ "$UNDO" = 1 ]; then
   say "== undo"
-  for f in /etc/systemd/system/srv2-power-limits.service /etc/sysctl.d/90-srv2-hang.conf /etc/modules-load.d/srv2-watchdog.conf \
-           /etc/systemd/system.conf.d/90-srv2-watchdog.conf /etc/default/grub.d/90-srv2-stability.cfg; do
+  do_it "systemctl disable srv2-power-limits.service srv2-watchdog.service 2>/dev/null; true"
+  for f in /etc/systemd/system/srv2-power-limits.service /etc/systemd/system/srv2-watchdog.service /etc/sysctl.d/90-srv2-hang.conf \
+           /etc/modules-load.d/srv2-watchdog.conf /etc/systemd/system.conf.d/90-srv2-watchdog.conf /etc/default/grub.d/90-srv2-stability.cfg; do
     [ -e "$f" ] && do_it "rm -f $f" || say "   $f: not there"
   done
-  do_it "systemctl disable srv2-power-limits.service 2>/dev/null; systemctl daemon-reload; update-grub >/dev/null 2>&1; true"
+  do_it "systemctl daemon-reload; update-grub >/dev/null 2>&1; true"
   say "   done: the power limits and the sysctl go back at the next boot, the grub lines too"
   exit 0
 fi
@@ -45,11 +46,13 @@ if [ -d "$RAPL" ]; then
     cat > /etc/systemd/system/srv2-power-limits.service <<UNIT
 [Unit]
 Description=Power limits of the processor of srv2 (35 W / 45 W, see deploy/srv2/stabilise.sh)
-After=sysinit.target
+# thermald puts its own limits back when it starts (the first reboot: 58 W / 115 W a second after this service wrote 35 / 45): after it, and a while
+After=thermald.service
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
+ExecStartPre=/bin/sleep 30
 ExecStart=/bin/sh -c 'echo $PL1_UW > $RAPL/constraint_0_power_limit_uw; echo $PL2_UW > $RAPL/constraint_1_power_limit_uw'
 
 [Install]
@@ -85,11 +88,27 @@ say "== 3. hardware watchdog"
 if ls /lib/modules/"$(uname -r)"/kernel/drivers/watchdog/iTCO_wdt.ko* >/dev/null 2>&1; then
   if [ "$CHECK" = 0 ]; then
     if modprobe iTCO_wdt 2>&1 && [ -e /dev/watchdog0 ]; then
-      echo iTCO_wdt > /etc/modules-load.d/srv2-watchdog.conf
+      # systemd-modules-load refuses a module Ubuntu blacklists ("deny-listed by kmod": the first reboot left the box without a watchdog),
+      # a modprobe by name does not: a service loads it, then systemd is restarted to open the device (it looks for it when it starts)
+      rm -f /etc/modules-load.d/srv2-watchdog.conf
+      cat > /etc/systemd/system/srv2-watchdog.service <<'UNIT'
+[Unit]
+Description=Hardware watchdog of srv2 (iTCO_wdt, blacklisted by Ubuntu), fed by systemd (see deploy/srv2/stabilise.sh)
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c '/sbin/modprobe iTCO_wdt && /bin/systemctl daemon-reexec'
+
+[Install]
+WantedBy=multi-user.target
+UNIT
       mkdir -p /etc/systemd/system.conf.d
       printf '[Manager]\nRuntimeWatchdogSec=30s\nRebootWatchdogSec=2min\n' > /etc/systemd/system.conf.d/90-srv2-watchdog.conf
+      systemctl daemon-reload
+      systemctl enable srv2-watchdog.service
       systemctl daemon-reexec
-      say "   set: /dev/watchdog0 ($(cat /sys/class/watchdog/watchdog0/identity 2>/dev/null)), fed by systemd every 30 s: a frozen box is reset by the chipset"
+      say "   set: /dev/watchdog0 ($(cat /sys/class/watchdog/watchdog0/identity 2>/dev/null)), fed by systemd every 30 s: a frozen box is reset by the chipset (loaded again at every boot by srv2-watchdog.service)"
     else
       say "   the chipset gives no watchdog (the BIOS turned its reset off: $(dmesg | grep -i -E 'iTCO|wdt' | tail -1)). A box frozen for good will still need the power button"
       rmmod iTCO_wdt 2>/dev/null
