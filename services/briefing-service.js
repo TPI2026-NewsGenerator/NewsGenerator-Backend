@@ -8,6 +8,7 @@
 
 "use strict"
 
+import {Buffer} from 'node:buffer';
 import {rss} from "../db/rss-links.js";
 import {BriefingModel} from "../models/briefing-model.js";
 import {ProfileModel} from "../models/profile-model.js";
@@ -1436,6 +1437,61 @@ export const withoutTakenOut = (items, removed) => {
     });
 };
 
+// The blocks of the e-mail the reader chose for some cards (the user, 5.11.2026), {storyId: {media, contested, official, unconfirmed, names,
+// analysis, angles, affair, coverage}}, each true or false: a card with an entry has the badges row under its title (the media that tell
+// it, who denies it, the official sources, what the article says is not confirmed), the names, the affair and the coverage the entry
+// puts in, and none of what it leaves out: the denials, the official sources, the words of the article, the analysis and the angles of a
+// block at false are taken from the card. What an entry does not say is what the page shows at first: the badge of the media, the names,
+// the affair and the coverage are off, the others on. A card with no entry is sent as it was before the blocks. The pictures and the
+// countries have their own choice (see withChosenPictures, withOwnCountries)
+export const BLOCKS = ['media', 'contested', 'official', 'unconfirmed', 'names', 'analysis', 'angles', 'affair', 'coverage'];
+const BLOCK_DEFAULTS = {media: false, contested: true, official: true, unconfirmed: true, names: false, analysis: true, angles: true, affair: false, coverage: false};
+export const withBlocks = (items, blocks) => {
+    if (blocks === undefined || blocks === null) return items;
+    const plain = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+    if (!plain(blocks) || !Object.values(blocks).every(entry => plain(entry)
+        && Object.entries(entry).every(([block, on]) => BLOCKS.includes(block) && typeof on === 'boolean'))) {
+        throw Object.assign(new Error(`blocks: {storyId: {${BLOCKS.join(', ')}}}, each true or false.`), {status: 400});
+    }
+    return items.map(item => {
+        const entry = blocks[String(item.storyId)];
+        if (!entry) return item;
+        const on = {...BLOCK_DEFAULTS, ...entry};
+        return {
+            ...item, blocks: on,
+            ...(on.contested ? {} : {contested: []}),
+            ...(on.official ? {} : {official: []}),
+            ...(on.unconfirmed ? {} : {hedged: null, hedgedTranslation: null}),
+            ...(on.analysis ? {} : {analysis: null}),
+            ...(on.angles ? {} : {angles: []}),
+        };
+    });
+};
+
+// The affair of the cards that ask for it in their blocks, as AffairService.forMail gives it (built by the AI the first time, then kept:
+// the page builds them in advance). One that cannot be built is left out of the e-mail, said in the log. Loaded when needed: the service of
+// the affairs reads this one
+export const withAffairs = async (items, userId, briefingId) => {
+    const asked = items.filter(item => item.blocks?.affair);
+    if (asked.length === 0) return items;
+    const affairs = await import('./affair-service.js').then(
+        ({AffairService}) => Promise.all(asked.map(item => AffairService.forMail(userId, briefingId, item.storyId).catch(err => {
+            console.error(`Briefing ${briefingId}: the affair of the card ${item.storyId} is not in the e-mail (${err.message})`);
+            return null;
+        }))),
+        err => {
+            console.error(`Briefing ${briefingId}: the affairs are not in the e-mail (${err.message})`);
+            return asked.map(() => null);
+        });
+    return items.map(item => asked.includes(item) ? {...item, affair: affairs[asked.indexOf(item)]} : item);
+};
+
+// The e-mail as its preview shows it: the pictures the reader joined (cid:) are in the page itself, as data, and its links open in a tab
+// of their own
+export const previewHtml = (html, attachments = []) => attachments
+    .reduce((page, file) => page.replaceAll(`cid:${file.cid}`, `data:${file.contentType};base64,${Buffer.from(file.content).toString('base64')}`), html)
+    .replace('<head>', '<head><base target="_blank">');
+
 // {row, briefing} of a ready briefing of this reader, else 404
 const readyBriefing = async (userId, briefingId) => {
     const id = Number(briefingId);
@@ -1622,6 +1678,54 @@ const cardElsewhere = async (userId, briefingId, links, language) => {
 const picturesOfItem = async (item) => storyPictures(item,
     await BriefingModel.articlePictures(item.storyId, [item.lead, ...(item.articles ?? [])].filter(Boolean).map(article => article.url)));
 
+// The e-mail of the cards ticked, built as it is sent (BriefingService.email) or shown (BriefingService.preview, which sends nothing and
+// marks nothing): {mail: {subject, html, text}, attachments, address, toOther, user, row, ticked}. See email for what its parameters are
+const builtMail = async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = [], texts = undefined, countries = undefined, theme = 'light', timeZone = undefined, blocks = undefined, {preview = false} = {}) => {
+    if (!Array.isArray(storyIds) || storyIds.length === 0 || !storyIds.every(storyId => Number.isInteger(storyId) && storyId !== 0)) {
+        throw Object.assign(new Error('storyIds: the cards ticked, one at least.'), {status: 400});
+    }
+    if (ai === null || ai === undefined) ai = [];
+    if (!Array.isArray(ai) || !ai.every(storyId => Number.isInteger(storyId))) {
+        throw Object.assign(new Error('ai: the storyIds of the cards sent in their AI version.'), {status: 400});
+    }
+    if (!MAIL_FORMATS.includes(format)) throw Object.assign(new Error(`format: one of ${MAIL_FORMATS.join(', ')}.`), {status: 400});
+    if (theme === null || theme === undefined) theme = 'light';
+    if (!THEMES.includes(theme)) throw Object.assign(new Error(`theme: one of ${THEMES.join(', ')}.`), {status: 400});
+    if (timeZone !== null && timeZone !== undefined && !isTimeZone(timeZone)) throw Object.assign(new Error('timeZone: a time zone, like Europe/Paris.'), {status: 400});
+    const typed = typeof to === 'string' ? to.trim() : to ?? '';
+    // in the preview the address is the one the reader is still typing: a wrong one is left out, not refused
+    if (!preview && typed !== '' && !isEmail(typed)) throw Object.assign(new Error(EMAIL_RULE), {status: 400});
+    const asked = typed !== '' && isEmail(typed) ? typed : '';
+    const {row, briefing} = await readyBriefing(userId, briefingId);
+    // each card with its AI analysis when it has one (see analyze), the model that wrote it with it
+    const analyses = briefing.analysis?.status === 'ready' ? briefing.analysis.cards ?? {} : {};
+    const byId = new Map(briefing.items.map(item => [item.storyId, analyses[item.storyId]
+        ? {...item, analysis: {...analyses[item.storyId], model: briefing.analysis.model}} : item]));
+    // in the order given, each card once, the ones not in this briefing left out
+    const ticked = [...new Set(storyIds)].map(storyId => byId.get(storyId)).filter(Boolean);
+    if (ticked.length === 0) throw Object.assign(new Error('None of the cards ticked is in this briefing.'), {status: 404});
+    const [user, profile] = await Promise.all([UserModel.email(userId), row.id_profile ? ProfileModel.get(row.id_profile) : null]);
+    if (!preview && !asked && !user?.email) throw Object.assign(new Error('Your account has no e-mail address.'), {status: 400});
+    const address = asked || user?.email || '';
+    const toOther = address !== '' && address.toLowerCase() !== String(user?.email ?? '').toLowerCase();
+    const sender = toOther ? user?.username ?? null : null;
+    // a picture of the story chosen is credited to its medium
+    const changed = ticked.filter(item => pictures && typeof pictures === 'object' && typeof pictures[String(item.storyId)]?.url === 'string');
+    const known = new Map((await Promise.all(changed.map(picturesOfItem))).flat().map(picture => [picture.url, picture.source]));
+    const {items: chosen, attachments} = await withChosenPictures(withOwnCountries(withOwnTexts(withBlocks(withoutTakenOut(withOwnTitles(ticked, titles), removed), blocks), texts), countries), pictures, {sender, known});
+    const items = await withAffairs(chosen, userId, briefingId);
+    // the AI version asked for a card: sent when the card has one in that way, else the card as published
+    const inAi = new Set(ai);
+    // all of it in the reader's language: the words around the cards and the ones of an article saying
+    // it has no confirmation translated as the titles are (the user, 18.10.2026)
+    const language = readerLanguage(profile ?? {});
+    const [labels, told] = await Promise.all([labelsFor(language), withHedgedTranslated(items, language)]);
+    // its words left in English when the AI did not answer: its dates too, not half of it in English
+    const mail = briefingMail({...briefing, items: told.map(item => inAi.has(item.storyId) ? {...item, aiVersion: true} : item)},
+        {profile: profile?.name ?? null, sender, format, language: labels === LABELS ? 'en' : language, labels, theme, timeZone: timeZone ?? undefined});
+    return {mail, attachments, address, toOther, user, row, ticked};
+};
+
 export const BriefingService = {
     // the news of what the profile follows, read now, 'limit' for each (one of WATCH_LIMITS): see followingNews
     following: followingNews,
@@ -1645,52 +1749,24 @@ export const BriefingService = {
     // countries: {storyId: [code]}, the countries the reader chose for some cards (see withOwnCountries);
     // theme: 'light' (the default) or 'dark', the colours of the e-mail (one of THEMES, the user, 2.11.2026);
     // timeZone: the one of the reader's browser ("Europe/Paris"), the hours of the e-mail are written in it (Zurich
-    // when not given). No copy is kept any more: the e-mail has no link to one (the user, 13.10.2026)
-    email: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = [], texts = undefined, countries = undefined, theme = 'light', timeZone = undefined) => {
-        if (!Array.isArray(storyIds) || storyIds.length === 0 || !storyIds.every(storyId => Number.isInteger(storyId) && storyId !== 0)) {
-            throw Object.assign(new Error('storyIds: the cards ticked, one at least.'), {status: 400});
-        }
-        if (ai === null || ai === undefined) ai = [];
-        if (!Array.isArray(ai) || !ai.every(storyId => Number.isInteger(storyId))) {
-            throw Object.assign(new Error('ai: the storyIds of the cards sent in their AI version.'), {status: 400});
-        }
-        if (!MAIL_FORMATS.includes(format)) throw Object.assign(new Error(`format: one of ${MAIL_FORMATS.join(', ')}.`), {status: 400});
-        if (theme === null || theme === undefined) theme = 'light';
-        if (!THEMES.includes(theme)) throw Object.assign(new Error(`theme: one of ${THEMES.join(', ')}.`), {status: 400});
-        if (timeZone !== null && timeZone !== undefined && !isTimeZone(timeZone)) throw Object.assign(new Error('timeZone: a time zone, like Europe/Paris.'), {status: 400});
-        const asked = typeof to === 'string' ? to.trim() : to ?? '';
-        if (asked !== '' && !isEmail(asked)) throw Object.assign(new Error(EMAIL_RULE), {status: 400});
-        const {row, briefing} = await readyBriefing(userId, briefingId);
-        // each card with its AI analysis when it has one (see analyze), the model that wrote it with it
-        const analyses = briefing.analysis?.status === 'ready' ? briefing.analysis.cards ?? {} : {};
-        const byId = new Map(briefing.items.map(item => [item.storyId, analyses[item.storyId]
-            ? {...item, analysis: {...analyses[item.storyId], model: briefing.analysis.model}} : item]));
-        // in the order given, each card once, the ones not in this briefing left out
-        const ticked = [...new Set(storyIds)].map(storyId => byId.get(storyId)).filter(Boolean);
-        if (ticked.length === 0) throw Object.assign(new Error('None of the cards ticked is in this briefing.'), {status: 404});
-        const [user, profile] = await Promise.all([UserModel.email(userId), row.id_profile ? ProfileModel.get(row.id_profile) : null]);
-        if (!asked && !user?.email) throw Object.assign(new Error('Your account has no e-mail address.'), {status: 400});
-        const address = asked || user.email;
-        const toOther = address.toLowerCase() !== String(user?.email ?? '').toLowerCase();
-        const sender = toOther ? user?.username ?? null : null;
-        // a picture of the story chosen is credited to its medium
-        const changed = ticked.filter(item => pictures && typeof pictures === 'object' && typeof pictures[String(item.storyId)]?.url === 'string');
-        const known = new Map((await Promise.all(changed.map(picturesOfItem))).flat().map(picture => [picture.url, picture.source]));
-        const {items, attachments} = await withChosenPictures(withOwnCountries(withOwnTexts(withoutTakenOut(withOwnTitles(ticked, titles), removed), texts), countries), pictures, {sender, known});
-        // the AI version asked for a card: sent when the card has one in that way, else the card as published
-        const inAi = new Set(ai);
-        // all of it in the reader's language: the words around the cards and the ones of an article saying
-        // it has no confirmation translated as the titles are (the user, 18.10.2026)
-        const language = readerLanguage(profile ?? {});
-        const [labels, told] = await Promise.all([labelsFor(language), withHedgedTranslated(items, language)]);
-        // its words left in English when the AI did not answer: its dates too, not half of it in English
-        const mail = briefingMail({...briefing, items: told.map(item => inAi.has(item.storyId) ? {...item, aiVersion: true} : item)},
-            {profile: profile?.name ?? null, sender, format, language: labels === LABELS ? 'en' : language, labels, theme, timeZone: timeZone ?? undefined});
+    // when not given); blocks: {storyId: {media, contested, official, unconfirmed, names, analysis, angles, affair, coverage}}, what the
+    // reader puts in the e-mail and leaves out of it for some cards (see withBlocks). No copy is kept any more: the e-mail has no link to
+    // one (the user, 13.10.2026)
+    email: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = [], texts = undefined, countries = undefined, theme = 'light', timeZone = undefined, blocks = undefined) => {
+        const {mail, attachments, address, toOther, user, row, ticked} = await builtMail(userId, briefingId, storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme, timeZone, blocks);
         await sendMail({to: address, replyTo: toOther && user?.email ? user.email : undefined, ...mail, attachments});
         // sent, they are read: their stories are left out of the next briefings (see notShownBefore). The
         // e-mail is gone already, a failure here only lets them come back
         await BriefingModel.markSent(userId, row.id, ticked.map(item => item.storyId)).catch(err =>
             console.error(`Briefing ${briefingId}: the cards sent were not marked (${err.message})`));
+    },
+
+    // The e-mail as it would be sent, the same call as email, answered as its page: {html}. The address `to` only decides whether it goes to
+    // another than the reader (their reasons for the cards are left out then): a wrong one is left out, the reader is still typing it. Nothing
+    // is sent and no story is marked as read: the editor shows it while the reader changes what is in it
+    preview: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = [], texts = undefined, countries = undefined, theme = 'light', timeZone = undefined, blocks = undefined) => {
+        const {mail, attachments} = await builtMail(userId, briefingId, storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme, timeZone, blocks, {preview: true});
+        return {html: previewHtml(mail.html, attachments)};
     },
 
     // A news the reader adds by its link to a ready briefing, to send it by e-mail with its cards. When

@@ -5,7 +5,10 @@ at the foot of the page they tick and order the cards, choose how their sentence
 key points or the summary), the AI version of a card's points or summary, the picture of each card,
 their own title, the text of its key passages, points or summary as they write it (since 20.10.2026),
 and take out the lines they do not want (a denial, an angle, an official source, a line
-of the AI analysis). The e-mail lays out what the briefing wrote, as the page shows it, all of it in the
+of the AI analysis). Since 05.11.2026 they also choose, card by card, which blocks go in: the badges (the media that
+tell it, "Contested", "Official source", "Unconfirmed", each on its own), who it is about, the AI analysis, the angles,
+the affair and the coverage (the countries and the pictures have their choice already), and see the e-mail as it will be
+sent, live (see "The blocks" and "The preview"). The e-mail lays out what the briefing wrote, as the page shows it, all of it in the
 reader's language: only its own words are translated when it is sent, once per language and kept
 (`mail_labels`).
 The cards sent count as read: their stories are left out of the next briefings for 48 hours.
@@ -21,7 +24,7 @@ The cards sent count as read: their stories are left out of the next briefings f
   analysis lines, denials, angles and official sources kept or taken out; `MailPicture.jsx` and
   `mailPictures.js`: the picture of a card, measured by the browser.
 - API: `GET /api/briefing/:id/stories/:storyId/pictures`, `POST /api/briefing/:id/stories/:storyId/neutral-title`,
-  `POST /api/briefing/:id/email` (204), all
+  `POST /api/briefing/:id/email` (204), `POST /api/briefing/:id/email/preview` (200 `{html}`), all
   for the administrators (`adminOnly(MAIL_REFUSED)`, 403); `GET /api/mails/:token` (no account), the copy
   of an e-mail sent before 13.10.2026.
 
@@ -50,19 +53,46 @@ The cards sent count as read: their stories are left out of the next briefings f
   the width of the picture in the e-mail) is put aside, a card whose own is too small gets the best other
   of its story, else none.
 - `POST /api/briefing/:id/email {storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme,
-  timeZone}`: 10 an hour per
+  timeZone, blocks}`: 10 an hour per
   IP address and 30 a day per account (`rateLimit`); the body up to 9 MB (`app.js`), for the reader's files in
   base64.
+- **The blocks** (`blocks: {storyId: {media, contested, official, unconfirmed, names, analysis, angles, affair, coverage}}`,
+  booleans, `withBlocks` in `briefing-service.js`; 400 for anything else): for a card with an entry the e-mail has a
+  **badges row** under its title (client `BriefingCard.jsx` `Glance`: a grey pill "Told by 12 media in 5 languages", then
+  "Contested" and "Unconfirmed" in orange, "Official source" in green, the tints mixed to plain colours because mail apps do
+  not all read `rgba()`), the **names** (a pill each, `item.names`), its **affair** and its **coverage**, in that order after the
+  angles, before where to read it. An entry that does not say a block has what the page shows at first: `media`, `names`,
+  `affair` and `coverage` off, `contested`, `official`, `unconfirmed`, `analysis` and `angles` on. A block at false takes
+  its data from the card (the denials, the official posts, the "not confirmed" words, the analysis, the angles), so the box and
+  the badge go together; the lines taken out (`removed`) apply on top. A card with no entry, or no `blocks`, is sent as it
+  was before: no badge, no names, no coverage, no affair. A badge is there when its block is on and the card has what it says.
+- The **coverage** (`coverageOfCard`, `services/utils/card-coverage.js`, the same count as the page's
+  `cardCoverage.js`): how many media and languages, who told it first, the hours as bars (a table cell each, the one thing every
+  mail app draws, 12 bars at most), the languages. The **affair** (`AffairService.forMail`: the view the page's tab shows and the
+  size of its thread, built by the AI the first time, 20 seconds or so, kept 3 hours; the page builds them in advance): its title,
+  its figures, then its key events one under the other, the oldest first, each with a dot (blue; orange when someone denies it,
+  green when a party announced it itself, a denial first; hollow and dashed when the articles say it is not confirmed), its date,
+  its title (translated) as a link, the medium, how many media told it and its marks; a line counts the events that are not key
+  ("+ 4 smaller events"). The line of the page cannot be drawn in an e-mail. A card that is no affair, or whose affair cannot be
+  built, is sent without it (logged).
+- **The preview**: `POST /api/briefing/:id/email/preview`, the same body as `/email` (`to` optional: it only decides whether
+  the e-mail goes to another than the reader, who has no "why" of the cards then; a wrong one is left out, the reader is still
+  typing it), answers `{html}` and sends nothing nor marks any story as read. `BriefingService.email` and `.preview` build the
+  e-mail with the same function (`builtMail`), so the preview is the e-mail: the files the reader joined (`cid:`) are put in the
+  page as `data:`, and `<base target="_blank">` opens its links in a tab (`previewHtml`). 200 in 10 minutes per account
+  (`rateLimit`): the editor asks at each change. The AI is not asked again at each one: the labels of a language are translated
+  once and kept while the server runs (a request in progress is waited for), and so are the words of an article saying it has no
+  confirmation (`withHedgedTranslated`, 500 kept); the affairs are kept by `AffairService`.
 - `BriefingService.email`: `storyIds` one at least, `format` one of `MAIL_FORMATS` (`points`, `digest`,
   `passages`, the key passages when not given), `ai` the cards sent in their AI version, `to` an address
   (`isEmail`) or the account's; 400 otherwise. A ready briefing of this reader, else 404.
 - Each card with its AI analysis when it is ready (`briefings.analysis`), in the order given, once each;
-  `withOwnTitles` (300 characters at most), `withOwnTexts` (`texts: {storyId: [paragraph]}`, 20
+  `withOwnTitles` (300 characters at most), `withBlocks`, `withOwnTexts` (`texts: {storyId: [paragraph]}`, 20
   paragraphs of 2,000 characters at most, sent instead of the article's sentences and of the AI version
   in the way chosen; left empty, the card's own), `withoutTakenOut` (`removed: {storyId: {contested, angles,
   official, why, next, timeline: [index]}}`; an analysis left empty is not sent), `withChosenPictures`
   (taken out, an address of the web checked by `assertPublicUrl`, or a JPEG, PNG, GIF or WebP file told by
-  its first bytes, 2 MB each, 6 MB per e-mail, joined as `cid:`).
+  its first bytes, 2 MB each, 6 MB per e-mail, joined as `cid:`), then `withAffairs` (the affair of the cards that ask for it).
 - Sent to another address than the account's: the "why" of each card is left out (it is written to the
   reader) and the answers go to the reader (`Reply-To`).
 - `briefingMail` (`services/utils/briefing-mail.js`): a table with inline styles in the design of the page
@@ -72,9 +102,9 @@ The cards sent count as read: their stories are left out of the next briefings f
   bar, `withOwnCountries`, `countries: {storyId: [code]}`, 10 at most; else the ones found, none when the title
   names them; not its topic: the
   same card after card, the user, 18.10.2026), date and language,
-  title, why, picture, its sentences in the way chosen (or the AI's, without saying so), its official
-  sources boxed right under them, its analysis, denials, angles, where to read it, and the notes of its
-  margin. No "Who tells it", nothing says what is translated. Titled with the profile's name and the day
+  title, its badges and who it is about when asked, why, picture, its sentences in the way chosen (or the AI's, without saying so), its official
+  sources boxed right under them, its analysis, denials, angles, its affair and its coverage when asked, where to read it, and the notes of its
+  margin. No "Who tells it" (the badge of the media is the reader's choice), nothing says what is translated. Titled with the profile's name and the day
   ("Roberto’s Briefing · 13 October 2026"), the subject adds the number of stories.
 - In the reader's language (`readerLanguage` of the profile, `services/utils/mail-labels.js`): `labelsFor`
   translates `LABELS` (`briefing-mail.js`, "Key points", "Contested", "{by} denies:"...) with
@@ -82,7 +112,7 @@ The cards sent count as read: their stories are left out of the next briefings f
   (`MailLabelModel`, `db/add_mail_labels.sql`), so the e-mail says the same words from one session of the
   server to the next, the AI is asked only for the words with none kept, and a translation kept is never
   replaced (one corrected by hand stays); a translation that lost a `{place}` keeps its English and is not
-  kept. The database not answering, the AI translates them all. The AI not answering, the e-mail is in English, its dates too. `withHedgedTranslated`
+  kept (the words of the blocks too, since 05.11.2026: translated once, at the first e-mail or preview in a language). The database not answering, the AI translates them all. The AI not answering, the e-mail is in English, its dates too. `withHedgedTranslated`
   translates the words of an article saying it has no confirmation ("selon nos informations"). Dates
   and names of languages in that language (`Intl`). Written by the briefing since 18.10.2026: who denies
   in that language (`contested.js`), the titles of the official posts translated (`official-sources.js`).
@@ -130,6 +160,7 @@ The cards sent count as read: their stories are left out of the next briefings f
 ## See also
 
 - [News by link](../news-by-link/README.md): a news added to the briefing to send it
+- [Affair](../affair/README.md): the events and the coverage of an affair, the block "This affair" of the e-mail
 - [Analysis (IA)](../analysis-ia/README.md), [Official source](../official-source/README.md),
   [Other angles](../other-angles/README.md), [Denials](../denials/README.md): the lines the reader keeps
   or takes out

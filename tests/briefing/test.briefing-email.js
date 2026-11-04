@@ -24,7 +24,10 @@ jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: 
 jest.unstable_mockModule('../../services/utils/mailer.js', () => ({sendMail, mailEnabled: () => true}));
 const copies = {save: jest.fn(async () => 11), byToken: jest.fn(async () => null), remove: jest.fn(async () => 1)};
 jest.unstable_mockModule('../../models/sent-mail-model.js', () => ({SentMailModel: copies}));
-const {BriefingService, withOwnCountries, withOwnTexts, withOwnTitles, withoutTakenOut} = await import('../../services/briefing-service.js');
+// the affair of a card for the e-mail: built by the AI, and the service of the affairs reads the briefing service (see withAffairs)
+const forMail = jest.fn(async () => null);
+jest.unstable_mockModule('../../services/affair-service.js', () => ({AffairService: {forMail}}));
+const {BriefingService, previewHtml, withAffairs, withBlocks, withOwnCountries, withOwnTexts, withOwnTitles, withoutTakenOut} = await import('../../services/briefing-service.js');
 const {briefingMail, LABELS} = await import('../../services/utils/briefing-mail.js');
 
 const card = (storyId, title, changes = {}) => ({
@@ -40,6 +43,7 @@ const row = {
 
 beforeEach(() => {
     ofUser.mockReset().mockResolvedValue(row);
+    forMail.mockReset().mockResolvedValue(null);
     sendMail.mockClear();
     markSent.mockReset().mockResolvedValue(1);
 });
@@ -741,5 +745,360 @@ describe('BriefingService.email in the theme the reader chose', () => {
         }
         expect(ofUser).not.toHaveBeenCalled();
         expect(sendMail).not.toHaveBeenCalled();
+    });
+});
+
+// The blocks the reader puts in the e-mail and leaves out of it, for each card (the user, 5.11.2026): the badges row, who it is about, the
+// coverage and the affair, and the analysis, angles, denials, official sources and unconfirmed words they can leave out
+describe('withBlocks', () => {
+    const items = [card(1, 'First', {contested: [{by: 'A', sentence: 'No.', source: 's'}], official: [{party: 'B', title: 'T', url: 'https://b.example/1'}],
+        hedged: 'reportedly', hedgedTranslation: 'selon', analysis: {why: ['Why.'], next: [], timeline: []}, angles: [{title: 'An angle', url: 'https://x.example/1', source: 'x'}]}), card(2, 'Second')];
+
+    it('should leave the cards as they are without blocks, or for a card without an entry', () => {
+        expect(withBlocks(items, undefined)).toBe(items);
+        expect(withBlocks(items, null)).toBe(items);
+        const [first, second] = withBlocks(items, {2: {names: true}});
+        expect(first).toBe(items[0]);
+        expect(second.blocks).toMatchObject({names: true, media: false, contested: true, coverage: false});
+    });
+
+    it('should give a card with an entry what the page shows at first, and what the entry says', () => {
+        const [first] = withBlocks(items, {1: {coverage: true, angles: false}});
+        expect(first.blocks).toEqual({media: false, contested: true, official: true, unconfirmed: true, names: false, analysis: true, angles: false, affair: false, coverage: true});
+    });
+
+    it('should take from a card what a block at false puts out of the e-mail', () => {
+        const [first] = withBlocks(items, {1: {contested: false, official: false, unconfirmed: false, analysis: false, angles: false}});
+        expect(first).toMatchObject({contested: [], official: [], hedged: null, hedgedTranslation: null, analysis: null, angles: []});
+        const [kept] = withBlocks(items, {1: {media: true}});
+        expect(kept).toMatchObject({contested: items[0].contested, official: items[0].official, hedged: 'reportedly', analysis: items[0].analysis, angles: items[0].angles});
+    });
+
+    const refused = (blocks) => {
+        try {
+            withBlocks(items, blocks);
+        } catch (err) {
+            return err.status;
+        }
+        return null;
+    };
+
+    it('should refuse what is not a blocks of the cards: an object of objects of known blocks, true or false', () => {
+        for (const blocks of ['all', 3, [], [{names: true}], {1: true}, {1: null}, {1: []}, {1: {names: 'yes'}}, {1: {names: 1}}, {1: {pictures: true}}, {1: {names: true, unknown: false}}]) {
+            expect(refused(blocks)).toBe(400);
+        }
+    });
+
+    it('should refuse them through the service, before anything is sent', async () => {
+        await expect(BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'passages', [], undefined, undefined, 'light', undefined, {1: {names: 'yes'}})).rejects.toMatchObject({status: 400});
+        await expect(BriefingService.preview(4, 7, [1], undefined, undefined, undefined, undefined, 'passages', [], undefined, undefined, 'light', undefined, [])).rejects.toMatchObject({status: 400});
+        expect(sendMail).not.toHaveBeenCalled();
+    });
+});
+
+// the badges, the names, the coverage and the affair of the e-mail
+describe('briefingMail with the blocks of a card', () => {
+    const article = (source, at, language = 'en') => ({source, url: `https://${source}/a`, publishedAt: at, language});
+    const at = (hour) => new Date(Date.UTC(2026, 9, 8, hour)).toISOString();
+    const full = card(1, 'Gipfel', {
+        corroboration: {media: 3, read: 3, independent: 2, agencies: []},
+        articles: [article('a.com', at(6)), article('b.fr', at(8), 'fr'), article('c.de', at(8), 'de')],
+        names: [{name: 'FIFA'}, {name: 'Infantino', qid: 'Q1'}],
+        contested: [{by: 'Infantino', sentence: 'No.', source: 'bild.de', url: 'https://bild.de/a'}],
+        official: [{party: 'UEFA', title: 'A post', url: 'https://uefa.com/a', channel: 'site'}, {party: 'FIGC', title: 'Another', url: 'https://figc.it/a', channel: 'site'}],
+        hedged: 'reportedly',
+    });
+    const mail = (item, options) => briefingMail({hours: 24, finishedAt: '2026-10-08T06:01:00.000Z', items: [item]}, options);
+    const on = (blocks, item = full) => withBlocks([item], {[item.storyId]: blocks})[0];
+
+    it('should send a card with no entry as before: no badge, no names, no coverage, no affair', () => {
+        const {html, text} = mail(full);
+        for (const part of ['Who it is about', 'How widely it is told', 'This affair', 'Told by 3 media', 'Unconfirmed', 'border-radius:999px']) {
+            expect(html).not.toContain(part);
+            expect(text).not.toContain(part);
+        }
+        expect(html).toContain('>Contested<');
+        expect(html).toContain('>Official sources<');
+    });
+
+    it('should show under the title the pills of what the card has: the media, the denial, the official sources, the unconfirmed words', () => {
+        const {html, text} = mail(on({media: true}));
+        expect(html).toContain('Told by 3 media in 3 languages');
+        expect(html).toMatch(/color:#BF4800">Contested</);
+        expect(html).toMatch(/color:#248A3D">2 official sources</);
+        expect(html).toMatch(/color:#BF4800">Unconfirmed</);
+        // under the title, before its sentences
+        expect(html.indexOf('Told by 3 media')).toBeGreaterThan(html.indexOf('<h2'));
+        expect(html.indexOf('Told by 3 media')).toBeLessThan(html.indexOf('Passage of Gipfel'));
+        // the tints are plain colours: mail apps do not all read rgba()
+        expect(html).not.toContain('rgba(');
+        expect(text).toContain('Told by 3 media in 3 languages · Contested · 2 official sources · Unconfirmed');
+    });
+
+    it('should say one medium and one official source in the singular, and leave a language count of one out', () => {
+        const single = on({media: true}, {...full, corroboration: {media: 1}, articles: [article('a.com', at(6))], official: [full.official[0]], contested: []});
+        const {html} = mail(single);
+        expect(html).toContain('Told by one medium<');
+        expect(html).toContain('>Official source<');
+        expect(html).not.toContain('Contested');
+    });
+
+    it('should have a badge only for the block that is on and has what it says', () => {
+        const {html} = mail(on({contested: false, official: false, unconfirmed: false}));
+        expect(html).not.toContain('border-radius:999px');
+        expect(html).not.toContain('Contested');
+        expect(html).not.toContain('Official source');
+        expect(html).not.toContain('Not confirmed');
+        const bare = mail(on({media: true, names: true}, card(2, 'Bare', {corroboration: undefined})));
+        expect(bare.html).not.toContain('border-radius:999px');
+    });
+
+    it('should show who it is about, a pill each, only when asked', () => {
+        const {html, text} = mail(on({names: true}));
+        expect(html).toContain('>Who it is about<');
+        expect(html).toContain('>FIFA</span>');
+        expect(html).toContain('>Infantino</span>');
+        expect(text).toContain('Who it is about: FIFA, Infantino');
+        expect(mail(on({names: false})).html).not.toContain('Who it is about');
+        expect(mail(on({names: true}, card(3, 'Nobody'))).html).not.toContain('Who it is about');
+    });
+
+    it('should show how widely it is told: the media, the languages, who told it first, the hours as bars, the languages', () => {
+        const {html, text} = mail(on({coverage: true}));
+        expect(html).toContain('>How widely it is told<');
+        expect(html).toContain('3 media · 3 languages');
+        expect(html).toContain('First told by a.com, 8 Oct');
+        expect(html).toContain('German 1 · English 1 · French 1');
+        // a bar a cell of a table, the tallest one the whole height
+        expect(html).toMatch(/<td height="44" style="height:44px;background:#/);
+        expect(text).toContain('How widely it is told: 3 media · 3 languages. First told by a.com');
+        expect(mail(on({coverage: false})).html).not.toContain('How widely it is told');
+        expect(mail(on({coverage: true}, card(4, 'No article'))).html).not.toContain('How widely it is told');
+    });
+
+    it('should put the affair before the coverage, after the angles and before where to read it', () => {
+        const angles = [{title: 'An angle', url: 'https://x.example/1', source: 'x'}];
+        const {html} = mail(on({coverage: true, affair: true}, {...full, angles, affair: {title: 'The FIFA files', chip: null, coverage: null,
+            events: [{id: 1, at: at(7), kind: 'key', title: 'T', url: 'https://t.example/1', medium: 't.example', media: ['a', 'b'], languages: ['en']}]}}));
+        const order = ['Same affair, other angles', 'This affair', 'How widely it is told', 'Read the article at'].map(part => html.indexOf(part));
+        expect(order.every(place => place > 0)).toBe(true);
+        expect(order).toEqual([...order].sort((a, b) => a - b));
+    });
+
+    describe('the affair', () => {
+        const event = (id, hour, extra = {}) => ({id, at: at(hour), kind: 'key', title: `Event ${id}`, titleTranslation: null, url: `https://news.example/${id}`, medium: 'news.example',
+            media: ['a.fr', 'b.fr'], languages: ['en'], reported: false, official: false, denial: false, ...extra});
+        const affair = {title: 'The FIFA files', chip: {stories: 15, media: 129}, coverage: {media: 503, news: 1398, languages: [{language: 'en', media: 4}, {language: 'fr', media: 2}]},
+            events: [event(3, 12, {official: true}), event(1, 6), event(2, 9, {denial: true, official: true}), event(4, 7, {kind: 'minor'}), event(5, 8, {kind: 'minor'}), event(6, 13, {reported: true, titleTranslation: 'Évènement six'})]};
+        const html = () => mail(on({affair: true}, {...full, affair})).html;
+
+        it('should show its title, its figures and its key events, the oldest first', () => {
+            const page = html();
+            expect(page).toContain('>This affair<');
+            expect(page).toContain('>The FIFA files<');
+            expect(page).toContain('15 stories told by 129 media');
+            expect(page).toContain('503 media · 1,398 news · 2 languages');
+            const places = ['Event 1', 'Event 2', 'Event 3', 'Évènement six'].map(title => page.indexOf(title));
+            expect(places.every(place => place > 0)).toBe(true);
+            expect(places).toEqual([...places].sort((a, b) => a - b));
+            expect(page).toContain('href="https://news.example/1"');
+            expect(page).toContain('+ 2 smaller events');
+            // the events that are not key are not listed
+            expect(page).not.toContain('Event 4');
+        });
+
+        it('should colour the dot of an event: orange when someone denies it, green when a party announced it, a denial first', () => {
+            const page = html();
+            const dotOf = (title) => {
+                const row = page.slice(page.lastIndexOf('<tr>', page.indexOf(title)), page.indexOf(title));
+                return row.match(/border-radius:50%;([^"]*)"/)[1];
+            };
+            expect(dotOf('Event 1')).toBe('background:#0066CC;border:2px solid #0066CC');
+            expect(dotOf('Event 2')).toBe('background:#BF4800;border:2px solid #BF4800');
+            expect(dotOf('Event 3')).toBe('background:#248A3D;border:2px solid #248A3D');
+            // the articles say it is not confirmed: hollow and dashed
+            expect(dotOf('Évènement six')).toBe('background:#FFFFFF;border:2px dashed #0066CC');
+        });
+
+        it('should say the marks of an event in the colours of the page, and how many media told it', () => {
+            const page = html();
+            expect(page).toMatch(/told by 2 media/);
+            expect(page).toMatch(/color:#248A3D;font-weight:500">Official</);
+            expect(page).toMatch(/color:#BF4800;font-weight:500">Contested</);
+            expect(page).toMatch(/color:#BF4800;font-weight:500">Reported</);
+        });
+
+        it('should be in the text, and not there when the affair is not asked, nor built', () => {
+            const {text} = mail(on({affair: true}, {...full, affair}));
+            expect(text).toContain('This affair: The FIFA files');
+            expect(text).toContain('15 stories told by 129 media');
+            expect(text).toMatch(/ {2}\d+ Oct Event 1 \(news.example\) https:\/\/news.example\/1/);
+            expect(text).toContain('+ 2 smaller events');
+            expect(mail(on({affair: false}, {...full, affair})).html).not.toContain('This affair');
+            expect(mail(on({affair: true}, {...full, affair: null})).html).not.toContain('This affair');
+            expect(mail(on({affair: true}, {...full, affair: {...affair, events: []}})).html).not.toContain('This affair');
+        });
+
+        it('should say a single smaller event in the singular, and leave the line out when there is none', () => {
+            expect(mail(on({affair: true}, {...full, affair: {...affair, events: [event(1, 6), event(4, 7, {kind: 'minor'})]}})).html).toContain('+ 1 smaller event<');
+            expect(mail(on({affair: true}, {...full, affair: {...affair, events: [event(1, 6)]}})).html).not.toContain('smaller event');
+        });
+    });
+
+    it('should write the new words in the language of the reader, left in English where the translation lacks them', () => {
+        const labels = {...LABELS, toldByMedia: 'Raconté par {count} médias', inLanguages: 'en {count} langues', contested: 'Contesté', whoItIsAbout: 'De qui il parle'};
+        const {html} = mail(on({media: true, names: true}), {language: 'fr', labels});
+        expect(html).toContain('Raconté par 3 médias en 3 langues');
+        expect(html).toContain('>Contesté<');
+        expect(html).toContain('>De qui il parle<');
+        expect(html).toContain('Official source');
+    });
+
+    it('should take the dark colours of the page for the pills when the reader chooses dark', () => {
+        const {html} = mail(on({media: true, names: true}), {theme: 'dark'});
+        expect(html).toMatch(/color:#FF9F0A">Contested</);
+        expect(html).toMatch(/color:#30D158">2 official sources</);
+        expect(html).toContain('background:#2C2C2E;border:1px solid #2C2C2E;color:#98989D');
+    });
+});
+
+describe('BriefingService.email with the blocks of the cards', () => {
+    const sent = () => sendMail.mock.calls.at(-1)[0];
+    const asked = (blocks) => BriefingService.email(4, 7, [1], undefined, undefined, undefined, undefined, 'passages', [], undefined, undefined, 'light', undefined, blocks);
+    const withData = () => ofUser.mockResolvedValue({...row, items: [card(1, 'First story', {
+        contested: [{by: 'Infantino', sentence: 'No.', source: 'bild.de', url: 'https://bild.de/a'}], names: [{name: 'FIFA'}],
+        articles: [{source: 'a.com', url: 'https://a.com/1', publishedAt: '2026-10-08T06:00:00.000Z'}],
+    })]});
+    beforeEach(withData);
+
+    it('should send the card as before when no block is given', async () => {
+        await asked(undefined);
+        const before = sent().html;
+        await asked({});
+        expect(sent().html).toBe(before);
+        expect(before).toContain('>Contested<');
+        expect(before).not.toContain('Who it is about');
+    });
+
+    it('should put in the blocks asked and leave out the ones refused', async () => {
+        await asked({1: {names: true, coverage: true, contested: false}});
+        expect(sent().html).toContain('Who it is about');
+        expect(sent().html).toContain('How widely it is told');
+        expect(sent().html).not.toContain('Infantino');
+        expect(sent().text).toContain('Who it is about: FIFA');
+    });
+
+    it('should leave the lines the reader took out out, on top of the blocks', async () => {
+        ofUser.mockResolvedValue({...row, items: [card(1, 'First story', {
+            contested: [{by: 'Infantino', sentence: 'No.', source: 'bild.de'}, {by: 'Ceferin', sentence: 'Never.', source: 'x.com'}]})]});
+        await BriefingService.email(4, 7, [1], undefined, undefined, undefined, {1: {contested: [0]}}, 'passages', [], undefined, undefined, 'light', undefined, {1: {media: true}});
+        expect(sent().html).toContain('Ceferin');
+        expect(sent().html).not.toContain('Infantino');
+        expect(sent().html).toContain('>Contested<');
+    });
+
+    it('should ask the affair of the cards that ask for it, and only those', async () => {
+        forMail.mockResolvedValue({title: 'The FIFA files', chip: null, coverage: null, events: [{id: 1, at: '2026-10-07T10:00:00.000Z', kind: 'key', title: 'An event', url: 'https://n.example/1', medium: 'n.example', media: ['a', 'b']}]});
+        await asked({1: {names: true}});
+        expect(forMail).not.toHaveBeenCalled();
+        await asked({1: {affair: true}});
+        expect(forMail).toHaveBeenCalledTimes(1);
+        expect(forMail).toHaveBeenCalledWith(4, 7, 1);
+        expect(sent().html).toContain('>The FIFA files<');
+        expect(sent().html).toContain('An event');
+    });
+
+    it('should send the e-mail without the affair when it cannot be built, and say why in the log', async () => {
+        const quiet = jest.spyOn(console, 'error').mockImplementation(() => {});
+        forMail.mockRejectedValue(new Error('the AI is down'));
+        await asked({1: {affair: true, names: true}});
+        expect(sent().html).toContain('Who it is about');
+        expect(sent().html).not.toContain('This affair');
+        expect(quiet).toHaveBeenCalledWith(expect.stringContaining('the AI is down'));
+        // no affair behind the card either
+        forMail.mockReset().mockResolvedValue(null);
+        await asked({1: {affair: true}});
+        expect(sent().html).not.toContain('This affair');
+        quiet.mockRestore();
+    });
+});
+
+describe('withAffairs', () => {
+    it('should give each card that asks for it its own affair, and leave the others as they are', async () => {
+        const items = [{storyId: 1, blocks: {affair: true}}, {storyId: 2, blocks: {affair: false}}, {storyId: 3}, {storyId: 4, blocks: {affair: true}}];
+        forMail.mockImplementation(async (userId, briefingId, storyId) => storyId === 4 ? null : {title: `Affair ${storyId}`});
+        const result = await withAffairs(items, 4, 7);
+        expect(result[0].affair).toEqual({title: 'Affair 1'});
+        expect(result[1]).toBe(items[1]);
+        expect(result[2]).toBe(items[2]);
+        expect(result[3].affair).toBeNull();
+        expect(await withAffairs([items[2]], 4, 7)).toEqual([items[2]]);
+    });
+});
+
+// the preview of the editor: the same e-mail, shown, never sent (the user chose it with the live preview, 5.11.2026)
+describe('BriefingService.preview', () => {
+    const preview = (...args) => BriefingService.preview(4, 7, [1, 3], ...args);
+    beforeEach(() => ofUser.mockResolvedValue({...row, items: [
+        card(1, 'First story', {thumbnail: 'https://93.184.215.14/first.jpg', thumbnailSource: 'media.fr', why: 'For you.'}),
+        card(2, 'Second story'), card(3, 'Third story'),
+    ]}));
+
+    it('should answer the page of the e-mail, and send nothing nor mark any story as read', async () => {
+        const {html} = await preview();
+        expect(html).toContain('First story');
+        expect(html).toContain('Third story');
+        expect(html).not.toContain('Second story');
+        expect(sendMail).not.toHaveBeenCalled();
+        expect(markSent).not.toHaveBeenCalled();
+    });
+
+    it('should open its links in a tab of their own', async () => {
+        const {html} = await preview();
+        expect(html).toContain('<head><base target="_blank">');
+    });
+
+    it('should show the pictures the reader joined as data, not as the cid: of a mail', async () => {
+        const {html} = await preview(undefined, {3: {data: PNG}});
+        expect(html).not.toContain('cid:');
+        expect(html).toContain(`src="data:image/png;base64,${PNG}"`);
+    });
+
+    it('should be the e-mail that email sends, blocks, order and theme included, apart from what shows it', async () => {
+        const args = [undefined, undefined, {1: 'A title of mine'}, undefined, 'points', [], undefined, undefined, 'dark', undefined, {1: {names: true}, 3: {coverage: true}}];
+        const {html} = await preview(...args);
+        await BriefingService.email(4, 7, [1, 3], ...args);
+        expect(previewHtml(sendMail.mock.calls[0][0].html)).toBe(html);
+        expect(html).toContain('A title of mine');
+        expect(html).toContain('background:#1C1C1E');
+    });
+
+    it('should not refuse the address the reader is still typing, and take the one of the account for it', async () => {
+        for (const to of ['read', 'reader@', 'reader@example', 3, {}]) {
+            await expect(preview(to)).resolves.toEqual({html: expect.any(String)});
+        }
+        // the same as the account's: not to another, the reasons for the cards stay; to another, they leave
+        expect((await preview('reader@example.test')).html).toContain('For you.');
+        expect((await preview('friend@example.org')).html).not.toContain('For you.');
+        // while e-mail refuses a wrong address
+        await expect(BriefingService.email(4, 7, [1], 'reader@')).rejects.toMatchObject({status: 400});
+    });
+
+    it('should refuse what email refuses: no card ticked, none of this briefing, an unknown format or theme, a briefing that is not ready', async () => {
+        await expect(BriefingService.preview(4, 7, [])).rejects.toMatchObject({status: 400});
+        await expect(BriefingService.preview(4, 7, [99])).rejects.toMatchObject({status: 404});
+        await expect(preview(undefined, undefined, undefined, undefined, 'tweets')).rejects.toMatchObject({status: 400});
+        await expect(preview(undefined, undefined, undefined, undefined, 'passages', [], undefined, undefined, 'auto')).rejects.toMatchObject({status: 400});
+        ofUser.mockResolvedValue({...row, status: 'running'});
+        await expect(preview()).rejects.toMatchObject({status: 404});
+    });
+});
+
+describe('previewHtml', () => {
+    it('should put the files joined in the page and open the links in a tab of their own', () => {
+        const html = '<!doctype html><html><head><meta charset="utf-8"></head><body><img src="cid:a@x"><img src="cid:a@x"><img src="cid:b@x"></body></html>';
+        const page = previewHtml(html, [{cid: 'a@x', contentType: 'image/png', content: Buffer.from('AB')}, {cid: 'b@x', contentType: 'image/jpeg', content: Buffer.from('C')}]);
+        expect(page).toBe(html.replace('<head>', '<head><base target="_blank">').replaceAll('cid:a@x', 'data:image/png;base64,QUI=').replace('cid:b@x', 'data:image/jpeg;base64,Qw=='));
+        expect(previewHtml(html)).toBe(html.replace('<head>', '<head><base target="_blank">'));
     });
 });

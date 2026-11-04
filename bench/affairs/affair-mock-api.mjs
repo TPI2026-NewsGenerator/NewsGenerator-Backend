@@ -29,7 +29,7 @@ const wrap = (handler) => async (req, res) => {
 app.get('/api/session', (req, res) => res.json({id: 1, username: 'mock', email: 'reader@example.test', role: 'User'}));
 app.get('/api/profile', (req, res) => res.json({profile: {id: profileId, name: 'Profil', text: 'Mock', interests: [], watchTerms: []}}));
 app.get('/api/profile/profiles', (req, res) => res.json({profiles: [{id: profileId, name: 'Profil'}]}));
-app.get('/api/briefing', wrap(async () => ({briefing: (await latest()).briefing, mail: false})));
+app.get('/api/briefing', wrap(async () => ({briefing: (await latest()).briefing, mail: true})));
 app.get('/api/briefing/:id/affairs', wrap(async (req) => ({affairs: await AffairService.chips((await latest()).userId, req.params.id)})));
 app.get('/api/briefing/:id/stories/:storyId/affair', wrap(async (req) => AffairService.view((await latest()).userId, req.params.id, req.params.storyId)));
 // the affairs followed live in memory here (their tables are made by db/add_affairs.sql): the real affair of the card is kept, its
@@ -40,6 +40,12 @@ let nextId = 1;
 const summary = (one) => ({id: one.id, title: one.view.title, followedAt: one.at, lastEventAt: one.view.events.at(-1)?.at ?? null, unread: one.unread,
     events: one.view.events.length, key: one.view.events.filter(e => e.kind === 'key').length, media: one.view.coverage?.media ?? 0, last: one.view.events.at(-1) ?? null});
 app.get('/api/affairs', wrap(async () => ({affairs: [...followed.values()].map(summary), unread: [...followed.values()].reduce((n, one) => n + one.unread, 0)})));
+// the e-mail as it would be sent, drawn by the real server for what the editor of the e-mail has chosen: nothing is sent (no route sends)
+app.post('/api/briefing/:id/email/preview', wrap(async (req) => {
+    const {userId} = await latest();
+    const b = req.body ?? {};
+    return BriefingService.preview(userId, req.params.id, b.storyIds, null, b.pictures, b.titles, b.removed, b.format, b.ai, b.texts, b.countries, b.theme, b.timeZone, b.blocks);
+}));
 app.get('/api/affairs/unread', wrap(async () => ({unread: [...followed.values()].reduce((n, one) => n + one.unread, 0)})));
 app.get('/api/affairs/push/key', (req, res) => res.json({enabled: false, publicKey: null}));
 app.post('/api/affairs', wrap(async (req) => {

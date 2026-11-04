@@ -121,3 +121,38 @@ describe('withHedgedTranslated', () => {
         expect(translateTexts).not.toHaveBeenCalled();
     });
 });
+
+// the editor of the e-mail asks for its preview at each change: the AI is asked for the same words once (the user, 5.11.2026)
+describe('labelsFor and withHedgedTranslated asked again and again', () => {
+    it('should ask the AI once for a language when the previews ask together, and give them the same words', async () => {
+        translateTexts.mockImplementation(async (texts) => {
+            await new Promise(resolve => setTimeout(resolve, 20));
+            return texts.map(({text}) => FRENCH[text] ?? null);
+        });
+        const [first, second] = await Promise.all([labelsFor('da'), labelsFor('da')]);
+        expect(second).toBe(first);
+        expect(translateTexts).toHaveBeenCalledTimes(1);
+        expect(await labelsFor('da')).toBe(first);
+        expect(translateTexts).toHaveBeenCalledTimes(1);
+    });
+
+    it('should translate the words of a card once, and use them for the next previews', async () => {
+        translateTexts.mockResolvedValueOnce(['dem Vernehmen nach']);
+        const items = [{storyId: 1, hedged: 'allegedly', language: 'en'}];
+        expect(await withHedgedTranslated(items, 'de')).toEqual([{...items[0], hedgedTranslation: 'dem Vernehmen nach'}]);
+        expect(await withHedgedTranslated(items, 'de')).toEqual([{...items[0], hedgedTranslation: 'dem Vernehmen nach'}]);
+        expect(translateTexts).toHaveBeenCalledTimes(1);
+        // another language, other words
+        translateTexts.mockResolvedValueOnce(['presuntamente']);
+        expect((await withHedgedTranslated(items, 'es'))[0].hedgedTranslation).toBe('presuntamente');
+        expect(translateTexts).toHaveBeenCalledTimes(2);
+    });
+
+    it('should ask again for the words the AI did not translate', async () => {
+        translateTexts.mockResolvedValueOnce([null]).mockResolvedValueOnce(['à ce qu’il paraît']);
+        const items = [{storyId: 1, hedged: 'apparently', language: 'en'}];
+        expect((await withHedgedTranslated(items, 'fr'))[0].hedgedTranslation).toBeNull();
+        expect((await withHedgedTranslated(items, 'fr'))[0].hedgedTranslation).toBe('à ce qu’il paraît');
+        expect(translateTexts).toHaveBeenCalledTimes(2);
+    });
+});

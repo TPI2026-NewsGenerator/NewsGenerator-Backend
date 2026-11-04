@@ -12,7 +12,8 @@ import express from 'express';
 
 const original = jest.fn();
 const email = jest.fn(async () => {});
-jest.unstable_mockModule('../../services/briefing-service.js', () => ({BriefingService: {original, email}}));
+const preview = jest.fn(async () => ({html: '<!doctype html><p>Preview</p>'}));
+jest.unstable_mockModule('../../services/briefing-service.js', () => ({BriefingService: {original, email, preview}}));
 jest.unstable_mockModule('../../services/affair-service.js', () => ({AffairService: {}}));
 jest.unstable_mockModule('../../services/utils/mailer.js', () => ({mailEnabled: () => true}));
 jest.unstable_mockModule('../../services/utils/admin.js', () => ({isAdmin: async () => true}));
@@ -23,6 +24,7 @@ const app = express();
 app.set('trust proxy', 'loopback');
 app.use('/api/mails', mailRouter);
 app.post('/api/briefing/:id/email', express.json(), (req, res, next) => { req.user = {id: 4}; next(); }, BriefingController.email);
+app.post('/api/briefing/:id/email/preview', express.json(), (req, res, next) => { req.user = {id: 4}; next(); }, BriefingController.emailPreview);
 
 let server;
 beforeAll(async () => { await new Promise(resolve => { server = app.listen(0, '127.0.0.1', resolve); }); });
@@ -30,6 +32,7 @@ afterAll(() => server.close());
 beforeEach(() => {
     original.mockReset();
     email.mockClear();
+    preview.mockClear();
 });
 
 // {status, type, headers, text}: through node:http, which sends the Host header given
@@ -76,6 +79,30 @@ describe('GET /api/mails/:token', () => {
 describe('POST /api/briefing/:id/email', () => {
     it('should give the service what the reader sent, and no address of the site: the e-mail has no link to a copy any more', async () => {
         await request('POST', '/api/briefing/7/email', {headers: {Host: 'news.example'}, body: {storyIds: [1], format: 'points', ai: [1], texts: {1: ['My point.']}, countries: {1: ['FR']}, theme: 'dark', timeZone: 'Europe/Paris'}});
-        expect(email).toHaveBeenCalledWith(4, '7', [1], undefined, undefined, undefined, undefined, 'points', [1], {1: ['My point.']}, {1: ['FR']}, 'dark', 'Europe/Paris');
+        expect(email).toHaveBeenCalledWith(4, '7', [1], undefined, undefined, undefined, undefined, 'points', [1], {1: ['My point.']}, {1: ['FR']}, 'dark', 'Europe/Paris', undefined);
+    });
+
+    it('should give the service the blocks the reader chose for the cards (the user, 5.11.2026)', async () => {
+        const blocks = {1: {names: true, coverage: true, contested: false}};
+        await request('POST', '/api/briefing/7/email', {body: {storyIds: [1], blocks}});
+        expect(email).toHaveBeenCalledWith(4, '7', [1], undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, blocks);
+    });
+});
+
+describe('POST /api/briefing/:id/email/preview', () => {
+    it('should give the service the same as the e-mail, and answer the page of the e-mail', async () => {
+        const blocks = {1: {affair: true}};
+        const res = await request('POST', '/api/briefing/7/email/preview', {body: {storyIds: [1, 2], to: 'friend@example.org', format: 'points', ai: [1], theme: 'dark', timeZone: 'Europe/Paris', blocks}});
+        expect(res.status).toBe(200);
+        expect(JSON.parse(res.text)).toEqual({html: '<!doctype html><p>Preview</p>'});
+        expect(preview).toHaveBeenCalledWith(4, '7', [1, 2], 'friend@example.org', undefined, undefined, undefined, 'points', [1], undefined, undefined, 'dark', 'Europe/Paris', blocks);
+        expect(email).not.toHaveBeenCalled();
+    });
+
+    it('should say what the service refuses, with its status', async () => {
+        preview.mockRejectedValueOnce(Object.assign(new Error('blocks: {storyId: {media}}, each true or false.'), {status: 400}));
+        const res = await request('POST', '/api/briefing/7/email/preview', {body: {storyIds: [1], blocks: 'all'}});
+        expect(res.status).toBe(400);
+        expect(JSON.parse(res.text)).toEqual({error: 'blocks: {storyId: {media}}, each true or false.'});
     });
 });

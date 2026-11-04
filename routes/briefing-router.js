@@ -47,5 +47,9 @@ router.post('/:id/email', authenticateToken, adminOnly(MAIL_REFUSED),
     rateLimit({windowMs: 3600e3, max: 10, message: 'Too many e-mails sent, try again in an hour.'}),
     rateLimit({windowMs: 24 * 3600e3, max: 30, key: req => `user ${req.user.id}`, message: 'Too many e-mails sent today, try again tomorrow.'}),
     BriefingController.email);
+// the e-mail shown while the reader changes it (nothing is sent): asked at each change, so a limit of its own
+router.post('/:id/email/preview', authenticateToken, adminOnly(MAIL_REFUSED),
+    rateLimit({windowMs: 600e3, max: 200, key: req => `email preview ${req.user.id}`, message: 'Too many previews of the e-mail, try again in a few minutes.'}),
+    BriefingController.emailPreview);
 
 export default router;

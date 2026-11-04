@@ -135,6 +135,15 @@ export const AffairService = {
         });
     },
 
+    // The affair of a card for the e-mail (see withAffairs): its title, its events, its coverage and the size of its thread ({stories, media},
+    // null when the database does not tell), null when the card is no affair. Built by the AI the first time, as view does
+    forMail: async (userId, briefingId, storyId) => {
+        const view = await AffairService.view(userId, briefingId, storyId);
+        if (!view.affair) return null;
+        const [stats] = await AffairModel.threadStats([Number(storyId)]).catch(() => []);
+        return {title: view.title, events: view.events, coverage: view.coverage, chip: stats ? {stories: Number(stats.stories), media: Number(stats.media)} : null};
+    },
+
     // --- the affairs a reader follows ---
 
     // The reader follows the affair behind a card: the affair as the page shows it is kept (its events stay as long as it

@@ -7,7 +7,9 @@
 //               sentences in the way the reader chose (bullet points, summary or key passages), who
 //               its official source, who denies it, its analysis when it has one, its other angles, where
 //               to read it, and the note of its margin. Who tells it is left out: its sources say it
-//               already. Nothing says what is translated, by a machine or the AI (the user, 16.10.2026).
+//               already, unless the reader asks for the badges ("Told by 12 media", "Contested", "Official source",
+//               "Unconfirmed"), who it is about, the coverage and the affair of a card (the user, 5.11.2026: each a
+//               block the reader puts in or leaves out, see withBlocks). Nothing says what is translated, by a machine or the AI (the user, 16.10.2026).
 //               In the design of the page since 2.11.2026 (the user: "Apple minimal"): Inter, white and
 //               one grey, one blue for the links, hairlines, rounded boxes. Light, or dark when the reader
 //               chooses it for the e-mail (the user, 2.11.2026): the e-mail is one or the other, the
@@ -20,6 +22,7 @@
 import {languageName} from './language.js';
 import {countryName, countryNames} from './country-names.js';
 import {ORIGINAL_END, ORIGINAL_START, withoutOriginalMarks} from './original-marks.js';
+import {coverageOfCard} from './card-coverage.js';
 
 // The colours and the font of the page (client styles/index.css). Mail apps keep inline styles and simple
 // tables only; Inter is asked from Google Fonts, which Apple Mail and Outlook for Mac load, and Gmail
@@ -80,6 +83,25 @@ export const LABELS = {
     briefing: 'Briefing',
     oneStory: '1 story',
     stories: '{count} stories',
+    toldByMedia: 'Told by {count} media',
+    toldByOneMedium: 'Told by one medium',
+    inLanguages: 'in {count} languages',
+    officialSourcesCount: '{count} official sources',
+    unconfirmedBadge: 'Unconfirmed',
+    whoItIsAbout: 'Who it is about',
+    howWidelyTold: 'How widely it is told',
+    oneMedium: 'One medium',
+    nMedia: '{count} media',
+    oneLanguage: '1 language',
+    nLanguages: '{count} languages',
+    firstToldBy: 'First told by {source}, {date}',
+    thisAffair: 'This affair',
+    affairStories: '{stories} stories told by {media} media',
+    affairFigures: '{media} media · {news} news · {languages} languages',
+    reported: 'Reported',
+    official: 'Official',
+    oneSmallerEvent: '+ 1 smaller event',
+    smallerEvents: '+ {count} smaller events',
 };
 // English writes the apostrophe alone after a name that ends in s: "Chris’ Briefing" (the user, 2.11.2026).
 // Not a label: the other languages say it with a word ("le briefing de {name}"), whatever the name ends in
@@ -231,6 +253,150 @@ const anglesHtml = (given, t = ENGLISH) => {
 </div>`;
 };
 
+// A colour a share of the way from the page's to another one, as a plain hex: mail apps do not all read rgba(), so the tint of a
+// badge is mixed here, not made transparent
+const mix = (hex, base, share) => {
+    const part = (colour, at) => parseInt(colour.slice(1 + at * 2, 3 + at * 2), 16);
+    return `#${[0, 1, 2].map(at => Math.round(part(base, at) + (part(hex, at) - part(base, at)) * share).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+};
+const PILL = `display:inline-block;margin:0 6px 6px 0;padding:5px 13px;border-radius:999px;font:500 13px/1.3 ${FONT};white-space:nowrap`;
+// a pill of a row under the title (client BriefingCard.jsx Glance and the names): tone 'mute' for how widely it is told, 'warn' (orange) for
+// what is said against the news or the article says is not confirmed, 'official' (green) for what a party said itself, 'name' for who it
+// is about. html: its words, escaped already
+const pillHtml = (html, tone, t) => {
+    const c = t.c;
+    const looks = {
+        mute: `background:${c.deep};border:1px solid ${c.deep};color:${c.mute}`,
+        warn: `background:${mix(c.accent, c.paper, .1)};border:1px solid ${mix(c.accent, c.paper, .3)};color:${c.accent}`,
+        official: `background:${mix(c.official, c.paper, .1)};border:1px solid ${mix(c.official, c.paper, .3)};color:${c.official}`,
+        name: `background:${c.paper};border:1px solid ${c.rule};color:${c.action};font-weight:400`,
+    };
+    return `<span style="${PILL};${looks[tone]}">${html}</span>`;
+};
+
+// The words of the first badge: how widely it is told, in the languages it is told in when more than one
+const toldByWords = (card, t = ENGLISH) => {
+    const media = card.corroboration?.media ?? 0;
+    if (media <= 0) return null;
+    const languages = new Set((card.articles ?? []).map(article => article.language).filter(Boolean)).size;
+    const told = media === 1 ? t.labels.toldByOneMedium : fillText(t.labels.toldByMedia, {count: media});
+    return languages > 1 ? `${told} ${fillText(t.labels.inLanguages, {count: languages})}` : told;
+};
+// The badges of a card the reader asked them for (card.blocks, see withBlocks): the media that tell it, who denies it, the parties that
+// said it themselves (the ones with a web address, as the box of them), an article that says itself it is not confirmed. A badge is there
+// when its block is on and the card has what it says; the denials, the posts and the words are taken from the card when their block is off
+const badgesOf = (card, t = ENGLISH) => {
+    if (!card.blocks) return [];
+    const L = t.labels;
+    const contested = card.contested?.length ?? 0;
+    const official = (card.official ?? []).filter(post => webUrl(post.url)).length;
+    return [
+        card.blocks.media && toldByWords(card, t) && {tone: 'mute', words: toldByWords(card, t)},
+        contested > 0 && {tone: 'warn', words: contested === 1 ? L.contested : `${L.contested} (${contested})`},
+        official > 0 && {tone: 'official', words: official === 1 ? L.officialSource : fillText(L.officialSourcesCount, {count: official})},
+        card.hedged && {tone: 'warn', words: L.unconfirmedBadge},
+    ].filter(Boolean);
+};
+const badgesHtml = (card, t = ENGLISH) => {
+    const badges = badgesOf(card, t);
+    return badges.length === 0 ? '' : `<p style="margin:14px 0 0">${badges.map(badge => pillHtml(escape(badge.words), badge.tone, t)).join('')}</p>`;
+};
+// who it is about: a kicker and a pill for each name, when the reader asked for them
+const namesOf = (card) => card.blocks?.names ? (card.names ?? []).map(one => one.name).filter(Boolean) : [];
+const namesHtml = (card, t = ENGLISH) => {
+    const names = namesOf(card);
+    return names.length === 0 ? '' : `
+  <div style="margin-top:14px">${kicker(t.labels.whoItIsAbout, t)}<p style="margin:8px 0 0">${names.map(name => pillHtml(escape(name), 'name', t)).join('')}</p></div>`;
+};
+
+// How widely it is told (client CardCoverage.jsx), from the articles the card holds: the count of media and languages, who told it first,
+// the hours the media came in as bars (cells of a table: the only thing every mail app draws), the languages. Only when the reader asks
+const coverageWords = (coverage, t = ENGLISH) => [
+    coverage.media === 1 ? t.labels.oneMedium : fillText(t.labels.nMedia, {count: coverage.media}),
+    coverage.languages.length === 0 ? null : coverage.languages.length === 1 ? t.labels.oneLanguage : fillText(t.labels.nLanguages, {count: coverage.languages.length}),
+].filter(Boolean).join(' · ');
+const BAR_MAX = 44;
+const coverageHtml = (card, t = ENGLISH) => {
+    const coverage = card.blocks?.coverage ? coverageOfCard(card) : null;
+    if (!coverage) return '';
+    const most = Math.max(1, ...coverage.bars.map(bar => bar.count));
+    const bars = coverage.bars.length < 2 ? '' : `
+  <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;max-width:340px;margin-top:16px"><tr>${coverage.bars.map(bar => {
+        const height = bar.count === 0 ? 2 : Math.max(6, Math.round(bar.count / most * BAR_MAX));
+        return `<td valign="bottom" height="${BAR_MAX}" style="padding:0 1px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td height="${height}" style="height:${height}px;background:${mix(t.c.mute, t.c.paper, .4)};border-radius:3px 3px 0 0;font-size:0;line-height:0">&nbsp;</td></tr></table></td>`;
+    }).join('')}</tr></table>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:340px;margin-top:4px"><tr><td style="${t.s.caption}">${escape(when(coverage.first?.at, t))}</td><td align="right" style="${t.s.caption}">${escape(when(coverage.last?.at, t))}</td></tr></table>`;
+    return `
+<div style="margin-top:36px">
+  ${kicker(t.labels.howWidelyTold, t)}
+  <p style="margin:8px 0 0;font:500 17px/1.35 ${FONT};color:${t.c.ink}">${escape(coverageWords(coverage, t))}</p>
+  ${coverage.first ? `<p style="${t.s.caption};margin-top:4px">${fill(t.labels.firstToldBy, {source: escape(coverage.first.source), date: escape(when(coverage.first.at, t))})}</p>` : ''}${bars}
+  ${coverage.languages.length > 0 ? `<p style="${t.s.caption};margin-top:12px">${escape(coverage.languages.map(one => `${languageName(one.language, t.language)} ${one.media}`).join(' · '))}</p>` : ''}
+</div>`;
+};
+const coverageText = (card, t = ENGLISH) => {
+    const coverage = card.blocks?.coverage ? coverageOfCard(card) : null;
+    return coverage ? [`${t.labels.howWidelyTold}: ${coverageWords(coverage, t)}${coverage.first ? `. ${fillText(t.labels.firstToldBy, {source: coverage.first.source, date: when(coverage.first.at, t)})}` : ''}`] : [];
+};
+
+// The affair of a card (client AffairPanel, see AffairService.forMail): its title, the size of its thread and of its coverage, then its key
+// events one under the other, the oldest first, each with a dot: blue, orange when someone denies it, green when a party announced it
+// itself (a denial first, as on the line of the page), hollow and dashed when the articles say it is not confirmed. The events that are not
+// key are counted in a line. The line of the page cannot be drawn in an e-mail. Only when the reader asks, and the card is an affair
+const eventDay = (at, t = ENGLISH) => at ? new Date(at).toLocaleDateString(t.locale, {day: 'numeric', month: 'short', timeZone: t.timeZone}) : '';
+const eventsOf = (affair) => {
+    const events = [...(affair?.events ?? [])].sort((a, b) => String(a.at).localeCompare(String(b.at)));
+    return {keys: events.filter(event => event.kind === 'key'), others: events.filter(event => event.kind !== 'key').length};
+};
+const smallerEvents = (others, t) => others === 0 ? '' : others === 1 ? t.labels.oneSmallerEvent : fillText(t.labels.smallerEvents, {count: others});
+const affairFigures = (affair, t) => {
+    const coverage = affair.coverage;
+    if (!coverage || !coverage.media) return '';
+    const count = (n) => Number(n ?? 0).toLocaleString(t.locale);
+    return fillText(t.labels.affairFigures, {media: count(coverage.media), news: count(coverage.news), languages: count(coverage.languages?.length)});
+};
+const affairStories = (affair, t) => affair.chip ? fillText(t.labels.affairStories, {stories: affair.chip.stories, media: affair.chip.media}) : '';
+const affairHtml = (card, t = ENGLISH) => {
+    const affair = card.blocks?.affair ? card.affair : null;
+    const {keys, others} = eventsOf(affair);
+    if (!affair || keys.length + others === 0) return '';
+    const c = t.c;
+    const row = (event) => {
+        const tone = event.denial ? c.accent : event.official ? c.official : c.action;
+        const dot = event.reported ? `background:${c.paper};border:2px dashed ${tone}` : `background:${tone};border:2px solid ${tone}`;
+        const marks = [event.reported && [t.labels.reported, c.accent], event.official && [t.labels.official, c.official], event.denial && [t.labels.contested, c.accent]].filter(Boolean);
+        const title = escape(event.titleTranslation ?? event.title);
+        const meta = [event.medium && escape(event.medium), event.media?.length > 1 && fill(t.labels.toldBy, {count: event.media.length}),
+            ...marks.map(([words, colour]) => `<span style="color:${colour};font-weight:500">${escape(words)}</span>`)].filter(Boolean).join(' · ');
+        return `<tr>
+    <td valign="top" style="padding:7px 10px 0 0;width:12px"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;${dot}"></span></td>
+    <td valign="top" style="${t.s.caption};padding:3px 12px 10px 0;white-space:nowrap">${escape(eventDay(event.at, t))}</td>
+    <td valign="top" style="padding:0 0 10px">${webUrl(event.url)
+        ? `<a href="${escape(event.url)}" style="font:400 15px/1.45 ${FONT};color:${c.ink};text-decoration:underline;text-decoration-color:${c.rule};text-underline-offset:3px">${title}</a>`
+        : `<span style="font:400 15px/1.45 ${FONT};color:${c.ink}">${title}</span>`}${meta ? `<br><span style="${t.s.caption}">${meta}</span>` : ''}</td>
+  </tr>`;
+    };
+    return `
+<div style="margin-top:36px">
+  ${kicker(t.labels.thisAffair, t)}
+  <p style="margin:8px 0 0;font:500 17px/1.35 ${FONT};color:${c.ink}">${escape(affair.title)}</p>
+  ${[affairStories(affair, t), affairFigures(affair, t)].filter(Boolean).map(line => `<p style="${t.s.caption};margin-top:4px">${escape(line)}</p>`).join('')}
+  <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-top:14px">${keys.map(row).join('')}</table>
+  ${others > 0 ? `<p style="${t.s.caption};margin-top:2px">${escape(smallerEvents(others, t))}</p>` : ''}
+</div>`;
+};
+const affairText = (card, t = ENGLISH) => {
+    const affair = card.blocks?.affair ? card.affair : null;
+    const {keys, others} = eventsOf(affair);
+    if (!affair || keys.length + others === 0) return [];
+    return [
+        `${t.labels.thisAffair}: ${affair.title}`,
+        ...[affairStories(affair, t), affairFigures(affair, t)].filter(Boolean),
+        ...keys.map(event => `  ${eventDay(event.at, t)} ${event.titleTranslation ?? event.title}${event.medium ? ` (${event.medium})` : ''}${event.url ? ` ${event.url}` : ''}`),
+        ...(others > 0 ? [`  ${smallerEvents(others, t)}`] : []),
+    ];
+};
+
 // where to read it (client NewsLinks.jsx): the article of the passages, then each other medium once
 const SHOWN_OTHERS = 8;
 const linksHtml = (card, t = ENGLISH) => {
@@ -317,6 +483,7 @@ const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH) =>
     ].filter(Boolean).join(' · ')}</p></td>
   </tr></table>
   <h2 style="margin:0;font:600 28px/1.15 ${FONT};letter-spacing:-.022em;color:${t.c.ink}">${escape(titleOf(card))}</h2>
+  ${badgesHtml(card, t)}${namesHtml(card, t)}
   ${personal && card.why ? `<p style="margin:12px 0 0;font:400 20px/1.45 ${FONT};letter-spacing:-.01em;color:${t.c.mute}">${escape(card.why)}</p>` : ''}
   ${picture ? `<img src="${escape(picture)}" alt="" width="${width}" style="display:block;width:100%;max-width:${width}px;height:auto;margin-top:20px;border:0;border-radius:18px;background:${t.c.deep}">
   ${credit ? `<p style="${t.s.caption};margin-top:6px">${escape(illustration ? t.labels.illustration : t.labels.picture)} — ${escape(credit)}</p>` : ''}` : ''}
@@ -327,6 +494,8 @@ const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH) =>
   ${analysisHtml(card.analysis, t)}
   ${contestedHtml(card.contested ?? [], t)}
   ${anglesHtml(card.angles ?? [], t)}
+  ${affairHtml(card, t)}
+  ${coverageHtml(card, t)}
   ${linksHtml(card, t)}
   ${notesHtml(card, t)}
 </td></tr>`;
@@ -374,6 +543,8 @@ ${cards.map((card, i) => cardHtml(card, i, !sender, format, t)).join('')}
             const countries = countriesOf(card, t);
             return [
                 `${String(i + 1).padStart(2, '0')}. ${titleOf(card)}${countries.length > 0 ? ` (${countries.join(', ')})` : ''}`,
+                ...(badgesOf(card, t).length > 0 ? [badgesOf(card, t).map(badge => badge.words).join(' · ')] : []),
+                ...(namesOf(card).length > 0 ? [`${L.whoItIsAbout}: ${namesOf(card).join(', ')}`] : []),
                 sender ? '' : card.why ?? '',
                 '',
                 wayText(wayOf(card, format, t)),
@@ -383,6 +554,8 @@ ${cards.map((card, i) => cardHtml(card, i, !sender, format, t)).join('')}
                 ...analysisText(card.analysis, t),
                 ...(card.contested ?? []).map(denial => `${L.contested} — ${fillText(L.denies, {by: denial.by})} "${denial.translation || denial.sentence}" (${denial.source})`),
                 ...(card.angles ?? []).map(angle => `${L.otherAngle} ${angle.titleTranslation ?? angle.title} (${angle.source}) ${angle.url}`),
+                ...affairText(card, t),
+                ...coverageText(card, t),
                 lead ? `${fillText(L.readAt, {source: lead.source})}: ${lead.url}` : '',
                 '',
             ].filter((line, j, lines) => line !== '' || lines[j - 1] !== '').join('\n');
