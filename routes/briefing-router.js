@@ -21,6 +21,14 @@ router.get('/following', authenticateToken, activeProfile,
     rateLimit({windowMs: 60e3, max: 20, key: req => `following ${req.user.id}`, message: 'Too many searches of the news you follow, try again in a minute.'}),
     BriefingController.following);
 router.post('/:id/vote', authenticateToken, activeProfile, BriefingController.vote);
+// the cards that are one affair, then the affair of one card: a month of stories compared and judged by the AI, kept
+// for the next requests (see AffairService)
+router.get('/:id/affairs', authenticateToken,
+    rateLimit({windowMs: 3600e3, max: 60, key: req => `affairs ${req.user.id}`, message: 'Too many affairs asked, try again in an hour.'}),
+    BriefingController.affairs);
+router.get('/:id/stories/:storyId/affair', authenticateToken,
+    rateLimit({windowMs: 3600e3, max: 60, key: req => `affair ${req.user.id}`, message: 'Too many affairs asked, try again in an hour.'}),
+    BriefingController.affair);
 // the e-mail of the briefing is for the administrators only (see admin.js)
 const MAIL_REFUSED = 'Sending the briefing by e-mail is for the administrators.';
 router.get('/:id/stories/:storyId/pictures', authenticateToken, adminOnly(MAIL_REFUSED), BriefingController.pictures);

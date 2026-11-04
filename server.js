@@ -12,6 +12,7 @@ import 'dotenv/config';
 import app from './app.js';
 import {FeedService} from './services/feed-service.js';
 import {IngestService} from './services/ingest-service.js';
+import {AffairService} from './services/affair-service.js';
 import {TaggingService} from './services/tagging-service.js';
 import {DiscoveryService} from './services/discovery-service.js';
 import {guardFetch} from './services/utils/public-url.js';
@@ -36,3 +37,6 @@ if (process.env.INGEST_IN_SERVER !== 'false') IngestService.schedule();
 // the names of the news found as they are read (see TaggingService), by the server running the
 // ingestion: two would read the same news. Without NER_URL nothing is tagged
 if (process.env.INGEST_IN_SERVER !== 'false') TaggingService.schedule();
+// the affairs the readers follow, checked for the stories created since (see AffairService.watch): by the same server, whose
+// ingestion makes the stories, so that the stories compared are the ones just grouped
+if (process.env.INGEST_IN_SERVER !== 'false') AffairService.schedule();

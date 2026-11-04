@@ -13,6 +13,7 @@ import express from 'express';
 const original = jest.fn();
 const email = jest.fn(async () => {});
 jest.unstable_mockModule('../../services/briefing-service.js', () => ({BriefingService: {original, email}}));
+jest.unstable_mockModule('../../services/affair-service.js', () => ({AffairService: {}}));
 jest.unstable_mockModule('../../services/utils/mailer.js', () => ({mailEnabled: () => true}));
 jest.unstable_mockModule('../../services/utils/admin.js', () => ({isAdmin: async () => true}));
 const {default: mailRouter} = await import('../../routes/mail-router.js');

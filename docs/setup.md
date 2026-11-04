@@ -205,6 +205,9 @@ second. The `.env` of the server lists the taggers in `NER_URL`, separated by co
 39. Do the same with "add_item_media.sql" (whether an item a card names is a news medium: "L'Équipe: ..." in a
     card told by Romanian media is no news of France). A server started before it works as it did, and takes the
     column up when it is restarted after it
+40. Do the same with "add_affairs.sql" (the affairs a reader follows, the alerts they give and the devices that receive
+    them, see [The affair](briefing/affair/README.md)). The server checks the affairs followed every 15 minutes: until it is
+    run, it says so once in its log and does nothing else
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.

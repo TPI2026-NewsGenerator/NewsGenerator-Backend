@@ -92,6 +92,7 @@ What a card adds:
   cards that merit one, written after the briefing
 - [Official source](official-source/README.md): where a party of the news said it itself
 - [Corroboration](corroboration/README.md): how widely a news is carried and how its article credits its sources, shown on the card
+- [The affair](affair/README.md): the events of the affair behind a card on a horizontal line, and how widely the media told it
 - [Other angles](other-angles/README.md): news of the same affair that tell something the card does not
 - [Denials](denials/README.md): "Contested", someone named who denies the news, quoted
 

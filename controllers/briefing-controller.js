@@ -8,10 +8,29 @@
 "use strict"
 
 import {BriefingService} from '../services/briefing-service.js';
+import {AffairService} from '../services/affair-service.js';
 import {mailEnabled} from '../services/utils/mailer.js';
 import {isAdmin} from '../services/utils/admin.js';
 
 export const BriefingController = {
+    // the cards of the briefing that are one affair, with its name: {affairs: {storyId: {title, stories, media}}}
+    affairs: async (req, res) => {
+        try {
+            res.status(200).json({affairs: await AffairService.chips(req.user.id, req.params.id)});
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
+    // the affair of a card: its events in time order and how widely the media told it (see AffairService.view)
+    affair: async (req, res) => {
+        try {
+            res.status(200).json(await AffairService.view(req.user.id, req.params.id, req.params.storyId));
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
     // the last briefing, null when none was ever written
     latest: async (req, res) => {
         try {
