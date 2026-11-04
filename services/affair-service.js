@@ -14,7 +14,7 @@ import {BriefingModel} from '../models/briefing-model.js';
 import {ProfileModel} from '../models/profile-model.js';
 import {feedsOf} from './briefing-service.js';
 import {PushService} from './push-service.js';
-import {affairFile, buildAffair} from './utils/affair.js';
+import {affairFile, buildAffair, translateEvents} from './utils/affair.js';
 import {watchAffair} from './utils/affair-watch.js';
 import {mapWithConcurrency} from './utils/concurrency.js';
 import {readerLanguage} from './utils/language.js';
@@ -179,6 +179,13 @@ export const AffairService = {
     detail: async (userId, id) => {
         const row = await AffairModel.followedOne(userId, Number(id));
         if (!row) throw Object.assign(new Error('Unknown affair.'), {status: 404});
+        // The titles of the events in the language of the reader: the ones of an affair followed before 5.11.2026 were not read from their
+        // letters (a Persian paper of an English feed was left untranslated). Asked once for each event, then kept
+        const was = row.view.events.map(event => `${event.language}|${event.titleTranslation ?? ''}`);
+        await translateEvents(row.view.events, row.language).catch(err => console.error(`Affair ${row.id}: the titles were not translated (${err.message})`));
+        if (row.view.events.some((event, i) => `${event.language}|${event.titleTranslation ?? ''}` !== was[i] || event.translationChecked === undefined)) {
+            await AffairModel.saveView(row.id, row.view).catch(() => {});
+        }
         const alerts = await AffairModel.alertsOf(row.id);
         return {
             id: row.id, title: row.title, language: row.language, followedAt: row.created_at, checkedAt: row.checked_at, lastEventAt: row.last_event_at,

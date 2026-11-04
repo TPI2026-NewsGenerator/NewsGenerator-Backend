@@ -42,7 +42,13 @@ from the last 30 days when they name the card's rare names. The AI judges them f
   more (`SAME_FACT_LIKENESS`). `placeAngles`: 5 shown (`MAX_ANGLES`), the closest first; the first one
   found by names takes the last place when the closest fill them all. A story shown under a card is not
   shown under a later one.
-- The titles in another language than the reader's are translated (`translateTexts`). Each angle is saved
+- The titles in another language than the reader's are translated: the language of a title is read from its letters as well as from the label of its feed (`translatedTitles`, `title-translation.js`): a Persian or Czech
+  paper in a feed declared English was labelled English and shown untranslated to a reader of English (a card of 4.11.2026); 12 616 of the
+  19 286 news in Arabic letters of that day carried another label. A script that is not Latin says its language (a label of that script
+  stands, franc taking a short Russian title for Bulgarian), the short words of a French, German... title read without its label too,
+  and accents that are not English's guess it (Czech, Polish...) with the translation kept only if it differs from the title. A title in
+  Latin letters without accent or word of the nine languages (Dutch, Croatian) still takes its label. `node scripts/repair-angle-titles.js`
+  translates the angles of the briefings written before. Each angle is saved
   as `{title, titleTranslation, url, source, publishedAt, trusted, language, storyId, media}`.
 
 ## Measured

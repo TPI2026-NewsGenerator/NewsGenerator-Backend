@@ -32,6 +32,7 @@ import {AFFAIR_DAYS, storiesOfSameNames} from "./utils/affair-names.js";
 import {officialSourcesOf} from "./utils/official-sources.js";
 import {evolvedStories, REPEAT_HOURS, shownStories, withoutRepeats} from "./utils/repeats.js";
 import {readerLanguage, writtenIn} from "./utils/language.js";
+import {translatedTitles} from "./utils/title-translation.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {assertPublicUrl, hostOf, mediumOf} from "./utils/public-url.js";
 import {credibleStory, decodeLinks, googleAvailable, isGoogleNewsUrl, isNotNews, isRepeatedPage, pickCandidates} from "./utils/google-news.js";
@@ -479,16 +480,22 @@ export const anglesOf = async (stories, titles, {language, feedUrls, hours, trus
         return [card.id, shown];
     }));
 
-    const foreign = [...angles.values()].flat()
-        .filter(other => other.article.lang && other.article.lang !== language && writtenIn(other.article.lang) && writtenIn(language));
-    const translations = foreign.length === 0 ? [] : await translateTexts(foreign.map(other => ({text: other.title, from: writtenIn(other.article.lang)})),
-        writtenIn(language), usage).catch(() => foreign.map(() => null));
-    return new Map([...angles].map(([id, others]) => [id, others.map(other => ({
-        ...toArticle(other.article, trusted),
-        titleTranslation: translations[foreign.indexOf(other)] ?? null,
-        storyId: other.storyId,
-        media: other.media,
-    }))]));
+    // The language of each title is read from its letters as well as from the label of its feed: a Czech paper in a feed declared
+    // English was shown untranslated to a reader of English (a card of 4.11.2026), as a Persian one (see translatedTitles)
+    const all = [...angles.values()].flat();
+    const translated = await translatedTitles(all.map(other => ({title: other.title, label: other.article.lang})), language, usage)
+        .catch(() => all.map(other => ({language: other.article.lang, translation: null})));
+    return new Map([...angles].map(([id, others]) => [id, others.map(other => {
+        const read = translated[all.indexOf(other)];
+        return {
+            ...toArticle(other.article, trusted),
+            // the language the title is written in, when its letters say another than the label
+            ...(read.language && read.language !== other.article.lang ? {language: read.language} : {}),
+            titleTranslation: read.translation,
+            storyId: other.storyId,
+            media: other.media,
+        };
+    })]));
 };
 
 // the stories in the language of the reader closest to the chosen ones written in another, with the

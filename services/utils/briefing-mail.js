@@ -24,8 +24,8 @@ import {ORIGINAL_END, ORIGINAL_START, withoutOriginalMarks} from './original-mar
 // The colours and the font of the page (client styles/index.css). Mail apps keep inline styles and simple
 // tables only; Inter is asked from Google Fonts, which Apple Mail and Outlook for Mac load, and Gmail
 // replaces by the system's font. The colours are inline, the ones of the theme chosen
-const LIGHT = {paper: '#FFFFFF', deep: '#F5F5F7', ink: '#1D1D1F', mute: '#6E6E73', rule: '#D2D2D7', action: '#0066CC', accent: '#BF4800', number: '#BEBEC1'};
-const DARK = {paper: '#1C1C1E', deep: '#2C2C2E', ink: '#F5F5F7', mute: '#98989D', rule: '#3A3A3C', action: '#2997FF', accent: '#FF9F0A', number: '#545456'};
+const LIGHT = {paper: '#FFFFFF', deep: '#F5F5F7', ink: '#1D1D1F', mute: '#6E6E73', rule: '#D2D2D7', action: '#0066CC', accent: '#BF4800', official: '#248A3D', number: '#BEBEC1'};
+const DARK = {paper: '#1C1C1E', deep: '#2C2C2E', ink: '#F5F5F7', mute: '#98989D', rule: '#3A3A3C', action: '#2997FF', accent: '#FF9F0A', official: '#30D158', number: '#545456'};
 export const THEMES = ['light', 'dark'];
 // the hours of the e-mail are the ones of the reader's time zone (the browser tells it, see BriefingApi.email),
 // the ones of Zurich when it does not
@@ -257,7 +257,7 @@ const officialHtml = (given, t = ENGLISH) => {
     const posts = given.filter(post => webUrl(post.url));
     return posts.length === 0 ? '' : `
 <div style="${t.s.box}">
-  ${kicker(t.labels.officialSources, t)}
+  ${kicker(t.labels.officialSources, t, 'official')}
   ${posts.map(post => `<p style="${t.s.body};font-size:15px;line-height:1.5;margin-top:8px">${officialLine(post, t)}</p>`).join('')}
 </div>`;
 };

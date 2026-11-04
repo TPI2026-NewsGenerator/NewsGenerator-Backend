@@ -378,6 +378,9 @@ describe('briefingMail', () => {
         ]});
         let {html, text} = briefingMail({...briefing, items: [official]});
         expect(html).toContain('>Official sources<');
+        // in green, as on the page (the user, 5.11.2026), the denials in orange
+        expect(html).toMatch(/color:#248A3D">Official sources</);
+        expect(briefingMail({...briefing, items: [official]}, {theme: 'dark'}).html).toMatch(/color:#30D158">Official sources</);
         expect(html).toContain('<b>UEFA</b> said it: <a href="https://www.uefa.com/news/1"');
         // a post without a web address is no link
         expect(html).not.toContain('javascript:');
@@ -633,8 +636,8 @@ describe('briefingMail, the name of the profile and the design of the page', () 
 
     const full = {...briefing, items: [{...briefing.items[0], contested: [{by: 'Infantino', sentence: 'No.', source: 'bild.de', url: 'https://bild.de/a'}],
         official: [{party: 'UEFA', title: 'A post', url: 'https://uefa.com/a', channel: 'site'}]}]};
-    const LIGHT_COLOURS = ['#FFFFFF', '#F5F5F7', '#1D1D1F', '#6E6E73', '#D2D2D7', '#0066CC', '#BF4800'];
-    const DARK_COLOURS = ['#1C1C1E', '#2C2C2E', '#F5F5F7', '#98989D', '#3A3A3C', '#2997FF', '#FF9F0A'];
+    const LIGHT_COLOURS = ['#FFFFFF', '#F5F5F7', '#1D1D1F', '#6E6E73', '#D2D2D7', '#0066CC', '#BF4800', '#248A3D'];
+    const DARK_COLOURS = ['#1C1C1E', '#2C2C2E', '#F5F5F7', '#98989D', '#3A3A3C', '#2997FF', '#FF9F0A', '#30D158'];
 
     it('should be in the design of the page: Inter, white and one grey, blue links, rounded boxes, no serif (the user, 2.11.2026)', () => {
         const {html} = briefingMail(full);

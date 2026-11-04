@@ -66,6 +66,12 @@ if (!affair.affair) {
         const marks = [event.reported ? `reported(${event.reported})` : '', event.official ? 'OFFICIAL' : '', event.denial ? 'DENIAL' : ''].filter(Boolean).join(' ');
         console.log(`${event.at.slice(5, 16)} ${event.kind === 'key' ? 'KEY  ' : '     '} m${String(event.media.length).padStart(3)} L${event.languages.length} ${event.storyIds.length > 1 ? `x${event.storyIds.length}` : '  '} ${marks} | ${(event.titleTranslation ?? event.title).slice(0, 100)}`);
     }
+    const foreign = affair.events.filter(event => event.language !== language);
+    const untranslated = foreign.filter(event => !event.titleTranslation);
+    console.log(`TRANSLATION: ${foreign.length} events in another language than ${language}, ${untranslated.length} without a translation`);
+    const byLanguage = {};
+    for (const event of untranslated) byLanguage[event.language] = (byLanguage[event.language] ?? 0) + 1;
+    if (untranslated.length > 0) console.log('  not translated, by language:', JSON.stringify(byLanguage), '| e.g.', untranslated.slice(0, 3).map(event => `[${event.language}] ${event.title.slice(0, 50)}`).join(' | '));
     const c = affair.coverage;
     console.log(`COVERAGE: ${c.media} media, ${c.news} news, first ${c.first?.medium} (${c.first?.at?.slice(0, 16)}), peak ${c.peak?.day} (${c.peak?.media} media)`);
     console.log(`  languages: ${c.languages.slice(0, 8).map(l => `${l.language} ${l.media}`).join(', ')}`);

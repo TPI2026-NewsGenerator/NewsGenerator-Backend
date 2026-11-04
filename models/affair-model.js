@@ -128,6 +128,9 @@ export const AffairModel = {
         WHERE id = $1::int`,
         id, JSON.stringify(view), storyIds, checkedAt, lastEventAt),
 
+    // its view only (the titles of its events translated again, see AffairService.detail)
+    saveView: async (id, view) => prisma.$executeRawUnsafe('UPDATE affairs SET view = $2::jsonb WHERE id = $1::int', id, JSON.stringify(view)),
+
     // the reader stops following it: its alerts go with it. 0 when it is not theirs
     unfollow: async (userId, id) => prisma.$executeRawUnsafe('DELETE FROM affairs WHERE id = $1::int AND id_user = $2::int', id, userId),
 

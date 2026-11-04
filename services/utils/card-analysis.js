@@ -307,7 +307,14 @@ export const shownText = (card, text) => String(text ?? '')
     .replace(/\s*\((?:[^()]*\b(?:A\d+|s\d+|[TGDO]\d+)\b[^()]*)\)/g, '')
     .replace(/\bA(\d+)(?:\s*,?\s*s\d+(?:\s*[-–]\s*s?\d+)?)?\b/g, (id, n) => card.articles[Number(n) - 1]?.source ?? id)
     .replace(/\s+([,.;:])/g, '$1').replace(/\s+/g, ' ').trim();
-const condition = (text) => String(text ?? '').trim().replace(/^(?:if|si|wenn|se|als)\s+/i, '').replace(/[,;:\s]+$/, '');
+// The page puts the ", then" after the condition: a point the AI ended it with ("refuses.", "refuses.,") would show as ".," before it (the
+// user, 5.11.2026). The final point of an initialism ("U.S.") stays
+const INITIALISM = /(?:\b\p{L}\.){2,}$/u;
+const endless = (text) => {
+    const bare = text.replace(/[,;:\s]+$/, '');
+    return INITIALISM.test(bare) ? bare : bare.replace(/[.,;:\s]+$/, '');
+};
+const condition = (text) => endless(String(text ?? '').trim().replace(/^(?:if|si|wenn|se|als)\s+/i, ''));
 const consequence = (text) => String(text ?? '').trim().replace(/^(?:then|alors|dann|allora|dan|entonces)\s+/i, '');
 
 // The AI sometimes writes the whole sentence in "if" ("FKF breaches these principles, then FIFA may refer

@@ -43,7 +43,7 @@ Nothing is chosen by the reader: the system finds the affair, names it, and buil
    (0.80, within 3 days); then all the events are read once more together (`sameFactEvents`) to join the ones
    the calls kept apart. A denial is never joined to what it denies. The date of an event is the one of its first
    news, unless the feed got it wrong (a page re-dated, dated ahead): the day we saw the story then stands.
-   The lead of an event is its story in the reader's language, else the most told; its title is translated when
+   The lead of an event is its story in the reader's language, else the most told; its title is translated (the language read from its letters, see [Other angles](../other-angles/README.md)) when
    it is in another language, the original on demand.
 5. **The marks**, never a verdict: *Reported* (half of its news hedge, `hedging.js`), *Official* (the AI says a party
    announced it **and** a news of it quotes a statement or a release, `statements.js`), *Contested* (the AI says

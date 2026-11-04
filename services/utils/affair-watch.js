@@ -12,13 +12,11 @@
 import {AffairModel} from '../../models/affair-model.js';
 import {StoryModel} from '../../models/story-model.js';
 import {AFFAIR_DAYS} from './affair-names.js';
-import {CLOSE_LIKENESS, storiesWithNews} from './affair.js';
+import {CLOSE_LIKENESS, storiesWithNews, translateEvents} from './affair.js';
 import {confirmEvents, FACTS_SHOWN, JUDGED_AT_ONCE, judgeStories, sameFactEvents} from './affair-judge.js';
 import {eventsOf, mergedNew, refreshedEvent} from './affair-events.js';
 import {coverageOf, mergedCoverage} from './affair-coverage.js';
 import {mapWithConcurrency} from './concurrency.js';
-import {translateTexts} from './extract.js';
-import {writtenIn} from './language.js';
 import {newUsage} from './ollama.js';
 
 // The stories created since the last check that are close to the affair or in its threads: a quarter of an hour of
@@ -62,10 +60,7 @@ export const checkAffair = async ({affair, fresh, held = new Map(), now = new Da
     const pairs = [...new Set(judged.flatMap(item => item.asStory === null ? [] : [item.story.storyId, item.asStory]))];
     const likeness = new Map((pairs.length < 2 ? [] : await StoryModel.likenessAmong(pairs).catch(() => [])).map(row => [`${row.a}:${row.b}`, row.likeness]));
     const found = eventsOf(judged, {language, likeness: (a, b) => likeness.get(`${Math.min(a, b)}:${Math.max(a, b)}`) ?? 0});
-    const foreign = found.filter(event => event.language !== language && writtenIn(event.language) && writtenIn(language));
-    const translations = foreign.length === 0 ? [] : await translateTexts(foreign.map(event => ({text: event.title, from: writtenIn(event.language)})), writtenIn(language), usage)
-        .catch(() => foreign.map(() => null));
-    for (const event of found) event.titleTranslation = translations[foreign.indexOf(event)] ?? null;
+    await translateEvents(found, language, usage);
 
     // 3. the ones that tell a fact the reader has are added to it, the others come after
     const near = known.filter(event => found.some(one => Math.abs(+new Date(one.at) - +new Date(event.at)) <= RECENT_DAYS * DAY_MS));

@@ -16,8 +16,8 @@ import {affairFileOf, FACTS_SHOWN, JUDGED_AT_ONCE, judgeStories, sameFactEvents}
 import {datedAt, eventsOf, joinedEvents} from './affair-events.js';
 import {coverageOf} from './affair-coverage.js';
 import {mapWithConcurrency} from './concurrency.js';
-import {translateTexts} from './extract.js';
-import {writtenIn} from './language.js';
+import {translatedTitles} from './title-translation.js';
+import {scriptLanguage, writtenIn} from './language.js';
 import {newUsage} from './ollama.js';
 import {cleanTitle} from './titles.js';
 
@@ -39,17 +39,38 @@ export const storiesWithNews = async (rows, feedUrls, since) => {
     const ids = rows.map(row => row.id);
     const [stories, news] = await Promise.all([AffairModel.stories(ids), AffairModel.newsOf({storyIds: ids, feedUrls, since})]);
     const newsOf = new Map(ids.map(id => [id, []]));
-    for (const item of news) newsOf.get(item.id_story).push({...item, title: cleanTitle(item.title, item.medium)});
+    for (const item of news) {
+        const title = cleanTitle(item.title, item.medium);
+        // the label of a news is its feed's when the words cannot tell: a title in Persian letters is Persian (see scriptLanguage)
+        newsOf.get(item.id_story).push({...item, title, lang: scriptLanguage(title, item.lang) ?? item.lang});
+    }
     const rowOf = new Map(rows.map(row => [row.id, row]));
     return stories.filter(story => newsOf.get(story.id).length > 0).map(story => {
         const items = newsOf.get(story.id);
         const row = rowOf.get(story.id);
         return {
-            storyId: story.id, lang: story.lang, via: row.via, likeness: row.likeness, createdAt: story.created_at,
+            storyId: story.id, lang: scriptLanguage(items[0].title, story.lang) ?? story.lang, via: row.via, likeness: row.likeness, createdAt: story.created_at,
             news: items, media: [...new Set(items.map(item => item.medium).filter(Boolean))],
             at: datedAt(items[0].at, story.created_at),
         };
     }).sort(byTime);
+};
+
+// The titles of these events in the language of the reader (language: a code), the ones in another language only (see
+// translatedTitles: the language of a title is read from its letters, the label of its feed being English for a Persian or Czech
+// paper). The event takes the language its title is really written in. The ones already translated are left; one the AI could not
+// translate stays without. Each event is asked once (translationChecked): the ones of an affair followed before this existed are asked
+// when it is opened (see AffairService.detail). Answers the events
+export const translateEvents = async (events, language, usage = null) => {
+    const wanted = events.filter(event => !event.titleTranslation && !event.translationChecked);
+    const answers = await translatedTitles(wanted.map(event => ({title: event.title, label: event.language})), language, usage);
+    wanted.forEach((event, i) => {
+        event.language = answers[i].language ?? event.language;
+        event.titleTranslation = answers[i].translation;
+        event.translationChecked = true;
+    });
+    for (const event of events) event.titleTranslation ??= null;
+    return events;
 };
 
 // The news the grouping put with a card as one affair, given to the AI to name it: the closest to the card, oldest
@@ -129,10 +150,7 @@ export const buildAffair = async ({storyId, title, language, feedUrls, file = un
     const events = joinedEvents(found, same, language);
 
     // the titles of another language than the reader's, translated (marked as translated by the client)
-    const foreign = events.filter(event => event.language !== language && writtenIn(event.language) && writtenIn(language));
-    const translations = foreign.length === 0 ? [] : await translateTexts(foreign.map(event => ({text: event.title, from: writtenIn(event.language)})), writtenIn(language), usage)
-        .catch(() => foreign.map(() => null));
-    for (const event of events) event.titleTranslation = translations[foreign.indexOf(event)] ?? null;
+    await translateEvents(events, language, usage);
 
     return {
         affair: true,

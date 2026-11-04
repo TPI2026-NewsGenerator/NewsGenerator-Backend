@@ -129,6 +129,72 @@ export const ownLanguage = (text, fallback = null) => {
     return languageOf(text, fallback);
 };
 
+// The language a SHORT text is written in when its letters are not Latin: Arabic, Cyrillic, Greek, Hebrew, Chinese, Japanese,
+// Korean, Thai, Devanagari, Bengali, Georgian, Armenian. A title is far under MIN_TRIGRAM_CHARS, the short words know 9 languages
+// of Latin letters, so a title in another script kept the language of its feed: the Persian edition of Afghanistan International
+// (afintl.com) is read in an English feed and was labelled English, and 12 616 of the 19 286 news written in Arabic letters of
+// 5.11.2026 had another label. A letter outside the script of a language tells that language, whatever the feed: the script
+// picks the languages franc may name (a title of 10 letters at least), else the commonest of them. null for a title in Latin
+// letters (the label stands), or with too few letters
+const SCRIPTS = [
+    [/[぀-ヿ]/gu, ['jpn']],
+    [/[一-鿿]/gu, ['cmn', 'jpn']],
+    [/[가-힯]/gu, ['kor']],
+    [/[؀-ۿݐ-ݿ]/gu, ['arb', 'pes', 'urd']],
+    [/[Ѐ-ӿ]/gu, ['rus', 'ukr', 'bul', 'srp', 'mkd', 'bel', 'kaz']],
+    [/[Ͱ-Ͽἀ-῿]/gu, ['ell']],
+    [/[֐-׿]/gu, ['heb']],
+    [/[฀-๿]/gu, ['tha']],
+    [/[ऀ-ॿ]/gu, ['hin']],
+    [/[ঀ-৿]/gu, ['ben']],
+    [/[Ⴀ-ჿ]/gu, ['kat']],
+    [/[԰-֏]/gu, ['hye']],
+];
+export const scriptLanguage = (text, label = null) => {
+    const letters = (String(text ?? '').match(/\p{L}/gu) ?? []).length;
+    if (letters < 4) return null;
+    for (const [pattern, codes] of SCRIPTS) {
+        const hits = (text.match(pattern) ?? []).length;
+        // kana make Japanese with any number of Chinese characters; the others need most of the letters
+        if (hits === 0 || (codes[0] !== 'jpn' || codes.length > 1 ? hits / letters < 0.6 : hits / letters < 0.1)) continue;
+        // a label that is one of the languages of the script stands: franc takes a short Russian title for Bulgarian
+        if (label && codes.some(code => FRANC_CODES[code] === label)) return label;
+        const named = codes.length === 1 ? codes[0] : franc(text, {minLength: 10, only: codes});
+        return FRANC_CODES[named] ?? FRANC_CODES[codes[0]];
+    }
+    return null;
+};
+
+// A title in Latin letters whose accents are not English's: "Můj cíl je jasný: sloužit fotbalu a lidem" came from a Czech paper read
+// in a feed declared English (the angle of a card of 4.11.2026 was shown untranslated). Two letters with a mark at least, 3% of
+// the letters: franc then says which of the languages of such letters it is, short as it is (the choice is among languages that
+// have them, English left out). It is a guess: a football title of names ("Mbappé and Müller shine as Ødegaard returns") passes
+// for Danish, so what asks for a translation (see translatedTitles) keeps the title when the translation is the same text.
+// null when the marks are few or franc says the label
+const ACCENTED = ['ces', 'slk', 'pol', 'hun', 'ron', 'tur', 'vie', 'hrv', 'bos', 'slv', 'swe', 'dan', 'nob', 'fin', 'ekk', 'lvs', 'lit', 'als', 'fra', 'deu', 'spa', 'por', 'ita', 'nld', 'cat', 'glg'];
+export const markedLanguage = (text, label = null) => {
+    const letters = (String(text ?? '').match(/\p{L}/gu) ?? []).length;
+    const marks = (String(text ?? '').match(/[À-ɏḀ-ỿ]/gu) ?? []).length;
+    if (letters < 12 || marks < 2 || marks / letters < 0.03) return null;
+    let code = FRANC_CODES[franc(text, {minLength: 10, only: ACCENTED})];
+    // franc takes Czech for Slovak and back on a short text: ě, ř and ů are Czech's alone, ä, ĺ, ľ, ŕ and ô Slovak's
+    if (code === 'sk' && /[ěřů]/iu.test(text)) code = 'cs';
+    else if (code === 'cs' && /[äĺľŕô]/iu.test(text)) code = 'sk';
+    return code && code !== label ? code : null;
+};
+
+// The language a title is really written in, from its letters, the label the database gave it when they say nothing. 'guessed': the
+// language came from the accents only (see markedLanguage)
+export const titleLanguage = (title, label = null) => {
+    const script = scriptLanguage(title);
+    if (script) return {language: script, guessed: false};
+    // the short words of the 9 languages that have them, read without the label (as the timeline of the analysis reads its titles)
+    const words = languageOf(title);
+    if (words && words !== label) return {language: words, guessed: false};
+    const marked = markedLanguage(title, label);
+    return marked ? {language: marked, guessed: true} : {language: label, guessed: false};
+};
+
 // The language most of these texts (the news of one feed) are written in, null when too few of them
 // tell it or they do not agree. Measured on 345 feeds: every feed of a listed language was told right
 // by the words. With franc on the texts joined, the other languages too (see longTextLanguage).

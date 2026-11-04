@@ -95,6 +95,25 @@ describe('the "If X, then Y" lines of an analysis', () => {
         expect(cleanNext({if: 'the Council refuses, alors le plan est abandonné.', then: ''})).toEqual({if: 'the Council refuses', then: 'le plan est abandonné.'});
     });
 
+    // the page writes "If X, then Y": a point the AI ended X with showed as ".," before the "then" (the user, 5.11.2026)
+    it('should not end the condition with a point, nor a point and a comma, the page puts its own comma after it', () => {
+        expect(cleanNext({if: 'the Council refuses.', then: 'the plan is dropped.'})).toEqual({if: 'the Council refuses', then: 'the plan is dropped.'});
+        expect(cleanNext({if: 'If the Council refuses.,', then: 'the plan is dropped.'}).if).toBe('the Council refuses');
+        expect(cleanNext({if: 'the Council refuses…', then: 'the plan is dropped.'}).if).toBe('the Council refuses…');
+        // the consequence is a sentence of its own: its point stays
+        expect(cleanNext({if: 'the Council refuses', then: 'the plan is dropped.'}).then).toBe('the plan is dropped.');
+    });
+
+    it('should keep the last point of an initialism ending the condition', () => {
+        expect(cleanNext({if: 'talks with the U.S.', then: 'a deal is signed.'}).if).toBe('talks with the U.S.');
+        expect(cleanNext({if: 'talks with the U.S.,', then: 'a deal is signed.'}).if).toBe('talks with the U.S.');
+    });
+
+    it('should clean a saved analysis whose condition ends with a point', () => {
+        const saved = {status: 'ready', cards: {5: {why: [], next: [{if: 'the vote fails.', then: 'the plan is dropped.'}], timeline: []}}};
+        expect(withCleanNext(saved).cards[5].next).toEqual([{if: 'the vote fails', then: 'the plan is dropped.'}]);
+    });
+
     it('should leave a line as it is when its condition has no "then"', () => {
         expect(cleanNext(once)).toEqual(once);
     });
