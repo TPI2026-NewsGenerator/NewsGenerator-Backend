@@ -10,7 +10,7 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const ollamaJson = jest.fn();
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson}));
-const {scriptLanguage, titleLanguage} = await import('../../services/utils/language.js');
+const {scriptLanguage, titleLanguage, writtenIn} = await import('../../services/utils/language.js');
 const {translatedTitles} = await import('../../services/utils/title-translation.js');
 
 const PERSIAN = 'افشاگری لوموند: فیفا مالیات‌های رئیس خود را در امریکا پرداخت کرده است';
@@ -33,6 +33,36 @@ describe('scriptLanguage', () => {
         expect(scriptLanguage('Ο Ινφαντίνο απαντά στην UEFA')).toBe('el');
         expect(scriptLanguage('インファンティーノ会長が辞任を否定')).toBe('ja');
         expect(scriptLanguage('国际足联主席因凡蒂诺否认辞职')).toBe('zh');
+    });
+
+    // the languages of a script of their own, which the list had not (the user, 06.11.2026: "éviter problème de langue plus tard")
+    it('should name the languages of India, South-East Asia and Ethiopia by their letters, whatever the label of their feed', () => {
+        const titles = {
+            ta: 'ஃபிஃபா நடுவர் விதிகளில் மாற்றங்களை அறிவித்துள்ளது இன்று', te: 'ఫిఫా రిఫరీ నియమాలలో మార్పులను ప్రకటించింది ఈ రోజు',
+            kn: 'ಫಿಫಾ ರೆಫರಿ ನಿಯಮಗಳಲ್ಲಿ ಬದಲಾವಣೆಗಳನ್ನು ಘೋಷಿಸಿದೆ ಇಂದು', ml: 'ഫിഫ റഫറി നിയമങ്ങളിൽ മാറ്റങ്ങൾ പ്രഖ്യാപിച്ചു ഇന്ന്',
+            gu: 'ફિફાએ રેફરીના નિયમોમાં ફેરફારની જાહેરાત કરી છે આજે', pa: 'ਫੀਫਾ ਨੇ ਰੈਫਰੀ ਦੇ ਨਿਯਮਾਂ ਵਿੱਚ ਬਦਲਾਅ ਦਾ ਐਲਾਨ ਕੀਤਾ ਹੈ ਅੱਜ',
+            si: 'ෆීෆා ආයතනය විනිසුරු නීතිවල වෙනස්කම් නිවේදනය කළා අද', km: 'ហ្វីហ្វាប្រកាសការផ្លាស់ប្តូរច្បាប់អាជ្ញាកណ្តាលនៅថ្ងៃនេះ',
+            lo: 'ຟີຟາປະກາດການປ່ຽນແປງກົດລະບຽບຜູ້ຕັດສິນມື້ນີ້ແລ້ວ', my: 'ဖီဖာက ဒိုင်လူကြီးစည်းမျဉ်းများ ပြောင်းလဲကြောင်း ကြေညာခဲ့သည်',
+            am: 'ፊፋ በዳኝነት ህጎች ላይ ለውጦችን ማወጁን ዛሬ አስታወቀ',
+        };
+        for (const [code, title] of Object.entries(titles)) {
+            expect(scriptLanguage(title)).toBe(code);
+            expect(titleLanguage(title, 'en')).toEqual({language: code, guessed: false});
+            expect(writtenIn(code)).not.toBeNull();
+        }
+    });
+
+    it('should read a Serbian title in Cyrillic as Serbian, with a label or without', () => {
+        const title = 'Званично: Нема кандидата за председника Фудбалског савеза Србије!';
+        expect(titleLanguage(title, null)).toEqual({language: 'sr', guessed: false});
+        expect(titleLanguage(title, 'en')).toEqual({language: 'sr', guessed: false});
+        expect(titleLanguage(title, 'sr')).toEqual({language: 'sr', guessed: false});
+    });
+
+    it('should translate the languages a feed labels but the words cannot read: Icelandic, Welsh, Basque, Hausa...', () => {
+        for (const code of ['is', 'cy', 'eu', 'ha', 'so', 'mt', 'ga', 'nb']) expect(writtenIn(code)).not.toBeNull();
+        // and still not a code that is no language
+        expect(writtenIn('zz')).toBeNull();
     });
 
     it('should say nothing of a title in Latin letters, or with too few letters', () => {

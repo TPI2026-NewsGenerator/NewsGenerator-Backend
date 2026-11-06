@@ -138,15 +138,14 @@ describe('countryNamed', () => {
 
 describe('countryNames', () => {
     it('should name the countries in the language asked', () => {
-        expect(countryNames(['US', 'CN'], {titles: ['Trump et Xi se rencontrent'], locale: 'fr'})).toEqual(['États-Unis', 'Chine']);
-        expect(countryNames(['ZM'], {titles: ['Hichilema dismisses his finance minister']})).toEqual(['Zambia']);
+        expect(countryNames(['US', 'CN'], {locale: 'fr'})).toEqual(['États-Unis', 'Chine']);
+        expect(countryNames(['ZM'])).toEqual(['Zambia']);
+        expect(countryNames([])).toEqual([]);
     });
 
-    it('should show none when the title names every one of them already, in its language or the reader one', () => {
-        expect(countryNames(['ZM'], {titles: ['La Zambie limoge son ministre'], languages: ['fr']})).toEqual([]);
-        expect(countryNames(['ZM'], {titles: ['Le président zambien limoge son ministre'], languages: ['fr']})).toEqual([]);
-        expect(countryNames(['US', 'CN'], {titles: ['Trump en Chine'], languages: ['fr']})).toEqual(['United States', 'China']);
-        expect(countryNames(['US', 'CN'], {titles: ['Les États-Unis et la Chine signent'], languages: ['fr']})).toEqual([]);
-        expect(countryNames([], {titles: ['x']})).toEqual([]);
+    // the title is no longer asked (the user, 06.11.2026): a country is shown even when the title names it
+    it('should show every country, even when the title names it already', () => {
+        expect(countryNames(['ZM'], {titles: ['La Zambie limoge son ministre'], languages: ['fr'], locale: 'fr'})).toEqual(['Zambie']);
+        expect(countryNames(['US', 'CN'], {titles: ['Les États-Unis et la Chine signent'], languages: ['fr']})).toEqual(['United States', 'China']);
     });
 });

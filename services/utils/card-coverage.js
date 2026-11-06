@@ -20,7 +20,7 @@ const binOf = (span) => {
 };
 
 // item: a card of the briefing ({articles: [{source, url, publishedAt, language, trusted}], corroboration: {media}}). Answers null
-// when it holds no article, else {media, languages: [{language, media}], first: {source, at}, last: {at}, binMs, bars: [{from, count}],
+// when it holds no article, else {media, languages: [{language, media}], first: {source, url, at}, last: {at}, binMs, bars: [{from, count}],
 // list: [article]} the media in the order they came in, the ones with no date last. media: the greater of the media the card counts
 // and the articles it holds
 export const coverageOfCard = (item) => {
@@ -48,7 +48,7 @@ export const coverageOfCard = (item) => {
     return {
         media: Math.max(item.corroboration?.media ?? 0, new Set(articles.map(article => article.source)).size),
         languages,
-        first: dated[0] ? {source: dated[0].source, at: dated[0].publishedAt} : null,
+        first: dated[0] ? {source: dated[0].source, url: dated[0].url ?? null, at: dated[0].publishedAt} : null,
         last: dated.length > 0 ? {at: dated[dated.length - 1].publishedAt} : null,
         binMs, bars,
         list: [...dated, ...undated],

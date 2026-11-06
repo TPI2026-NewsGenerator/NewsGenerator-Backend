@@ -20,7 +20,7 @@
 "use strict"
 
 import {languageName} from './language.js';
-import {countryName, countryNames} from './country-names.js';
+import {countryNames} from './country-names.js';
 import {ORIGINAL_END, ORIGINAL_START, withoutOriginalMarks} from './original-marks.js';
 import {coverageOfCard} from './card-coverage.js';
 
@@ -107,11 +107,12 @@ export const LABELS = {
 // Not a label: the other languages say it with a word ("le briefing de {name}"), whatever the name ends in
 const BRIEFING_OF_S = '{name}’ Briefing';
 
-// The text styles of the page (kicker, caption, body-text, lede, link) and what the page puts on its one other
-// tone, a rounded box (the AI analysis, who denies, the official sources), in the colours c. A kicker is
-// small and quiet, in the case it is written, as on the page
+// The text styles of the page (section title, caption, body-text, lede, link) and what the page puts on its one other
+// tone, a rounded box (the AI analysis, who denies, the official sources), in the colours c. The title of a part of a card ("Key
+// points", "Same affair, other angles"...) is a title, not a label: 18 px in semibold and the ink, as the page's (the user,
+// 06.11.2026: "trop petits et non visibles comme des titres")
 const stylesOf = (c) => ({
-    kicker: `font:500 13px/1.3 ${FONT};letter-spacing:0;color:${c.mute};margin:0`,
+    heading: `font:600 18px/1.3 ${FONT};letter-spacing:-.01em;color:${c.ink};margin:0`,
     caption: `font:400 13px/1.45 ${FONT};color:${c.mute};margin:0`,
     body: `font:400 17px/1.6 ${FONT};letter-spacing:-.005em;color:${c.ink};margin:0`,
     lede: `font:400 19px/1.55 ${FONT};letter-spacing:-.005em;color:${c.ink};margin:0`,
@@ -177,7 +178,17 @@ const languageMark = (code, t = ENGLISH) => code
     : '';
 // a medium and its marks kept together on one line
 const together = (html) => `<span style="white-space:nowrap">${html}</span>`;
-const kicker = (text, t, tone = 'mute') => `<p style="${t.s.kicker}${tone === 'mute' ? '' : `;color:${t.c[tone]}`}">${escape(text)}</p>`;
+const heading = (text, t, tone = 'ink') => `<p style="${t.s.heading}${tone === 'ink' ? '' : `;color:${t.c[tone]}`}">${escape(text)}</p>`;
+
+// The links of the e-mail are of three kinds, as on the page: the one that leads to the article (the blue of the action), the title of an
+// item of a list (the ink, a hairline under it), and the name of a medium (the grey, the same hairline). The name of a medium that looks
+// like an address ("fss.rs") is turned into a link by the mail apps of phones, blue and underlined, among the grey ones (the user,
+// 06.11.2026): it is a link of ours, with the address of its news, or a break nobody sees (a zero-width space) when there is none
+const HAIRLINE = (t) => `text-decoration:underline;text-decoration-color:${t.c.rule};text-underline-offset:3px`;
+const itemLinkStyle = (t) => `color:${t.c.ink};${HAIRLINE(t)}`;
+const mediumHtml = (name, url, t) => webUrl(url)
+    ? `<a href="${escape(url)}" style="color:${t.c.mute};${HAIRLINE(t)}">${escape(name)}</a>`
+    : escape(name).replace(/(?<=[\p{L}\p{N}])\.(?=\p{L})/gu, '.&#8203;');
 
 // the passages, "[…]" between two of them; the first one of the first card a little larger, as on the page
 const passagesHtml = (paragraphs, lede, t) => paragraphs.map((paragraph, i) => {
@@ -203,10 +214,10 @@ const wayText = ({paragraphs: marked, way}) => {
 
 const contestedHtml = (denials, t = ENGLISH) => denials.length === 0 ? '' : `
 <div style="${t.s.box}">
-  ${kicker(t.labels.contested, t, 'accent')}
+  ${heading(t.labels.contested, t, 'accent')}
   ${denials.map(denial => `
   <p style="${t.s.body};margin-top:12px"><b>${fill(t.labels.denies, {by: escape(denial.by)})}</b> “${escape(denial.translation || denial.sentence)}”</p>
-  <p style="${t.s.caption};margin-top:4px">— ${webUrl(denial.url) ? `<a href="${escape(denial.url)}" style="color:${t.c.mute};text-decoration:underline;text-underline-offset:3px">${escape(denial.source)}</a>` : escape(denial.source)}${denial.publishedAt ? `, ${escape(when(denial.publishedAt, t))}` : ''}</p>`).join('')}
+  <p style="${t.s.caption};margin-top:4px">— ${mediumHtml(denial.source, denial.url, t)}${denial.publishedAt ? `, ${escape(when(denial.publishedAt, t))}` : ''}</p>`).join('')}
 </div>`;
 
 // The AI analysis of the card (see card-analysis.js), the lines the reader kept: why it matters, what
@@ -218,13 +229,13 @@ const analysisHtml = (analysis, t = ENGLISH) => {
     const why = analysis.why ?? [], next = analysis.next ?? [], timeline = (analysis.timeline ?? []).filter(item => item.title);
     if (why.length + next.length + timeline.length === 0) return '';
     const list = (lines) => `<ul style="margin:0;padding-left:22px">${lines.map(line => `<li style="${t.s.body};margin-top:8px">${line}</li>`).join('')}</ul>`;
-    const part = (title, html, first) => `<div style="margin-top:${first ? 0 : 16}px">${kicker(title, t)}${html}</div>`;
+    const part = (title, html, first) => `<div style="margin-top:${first ? 0 : 20}px">${heading(title, t)}<div style="margin-top:8px">${html}</div></div>`;
     const parts = [
         why.length > 0 && [t.labels.whyItMatters, list(why.map(escape))],
         next.length > 0 && [t.labels.whatNext, list(next.map(line => `<b>${escape(t.labels.if)}</b> ${escape(line.if)}, <b>${escape(t.labels.then)}</b> ${escape(line.then)}`))],
         timeline.length > 0 && [t.labels.storySoFar, timeline.map(item => `<p style="${t.s.caption};color:${t.c.ink};margin-top:6px"><span style="color:${t.c.mute}">${escape(dayOf(item.date, t))}</span> ${webUrl(item.url)
-            ? `<a href="${escape(item.url)}" style="color:${t.c.ink};text-decoration:underline;text-decoration-color:${t.c.rule};text-underline-offset:3px">${escape(item.titleTranslation ?? item.title)}</a>`
-            : escape(item.titleTranslation ?? item.title)}${item.medium ? ` <span style="color:${t.c.mute}">· ${escape(item.medium)}</span>` : ''}</p>`).join('')],
+            ? `<a href="${escape(item.url)}" style="${itemLinkStyle(t)}">${escape(item.titleTranslation ?? item.title)}</a>`
+            : escape(item.titleTranslation ?? item.title)}${item.medium ? ` <span style="color:${t.c.mute}">· ${mediumHtml(item.medium, item.url, t)}</span>` : ''}</p>`).join('')],
     ].filter(Boolean);
     return `
 <div style="${t.s.box}">
@@ -246,10 +257,10 @@ const anglesHtml = (given, t = ENGLISH) => {
     const angles = given.filter(angle => webUrl(angle.url));
     return angles.length === 0 ? '' : `
 <div style="margin-top:36px">
-  ${kicker(t.labels.otherAngles, t)}
+  ${heading(t.labels.otherAngles, t)}
   ${angles.map(angle => `
-  <p style="margin:12px 0 0"><a href="${escape(angle.url)}" style="font:600 17px/1.45 ${FONT};letter-spacing:-.005em;color:${t.c.ink};text-decoration:none">${escape(angle.titleTranslation ?? angle.title)}</a></p>
-  <p style="${t.s.caption};margin-top:4px">${together(`${escape(angle.source)}${languageMark(angle.language, t)}`)}${angle.publishedAt ? ` · ${escape(when(angle.publishedAt, t))}` : ''}${angle.media > 1 ? ` · ${fill(t.labels.toldBy, {count: escape(angle.media)})}` : ''}</p>`).join('')}
+  <p style="margin:14px 0 0"><a href="${escape(angle.url)}" style="font:500 17px/1.45 ${FONT};letter-spacing:-.005em;${itemLinkStyle(t)}">${escape(angle.titleTranslation ?? angle.title)}</a></p>
+  <p style="${t.s.caption};margin-top:4px">${together(`${mediumHtml(angle.source, angle.url, t)}${languageMark(angle.language, t)}`)}${angle.publishedAt ? ` · ${escape(when(angle.publishedAt, t))}` : ''}${angle.media > 1 ? ` · ${fill(t.labels.toldBy, {count: escape(angle.media)})}` : ''}</p>`).join('')}
 </div>`;
 };
 
@@ -306,7 +317,7 @@ const namesOf = (card) => card.blocks?.names ? (card.names ?? []).map(one => one
 const namesHtml = (card, t = ENGLISH) => {
     const names = namesOf(card);
     return names.length === 0 ? '' : `
-  <div style="margin-top:14px">${kicker(t.labels.whoItIsAbout, t)}<p style="margin:8px 0 0">${names.map(name => pillHtml(escape(name), 'name', t)).join('')}</p></div>`;
+  <div style="margin-top:18px">${heading(t.labels.whoItIsAbout, t)}<p style="margin:10px 0 0">${names.map(name => pillHtml(escape(name), 'name', t)).join('')}</p></div>`;
 };
 
 // How widely it is told (client CardCoverage.jsx), from the articles the card holds: the count of media and languages, who told it first,
@@ -328,9 +339,9 @@ const coverageHtml = (card, t = ENGLISH) => {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:340px;margin-top:4px"><tr><td style="${t.s.caption}">${escape(when(coverage.first?.at, t))}</td><td align="right" style="${t.s.caption}">${escape(when(coverage.last?.at, t))}</td></tr></table>`;
     return `
 <div style="margin-top:36px">
-  ${kicker(t.labels.howWidelyTold, t)}
+  ${heading(t.labels.howWidelyTold, t)}
   <p style="margin:8px 0 0;font:500 17px/1.35 ${FONT};color:${t.c.ink}">${escape(coverageWords(coverage, t))}</p>
-  ${coverage.first ? `<p style="${t.s.caption};margin-top:4px">${fill(t.labels.firstToldBy, {source: escape(coverage.first.source), date: escape(when(coverage.first.at, t))})}</p>` : ''}${bars}
+  ${coverage.first ? `<p style="${t.s.caption};margin-top:4px">${fill(t.labels.firstToldBy, {source: mediumHtml(coverage.first.source, coverage.first.url, t), date: escape(when(coverage.first.at, t))})}</p>` : ''}${bars}
   ${coverage.languages.length > 0 ? `<p style="${t.s.caption};margin-top:12px">${escape(coverage.languages.map(one => `${languageName(one.language, t.language)} ${one.media}`).join(' · '))}</p>` : ''}
 </div>`;
 };
@@ -366,19 +377,19 @@ const affairHtml = (card, t = ENGLISH) => {
         const dot = event.reported ? `background:${c.paper};border:2px dashed ${tone}` : `background:${tone};border:2px solid ${tone}`;
         const marks = [event.reported && [t.labels.reported, c.accent], event.official && [t.labels.official, c.official], event.denial && [t.labels.contested, c.accent]].filter(Boolean);
         const title = escape(event.titleTranslation ?? event.title);
-        const meta = [event.medium && escape(event.medium), event.media?.length > 1 && fill(t.labels.toldBy, {count: event.media.length}),
+        const meta = [event.medium && mediumHtml(event.medium, event.url, t), event.media?.length > 1 && fill(t.labels.toldBy, {count: event.media.length}),
             ...marks.map(([words, colour]) => `<span style="color:${colour};font-weight:500">${escape(words)}</span>`)].filter(Boolean).join(' · ');
         return `<tr>
     <td valign="top" style="padding:7px 10px 0 0;width:12px"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;${dot}"></span></td>
     <td valign="top" style="${t.s.caption};padding:3px 12px 10px 0;white-space:nowrap">${escape(eventDay(event.at, t))}</td>
     <td valign="top" style="padding:0 0 10px">${webUrl(event.url)
-        ? `<a href="${escape(event.url)}" style="font:400 15px/1.45 ${FONT};color:${c.ink};text-decoration:underline;text-decoration-color:${c.rule};text-underline-offset:3px">${title}</a>`
+        ? `<a href="${escape(event.url)}" style="font:400 15px/1.45 ${FONT};${itemLinkStyle(t)}">${title}</a>`
         : `<span style="font:400 15px/1.45 ${FONT};color:${c.ink}">${title}</span>`}${meta ? `<br><span style="${t.s.caption}">${meta}</span>` : ''}</td>
   </tr>`;
     };
     return `
 <div style="margin-top:36px">
-  ${kicker(t.labels.thisAffair, t)}
+  ${heading(t.labels.thisAffair, t)}
   <p style="margin:8px 0 0;font:500 17px/1.35 ${FONT};color:${c.ink}">${escape(affair.title)}</p>
   ${[affairStories(affair, t), affairFigures(affair, t)].filter(Boolean).map(line => `<p style="${t.s.caption};margin-top:4px">${escape(line)}</p>`).join('')}
   <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-top:14px">${keys.map(row).join('')}</table>
@@ -397,18 +408,23 @@ const affairText = (card, t = ENGLISH) => {
     ];
 };
 
-// where to read it (client NewsLinks.jsx): the article of the passages, then each other medium once
+// where to read it (client NewsLinks.jsx): the article of the passages, right under its sentences (the user, 06.11.2026), and at the very
+// bottom each other medium once that covers it
 const SHOWN_OTHERS = 8;
-const linksHtml = (card, t = ENGLISH) => {
+const readHtml = (card, t = ENGLISH) => {
     const lead = card.lead ?? card.articles?.[0];
     if (!lead || !webUrl(lead.url)) return '';
-    const seen = new Set([lead.source]);
-    const others = (card.articles ?? []).filter(other => webUrl(other.url) && !seen.has(other.source) && seen.add(other.source));
     return `
-<p style="margin:32px 0 0;font:400 15px/1.4 ${FONT}"><a href="${escape(lead.url)}" style="${t.s.link}">${fill(t.labels.readAt, {source: escape(lead.source)})}</a>${lead.trusted ? ` <span style="color:${t.c.accent}">★</span>` : ''}${languageMark(lead.language, t)}</p>
-${others.length > 0 ? `<p style="${t.s.caption};margin-top:8px">${escape(t.labels.alsoCovered)} ${others.slice(0, SHOWN_OTHERS)
-        .map(other => together(`<a href="${escape(other.url)}" style="color:${t.c.mute};text-decoration:underline;text-decoration-color:${t.c.rule};text-underline-offset:4px">${escape(other.source)}</a>${other.trusted ? ' ★' : ''}${languageMark(other.language, t)}`))
-        .join(', ')}${others.length > SHOWN_OTHERS ? ` ${fill(t.labels.andMore, {count: others.length - SHOWN_OTHERS})}` : ''}</p>` : ''}`;
+  <p style="margin:20px 0 0;font:400 15px/1.4 ${FONT}"><a href="${escape(lead.url)}" style="${t.s.link}">${fill(t.labels.readAt, {source: escape(lead.source)})}</a>${lead.trusted ? ` <span style="color:${t.c.accent}">★</span>` : ''}${languageMark(lead.language, t)}</p>`;
+};
+const alsoHtml = (card, t = ENGLISH) => {
+    const lead = card.lead ?? card.articles?.[0];
+    const seen = new Set([lead?.source]);
+    const others = (card.articles ?? []).filter(other => webUrl(other.url) && !seen.has(other.source) && seen.add(other.source));
+    return others.length === 0 ? '' : `
+<p style="${t.s.caption};margin-top:32px">${escape(t.labels.alsoCovered)} ${others.slice(0, SHOWN_OTHERS)
+        .map(other => together(`${mediumHtml(other.source, other.url, t)}${other.trusted ? ' ★' : ''}${languageMark(other.language, t)}`))
+        .join(', ')}${others.length > SHOWN_OTHERS ? ` ${fill(t.labels.andMore, {count: others.length - SHOWN_OTHERS})}` : ''}</p>`;
 };
 
 // the posts where a party said the news itself (see official-sources.js), a line each, and its
@@ -417,13 +433,13 @@ ${others.length > 0 ? `<p style="${t.s.caption};margin-top:8px">${escape(t.label
 // out, or none has a web address), no box
 // the title of a post in the reader's language when it was translated (briefings since 18.10.2026)
 const officialLine = (post, t = ENGLISH) => post.channel === 'reported'
-    ? `${fill(t.labels.saidItReported, {party: `<b>${escape(post.party)}</b>`, source: `<a href="${escape(post.url)}" style="color:${t.c.ink};text-decoration:underline;text-decoration-color:${t.c.rule};text-underline-offset:3px">${escape(post.source)}</a>`})} “${escape(post.translation ?? post.title)}”`
-    : `${fill(t.labels.saidIt, {party: `<b>${escape(post.party)}</b>`})} <a href="${escape(post.url)}" style="color:${t.c.ink};text-decoration:underline;text-decoration-color:${t.c.rule};text-underline-offset:3px">${escape(post.translation ?? post.title)}</a>${post.publishedAt ? `<span style="color:${t.c.mute}">, ${escape(when(post.publishedAt, t))}</span>` : ''}`;
+    ? `${fill(t.labels.saidItReported, {party: `<b>${escape(post.party)}</b>`, source: `<a href="${escape(post.url)}" style="${itemLinkStyle(t)}">${escape(post.source)}</a>`})} “${escape(post.translation ?? post.title)}”`
+    : `${fill(t.labels.saidIt, {party: `<b>${escape(post.party)}</b>`})} <a href="${escape(post.url)}" style="${itemLinkStyle(t)}">${escape(post.translation ?? post.title)}</a>${post.publishedAt ? `<span style="color:${t.c.mute}">, ${escape(when(post.publishedAt, t))}</span>` : ''}`;
 const officialHtml = (given, t = ENGLISH) => {
     const posts = given.filter(post => webUrl(post.url));
     return posts.length === 0 ? '' : `
 <div style="${t.s.box}">
-  ${kicker(t.labels.officialSources, t, 'official')}
+  ${heading(t.labels.officialSources, t, 'official')}
   ${posts.map(post => `<p style="${t.s.body};font-size:15px;line-height:1.5;margin-top:8px">${officialLine(post, t)}</p>`).join('')}
 </div>`;
 };
@@ -433,19 +449,14 @@ const officialHtml = (given, t = ENGLISH) => {
 // withHedgedTranslated)
 const notesHtml = (card, t = ENGLISH) => !card.hedged ? '' : `
 <div style="margin-top:24px;border-top:1px solid ${t.c.rule}">
-  <div style="padding-top:12px">${kicker(t.labels.notConfirmed, t, 'accent')}<p style="${t.s.caption};color:${t.c.ink};margin-top:4px">${fill(t.labels.unconfirmed, {words: escape(card.hedgedTranslation ?? card.hedged)})}</p></div>
+  <div style="padding-top:12px">${heading(t.labels.notConfirmed, t, 'accent')}<p style="${t.s.caption};color:${t.c.ink};margin-top:4px">${fill(t.labels.unconfirmed, {words: escape(card.hedgedTranslation ?? card.hedged)})}</p></div>
 </div>`;
 
 // the title shown: the one the reader wrote for the e-mail (ownTitle), else the translated one
 const titleOf = (card) => card.ownTitle ?? card.titleTranslation ?? card.title;
 // The countries of who it names, in the reader's language: the ones the reader chose for the e-mail
-// (ownCountries, codes, see withOwnCountries) as they are, else none when its title names them (see
-// country-names.js)
-const countriesOf = (card, t = ENGLISH) => Array.isArray(card.ownCountries)
-    ? card.ownCountries.map(code => countryName(code, t.language))
-    : countryNames(card.countries ?? [], {
-        titles: [card.ownTitle, card.titleTranslation, card.title], languages: [card.language], locale: t.language,
-    });
+// (ownCountries, codes, see withOwnCountries) as they are, else the ones found, whatever the title says (see country-names.js)
+const countriesOf = (card, t = ENGLISH) => countryNames(Array.isArray(card.ownCountries) ? card.ownCountries : card.countries ?? [], {locale: t.language});
 
 // personal: the why of the card, written to the reader ("that you follow"), left out of an e-mail to
 // another; format: the way its sentences are shown (see wayOf)
@@ -486,17 +497,17 @@ const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH, an
   ${badgesHtml(card, t)}${namesHtml(card, t)}
   ${personal && card.why ? `<p style="margin:12px 0 0;font:400 20px/1.45 ${FONT};letter-spacing:-.01em;color:${t.c.mute}">${escape(card.why)}</p>` : ''}
   ${picture ? `<img src="${escape(picture)}" alt="" width="${width}" style="display:block;width:100%;max-width:${width}px;height:auto;margin-top:20px;border:0;border-radius:18px;background:${t.c.deep}">
-  ${credit ? `<p style="${t.s.caption};margin-top:6px">${escape(illustration ? t.labels.illustration : t.labels.picture)} — ${escape(credit)}</p>` : ''}` : ''}
+  ${credit ? `<p style="${t.s.caption};margin-top:6px">${escape(illustration ? t.labels.illustration : t.labels.picture)} — ${mediumHtml(credit, null, t)}</p>` : ''}` : ''}
   ${sentences.paragraphs.length > 0 ? `
-  <div style="margin-top:24px">${kicker(sentences.title, t)}</div>
-  <div style="margin-top:12px;overflow:hidden">${WAYS_HTML[sentences.way](sentences.paragraphs, i === 0, t)}</div>` : ''}
+  <div style="margin-top:28px">${heading(sentences.title, t)}</div>
+  <div style="margin-top:12px;overflow:hidden">${WAYS_HTML[sentences.way](sentences.paragraphs, i === 0, t)}</div>` : ''}${readHtml(card, t)}
   ${officialHtml(card.official ?? [], t)}
   ${analysisHtml(card.analysis, t)}
   ${contestedHtml(card.contested ?? [], t)}
   ${anglesHtml(card.angles ?? [], t)}
   ${affairHtml(card, t)}
   ${coverageHtml(card, t)}
-  ${linksHtml(card, t)}
+  ${alsoHtml(card, t)}
   ${notesHtml(card, t)}
 </td></tr>`;
 };
@@ -548,6 +559,7 @@ ${cards.map((card, i) => cardHtml(card, i, !sender, format, t, anchors)).join(''
                 sender ? '' : card.why ?? '',
                 '',
                 wayText(wayOf(card, format, t)),
+                lead ? `${fillText(L.readAt, {source: lead.source})}: ${lead.url}` : '',
                 ...(card.official ?? []).map(post => post.channel === 'reported'
                     ? `${L.officialSource} — ${fillText(L.saidItReported, {party: post.party, source: post.source})} "${post.translation ?? post.title}" ${post.url}`
                     : `${L.officialSource} — ${fillText(L.saidIt, {party: post.party})} ${post.translation ?? post.title} ${post.url}`),
@@ -556,7 +568,6 @@ ${cards.map((card, i) => cardHtml(card, i, !sender, format, t, anchors)).join(''
                 ...(card.angles ?? []).map(angle => `${L.otherAngle} ${angle.titleTranslation ?? angle.title} (${angle.source}) ${angle.url}`),
                 ...affairText(card, t),
                 ...coverageText(card, t),
-                lead ? `${fillText(L.readAt, {source: lead.source})}: ${lead.url}` : '',
                 '',
             ].filter((line, j, lines) => line !== '' || lines[j - 1] !== '').join('\n');
         }),

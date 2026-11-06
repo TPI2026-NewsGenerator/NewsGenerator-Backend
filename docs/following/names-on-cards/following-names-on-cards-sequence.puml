@@ -87,7 +87,7 @@ Briefing -> DB : briefings.items[].names, items[].countries
 == read ==
 Client -> Briefing : GET /api/briefing
 Briefing --> Client : the cards with their names
-Client --> Reader : "Who it is about", each name a link (pageOf);\nits countries under its topic, none when the title names them
+Client --> Reader : "Who it is about", each name a link (pageOf);\nits countries under its topic
 Reader -> Client : clicks a name
 alt it has a qid
     Client -> Client : /following/:qid (see Wikidata items)

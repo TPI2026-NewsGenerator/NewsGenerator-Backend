@@ -16,7 +16,7 @@ describe('coverageOfCard', () => {
     it('should count the media and the languages, and name the first medium to tell it', () => {
         const coverage = coverageOfCard({articles: [article('b.fr', hour(2), 'fr'), article('a.com', hour(0)), article('c.com', hour(1)), article('d.de', hour(3), 'de')]});
         expect(coverage.media).toBe(4);
-        expect(coverage.first).toEqual({source: 'a.com', at: hour(0)});
+        expect(coverage.first).toEqual({source: 'a.com', url: 'https://a.com', at: hour(0)});
         expect(coverage.last).toEqual({at: hour(3)});
         expect(coverage.list.map(one => one.source)).toEqual(['a.com', 'c.com', 'b.fr', 'd.de']);
         expect(coverage.languages).toEqual([{language: 'en', media: 2}, {language: 'de', media: 1}, {language: 'fr', media: 1}]);

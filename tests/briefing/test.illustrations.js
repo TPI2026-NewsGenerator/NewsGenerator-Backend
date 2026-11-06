@@ -89,7 +89,7 @@ describe('the illustration of a card', () => {
         expect(html).toContain('width="280"');
         // the picture of an article stays a picture, 560 px wide
         const {html: own} = briefingMail({items: [{...card, thumbnail: 'https://media.fr/a.jpg', thumbnailSource: 'media.fr'}]});
-        expect(own).toContain('Picture — media.fr');
+        expect(own).toContain('Picture — media.&#8203;fr');
         expect(own).toContain('width="560"');
     });
 });

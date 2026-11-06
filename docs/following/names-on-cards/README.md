@@ -104,7 +104,8 @@ on the page ("Zambia", "United States · China") and next to its topic in the e-
   that body only: Infantino of FIFA is no Swiss news, Motsepe of the CAF no South African one; the Romanian
   referee of a card naming UEFA, Wenger or Beckham running against Infantino keep theirs.
 - **Which are shown.** `cardCountries` (`countries.js`): every country weighing half the first at least, 3 at
-  most; none when the title names them all already ("La Zambie limoge...", "le président zambien...").
+  most. Shown even when the title names them: the rule of 18.10.2026 that left them out when it did ("La Zambie
+  limoge...") was removed on 06.11.2026, it hid the country of cards the reader had found in the editor.
 - **The AI chooses among the candidates.** Rules found one case at a time (a medium, the seat of an international
   body, the people of a body) leave the next case wrong: a card on the World Cup 2026 showed Qatar, "WLA demands
   inclusion in FIFA governance review" Switzerland, a Greek referee's card France (the user, 03.11.2026: a wrong

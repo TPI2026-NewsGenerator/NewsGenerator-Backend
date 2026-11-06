@@ -1241,17 +1241,17 @@ export const cardAnalyses = async (items, articles, language, {usage = null, onP
             });
         return [item.storyId, {days: new Set(rows.map(row => day(row.created_at)).filter(date => date < day(now))).size,
             items: rows.slice(0, TIMELINE_MAX).reverse().map(row => ({date: day(row.created_at), title: row.title, medium: row.medium,
-                url: row.link, titleTranslation: null}))}];
+                url: row.link, titleTranslation: null, label: row.lang}))}];
     }));
-    // their titles in the reader's language, as the cards' titles
-    const foreign = [...timelines.values()].flatMap(timeline => timeline.items)
-        .map(item => ({item, from: languageOf(item.title)})).filter(({from}) => from && from !== language && writtenIn(from) && writtenIn(language));
-    for (let i = 0; i < foreign.length; i += 25) {
-        const part = foreign.slice(i, i + 25);
-        const translations = await translateTexts(part.map(({item, from}) => ({text: item.title, from: writtenIn(from)})), writtenIn(language), usage)
-            .catch(() => part.map(() => null));
-        part.forEach(({item}, j) => { item.titleTranslation = translations[j]; });
-    }
+    // their titles in the reader's language, as the cards' titles: the language of each is read from its letters as well as from its
+    // story's label (the words alone know no Cyrillic: two Serbian titles of 6.11.2026 stayed as they were, see translatedTitles)
+    const earlierItems = [...timelines.values()].flatMap(timeline => timeline.items);
+    const translated = await translatedTitles(earlierItems.map(item => ({title: item.title, label: item.label})), language, usage)
+        .catch(() => earlierItems.map(() => ({translation: null})));
+    earlierItems.forEach((item, i) => {
+        item.titleTranslation = translated[i].translation;
+        delete item.label;
+    });
     const cards = shown.map((item, i) => ({
         n: i + 1, storyId: item.storyId, title: item.title, titleTranslation: item.titleTranslation ?? null,
         medium: item.lead?.source ?? null, summary: item.summary, translation: withoutOriginalMarks(item.translation) ?? null,

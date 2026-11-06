@@ -53,6 +53,13 @@ const FRANC_CODES = {
     arb: 'ar', pes: 'fa', urd: 'ur', hin: 'hi', ben: 'bn', cmn: 'zh', jpn: 'ja', kor: 'ko', ind: 'id', zlm: 'ms',
     vie: 'vi', tha: 'th', swh: 'sw', afr: 'af', tgl: 'tl', uzn: 'uz',
 };
+// Languages franc is not trusted with (the ones above are the ones measured on the feeds, see longTextLanguage: a Latin-letter text
+// taken for Hausa or Welsh is worse than one left to its words), but that a title is told in by its letters, or a feed by its label,
+// and are translated all the same (the user, 06.11.2026: two Serbian titles in Cyrillic stayed untranslated; the others then). BY_SCRIPT:
+// the languages of a script of their own, read from the letters of a title; BY_LABEL: the languages of Latin or shared letters, read
+// from the label a feed gives them, never guessed from a text
+const BY_SCRIPT = {tam: 'ta', tel: 'te', kan: 'kn', mal: 'ml', guj: 'gu', pan: 'pa', sin: 'si', khm: 'km', lao: 'lo', mya: 'my', amh: 'am'};
+const BY_LABEL = ['nb', 'nn', 'mr', 'ne', 'mn', 'ps', 'ku', 'ky', 'tg', 'tk', 'ti', 'eu', 'is', 'ga', 'cy', 'mt', 'jv', 'ha', 'so', 'yo', 'zu', 'xh', 'ig', 'mg', 'ht'];
 const MIN_TRIGRAM_CHARS = 200;  // shorter, the short words are surer
 // Croatian, Bosnian and Serbian are written alike: franc gave index.hr Bosnian and oslobodjenje.ba
 // Serbian. The country of the site decides between them. Galician and Portuguese too: the feed of
@@ -149,6 +156,17 @@ const SCRIPTS = [
     [/[ঀ-৿]/gu, ['ben']],
     [/[Ⴀ-ჿ]/gu, ['kat']],
     [/[԰-֏]/gu, ['hye']],
+    [/[\u0B80-\u0BFF]/gu, ['tam']],
+    [/[\u0C00-\u0C7F]/gu, ['tel']],
+    [/[\u0C80-\u0CFF]/gu, ['kan']],
+    [/[\u0D00-\u0D7F]/gu, ['mal']],
+    [/[\u0A80-\u0AFF]/gu, ['guj']],
+    [/[\u0A00-\u0A7F]/gu, ['pan']],
+    [/[\u0D80-\u0DFF]/gu, ['sin']],
+    [/[\u1780-\u17FF]/gu, ['khm']],
+    [/[\u0E80-\u0EFF]/gu, ['lao']],
+    [/[\u1000-\u109F]/gu, ['mya']],
+    [/[\u1200-\u137F]/gu, ['amh']],
 ];
 export const scriptLanguage = (text, label = null) => {
     const letters = (String(text ?? '').match(/\p{L}/gu) ?? []).length;
@@ -158,9 +176,10 @@ export const scriptLanguage = (text, label = null) => {
         // kana make Japanese with any number of Chinese characters; the others need most of the letters
         if (hits === 0 || (codes[0] !== 'jpn' || codes.length > 1 ? hits / letters < 0.6 : hits / letters < 0.1)) continue;
         // a label that is one of the languages of the script stands: franc takes a short Russian title for Bulgarian
-        if (label && codes.some(code => FRANC_CODES[code] === label)) return label;
+        const known = {...FRANC_CODES, ...BY_SCRIPT};
+        if (label && codes.some(code => known[code] === label)) return label;
         const named = codes.length === 1 ? codes[0] : franc(text, {minLength: 10, only: codes});
-        return FRANC_CODES[named] ?? FRANC_CODES[codes[0]];
+        return known[named] ?? known[codes[0]];
     }
     return null;
 };
@@ -290,4 +309,4 @@ export const writtenIn = (code) => KNOWN_LANGUAGES.includes(code) ? languageName
 // the languages told by their short words (the directory only keeps feeds in them)
 export const LANGUAGES = Object.keys(WORDS);
 // every language a feed or a news can be told in
-export const KNOWN_LANGUAGES = [...new Set([...LANGUAGES, ...Object.values(FRANC_CODES)])];
+export const KNOWN_LANGUAGES = [...new Set([...LANGUAGES, ...Object.values(FRANC_CODES), ...Object.values(BY_SCRIPT), ...BY_LABEL])];

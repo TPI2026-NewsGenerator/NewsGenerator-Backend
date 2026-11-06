@@ -174,7 +174,7 @@ describe('BriefingService.email with the pictures the reader chose', () => {
         const mail = sendMail.mock.calls[0][0];
         expect(mail.html).not.toContain('first.jpg');
         expect(mail.html).toContain('src="https://93.184.215.14/kicker.jpg"');
-        expect(mail.html).toContain('Picture — kicker.de');
+        expect(mail.html).toContain('Picture — kicker.&#8203;de');
         expect(mail.html).toContain('src="cid:picture-3@newsgenerator"');
         expect(mail.html).toContain('Picture — added by you');
         expect(mail.attachments).toEqual([expect.objectContaining({cid: 'picture-3@newsgenerator', contentType: 'image/png', filename: 'picture-3.png'})]);
@@ -266,7 +266,7 @@ describe('briefingMail', () => {
         const {html} = briefingMail(briefing);
 
         for (const part of ['>01<', 'Sommet contre Infantino', 'Du football, que vous suivez.',
-            'src="https://cdn.example/a.jpg"', 'Picture — sport1.de', 'Key passages', 'second.', '[…]',
+            'src="https://cdn.example/a.jpg"', 'Picture — sport1.&#8203;de', 'Key passages', 'second.', '[…]',
             'Contested', 'Infantino denies:', 'Infantino denies:</b> “Ce n’est pas vrai.”', 'Same affair, other angles', 'Le Nigeria porte plainte',
             'told by 3 media', 'Read the article at media.fr', 'Also covered by', 'kicker.de', 'Not confirmed']) {
             expect(html).toContain(part);
@@ -380,7 +380,7 @@ describe('briefingMail', () => {
 
         expect(subject).toBe('Le briefing de Roberto · 8 octobre 2026 · 2 stories');
         for (const part of ['Contesté', '<b>Infantino dément :</b> “Ce n’est pas vrai.”', 'Passages clés', 'Lire l’article sur media.fr',
-            'raconté par 3 médias', 'Image — sport1.de', 'title="Écrit en allemand"', 'Non confirmé', 'non confirmé : « selon nos sources »',
+            'raconté par 3 médias', 'Image — sport1.&#8203;de', 'title="Écrit en allemand"', 'Non confirmé', 'non confirmé : « selon nos sources »',
             '<b>DFB</b> l’a dit : <a href="https://www.dfb.de/1"', '>Le présidium de la DFB décide</a>']) {
             expect(html).toContain(part);
         }
@@ -619,6 +619,15 @@ describe('BriefingService.email with the countries the reader chose', () => {
         expect(sent().html).toContain('Spain');
         expect(sent().text).toContain('01. First story (Germany, Italy)');
         expect(sent().text).toContain('02. Second story (Spain)');
+    });
+
+    // the country of a card is shown even when its title names it (the user, 06.11.2026: "Aruba" and "Cameroun" were found and not drawn)
+    it('should show the countries of a card as found, even when its title names them', async () => {
+        ofUser.mockResolvedValue({...row, items: [card(1, 'Zambia sacks its coach', {countries: ['ZM']}), card(2, 'Second story', {countries: ['ES']})]});
+        await BriefingService.email(4, 7, [1, 2]);
+        expect(sent().html).toContain('>Zambia<');
+        expect(sent().html).toContain('Spain');
+        expect(sent().text).toContain('01. Zambia sacks its coach (Zambia)');
     });
 
     it('should show a country the reader chose even when the title names it, and none when the list is empty', async () => {
@@ -888,7 +897,7 @@ describe('briefingMail with the blocks of a card', () => {
         const {html, text} = mail(on({coverage: true}));
         expect(html).toContain('>How widely it is told<');
         expect(html).toContain('3 media · 3 languages');
-        expect(html).toContain('First told by a.com, 8 Oct');
+        expect(html).toMatch(/First told by <a href="https:\/\/a\.com\/a"[^>]*>a\.com<\/a>, 8 Oct/);
         expect(html).toContain('German 1 · English 1 · French 1');
         // a bar a cell of a table, the tallest one the whole height
         expect(html).toMatch(/<td height="44" style="height:44px;background:#/);
@@ -897,11 +906,11 @@ describe('briefingMail with the blocks of a card', () => {
         expect(mail(on({coverage: true}, card(4, 'No article'))).html).not.toContain('How widely it is told');
     });
 
-    it('should put the affair before the coverage, after the angles and before where to read it', () => {
+    it('should put the affair before the coverage, after the angles, with where to read it up under the sentences and who else covers it at the very bottom', () => {
         const angles = [{title: 'An angle', url: 'https://x.example/1', source: 'x'}];
         const {html} = mail(on({coverage: true, affair: true}, {...full, angles, affair: {title: 'The FIFA files', chip: null, coverage: null,
             events: [{id: 1, at: at(7), kind: 'key', title: 'T', url: 'https://t.example/1', medium: 't.example', media: ['a', 'b'], languages: ['en']}]}}));
-        const order = ['Same affair, other angles', 'This affair', 'How widely it is told', 'Read the article at'].map(part => html.indexOf(part));
+        const order = ['Read the article at', 'Same affair, other angles', 'This affair', 'How widely it is told', 'Also covered by'].map(part => html.indexOf(part));
         expect(order.every(place => place > 0)).toBe(true);
         expect(order).toEqual([...order].sort((a, b) => a - b));
     });
@@ -1132,5 +1141,74 @@ describe('previewHtml', () => {
         const page = previewHtml(html, [{cid: 'a@x', contentType: 'image/png', content: Buffer.from('AB')}, {cid: 'b@x', contentType: 'image/jpeg', content: Buffer.from('C')}]);
         expect(page).toBe(html.replace('<head>', '<head><base target="_blank">').replaceAll('cid:a@x', 'data:image/png;base64,QUI=').replace('cid:b@x', 'data:image/jpeg;base64,Qw=='));
         expect(previewHtml(html)).toBe(html.replace('<head>', '<head><base target="_blank">'));
+    });
+});
+
+// the titles of the parts of a card are titles, and its links are of three kinds (the user, 06.11.2026: the titles "trop petits", links
+// "soulignés en bleu", "gris souligné" and "gris non souligné" mixed)
+describe('briefingMail, its titles and its links', () => {
+    const news = (source, url) => ({source, url, publishedAt: '2026-10-08T06:00:00.000Z', language: 'sr'});
+    const serbian = card(1, 'Gipfel', {
+        lead: {source: 'nova.rs', url: 'https://nova.rs/1', language: 'sr'},
+        articles: [news('nova.rs', 'https://nova.rs/1'), news('klix.ba', 'https://klix.ba/2'), news('fss.rs', 'https://fss.rs/3')],
+        thumbnail: 'https://cdn.example/a.jpg', thumbnailSource: 'lapresse.tn',
+        angles: [{title: 'Elections when it is not their time', url: 'https://danas.rs/1', source: 'danas.rs', language: 'sr', publishedAt: '2026-11-02T17:00:00.000Z'}],
+        analysis: {why: ['Because.'], next: [], timeline: [
+            {date: '2026-11-02', title: 'The first one', url: 'https://fss.rs/9', medium: 'fss.rs'},
+            {date: '2026-11-01', title: 'The second one', url: null, medium: 'sportklub.rs'},
+        ]},
+    });
+    const mailOf = (changes = {}) => briefingMail({items: [{...serbian, ...changes}], createdAt: new Date('2026-11-05T06:00:00Z')});
+
+    it('should write the title of each part as a title: 18 px in semibold and the ink, not a small grey label', () => {
+        const {html} = mailOf();
+        for (const title of ['Key passages', 'Why it matters', 'Same affair, other angles']) {
+            expect(html).toMatch(new RegExp(`<p style="font:600 18px/1[.]3 [^"]*color:#1D1D1F;margin:0">${title}</p>`));
+        }
+        expect(html).not.toContain('font:500 13px/1.3');
+    });
+
+    it('should keep the colour of a box on its title: orange for the denials, green for the official sources', () => {
+        const {html} = mailOf({contested: [{by: 'A', sentence: 'No.', source: 'bild.de', url: 'https://bild.de/a'}], official: [{party: 'UEFA', title: 'A post', url: 'https://uefa.com/a', channel: 'site'}]});
+        expect(html).toMatch(/font:600 18px[^"]*margin:0;color:#BF4800">Contested</);
+        expect(html).toMatch(/font:600 18px[^"]*margin:0;color:#248A3D">Official sources</);
+    });
+
+    it('should put the link to the article right under the sentences, and who else covers it at the very bottom (the user, 06.11.2026)', () => {
+        const {html, text} = mailOf({official: [{party: 'UEFA', title: 'A post', url: 'https://uefa.com/a', channel: 'site'}]});
+        const order = ['Another passage.', 'Read the article at nova.rs', 'Official sources', 'Why it matters', 'Same affair, other angles', 'Also covered by'].map(part => html.indexOf(part));
+        expect(order.every(place => place > 0)).toBe(true);
+        expect(order).toEqual([...order].sort((a, b) => a - b));
+        // the text of the e-mail too
+        expect(text.indexOf('Read the article at nova.rs')).toBeGreaterThan(text.indexOf('Another passage.'));
+        expect(text.indexOf('Read the article at nova.rs')).toBeLessThan(text.indexOf('Why it matters'));
+    });
+
+    it('should show the name of a medium of a news as a grey link with a hairline, wherever it is written: the angles, the story so far, who else covers it', () => {
+        const {html} = mailOf();
+        const grey = 'style="color:#6E6E73;text-decoration:underline;text-decoration-color:#D2D2D7;text-underline-offset:3px"';
+        for (const [url, name] of [['https://danas.rs/1', 'danas.rs'], ['https://fss.rs/9', 'fss.rs'], ['https://klix.ba/2', 'klix.ba']]) {
+            expect(html).toContain(`<a href="${url}" ${grey}>${name}</a>`);
+        }
+    });
+
+    it('should show the title of an item of a list as a link in the ink with the same hairline, the angles included', () => {
+        const {html} = mailOf();
+        const ink = 'color:#1D1D1F;text-decoration:underline;text-decoration-color:#D2D2D7;text-underline-offset:3px';
+        expect(html).toMatch(new RegExp(`<a href="https://danas[.]rs/1" style="[^"]*${ink}">Elections when it is not their time</a>`));
+        expect(html).toContain(`<a href="https://fss.rs/9" style="${ink}">The first one</a>`);
+    });
+
+    it('should break a name that looks like an address where it is no link, so a phone does not turn it into a blue one', () => {
+        const {html} = mailOf();
+        expect(html).toContain('sportklub.&#8203;rs');
+        expect(html).not.toContain('sportklub.rs');
+        expect(html).toContain('Picture — lapresse.&#8203;tn');
+    });
+
+    it('should leave the link to the article in the blue of the action: the only blue link', () => {
+        const {html} = mailOf();
+        expect(html).toContain('<a href="https://nova.rs/1" style="color:#0066CC;text-decoration:none">Read the article at nova.rs</a>');
+        expect(html.match(/color:#0066CC/g)).toHaveLength(1);
     });
 });

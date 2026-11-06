@@ -227,7 +227,10 @@ const NAMES_RULE = `Names of people, organisations and places stay as they are; 
 the Latin one (Greek, Cyrillic, Arabic, Chinese...) is written as the international press and Wikipedia spell it in the
 Latin alphabet ("Μπαπέ" is "Mbappé"), and when you do not know that spelling, transliterated sound by sound, the same
 way each time. A man's first name never becomes a woman's, nor the reverse (Stéphane and Stéphanie are two people): the
-articles and the endings of the original often say which.`;
+articles and the endings of the original often say which.
+An acronym of the original (ADN, DNA, FSS, CAF) is the name of a body or of a thing: it is kept as written, never read as the
+common word it looks like (the "ADN" of a refereeing directorate is not "deoxyribonucleic acid"), unless you know for sure it
+has an established form in the target language (UEFA stays UEFA, "ONU" becomes "UN").`;
 
 const translatePrompt = (sentences, from, to, again = false, note = '') => `Translate these sentences of a news article from ${from} into ${to}.
 Translate each one faithfully and completely: the same facts, the same figures, the same names, the

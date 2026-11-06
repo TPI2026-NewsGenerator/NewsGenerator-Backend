@@ -9,7 +9,7 @@ package "Client (React)" {
         under its topic: item.countries
     }
     class "countries.js" as countriesJs {
-        + countryNames(codes, {titles, languages})
+        + countryNames(codes, {locale})
     }
     class EntityApi {
         + pageOf({name, qid})
