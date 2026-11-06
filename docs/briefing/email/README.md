@@ -6,7 +6,7 @@ key points or the summary), the AI version of a card's points or summary, the pi
 their own title, the text of its key passages, points or summary as they write it (since 20.10.2026),
 and take out the lines they do not want (a denial, an angle, an official source, a line
 of the AI analysis). Since 05.11.2026 they also choose, card by card, which blocks go in: the badges (the media that
-tell it, "Contested", "Official source", "Unconfirmed", each on its own), who it is about, the AI analysis, the angles,
+tell it, "Contested", "Officially confirmed", "Unconfirmed", each on its own), who it is about, the AI analysis, the angles,
 the affair and the coverage (the countries and the pictures have their choice already), and see the e-mail as it will be
 sent, live (see "The blocks" and "The preview"). The e-mail lays out what the briefing wrote, as the page shows it, all of it in the
 reader's language: only its own words are translated when it is sent, once per language and kept
@@ -59,7 +59,7 @@ The cards sent count as read: their stories are left out of the next briefings f
 - **The blocks** (`blocks: {storyId: {media, contested, official, unconfirmed, names, analysis, angles, affair, coverage}}`,
   booleans, `withBlocks` in `briefing-service.js`; 400 for anything else): for a card with an entry the e-mail has a
   **badges row** under its title (client `BriefingCard.jsx` `Glance`: a grey pill "Told by 12 media in 5 languages", then
-  "Contested" and "Unconfirmed" in orange, "Official source" in green, the tints mixed to plain colours because mail apps do
+  "Contested" and "Unconfirmed" in orange, "Officially confirmed" in green, the tints mixed to plain colours because mail apps do
   not all read `rgba()`), the **names** (a pill each, `item.names`), its **affair** and its **coverage**, in that order after the
   angles, before where to read it. An entry that does not say a block has what the page shows at first: `media`, `names`,
   `affair` and `coverage` off, `contested`, `official`, `unconfirmed`, `analysis` and `angles` on. A block at false takes

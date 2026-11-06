@@ -6,6 +6,10 @@ federation, a company, the person it is about) said it itself: a post on its own
 by record.pt: ..."). Two at most, of different parties. Most cards have none: X and Instagram can't be
 read, and the sites of most big clubs publish no feed.
 
+Under the title, in the line of badges, the card says it as one badge, "Officially confirmed" (on the page, in the e-mail and
+in the editor), whatever the number of parties: it is the information that is confirmed, not a source that is offered (the user's
+friend, 6.11.2026). The box below keeps "Official source(s)" and the quotation, the place of the sources.
+
 ## Where
 
 - `client/src/features/briefing/components/BriefingCard.jsx`: `OfficialSource`, in the margin of the

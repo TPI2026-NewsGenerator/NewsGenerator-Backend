@@ -19,7 +19,10 @@
     "preview": "../node_modules/.bin/vite preview",
     "docs": "node docs-site/run.mjs serve",
     "docs:build": "node docs-site/run.mjs build",
-    "docs:zip": "node docs-site/run.mjs zip"
+    "docs:zip": "node docs-site/run.mjs zip",
+    "regression": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/regression",
+    "regression:live": "node --env-file=.env bench/regression-run.mjs",
+    "audit": "node scripts/briefing-audit.js"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",

@@ -17,6 +17,7 @@ in Swagger: `http://localhost:3001/docs` (`config/swagger.js`).
 | `a-to-z/` | [`parcours-newsgenerator.md`](a-to-z/parcours-newsgenerator.md) ([`.html`](a-to-z/parcours-newsgenerator.html)), the walk of a reader; [`parcours-d-une-nouvelle.md`](a-to-z/parcours-d-une-nouvelle.md) ([`.html`](a-to-z/parcours-d-une-nouvelle.html)), one news from the page of its medium to a card; [`32-a-to-z`](a-to-z/32-a-to-z.png), the same as one diagram; [`00-overview`](a-to-z/00-overview.png), the features and what links them; [`31-deployment`](a-to-z/31-deployment.png), the machines |
 | `database/` | [`mld.md`](database/mld.md), the 25 tables, their columns, keys and SQL functions; [`30-database`](database/30-database.png), the same as a diagram |
 | `archive/` | the MCD, MLD and class diagrams of sprints 1 to 3, and [the former long README](archive/readme-features-2026-10-24.md), kept as they were |
+| `testing/` | [`README.md`](testing/README.md), the corpus of regression: real, hard cases run at every change, with the real model before a deploy, and a check of a briefing after it |
 | `_style/` | the style every class (`class.iuml`) and sequence (`sequence.iuml`) diagram includes |
 | [`setup.md`](setup.md), [`deployment.md`](deployment.md) | installing and configuring the server, and hosting it on the machine that stays on |
 | [`tools.md`](tools.md) | every tool, its version, what it is for, where it is in the code and which parts of these docs explain it |
