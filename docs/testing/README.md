@@ -20,7 +20,7 @@ git, like the other benches) and says what held before and fails now, and the re
 
 ## What the corpus holds
 
-97 offline cases and 19 live ones, in families, most of them taken from the briefings of 6.11.2026:
+103 offline cases and 19 live ones, in families, most of them taken from the briefings of 6.11.2026:
 
 | Family | Asks of | Cases came from |
 |---|---|---|

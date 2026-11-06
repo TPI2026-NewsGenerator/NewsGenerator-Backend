@@ -16,7 +16,7 @@ import 'dotenv/config';
 import process from 'node:process';
 import {prisma} from '../config/db.js';
 import {ProfileModel} from '../models/profile-model.js';
-import {lowerFirst, capitalWordsOfCard} from '../services/utils/card-analysis.js';
+import {lacksCapital, lowerFirst, capitalWordsOfCard} from '../services/utils/card-analysis.js';
 import {withoutDateline} from '../services/utils/extract.js';
 import {readerLanguage, titleLanguage, writtenIn} from '../services/utils/language.js';
 
@@ -58,6 +58,8 @@ const checks = [
         const known = capitalWordsOfCard(items.find(item => String(item.storyId) === storyId));
         return (card.next ?? []).filter(line => lowerFirst(line.if, known) !== line.if).map(line => `If ${short(line.if, 50)}`);
     })],
+    ['no part of an "If" line lacks the capital English gives a nationality, a month or a day', Object.values(row.analysis?.cards ?? {}).flatMap(card => (card.next ?? [])
+        .flatMap(line => [line.if, line.then]).filter(part => lacksCapital(String(part ?? '').match(/^\p{L}+/u)?.[0])).map(part => short(part, 50)))],
     ['no angle has a language its title does not say', angles.filter(angle => angle.language && (() => {
         const read = titleLanguage(angle.title, angle.language);
         return read.language !== angle.language && !read.guessed;

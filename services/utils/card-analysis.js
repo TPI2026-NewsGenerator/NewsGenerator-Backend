@@ -342,14 +342,42 @@ const OPENING_DETERMINERS = new Set(['the', 'a', 'an', 'this', 'that', 'these', 
     'son', 'sa', 'ses', 'leur', 'leurs', 'plusieurs', 'certains', 'certaines', 'chaque', 'tout', 'tous', 'toute', 'toutes', 'el', 'los', 'las', 'una', 'unos', 'unas',
     'este', 'esta', 'estos', 'estas', 'su', 'sus', 'varios', 'algunos', 'algunas', 'todos', 'todas', 'il', 'lo', 'gli', 'uno', 'questo', 'questa', 'alcuni', 'alcune',
     'tutti', 'der', 'die', 'das', 'den', 'dem', 'des', 'ein', 'eine', 'einen', 'einem', 'einer', 'dieser', 'diese', 'dieses', 'alle', 'beide', 'mehrere', 'einige']);
+// The words English writes with a capital wherever they stand, whatever the card has: the months, the days, the people of a country
+// and their language (the analysis of 7.11.2026 had "If russian athletes are not granted visas"), their plural with an s. May, March,
+// August and Polish are words as well: they are kept when written with a capital, never put back when written without
+const MONTHS_AND_DAYS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december',
+    'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const PEOPLES = ['afghan', 'african', 'albanian', 'algerian', 'american', 'angolan', 'arab', 'argentine', 'argentinian', 'armenian', 'asian', 'australian', 'austrian',
+    'azerbaijani', 'bahraini', 'balkan', 'bangladeshi', 'belarusian', 'belgian', 'bolivian', 'bosnian', 'brazilian', 'british', 'bulgarian', 'cambodian', 'cameroonian',
+    'canadian', 'chilean', 'chinese', 'colombian', 'congolese', 'croatian', 'cuban', 'cypriot', 'czech', 'danish', 'dutch', 'ecuadorian', 'egyptian', 'emirati', 'english',
+    'estonian', 'ethiopian', 'european', 'filipino', 'finnish', 'french', 'georgian', 'german', 'ghanaian', 'greek', 'guatemalan', 'haitian', 'honduran', 'hungarian',
+    'icelandic', 'indian', 'indonesian', 'iranian', 'iraqi', 'irish', 'israeli', 'italian', 'ivorian', 'jamaican', 'japanese', 'jordanian', 'kazakh', 'kenyan', 'korean',
+    'kosovar', 'kuwaiti', 'latvian', 'lebanese', 'libyan', 'lithuanian', 'macedonian', 'malaysian', 'maltese', 'mexican', 'moldovan', 'mongolian', 'montenegrin',
+    'moroccan', 'nepalese', 'nigerian', 'nordic', 'norwegian', 'omani', 'pakistani', 'palestinian', 'panamanian', 'paraguayan', 'persian', 'peruvian', 'polish',
+    'portuguese', 'qatari', 'romanian', 'russian', 'rwandan', 'saudi', 'scottish', 'senegalese', 'serbian', 'singaporean', 'slovak', 'slovenian', 'somali', 'spanish',
+    'sudanese', 'swedish', 'swiss', 'syrian', 'taiwanese', 'thai', 'tunisian', 'turkish', 'ugandan', 'ukrainian', 'uruguayan', 'uzbek', 'venezuelan', 'vietnamese',
+    'welsh', 'yemeni', 'zambian', 'zimbabwean'];
+const AMBIGUOUS = new Set(['may', 'march', 'august', 'polish']);
+const BY_RULE = new Set([...MONTHS_AND_DAYS, ...PEOPLES]);
+const lowerCased = (word) => String(word ?? '').toLowerCase();
+const keepsCapital = (word) => BY_RULE.has(lowerCased(word)) || (lowerCased(word).endsWith('s') && PEOPLES.includes(lowerCased(word).slice(0, -1)));
+// a word written without its capital that English writes with one
+export const lacksCapital = (word) => keepsCapital(word) && !AMBIGUOUS.has(lowerCased(word));
+
 export const lowerFirst = (text, known = new Set()) => {
     const first = String(text ?? '').match(/^\p{Lu}[\p{Ll}\p{M}'’]*(?![\p{L}\p{N}-])/u)?.[0];
-    if (!first || first === 'I' || known.has(strip(first))) return text;
+    if (!first || first === 'I' || keepsCapital(first) || known.has(strip(first))) return text;
     const nameRun = /^\s+\p{Lu}/u.test(text.slice(first.length)) && !OPENING_DETERMINERS.has(strip(first));
     if (nameRun) return text;
     return first.toLowerCase() + text.slice(first.length);
 };
-const casedNext = (line, known) => ({if: lowerFirst(line.if, known), then: lowerFirst(line.then, known)});
+// a part of an "If X, then Y" line as the page writes it: a small first letter, or its capital put back when it is a word English
+// always writes with one (an analysis saved with "russian" has it back when read)
+const casedPart = (text, known) => {
+    const lead = String(text ?? '').match(/^\p{Ll}[\p{L}\p{M}'’]*/u)?.[0];
+    return lead && lacksCapital(lead) ? lead[0].toUpperCase() + text.slice(1) : lowerFirst(text, known);
+};
+const casedNext = (line, known) => ({if: casedPart(line.if, known), then: casedPart(line.then, known)});
 
 // An analysis as saved, its "next" lines cleaned as above: the ones written before had the repetition. knownOf(storyId): the
 // words its card writes with a capital (see capitalWords)
