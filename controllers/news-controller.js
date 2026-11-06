@@ -15,6 +15,9 @@ const MAX_TRANSLATED_NEWS = 30;
 const MAX_TRANSLATED_TITLES = 60;
 const MAX_TRANSLATED_EXCERPTS = 30;
 const MAX_EXCERPT_LENGTH = 500;
+// the names a news is marked by in its translation (see MAX_MARK_NAMES of briefing-service.js), as long as a term followed can be
+const MAX_MARKED_NAMES = 20;
+const MAX_MARKED_NAME_LENGTH = 60;
 
 export const NewsController = {
     getNews: async (req, res) => {
@@ -99,8 +102,9 @@ export const NewsController = {
     // body: {news: [url], titles: [url], excerpts: [{url, text}], language}: the cards the reader reaches, their
     // title and description translated, and the facts of their affairs, their title only; the words of a
     // description around a name followed (what the page of what a profile follows shows)
+    // terms: {url: [name]}, optional, the names the page marks in the text of its news: the places of them in the translation come back
     translateNews: async (req, res) => {
-        const {news = [], titles = [], excerpts = [], language} = req.body;
+        const {news = [], titles = [], excerpts = [], language, terms = {}} = req.body;
         const urls = (list, max) => Array.isArray(list) && list.length <= max && list.every(url => typeof url === 'string');
         const passages = Array.isArray(excerpts) && excerpts.length <= MAX_TRANSLATED_EXCERPTS
             && excerpts.every(excerpt => typeof excerpt?.url === 'string' && typeof excerpt?.text === 'string' && excerpt.text.length <= MAX_EXCERPT_LENGTH);
@@ -110,9 +114,13 @@ export const NewsController = {
         if (typeof language !== 'string' || !FeedService.languages().includes(language)) {
             return res.status(400).json({error: `Unknown language: ${language}`});
         }
+        const named = terms !== null && typeof terms === 'object' && !Array.isArray(terms) && Object.keys(terms).length <= MAX_TRANSLATED_NEWS + MAX_TRANSLATED_TITLES
+            && Object.values(terms).every(names => Array.isArray(names) && names.length <= MAX_MARKED_NAMES
+                && names.every(name => typeof name === 'string' && name.length > 0 && name.length <= MAX_MARKED_NAME_LENGTH));
+        if (!named) return res.status(400).json({error: `terms: for each news, up to ${MAX_MARKED_NAMES} names of up to ${MAX_MARKED_NAME_LENGTH} characters.`});
 
         try {
-            res.status(200).json({translations: await NewsService.translateNews({news, titles, excerpts, language})});
+            res.status(200).json({translations: await NewsService.translateNews({news, titles, excerpts, language, terms})});
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? error});
         }

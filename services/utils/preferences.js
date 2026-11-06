@@ -4,7 +4,7 @@
 //  File: preferences.js
 //  Description: What the display preferences of a reader can be, kept on their account so that their phone and their laptop show the same
 //               (the user, 06.11.2026): the layout of the editor of the e-mail, the presets of the e-mail and of the page, the preset the page
-//               shows, the way a card is read, the size of the next briefing and the news per name followed. Only these keys, each with only
+//               shows, the way a card is read, whether the AI version comes first, the size of the next briefing and the news per name followed. Only these keys, each with only
 //               the values the page offers: the column is a JSON the page writes, so nothing else is let in
 //
 
@@ -38,6 +38,8 @@ export const PREFERENCES = {
     pagePresets: {accepts: presetsOf, rule: `{${PRESET_NAMES.join(', ')}} each a list of the blocks ${BLOCKS.join(', ')}`},
     show: {accepts: (value) => PRESET_NAMES.includes(value), rule: `one of ${PRESET_NAMES.join(', ')}`},
     format: {accepts: (value) => WAYS.includes(value), rule: `one of ${WAYS.join(', ')}`},
+    // the cards and the editor of the e-mail start on the AI version of the sentences, when the card has one (the user, 06.11.2026)
+    aiFirst: {accepts: (value) => typeof value === 'boolean', rule: 'true or false'},
     size: {accepts: (value) => BRIEFING_SIZES.includes(value), rule: `one of ${BRIEFING_SIZES.join(', ')}`},
     followingNews: {accepts: (value) => FOLLOWING_NEWS.includes(value), rule: `one of ${FOLLOWING_NEWS.join(', ')}`},
 };

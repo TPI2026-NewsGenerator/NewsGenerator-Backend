@@ -88,6 +88,17 @@ describe('titleLanguage', () => {
         expect(read.language).not.toBe('en');
     });
 
+    it('should not take a Slovak title labelled English for Bosnian: á, é, ú and ý are no letters of Croatian nor of Bosnian (ta3.com, 6.11.2026)', () => {
+        const read = titleLanguage('Podcenili ste to, odkázalo vedenie svetového hokeja. IIHF kritizuje súd za to, že vrátili Rusov do hry', 'en');
+        expect(read.guessed).toBe(true);
+        expect(['sk', 'cs']).toContain(read.language);
+    });
+
+    it('should still read a Croatian title with its own letters as such', () => {
+        const read = titleLanguage('Čeferin: šampioni će igrati u Zagrebu, ždrijeb je u petak', 'en');
+        expect(['hr', 'bs']).toContain(read.language);
+    });
+
     it('should leave an English title and its label alone', () => {
         expect(titleLanguage('FIFA faces fresh transparency questions after $4m payment to Infantino’s US tax bill', 'en')).toEqual({language: 'en', guessed: false});
         expect(titleLanguage('UEFA’s Čeferin says he will run again for a third term', 'en')).toEqual({language: 'en', guessed: false});

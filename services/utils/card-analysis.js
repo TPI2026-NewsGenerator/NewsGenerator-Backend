@@ -169,7 +169,9 @@ Write two parts:
 2. "next": what may come next, as "If X, then Y", 0 to 2 entries. Both X and Y are stated by the cited
    sources as a possible next step: a pending decision, a deadline, a vote, a trial, an appeal, a
    threat, a warning, or a consequence someone in the sources names. Never a consequence you imagine
-   yourself, never two facts you join yourself. None in the sources: an empty list.
+   yourself, never two facts you join yourself. None in the sources: an empty list. The page writes
+   "If" before X and "then" before Y: write each as the rest of that sentence, without a capital at its
+   start unless it starts with a name.
 
 For every line:
 - it cites the ids of the sources it relies on ("A1 s12", "T3", "G2"...), every one it uses;
@@ -327,11 +329,36 @@ export const cleanNext = (line) => {
     return {if: condition(first), then: consequence(line?.then) || consequence(rest.join(', then '))};
 };
 
-// An analysis as saved, its "next" lines cleaned as above: the ones written before had the repetition
-export const withCleanNext = (analysis) => !analysis?.cards || typeof analysis.cards !== 'object' ? analysis : {
+// The page writes the "If" and the "then" and what the AI wrote follows them, so "If Talks open, then they would" has a capital
+// where the sentence goes on (the user's friend, 6.11.2026): the first letter of each part is a small one, unless its first word
+// is a name or an acronym: a word the card writes with a capital inside a sentence (the nouns of German are all such), a word
+// with another capital inside ("FIFA", "McDonald") and the pronoun "I"
+// (a line break ends a sentence: the texts of a card are joined with them)
+const capitalWords = (text) => new Set(capitalised(String(text ?? '').replace(/\s*\n+\s*/g, '. ')).flatMap(name => name.text.split(/\s+/)).map(strip).filter(Boolean));
+export const lowerFirst = (text, known = new Set()) => {
+    const first = String(text ?? '').match(/^\p{Lu}[\p{Ll}\p{M}'’]*(?![\p{L}\p{N}-])/u)?.[0];
+    if (!first || first === 'I' || known.has(strip(first))) return text;
+    return first.toLowerCase() + text.slice(first.length);
+};
+const casedNext = (line, known) => ({if: lowerFirst(line.if, known), then: lowerFirst(line.then, known)});
+
+// An analysis as saved, its "next" lines cleaned as above: the ones written before had the repetition. knownOf(storyId): the
+// words its card writes with a capital (see capitalWords)
+export const withCleanNext = (analysis, knownOf = () => new Set()) => !analysis?.cards || typeof analysis.cards !== 'object' ? analysis : {
     ...analysis,
     cards: Object.fromEntries(Object.entries(analysis.cards).map(([storyId, lines]) =>
-        [storyId, Array.isArray(lines?.next) ? {...lines, next: lines.next.map(cleanNext)} : lines])),
+        [storyId, Array.isArray(lines?.next) ? {...lines, next: lines.next.map(line => casedNext(cleanNext(line), knownOf(storyId)))} : lines])),
+};
+// the words a card of a briefing (as saved) writes with a capital, for withCleanNext
+export const capitalWordsOfCard = (item) => {
+    const known = capitalWords([item?.title, item?.titleTranslation, item?.summary, item?.translation, item?.points, item?.pointsTranslation]
+        .filter(text => typeof text === 'string').join('\n'));
+    // the names the card is tagged with, whatever their place in a sentence
+    for (const name of Array.isArray(item?.names) ? item.names : []) {
+        const text = typeof name === 'string' ? name : name?.name ?? name?.text ?? name?.label;
+        if (typeof text === 'string') text.split(/\s+/).map(strip).filter(Boolean).forEach(word => known.add(word));
+    }
+    return known;
 };
 
 // A "why" line that says again what the card shows. The prompt asks the AI to leave such a line out, and it does
@@ -390,9 +417,11 @@ export const checkedLines = async (answer, card) => {
         const missing = (tagged?.[i] ?? capitalised(line.text)).filter(name => !holds(citedStrip, name.text, name.label, acronyms) && !isMedium(name.text));
         return missing.length === 0 || (missing.length === 1 && holds(strip(every), missing[0].text, '', acronymsOf(every)));
     });
+    // the small letters after "If" and "then" come after the checks: a name the AI invented must still be seen as one
+    const known = capitalWords(every);
     return {
         why: kept.filter(line => line.part === 'why').map(line => line.text),
-        next: kept.filter(line => line.part === 'next').map(line => ({if: line.if, then: line.then})),
+        next: kept.filter(line => line.part === 'next').map(line => casedNext(line, known)),
         dropped: lines.length - kept.length,
     };
 };

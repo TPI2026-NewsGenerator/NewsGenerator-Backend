@@ -10,7 +10,7 @@ import {describe, expect, it, jest} from '@jest/globals';
 
 const chat = jest.fn();
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
-const {ORIGINAL_END, ORIGINAL_START, buildExtract, canSummarize, extractArticle, keepsFigures, passagesText, sentencesOf, shorterWays, splitSentences, translatePassages, translateTexts, withoutOriginalMarks} =
+const {ORIGINAL_END, ORIGINAL_START, buildExtract, canSummarize, extractArticle, keepsFigures, passagesText, sentencesOf, shorterWays, splitSentences, translatePassages, translateTexts, withoutDateline, withoutOriginalMarks} =
     await import('../../services/utils/extract.js');
 const {newUsage} = await import('../../services/utils/ollama.js');
 
@@ -281,11 +281,46 @@ describe('translateTexts', () => {
         chat.mockReset()
             .mockResolvedValueOnce(json({translations: ['Le Bayern gagne']}))
             .mockResolvedValueOnce(json({translations: ['Le Bayern gagne à Dortmund', "L'arbitre a annulé le but"]}));
+        // the text that lost its figure is asked once more, alone (a third call, that loses it again here)
+        chat.mockResolvedValueOnce(json({translations: ['Le Bayern gagne à Dortmund']}));
         expect(await translateTexts(texts, 'French')).toEqual([null, "L'arbitre a annulé le but"]);
-        expect(chat).toHaveBeenCalledTimes(2);
+        expect(chat).toHaveBeenCalledTimes(3);
 
         chat.mockReset().mockResolvedValue(json({nothing: true}));
         expect(await translateTexts(texts, 'French')).toEqual([null, null]);
+    });
+
+    it('should ask again, told of the figures, for a text that came back without one, and keep the ones that came back whole', async () => {
+        chat.mockReset()
+            .mockResolvedValueOnce(json({translations: ['Le Bayern gagne à Dortmund', "L'arbitre a annulé le but"]}))
+            .mockResolvedValueOnce(json({translations: ['Le Bayern gagne 3-1 à Dortmund']}));
+        expect(await translateTexts(texts, 'French')).toEqual(['Le Bayern gagne 3-1 à Dortmund', "L'arbitre a annulé le but"]);
+        expect(chat).toHaveBeenCalledTimes(2);
+        // the second call has the text that lost its figure only, and says why
+        const prompt = chat.mock.calls[1][0].messages.at(-1).content;
+        expect(prompt).toContain('lost or changed a figure');
+        expect(prompt).toContain('[1] (German) Bayern gewinnt 3:1 in Dortmund');
+        expect(prompt).not.toContain('El árbitro');
+    });
+});
+
+describe('keepsFigures, the dates', () => {
+    it('should take a date written 5/11 for the same one written with the name of its month (a Vietnamese card of 6.11.2026 lost all its translation)', () => {
+        expect(keepsFigures('Hội nghị diễn ra ngày 5/11 tại Thành phố Hồ Chí Minh', 'The conference took place on November 5 in Ho Chi Minh City')).toBe(true);
+        expect(keepsFigures('từ ngày 20/2 đến 20/6', 'from 20 February to 20 June')).toBe(true);
+        expect(keepsFigures('từ ngày 28/7 đến 8/8', 'from July 28 to August 8')).toBe(true);
+        expect(keepsFigures('Reunión el 5 de noviembre', 'Meeting on the 5th of November')).toBe(true);
+        expect(keepsFigures('tháng 11 năm 2026', 'November 2026')).toBe(true);
+        expect(keepsFigures('le 3/5', 'le 3 mai')).toBe(true);
+    });
+
+    it('should still refuse a figure that is lost, whatever the month the translation names', () => {
+        expect(keepsFigures('ngày 5/11 có 20 đội', 'on November 5 there were teams')).toBe(false);
+        // the month is named once: a second figure of the original is not it
+        expect(keepsFigures('11 đội vào ngày 5/11', 'teams on November 5')).toBe(false);
+        // "may" is a month only beside a figure
+        expect(keepsFigures('5 đội', 'it may be teams')).toBe(false);
+        expect(keepsFigures('ngày 5/5', 'on May 5')).toBe(true);
     });
 });
 
@@ -351,5 +386,44 @@ describe('canSummarize', () => {
         expect(canSummarize('mot '.repeat(45))).toBe(false);
         expect(canSummarize(null)).toBe(false);
         expect(canSummarize('mot '.repeat(60))).toBe(true);
+    });
+});
+
+describe('withoutDateline', () => {
+    it('should take the date and the dash off the start of the first sentence of an article (the key points of a card of 6.11.2026 began with "November 6 –")', () => {
+        const sentence = 'FIFA wants the IOC to restrict the women’s Olympic football tournament to under-23 players.';
+        expect(withoutDateline(`November 6 – ${sentence}`)).toBe(sentence);
+        expect(withoutDateline(`6 November 2026 — ${sentence}`)).toBe(sentence);
+        expect(withoutDateline(`Zurich, 27 October 2026 —- ${sentence}`.replace('—-', '—'))).toBe(sentence);
+        expect(withoutDateline(`6 de noviembre – ${sentence}`)).toBe(sentence);
+        expect(withoutDateline(`6 février - ${sentence}`)).toBe(sentence);
+        expect(withoutDateline(`06.11.2026 - ${sentence}`)).toBe(sentence);
+    });
+
+    it('should take off the other ways an agency writes it: a day of the week, a year with "de", a time', () => {
+        const sentence = 'FIFA wants the IOC to restrict the women’s Olympic football tournament to under-23 players.';
+        expect(withoutDateline(`Wednesday 6 November – ${sentence}`)).toBe(sentence);
+        expect(withoutDateline(`Mercredi 6 novembre 2026 – ${sentence}`)).toBe(sentence);
+        expect(withoutDateline(`Miércoles, 6 de noviembre de 2026 — ${sentence}`)).toBe(sentence);
+        expect(withoutDateline(`Mittwoch, 6. November 2026, 14:30 – ${sentence}`)).toBe(sentence);
+        expect(withoutDateline(`Lima, 6 de noviembre – ${sentence}`)).toBe(sentence);
+        expect(withoutDateline(`6 November 2026, 14h30 - ${sentence}`)).toBe(sentence);
+    });
+
+    it('should leave a sentence that is no dateline: no dash, a word that is no month, a range of dates, an opening figure', () => {
+        expect(withoutDateline('November 6 was the day FIFA asked the IOC for it.')).toBe('November 6 was the day FIFA asked the IOC for it.');
+        expect(withoutDateline('Smith 6 – Jones 4 was the score of the final.')).toBe('Smith 6 – Jones 4 was the score of the final.');
+        expect(withoutDateline('November 6 – 8 November are the dates of the tournament.')).toBe('November 6 – 8 November are the dates of the tournament.');
+        expect(withoutDateline('FIFA wants the IOC to restrict the tournament.')).toBe('FIFA wants the IOC to restrict the tournament.');
+    });
+
+    it('should only take it off the first sentence of an article: the date of a timeline is part of its line', () => {
+        const content = 'November 6 – FIFA wants the IOC to restrict the tournament to under-23 players. March 5 – Police arrested the three men outside the stadium.';
+        expect(splitSentences(content)).toEqual([
+            'FIFA wants the IOC to restrict the tournament to under-23 players.',
+            'March 5 – Police arrested the three men outside the stadium.',
+        ]);
+        expect(sentencesOf({content: '', blocks: [{kind: 'text', text: 'November 6 – FIFA wants the IOC to restrict the tournament to under-23 players.'}]}))
+            .toEqual([{text: 'FIFA wants the IOC to restrict the tournament to under-23 players.', quote: false}]);
     });
 });

@@ -12,7 +12,7 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const ollamaJson = jest.fn();
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson}));
-const {aiRewrittenTitles, checkRewrite, judgedTitles, judgmentPrompt, neutralTitle, neutralTitles, normalizeJudged, normalizeRemovals, normalizeSameFact, neutralPrompt, rewritePrompt, rewrittenTitle, sameFact, sameFactPrompt} = await import('../../services/utils/neutral-titles.js');
+const {aiRewrittenTitles, bestRewrite, checkRewrite, judgedTitles, judgmentPrompt, neutralTitle, neutralTitles, normalizeJudged, normalizeRemovals, normalizeSameFact, neutralPrompt, rewritePrompt, rewrittenTitle, sameFact, sameFactPrompt} = await import('../../services/utils/neutral-titles.js');
 
 describe('neutralTitle', () => {
     it('should take out a teaser at the start of a title, with its punctuation', () => {
@@ -239,6 +239,47 @@ describe('rewrittenTitle', () => {
     });
 });
 
+describe('bestRewrite', () => {
+    beforeEach(() => ollamaJson.mockReset());
+    // the first card of a briefing of 6.11.2026: the proposal lost the "FA" of its first clause, the checks refused it three times of three
+    const TITLE = 'Now will the FA put their money where their mouth is? England chiefs and UEFA must decide whether to back rival Japanese bid to Gianni Infantino';
+
+    it('should answer the first proposal that passes the checks, asking once', async () => {
+        ollamaJson.mockResolvedValue({title: 'England chiefs and UEFA must decide whether to back rival Japanese bid to Gianni Infantino'});
+        expect((await bestRewrite(TITLE, '')).title).toBeNull();
+        expect(ollamaJson).toHaveBeenCalledTimes(2);
+
+        ollamaJson.mockReset().mockResolvedValue({title: 'Le PSG bat Lyon 3-0'});
+        expect(await bestRewrite('Incroyable ! Le PSG écrase Lyon 3-0', '')).toEqual({title: 'Le PSG bat Lyon 3-0'});
+        expect(ollamaJson).toHaveBeenCalledTimes(1);
+    });
+
+    it('should answer that a title is neutral already without asking again', async () => {
+        ollamaJson.mockResolvedValue({title: 'Le PSG bat Lyon 3-0'});
+        expect(await bestRewrite('Le PSG bat Lyon 3-0', '')).toEqual({title: null, reason: 'same'});
+        expect(ollamaJson).toHaveBeenCalledTimes(1);
+    });
+
+    it('should answer the refused proposal that can mislead the least, with what the checks found, for the reader to read', async () => {
+        // a figure lost, then a name lost: the name is the lighter
+        ollamaJson.mockResolvedValueOnce({title: 'The FA decides'}).mockResolvedValueOnce({title: 'England chiefs and UEFA must decide whether to back rival Japanese bid to Gianni Infantino'});
+        const answer = await bestRewrite('Now will the FA decide whether to back 2 rival bids to Gianni Infantino?', '');
+        expect(answer.reason).toBe('unsafe');
+        expect(answer.proposal).toBeTruthy();
+
+        ollamaJson.mockReset().mockResolvedValue({title: 'England chiefs and UEFA must decide whether to back rival Japanese bid to Gianni Infantino'});
+        expect(await bestRewrite(TITLE, '')).toEqual({title: null, reason: 'unsafe', problem: 'name lost', proposal: 'England chiefs and UEFA must decide whether to back rival Japanese bid to Gianni Infantino'});
+    });
+
+    it('should ask again when the AI fails once, and let the error through when it fails every time', async () => {
+        ollamaJson.mockRejectedValueOnce(new Error('down')).mockResolvedValueOnce({title: 'Le PSG bat Lyon 3-0'});
+        expect(await bestRewrite('Incroyable ! Le PSG écrase Lyon 3-0', '')).toEqual({title: 'Le PSG bat Lyon 3-0'});
+
+        ollamaJson.mockReset().mockRejectedValue(new Error('down'));
+        await expect(bestRewrite('Le PSG bat Lyon 3-0', '')).rejects.toThrow('down');
+    });
+});
+
 describe('rewrittenTitle of a short title', () => {
     beforeEach(() => ollamaJson.mockReset());
 
@@ -345,6 +386,20 @@ describe('aiRewrittenTitles', () => {
         expect([...kept]).toEqual([[0, 'Nobody wants to be president of the Hockey Federation of Norway']]);
         const opinion = ollamaJson.mock.calls.find(([prompt]) => prompt.startsWith('Voici des paires'))[0];
         expect(opinion).toContain('Retiré : IIHF and the IOC must react');
+    });
+
+    it('should give back in "proposed" what it did not keep: a rewrite the checks refuse and one the second opinion refuses, each with its reason', async () => {
+        ollamaJson.mockImplementation(async (prompt) => {
+            if (prompt.startsWith('Voici des titres')) return {titles: [{n: 1, words: ['Historic']}, {n: 3, words: ['shakes']}]};
+            if (prompt.startsWith('Voici le titre')) return {title: prompt.includes('Titre : New scandal') ? 'New scandal shakes FIFA!' : 'From this matchday onwards referees will speak'};
+            return {pairs: [{n: 1, same: false, why: 'it loses who speaks'}]};
+        });
+        const proposed = new Map();
+        expect((await aiRewrittenTitles(entries, {}, proposed)).size).toBe(0);
+        expect([...proposed]).toEqual([
+            [2, {title: 'New scandal shakes FIFA!', problem: 'exclamation'}],
+            [0, {title: 'From this matchday onwards referees will speak', problem: 'second opinion', why: 'it loses who speaks'}],
+        ].sort((a, b) => [...proposed.keys()].indexOf(a[0]) - [...proposed.keys()].indexOf(b[0])));
     });
 
     it('should keep nothing a rewrite refused by the checks of the code, nor ask a second opinion of it', async () => {

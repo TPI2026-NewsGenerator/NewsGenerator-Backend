@@ -20,6 +20,7 @@ describe('checkedPreferences', () => {
             pagePresets: {short: []},
             show: 'standard',
             format: 'digest',
+            aiFirst: false,
             size: 20,
             followingNews: 50,
         };
@@ -35,6 +36,7 @@ describe('checkedPreferences', () => {
         for (const layout of ['frames', 'matrix']) expect(checkedPreferences({layout})).toEqual({layout});
         for (const show of ['short', 'standard', 'everything']) expect(checkedPreferences({show})).toEqual({show});
         for (const format of ['points', 'digest', 'passages']) expect(checkedPreferences({format})).toEqual({format});
+        for (const aiFirst of [true, false]) expect(checkedPreferences({aiFirst})).toEqual({aiFirst});
         for (const size of [10, 20, 30]) expect(checkedPreferences({size})).toEqual({size});
         for (const followingNews of [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]) expect(checkedPreferences({followingNews})).toEqual({followingNews});
     });
@@ -57,6 +59,8 @@ describe('checkedPreferences', () => {
         for (const format of ['summary', 'Points', '', null, 3]) refused({format});
         for (const size of [0, 5, 15, 40, -10, 10.5, '20', null, [20], NaN]) refused({size});
         for (const followingNews of [0, 5, 15, 110, 200, -10, 10.5, '50', null, [50], NaN]) refused({followingNews});
+        // the AI version first is a yes or a no, not a word
+        for (const aiFirst of ['true', 'yes', 1, 0, null, [true], {}]) refused({aiFirst});
     });
 
     it('should refuse presets that are not the three of the page, each a list of its blocks', () => {

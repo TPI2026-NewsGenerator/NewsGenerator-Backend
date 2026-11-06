@@ -70,17 +70,20 @@ const dropsConsonants = (short, long) => {
     return at === short.length;
 };
 
-// The text with the words that are a spelling of a name of 'names' put as it spells them: only a capitalized
-// word of five letters or more that the names do not have, the original does not write as it is, and
-// that is one of them with a doubled or a dropped consonant; and only when one of the names fits.
+// The text with the words that are a spelling of a name of 'names' put as it spells them: a capitalized word
+// of five letters or more that is one of them with other accents ("Lekjaâ" of a French text, "Lekjaa" on Wikidata
+// and Wikipedia: the user's friend, 6.11.2026), the first of the names that has the same letters winning (the
+// labels of Wikidata come before the names the text writes, see spellingsOf); and
+// one that the names do not have, the original does not write as it is, and that is one of them with a doubled
+// or a dropped consonant, when one of the names fits.
 // names: ["Stéphanie Frappart", "Thessaloniki"], original: the text translated (a name it writes in the
-// Latin alphabet stays as its source spells it)
+// Latin alphabet stays as its source spells it, apart from its accents)
 export const alignNames = (text, names, original = '') => {
     if (!text || !names?.length) return text;
     const targets = new Map();
     for (const name of names) {
         for (const {word} of wordsOf(name)) {
-            if (capital(word) && LATIN_WORD.test(word) && plain(word).length >= MIN_LENGTH) targets.set(plain(word), word);
+            if (capital(word) && LATIN_WORD.test(word) && plain(word).length >= MIN_LENGTH && !targets.has(plain(word))) targets.set(plain(word), word);
         }
     }
     if (targets.size === 0) return text;
@@ -89,7 +92,17 @@ export const alignNames = (text, names, original = '') => {
     let from = 0;
     for (const {word, at, length} of wordsOf(text)) {
         const key = plain(word);
-        if (!capital(word) || key.length < MIN_LENGTH || targets.has(key) || written.has(key)) continue;
+        if (!capital(word) || key.length < MIN_LENGTH) continue;
+        if (targets.has(key)) {
+            // the same letters with other accents; a word in capitals is left as it is
+            const spelled = targets.get(key);
+            if (spelled !== word && word !== word.toUpperCase()) {
+                result += text.slice(from, at) + spelled + text.slice(at + word.length, at + length);
+                from = at + length;
+            }
+            continue;
+        }
+        if (written.has(key)) continue;
         const fits = [...targets].filter(([target]) => Math.abs(target.length - key.length) <= 2
             && (dropsConsonants(key, target) || dropsConsonants(target, key)));
         if (fits.length !== 1) continue;

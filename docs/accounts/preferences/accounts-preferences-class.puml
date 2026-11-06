@@ -20,7 +20,7 @@ package "Client (React)" as Client {
     }
     class "the six preferences" as Six {
         layout, mailPresets, pagePresets
-        show, format, size, followingNews
+        show, format, aiFirst, size, followingNews
         + kept*() / keep*()
         + usePresets(scope)
     }

@@ -49,7 +49,7 @@ jest.unstable_mockModule('../../services/utils/wikidata.js', async () => ({
     readItem, searchItems, candidatesFor, describeItems, PERSON_SITELINKS: 10, SITELINKS_AHEAD: 3, readCountries: async () => new Map(), exactItems: async () => [], wikimediaHeaders: () => ({}), isQid: (value) => /^Q\d+$/.test(value ?? ''),
 }));
 
-const {EntityService, forgetLookups, mergeNews, namesFor} = await import('../../services/entity-service.js');
+const {EntityService, forgetLookups, mergeNews, namesFor, searchNamesFor} = await import('../../services/entity-service.js');
 const {kindOf, namesOf, usableName, withoutClubWords} = await import('../../services/utils/wikidata-names.js');
 
 const PSG = {id: 1, qid: 'Q483020', label: 'Paris Saint-Germain FC', description: 'club', kind: 'club',
@@ -97,6 +97,21 @@ describe('the names of an item of Wikidata', () => {
     it('should take out the names the reader took out, and add theirs', () => {
         expect(namesFor(PSG, {added_names: ['Les Parisiens', 'psg'], removed_names: ['paris saint-germain fc']}))
             .toEqual(['Paris Saint-Germain', 'PSG', 'Les Parisiens']);
+    });
+
+    // the tab of Carlos Velasco Carballo showed every Velasco of the news (the user's friend, 6.11.2026)
+    it('should not search a person by a family name alone: it is the name of everyone who carries it', () => {
+        const velasco = {qid: 'Q314726', label: 'Carlos Velasco Carballo', kind: 'person', names: ['Carlos Velasco Carballo', 'Velasco', 'Velasco Carballo', 'Carlos Velasco']};
+        expect(searchNamesFor(velasco, null)).toEqual(['Carlos Velasco Carballo', 'Velasco Carballo', 'Carlos Velasco']);
+        // the names are still all listed for the reader to see
+        expect(namesFor(velasco, null)).toHaveLength(4);
+        // the word the reader added themselves stays
+        expect(searchNamesFor(velasco, {added_names: ['Velasco'], removed_names: []})).toContain('Velasco');
+    });
+
+    it('should keep the one-word names of a person known by one word, of a club and of an organisation', () => {
+        expect(searchNamesFor({label: 'Pelé', kind: 'person', names: ['Pelé', 'Edson']}, null)).toEqual(['Pelé', 'Edson']);
+        expect(searchNamesFor({label: 'Real Madrid CF', kind: 'club', names: ['Real Madrid CF', 'Madrid']}, null)).toEqual(['Real Madrid CF', 'Madrid']);
     });
 });
 

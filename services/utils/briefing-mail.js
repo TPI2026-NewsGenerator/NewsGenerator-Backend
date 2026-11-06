@@ -86,7 +86,7 @@ export const LABELS = {
     toldByMedia: 'Told by {count} media',
     toldByOneMedium: 'Told by one medium',
     inLanguages: 'in {count} languages',
-    officialSourcesCount: '{count} official sources',
+    officiallyConfirmed: 'Officially confirmed',
     unconfirmedBadge: 'Unconfirmed',
     whoItIsAbout: 'Who it is about',
     howWidelyTold: 'How widely it is told',
@@ -304,7 +304,7 @@ const badgesOf = (card, t = ENGLISH) => {
     return [
         card.blocks.media && toldByWords(card, t) && {tone: 'mute', words: toldByWords(card, t)},
         contested > 0 && {tone: 'warn', words: contested === 1 ? L.contested : `${L.contested} (${contested})`},
-        official > 0 && {tone: 'official', words: official === 1 ? L.officialSource : fillText(L.officialSourcesCount, {count: official})},
+        official > 0 && {tone: 'official', words: L.officiallyConfirmed},
         card.hedged && {tone: 'warn', words: L.unconfirmedBadge},
     ].filter(Boolean);
 };

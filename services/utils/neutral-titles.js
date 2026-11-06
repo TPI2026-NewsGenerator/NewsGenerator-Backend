@@ -239,6 +239,13 @@ const droppedClauses = (title, stems) => {
     return {leading: bare(clauses.slice(0, start)), trailing: bare(clauses.slice(end)), kept};
 };
 
+// the proposal as the checks read it: its spaces as one, the quotation marks the AI wrapped a title in taken off (unless the title
+// itself begins with one); '' when there is none
+const cleanProposal = (title, proposal) => {
+    const text = typeof proposal === 'string' ? proposal.replace(/\s+/g, ' ').trim() : '';
+    return /^["“«].*["”»]$/u.test(text) && !/^["“«„]/u.test(title) ? text.slice(1, -1).trim() : text;
+};
+
 // The proposal checked against the title: {text}, or {problem} naming the check it fails when it is not the title of the
 // same news: an exclamation mark kept, a name or a figure added that neither the title nor the passages have, a name or
 // a figure or a quotation of the title lost, a negation added or lost, a question made a statement or the opposite, longer
@@ -248,9 +255,7 @@ const droppedClauses = (title, stems) => {
 // opinion to be told what is gone (a name lost with a clause that starts the title, or is in the middle of it, or that the
 // proposal keeps some of, is still refused: « Infantino under pressure from UEFA: » says a fact)
 export const checkRewrite = (title, proposal, passages = '') => {
-    let text = typeof proposal === 'string' ? proposal.replace(/\s+/g, ' ').trim() : '';
-    // a title the AI wrapped in quotation marks, unless the title itself begins with one
-    if (/^["“«].*["”»]$/u.test(text) && !/^["“«„]/u.test(title)) text = text.slice(1, -1).trim();
+    const text = cleanProposal(title, proposal);
     if (!text) return {problem: 'empty'};
     if (/[!¡]/u.test(text)) return {problem: 'exclamation'};
     const known = new Set(tokensOf(`${title} ${passages}`).map(plainWord));
@@ -301,8 +306,36 @@ export const rewrittenTitle = async (title, passages = '', usage = null, {langua
     // the title given back as it is, however short: neutral already
     if (typeof answer?.title === 'string' && answer.title.replace(/\s+/g, ' ').trim() === tidyTitle) return {title: null, reason: 'same'};
     const {text, dropped, problem} = checkRewrite(title, answer?.title, passages);
-    if (problem) return {title: null, reason: 'unsafe', problem, proposal: typeof answer?.title === 'string' ? answer.title : null};
+    if (problem) return {title: null, reason: 'unsafe', problem, proposal: cleanProposal(title, answer?.title) || null};
     return text === tidyTitle ? {title: null, reason: 'same'} : {title: text, ...(dropped ? {dropped} : {})};
+};
+
+// How much a refused proposal can mislead, the least first: a mark of the medium or a length is read at a glance, a name is looked for,
+// a figure, a negation, a question or a quotation changes what the title says
+const PROBLEM_RANK = {exclamation: 1, length: 1, 'name added': 2, 'name lost': 2, 'figure added': 3, 'figure lost': 3, negation: 3, question: 3, 'quotation changed': 3};
+const rankOf = (problem) => PROBLEM_RANK[problem] ?? 2;
+
+// A title rewritten for the reader of the editor, who reads it against the title and decides (the user, 6.11.2026: the proposal the checks
+// refuse is shown too, with what they found, not hidden: a button that turns and says nothing was taken for a bug). Asked twice at most:
+// the first that passes the checks, 'same' when the title is neutral already, else the refused one that can mislead the least, as
+// {title: null, reason: 'unsafe', problem, proposal}. An AI that fails once is asked again; failing every time is an error
+export const REWRITE_ATTEMPTS = 2;
+export const bestRewrite = async (title, passages = '', usage = null, options = {}) => {
+    let best = null;
+    let failure = null;
+    for (let attempt = 0; attempt < REWRITE_ATTEMPTS; attempt++) {
+        let answer;
+        try {
+            answer = await rewrittenTitle(title, passages, usage, options);
+        } catch (err) {
+            failure = err;
+            continue;
+        }
+        if (answer.title || answer.reason === 'same') return answer;
+        if (answer.proposal && (best === null || rankOf(answer.problem) < rankOf(best.problem))) best = answer;
+    }
+    if (best === null && failure !== null) throw failure;
+    return best ?? {title: null, reason: 'unsafe', problem: 'empty', proposal: null};
 };
 
 // Whether a title needs to be made neutral at all, asked of all the titles of a briefing at once before any is
@@ -366,12 +399,14 @@ export const sameFact = async (pairs, usage = null, {think, timeoutMs} = {}) =>
 // says whether the rewrite tells exactly the same fact. A rewrite is kept only when it says so: 22 titles of 300 changed,
 // the 22 right by hand, the 28 mild or bad rewrites stopped. Any failure leaves the title as it is: a card never waits
 // on it. entries: [{title, passages, language}] (language: its name, "German", for the rewrite to be written in it).
-// Answers Map index -> the title rewritten, only for the ones kept
+// Answers Map index -> the title rewritten, only for the ones kept. 'proposed', a Map given, is filled with the ones that were not, index ->
+// {title, problem, why}: what the AI wrote and what the checks, or the second opinion, found against it, for the reader of the editor to
+// read against the title (see bestRewrite)
 export const REWRITES_AT_ONCE = 4;
 const JUDGED_AT_ONCE = 40;
 const VERIFIED_AT_ONCE = 6;
 const AI_TIMEOUT_MS = 240e3;
-export const aiRewrittenTitles = async (entries, usage = {}) => {
+export const aiRewrittenTitles = async (entries, usage = {}, proposed = null) => {
     const kept = new Map();
     if (entries.length === 0 || process.env.AI_NEUTRAL_TITLES === 'off') return kept;
     const judged = new Set();
@@ -387,6 +422,7 @@ export const aiRewrittenTitles = async (entries, usage = {}) => {
         try {
             const answer = await rewrittenTitle(entries[index].title, entries[index].passages, usage.rewriting, {language: entries[index].language, timeoutMs: AI_TIMEOUT_MS});
             if (answer.title) proposals.push({index, proposal: answer.title, dropped: answer.dropped});
+            else if (answer.reason === 'unsafe' && answer.proposal) proposed?.set(index, {title: answer.proposal, problem: answer.problem});
         } catch (err) {
             console.error(`Briefing: a title was not rewritten (${err.message})`);
         }
@@ -394,7 +430,10 @@ export const aiRewrittenTitles = async (entries, usage = {}) => {
     await mapWithConcurrency(chunksOf(proposals.sort((a, b) => a.index - b.index), VERIFIED_AT_ONCE), REWRITES_AT_ONCE, async (batch) => {
         try {
             const verdicts = await sameFact(batch.map(({index, proposal, dropped}) => ({title: entries[index].title, proposal, dropped})), usage.verifying, {think: true, timeoutMs: AI_TIMEOUT_MS});
-            batch.forEach(({index, proposal}, at) => { if (verdicts.get(at)?.same === true) kept.set(index, proposal); });
+            batch.forEach(({index, proposal}, at) => {
+                if (verdicts.get(at)?.same === true) kept.set(index, proposal);
+                else if (verdicts.has(at)) proposed?.set(index, {title: proposal, problem: 'second opinion', why: verdicts.get(at).why || null});
+            });
         } catch (err) {
             console.error(`Briefing: the titles rewritten were not verified (${err.message})`);
         }

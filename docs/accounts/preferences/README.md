@@ -26,6 +26,7 @@ network, and the account catches up.
 | `pagePresets` | the same, for the page of the briefing | `newsgenerator.page-presets` |
 | `show` | `short`, `standard` or `everything`: the preset the page shows its cards in | `newsgenerator.briefing-show` |
 | `format` | `points`, `digest` or `passages`: the way a card is read | `newsgenerator.briefing-format` |
+| `aiFirst` | `true` or `false` (true when never set): the cards and the editor of the e-mail start on the AI version of the sentences | `newsgenerator.ai-first` |
 | `size` | 10, 20 or 30 (`BRIEFING_SIZES`): the cards of the next briefing | `newsgenerator.briefing-size` |
 | `followingNews` | 10 to 100, by 10 (`WATCH_LIMITS`): the news per name followed | `newsgenerator.following-news` |
 

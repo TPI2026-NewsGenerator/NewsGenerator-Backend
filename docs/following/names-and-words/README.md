@@ -80,7 +80,10 @@ also has a page of its own with its news, and the names met card after card are 
   its row comes near the screen (`useTranslation` and `createTranslator` of the search, `POST /api/news/translations`,
   `NewsService.translateNews`: the AI translates cached articles only, 20 texts a call, the translations kept in
   memory), shown marked "translated from German" with the title and the words as written under them in italics,
-  the terms marked there. The rows are asked by the `link` of each news (the address of the feed; the `url` shown
+  the terms marked there. The terms are marked in the translation too: each news of the answer carries `terms` (the words of it
+  that were marked and the names its group is followed by, 20 at most), sent with the translation (`terms: {url: [name]}`),
+  and the server answers their places in the translated text (`marks`, `excerptMarks`, `Filter.highlights`, the rule of the
+  text as written). The rows are asked by the `link` of each news (the address of the feed; the `url` shown
   can be the decoded address of a Google News link, which the cache does not know). The excerpt is asked as the
   page shows it (`excerpts: [{url, text}]`, its "…" at the ends kept): the server translates it only when it is a
   passage of the description of that news, so the AI is still no translator for any text. Measured for the profile

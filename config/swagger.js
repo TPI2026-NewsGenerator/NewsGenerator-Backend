@@ -219,10 +219,10 @@ const options = {
                 "get": {
                     "tags": ["Login"],
                     "summary": "The display preferences kept on the account of the signed in user",
-                    "description": "What the reader set on any of their devices, so that another shows the same: the layout of the editor of the e-mail, the presets, the preset of the page, the reading way, the size of the next briefing and the news per name followed. {} until one is set; a key missing is a preference never set (the page keeps its own default). At most 60 reads per account in 10 minutes.",
+                    "description": "What the reader set on any of their devices, so that another shows the same: the layout of the editor of the e-mail, the presets, the preset of the page, the reading way, whether the AI version comes first, the size of the next briefing and the news per name followed. {} until one is set; a key missing is a preference never set (the page keeps its own default). At most 60 reads per account in 10 minutes.",
                     "responses": {
                         "200": {
-                            "description": "{preferences: {layout, mailPresets, pagePresets, show, format, size, followingNews}}, each key only when set",
+                            "description": "{preferences: {layout, mailPresets, pagePresets, show, format, aiFirst, size, followingNews}}, each key only when set",
                             "content": {
                                 "application/json": {
                                     "example": {"preferences": {"layout": "matrix", "show": "standard", "size": 20, "followingNews": 50}}
@@ -251,6 +251,7 @@ const options = {
                                         "pagePresets": {"type": "object", "description": "The same, for the page of the briefing"},
                                         "show": {"type": "string", "enum": ["short", "standard", "everything"], "description": "The preset the page shows its cards in"},
                                         "format": {"type": "string", "enum": ["points", "digest", "passages"], "description": "The way a card is read"},
+                                        "aiFirst": {"type": "boolean", "description": "The cards and the editor of the e-mail start on the AI version of the sentences, when a card has one"},
                                         "size": {"type": "integer", "enum": [10, 20, 30], "description": "The cards of the next briefing"},
                                         "followingNews": {"type": "integer", "minimum": 10, "maximum": 100, "multipleOf": 10, "description": "The news per name or word followed"}
                                     }
@@ -776,6 +777,7 @@ const options = {
                                     "properties": {
                                         "news": {"type": "array", "maxItems": 30, "items": {"type": "string", "format": "uri"}},
                                         "titles": {"type": "array", "maxItems": 60, "items": {"type": "string", "format": "uri"}},
+                                        "terms": {"type": "object", "description": "{url: [name]}, up to 20 names of 60 characters each for a news: the page that marks the names it follows asks the places of them in the translation", "additionalProperties": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 60}}},
                                         "language": {"type": "string", "enum": ["en", "fr", "es", "de", "it"], "example": "fr"}
                                     },
                                     "required": ["language"]
@@ -785,7 +787,7 @@ const options = {
                     },
                     "responses": {
                         "200": {
-                            "description": "{translations: [{url, language, title, description}]}: only the news with a translation; language is the one they are written in, description null when not asked or not translated. Then, for each passage asked in `excerpts` [{url, text}] (the words of a description around a name followed, with the dots at its ends, 30 at most) that is in the description of that news and is written in another language: {url, text, language, excerpt}, the translation with the same dots."
+                            "description": "{translations: [{url, language, title, description}]}: only the news with a translation; language is the one they are written in, description null when not asked or not translated. Then, for each passage asked in `excerpts` [{url, text}] (the words of a description around a name followed, with the dots at its ends, 30 at most) that is in the description of that news and is written in another language: {url, text, language, excerpt}, the translation with the same dots. For the names given in `terms`, `marks` {title, description} ([[start, end]] in the translated text) on a news and `excerptMarks` on a passage, only when a name is found in it."
                         },
                         "400": {"description": "No url, too many, an url not found in the news cache, or an unknown language"},
                         "403": {"description": "Invalid or expired token"}

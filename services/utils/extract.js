@@ -34,6 +34,28 @@ export const SOURCINGS = ['named', 'anonymous', 'none'];
 const wordCount = (text) => (text ?? '').split(/\s+/).filter(Boolean).length;
 export const canSummarize = (text) => wordCount(text) >= MIN_TEXT_WORDS;
 
+// A date and a dash before the first words of a sentence, the dateline of a news agency ("November 6 – FIFA wants the IOC to…",
+// "Zurich, 27 October 2026 — The IFAB…", "06.11.2026 - …"): it dates the news, it is no part of what the article says, and showed
+// in the key points as their first words (the user's friend, 6.11.2026). The month is one of MONTHS, a place may come before the
+// date, a day of the week may come before it ("Wednesday 6 November –"), a year ("2026", "de 2026") and a time ("14:30", "14h30") after
+// it, and a figure after the dash ("November 6 – 8 November", a range) leaves it
+const WEEKDAY = /^(?:(?:mon|tues|wednes|thurs|fri|satur|sun)day|lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|luned[iì]|marted[iì]|mercoled[iì]|gioved[iì]|venerd[iì]|sabato|domenica|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)\.?,?\s+/iu;
+const DATELINE = new RegExp(String.raw`^(?:\p{Lu}[\p{L}.'’ -]{1,30},\s+)?(?:(?:\d{1,2}(?:st|nd|rd|th|er|º|\.)?\s+(?:of\s+|de\s+|del\s+|di\s+)?(\p{L}+)|(\p{L}+)\s+\d{1,2}(?:st|nd|rd|th)?)(?:,?\s+(?:de\s+)?\d{4})?(?:,?\s+(?:at\s+|à\s+|um\s+|alle\s+|a\s+las\s+)?\d{1,2}[:h.]\d{2})?|(?:0?[1-9]|[12]\d|3[01])[./](?:0?[1-9]|1[0-2])(?:[./]\d{2,4})?\.?)\s*[–—−-]+\s+(?!\d)`, 'u');
+export const withoutDateline = (sentence) => {
+    const text = String(sentence ?? '');
+    const weekday = text.match(WEEKDAY)?.[0] ?? '';
+    const found = text.slice(weekday.length).match(DATELINE);
+    if (!found) return sentence;
+    const month = found[1] ?? found[2];
+    return month === undefined || MONTH_OF.has(month.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()) ? text.slice(weekday.length + found[0].length) : sentence;
+};
+// The first sentence of an article without its dateline, as it was when what is left is no sentence any more. Only the first: a date
+// and a dash further on open the line of a timeline ("March 5 – police arrested…"), which the date is part of
+const undated = (text) => {
+    const bare = withoutDateline(text);
+    return bare !== text && isSentence(bare) ? bare : text;
+};
+
 const segmenter = new Intl.Segmenter('en', {granularity: 'sentence'});
 // "M.", "Mr.", "Dr.", "U.S.", "St.", "Guild v.": a sentence does not end there
 const ABBREVIATION = /(?:^|[\s(])(?:[A-Za-z]|[A-Z][a-z]{1,2}|Mme|Mlle|Mgr|n°|No|vs|etc|(?:[A-Z]\.)+[A-Z])\.\s*$/;
@@ -65,7 +87,10 @@ const isSentence = (text) => {
 };
 
 // the sentences of a text read flat, when the page gave no blocks
-export const splitSentences = (text) => cut((text ?? '').slice(0, MAX_CONTENT_CHARS)).filter(isSentence).slice(0, MAX_SENTENCES);
+export const splitSentences = (text) => {
+    const sentences = cut((text ?? '').slice(0, MAX_CONTENT_CHARS)).filter(isSentence).slice(0, MAX_SENTENCES);
+    return sentences.length > 0 ? [undated(sentences[0]), ...sentences.slice(1)] : sentences;
+};
 
 // The sentences that can be shown, from the blocks of the page: [{text, quote}]. Headings and
 // captions are never shown; a sentence of a quote is marked, the reader sees it between quotation
@@ -81,7 +106,7 @@ export const sentencesOf = ({content, blocks}) => {
         if (chars > MAX_CONTENT_CHARS) break;
         chars += block.text.length;
         for (const text of cut(block.text)) {
-            if (isSentence(text)) sentences.push({text, quote: block.kind === 'quote'});
+            if (isSentence(text)) sentences.push({text: sentences.length === 0 ? undated(text) : text, quote: block.kind === 'quote'});
         }
     }
     return sentences.slice(0, MAX_SENTENCES);
@@ -207,13 +232,45 @@ const figures = (text) => (sameWrittenFigures(text).match(/\d+(?:[.,\u202f\u00a0
 export const figuresOf = figures;
 // the figures of a text and the ones its words about the rounds of a cup give
 export const figuresIn = (text) => [...figures(text), ...ROUNDS.filter(([, words]) => words.test(text)).map(([round]) => String(round))];
-// a translation keeps every figure of the sentence it translates, checked here rather than trusted
+// The months of the languages a translation is written in, by their number (accents off): a date written "5/11" or "tháng 11"
+// is "November 5" in a translation, whose month is a word and no figure (a card of 6.11.2026 with three such dates lost all its
+// translation: more than half of its sentences were refused, the Vietnamese was shown as it was)
+const MONTHS = [
+    ['january', 'janvier', 'enero', 'gennaio', 'januar', 'janeiro', 'januari', 'jan'],
+    ['february', 'fevrier', 'febrero', 'febbraio', 'februar', 'fevereiro', 'februari', 'feb'],
+    ['march', 'mars', 'marzo', 'marz', 'maart', 'marco'],
+    ['april', 'avril', 'abril', 'aprile', 'apr'],
+    ['may', 'mai', 'mayo', 'maggio', 'maio', 'mei'],
+    ['june', 'juin', 'junio', 'giugno', 'juni', 'junho', 'jun'],
+    ['july', 'juillet', 'julio', 'luglio', 'juli', 'julho', 'jul'],
+    ['august', 'aout', 'agosto', 'augustus', 'aug'],
+    ['september', 'septembre', 'septiembre', 'setiembre', 'settembre', 'setembro', 'sept', 'sep'],
+    ['october', 'octobre', 'octubre', 'ottobre', 'oktober', 'outubro', 'oct', 'okt'],
+    ['november', 'novembre', 'noviembre', 'novembro', 'nov'],
+    ['december', 'decembre', 'diciembre', 'dicembre', 'dezember', 'dezembro', 'dec', 'dez'],
+];
+const MONTH_OF = new Map(MONTHS.flatMap((names, i) => names.map(name => [name, i + 1])));
+// the numbers of the months a text names ("may" is one only beside a figure: "it may rain" is none)
+const monthsNamed = (text) => {
+    const plain = text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+    const mayIsMonth = /\bmay\s+\d|\d(?:st|nd|rd|th)?\s+(?:of\s+)?may\b/.test(plain);
+    return (plain.match(/\p{L}+/gu) ?? []).filter(word => word !== 'may' || mayIsMonth).map(word => MONTH_OF.get(word)).filter(Boolean);
+};
+
+// a translation keeps every figure of the sentence it translates, checked here rather than trusted. A figure from 1 to 12 may
+// have become the month of its date (see MONTHS)
 export const keepsFigures = (original, translation) => {
     const left = figures(translation);
+    const months = monthsNamed(translation);
     return figures(original).every(figure => {
         const i = left.indexOf(figure);
-        if (i < 0) return false;
-        left.splice(i, 1);
+        if (i >= 0) {
+            left.splice(i, 1);
+            return true;
+        }
+        const month = months.indexOf(Number(figure));
+        if (month < 0) return false;
+        months.splice(month, 1);
         return true;
     });
 };
@@ -286,11 +343,13 @@ const hintOf = (item) => {
     return note ? `\n    ${note}` : '';
 };
 
-const textsPrompt = (texts, to) => `Translate these titles and descriptions of news articles into ${to}. Each one
+const textsPrompt = (texts, to, again = false) => `Translate these titles and descriptions of news articles into ${to}. Each one
 says its language between parentheses before it.
 Translate each one faithfully and completely: the same facts, the same figures, the same names, the
 same certainty (may, reportedly, alleged, planned), nothing added and nothing left out. ${NAMES_RULE} A text cut at
-its end stays cut.
+its end stays cut.${again ? `
+A previous translation of these texts was empty or lost or changed a figure (a number, a time, a score, a round of a
+cup, the 1 of "Liga 1"): write every figure of the original as it is.` : ''}
 
 ${texts.map((item, i) => `[${i + 1}] (${item.from}) ${item.text}${hintOf(item)}`).join('\n')}
 
@@ -301,19 +360,26 @@ Answer only in JSON: {"translations": ["...", one per text, in the same order]}`
 // the news as Wikidata spells them, names the ones the card already spells (the translation of its text):
 // told to the AI, and a word of the translation a consonant off one of them put back as they spell it (see
 // spellings.js). Answers one translation per text, null for one that dropped a figure; all null when the AI
-// does not answer one per text, asked once more first
+// does not answer one per text. Asked again, told so, for what does not come back whole: a call that answers another
+// number of translations, and the texts that came back empty or without a figure (a Peruvian title of 6.11.2026 stayed
+// Spanish for one such answer, the same card was translated in another briefing)
+const TEXTS_ATTEMPTS = 3;
 export const translateTexts = async (texts, to, usage = null) => {
-    for (let attempt = 0; attempt < 2; attempt++) {
-        const answer = await ollamaJson(textsPrompt(texts, to), usage).catch(() => null);
+    const done = new Array(texts.length).fill(null);
+    let open = texts.map((item, i) => i);
+    for (let attempt = 0; attempt < TEXTS_ATTEMPTS && open.length > 0; attempt++) {
+        const answer = await ollamaJson(textsPrompt(open.map(i => texts[i]), to, attempt > 0), usage).catch(() => null);
         const translations = answer?.translations;
-        if (!Array.isArray(translations) || translations.length !== texts.length) continue;
-        return texts.map((item, i) => {
+        if (!Array.isArray(translations) || translations.length !== open.length) continue;
+        open = open.filter((i, k) => {
             // the AI often writes the number of the text again, its language sometimes: "[1] (German) ..."
-            const translation = typeof translations[i] === 'string' ? translations[i].replace(/^\s*\[\d+\]\s*(?:\([^)]*\)\s*)?/, '').trim() : '';
-            return translation && keepsFigures(item.text, translation) ? alignNames(translation, spellingsOf(item), item.text) : null;
+            const translation = typeof translations[k] === 'string' ? translations[k].replace(/^\s*\[\d+\]\s*(?:\([^)]*\)\s*)?/, '').trim() : '';
+            if (!translation || !keepsFigures(texts[i].text, translation)) return true;
+            done[i] = alignNames(translation, spellingsOf(texts[i]), texts[i].text);
+            return false;
         });
     }
-    return texts.map(() => null);
+    return done;
 };
 
 // The language of passages and their translation for a reader of 'language' (a code), null when they

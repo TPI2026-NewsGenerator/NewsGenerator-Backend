@@ -18,7 +18,7 @@ jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 // no tagger: the names are the words in capitals; no Gemini
 process.env.NER_URL = '';
 delete process.env.AISTUDIO_API_KEY;
-const {ANALYSIS_MODEL, analysesOf, checkedLines, cleanNext, fittedArticles, pickedCards, repeatsCard, withCleanNext} = await import('../../services/utils/card-analysis.js');
+const {ANALYSIS_MODEL, analysesOf, capitalWordsOfCard, checkedLines, cleanNext, fittedArticles, lowerFirst, pickedCards, repeatsCard, withCleanNext} = await import('../../services/utils/card-analysis.js');
 
 const card = (n, storyId, extra = {}) => ({
     n, storyId, title: `Card ${n}`, titleTranslation: null, medium: 'rts.ch', summary: 'The FIFA Council will vote on 18 March in Rabat.',
@@ -112,6 +112,42 @@ describe('the "If X, then Y" lines of an analysis', () => {
     it('should clean a saved analysis whose condition ends with a point', () => {
         const saved = {status: 'ready', cards: {5: {why: [], next: [{if: 'the vote fails.', then: 'the plan is dropped.'}], timeline: []}}};
         expect(withCleanNext(saved).cards[5].next).toEqual([{if: 'the vote fails', then: 'the plan is dropped.'}]);
+    });
+
+    // the page writes "If" and "then": "If Talks open, then They would" has a capital where the sentence goes on (the user's friend, 6.11.2026)
+    it('should begin the condition and the consequence with a small letter, the page writes the "If" and the "then" before them', () => {
+        const saved = {cards: {1: {why: [], next: [
+            {if: 'If Talks open,', then: 'then They would involve players and major associations.'},
+            {if: 'A change is adopted', then: 'It could only apply from 2032.'},
+        ]}}};
+        expect(withCleanNext(saved).cards[1].next).toEqual([
+            {if: 'talks open', then: 'they would involve players and major associations.'},
+            {if: 'a change is adopted', then: 'it could only apply from 2032.'},
+        ]);
+    });
+
+    it('should keep the capital of a name or a noun the card writes with one, of an acronym and of "I"', () => {
+        const saved = {cards: {1: {why: [], next: [
+            {if: 'Brazil win the final', then: 'FIFA may react.'},
+            {if: 'Gespräche beginnen', then: 'McDonald zahlt.'},
+            {if: 'I am asked', then: 'U-23 players are chosen.'},
+        ]}}};
+        const known = () => new Set(['brazil', 'gesprache']);
+        expect(withCleanNext(saved, known).cards[1].next).toEqual([
+            {if: 'Brazil win the final', then: 'FIFA may react.'},
+            {if: 'Gespräche beginnen', then: 'McDonald zahlt.'},
+            {if: 'I am asked', then: 'U-23 players are chosen.'},
+        ]);
+    });
+
+    it('should find the names of a card in its text, in the middle of its sentences, and in the names it is tagged with', () => {
+        const known = capitalWordsOfCard({title: 'FIFA pushes for the Olympic tournament', summary: 'Talks with Brazil open. The wait is long.', names: [{name: 'Infantino'}, 'Brisbane']});
+        expect(known.has('brazil')).toBe(true);
+        expect(known.has('infantino')).toBe(true);
+        expect(known.has('brisbane')).toBe(true);
+        expect(known.has('talks')).toBe(false);
+        expect(lowerFirst('Brazil win', known)).toBe('Brazil win');
+        expect(lowerFirst('Talks open', known)).toBe('talks open');
     });
 
     it('should leave a line as it is when its condition has no "then"', () => {

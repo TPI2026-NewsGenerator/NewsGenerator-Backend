@@ -851,25 +851,25 @@ describe('briefingMail with the blocks of a card', () => {
         expect(html).toContain('>Official sources<');
     });
 
-    it('should show under the title the pills of what the card has: the media, the denial, the official sources, the unconfirmed words', () => {
+    it('should show under the title the pills of what the card has: the media, the denial, the official sources (one badge, however many), the unconfirmed words', () => {
         const {html, text} = mail(on({media: true}));
         expect(html).toContain('Told by 3 media in 3 languages');
         expect(html).toMatch(/color:#BF4800">Contested</);
-        expect(html).toMatch(/color:#248A3D">2 official sources</);
+        expect(html).toMatch(/color:#248A3D">Officially confirmed</);
         expect(html).toMatch(/color:#BF4800">Unconfirmed</);
         // under the title, before its sentences
         expect(html.indexOf('Told by 3 media')).toBeGreaterThan(html.indexOf('<h2'));
         expect(html.indexOf('Told by 3 media')).toBeLessThan(html.indexOf('Passage of Gipfel'));
         // the tints are plain colours: mail apps do not all read rgba()
         expect(html).not.toContain('rgba(');
-        expect(text).toContain('Told by 3 media in 3 languages · Contested · 2 official sources · Unconfirmed');
+        expect(text).toContain('Told by 3 media in 3 languages · Contested · Officially confirmed · Unconfirmed');
     });
 
     it('should say one medium and one official source in the singular, and leave a language count of one out', () => {
         const single = on({media: true}, {...full, corroboration: {media: 1}, articles: [article('a.com', at(6))], official: [full.official[0]], contested: []});
         const {html} = mail(single);
         expect(html).toContain('Told by one medium<');
-        expect(html).toContain('>Official source<');
+        expect(html).toContain('>Officially confirmed<');
         expect(html).not.toContain('Contested');
     });
 
@@ -877,7 +877,7 @@ describe('briefingMail with the blocks of a card', () => {
         const {html} = mail(on({contested: false, official: false, unconfirmed: false}));
         expect(html).not.toContain('border-radius:999px');
         expect(html).not.toContain('Contested');
-        expect(html).not.toContain('Official source');
+        expect(html).not.toContain('Officially confirmed');
         expect(html).not.toContain('Not confirmed');
         const bare = mail(on({media: true, names: true}, card(2, 'Bare', {corroboration: undefined})));
         expect(bare.html).not.toContain('border-radius:999px');
@@ -981,13 +981,13 @@ describe('briefingMail with the blocks of a card', () => {
         expect(html).toContain('Raconté par 3 médias en 3 langues');
         expect(html).toContain('>Contesté<');
         expect(html).toContain('>De qui il parle<');
-        expect(html).toContain('Official source');
+        expect(html).toContain('Officially confirmed');
     });
 
     it('should take the dark colours of the page for the pills when the reader chooses dark', () => {
         const {html} = mail(on({media: true, names: true}), {theme: 'dark'});
         expect(html).toMatch(/color:#FF9F0A">Contested</);
-        expect(html).toMatch(/color:#30D158">2 official sources</);
+        expect(html).toMatch(/color:#30D158">Officially confirmed</);
         expect(html).toContain('background:#2C2C2E;border:1px solid #2C2C2E;color:#98989D');
     });
 });

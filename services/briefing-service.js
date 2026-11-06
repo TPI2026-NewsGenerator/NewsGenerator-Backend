@@ -22,7 +22,7 @@ import {canSummarize, extractArticle, passagesText, sentencesOf, splitSentences,
 import {glossariesOfStories} from "./utils/card-spellings.js";
 import {alignNames, namesIn, spellingsOf} from "./utils/spellings.js";
 import {aiWaysOf} from "./utils/ai-ways.js";
-import {ANALYSIS_MODEL, TIMELINE_MAX, analysesOf, fittedArticles, withCleanNext} from "./utils/card-analysis.js";
+import {ANALYSIS_MODEL, TIMELINE_MAX, analysesOf, capitalWordsOfCard, fittedArticles, withCleanNext} from "./utils/card-analysis.js";
 import {languageOf} from "./utils/language.js";
 import {BRIEFING_SIZES, MAX_BRIEFING, balanceSelection, checkStories, mergeStories, reviewCards, selectStories, shareOut} from "./utils/profile-ai.js";
 import {corroborationOf} from "./utils/corroboration.js";
@@ -54,7 +54,7 @@ import {EntityService} from "./entity-service.js";
 import {namesAndCountriesOfCards} from "./utils/card-names.js";
 import {isCountry} from "./utils/country-names.js";
 import {cleanTitle, wholeTitle} from "./utils/titles.js";
-import {aiRewrittenTitles, neutralTitles, rewrittenTitle} from "./utils/neutral-titles.js";
+import {aiRewrittenTitles, bestRewrite, neutralTitles} from "./utils/neutral-titles.js";
 
 // Measured on four profiles and 249 stories judged by hand:
 //  - one vector per interest, dense + half the sparse: 88% of relevant cards (one vector for the
@@ -654,6 +654,9 @@ export const completeCards = async ({main, spare = []}, {briefingId = null, labe
     const neutralTitle = new Map();
     // the leads whose title the AI rewrote (not only shortened by the code): the card says so and shows the title as published
     const titleRewritten = new Set();
+    // lead -> {title, problem}: the rewrite the AI wrote that the checks or the second opinion refused, shown to the reader of the
+    // editor of the e-mail with what was found against it (the user, 6.11.2026), never put in the card
+    const titleProposal = new Map();
     // lead -> {glossary, names}: how the card spells its names, from Wikidata and from its translated text
     const spellings = new Map();
     let rounds = 0;
@@ -688,22 +691,38 @@ export const completeCards = async ({main, spare = []}, {briefingId = null, labe
         // 03.11.2026): the AI judges which need it, rewrites them, and a second opinion keeps only the rewrites that tell
         // exactly the same fact (see aiRewrittenTitles). The title as published stays in titleAsPublished. Never fails the briefing
         const kept = [...leads].filter(([result]) => !leftOut.has(String(result.story.storyId)));
+        const proposed = new Map();
         const rewrites = await aiRewrittenTitles(kept.map(([result, lead]) => ({title: shownTitle(lead), passages: textOf(result.summary?.summary), language: writtenIn(lead.lang)})),
-            {judging: usage.titling, rewriting: usage.titleRewriting, verifying: usage.titleRewriting}).catch(err => {
+            {judging: usage.titling, rewriting: usage.titleRewriting, verifying: usage.titleRewriting}, proposed).catch(err => {
             console.error(`Briefing: the titles were not rewritten (${err.message})`);
             return new Map();
         });
         kept.forEach(([, lead], i) => {
-            if (!rewrites.has(i)) return;
+            if (!rewrites.has(i)) {
+                if (proposed.has(i)) {
+                    console.log(`Briefing ${briefingId}: title rewrite not kept (${proposed.get(i).problem}), left to the editor: "${lead.title}" -> "${proposed.get(i).title}"`);
+                    titleProposal.set(lead, proposed.get(i));
+                }
+                return;
+            }
             console.log(`Briefing ${briefingId}: title rewritten by the AI: "${lead.title}" -> "${rewrites.get(i)}"`);
             neutralTitle.set(lead, rewrites.get(i));
             titleRewritten.add(lead);
         });
-        // and the titles written in another language than the reader's translated, as their passages
+        // and the titles written in another language than the reader's translated, as their passages; the proposals of the editor with
+        // them, in the language of the title the e-mail will have
         const foreign = kept.map(([, lead]) => lead).filter(lead => lead.lang && lead.lang !== language && writtenIn(lead.lang) && writtenIn(language));
-        const translations = foreign.length === 0 ? [] : await translateTexts(foreign.map(lead => ({text: shownTitle(lead), from: writtenIn(lead.lang), ...spellings.get(lead)})),
-            writtenIn(language), usage.summarizing);
+        const proposedForeign = foreign.filter(lead => titleProposal.has(lead));
+        const translations = foreign.length === 0 ? [] : await translateTexts([
+            ...foreign.map(lead => ({text: shownTitle(lead), from: writtenIn(lead.lang), ...spellings.get(lead)})),
+            ...proposedForeign.map(lead => ({text: titleProposal.get(lead).title, from: writtenIn(lead.lang), ...spellings.get(lead)})),
+        ], writtenIn(language), usage.summarizing);
         foreign.forEach((lead, i) => titleTranslation.set(lead, translations[i]));
+        proposedForeign.forEach((lead, j) => {
+            const translated = translations[foreign.length + j];
+            if (translated) titleProposal.set(lead, {...titleProposal.get(lead), title: translated});
+            else titleProposal.delete(lead);
+        });
         if (leftOut.size > 0) console.log(`Briefing: ${leftOut.size} cards on what the reader refuses left out (${[...leftOut.values()].join(' / ')})`);
         return results.map(result => ({...result, leftOut: leftOut.get(String(result.story.storyId)) ?? null}));
     };
@@ -799,6 +818,9 @@ export const completeCards = async ({main, spare = []}, {briefingId = null, labe
             // true when the AI rewrote the title (a judgment inside its sentences), after checking it tells the same fact; false
             // when the code only took a teaser out of it. Absent from the briefings made before 03.11.2026
             titleRewritten: titleRewritten.has(lead),
+            // the rewrite the AI wrote and the checks refused, {title, problem}, in the language of the title the card has: the editor of
+            // the e-mail shows it against the title with what was found; absent from the briefings made before 06.11.2026
+            titleProposal: titleProposal.get(lead) ?? null,
             // the article of the title and of the passages, the one the card sends to read: the reader
             // could not tell which of its articles the passages were of
             lead: toArticle(lead, trusted),
@@ -1128,6 +1150,18 @@ export const FOLLOWING_BUDGET_MS = 170e3;
 const MAX_FOLLOWING_JOBS = 4;
 const followingJobs = new Map();        // `${profileId} ${limit} ${follows}` -> {status, progress, answer, error, endedAt, done}
 
+// The names the page marks in the translation of a news of its list, which it asks the places of with the translation: the words of
+// the news as written that were marked (the name as the medium spells it, often the same in the translation) and the names the group is
+// followed by (the label and the aliases of its item, the word as written), the ones known to be in the news first. At most MAX_MARK_NAMES
+// of at most 60 characters (the server of the translations takes no more, see news-controller.js)
+const MAX_MARK_NAMES = 20;
+export const namesToMark = (follows, group, news, marks) => {
+    const own = group.qid ? follows.find(follow => follow.qid === group.qid) : follows.find(follow => follow.qid === null && follow.label === group.term);
+    const written = ['title', 'excerpt'].flatMap(field => (marks[field] ?? []).map(([start, end]) => String(news[field] ?? '').slice(start, end).trim()));
+    const names = [...written, ...(own?.names ?? [group.term])].filter(name => name.length > 0 && name.length <= 60);
+    return [...new Map(names.map(name => [name.toLowerCase(), name])).values()].slice(0, MAX_MARK_NAMES);
+};
+
 const followingJob = (profileId, words, follows, limit) => {
     const job = {status: 'running', progress: null, answer: null, error: null, endedAt: null};
     job.done = (async () => {
@@ -1136,7 +1170,10 @@ const followingJob = (profileId, words, follows, limit) => {
                 stopAt: Date.now() + FOLLOWING_BUDGET_MS});
             await rememberShown(profileId, groups);
             const terms = [...new Set(follows.flatMap(follow => follow.names))];
-            job.answer = {limit, partial, groups: groups.map(group => ({...group, news: group.news.map(news => ({...news, marks: marksOf({title: news.title, excerpt: news.excerpt}, terms)}))}))};
+            job.answer = {limit, partial, groups: groups.map(group => ({...group, news: group.news.map(news => {
+                const marks = marksOf({title: news.title, excerpt: news.excerpt}, terms);
+                return {...news, marks, terms: namesToMark(follows, group, news, marks)};
+            })}))};
             job.status = 'ready';
         } catch (err) {
             console.error(`Briefing: the news of what the profile follows were not searched (${err.message})`);
@@ -1318,7 +1355,7 @@ const toBriefing = (row) => row && ({
     error: row.error,
     items: row.items ?? [],
     // the analysis of its cards that merit one (see analyze), null for a briefing written before 15.10.2026
-    analysis: withCleanNext(analysisOfRow(row.analysis)),
+    analysis: withCleanNext(analysisOfRow(row.analysis), storyId => capitalWordsOfCard((row.items ?? []).find(item => String(item.storyId) === String(storyId)))),
     size: row.size ?? MAX_BRIEFING,  // the cards asked for
     hours: row.hours,               // of news it was written from
     createdAt: row.created_at,
@@ -1881,8 +1918,9 @@ export const BriefingService = {
     },
 
     // A neutral title for a card, written by the AI when the reader asks for it in the editor of the e-mail and
-    // shown to them against the title they have (see rewrittenTitle): {title}, {title: null, reason: 'same'} for a title
-    // neutral already, {title: null, reason: 'unsafe'} when the AI changed what the title says. Of the title the reader
+    // shown to them against the title they have (see bestRewrite): {title}, {title: null, reason: 'same'} for a title
+    // neutral already, {title, problem} when the checks found something against it (a name lost: the reader decides, the
+    // user, 6.11.2026), {title: null, reason: 'unsafe'} when there is no proposal at all. Of the title the reader
     // reads (its translation when it has one), with the sentences of the card for the facts
     neutralTitle: async (userId, briefingId, storyId) => {
         const {row, briefing} = await readyBriefing(userId, briefingId);
@@ -1893,8 +1931,10 @@ export const BriefingService = {
         // the title is written in the language of the reader when it was translated, else in its own
         const profile = item.titleTranslation && row.id_profile ? await ProfileModel.get(row.id_profile) : null;
         const language = item.titleTranslation ? readerLanguage(profile ?? {}) : item.language;
-        const proposal = await rewrittenTitle(item.titleTranslation ?? item.title, textOf(sentences), usage, {language: writtenIn(language)});
+        const proposal = await bestRewrite(item.titleTranslation ?? item.title, textOf(sentences), usage, {language: writtenIn(language)});
         console.log(`Briefing ${briefingId}: neutral title asked for the card ${item.storyId}, ${proposal.title ? 'proposed' : `${proposal.reason}${proposal.problem ? ` (${proposal.problem}: ${proposal.proposal})` : ''}`}, tokens ${JSON.stringify(usage)}`);
+        // a proposal the checks refused is shown all the same, with what they found: {title, problem}
+        if (!proposal.title && proposal.reason === 'unsafe' && proposal.proposal) return {title: proposal.proposal, problem: proposal.problem};
         return {title: proposal.title, ...(proposal.reason ? {reason: proposal.reason} : {})};
     },
 

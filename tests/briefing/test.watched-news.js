@@ -9,7 +9,7 @@
 import {describe, expect, it, jest} from '@jest/globals';
 
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
-const {newsOfTerms} = await import('../../services/briefing-service.js');
+const {namesToMark, newsOfTerms} = await import('../../services/briefing-service.js');
 
 const at = new Date('2026-10-08T12:00:00Z');
 const article = (id, story, title, changes = {}) => ({
@@ -61,5 +61,33 @@ describe('newsOfTerms', () => {
 
         expect(groups.map(group => [group.term, group.count])).toEqual([['Dario Amodei', 0], ['VAR', 1]]);
         expect(groups[0].news).toEqual([]);
+    });
+});
+
+// the page marks the names in the translation of a news too: the names it asks the places of (the user, 6.11.2026)
+describe('namesToMark', () => {
+    const follows = [
+        {label: 'Nuri Şahin', qid: 'Q1', names: ['Nuri Şahin', 'Şahin', 'Nuri Sahin']},
+        {label: 'VAR', qid: null, names: ['VAR']},
+    ];
+
+    it('should give the words of the news that were marked, then the names its group is followed by, each once whatever its case', () => {
+        const news = {title: 'Nuri Şahin vor dem Aus', excerpt: 'Der Trainer nuri şahin steht unter Druck'};
+        const marks = {title: [[0, 10]], excerpt: [[12, 22]]};
+        expect(namesToMark(follows, {qid: 'Q1', term: 'Nuri Şahin'}, news, marks)).toEqual(['Nuri Şahin', 'Şahin', 'Nuri Sahin']);
+    });
+
+    it('should give the word followed as written for a word, and the term of a group that follows nothing', () => {
+        expect(namesToMark(follows, {qid: null, term: 'VAR'}, {title: 'Die VAR greift ein'}, {title: [[4, 7]]})).toEqual(['VAR']);
+        expect(namesToMark(follows, {qid: 'Q9', term: 'Unknown'}, {title: 'x'}, {})).toEqual(['Unknown']);
+    });
+
+    it('should keep the words of the news that no name of the group spells (a name the medium writes otherwise), at most 20 names of 60 characters', () => {
+        const names = Array.from({length: 30}, (_, i) => `Name number ${i}`);
+        const many = [{label: 'Many', qid: 'Q2', names: [...names, 'x'.repeat(61)]}];
+        const got = namesToMark(many, {qid: 'Q2', term: 'Many'}, {title: 'Šahin signs'}, {title: [[0, 5]]});
+        expect(got[0]).toBe('Šahin');
+        expect(got).toHaveLength(20);
+        expect(got.every(name => name.length <= 60)).toBe(true);
     });
 });

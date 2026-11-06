@@ -477,7 +477,10 @@ export const NewsService = {
     // profile follows shows (see excerptOf, with its "…" at the ends): translated when text is a passage of the
     // description of that news, answered [{url, text, language, excerpt}] after the others.
     // Only news of the cache: the AI is no translator for any text
-    translateNews: async ({news = [], titles = [], excerpts = [], language}) => {
+    // terms: {url: [name]}, the names the page marks in the text of a news (the page of what a profile follows): the places of those
+    // names in the translation are answered, 'marks' {title, description} and 'excerptMarks', as the page marks the text as written
+    // (the user, 06.11.2026: a title translated lost the tint of the name that finds it)
+    translateNews: async ({news = [], titles = [], excerpts = [], language, terms = {}}) => {
         const urls = [...new Set([...news, ...titles])];
         const articles = await NewsService.cachedArticles([...new Set([...urls, ...excerpts.map(excerpt => excerpt.url)])]);
         const to = writtenIn(language);
@@ -517,6 +520,8 @@ export const NewsService = {
             translated.delete(key);
         }
 
+        // the places of the names of a news in a text translated, none when the page asked for no names or a name is not in it
+        const marksIn = (url, text) => Filter.highlights(text, terms?.[url]);
         const byUrl = new Map();
         for (const {url, from, field, text} of wanted) {
             const translation = translated.get(keyOf(text));
@@ -524,9 +529,17 @@ export const NewsService = {
             if (!byUrl.has(url)) byUrl.set(url, {url, language: from, title: null, description: null});
             byUrl.get(url)[field] = translation;
         }
+        for (const translation of byUrl.values()) {
+            const marks = Object.fromEntries(['title', 'description'].map(field => [field, translation[field] ? marksIn(translation.url, translation[field]) : []])
+                .filter(([, ranges]) => ranges.length > 0));
+            if (Object.keys(marks).length > 0) translation.marks = marks;
+        }
         const passagesDone = passages.flatMap(({url, text, core, from, lead, trail}) => {
             const translation = translated.get(keyOf(core));
-            return translation ? [{url, text, language: from, excerpt: `${lead ? '…' : ''}${translation}${trail ? '…' : ''}`}] : [];
+            if (!translation) return [];
+            const excerpt = `${lead ? '…' : ''}${translation}${trail ? '…' : ''}`;
+            const excerptMarks = marksIn(url, excerpt);
+            return [{url, text, language: from, excerpt, ...(excerptMarks.length > 0 ? {excerptMarks} : {})}];
         });
         return [...byUrl.values(), ...passagesDone];
     },

@@ -200,6 +200,18 @@ export const namesFor = (row, following) => {
     });
 };
 
+// The names the news of an item are searched by. A family name or a first name alone is the name of everyone who carries it: the
+// Wikidata aliases of Carlos Velasco Carballo (a Spanish referee) hold "Velasco", which found footballers, ministers and
+// governors named Velasco in his tab: 73 sightings of the name, none linked to him (the user's friend, 6.11.2026). A person with a
+// name of several words is searched by the names of several words, and by the item the tagger links its news to; the words
+// alone the reader added stay
+export const searchNamesFor = (row, following) => {
+    const names = namesFor(row, following);
+    if (row.kind !== 'person' || !/\s/.test(String(row.label ?? '').trim())) return names;
+    const added = new Set((following?.added_names ?? []).map(name => cleanName(name).toLowerCase()));
+    return names.filter(name => /\s/.test(name) || added.has(name.toLowerCase()));
+};
+
 const summary = (row, following) => ({
     qid: row.qid, label: row.label, description: row.description, kind: row.kind,
     // the name it is shown by in lists and tabs: "UEFA" (see shortName)
@@ -517,7 +529,7 @@ export const EntityService = {
         const rows = (await EntityModel.followed(profileId, {inBriefing: true})).filter(row => only === null || only.includes(row.qid));
         if (rows.length === 0) return [];
         // all the items in one search: 300 of them, one each, were 300 searches of the database
-        const namesOf = new Map(rows.map(row => [row.qid, namesFor(row, row)]));
+        const namesOf = new Map(rows.map(row => [row.qid, searchNamesFor(row, row)]));
         const found = new Map((await namedNews(profileId, [...new Set([...namesOf.values()].flat())], hours, rows.map(row => row.qid)))
             .map(group => [group.term, group]));
         return rows.map(row => ({term: shortName(row.label, row.names), qid: row.qid,
@@ -549,7 +561,7 @@ export const EntityService = {
     // briefing by their names, then the words, each its own name
     followTerms: async (profileId, words) => [
         ...(profileId === null ? [] : await EntityModel.followed(profileId, {inBriefing: true}))
-            .map(row => ({label: shortName(row.label, row.names), qid: row.qid, names: namesFor(row, row)})),
+            .map(row => ({label: shortName(row.label, row.names), qid: row.qid, names: searchNamesFor(row, row)})),
         ...(words ?? []).map(word => ({label: word, qid: null, names: [word]})),
     ],
 

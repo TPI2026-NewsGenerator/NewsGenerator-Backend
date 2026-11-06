@@ -190,12 +190,18 @@ export const scriptLanguage = (text, label = null) => {
 // have them, English left out). It is a guess: a football title of names ("Mbappé and Müller shine as Ødegaard returns") passes
 // for Danish, so what asks for a translation (see translatedTitles) keeps the title when the translation is the same text.
 // null when the marks are few or franc says the label
+const NOT_SERBO_CROATIAN = /[áàâäãåéèêëěíìîïóòôöõőøúùûüűůýÿñňřťďľĺŕłąęśźńşșțţ]/iu;
 const ACCENTED = ['ces', 'slk', 'pol', 'hun', 'ron', 'tur', 'vie', 'hrv', 'bos', 'slv', 'swe', 'dan', 'nob', 'fin', 'ekk', 'lvs', 'lit', 'als', 'fra', 'deu', 'spa', 'por', 'ita', 'nld', 'cat', 'glg'];
 export const markedLanguage = (text, label = null) => {
     const letters = (String(text ?? '').match(/\p{L}/gu) ?? []).length;
     const marks = (String(text ?? '').match(/[À-ɏḀ-ỿ]/gu) ?? []).length;
     if (letters < 12 || marks < 2 || marks / letters < 0.03) return null;
     let code = FRANC_CODES[franc(text, {minLength: 10, only: ACCENTED})];
+    // Croatian and Bosnian are written with č, ć, đ, š and ž: a letter beyond them (á, é, ú, ý of "Podcenili ste to, odkázalo vedenie
+    // svetového hokeja", a Slovak title of ta3.com, 6.11.2026, read Bosnian) is another language's, so franc chooses without them
+    if ((code === 'hr' || code === 'bs') && NOT_SERBO_CROATIAN.test(text)) {
+        code = FRANC_CODES[franc(text, {minLength: 10, only: ACCENTED.filter(other => other !== 'hrv' && other !== 'bos')})];
+    }
     // franc takes Czech for Slovak and back on a short text: ě, ř and ů are Czech's alone, ä, ĺ, ľ, ŕ and ô Slovak's
     if (code === 'sk' && /[ěřů]/iu.test(text)) code = 'cs';
     else if (code === 'cs' && /[äĺľŕô]/iu.test(text)) code = 'sk';

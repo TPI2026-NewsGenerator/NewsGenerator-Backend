@@ -45,6 +45,19 @@ describe('alignNames', () => {
         expect(alignNames("UEFA referee Frapar's seminar", names)).toBe("UEFA referee Frappart's seminar");
     });
 
+    it('should put a name written with other accents as Wikidata spells it, whatever the original writes (Lekjaâ, 6.11.2026)', () => {
+        expect(alignNames('FRMF president Fouzi Lekjaâ must leave a position at the CAF.', ['Fouzi Lekjaa', 'CAF'], 'Le président de la FRMF Fouzi Lekjaâ doit quitter un poste'))
+            .toBe('FRMF president Fouzi Lekjaa must leave a position at the CAF.');
+        expect(alignNames("Lekjaâ's decision", ['Fouzi Lekjaa'])).toBe("Lekjaa's decision");
+        // the accents Wikidata has are put back too, a name in capitals is left as it is
+        expect(alignNames('Luka Modric scores', ['Luka Modrić'])).toBe('Luka Modrić scores');
+        expect(alignNames('LEKJAÂ SPEAKS', ['Fouzi Lekjaa'])).toBe('LEKJAÂ SPEAKS');
+    });
+
+    it('should take the label of Wikidata, first in the names, over the same name another way written in the text', () => {
+        expect(alignNames('Lekjaâ speaks', ['Fouzi Lekjaa', 'Fouzi Lekjaâ'])).toBe('Lekjaa speaks');
+    });
+
     it('should put back a doubled consonant the other way', () => {
         expect(alignNames('Emil Bozhinovski referees', ['Emil Bozinovski'])).toBe('Emil Bozinovski referees');
     });

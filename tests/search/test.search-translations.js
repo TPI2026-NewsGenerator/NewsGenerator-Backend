@@ -70,8 +70,8 @@ describe('translateNews', () => {
 
     it('should ask a text again when the AI did not answer, not keep it untranslated until a restart', async () => {
         FeedModel.getArticlesByLinks.mockResolvedValue([article('https://bild.test/6', 'Dortmund verliert in Mainz', null, 'de')]);
-        // no translation for the text, twice: what translateTexts answers when the AI is down too
-        answer(); answer();
+        // no translation for the text, three times (see TEXTS_ATTEMPTS): what translateTexts answers when the AI is down too
+        answer(); answer(); answer();
 
         expect(await NewsService.translateNews({news: ['https://bild.test/6'], language: 'en'})).toEqual([]);
         answer('Dortmund loses in Mainz');
@@ -134,6 +134,39 @@ describe('translateNews', () => {
         expect(first.map(found => [found.title ?? found.excerpt])).toEqual([['Dortmund loses'], ['Dortmund loses in Mainz and the coach Nuri Şahin has been under pressure for weeks']]);
         expect(again).toEqual([expect.objectContaining({excerpt: 'Dortmund loses in Mainz and the coach Nuri Şahin has been under pressure for weeks'})]);
         expect(chat).toHaveBeenCalledTimes(1);
+    });
+
+    // the page of what a profile follows marks the names in a text as written; the translation lost the tint (the user, 6.11.2026)
+    it('should answer the places of the names asked in the translated title, description and passage, for the page to mark them', async () => {
+        const description = 'Gladbach verliert in Mainz und der Trainer Nuri Şahin steht dort unter Druck seit Wochen.';
+        FeedModel.getArticlesByLinks.mockResolvedValue([article('https://bild.test/11', 'Nuri Şahin vor dem Aus', description, 'de')]);
+        // the passage is the description: one text asked for both
+        answer('Nuri Sahin facing the sack', 'Gladbach lose in Mainz and the coach Nuri Sahin is under pressure there for weeks');
+
+        const [found, passage] = await NewsService.translateNews({
+            news: ['https://bild.test/11'], excerpts: [{url: 'https://bild.test/11', text: description}], language: 'en',
+            terms: {'https://bild.test/11': ['Nuri Şahin']},
+        });
+
+        // accents aside, as the text as written is marked
+        expect(found.title).toBe('Nuri Sahin facing the sack');
+        const at = found.description.indexOf('Nuri Sahin');
+        expect(found.marks).toEqual({title: [[0, 10]], description: [[at, at + 10]]});
+        expect(passage.excerptMarks).toEqual([[at, at + 10]]);
+        expect(found.title.slice(...found.marks.title[0])).toBe('Nuri Sahin');
+        expect(passage.excerpt.slice(...passage.excerptMarks[0])).toBe('Nuri Sahin');
+    });
+
+    it('should answer no marks when no name is asked, or a name is not in the translation (a name the translation wrote otherwise)', async () => {
+        FeedModel.getArticlesByLinks.mockResolvedValue([article('https://bild.test/12', 'Schiedsrichter vor dem Aus', null, 'de')]);
+        answer('Referee facing the sack');
+        answer('Referee facing the sack');
+
+        const [plain] = await NewsService.translateNews({titles: ['https://bild.test/12'], language: 'en'});
+        const [other] = await NewsService.translateNews({titles: ['https://bild.test/12'], language: 'en', terms: {'https://bild.test/12': ['Felix Brych']}});
+
+        expect(plain).not.toHaveProperty('marks');
+        expect(other).not.toHaveProperty('marks');
     });
 
     it('should refuse a news that is not in the cache', async () => {
