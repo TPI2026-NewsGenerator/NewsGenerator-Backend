@@ -146,6 +146,19 @@ export const MentionModel = {
         GROUP BY w.word, m.qid
         ORDER BY w.word, seen DESC`, words),
 
+    // [{word, qid, seen, keys}]: for each of these family names, with their doubled letters as one ("mesi", see collapsed of
+    // romanize.js), the persons linked to an item named in full whose family name is it so ("lionel messi"), each item once with how
+    // often its writings were met, the most met first, and its writings (8 at most, the most met first: their given names are told
+    // apart from a name in other letters). The names a card writes in Greek or Cyrillic letters are looked for by their Latin spellings
+    personsByLooseSurname: async (words) => words.length === 0 ? [] : prisma.$queryRawUnsafe(`
+        SELECT regexp_replace(substring(m.key from '[^ ]+$'), '(.)\\1', '\\1', 'g') AS word, m.qid, sum(m.seen)::int AS seen,
+               (array_agg(m.key ORDER BY m.seen DESC))[1:8] AS keys
+        FROM mentions m
+        WHERE m.qid IS NOT NULL AND m.kind = 'person' AND position(' ' in m.key) > 0
+          AND regexp_replace(substring(m.key from '[^ ]+$'), '(.)\\1', '\\1', 'g') = ANY($1::text[])
+        GROUP BY 1, m.qid
+        ORDER BY 1, seen DESC`, words),
+
     // [{site, news}]: the sites of the news naming this name ("prosport.ro"), how many each: a byline is
     // of one site, a person of the media of their country (see country-names.js mediaOf)
     sitesNaming: async (id) => prisma.$queryRawUnsafe(`

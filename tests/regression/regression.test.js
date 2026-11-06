@@ -20,6 +20,7 @@ const {keepsFigures, splitSentences} = await import('../../services/utils/extrac
 const {alignNames} = await import('../../services/utils/spellings.js');
 const {withCleanNext} = await import('../../services/utils/card-analysis.js');
 const {searchNamesFor} = await import('../../services/utils/watch-names.js');
+const {withSurnamesLinked} = await import('../../services/utils/card-names.js');
 const {checkRewrite, neutralTitle} = await import('../../services/utils/neutral-titles.js');
 
 const corpus = JSON.parse(readFileSync(new URL('./corpus.json', import.meta.url), 'utf8'));
@@ -50,6 +51,11 @@ const FAMILIES = {
     ifthen: ({input, expect: wanted}) => {
         const saved = {cards: {1: {next: [{if: input.if, then: input.then}]}}};
         expect(withCleanNext(saved, () => new Set(input.known ?? [])).cards[1].next[0]).toEqual({if: wanted.if, then: wanted.then});
+    },
+    // a name in Greek or Cyrillic letters and the persons linked whose family name it spells (the rows MentionModel.personsByLooseSurname gave)
+    romanized: ({input, expect: wanted}) => {
+        const [linked] = withSurnamesLinked([[{qid: null, ...input.name}]], [], input.rows)[0];
+        expect(linked.qid ?? null).toBe(wanted.qid);
     },
     following: ({input, expect: wanted}) => {
         expect(searchNamesFor(input.row, input.following ?? null, new Set(input.common))).toEqual(wanted.names);

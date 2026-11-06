@@ -7,7 +7,7 @@
 //               spelled with other accents than its card, no "If" of the analysis keeps a capital that is no name, no angle has a
 //               language its title does not say. And, beside them, what a change may have broken without a sign: the share of cards
 //               with their names, countries, angles, picture, AI version, and the time it took, against the last briefings of the
-//               same profile. Writes nothing. After a deploy, on the first briefing written
+//               same profile, and why the cards without a country have none. Writes nothing. After a deploy, on the first briefing written
 //
 //  node scripts/briefing-audit.js <briefingId>     (exit code 1 when a check fails)
 //
@@ -16,6 +16,8 @@ import 'dotenv/config';
 import process from 'node:process';
 import {prisma} from '../config/db.js';
 import {ProfileModel} from '../models/profile-model.js';
+import {MentionModel} from '../models/mention-model.js';
+import {NO_COUNTRY_BECAUSE, countryInfoOf, whyNoCountry} from '../services/utils/countries.js';
 import {lacksCapital, lowerFirst, capitalWordsOfCard} from '../services/utils/card-analysis.js';
 import {withoutDateline} from '../services/utils/extract.js';
 import {readerLanguage, titleLanguage, writtenIn} from '../services/utils/language.js';
@@ -90,6 +92,22 @@ if (before.length > 0) {
         const was = average(key);
         const worse = key === 'seconds' ? now[key] > was * 1.5 : now[key] < was - 20;
         console.log(`${worse ? 'WARN' : '    '} ${key.padEnd(9)} ${String(now[key]).padStart(4)}  was ${String(was).padStart(4)}`);
+    }
+}
+// the cards without a country, and why: a share that drops says nothing of what changed (international bodies have none by rule, a name
+// the tagger did not link has none, a country the rules gave and the AI refused...). The names the card shows, their countries as read
+// in the database
+const withoutCountry = items.filter(item => !item.countries?.length);
+if (withoutCountry.length > 0) {
+    const qids = [...new Set(withoutCountry.flatMap(item => (item.names ?? []).map(name => name.qid)).filter(Boolean))];
+    const countryOf = new Map((await MentionModel.countriesOf(qids)).map(one => [one.qid, countryInfoOf(one)]));
+    const byReason = Map.groupBy(withoutCountry, item => whyNoCountry(item.names, countryOf));
+    console.log(`\n${withoutCountry.length} of ${items.length} cards without a country:`);
+    for (const [reason, text] of Object.entries(NO_COUNTRY_BECAUSE)) {
+        const cards = byReason.get(reason) ?? [];
+        if (cards.length === 0) continue;
+        console.log(`    ${String(cards.length).padStart(3)}  ${text}`);
+        for (const item of cards.slice(0, 2)) console.log(`           - ${short(item.titleTranslation ?? item.title, 60)}`);
     }
 }
 const rewritten = items.filter(item => item.titleRewritten).length;

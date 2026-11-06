@@ -11,6 +11,7 @@
 
 import {MentionModel} from '../../models/mention-model.js';
 import {mentionKey} from './mentions.js';
+import {collapsed, romanizations, sameGivenName} from './romanize.js';
 import {cardCountries, countriesOfItems} from './countries.js';
 import {chooseCountries, countryCandidates} from './country-choice.js';
 import {countryName, countryNamed} from './country-names.js';
@@ -140,24 +141,48 @@ const SURNAME_AHEAD = 3;
 const MIN_SURNAME = 4;
 const surnameKey = (name) => {
     const key = bare(mentionKey(name.name));
-    return !name.qid && !key.includes(' ') && key.length >= MIN_SURNAME && ['person', 'organization'].includes(name.kind) ? key : null;
+    // a name in Greek or Cyrillic letters is looked for by its Latin spellings (see romanKeys), not by its own letters
+    return !name.qid && !key.includes(' ') && key.length >= MIN_SURNAME && ['person', 'organization'].includes(name.kind) && romanizations(name.name).length === 0 ? key : null;
 };
+// A person written in Greek or Cyrillic letters that Wikidata has not as the press writes it ("Τζιάνι Ινφαντίνο", Wikidata has "Τζάνι
+// Ινφαντίνο": the briefing 444 of 6.11.2026 had no person, no country for it) is the person linked whose family name has the Latin
+// spellings of its own, doubled letters aside, by the same rule as a family name alone: met SURNAME_AHEAD times more than any other so
+// named. A name in full tells its given name too, which must be one of the person's, as written with other letters ("Thomas" is
+// not "Gerd"). Only a person: the tagger takes a name for anything on a card
+export const romanKeys = (name) => (!name.qid && name.kind === 'person' ? romanizations(name.name).map(mentionKey).filter(Boolean) : []);
+const MIN_SEEN_ROMAN = 3;
 // names: the names of each card (see chosenNames); rows: [{word, qid, seen, asPerson, asOther}] (see
-// MentionModel.personsEndingWith), the most met first for each word. The names as the card writes them,
+// MentionModel.personsEndingWith), the most met first for each word; loose: [{word, qid, seen, keys}] (see
+// MentionModel.personsByLooseSurname) for the names in other letters. The names as the card writes them,
 // with the person's item and kind (the writing most met was "President Trump", "C. Ronaldo"), and
 // bySurname the news naming that person in full; a card naming that person already keeps it once
-export const withSurnamesLinked = (names, rows) => {
+export const withSurnamesLinked = (names, rows, loose = []) => {
     const byWord = new Map();
     for (const row of rows) byWord.set(row.word, [...(byWord.get(row.word) ?? []), row]);
+    const byLoose = new Map();
+    for (const row of loose) byLoose.set(row.word, [...(byLoose.get(row.word) ?? []), row]);
     const personOf = (name) => {
         const [first, second] = byWord.get(surnameKey(name)) ?? [];
         if (!first || first.seen < SURNAME_AHEAD * (second?.seen ?? 0)) return null;
         return name.kind === 'person' || first.asPerson > first.asOther ? first : null;
     };
+    const romanPersonOf = (name) => {
+        const found = new Map();
+        for (const key of romanKeys(name)) {
+            const words = key.split(' ');
+            for (const row of byLoose.get(collapsed(words.at(-1))) ?? []) {
+                const given = words.length > 1 ? words[0] : null;
+                if (given && !row.keys.some(writing => sameGivenName(given, writing.split(' ')[0]))) continue;
+                found.set(row.qid, row);
+            }
+        }
+        const [first, second] = [...found.values()].sort((a, b) => b.seen - a.seen);
+        return first && first.seen >= MIN_SEEN_ROMAN && first.seen >= SURNAME_AHEAD * (second?.seen ?? 0) ? first : null;
+    };
     return names.map(card => {
         const shown = new Set(card.filter(name => name.qid).map(name => name.qid));
         return card.flatMap(name => {
-            const person = surnameKey(name) ? personOf(name) : null;
+            const person = surnameKey(name) ? personOf(name) : romanPersonOf(name);
             if (!person) return [name];
             if (shown.has(person.qid)) return [];
             shown.add(person.qid);
@@ -197,7 +222,13 @@ const readNames = async (cards) => {
         console.error(`Names: the family names were not read (${err.message})`);
         return [];
     });
-    const linked = withSurnamesLinked(read.map(card => card.names), persons);
+    // the names in Greek or Cyrillic letters: the family names of their Latin spellings, doubled letters as one
+    const looseWords = [...new Set(read.flatMap(card => card.names.flatMap(name => romanKeys(name).map(key => collapsed(key.split(' ').at(-1))))).filter(word => word.length >= MIN_SURNAME))];
+    const loose = await MentionModel.personsByLooseSurname(looseWords).catch(err => {
+        console.error(`Names: the persons of names in other letters were not read (${err.message})`);
+        return [];
+    });
+    const linked = withSurnamesLinked(read.map(card => card.names), persons, loose);
     const ids = [...linked.flatMap(names => names.filter(name => !name.qid && name.id).map(name => name.id)),
         ...read.flatMap(card => card.toLink)];
     if (ids.length > 0) await MentionModel.want({ids}).catch(err => console.error(`Names: not asked first in Wikidata (${err.message})`));

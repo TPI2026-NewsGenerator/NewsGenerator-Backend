@@ -9,7 +9,7 @@
 import {describe, expect, it, jest} from '@jest/globals';
 
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
-const {cardCountries} = await import('../../services/utils/countries.js');
+const {cardCountries, whyNoCountry} = await import('../../services/utils/countries.js');
 const {countryNamed, countryNames} = await import('../../services/utils/country-names.js');
 const {readCountries} = await import('../../services/utils/wikidata.js');
 
@@ -74,6 +74,35 @@ describe('cardCountries', () => {
     it('should count an item once, and a match of two clubs of one country as that country', () => {
         expect(cardCountries([{qid: 'Q9617', weight: 4}, {qid: 'Q9616', weight: 4}, {qid: 'Q9617', weight: 4}], countryOf)).toEqual(['GB']);
         expect(cardCountries([{qid: 'Q1076', weight: 4}, {qid: 'Q1076', weight: 4}, {qid: 'Q22686', weight: 3}], countryOf)).toEqual(['ZM', 'US']);
+    });
+});
+
+describe('whyNoCountry', () => {
+    const person = (name, qid) => ({name, qid, kind: 'person'});
+    const organization = (name, qid) => ({name, qid, kind: 'organization'});
+
+    it('should tell a card without a name, and one whose names are linked to no item', () => {
+        expect(whyNoCountry([], countryOf)).toBe('noName');
+        expect(whyNoCountry(undefined, countryOf)).toBe('noName');
+        expect(whyNoCountry([person('Ινφαντίνο', null)], countryOf)).toBe('unlinked');
+    });
+
+    it('should tell an international body and its people, whose country is not the card\'s', () => {
+        expect(whyNoCountry([organization('FIFA', 'Q253414')], countryOf)).toBe('international');
+        expect(whyNoCountry([organization('FIFA', 'Q253414'), person('Gianni Infantino', 'Q124138')], countryOf)).toBe('international');
+        // and one more name that no item is linked to
+        expect(whyNoCountry([organization('UEFA', 'Q35572'), person('Someone', null)], countryOf)).toBe('international');
+    });
+
+    it('should tell a country the rules gave and the AI kept none of', () => {
+        expect(whyNoCountry([person('Gianni Infantino', 'Q124138')], countryOf)).toBe('refused');
+        expect(whyNoCountry([organization('L\'Équipe', 'Q815748'), organization('FIFA', 'Q253414')], countryOf)).toBe('refused');
+    });
+
+    it('should tell the names linked whose country was not read yet, or that have none', () => {
+        expect(whyNoCountry([person('Nobody', 'Q999')], countryOf)).toBe('notRead');
+        const known = new Map([['Q5', {country: null, international: false, bodies: [], media: false}]]);
+        expect(whyNoCountry([person('A person of no country', 'Q5')], known)).toBe('noneKnown');
     });
 });
 

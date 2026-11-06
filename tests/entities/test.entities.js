@@ -26,7 +26,7 @@ jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel}));
 // the news the tagger read, and how many it has not (some: their texts are searched)
 const seenOf = jest.fn(async () => new Map());
-const MentionModel = {seenOf, articlesNamed: jest.fn(async () => []), personsEndingWith: jest.fn(async () => []), anyUntagged: jest.fn(async () => true), qidsOfKey: jest.fn(async () => []),
+const MentionModel = {seenOf, articlesNamed: jest.fn(async () => []), personsEndingWith: jest.fn(async () => []), personsByLooseSurname: jest.fn(async () => []), anyUntagged: jest.fn(async () => true), qidsOfKey: jest.fn(async () => []),
     articlesOfStories: jest.fn(async () => []), namesOfArticles: jest.fn(async () => []), want: jest.fn(async () => 0),
     surnameSpread: jest.fn(async () => new Map())};
 jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel}));

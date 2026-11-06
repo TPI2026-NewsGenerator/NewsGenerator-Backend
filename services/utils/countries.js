@@ -50,6 +50,30 @@ export const cardCountries = (items, of) => {
     return ranked.filter(([, score]) => score >= ranked[0][1] * SHARE_OF_FIRST).slice(0, MAX_COUNTRIES).map(([code]) => code);
 };
 
+// Why a card has no country, for the audit of a briefing (scripts/briefing-audit.js): the first of these that holds. names: [{name,
+// qid, kind}] the card shows; of: Map qid -> {country, international, bodies, media} as countriesOfItems answers (the rows of the
+// database only: nothing is asked of Wikidata)
+export const NO_COUNTRY_BECAUSE = {
+    noName: 'the card has no name',
+    unlinked: 'its names are linked to no item of Wikidata',
+    international: 'its names are international bodies and their people',
+    notRead: 'the country of a name linked was not read yet',
+    noneKnown: 'the names linked have no country (people without one, things)',
+    refused: 'the rules gave a country and the AI kept none of them',
+};
+export const whyNoCountry = (names, of) => {
+    if (!names?.length) return 'noName';
+    const linked = names.filter(name => name.qid && !name.qid.startsWith('country:'));
+    if (linked.length === 0) return 'unlinked';
+    if (cardCountries(linked.map(name => ({qid: name.qid, weight: 1, person: name.kind === 'person'})), of).length > 0) return 'refused';
+    if (linked.some(name => of.get(name.qid)?.international)) return 'international';
+    if (linked.some(name => !of.has(name.qid))) return 'notRead';
+    return 'noneKnown';
+};
+
+// a row of item_countries as countriesOfItems and the audit read it
+export const countryInfoOf = (row) => ({country: row.country, international: row.international, bodies: row.bodies ?? [], media: Boolean(row.media)});
+
 // the items asked for to Wikidata at once, kept before the next ones; and how long a card waits for
 // Wikidata to answer again: the server linking names shares its address and is refused at times
 // (18.10.2026), and the AI writing the cards takes longer anyway
@@ -65,7 +89,7 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 export const countriesOfItems = async (qids, {background = false} = {}) => {
     const asked = [...new Set(qids.filter(Boolean))];
     const rows = await MentionModel.countriesOf(asked);
-    const known = new Map(rows.map(row => [row.qid, {country: row.country, international: row.international, bodies: row.bodies ?? [], media: Boolean(row.media)}]));
+    const known = new Map(rows.map(row => [row.qid, countryInfoOf(row)]));
     const current = new Set(rows.filter(row => row.bodies && row.media !== null).map(row => row.qid));
     const missing = asked.filter(qid => !current.has(qid));
     let waited = 0;

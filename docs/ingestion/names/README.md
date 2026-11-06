@@ -98,6 +98,16 @@ what finds the other angles of a card through its rare names.
   on that card, when the tagger takes that word for a person most of the time ("Infantino": a person 1,194
   times, an organisation 329, a place 124). A club named like someone ("Milan", a cyclist) stays a club.
   The card keeps its writing of the name.
+- **A person in Greek or Cyrillic letters** (`romanKeys` and `romanizations` of `services/utils/romanize.js`,
+  `MentionModel.personsByLooseSurname`, since 7.11.2026): the Greek press writes "Τζιάνι Ινφαντίνο", Wikidata "Τζάνι
+  Ινφαντίνο": no search finds the item and the card lost its person and its country (briefing 444). The Latin
+  spellings of the name are made (a letter two spellings share gives each: the "ντ" is the "nt" of Infantino and
+  the "d" of Ronaldo), and the family name, doubled letters aside ("Messi" and "Μέσι"), is looked for among the
+  persons linked. With several persons of that family name, the one whose given name is at most half its letters
+  apart (initials count: "C. Ronaldo") and, as for a family name alone, the one met 3 times more than the next; met
+  3 times at least. Only a person is linked this way, never an organisation, and a name that mixes scripts or
+  has Arabic, Hebrew or Chinese letters has no spelling. Read on the last 12 briefings: the one Greek name of a
+  famous person linked, the four Greek persons of local news (no item in the persons linked) left alone.
 - **Report and housekeeping.** Every hour the log says what each tagger did and what is left
   (`untaggedCount`); once a day `deleteUnused` deletes the names no news names any more that were never looked
   for in Wikidata. The ones looked for are kept on purpose, whether a news still names them or not (the user,
