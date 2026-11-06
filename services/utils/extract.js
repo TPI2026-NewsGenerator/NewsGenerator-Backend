@@ -59,6 +59,8 @@ const undated = (text) => {
 const segmenter = new Intl.Segmenter('en', {granularity: 'sentence'});
 // "M.", "Mr.", "Dr.", "U.S.", "St.", "Guild v.": a sentence does not end there
 const ABBREVIATION = /(?:^|[\s(])(?:[A-Za-z]|[A-Z][a-z]{1,2}|Mme|Mlle|Mgr|n°|No|vs|etc|(?:[A-Z]\.)+[A-Z])\.\s*$/;
+// a number of one or two figures and its point, at the end of a piece: an ordinal ("5.", "21.", "90.") when a capital follows
+const ORDINAL = /(?:^|[\s(])\d{1,2}\.$/;
 
 // the sentences of a text, as written, whitespace put back to single spaces
 const cut = (text) => {
@@ -73,7 +75,10 @@ const cut = (text) => {
         // a closing quote, a lower case start or a figure closing a parenthesis ("8972), but") continue
         // the sentence before, as does an abbreviation. A straight quote opens as often as it closes:
         // it continues the sentence before only when no word follows it
-        if (previous !== undefined && (/^[»”’)\]]|^"(?!\p{L})|^\p{Ll}|^\d+\)/u.test(sentence) || ABBREVIATION.test(previous))) {
+        // an ordinal number written with its point ("am 5. November", "nach dem 21. Spieltag", "in der 90. Minute": German, Czech, Finnish) ends no
+        // sentence either: it was cut there, the first part lost its date or ended on "21." (the corpus of tests/regression)
+        if (previous !== undefined && (/^[»”’)\]]|^"(?!\p{L})|^\p{Ll}|^\d+\)/u.test(sentence) || ABBREVIATION.test(previous)
+            || (ORDINAL.test(previous) && /^\p{Lu}/u.test(sentence)))) {
             sentences[sentences.length - 1] = `${previous} ${sentence}`;
         } else {
             sentences.push(sentence);
@@ -344,16 +349,18 @@ const hintOf = (item) => {
 };
 
 const textsPrompt = (texts, to, again = false) => `Translate these titles and descriptions of news articles into ${to}. Each one
-says its language between parentheses before it.
+says its language between parentheses before it.${texts.some(item => item.guess) ? `
+The language of a text marked with a question mark is only a guess: say in "languages" the language it is really written in, in English
+("Slovenian"), and null for the others.` : ''}
 Translate each one faithfully and completely: the same facts, the same figures, the same names, the
 same certainty (may, reportedly, alleged, planned), nothing added and nothing left out. ${NAMES_RULE} A text cut at
 its end stays cut.${again ? `
 A previous translation of these texts was empty or lost or changed a figure (a number, a time, a score, a round of a
 cup, the 1 of "Liga 1"): write every figure of the original as it is.` : ''}
 
-${texts.map((item, i) => `[${i + 1}] (${item.from}) ${item.text}${hintOf(item)}`).join('\n')}
+${texts.map((item, i) => `[${i + 1}] (${item.from}${item.guess ? '?' : ''}) ${item.text}${hintOf(item)}`).join('\n')}
 
-Answer only in JSON: {"translations": ["...", one per text, in the same order]}`;
+Answer only in JSON: {"translations": ["...", one per text, in the same order]${texts.some(item => item.guess) ? ', "languages": [one per text, the language of a text marked with ?, else null]' : ''}}`;
 
 // Titles and descriptions of several languages translated into 'to' (a language name) in one call:
 // texts [{text, from, glossary, names}], 'from' a language name; glossary [{written, spelled}] the names of
@@ -362,15 +369,22 @@ Answer only in JSON: {"translations": ["...", one per text, in the same order]}`
 // spellings.js). Answers one translation per text, null for one that dropped a figure; all null when the AI
 // does not answer one per text. Asked again, told so, for what does not come back whole: a call that answers another
 // number of translations, and the texts that came back empty or without a figure (a Peruvian title of 6.11.2026 stayed
-// Spanish for one such answer, the same card was translated in another briefing)
+// Spanish for one such answer, the same card was translated in another briefing). A text with 'guess' true has a language the code
+// only guessed (see titleLanguage): the AI that translates it says the language it is really written in, and 'languages', an array
+// given, is filled with it (an English name, "Slovenian") at the place of the text: a Slovenian title of names that franc read
+// Bosnian, for nothing more than a few tokens
 const TEXTS_ATTEMPTS = 3;
-export const translateTexts = async (texts, to, usage = null) => {
+export const translateTexts = async (texts, to, usage = null, {languages = null} = {}) => {
     const done = new Array(texts.length).fill(null);
     let open = texts.map((item, i) => i);
     for (let attempt = 0; attempt < TEXTS_ATTEMPTS && open.length > 0; attempt++) {
         const answer = await ollamaJson(textsPrompt(open.map(i => texts[i]), to, attempt > 0), usage).catch(() => null);
         const translations = answer?.translations;
         if (!Array.isArray(translations) || translations.length !== open.length) continue;
+        open.forEach((i, k) => {
+            const said = Array.isArray(answer.languages) ? answer.languages[k] : null;
+            if (languages && texts[i].guess && typeof said === 'string' && said.trim()) languages[i] = said.trim();
+        });
         open = open.filter((i, k) => {
             // the AI often writes the number of the text again, its language sometimes: "[1] (German) ..."
             const translation = typeof translations[k] === 'string' ? translations[k].replace(/^\s*\[\d+\]\s*(?:\([^)]*\)\s*)?/, '').trim() : '';

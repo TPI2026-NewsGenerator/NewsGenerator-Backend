@@ -99,6 +99,23 @@ describe('titleLanguage', () => {
         expect(['hr', 'bs']).toContain(read.language);
     });
 
+    // the badge of an angle: a title of a feed labelled right, with accents, was guessed as a neighbour language by franc (6.11.2026)
+    it('should not guess another language for a title with accents when its label is a language that has them', () => {
+        const titles = [
+            ['Akte Gianni Infantino: Überblick der Skandale des Fifa-Präsidenten | Uefa', 'de'],
+            ['Árbitro admite erro e o Palmeiras não aceita a decisão após o jogo, diz a nota', 'pt'],
+            ['Fouzi Lekjaa, el hombre que transformó el fútbol marroquí en una potencia', 'es'],
+            ['Můj cíl je jasný: sloužit fotbalu a lidem', 'cs'],
+        ];
+        for (const [title, label] of titles) expect(titleLanguage(title, label)).toEqual({language: label, guessed: false});
+    });
+
+    it('should still guess for a label without such marks, English or none', () => {
+        const czech = 'Můj cíl je jasný: sloužit fotbalu a lidem';
+        expect(titleLanguage(czech, 'en').guessed).toBe(true);
+        expect(titleLanguage(czech, null).guessed).toBe(true);
+    });
+
     it('should leave an English title and its label alone', () => {
         expect(titleLanguage('FIFA faces fresh transparency questions after $4m payment to Infantino’s US tax bill', 'en')).toEqual({language: 'en', guessed: false});
         expect(titleLanguage('UEFA’s Čeferin says he will run again for a third term', 'en')).toEqual({language: 'en', guessed: false});
@@ -141,5 +158,45 @@ describe('translatedTitles', () => {
     it('should ask nothing when every title is in the language of the reader', async () => {
         expect(await translatedTitles([{title: 'FIFA faces fresh transparency questions', label: 'en'}], 'en')).toEqual([{language: 'en', translation: null}]);
         expect(ollamaJson).not.toHaveBeenCalled();
+    });
+});
+
+// the AI that translates a title whose language was only guessed says the language it is really written in (6.11.2026: a Slovenian
+// title of names was read Bosnian by franc, the badge of its angle said so)
+describe('translatedTitles, a language only guessed', () => {
+    const SLOVENIAN = 'Golobova ministrica Sanja Ajanović Hovnik s Čeferini nad vodstvo KPK';
+    const answers = (languages) => ollamaJson.mockImplementation(async (prompt) => ({
+        translations: [...prompt.matchAll(/^\[\d+\] \([^)]*\) (.*)$/gm)].map(match => `T: ${match[1]}`),
+        ...(languages ? {languages} : {}),
+    }));
+
+    it('should take the language the AI says for a title franc could only guess, and tell the AI it is a guess', async () => {
+        answers(['Slovenian']);
+        const [answer] = await translatedTitles([{title: SLOVENIAN, label: 'en'}], 'en');
+        expect(answer).toEqual({language: 'sl', translation: `T: ${SLOVENIAN}`});
+        const prompt = ollamaJson.mock.calls[0][0];
+        expect(prompt).toMatch(/\[1\] \(\w+\?\) Golobova/);
+        expect(prompt).toContain('marked with a question mark');
+        expect(prompt).toContain('"languages"');
+    });
+
+    it('should leave a title of names in the language of the reader when the AI says so: it was never a foreign one', async () => {
+        answers(['English']);
+        expect(await translatedTitles([{title: NAMES, label: 'en'}], 'en')).toEqual([{language: 'en', translation: null}]);
+    });
+
+    it('should keep the guess when the AI says no language, or one a news cannot be told in', async () => {
+        answers(null);
+        expect((await translatedTitles([{title: SLOVENIAN, label: 'en'}], 'en'))[0].language).toBe(titleLanguage(SLOVENIAN, 'en').language);
+        answers(['Klingon']);
+        expect((await translatedTitles([{title: SLOVENIAN, label: 'en'}], 'en'))[0].language).toBe(titleLanguage(SLOVENIAN, 'en').language);
+    });
+
+    it('should not ask for a language, nor take one, for a title whose language is no guess', async () => {
+        answers(['Slovenian']);
+        const [answer] = await translatedTitles([{title: 'La FIFA recule sous la pression et dévoile les documents', label: 'fr'}], 'en');
+        expect(answer.language).toBe('fr');
+        expect(ollamaJson.mock.calls[0][0]).not.toContain('question mark');
+        expect(ollamaJson.mock.calls[0][0]).not.toContain('"languages"');
     });
 });

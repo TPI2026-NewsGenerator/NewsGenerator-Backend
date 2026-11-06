@@ -191,32 +191,66 @@ export const scriptLanguage = (text, label = null) => {
 // for Danish, so what asks for a translation (see translatedTitles) keeps the title when the translation is the same text.
 // null when the marks are few or franc says the label
 const NOT_SERBO_CROATIAN = /[áàâäãåéèêëěíìîïóòôöõőøúùûüűůýÿñňřťďľĺŕłąęśźńşșțţ]/iu;
+// the letters one language alone writes, among the ones of ACCENTED (ä, ö, ü, ß, å, é, ç... are shared)
+const UNIQUE_LETTERS = {pl: /[ąęłńśźż]/iu, cs: /[ěřů]/iu, sk: /[ĺľŕô]/iu, hu: /[őű]/iu, tr: /[ğı]/iu, ro: /[ășț]/iu, lv: /[āēģīķļņ]/iu, lt: /[ėįų]/iu};
 const ACCENTED = ['ces', 'slk', 'pol', 'hun', 'ron', 'tur', 'vie', 'hrv', 'bos', 'slv', 'swe', 'dan', 'nob', 'fin', 'ekk', 'lvs', 'lit', 'als', 'fra', 'deu', 'spa', 'por', 'ita', 'nld', 'cat', 'glg'];
 export const markedLanguage = (text, label = null) => {
     const letters = (String(text ?? '').match(/\p{L}/gu) ?? []).length;
     const marks = (String(text ?? '').match(/[À-ɏḀ-ỿ]/gu) ?? []).length;
     if (letters < 12 || marks < 2 || marks / letters < 0.03) return null;
-    let code = FRANC_CODES[franc(text, {minLength: 10, only: ACCENTED})];
-    // Croatian and Bosnian are written with č, ć, đ, š and ž: a letter beyond them (á, é, ú, ý of "Podcenili ste to, odkázalo vedenie
-    // svetového hokeja", a Slovak title of ta3.com, 6.11.2026, read Bosnian) is another language's, so franc chooses without them
-    if ((code === 'hr' || code === 'bs') && NOT_SERBO_CROATIAN.test(text)) {
-        code = FRANC_CODES[franc(text, {minLength: 10, only: ACCENTED.filter(other => other !== 'hrv' && other !== 'bos')})];
+    // a letter that only one of the languages writes tells it at once, whatever franc makes of a short text (a Polish title read
+    // Catalan, a Czech one Slovenian: the cases of tests/regression); two languages' letters in a title (names) tell nothing
+    const own = Object.entries(UNIQUE_LETTERS).filter(([, letters]) => letters.test(text)).map(([language]) => language);
+    let code = own.length === 1 ? own[0] : FRANC_CODES[franc(text, {minLength: 10, only: ACCENTED})];
+    // Croatian, Bosnian and Slovenian are written with č, š and ž (ć and đ too, but Slovenian): a letter beyond them (á, é, ú, ý of
+    // "Podcenili ste to, odkázalo vedenie svetového hokeja", a Slovak title of ta3.com, 6.11.2026, read Bosnian) is another
+    // language's, so franc chooses without them
+    if (['hr', 'bs', 'sl'].includes(code) && NOT_SERBO_CROATIAN.test(text)) {
+        code = FRANC_CODES[franc(text, {minLength: 10, only: ACCENTED.filter(other => !['hrv', 'bos', 'slv'].includes(other))})];
     }
     // franc takes Czech for Slovak and back on a short text: ě, ř and ů are Czech's alone, ä, ĺ, ľ, ŕ and ô Slovak's
     if (code === 'sk' && /[ěřů]/iu.test(text)) code = 'cs';
     else if (code === 'cs' && /[äĺľŕô]/iu.test(text)) code = 'sk';
+    if (BALKAN.has(code)) code = balkanLanguage(text, code);
     return code && code !== label ? code : null;
 };
 
+// Serbian, Croatian and Bosnian are written alike in Latin letters, and Slovenian beside them with the same č, š, ž: franc tells them
+// apart no better than chance on a title (a Serbian one read Slovenian, a Slovenian one Bosnian: the corpus of tests/regression).
+// The short words that only one side writes decide before it: "ili", "šta", "nije", "će", "koji", "u" are Serbo-Croatian, "tudi",
+// "ki", "kot", "v", "ker", "več" Slovenian; a ć or đ in a word that is not a name is Serbo-Croatian too (Slovenian has neither).
+// Nothing in the title tells: franc's guess stands, shown as one (the translation is the same from either of them)
+const BALKAN = new Set(['sr', 'hr', 'bs', 'sl']);
+const SERBO_CROATIAN = new Set(['sr', 'hr', 'bs']);
+const SC_WORDS = new Set(['ili', 'šta', 'što', 'nije', 'neće', 'će', 'koji', 'koja', 'koje', 'jer', 'su', 'sve', 'još', 'već', 'bio', 'sa', 'uz', 'u', 'nakon', 'prema']);
+const SL_WORDS = new Set(['tudi', 'ki', 'kot', 'bo', 'bodo', 'bil', 'bili', 'še', 'ker', 'lahko', 'zelo', 'več', 'so', 'sta', 'ni', 'v', 'pri', 'vse', 'vsi', 'po', 'kateri', 'katera']);
+const balkanLanguage = (text, code) => {
+    const words = String(text).match(/\p{L}+/gu) ?? [];
+    const lower = words.map(word => word.toLowerCase());
+    // 'po' and 'ni' are written by both, they weigh a half
+    const sl = lower.filter(word => SL_WORDS.has(word) && !['po', 'ni'].includes(word)).length + lower.filter(word => ['po', 'ni'].includes(word)).length / 2;
+    const sc = lower.filter(word => SC_WORDS.has(word)).length + words.filter(word => /^\p{Ll}/u.test(word) && /[ćđ]/u.test(word)).length;
+    if (sl > sc) return 'sl';
+    if (sc > sl) return SERBO_CROATIAN.has(code) ? code : FRANC_CODES[franc(text, {minLength: 10, only: ['srp', 'hrv', 'bos']})] ?? 'sr';
+    return code;
+};
+
+// The languages whose letters carry such marks: a label that is one of them explains the marks of a title, there is nothing to guess.
+// Serbian is one of them (its Latin letters are the Croatian ones; ACCENTED has no 'srp': franc is never asked for it)
+const MARKED_LANGUAGES = new Set([...ACCENTED.map(code => FRANC_CODES[code]), 'sr']);
+
 // The language a title is really written in, from its letters, the label the database gave it when they say nothing. 'guessed': the
-// language came from the accents only (see markedLanguage)
+// language came from the accents only (see markedLanguage), and only for a label that has no such accents (English, or none): a
+// German title of a German feed has its Ü and ä, and franc then took it for Norwegian, a Portuguese one for Galician, a Spanish one
+// for Catalan, so their angles showed the wrong badge (one in about fifty angles, briefings of 5 and 6.11.2026)
 export const titleLanguage = (title, label = null) => {
-    const script = scriptLanguage(title);
+    // the label stands when it is one of the languages of the script (franc takes a Macedonian title of a Macedonian feed for Bulgarian)
+    const script = scriptLanguage(title, label);
     if (script) return {language: script, guessed: false};
     // the short words of the 9 languages that have them, read without the label (as the timeline of the analysis reads its titles)
     const words = languageOf(title);
     if (words && words !== label) return {language: words, guessed: false};
-    const marked = markedLanguage(title, label);
+    const marked = MARKED_LANGUAGES.has(label) ? null : markedLanguage(title, label);
     return marked ? {language: marked, guessed: true} : {language: label, guessed: false};
 };
 
@@ -311,6 +345,11 @@ export const readerLanguage = ({text = '', languages = []} = {}) => {
 
 // the name in English of a language a text can be told in, for the prompts of the AI; null otherwise
 export const writtenIn = (code) => KNOWN_LANGUAGES.includes(code) ? languageName(code) : null;
+// the code of a language the AI named ("Slovenian" is sl), null when it is none a news can be told in
+export const languageCodeOf = (name) => {
+    const wanted = String(name ?? '').trim().toLowerCase();
+    return wanted ? KNOWN_LANGUAGES.find(code => languageName(code).toLowerCase() === wanted) ?? null : null;
+};
 
 // the languages told by their short words (the directory only keeps feeds in them)
 export const LANGUAGES = Object.keys(WORDS);

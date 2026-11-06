@@ -304,6 +304,29 @@ describe('translateTexts', () => {
     });
 });
 
+describe('translateTexts, a language only guessed', () => {
+    it('should ask the language of the texts marked as a guess, and give the one the AI says at their place', async () => {
+        chat.mockReset().mockResolvedValueOnce(json({translations: ['Slovenia wins', 'Bayern wins 3-1'], languages: ['Slovenian', null]}));
+        const languages = [];
+        const answer = await translateTexts([{text: 'Slovenija zmaguje', from: 'Bosnian', guess: true}, {text: 'Bayern gewinnt 3-1', from: 'German'}], 'English', null, {languages});
+        expect(answer).toEqual(['Slovenia wins', 'Bayern wins 3-1']);
+        expect(languages[0]).toBe('Slovenian');
+        expect(languages[1]).toBeUndefined();
+        const prompt = chat.mock.calls[0][0].messages.at(-1).content;
+        expect(prompt).toContain('[1] (Bosnian?) Slovenija zmaguje');
+        expect(prompt).toContain('[2] (German) Bayern gewinnt 3-1');
+        expect(prompt).toContain('"languages"');
+    });
+
+    it('should neither ask nor answer a language when no text is a guess', async () => {
+        chat.mockReset().mockResolvedValueOnce(json({translations: ['Bayern wins 3-1'], languages: ['German']}));
+        const languages = [];
+        await translateTexts([{text: 'Bayern gewinnt 3-1', from: 'German'}], 'English', null, {languages});
+        expect(chat.mock.calls[0][0].messages.at(-1).content).not.toContain('"languages"');
+        expect(languages).toEqual([]);
+    });
+});
+
 describe('keepsFigures, the dates', () => {
     it('should take a date written 5/11 for the same one written with the name of its month (a Vietnamese card of 6.11.2026 lost all its translation)', () => {
         expect(keepsFigures('Hội nghị diễn ra ngày 5/11 tại Thành phố Hồ Chí Minh', 'The conference took place on November 5 in Ho Chi Minh City')).toBe(true);
