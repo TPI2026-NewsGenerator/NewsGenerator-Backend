@@ -27,7 +27,8 @@ jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel})
 // the news the tagger read, and how many it has not (some: their texts are searched)
 const seenOf = jest.fn(async () => new Map());
 const MentionModel = {seenOf, articlesNamed: jest.fn(async () => []), personsEndingWith: jest.fn(async () => []), anyUntagged: jest.fn(async () => true), qidsOfKey: jest.fn(async () => []),
-    articlesOfStories: jest.fn(async () => []), namesOfArticles: jest.fn(async () => []), want: jest.fn(async () => 0)};
+    articlesOfStories: jest.fn(async () => []), namesOfArticles: jest.fn(async () => []), want: jest.fn(async () => 0),
+    surnameSpread: jest.fn(async () => new Map())};
 jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel}));
 const inTitle = (term) => (article) => article.title.includes(term);
 jest.unstable_mockModule('../../services/briefing-service.js', () => ({
@@ -49,7 +50,7 @@ jest.unstable_mockModule('../../services/utils/wikidata.js', async () => ({
     readItem, searchItems, candidatesFor, describeItems, PERSON_SITELINKS: 10, SITELINKS_AHEAD: 3, readCountries: async () => new Map(), exactItems: async () => [], wikimediaHeaders: () => ({}), isQid: (value) => /^Q\d+$/.test(value ?? ''),
 }));
 
-const {EntityService, forgetLookups, mergeNews, namesFor, searchNamesFor} = await import('../../services/entity-service.js');
+const {COMMON_NAME_FIRSTS, EntityService, commonNames, forgetLookups, mergeNews, namesFor, searchNamesFor} = await import('../../services/entity-service.js');
 const {kindOf, namesOf, usableName, withoutClubWords} = await import('../../services/utils/wikidata-names.js');
 
 const PSG = {id: 1, qid: 'Q483020', label: 'Paris Saint-Germain FC', description: 'club', kind: 'club',
@@ -100,18 +101,56 @@ describe('the names of an item of Wikidata', () => {
     });
 
     // the tab of Carlos Velasco Carballo showed every Velasco of the news (the user's friend, 6.11.2026)
-    it('should not search a person by a family name alone: it is the name of everyone who carries it', () => {
+    it('should not search a person by a family name that many people carry: it is the name of everyone who carries it', () => {
         const velasco = {qid: 'Q314726', label: 'Carlos Velasco Carballo', kind: 'person', names: ['Carlos Velasco Carballo', 'Velasco', 'Velasco Carballo', 'Carlos Velasco']};
-        expect(searchNamesFor(velasco, null)).toEqual(['Carlos Velasco Carballo', 'Velasco Carballo', 'Carlos Velasco']);
+        const common = new Set(['velasco']);
+        expect(searchNamesFor(velasco, null, common)).toEqual(['Carlos Velasco Carballo', 'Velasco Carballo', 'Carlos Velasco']);
+        // nothing is taken out while nothing is known of the names (the database did not answer)
+        expect(searchNamesFor(velasco, null)).toHaveLength(4);
         // the names are still all listed for the reader to see
         expect(namesFor(velasco, null)).toHaveLength(4);
         // the word the reader added themselves stays
-        expect(searchNamesFor(velasco, {added_names: ['Velasco'], removed_names: []})).toContain('Velasco');
+        expect(searchNamesFor(velasco, {added_names: ['Velasco'], removed_names: []}, common)).toContain('Velasco');
+    });
+
+    // the first version took out every one-word name and would have taken out the 259 news of the month of Čeferin
+    it('should keep the family name of a person few people carry, however many news name it', () => {
+        const ceferin = {qid: 'Q1', label: 'Aleksander Čeferin', kind: 'person', names: ['Aleksander Čeferin', 'Čeferin', 'Ceferin']};
+        expect(searchNamesFor(ceferin, null, new Set(['velasco']))).toEqual(['Aleksander Čeferin', 'Čeferin', 'Ceferin']);
+        // the key of a name has no accent and no capital: Ceferin and Čeferin are one
+        expect(searchNamesFor(ceferin, null, new Set(['ceferin']))).toEqual(['Aleksander Čeferin']);
     });
 
     it('should keep the one-word names of a person known by one word, of a club and of an organisation', () => {
         expect(searchNamesFor({label: 'Pelé', kind: 'person', names: ['Pelé', 'Edson']}, null)).toEqual(['Pelé', 'Edson']);
         expect(searchNamesFor({label: 'Real Madrid CF', kind: 'club', names: ['Real Madrid CF', 'Madrid']}, null)).toEqual(['Real Madrid CF', 'Madrid']);
+    });
+});
+
+describe('commonNames', () => {
+    const person = (label, ...aliases) => ({qid: 'Q' + label.length + label[0], label, kind: 'person', names: [label, ...aliases]});
+
+    it('should hold the family names that many first words carry, and none of the others', async () => {
+        MentionModel.surnameSpread.mockResolvedValueOnce(new Map([['sandoval', COMMON_NAME_FIRSTS + 14], ['pavlov', 7]]));
+        const common = await commonNames([person('Hugo Sandoval', 'Sandoval'), person('Ivan Pavlov', 'Pavlov'), person('Pelé', 'Edson'), {label: 'Real Madrid CF', kind: 'club', names: ['Madrid']}]);
+        expect([...common]).toEqual(['sandoval']);
+        // only the one-word names of persons with a name of several words are asked, by their key
+        expect(MentionModel.surnameSpread).toHaveBeenLastCalledWith(['sandoval', 'pavlov']);
+    });
+
+    it('should ask a name once a day, not at every search of the tab', async () => {
+        MentionModel.surnameSpread.mockClear();
+        MentionModel.surnameSpread.mockResolvedValueOnce(new Map([['okonkwo', 3]]));
+        await commonNames([person('Chidi Okonkwo', 'Okonkwo')]);
+        await commonNames([person('Chidi Okonkwo', 'Okonkwo')]);
+        expect(MentionModel.surnameSpread).toHaveBeenCalledTimes(1);
+    });
+
+    it('should leave every name searched when the database does not answer', async () => {
+        const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+        MentionModel.surnameSpread.mockRejectedValueOnce(new Error('down'));
+        expect((await commonNames([person('Tomas Nowakowski', 'Nowakowski')])).size).toBe(0);
+        error.mockRestore();
     });
 });
 

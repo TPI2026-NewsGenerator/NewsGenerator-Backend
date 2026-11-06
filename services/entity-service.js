@@ -203,13 +203,36 @@ export const namesFor = (row, following) => {
 // The names the news of an item are searched by. A family name or a first name alone is the name of everyone who carries it: the
 // Wikidata aliases of Carlos Velasco Carballo (a Spanish referee) hold "Velasco", which found footballers, ministers and
 // governors named Velasco in his tab: 73 sightings of the name, none linked to him (the user's friend, 6.11.2026). A person with a
-// name of several words is searched by the names of several words, and by the item the tagger links its news to; the words
-// alone the reader added stay
-export const searchNamesFor = (row, following) => {
+// name of several words is searched by the names of several words, and by the item the tagger links its news to, without the
+// one-word names that 'common' holds (the keys of the names, see commonNames): the words alone the reader added stay. A name
+// that belongs to few people stays (Čeferin: 259 news of the month, all of the president of UEFA)
+export const searchNamesFor = (row, following, common = new Set()) => {
     const names = namesFor(row, following);
     if (row.kind !== 'person' || !/\s/.test(String(row.label ?? '').trim())) return names;
     const added = new Set((following?.added_names ?? []).map(name => cleanName(name).toLowerCase()));
-    return names.filter(name => /\s/.test(name) || added.has(name.toLowerCase()));
+    return names.filter(name => /\s/.test(name) || added.has(name.toLowerCase()) || !common.has(mentionKey(name)));
+};
+
+// Which one-word names of the persons followed are the name of many people: the family names that this many first words
+// carry among the persons the tagger met (measured on 2.26 million names of 6.11.2026: García 581, Rodríguez 566, Silva 470,
+// Müller 189, Velasco 64, then Messi 38, Infantino 22, Čeferin 7, Kuipers 7, Rosetti 4). Their news are found by the full names
+// and by the item the tagger links, not by the family name alone. Kept a day; a database that does not answer leaves every name
+// searched, as before (a false news is better than a missing one when nothing is known)
+export const COMMON_NAME_FIRSTS = 50;
+const spreads = memo({ttlMs: 24 * 3600e3, max: 20000});
+export const commonNames = async (rows) => {
+    const keys = [...new Set(rows.filter(row => row.kind === 'person' && /\s/.test(String(row.label ?? '').trim()))
+        .flatMap(row => namesFor(row, row)).filter(name => !/\s/.test(name)).map(mentionKey).filter(Boolean))];
+    const unknown = keys.filter(key => spreads.get(key) === undefined);
+    if (unknown.length > 0) {
+        try {
+            const found = await MentionModel.surnameSpread(unknown);
+            unknown.forEach(key => spreads.set(key, found.get(key) ?? 0));
+        } catch (err) {
+            console.error(`Entities: the family names were not counted (${err.message})`);
+        }
+    }
+    return new Set(keys.filter(key => (spreads.get(key) ?? 0) >= COMMON_NAME_FIRSTS));
 };
 
 const summary = (row, following) => ({
@@ -529,7 +552,8 @@ export const EntityService = {
         const rows = (await EntityModel.followed(profileId, {inBriefing: true})).filter(row => only === null || only.includes(row.qid));
         if (rows.length === 0) return [];
         // all the items in one search: 300 of them, one each, were 300 searches of the database
-        const namesOf = new Map(rows.map(row => [row.qid, searchNamesFor(row, row)]));
+        const common = await commonNames(rows);
+        const namesOf = new Map(rows.map(row => [row.qid, searchNamesFor(row, row, common)]));
         const found = new Map((await namedNews(profileId, [...new Set([...namesOf.values()].flat())], hours, rows.map(row => row.qid)))
             .map(group => [group.term, group]));
         return rows.map(row => ({term: shortName(row.label, row.names), qid: row.qid,
@@ -559,11 +583,14 @@ export const EntityService = {
 
     // What the profile follows as the briefing marks it: [{label, qid, names}], the items in its
     // briefing by their names, then the words, each its own name
-    followTerms: async (profileId, words) => [
-        ...(profileId === null ? [] : await EntityModel.followed(profileId, {inBriefing: true}))
-            .map(row => ({label: shortName(row.label, row.names), qid: row.qid, names: searchNamesFor(row, row)})),
-        ...(words ?? []).map(word => ({label: word, qid: null, names: [word]})),
-    ],
+    followTerms: async (profileId, words) => {
+        const rows = profileId === null ? [] : await EntityModel.followed(profileId, {inBriefing: true});
+        const common = await commonNames(rows);
+        return [
+            ...rows.map(row => ({label: shortName(row.label, row.names), qid: row.qid, names: searchNamesFor(row, row, common)})),
+            ...(words ?? []).map(word => ({label: word, qid: null, names: [word]})),
+        ];
+    },
 
     follow: async (profileId, qid) => {
         if (profileId === null) throw fail(400, 'Write your profile first.');

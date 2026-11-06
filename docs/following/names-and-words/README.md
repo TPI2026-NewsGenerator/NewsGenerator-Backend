@@ -46,7 +46,13 @@ also has a page of its own with its news, and the names met card after card are 
   wanted. A frequent name is done in a day or two, a rare one takes the month; the window of the briefing (1 to 7
   days) is another choice. The items and the words are searched at the same time (see below). The answer is
   `{status, limit, partial, groups: [{term, qid, count, hours, limit, news: [..., marks]}]}`; `marks` are the
-  places of the terms in the titles and excerpts (`marksOf`). The client asks when the tab is opened
+  places of the terms in the titles and excerpts (`marksOf`). A person with a name of several words is not searched by a
+  family name alone when many people carry it (`searchNamesFor`, `commonNames`): the Wikidata aliases of Carlos Velasco
+  Carballo hold "Velasco", the name of 64 different first words among the persons the tagger met (García 581, Silva 470,
+  Müller 189), which filled his tab with other Velascos. The limit is `COMMON_NAME_FIRSTS` (50), kept a day, measured
+  on the persons met: Messi 38, Infantino 22, Čeferin 7, Kuipers 7, Rosetti 4 stay searched by their family name; the news of a
+  name taken out are still found by the full names and by the item the tagger links. The words the reader added stay. The
+  client asks when the tab is opened
   (`useFollowing`, `FollowingNews`, `FollowLimit`, the Slider of shadcn on Radix) and again when the bar moves.
 - **In background (300 names).** A long list takes minutes: the search runs as a briefing is written. The call
   answers `status: 'ready'` when it ends within 2.5 s (a short list, or one kept 10 minutes for the profile, what

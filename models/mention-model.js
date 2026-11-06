@@ -231,6 +231,14 @@ export const MentionModel = {
         GROUP BY a.id
         ORDER BY COALESCE(a.published_at, a.created_at) DESC`, keys, qids, feedUrls, since),
 
+    // How many different first words the persons the tagger met carry with each of these family names (a last word of their key):
+    // Map family name -> first words ("velasco" 64 of 72 persons, "ceferin" 7). A name no person with a first name carries is not in it
+    surnameSpread: async (surnames) => new Map(surnames.length === 0 ? [] : (await prisma.$queryRawUnsafe(`
+        SELECT substring(m.key from '[^ ]+$') AS last, count(DISTINCT split_part(m.key, ' ', 1))::int AS firsts
+        FROM mentions m
+        WHERE m.kind = 'person' AND position(' ' in m.key) > 0 AND substring(m.key from '[^ ]+$') = ANY($1::text[])
+        GROUP BY 1`, surnames)).map(row => [row.last, row.firsts])),
+
     // How many times the tagger met each of these names (their keys), all kinds together: Map key -> seen. A
     // name it never met is not in it
     seenOf: async (keys) => new Map(keys.length === 0 ? [] : (await prisma.$queryRawUnsafe(`
