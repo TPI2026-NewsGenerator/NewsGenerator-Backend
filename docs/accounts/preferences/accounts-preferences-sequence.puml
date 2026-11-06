@@ -1,0 +1,57 @@
+@startuml accounts-preferences-sequence
+!include ../../_style/sequence.iuml
+title Accounts > Preferences — the sign-in reads the account, then a change goes up
+
+actor Reader
+participant "Component\n+ usePreference" as Component
+participant "preferences.js\n+ localStorage" as Store
+participant PreferencesApi as Api
+participant "accountRouter\n+ authenticateToken, rateLimit" as Router
+participant "accountService\n+ preferencesRules" as Service
+participant userModel as UserModel
+database "PostgreSQL" as DB
+
+== Sign-in ==
+Store -> Store : startPreferences(userId): the account of this browser?\n(another one: the defaults)
+Component -> Store : kept() — the browser's value, at once
+Store -> Api : get()
+Api -> Router : GET /api/account/preferences
+alt no valid session, or more than 60 reads in 10 minutes
+    Router --> Api : 403 / 429
+    Api --> Store : {error}: the browser's values stay
+end
+Router -> Service : preferences(req.user.id)
+Service -> UserModel : preferences(userId)
+UserModel -> DB : SELECT preferences FROM users
+Service --> Api : 200 {preferences}
+Api --> Store : {preferences}
+loop each preference
+    alt changed here and never sent
+        Store -> Store : the browser's value goes up
+    else the account has a value the page offers
+        Store -> Store : it wins, kept in localStorage
+    else the account has none
+        Store -> Store : what the browser kept goes up
+    end
+end
+Store --> Component : told (useSyncExternalStore): drawn again
+
+== A change ==
+Reader -> Component : ticks a box, chooses a size
+Component -> Store : keep(value)
+Store -> Store : localStorage, name noted as not sent yet
+Store --> Component : told at once
+Store -> Store : wait 800 ms (another change starts it again)
+Store -> Api : save({size: 30, format: 'digest'}): only what changed
+Api -> Router : PUT /api/account/preferences
+Router -> Service : savePreferences(req.user.id, body)
+Service -> Service : checkedPreferences(body)
+alt a key or a value the page does not have, empty, over 4096 bytes
+    Service --> Api : 400 / 413, nothing saved
+    Api --> Store : {error}: kept in the browser, silently
+end
+Service -> UserModel : mergePreferences(userId, changes)
+UserModel -> DB : UPDATE users SET preferences = preferences || $1::jsonb
+Service --> Api : 200 {preferences}
+Api --> Store : sent: no longer noted
+@enduml

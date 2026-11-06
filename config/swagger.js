@@ -215,6 +215,59 @@ const options = {
                     }
                 }
             },
+            "/account/preferences": {
+                "get": {
+                    "tags": ["Login"],
+                    "summary": "The display preferences kept on the account of the signed in user",
+                    "description": "What the reader set on any of their devices, so that another shows the same: the layout of the editor of the e-mail, the presets, the preset of the page, the reading way, the size of the next briefing and the news per name followed. {} until one is set; a key missing is a preference never set (the page keeps its own default). At most 60 reads per account in 10 minutes.",
+                    "responses": {
+                        "200": {
+                            "description": "{preferences: {layout, mailPresets, pagePresets, show, format, size, followingNews}}, each key only when set",
+                            "content": {
+                                "application/json": {
+                                    "example": {"preferences": {"layout": "matrix", "show": "standard", "size": 20, "followingNews": 50}}
+                                }
+                            }
+                        },
+                        "403": {"description": "No session, or an expired one"},
+                        "404": {"description": "The account does not exist any more"},
+                        "429": {"description": "Too many reads"}
+                    }
+                },
+                "put": {
+                    "tags": ["Login"],
+                    "summary": "Save display preferences on the account of the signed in user",
+                    "description": "Partial: only the keys sent change, the others stay as they are (a list of presets is replaced as a whole). Every key is checked against what the page offers: a key it does not know, or a value it does not offer, is refused, and nothing is saved. At most 4096 bytes, and 200 saves per account in 10 minutes.",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "minProperties": 1,
+                                    "properties": {
+                                        "layout": {"type": "string", "enum": ["frames", "matrix"], "description": "The editor of the e-mail"},
+                                        "mailPresets": {"type": "object", "example": {"short": ["media", "contested"]}, "description": "{short, standard, everything}: the blocks of a story each preset puts in the e-mail. Blocks: picture, countries, media, contested, official, unconfirmed, names, analysis, angles, affair, coverage"},
+                                        "pagePresets": {"type": "object", "description": "The same, for the page of the briefing"},
+                                        "show": {"type": "string", "enum": ["short", "standard", "everything"], "description": "The preset the page shows its cards in"},
+                                        "format": {"type": "string", "enum": ["points", "digest", "passages"], "description": "The way a card is read"},
+                                        "size": {"type": "integer", "enum": [10, 20, 30], "description": "The cards of the next briefing"},
+                                        "followingNews": {"type": "integer", "minimum": 10, "maximum": 100, "multipleOf": 10, "description": "The news per name or word followed"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {"description": "{preferences}: all of them as now kept"},
+                        "400": {"description": "Not an object, empty, a key that is no preference, or a value the page does not offer"},
+                        "403": {"description": "No session, or an expired one"},
+                        "404": {"description": "The account does not exist any more"},
+                        "413": {"description": "Over 4096 bytes"},
+                        "429": {"description": "Too many saves"}
+                    }
+                }
+            },
             "/signup": {
                 "post": {
                     "tags": ["Login"],

@@ -208,6 +208,9 @@ second. The `.env` of the server lists the taggers in `NER_URL`, separated by co
 40. Do the same with "add_affairs.sql" (the affairs a reader follows, the alerts they give and the devices that receive
     them, see [The affair](briefing/affair/README.md)). The server checks the affairs followed every 15 minutes: until it is
     run, it says so once in its log and does nothing else
+41. Do the same with "add_user_preferences.sql" (the display preferences of a reader, kept on their account, see
+    [Preferences](accounts/preferences/README.md)). Run it before the server of this version: the login reads
+    the whole row of an account, so a server started before it cannot sign anyone in
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.

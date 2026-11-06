@@ -2,7 +2,7 @@
 //  Author: Fabian Rostello
 //  Date: 02.10.2026
 //  File: account-controller.js
-//  Description: Controller for the settings of an account
+//  Description: Controller for the settings of an account, and for its display preferences
 //
 
 "use strict"
@@ -23,6 +23,17 @@ const respond = async (res, serviceFn) => {
     }
 };
 
+// what the service gives as it is, or its refusal with the status it carries
+const answer = async (res, serviceFn) => {
+    try {
+        return res.status(200).json(await serviceFn());
+    } catch (error) {
+        const status = error.status || 500;
+        if (status >= 500) console.error(`Account: ${error.message ?? error}`);
+        return res.status(status).json({error: status >= 500 ? 'Your preferences could not be read or saved right now.' : error.message});
+    }
+};
+
 export const AccountController = {
     // the account is always the one of the session, never one named in the request
     rename: (req, res) => {
@@ -39,4 +50,9 @@ export const AccountController = {
         const {password, newPassword} = req.body ?? {};
         return respond(res, () => AccountService.changePassword(req.user.id, {password, newPassword}));
     },
+
+    // the display preferences have no password to ask and change no session: the answer is the preferences themselves
+    preferences: (req, res) => answer(res, () => AccountService.preferences(req.user.id)),
+
+    savePreferences: (req, res) => answer(res, () => AccountService.savePreferences(req.user.id, req.body)),
 };

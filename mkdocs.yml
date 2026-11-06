@@ -96,6 +96,7 @@ nav:
       - Signup: accounts/signup/README.md
       - Login and session: accounts/login-and-session/README.md
       - Settings: accounts/settings/README.md
+      - Preferences: accounts/preferences/README.md
   - Profile:
       - profile/README.md
       - AI questions: profile/ai-questions/README.md

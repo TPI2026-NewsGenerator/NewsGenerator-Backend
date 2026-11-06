@@ -3,7 +3,7 @@
 //  Date: 02.10.2026
 //  File: account-service.js
 //  Description: The settings of an account: its username, its email and its password, each changed
-//               only with the password of now
+//               only with the password of now, and its display preferences, shared by the devices of the reader
 //
 
 "use strict"
@@ -13,6 +13,7 @@ import {generateAccessToken} from './utils/jwt.js';
 import {notePasswordChange} from './utils/password-changes.js';
 import {UserModel} from '../models/user-model.js';
 import {EMAIL_RULE, isEmail, isPassword, isTaken, isUsername, PASSWORD_RULE, USERNAME_RULE} from './utils/account-rules.js';
+import {checkedPreferences} from './utils/preferences.js';
 
 const fail = (status, message) => Object.assign(new Error(message), {status});
 
@@ -80,5 +81,19 @@ export const AccountService = {
         const user = await UserModel.update(userId, {password: await hashWithSalt(newPassword), password_changed_at: new Date(at * 1000)});
         notePasswordChange(userId, at);
         return signedIn(user);
+    },
+
+    // -> {preferences}: the ones the reader set, {} until one is. The page keeps its own default for the others
+    preferences: async (userId) => {
+        const preferences = await UserModel.preferences(userId);
+        if (preferences === null) throw fail(404, 'This account does not exist any more.');
+        return {preferences};
+    },
+
+    // -> {preferences}: the ones now. Only the keys sent change (a preset list is replaced as a whole), the others stay as they are
+    savePreferences: async (userId, body) => {
+        const preferences = await UserModel.mergePreferences(userId, checkedPreferences(body));
+        if (preferences === null) throw fail(404, 'This account does not exist any more.');
+        return {preferences};
     },
 };

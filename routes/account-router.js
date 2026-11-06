@@ -2,7 +2,7 @@
 //  Author: Fabian Rostello
 //  Date: 02.10.2026
 //  File: account-router.js
-//  Description: Router for the settings of an account: its username, its email and its password
+//  Description: Router for the settings of an account: its username, its email and its password, and its display preferences
 //
 
 import express from 'express';
@@ -22,5 +22,14 @@ const accountLimit = rateLimit({
 router.put('/username', authenticateToken, accountLimit, AccountController.rename);
 router.put('/email', authenticateToken, accountLimit, AccountController.changeEmail);
 router.put('/password', authenticateToken, accountLimit, AccountController.changePassword);
+
+// the display preferences ask no password and are saved as the reader sets them (the page waits a moment between two saves):
+// counted by account, apart from the changes above
+router.get('/preferences', authenticateToken,
+    rateLimit({windowMs: 10 * 60e3, max: 60, key: req => `preferences read ${req.user.id}`, message: 'Too many preferences read, try again in a few minutes.'}),
+    AccountController.preferences);
+router.put('/preferences', authenticateToken,
+    rateLimit({windowMs: 10 * 60e3, max: 200, key: req => `preferences save ${req.user.id}`, message: 'Too many preferences saved, try again in a few minutes.'}),
+    AccountController.savePreferences);
 
 export default router;

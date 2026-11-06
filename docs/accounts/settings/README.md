@@ -47,6 +47,7 @@ A new password signs out every other device; the one used keeps its session.
 
 ## See also
 
+- [Preferences](../preferences/README.md): the display preferences of the account, which ask no password.
 - [Login and session](../login-and-session/README.md): how a token opened before the last change of password is refused.
 - [Signup](../signup/README.md): the same rules for the first name, email and password.
 - [Briefing > Email](../../briefing/email/README.md): the account email as the default recipient.

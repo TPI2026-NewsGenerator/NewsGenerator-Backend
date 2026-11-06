@@ -23,7 +23,7 @@ in Swagger: `http://localhost:3001/docs` (`config/swagger.js`).
 
 ## The features
 
-- **[Accounts](accounts/README.md)**: [Signup](accounts/signup/README.md) · [Login and session](accounts/login-and-session/README.md) · [Settings](accounts/settings/README.md)
+- **[Accounts](accounts/README.md)**: [Signup](accounts/signup/README.md) · [Login and session](accounts/login-and-session/README.md) · [Settings](accounts/settings/README.md) · [Preferences](accounts/preferences/README.md)
 - **[Profile](profile/README.md)**: [AI questions](profile/ai-questions/README.md) · [Interests](profile/interests/README.md) · [Projects](profile/projects/README.md) · [Several profiles](profile/several-profiles/README.md)
 - **[Sources](sources/README.md)**: [Discovery](sources/discovery/README.md) · [Added by hand](sources/added-by-hand/README.md) · [Recommended](sources/recommended/README.md) · [Missing sources](sources/missing-sources/README.md) · [Trusted and thumbs](sources/trusted-and-thumbs/README.md)
 - **[Ingestion](ingestion/README.md)** (the background work): [Feeds](ingestion/feeds/README.md) · [Vectors](ingestion/vectors/README.md) · [Stories and threads](ingestion/stories-and-threads/README.md) · [Names](ingestion/names/README.md) · [Directory](ingestion/directory/README.md)

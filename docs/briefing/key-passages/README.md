@@ -58,7 +58,7 @@ reader's, a machine translation is shown, marked as such, with the original one 
 
 Only one way is shown at a time: Key passages, [Summary](../summary/README.md) or
 [Bullet points](../bullet-points/README.md), chosen with "Read as" and kept in the browser (`localStorage`,
-key `newsgenerator.briefing-format`, `keptFormat` / `keepFormat`). The key passages have no AI version. In the
+key `newsgenerator.briefing-format`, `keptFormat` / `keepFormat`) and on the account ([Preferences](../../accounts/preferences/README.md)). The key passages have no AI version. In the
 e-mail, the bar of the cards ticked (`MailBar.jsx`) has its own "In the e-mail, as", preset to the page's way;
 `format: 'passages'` (also the default when no format is sent) sends them (`wayOf` of
 `services/utils/briefing-mail.js`), "[…]" between two passages. A card listed in `ai` is still sent as

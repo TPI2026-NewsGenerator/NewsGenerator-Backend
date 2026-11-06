@@ -73,6 +73,7 @@ Sizes in service on 16.10.2026, to give an idea: 2 000 000 `articles` (the last 
 | password | text | NOT NULL, bcrypt hash |
 | role | integer | NOT NULL, FK → roles.id |
 | password_changed_at | timestamptz | null — the last change of password: the sessions opened before are refused (`db/add_password_changed.sql`) |
+| preferences | jsonb | NOT NULL, default `{}` — the display preferences of the reader, shared by their devices: `layout`, `mailPresets`, `pagePresets`, `show`, `format`, `size`, `followingNews` (`db/add_user_preferences.sql`, [Preferences](../accounts/preferences/README.md)) |
 
 UNIQUE (username, email), and since the signup (`db/add_signup.sql`) two unique indexes whatever the
 case: `u_users_username_ci` on `lower(username)`, `u_users_email_ci` on `lower(email)`. The role is read

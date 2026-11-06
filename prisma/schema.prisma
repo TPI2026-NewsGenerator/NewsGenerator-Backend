@@ -109,6 +109,8 @@ model users {
   role              Int
   // the last change of password: the sessions opened before are refused (db/add_password_changed.sql)
   password_changed_at DateTime?         @db.Timestamptz(6)
+  // the display preferences of the reader, shared by their devices (db/add_user_preferences.sql)
+  preferences       Json                @default("{}")
   custom_searches   custom_searches[]
   user_feeds        user_feeds[]
   user_profiles     user_profiles[]

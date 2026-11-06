@@ -67,4 +67,12 @@ export const UserModel = {
 
     // the address the user gave, to send them what they ask for, and their name, to say who sends it
     email: async (id) => prisma.users.findUnique({where: {id}, select: {email: true, username: true}}),
+
+    // the display preferences kept on the account, {} until one is set, null when there is no such account
+    preferences: async (id) => (await prisma.users.findUnique({where: {id}, select: {preferences: true}}))?.preferences ?? null,
+
+    // The keys of 'changes' put over the preferences kept, the others left as they are, in one statement: two devices saving two
+    // different preferences at once keep both. -> the preferences now, null when there is no such account
+    mergePreferences: async (id, changes) => (await prisma.$queryRawUnsafe(
+        'UPDATE users SET preferences = preferences || $1::jsonb WHERE id = $2::int RETURNING preferences', JSON.stringify(changes), id))[0]?.preferences ?? null,
 };
