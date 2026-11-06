@@ -13,6 +13,7 @@
 
 "use strict"
 
+import process from 'node:process';
 import {ollamaJson} from './ollama.js';
 import {mapWithConcurrency} from './concurrency.js';
 
@@ -169,8 +170,10 @@ export const rewritePrompt = (title, passages, language = null) => `Voici le tit
 
 Réécris le titre pour qu'il soit NEUTRE : il dit le fait, comme le ferait une agence de presse, sans jugement, sans emphase et sans appel au clic.
 À retirer : les adjectifs et adverbes de jugement ou d'intensité (« incroyable », « choc », « honteux », « énorme », « enfin »), les points d'exclamation, les mots en majuscules d'insistance, les questions faites pour attirer, les mots d'appel (« Urgent », « Révélation »).
-À garder exactement : les noms de personnes, de lieux et d'organisations, les chiffres, les dates, ce que quelqu'un a dit entre guillemets, les négations, et la certitude du titre (« aurait », « selon X », « pourrait » restent).
-N'ajoute AUCUN fait, nom ou chiffre qui n'est ni dans le titre ni dans les phrases. N'explique rien. Écris dans la même langue que le titre${language ? ` (${language}, pas en français)` : ''}, en aussi peu de mots que lui ou moins. Un titre en forme de question reste une question. Un titre déjà neutre : recopie-le tel quel.
+À retirer aussi : un NOM qui juge ou dramatise, dit avec la voix du média (« fiasco », « scandale », « chaos », « débâcle », « farce », « honte », « alarme », « panique »). Si le reste du titre dit le fait, retire le nom avec son groupe (« Panique au port : », « Total debacle for the team: »). Sinon remplace-le par un mot neutre du même sujet (« scandale » : « affaire »), sans rien ajouter qui ne soit dans le titre : ni nom, ni fait pris dans les phrases. Le nom d'un événement qui a eu lieu (« incendie », « grève », « séisme », « faillite ») n'est pas un jugement : garde-le.
+À retirer aussi : une INJONCTION du média, c'est-à-dire ce que le média dit lui-même que d'autres doivent ou devraient faire (« le ministre doit réagir », « the board must resign », « il faut agir », « debe dimitir »). Ce n'est pas un fait : retire le passage entier, avec les noms qui ne sont que dans ce passage.
+À garder exactement : les noms de personnes, de lieux et d'organisations (sauf ceux qui ne sont que dans une injonction retirée), les chiffres, les dates, ce que quelqu'un a dit entre guillemets (« Un tel : the board must resign » reste tel quel), les règles dites comme un fait (« Les clubs doivent s'inscrire avant vendredi », « Players must wear shin guards » restent), les négations, et la certitude du titre (« aurait », « selon X », « pourrait » restent).
+N'ajoute AUCUN fait, nom ou chiffre qui n'est ni dans le titre ni dans les phrases. N'explique rien. Écris dans la même langue que le titre${language ? ` (${language}, pas en français)` : ''}, en aussi peu de mots que lui ou moins. Un titre en forme de question reste une question. Un titre déjà neutre, ou qui ne dit aucun fait en dehors de son jugement : recopie-le tel quel.
 
 Titre : ${title}
 
@@ -204,10 +207,46 @@ const namesOf = (text) => {
     return words.filter((word, i) => i > 0 && !/[.!?:]["”»]?$/u.test(words[i - 1]) && name.test(word)).map(plainWord).filter(Boolean);
 };
 
+// The clauses of a title: apart from each other by a comma, a semicolon, a colon, a bar, a dash or the end of a sentence
+// (not by an ellipsis, nor by the comma of a figure: a separator is followed by a space)
+const CLAUSE_BREAK = /(?<=[,;:|])\s+|\s+[–—-]\s+|(?<=[.!?])(?<!\.\.)\s+/u;
+const clausesOf = (title) => title.split(CLAUSE_BREAK).map(clause => clause.trim()).filter(clause => /[\p{L}\p{N}]/u.test(clause));
+// the most words the clauses a proposal leaves out may have, for a name in them to be allowed to go with them
+const MAX_DROPPED_WORDS = 10;
+
+// The clauses at the two ends of the title that the proposal leaves out whole: none of their words of four letters or more
+// begins a word of the proposal (« moraju da reaguju UEFA i FIFA » at the end of a title, « Total debacle: » at its start).
+// Never a clause in the middle, never more than MAX_DROPPED_WORDS words in all, and always a clause left that the proposal
+// has some of. {leading, trailing: the clauses left out at the start and at the end, kept: the others}
+const droppedClauses = (title, stems) => {
+    const clauses = clausesOf(title);
+    const gone = (clause) => {
+        const words = tokensOf(clause).map(plainWord).filter(word => word.length >= 4);
+        return words.length > 0 && words.every(word => !stems.has(word.slice(0, 4)));
+    };
+    let [start, end, count] = [0, clauses.length, 0];
+    const fits = (clause) => {
+        const words = realWordsOf(clause).length;
+        if (count + words > MAX_DROPPED_WORDS) return false;
+        count += words;
+        return true;
+    };
+    while (end - start > 1 && gone(clauses[start]) && fits(clauses[start])) start++;
+    while (end - start > 1 && gone(clauses[end - 1]) && fits(clauses[end - 1])) end--;
+    const kept = clauses.slice(start, end);
+    if (kept.every(gone)) return {leading: [], trailing: [], kept: clauses};
+    const bare = (list) => list.map(clause => clause.replace(/[\s,;:|]+$/u, ''));
+    return {leading: bare(clauses.slice(0, start)), trailing: bare(clauses.slice(end)), kept};
+};
+
 // The proposal checked against the title: {text}, or {problem} naming the check it fails when it is not the title of the
 // same news: an exclamation mark kept, a name or a figure added that neither the title nor the passages have, a name or
 // a figure or a quotation of the title lost, a negation added or lost, a question made a statement or the opposite, longer
-// than the title by more than two words or keeping less than half of it
+// than the title by more than two words or keeping less than half of it. A name of the title may go only with the clause
+// that has it, when the proposal leaves that clause out whole and it ends the title: « …, UEFA and FIFA must react » (the
+// injunction of the medium, which is no fact); then {text, dropped: [the clauses left out]} is answered, for the second
+// opinion to be told what is gone (a name lost with a clause that starts the title, or is in the middle of it, or that the
+// proposal keeps some of, is still refused: « Infantino under pressure from UEFA: » says a fact)
 export const checkRewrite = (title, proposal, passages = '') => {
     let text = typeof proposal === 'string' ? proposal.replace(/\s+/g, ' ').trim() : '';
     // a title the AI wrapped in quotation marks, unless the title itself begins with one
@@ -225,16 +264,27 @@ export const checkRewrite = (title, proposal, passages = '') => {
     if (!mostlyUpper(text) && !inTitleCase(text) && /^\P{L}*\p{Lu}/u.test(opening) && plainWord(opening).length >= 5 && !known.has(plainWord(opening))) return {problem: 'name added'};
     // a name is kept when a word of the proposal begins like it (« Barca » and « Barcelona », « Italian » and « Italy »)
     const stems = new Set(tokensOf(text).map(plainWord).filter(Boolean).map(word => word.slice(0, 4)));
-    if (namesOf(title).some(name => !stems.has(name.slice(0, 4)))) return {problem: 'name lost'};
+    const {leading, trailing, kept} = droppedClauses(title, stems);
+    const dropped = [...leading, ...trailing];
+    const lost = namesOf(title).filter(name => !stems.has(name.slice(0, 4)));
+    if (lost.length > 0) {
+        const inTrailing = new Set(tokensOf(trailing.join(' ')).map(plainWord));
+        // and no negation goes with it: « … must not react » beside another negation of the title would not be seen below
+        if (lost.some(name => !inTrailing.has(name)) || hasNegation(dropped.join(' '))) return {problem: 'name lost'};
+    }
     if (hasNegation(title) !== hasNegation(text)) return {problem: 'negation'};
     if (/\?\s*$/u.test(title) !== /\?\s*$/u.test(text)) return {problem: 'question'};
-    // what someone said stays word for word, its punctuation aside (the exclamation mark of a quotation may go)
+    // what someone said stays word for word, its punctuation aside (the exclamation mark of a quotation may go), and between
+    // quotation marks: without them a quotation becomes what the medium says itself
     const letters = (span) => span.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
-    if (quotedSpans(title).some(([start, end]) => end - start > 4 && !letters(text).includes(letters(title.slice(start, end))))) return {problem: 'quotation changed'};
+    const quotedNow = quotedSpans(text).map(([start, end]) => letters(text.slice(start, end)));
+    if (quotedSpans(title).some(([start, end]) => end - start > 4 && !quotedNow.some(inside => inside.includes(letters(title.slice(start, end)))))) return {problem: 'quotation changed'};
+    // the clauses left out whole do not count in what the proposal must keep of the title (at most MAX_DROPPED_WORDS words)
     const before = realWordsOf(title).length;
     const after = realWordsOf(text).length;
-    if (after < MIN_WORDS_LEFT || after > before + 2 || after < before * REWRITE_MIN_SHARE) return {problem: 'length'};
-    return {text: startsWithCapital(title) && !startsWithCapital(text) ? capitalized(text) : text};
+    const base = dropped.length > 0 ? realWordsOf(kept.join(' ')).length : before;
+    if (after < MIN_WORDS_LEFT || after > before + 2 || after < base * REWRITE_MIN_SHARE) return {problem: 'length'};
+    return {text: startsWithCapital(title) && !startsWithCapital(text) ? capitalized(text) : text, ...(lost.length > 0 ? {dropped} : {})};
 };
 
 // Thinking is on: on 45 real titles (bench/neutral-rewrite.mjs, 03.11.2026) it stays closer to the title (« Scandal in the
@@ -250,9 +300,9 @@ export const rewrittenTitle = async (title, passages = '', usage = null, {langua
     const tidyTitle = title.replace(/\s+/g, ' ').trim();
     // the title given back as it is, however short: neutral already
     if (typeof answer?.title === 'string' && answer.title.replace(/\s+/g, ' ').trim() === tidyTitle) return {title: null, reason: 'same'};
-    const {text, problem} = checkRewrite(title, answer?.title, passages);
+    const {text, dropped, problem} = checkRewrite(title, answer?.title, passages);
     if (problem) return {title: null, reason: 'unsafe', problem, proposal: typeof answer?.title === 'string' ? answer.title : null};
-    return text === tidyTitle ? {title: null, reason: 'same'} : {title: text};
+    return text === tidyTitle ? {title: null, reason: 'same'} : {title: text, ...(dropped ? {dropped} : {})};
 };
 
 // Whether a title needs to be made neutral at all, asked of all the titles of a briefing at once before any is
@@ -260,8 +310,8 @@ export const rewrittenTitle = async (title, passages = '', usage = null, {langua
 // bench/neutral-gate.mjs
 export const judgmentPrompt = (titles) => `Voici des titres d'articles d'actualité, chacun avec son numéro entre crochets, dans leur langue d'origine.
 
-Pour chaque titre, dis s'il contient un JUGEMENT, une EMPHASE ou un APPEL AU CLIC du média : un adjectif ou adverbe d'opinion ou d'intensité (« incroyable », « honteux », « énorme », « enfin », « massive », « shocking »), un point d'exclamation d'emphase, un mot d'appel (« Urgent », « Choc », « Révélation »), une question faite pour attirer, un mot en majuscules d'insistance, un verbe de combat (« démolit », « slams »).
-N'en ont pas : un titre qui dit un fait en termes simples (même grave ou important), un titre qui rapporte ce que quelqu'un a dit entre guillemets (le jugement est celui de la personne citée, pas du média), un nom de rubrique ou de statut (« Officiel », « Interview », « Live »), un titre en question qui demande vraiment quelque chose d'ouvert à l'actualité.
+Pour chaque titre, dis s'il contient un JUGEMENT, une EMPHASE ou un APPEL AU CLIC du média : un adjectif ou adverbe d'opinion ou d'intensité (« incroyable », « honteux », « énorme », « enfin », « massive », « shocking »), un point d'exclamation d'emphase, un mot d'appel (« Urgent », « Choc », « Révélation »), une question faite pour attirer, un mot en majuscules d'insistance, un verbe de combat (« démolit », « slams »), un NOM qui juge ou dramatise ce que le média raconte (« fiasco », « scandale », « chaos », « débâcle », « farce », « honte », « alarme », « panique » : « Total debacle for the team: … »), ou une INJONCTION du média : ce qu'il dit lui-même que d'autres doivent ou devraient faire (« le ministre doit réagir », « the board must resign », « il faut agir », « debe dimitir »).
+N'en ont pas : un titre qui dit un fait en termes simples (même grave ou important, le nom d'un événement qui a eu lieu : « incendie », « grève », « faillite »), un titre qui rapporte ce que quelqu'un a dit entre guillemets ou après son nom (le jugement ou l'injonction est celui de la personne citée, pas du média : « "Aucun club ne doit être exclu" », « Un tel : the board must resign »), une règle ou une obligation dite comme un fait (« Les clubs doivent s'inscrire avant vendredi », « Players must wear shin guards »), un nom de rubrique ou de statut (« Officiel », « Interview », « Live »), un titre en question qui demande vraiment quelque chose d'ouvert à l'actualité.
 Dans le doute, le titre n'en a pas.
 
 ${titles.map((title, i) => `[${i + 1}] ${title}`).join('\n')}
@@ -288,9 +338,10 @@ export const judgedTitles = async (titles, usage = null) =>
 export const sameFactPrompt = (pairs) => `Voici des paires de titres d'actualité : le titre A tel que publié, le titre B sa réécriture neutre. Chaque paire a son numéro entre crochets.
 
 Pour chaque paire, dis si B dit EXACTEMENT le même fait que A, avec seulement moins de jugement, d'emphase ou d'appel au clic : mêmes acteurs, même action, mêmes chiffres, même degré de certitude (« aurait », « selon X », « pourrait »), une question restant une question.
-Réponds non si B ajoute un fait, en retire un, change un acteur ou un verbe en un autre qui ne veut pas dire la même chose (« réagit » n'est pas « annonce », « raids » n'est pas « intervient »), rend plus ou moins certain, ou si B dit quelque chose que A ne dit pas. Dans le doute, non.
+B peut avoir retiré le jugement du média : un adjectif, un adverbe, un nom qui juge ou dramatise (« fiasco », « alarme », « scandale ») ou son injonction (ce que le média dit que d'autres doivent faire : « le ministre doit réagir »), avec les noms qui n'étaient que dans ce passage. Ce n'est pas un fait : cela ne change pas la réponse.
+Réponds non si B ajoute un fait, en retire un, change un acteur ou un verbe en un autre qui ne veut pas dire la même chose (« réagit » n'est pas « annonce », « raids » n'est pas « intervient »), rend plus ou moins certain, ou si B dit quelque chose que A ne dit pas. Une règle dite comme un fait (« Les clubs doivent s'inscrire avant vendredi ») ou ce que quelqu'un dit ou demande est un fait : B ne peut pas la retirer. Quand une paire a une ligne « Retiré », c'est le passage de A qui n'est plus dans B : réponds oui seulement si ce passage est un jugement ou une injonction du média, non s'il dit qui a fait, dit ou décidé quoi. Dans le doute, non.
 
-${pairs.map((pair, i) => `[${i + 1}]\nA : ${pair.title}\nB : ${pair.proposal}`).join('\n\n')}
+${pairs.map((pair, i) => `[${i + 1}]\nA : ${pair.title}\nB : ${pair.proposal}${pair.dropped?.length ? `\nRetiré : ${pair.dropped.join(' / ')}` : ''}`).join('\n\n')}
 
 Réponds uniquement en JSON : {"pairs": [{"n": numéro, "same": true ou false, "why": "ce qui diffère, en quelques mots, vide si same"}]}`;
 
@@ -335,14 +386,14 @@ export const aiRewrittenTitles = async (entries, usage = {}) => {
     await mapWithConcurrency([...judged].sort((a, b) => a - b), REWRITES_AT_ONCE, async (index) => {
         try {
             const answer = await rewrittenTitle(entries[index].title, entries[index].passages, usage.rewriting, {language: entries[index].language, timeoutMs: AI_TIMEOUT_MS});
-            if (answer.title) proposals.push({index, proposal: answer.title});
+            if (answer.title) proposals.push({index, proposal: answer.title, dropped: answer.dropped});
         } catch (err) {
             console.error(`Briefing: a title was not rewritten (${err.message})`);
         }
     });
     await mapWithConcurrency(chunksOf(proposals.sort((a, b) => a.index - b.index), VERIFIED_AT_ONCE), REWRITES_AT_ONCE, async (batch) => {
         try {
-            const verdicts = await sameFact(batch.map(({index, proposal}) => ({title: entries[index].title, proposal})), usage.verifying, {think: true, timeoutMs: AI_TIMEOUT_MS});
+            const verdicts = await sameFact(batch.map(({index, proposal, dropped}) => ({title: entries[index].title, proposal, dropped})), usage.verifying, {think: true, timeoutMs: AI_TIMEOUT_MS});
             batch.forEach(({index, proposal}, at) => { if (verdicts.get(at)?.same === true) kept.set(index, proposal); });
         } catch (err) {
             console.error(`Briefing: the titles rewritten were not verified (${err.message})`);

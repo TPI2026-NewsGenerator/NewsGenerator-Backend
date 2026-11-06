@@ -7,11 +7,12 @@
 //               a quotation, and leaves the title as it was when too little would be left
 //
 
+import process from 'node:process';
 import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const ollamaJson = jest.fn();
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson}));
-const {aiRewrittenTitles, checkRewrite, judgedTitles, neutralTitle, neutralTitles, normalizeJudged, normalizeRemovals, normalizeSameFact, neutralPrompt, rewritePrompt, rewrittenTitle, sameFact, sameFactPrompt} = await import('../../services/utils/neutral-titles.js');
+const {aiRewrittenTitles, checkRewrite, judgedTitles, judgmentPrompt, neutralTitle, neutralTitles, normalizeJudged, normalizeRemovals, normalizeSameFact, neutralPrompt, rewritePrompt, rewrittenTitle, sameFact, sameFactPrompt} = await import('../../services/utils/neutral-titles.js');
 
 describe('neutralTitle', () => {
     it('should take out a teaser at the start of a title, with its punctuation', () => {
@@ -145,6 +146,67 @@ describe('checkRewrite', () => {
     });
 });
 
+describe('checkRewrite of an injunction of the medium', () => {
+    const title = 'Total debacle for the hockey federation: nobody wants to be president of the Hockey Federation of Norway, IIHF and the IOC must react';
+
+    it('should let the names of the last clause go when the proposal leaves that clause out whole, and say which clause', () => {
+        expect(checkRewrite(title, 'Nobody wants to be president of the Hockey Federation of Norway', '')).toEqual({
+            text: 'Nobody wants to be president of the Hockey Federation of Norway',
+            dropped: ['IIHF and the IOC must react'],
+        });
+    });
+
+    it('should let a clause at the start go with the last one, and not count the clauses left out in what the proposal must keep', () => {
+        // 16 words, the proposal has 6: less than 0.4 of the title, more than 0.4 of the 7 words that are left
+        expect(checkRewrite('Katastrofe for norsk håndball: Ingen vil bli president i forbundet NHF, IHF og IOC må reagere', 'Ingen vil bli president i NHF', '')).toEqual({
+            text: 'Ingen vil bli president i NHF',
+            dropped: ['Katastrofe for norsk håndball', 'IHF og IOC må reagere'],
+        });
+        // a title with nothing to leave out is held to the whole of its length as before
+        expect(checkRewrite('Le PSG bat Lyon après un match très long et très disputé', 'Le PSG bat Lyon', '')).toEqual({problem: 'length'});
+    });
+
+    it('should still refuse a name lost with the clause that starts the title: it says a fact', () => {
+        expect(checkRewrite('Infantino under pressure from UEFA: FIFA opens the file of the project', 'FIFA opens the file of the project', '')).toEqual({problem: 'name lost'});
+        expect(checkRewrite('UEFA and FIFA must react: nobody wants to lead the Hockey Federation of Norway', 'Nobody wants to lead the Hockey Federation of Norway', '')).toEqual({problem: 'name lost'});
+    });
+
+    it('should still refuse a name lost with a clause that the proposal keeps some of', () => {
+        expect(checkRewrite('Total debacle: nobody wants to lead the Hockey Federation, IIHF and the IOC must react', 'Nobody wants to lead the Hockey Federation, IIHF reacts', ''))
+            .toEqual({problem: 'name lost'});
+    });
+
+    it('should still refuse a name lost with a clause in the middle of the title, or one of more than ten words', () => {
+        expect(checkRewrite('Nobody wants to lead the Hockey Federation, IIHF must react, a vote is planned', 'Nobody wants to lead the Hockey Federation, a vote is planned', ''))
+            .toEqual({problem: 'name lost'});
+        expect(checkRewrite('Total debacle: nobody wants the job at the Hockey Federation, the IOC must react at once and the IIHF and the leagues of Norway and Sweden must follow',
+            'Nobody wants the job at the Hockey Federation', '')).toEqual({problem: 'name lost'});
+    });
+
+    it('should still refuse a figure, a negation or a quotation lost with the clause', () => {
+        expect(checkRewrite('Total debacle: nobody wants the job at the Hockey Federation, 12 clubs and the IOC must react', 'Nobody wants the job at the Hockey Federation', ''))
+            .toEqual({problem: 'figure lost'});
+        // the title keeps another negation (« nobody »), so the one in the clause left out is looked for in the clause
+        expect(checkRewrite('Total debacle: nobody wants the job at the Hockey Federation, IIHF must not react', 'Nobody wants the job at the Hockey Federation', ''))
+            .toEqual({problem: 'name lost'});
+        expect(checkRewrite('Total debacle: nobody wants the job at the Hockey Federation, Coach Berg said "IIHF must react"', 'Nobody wants the job at the Hockey Federation', ''))
+            .toEqual({problem: 'quotation changed'});
+    });
+
+    it('should not say what is left out when no name goes with it', () => {
+        expect(checkRewrite('Incroyable ! Le PSG écrase Lyon 3-0', 'Le PSG bat Lyon 3-0', 'Lyon')).toEqual({text: 'Le PSG bat Lyon 3-0'});
+    });
+});
+
+describe('checkRewrite of a quotation', () => {
+    it('should refuse a quotation that loses its quotation marks: it would be the medium that says it', () => {
+        const title = '"No club should be excluded from the league", the president says';
+        expect(checkRewrite(title, 'No club should be excluded from the league, the president says', '')).toEqual({problem: 'quotation changed'});
+        expect(checkRewrite(title, '“No club should be excluded from the league”, the president says', '').text).toBe('“No club should be excluded from the league”, the president says');
+        expect(checkRewrite('"No club should be excluded from the league"', 'No club should be excluded from the league', '')).toEqual({problem: 'quotation changed'});
+    });
+});
+
 describe('rewrittenTitle', () => {
     beforeEach(() => ollamaJson.mockReset());
 
@@ -153,6 +215,12 @@ describe('rewrittenTitle', () => {
         expect(await rewrittenTitle('Incroyable ! Le PSG écrase Lyon 3-0', 'Le PSG a gagné 3-0.', null, {language: 'French'})).toEqual({title: 'Le PSG bat Lyon 3-0'});
         expect(ollamaJson.mock.calls[0][0]).toBe(rewritePrompt('Incroyable ! Le PSG écrase Lyon 3-0', 'Le PSG a gagné 3-0.', 'French'));
         expect(ollamaJson.mock.calls[0][0]).toContain('(French, pas en français)');
+    });
+
+    it('should answer the clauses left out with their names, for the second opinion', async () => {
+        ollamaJson.mockResolvedValue({title: 'Nobody wants to be president of the Hockey Federation of Norway'});
+        expect(await rewrittenTitle('Total debacle for the hockey federation: nobody wants to be president of the Hockey Federation of Norway, IIHF and the IOC must react', ''))
+            .toEqual({title: 'Nobody wants to be president of the Hockey Federation of Norway', dropped: ['IIHF and the IOC must react']});
     });
 
     it('should answer that a title is neutral already when the AI gives it back', async () => {
@@ -198,8 +266,26 @@ describe('judgedTitles', () => {
     });
 });
 
+describe('judgmentPrompt and rewritePrompt', () => {
+    it('should ask for the nouns that judge and the injunctions of the medium, not for a rule stated as a fact', () => {
+        for (const prompt of [judgmentPrompt(['Titre']), rewritePrompt('Titre', '')]) {
+            expect(prompt).toContain('fiasco');
+            expect(prompt).toContain('INJONCTION');
+            expect(prompt).toContain('Players must wear shin guards');
+        }
+    });
+});
+
 describe('sameFact', () => {
     beforeEach(() => ollamaJson.mockReset());
+
+    it('should tell the second opinion what was left out of a pair, when something was', () => {
+        const prompt = sameFactPrompt([{title: 'A1', proposal: 'B1', dropped: ['IIHF must react', 'Total debacle']}, {title: 'A2', proposal: 'B2'}, {title: 'A3', proposal: 'B3', dropped: []}]);
+        expect(prompt).toContain('[1]\nA : A1\nB : B1\nRetiré : IIHF must react / Total debacle\n');
+        expect(prompt).toContain('[2]\nA : A2\nB : B2\n');
+        expect(prompt).toContain('[3]\nA : A3\nB : B3\n');
+        expect(prompt.match(/Retiré :/g)).toHaveLength(1);
+    });
 
     it('should read the verdict of each pair, a pair without a clear one left out', () => {
         const answer = {pairs: [{n: 1, same: true, why: ''}, {n: '[2]', same: false, why: ' reacts is not announces '}, {n: 3, same: 'yes'}, {n: 9, same: true}, {n: 1, same: false}]};
@@ -246,6 +332,19 @@ describe('aiRewrittenTitles', () => {
         const opinion = ollamaJson.mock.calls.find(([prompt]) => prompt.startsWith('Voici des paires'));
         expect(opinion[2].think).toBe(true);
         expect(ollamaJson.mock.calls.filter(([prompt]) => prompt.startsWith('Voici le titre')).every(([, , options]) => options.think === true)).toBe(true);
+    });
+
+    it('should tell the second opinion which clause a rewrite left out with its names', async () => {
+        const title = 'Total debacle for the hockey federation: nobody wants to be president of the Hockey Federation of Norway, IIHF and the IOC must react';
+        ollamaJson.mockImplementation(async (prompt) => {
+            if (prompt.startsWith('Voici des titres')) return {titles: [{n: 1, words: ['Total debacle', 'must react']}]};
+            if (prompt.startsWith('Voici le titre')) return {title: 'Nobody wants to be president of the Hockey Federation of Norway'};
+            return {pairs: [{n: 1, same: true}]};
+        });
+        const kept = await aiRewrittenTitles([{title, passages: '', language: 'English'}], {});
+        expect([...kept]).toEqual([[0, 'Nobody wants to be president of the Hockey Federation of Norway']]);
+        const opinion = ollamaJson.mock.calls.find(([prompt]) => prompt.startsWith('Voici des paires'))[0];
+        expect(opinion).toContain('Retiré : IIHF and the IOC must react');
     });
 
     it('should keep nothing a rewrite refused by the checks of the code, nor ask a second opinion of it', async () => {
