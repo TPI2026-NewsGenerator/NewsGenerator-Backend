@@ -140,6 +140,17 @@ describe('the "If X, then Y" lines of an analysis', () => {
         ]);
     });
 
+    // found on the saved analyses of 6.11.2026: "If Kozo Tashima is supported" became "If kozo Tashima" (the card spells Kohzo)
+    it('should keep the capital of a name the card spells otherwise: a word followed by another with a capital, but not after a determiner', () => {
+        expect(lowerFirst('Kozo Tashima is supported by five federations')).toBe('Kozo Tashima is supported by five federations');
+        expect(lowerFirst('Real Sociedad receive the answers')).toBe('Real Sociedad receive the answers');
+        expect(lowerFirst('The CTA follows through on its commitment')).toBe('the CTA follows through on its commitment');
+        expect(lowerFirst('Competing candidates complain to the Court')).toBe('competing candidates complain to the Court');
+        expect(lowerFirst('Les Bleus gagnent')).toBe('les Bleus gagnent');
+        expect(lowerFirst('Die Gespräche beginnen')).toBe('die Gespräche beginnen');
+        expect(lowerFirst('Talks open')).toBe('talks open');
+    });
+
     it('should find the names of a card in its text, in the middle of its sentences, and in the names it is tagged with', () => {
         const known = capitalWordsOfCard({title: 'FIFA pushes for the Olympic tournament', summary: 'Talks with Brazil open. The wait is long.', names: [{name: 'Infantino'}, 'Brisbane']});
         expect(known.has('brazil')).toBe(true);

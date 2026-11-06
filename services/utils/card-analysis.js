@@ -332,12 +332,21 @@ export const cleanNext = (line) => {
 // The page writes the "If" and the "then" and what the AI wrote follows them, so "If Talks open, then they would" has a capital
 // where the sentence goes on (the user's friend, 6.11.2026): the first letter of each part is a small one, unless its first word
 // is a name or an acronym: a word the card writes with a capital inside a sentence (the nouns of German are all such), a word
-// with another capital inside ("FIFA", "McDonald") and the pronoun "I"
+// with another capital inside ("FIFA", "McDonald"), the pronoun "I", and a word followed by another with a capital, which is a name
+// run whatever the card spells ("Kozo Tashima" of the AI, "Kohzo Tashima" in the card: the first name must not lose its capital,
+// found on the saved analyses of 6.11.2026), unless it is a determiner ("The CTA follows" is "the CTA follows")
 // (a line break ends a sentence: the texts of a card are joined with them)
 const capitalWords = (text) => new Set(capitalised(String(text ?? '').replace(/\s*\n+\s*/g, '. ')).flatMap(name => name.text.split(/\s+/)).map(strip).filter(Boolean));
+const OPENING_DETERMINERS = new Set(['the', 'a', 'an', 'this', 'that', 'these', 'those', 'some', 'any', 'all', 'both', 'each', 'every', 'no', 'several', 'many', 'most',
+    'few', 'other', 'another', 'his', 'her', 'its', 'their', 'our', 'my', 'your', 'le', 'la', 'les', 'l', 'un', 'une', 'des', 'du', 'de', 'ce', 'cet', 'cette', 'ces',
+    'son', 'sa', 'ses', 'leur', 'leurs', 'plusieurs', 'certains', 'certaines', 'chaque', 'tout', 'tous', 'toute', 'toutes', 'el', 'los', 'las', 'una', 'unos', 'unas',
+    'este', 'esta', 'estos', 'estas', 'su', 'sus', 'varios', 'algunos', 'algunas', 'todos', 'todas', 'il', 'lo', 'gli', 'uno', 'questo', 'questa', 'alcuni', 'alcune',
+    'tutti', 'der', 'die', 'das', 'den', 'dem', 'des', 'ein', 'eine', 'einen', 'einem', 'einer', 'dieser', 'diese', 'dieses', 'alle', 'beide', 'mehrere', 'einige']);
 export const lowerFirst = (text, known = new Set()) => {
     const first = String(text ?? '').match(/^\p{Lu}[\p{Ll}\p{M}'’]*(?![\p{L}\p{N}-])/u)?.[0];
     if (!first || first === 'I' || known.has(strip(first))) return text;
+    const nameRun = /^\s+\p{Lu}/u.test(text.slice(first.length)) && !OPENING_DETERMINERS.has(strip(first));
+    if (nameRun) return text;
     return first.toLowerCase() + text.slice(first.length);
 };
 const casedNext = (line, known) => ({if: lowerFirst(line.if, known), then: lowerFirst(line.then, known)});
