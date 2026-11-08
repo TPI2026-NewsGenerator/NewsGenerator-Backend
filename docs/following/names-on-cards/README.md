@@ -94,6 +94,15 @@ on the page ("Zambia", "United States · China") and next to its topic in the e-
   item named by a quarter of its articles, and the countries named by their name (`countryNamed`,
   `country-names.js`: "Espagne", "la France", "España", "Ελλάδα" in 37 languages from `Intl.DisplayNames`, plus
   England, Scotland, Wales -> GB). Each weighs the articles of the card naming it.
+- **The words of a name** (`nationalityOf`, `nationalities.js`, since 8.11.2026) vote only for a card that nothing else gives a
+  country or a candidate to (all its names international bodies, or without a country): an organisation whose name starts with a
+  country ("Eesti jalgpalliliit", "Argentina FA": the first one, two or three words, four letters at least) or has an adjective of
+  nationality ("Fédération Algérienne", "Egyptian Football Association", "التحكيم الأردني": `demonyms.json`, the demonyms of the
+  countries in 139 languages from Wikidata, one country each, four letters at least, "english" and "british" the United Kingdom;
+  `scripts/build-demonyms.js` makes the file). A person (Jordan Henderson) or a place is never read so. Measured on the 590 cards of
+  the last 40 briefings (185 without a country): the start of a name added 4 countries, all right (the two-letter "AS" of AS Roma was
+  the American Samoa: left out); the adjective added 14, 12 right, one a federation named in passing, one doubtful, and agreed with the
+  62 cards that had the country already. The AI still chooses among the candidates. Corpus family `nationality`.
 - **The country of an item.** `readCountries` (`wikidata.js`): a country its own code (P297); a person the
   country it plays for (P1532), else its first citizenship (P27); anything else its country (P17), a part of
   a country (England) the country it is part of. None for an international body (international or

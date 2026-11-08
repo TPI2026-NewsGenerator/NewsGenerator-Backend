@@ -21,6 +21,7 @@ const {alignNames} = await import('../../services/utils/spellings.js');
 const {withCleanNext} = await import('../../services/utils/card-analysis.js');
 const {searchNamesFor} = await import('../../services/utils/watch-names.js');
 const {cardNames, tidyNames, withSurnamesLinked} = await import('../../services/utils/card-names.js');
+const {nationalityOf} = await import('../../services/utils/nationalities.js');
 const {checkRewrite, neutralTitle} = await import('../../services/utils/neutral-titles.js');
 
 const corpus = JSON.parse(readFileSync(new URL('./corpus.json', import.meta.url), 'utf8'));
@@ -62,6 +63,10 @@ const FAMILIES = {
         const [names] = tidyNames([input.names], {stems: input.stems ?? [], labels: new Map(Object.entries(input.labels ?? {})),
             orgs: [input.orgs ?? []], nameKeys: new Map(Object.entries(input.nameKeys ?? {})), translated: [Boolean(input.translated)]});
         expect(names.map(name => [name.name, name.qid ?? null])).toEqual(wanted.names);
+    },
+    // the country the name of an organisation says by its words: it starts with a country, or has an adjective of nationality
+    nationality: ({input, expect: wanted}) => {
+        expect(nationalityOf(input.name, input.kind)).toBe(wanted.code);
     },
     // the names chosen for a card from the rows of its articles' mentions (MentionModel.namesOfArticles)
     cardnames: ({input, expect: wanted}) => {

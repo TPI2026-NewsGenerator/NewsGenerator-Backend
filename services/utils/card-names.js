@@ -15,6 +15,7 @@ import {collapsed, romanizations, sameGivenName} from './romanize.js';
 import {labelsOfItems} from './card-spellings.js';
 import {alignNames} from './spellings.js';
 import {nameKeysOf} from './wikidata.js';
+import {nationalityOf} from './nationalities.js';
 import {cardCountries, countriesOfItems} from './countries.js';
 import {chooseCountries, countryCandidates} from './country-choice.js';
 import {countryName, countryNamed} from './country-names.js';
@@ -322,7 +323,10 @@ const readNames = async (cards) => {
             // named by 4 news, waited behind the most met names and its card had no country (19.10.2026)
             toLink: places.filter(row => !row.qid && !row.linkedAt && writtenAsName(row.name)).map(row => row.id),
             countries: rows.filter(row => row.kind !== 'person' && taken(row) >= least)
-                .map(row => ({code: countryNamed(row.name), inCard: taken(row)})).filter(row => row.code)};
+                .map(row => ({code: countryNamed(row.name), inCard: taken(row)})).filter(row => row.code),
+            // the countries the words of the organisations' names say ("Eesti jalgpalliliit", "Fédération Algérienne"), see nationalities.js
+            nationalities: rows.filter(row => row.kind === 'organization' && taken(row) >= least)
+                .map(row => ({code: nationalityOf(row.name, row.kind), inCard: taken(row)})).filter(row => row.code)};
     }));
     const words = [...new Set(read.flatMap(card => card.names.map(surnameKey).filter(Boolean)))];
     const persons = await MentionModel.personsEndingWith(words).catch(err => {
@@ -372,17 +376,26 @@ export const namesAndCountriesOfCards = async (cards, {usage = null, choose = tr
     });
     // a country named: its own code (see country-names.js countryNamed)
     const named = read.map(card => card.countries.map(row => ({qid: `country:${row.code}`, weight: row.inCard})));
-    named.flat().forEach(item => countryOf.set(item.qid, {country: item.qid.slice('country:'.length), international: false}));
+    // a country the words of the names of its organisations say (see nationalities.js): of a card that nothing else gives a country or a
+    // candidate to (all its names international, or without a country: the Estonian federation "Eesti jalgpalliliit" of a card naming
+    // UEFA), and only then, the card's other evidence being surer (a federation of another country named in passing: Guinea, on a
+    // card of Nigeria)
+    const said = read.map(card => card.nationalities.map(row => ({qid: `country:${row.code}`, weight: row.inCard})));
+    [...named.flat(), ...said.flat()].forEach(item => countryOf.set(item.qid, {country: item.qid.slice('country:'.length), international: false}));
+    const evidence = read.map((card, i) => {
+        const strong = [...items[i], ...named[i]];
+        return cardCountries(strong, countryOf).length === 0 && countryCandidates(strong, countryOf, new Map()).length === 0 ? [...strong, ...said[i]] : strong;
+    });
     // the rules of countries.js decide the countries of a card; the AI then chooses among the candidates Wikidata found
     // (see country-choice.js) and its choice replaces them, a card it does not answer keeping the rules'. choose: false
     // leaves the rules alone (bench/card-countries.mjs compares the two)
     const byStory = new Map(cards.map(card => [card.storyId, card]));
-    const rules = read.map((card, i) => cardCountries([...items[i], ...named[i]], countryOf));
+    const rules = evidence.map(list => cardCountries(list, countryOf));
     const asked = read.map((card, i) => {
         const labels = new Map([...card.names, ...card.places].filter(row => row.qid).map(row => [row.qid, row.name]));
-        card.countries.forEach(row => labels.set(`country:${row.code}`, countryName(row.code)));
+        [...card.countries, ...card.nationalities].forEach(row => labels.set(`country:${row.code}`, countryName(row.code)));
         const given = byStory.get(card.storyId);
-        return {titles: given?.titles ?? [], text: given?.text ?? '', candidates: countryCandidates([...items[i], ...named[i]], countryOf, labels)};
+        return {titles: given?.titles ?? [], text: given?.text ?? '', candidates: countryCandidates(evidence[i], countryOf, labels)};
     });
     // the cards with a candidate, asked together: the choice is by place in that list, back to the place in the cards here
     const toAsk = asked.map((card, index) => ({...card, index})).filter(card => card.candidates.length > 0);
