@@ -163,7 +163,10 @@ on the page ("Zambia", "United States · China") and next to its topic in the e-
   title, in 2 runs of 5 on a conflict of the UEFA with the FIFA, and none of the 67 such candidates of the last 60 briefings
   had been kept);
   `chooseCountries` asks the AI once for all the cards of the briefing which of them the news is about, from its
-  titles and 350 characters of its sentences: the place it happens, its main actors' country, the country of the
+  titles (3: the title of the card first, then those of its articles, `titlesOfCard` of `card-titles.js` since 9.11.2026: a card that had
+  joined four stories gave the AI the titles of the oldest one, all of Infantino's fourth term, and it refused Spain for the card of
+  "El mensaje de Emilio García Silvero" 4 times of 4; with the title of the card first it kept it 4 of 4; the check of the names reads
+  the same titles) and 350 characters of its sentences: the place it happens, its main actors' country, the country of the
   person or team that is the subject of the title; not the medium that tells it, the seat of a body, a person named in
   passing nor a namesake; none when in doubt, 3 at most. It can only answer a candidate (the code drops any other
   code); a card it does not answer keeps the countries of the rules, and so do all of them when it fails

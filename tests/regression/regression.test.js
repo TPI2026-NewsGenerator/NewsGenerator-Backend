@@ -25,6 +25,7 @@ const {cardNames, tidyNames, withSurnamesLinked} = await import('../../services/
 const {nationalityOf} = await import('../../services/utils/nationalities.js');
 const {countryDeclined, countryNamed} = await import('../../services/utils/country-names.js');
 const {placeOfOneCountry} = await import('../../services/utils/wikidata.js');
+const {titlesOfCard} = await import('../../services/utils/card-titles.js');
 const {checkRewrite, neutralTitle} = await import('../../services/utils/neutral-titles.js');
 
 const corpus = JSON.parse(readFileSync(new URL('./corpus.json', import.meta.url), 'utf8'));
@@ -75,6 +76,10 @@ const FAMILIES = {
     // languages lacks ("Großbritannien")
     declined: ({input, expect: wanted}) => {
         expect(countryNamed(input.name) ?? countryDeclined(input.name, input.language ?? null)).toBe(wanted.code);
+    },
+    // the titles of a card given to the AI that reads the card (the countries, the check of the names): its own title first, the others after
+    cardtitles: ({input, expect: wanted}) => {
+        expect(titlesOfCard(input.title, input.titles).slice(0, wanted.first)).toEqual(wanted.titles);
     },
     // the item of a place called so by several items of Wikidata, when none stands out but all are of one country
     places: ({input, expect: wanted}) => {

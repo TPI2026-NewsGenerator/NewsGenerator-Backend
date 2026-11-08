@@ -52,6 +52,7 @@ import {sizesOf} from "./utils/picture-sizes.js";
 import {SentMailModel} from "../models/sent-mail-model.js";
 import {EntityService} from "./entity-service.js";
 import {namesAndCountriesOfCards} from "./utils/card-names.js";
+import {titlesOfCard} from "./utils/card-titles.js";
 import {isCountry} from "./utils/country-names.js";
 import {cleanTitle, wholeTitle} from "./utils/titles.js";
 import {aiRewrittenTitles, bestRewrite, neutralTitles} from "./utils/neutral-titles.js";
@@ -760,7 +761,8 @@ export const completeCards = async ({main, spare = []}, {briefingId = null, labe
         }),
         namesAndCountriesOfCards(stories.map((story, i) => ({storyId: story.storyId, ids: story.members.map(article => article.id),
             media: [...new Set(story.members.map(mediumOfArticle))], topic: summaryOf(i)?.topic ?? null,
-            titles: [...new Set(story.members.map(article => article.title).filter(Boolean))], title: leads[i].title,
+            // its own title first: the AI reads 3 of them, and a card that joined stories began with the older one's (see card-titles.js)
+            titles: titlesOfCard(leads[i].title, story.members.map(article => article.title)), title: leads[i].title,
             // what the card says, in the language of its lead: a name it spells out ("Fédération malgache de football
             // (FMF)") tells a name the check sent away (see name-check.js)
             text: [summaryOf(i)?.digest, summaryOf(i)?.summary, summaryOf(i)?.points].filter(Boolean).join('\n'), language: leads[i].lang ?? null,
