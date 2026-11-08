@@ -9,6 +9,9 @@
 "use strict"
 
 export const KINDS = ['person', 'organization', 'location'];
+// the places that found no item before this date are looked for once more when a card names them (see MentionModel.want): the rules that
+// link a place changed (the Wikipedia of its language, the country the items called so share), 8.11.2026
+export const PLACES_RULES_FROM = new Date('2026-11-09T00:00:00Z');
 const MAX_NAME = 120;
 
 // "La Fédération lettone de football" and "Fédération lettone de football" are one name; "Los Angeles"

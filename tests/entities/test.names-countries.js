@@ -22,6 +22,7 @@ jest.unstable_mockModule('../../services/utils/country-choice.js', () => ({...co
 jest.unstable_mockModule('../../services/utils/card-spellings.js', () => ({labelsOfItems: jest.fn(async () => new Map())}));
 jest.unstable_mockModule('../../services/utils/wikidata.js', () => ({nameKeysOf: jest.fn(async () => new Map())}));
 const {namesAndCountriesOfCards} = await import('../../services/utils/card-names.js');
+const {MentionModel} = await import('../../models/mention-model.js');
 
 const card = {storyId: 1, ids: [1, 2], media: [], titles: ['A title']};
 const row = (name, kind, qid, inCard = 2) => ({id: Math.floor(Math.random() * 1e6), name, kind, qid, inCard, itemInCard: qid ? inCard : null, news: 3});
@@ -66,5 +67,30 @@ describe('namesAndCountriesOfCards, the country the words of a name say', () => 
 
     it('should not read a person, a place or a club of a short name for a country', async () => {
         expect(await countriesOf([row('Jordan Henderson', 'person', null), row('AS Roma', 'organization', null)], {})).toEqual([]);
+    });
+});
+
+describe('namesAndCountriesOfCards, a country declined, a place looked for again', () => {
+    const place = (name, lang, extra = {}) => ({...row(name, 'location', null, 2), id: 900, lang, ...extra});
+
+    it('should give a card the country of a place with no item that is a country declined (the Polish locative of Spain)', async () => {
+        expect(await countriesOf([place('Hiszpanii', 'pl'), row('Real Madrid', 'organization', null, 1)], {})).toEqual(['ES']);
+    });
+
+    it('should not read a place of an English news that starts like a country for it (Indiana is not India)', async () => {
+        expect(await countriesOf([place('Indiana', 'en')], {})).toEqual([]);
+    });
+
+    it('should not ask Wikidata for a country declined, but for the place never looked for', async () => {
+        MentionModel.want.mockClear();
+        await countriesOf([place('Hiszpanii', 'pl'), {...place('Corse', 'fr'), id: 901}], {});
+        expect(MentionModel.want).toHaveBeenCalledWith({ids: [901]});
+    });
+
+    it('should look again for a place that found no item before the rules of the places changed, not for one looked for since', async () => {
+        MentionModel.want.mockClear();
+        await countriesOf([{...place('Barcelona', 'es'), id: 902, linkedAt: new Date('2026-10-18T10:00:00Z')},
+            {...place('Rome', 'fr'), id: 903, linkedAt: new Date('2026-11-12T10:00:00Z')}], {});
+        expect(MentionModel.want).toHaveBeenCalledWith({ids: [902]});
     });
 });

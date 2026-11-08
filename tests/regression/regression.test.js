@@ -4,7 +4,8 @@
 //  File: regression.test.js
 //  Description: The corpus of regression of the briefing, offline: every case of tests/regression/corpus.json run through the logic that
 //               has no AI (the language of a title, the check of the figures of a translation, the dateline, the spelling of the names,
-//               the small letter after "If", the names a person is followed by, the checks of a neutral title). A test a case, named by
+//               the small letter after "If", the names a person is followed by, the checks of a neutral title, the countries of the places
+//               a name declines or several items share). A test a case, named by
 //               it. A problem reported on a card adds its case to the corpus first, then the logic is fixed (see README.md)
 //
 
@@ -22,6 +23,8 @@ const {withCleanNext} = await import('../../services/utils/card-analysis.js');
 const {searchNamesFor} = await import('../../services/utils/watch-names.js');
 const {cardNames, tidyNames, withSurnamesLinked} = await import('../../services/utils/card-names.js');
 const {nationalityOf} = await import('../../services/utils/nationalities.js');
+const {countryDeclined, countryNamed} = await import('../../services/utils/country-names.js');
+const {placeOfOneCountry} = await import('../../services/utils/wikidata.js');
 const {checkRewrite, neutralTitle} = await import('../../services/utils/neutral-titles.js');
 
 const corpus = JSON.parse(readFileSync(new URL('./corpus.json', import.meta.url), 'utf8'));
@@ -67,6 +70,15 @@ const FAMILIES = {
     // the country the name of an organisation says by its words: it starts with a country, or has an adjective of nationality
     nationality: ({input, expect: wanted}) => {
         expect(nationalityOf(input.name, input.kind)).toBe(wanted.code);
+    },
+    // the country a place is by its name declined by the cases of a language ("Hiszpanii"), or by the name of a country the Intl of the
+    // languages lacks ("Großbritannien")
+    declined: ({input, expect: wanted}) => {
+        expect(countryNamed(input.name) ?? countryDeclined(input.name, input.language ?? null)).toBe(wanted.code);
+    },
+    // the item of a place called so by several items of Wikidata, when none stands out but all are of one country
+    places: ({input, expect: wanted}) => {
+        expect(placeOfOneCountry(input.places, new Map(Object.entries(input.countries)))).toBe(wanted.qid);
     },
     // the names chosen for a card from the rows of its articles' mentions (MentionModel.namesOfArticles)
     cardnames: ({input, expect: wanted}) => {

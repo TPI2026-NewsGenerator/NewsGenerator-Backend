@@ -760,7 +760,7 @@ export const completeCards = async ({main, spare = []}, {briefingId = null, labe
         }),
         namesAndCountriesOfCards(stories.map((story, i) => ({storyId: story.storyId, ids: story.members.map(article => article.id),
             media: [...new Set(story.members.map(mediumOfArticle))], topic: summaryOf(i)?.topic ?? null,
-            titles: [...new Set(story.members.map(article => article.title).filter(Boolean))],
+            titles: [...new Set(story.members.map(article => article.title).filter(Boolean))], title: leads[i].title,
             // what the card says, in the language of its lead: a name it spells out ("Fédération malgache de football
             // (FMF)") tells a name the check sent away (see name-check.js)
             text: [summaryOf(i)?.digest, summaryOf(i)?.summary, summaryOf(i)?.points].filter(Boolean).join('\n'), language: leads[i].lang ?? null,

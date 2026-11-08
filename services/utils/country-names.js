@@ -9,6 +9,7 @@
 
 "use strict"
 
+import {readFileSync} from 'node:fs';
 import {mentionKey} from './mentions.js';
 
 const names = new Map();
@@ -34,7 +35,10 @@ export const isCountry = (code) => typeof code === 'string' && /^[A-Z]{2}$/.test
 
 // the languages the names of countries are known in: the ones of the news, about
 const NAMED_IN = ['en', 'fr', 'de', 'es', 'it', 'pt', 'nl', 'pl', 'cs', 'sk', 'sl', 'hr', 'sr', 'bs', 'hu', 'ro', 'bg', 'el',
-    'ru', 'uk', 'tr', 'sv', 'da', 'nb', 'fi', 'et', 'lv', 'lt', 'sq', 'ar', 'he', 'ja', 'zh', 'ko', 'vi', 'id', 'ms'];
+    'ru', 'uk', 'tr', 'sv', 'da', 'nb', 'fi', 'et', 'lv', 'lt', 'sq', 'ar', 'he', 'ja', 'zh', 'ko', 'vi', 'id', 'ms',
+    // the languages of the news that had none (Azerbaijani 390 places met, Macedonian 211, Uzbek 212, Catalan 158, Armenian 78...):
+    // none of the names of the languages above is lost to them (measured, 8.11.2026)
+    'az', 'uz', 'kk', 'be', 'mk', 'ca', 'hy', 'ka', 'is', 'eu', 'gl'];
 // codes that are no country: the European Union, the eurozone, the United Nations, outlying Oceania,
 // pseudo-locales, unknown
 const NOT_COUNTRIES = new Set(['EU', 'EZ', 'UN', 'QO', 'XA', 'XB', 'ZZ']);
@@ -46,6 +50,10 @@ const PARTS = {
     TR: ['Turkey'],
     US: ['US', 'U.S', 'U.S.', 'U.S.A', 'U.S.A.', 'EE.UU', 'EE.UU.', 'EEUU'],
 };
+// the United Kingdom is Great Britain in the news of many languages (Intl knows it as "United Kingdom" only: "Großbritannien", 497 news,
+// left with no country, 8.11.2026)
+PARTS.GB.push('Great Britain', 'Britain', 'Großbritannien', 'Grande-Bretagne', 'Gran Bretaña', 'Gran Bretagna', 'Grã-Bretanha', 'Groot-Brittannië',
+    'Storbritannien', 'Wielka Brytania', 'Velká Británie', 'Veľká Británia', 'Velika Britanija', 'Marea Britanie');
 let countryKeys = null;
 // Map key (see mentionKey) -> code of the names of every country, long and short ("United Kingdom",
 // "UK", "Royaume-Uni", "Vereinigtes Königreich"), in NAMED_IN; a name of two countries left out
@@ -93,6 +101,46 @@ const ARTICLE = /^(la|le|les|l'|the|el|los|las|il|lo|der|die|das)\s*/;
 export const countryNamed = (name) => {
     const key = mentionKey(name);
     return namesOfCountries().get(key) ?? namesOfCountries().get(key.replace(ARTICLE, '')) ?? null;
+};
+
+// The code of the country a name is, declined as the languages with cases decline it: "Hiszpanii" (Poland, Spain), "Srbiji", "Deutschlands",
+// "Franciaországból", "Казахстане", "Μεξικού", "Almanya'da". The tagger gives these forms as places of their own and Wikidata has no
+// item for them: 1 217 of the 76 946 places of the news met 5 times or more, "Srbiji" 4 222 times, and a card of the Polish "Hiszpanii"
+// had no country (measured on the database, 8.11.2026). A name is the name of a country, or its first letters when it ends with a
+// vowel, with up to 3 letters after: five letters at least, since four read "Leeds" as Lithuania (Leedu), "Perugia" as Peru, "Palace" as
+// Palau. Left out: a name of several words or with a hyphen or a figure ("Canada-EU", "India-US"), an adjective of nationality
+// ("Australian": see nationalities.js), a name two countries start (null), the "y" of "Norway"/"Germany" taken for a vowel to
+// drop ("Norwalk", "Germantown"), and a word of an English news, which has no cases ("Indiana" is the state, not India). Measured on the
+// 1 217 forms found: 99 in 100 were a country; the others are a word that starts like one (Liberci, Bolívar, Franchi)
+const DECLINED_STEM = 5;
+const DECLINED_ENDING = 3;
+const FINAL_VOWEL = /[aeiouαεηιουωаеиоуыэюяіє]$/u;
+const demonyms = JSON.parse(readFileSync(new URL('./demonyms.json', import.meta.url), 'utf8'));
+let declensionStems = null;
+const stemsOfCountries = () => {
+    if (declensionStems) return declensionStems;
+    declensionStems = new Map();
+    const add = (stem, code) => {
+        if (stem.length >= DECLINED_STEM) declensionStems.set(stem, declensionStems.has(stem) && declensionStems.get(stem) !== code ? null : code);
+    };
+    for (const [key, code] of namesOfCountries()) {
+        if (/[\s\-\d]/.test(key)) continue;
+        add(key, code);
+        // "hiszpania" is "hiszpanii", "hiszpanię"; "κυπρος" is "κυπρου"
+        if (FINAL_VOWEL.test(key) || key.endsWith('ς')) add(key.slice(0, -1), code);
+    }
+    return declensionStems;
+};
+export const countryDeclined = (name, language = null) => {
+    const key = mentionKey(name);
+    if (key.length <= DECLINED_STEM || /[\s\-\d]/.test(key) || namesOfCountries().has(key) || demonyms[key]) return null;
+    if (language === 'en' && /^\p{ASCII}+$/u.test(String(name))) return null;
+    const stems = stemsOfCountries();
+    const found = new Set();
+    for (let size = Math.max(DECLINED_STEM, key.length - DECLINED_ENDING); size < key.length; size++) {
+        if (stems.has(key.slice(0, size))) found.add(stems.get(key.slice(0, size)));
+    }
+    return found.size === 1 && !found.has(null) ? [...found][0] : null;
 };
 
 // the domains of two letters that are no country's sites: .co, .io, .tv, .me, .fm are for anyone

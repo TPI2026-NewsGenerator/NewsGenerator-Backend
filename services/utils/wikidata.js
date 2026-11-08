@@ -252,16 +252,38 @@ export const famousHuman = async (qids, {least = PERSON_SITELINKS, country = nul
 // A place named as several items are, as famousHuman: the one of them that is a place (it has a
 // position on Earth, P625, and is no human) and is in far more Wikipedias than any other place so
 // called. "Paris" is the capital, not Paris in Texas; null when none stands out
-export const famousPlace = async (qids) => {
+export const famousPlace = async (qids) => standingOut(await placesOf(qids), MIN_SITELINKS);
+
+// [{qid, links}] the items among these that are places (a position on Earth, P625, and no human), with the Wikipedias they are in
+const placesOf = async (qids) => {
     const asked = [...new Set(qids.filter(isQid))].slice(0, EXACT_FOUND);
-    if (asked.length === 0) return null;
+    if (asked.length === 0) return [];
     const params = new URLSearchParams({action: 'wbgetentities', ids: asked.join('|'), props: 'claims|sitelinks', format: 'json'});
     const entities = (await ask(`${API}?${params}`)).entities ?? {};
-    const places = asked.map(qid => entities[qid])
+    return asked.map(qid => entities[qid])
         .filter(item => item && item.missing === undefined && (item.claims?.P625 ?? []).length > 0
             && !(item.claims?.P31 ?? []).some(claim => claim.mainsnak?.datavalue?.value?.id === 'Q5'))
         .map(item => ({qid: item.id, links: Object.keys(item.sitelinks ?? {}).length}));
-    return standingOut(places, MIN_SITELINKS);
+};
+
+// A place that no other so called stands out from, but all of one country: "Barcelona" is the city, the province and the club of Spain, and
+// a town of Venezuela known in a few Wikipedias; "Corse" the island and a language. The card needs the country, not the exact item: the
+// item most known of the country that holds this share of the Wikipedias of all the places called so that have a country (the places with
+// none, a language, a people, an international body, are no vote), when it is in MIN_SITELINKS Wikipedias at least. places: [{qid, links}]
+// (see placesOf), countries: Map qid -> {country} (see readCountries)
+export const ONE_COUNTRY_SHARE = 0.8;
+export const placeOfOneCountry = (places, countries) => {
+    const byCountry = new Map();
+    for (const place of places) {
+        const code = countries.get(place.qid)?.country;
+        if (code) byCountry.set(code, [...(byCountry.get(code) ?? []), place]);
+    }
+    const links = (list) => list.reduce((sum, place) => sum + place.links, 0);
+    const total = links([...byCountry.values()].flat());
+    const [main] = [...byCountry.values()].sort((a, b) => links(b) - links(a));
+    if (!main || links(main) < ONE_COUNTRY_SHARE * total) return null;
+    const [best] = [...main].sort((a, b) => b.links - a.links);
+    return best.links >= MIN_SITELINKS ? best.qid : null;
 };
 
 // the item of each country, by its code ISO 3166-1 (P297), kept for as long as the process lives
@@ -296,7 +318,9 @@ export const placeItem = async (name, language = 'en') => {
         const names = [...Object.values(item?.labels ?? {}), ...Object.values(item?.aliases ?? {}).flat()];
         return names.some(other => mentionKey(other.value) === key);
     });
-    return called.length === 1 ? called[0] : called.length > 1 ? famousPlace(called) : null;
+    if (called.length < 2) return called[0] ?? null;
+    const places = await placesOf(called);
+    return standingOut(places, MIN_SITELINKS) ?? (places.length > 1 ? placeOfOneCountry(places, await readCountries(places.map(place => place.qid))) : null);
 };
 
 // The channels an item publishes on, as Wikidata gives them: its website and its accounts

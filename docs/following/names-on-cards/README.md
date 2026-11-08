@@ -32,6 +32,12 @@ stances of the same actor for the other angles of the card.
   (`itemInCard` of `MentionModel.namesOfArticles`, since 8.11.2026): the Argentine federation of 82 articles was written "AFA" by
   19, in two other ways by 6 and 4, and named by 24; the writing most met alone left it out of the card, and its country with it.
   The same for the places and the countries named. Stored in the briefing: `items[].names = [{name, qid, kind}]`.
+- **A person the title says** (`inTitle` of `chosenNames`, since 8.11.2026): a person the lead's title names, linked or named in full,
+  is a name of the card from a tenth of its articles (`SHARE_OF_CARD_TITLED`, 2 at least). The card of "El mensaje de Emilio García Silvero"
+  had joined four stories (113 articles), 25 of them named him (22%, a quarter being 29): his chip was gone and Infantino's was
+  there. Measured on the 593 cards of the last 40 briefings: 6 cards gained a name, 4 right (Trump, Cancelo twice, the Greek
+  Infantino), 2 wrong, both a word alone with no item ("Effigy" of "bonfire effigy": the tagger takes a word of a title for a
+  person), hence the person in full or linked. Corpus family `cardnames`.
 - **Wikidata first.** The names shown without a qid get `mentions.wanted_at` (`MentionModel.want`): the
   background looks for them before the others (see [Ingestion > Names](../../ingestion/names/README.md)),
   so a name of a card opens the page of its item within minutes.
@@ -103,6 +109,35 @@ on the page ("Zambia", "United States · China") and next to its topic in the e-
   the last 40 briefings (185 without a country): the start of a name added 4 countries, all right (the two-letter "AS" of AS Roma was
   the American Samoa: left out); the adjective added 14, 12 right, one a federation named in passing, one doubtful, and agreed with the
   62 cards that had the country already. The AI still chooses among the candidates. Corpus family `nationality`.
+- **A country declined** (`countryDeclined`, `country-names.js`, since 8.11.2026): a place with no item whose name is the name of a
+  country with the ending a language with cases gives it ("Hiszpanii", "Srbiji" 4 222 news, "Deutschlands", "Franciaországból",
+  "Казахстане", "Μεξικού", "Almanya'da") votes for that country like the name itself. The tagger gives these forms as places of their
+  own and Wikidata has no item for them: 1 217 of the 76 946 places met 5 times or more. A name is a country's name, or its first
+  letters when it ends with a vowel (`DECLINED_STEM`: 5 letters at least, 4 read "Leeds" as Lithuania, "Perugia" as Peru), with 3
+  letters after at most (`DECLINED_ENDING`). Left out: several words, a hyphen or a figure ("India-US"), an adjective of nationality
+  (`demonyms.json`), a name two countries start, the "y" of "Norway" taken for a vowel ("Norwalk"), and a word of an English news
+  (it has no cases: "Indiana"). 99 of 100 of the forms found were a country; the others are a word that starts like one (Liberci,
+  Bolívar, Franchi: known cases of the corpus). Not read: the countries of 4 letters of stem (Rosja, Suomi, Rusko, Iran).
+  The languages of the names of the countries grew by Azerbaijani, Uzbek, Kazakh, Belarusian, Macedonian, Catalan, Armenian,
+  Georgian, Icelandic, Basque and Galician, and `GB` has "Great Britain", "Großbritannien"... Corpus family `declined`.
+- **A place called so by several items of one country** (`placeOfOneCountry`, `wikidata.js`, since 8.11.2026): `placeItem` takes the
+  item called so when it stands out (3 times more Wikipedias than the next). Else, when the places called so (a position on Earth, no
+  human) with a country hold 80% of the Wikipedias together in one, it takes the best known of that country, if it is in 30 Wikipedias
+  at least: the card needs the country, not the exact item. "Corse" is the island (186 Wikipedias) and the Corsican language (108): the
+  island; "Barcelona" the city, the club and the province, against a town of Venezuela; "Georgia" the country and the state: none. A
+  language, a people, an international body has no country and does not vote. Measured on 136 of the places with no item
+  (8.11.2026): 19 linked, all in the right country (Hollywood, Springfield, Sarthe, Fribourg, Cork, "Großbritannien"...), the others
+  left (common nouns, a place of two countries). Corpus family `places`.
+- **A place looked for again.** 3 595 of the 4 111 places of 50 news or more that had no item were looked for before 22.10.2026, when the
+  Wikipedia of their language began to link them (`title-links.js`): 202 of the 400 most met are linked by their title, 2 wrong (the
+  Etihad Stadium of Melbourne for the one of Manchester, "Βόλο"). A card that names such a place asks for it again (`MentionModel.want`:
+  a place with no item looked for before `PLACES_RULES_FROM`, 9.11.2026), once; the loop links it first (`wanted_at`), so the next
+  briefing has its country. Measured with the rules of today on the 33 cards without a country of the last 40 briefings that name a place
+  with no item (`bench/places-countries.mjs`, nothing written): 12 gain a country, all 12 plausible (Spain for "Hiszpanii", Jordan,
+  France, Wales, Bruges, Lugano, San Siro, Senegal for the Youth Olympic Games...), 7 of them by a country declined. Nothing to run in the
+  database; to look for them all at once:
+  `UPDATE mentions SET linked_at = NULL WHERE kind = 'location' AND qid IS NULL AND linked_at < '2026-11-09' AND seen >= 3;`
+  (the loop takes 50 names a call, about 12 000 a day).
 - **The country of an item.** `readCountries` (`wikidata.js`): a country its own code (P297); a person the
   country it plays for (P1532), else its first citizenship (P27); anything else its country (P17), a part of
   a country (England) the country it is part of. None for an international body (international or

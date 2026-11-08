@@ -10,7 +10,7 @@
 import {describe, expect, it, jest} from '@jest/globals';
 
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
-const {BYLINE_SITELINKS, famousHuman, famousPlace, placeItem} = await import('../../services/utils/wikidata.js');
+const {BYLINE_SITELINKS, famousHuman, famousPlace, placeItem, placeOfOneCountry} = await import('../../services/utils/wikidata.js');
 const {countryOfSite, mediaOf} = await import('../../services/utils/country-names.js');
 const {withSurnamesLinked} = await import('../../services/utils/card-names.js');
 
@@ -114,6 +114,54 @@ describe('placeItem', () => {
         expect(await placeItem('Paris', 'en')).toBe('Q90');
         expect(new URL(fetch.mock.calls[2][0]).searchParams.get('ids')).toBe('Q830149|Q90');
         fetch.mockRestore();
+    });
+});
+
+describe('placeItem, several items of one country', () => {
+    const named = (id, label) => ({id, labels: {fr: {value: label}}, aliases: {}});
+    const inCountry = (id, links, country) => {
+        const found = place(id, links);
+        return country ? {...found, claims: {...found.claims, P17: [{rank: 'normal', mainsnak: {datavalue: {value: {id: country}}}}]}} : found;
+    };
+    const nation = (id, code) => ({id, claims: {P297: [{rank: 'normal', mainsnak: {datavalue: {value: code}}}]}});
+
+    it('should take the most known item of the country the places called so share: the island, not the language (Corse)', async () => {
+        const fetch = jest.spyOn(globalThis, 'fetch')
+            .mockResolvedValueOnce(answer({search: [{id: 'Q14112', label: 'Corsica'}, {id: 'Q33111', label: 'Corsican'}]}))
+            .mockResolvedValueOnce(answer({entities: {Q14112: named('Q14112', 'Corse'), Q33111: named('Q33111', 'Corse')}}))
+            .mockResolvedValueOnce(answer({entities: {Q14112: place('Q14112', 186), Q33111: place('Q33111', 108)}}))
+            .mockResolvedValueOnce(answer({entities: {Q14112: inCountry('Q14112', 186, 'Q142'), Q33111: inCountry('Q33111', 108, null)}}))
+            .mockResolvedValueOnce(answer({entities: {Q142: nation('Q142', 'FR')}}));
+        expect(await placeItem('Corse', 'fr')).toBe('Q14112');
+        fetch.mockRestore();
+    });
+
+    it('should take none when the places called so are about as known in two countries (Georgia)', async () => {
+        const fetch = jest.spyOn(globalThis, 'fetch')
+            .mockResolvedValueOnce(answer({search: [{id: 'Q230', label: 'Georgia'}, {id: 'Q1428', label: 'Georgia'}]}))
+            .mockResolvedValueOnce(answer({entities: {Q230: named('Q230', 'Géorgie'), Q1428: named('Q1428', 'Géorgie')}}))
+            .mockResolvedValueOnce(answer({entities: {Q230: place('Q230', 330), Q1428: place('Q1428', 320)}}))
+            .mockResolvedValueOnce(answer({entities: {Q230: inCountry('Q230', 330, 'Q230'), Q1428: inCountry('Q1428', 320, 'Q30')}}))
+            .mockResolvedValueOnce(answer({entities: {Q230: nation('Q230', 'GE'), Q30: nation('Q30', 'US')}}));
+        expect(await placeItem('Géorgie', 'fr')).toBeNull();
+        fetch.mockRestore();
+    });
+});
+
+describe('placeOfOneCountry', () => {
+    it('should take the best known item of the country holding 80% of the Wikipedias of the places that have one', () => {
+        const places = [{qid: 'A', links: 300}, {qid: 'B', links: 250}, {qid: 'C', links: 80}, {qid: 'D', links: 45}];
+        const countries = new Map([['A', {country: 'ES'}], ['B', {country: 'ES'}], ['C', {country: 'ES'}], ['D', {country: 'VE'}]]);
+        expect(placeOfOneCountry(places, countries)).toBe('A');
+        // 4 of 5 of the Wikipedias is the share, not less
+        expect(placeOfOneCountry([{qid: 'A', links: 40}, {qid: 'D', links: 11}], new Map([['A', {country: 'ES'}], ['D', {country: 'VE'}]]))).toBeNull();
+    });
+
+    it('should leave out an item with no country, and take none known in fewer than 30 Wikipedias', () => {
+        const countries = new Map([['A', {country: 'FR'}], ['B', {country: null}], ['C', {country: 'FR'}]]);
+        expect(placeOfOneCountry([{qid: 'A', links: 186}, {qid: 'B', links: 108}], countries)).toBe('A');
+        expect(placeOfOneCountry([{qid: 'C', links: 12}, {qid: 'A', links: 9}], countries)).toBeNull();
+        expect(placeOfOneCountry([], countries)).toBeNull();
     });
 });
 

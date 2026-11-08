@@ -9,6 +9,7 @@
 "use strict"
 
 import {prisma} from '../config/db.js';
+import {PLACES_RULES_FROM} from '../services/utils/mentions.js';
 
 const ARTICLE = `a.id, a.id_feed, a.link, a.title, a.description, a.published_at, a.created_at, a.id_story,
        a.source_url, a.resolved_link, a.medium, a.lang`;
@@ -105,7 +106,11 @@ export const MentionModel = {
     // these names (ids) or the names written so (key) looked for in Wikidata before the others: shown to
     // a reader. The ones looked for already are not looked for again, but for the persons in full and the
     // organisations left with no item and no candidates kept (looked for before the candidates were kept):
-    // once more, so that the next card choosing among their candidates finds them (see setCandidates)
+    // once more, so that the next card choosing among their candidates finds them (see setCandidates); and
+    // the places left with no item before PLACES_RULES_FROM, when the Wikipedia of their language and the
+    // country the items called so share were not looked at (see title-links.js, wikidata.js placeOfOneCountry):
+    // 3 595 of the 4 111 places of 50 news or more that had none (measured, 8.11.2026), half of them linked
+    // by the title of their article alone
     want: async ({ids = [], key = null}) => {
         if (ids.length === 0 && !key) return 0;
         const first = await prisma.$executeRawUnsafe(`
@@ -115,7 +120,10 @@ export const MentionModel = {
             UPDATE mentions SET linked_at = NULL, wanted_at = now()
             WHERE id = ANY($1::int[]) AND qid IS NULL AND candidates IS NULL AND linked_at IS NOT NULL
               AND kind IN ('person', 'organization') AND NOT (kind = 'person' AND key NOT LIKE '% %')`, ids);
-        return first + again;
+        const places = ids.length === 0 ? 0 : await prisma.$executeRawUnsafe(`
+            UPDATE mentions SET linked_at = NULL, wanted_at = now()
+            WHERE id = ANY($1::int[]) AND qid IS NULL AND kind = 'location' AND linked_at IS NOT NULL AND linked_at < $2`, ids, PLACES_RULES_FROM);
+        return first + again + places;
     },
 
     // the items (qids) a name may be, kept when the link loop left it with none: [] when it found nothing

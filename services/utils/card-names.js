@@ -10,7 +10,7 @@
 "use strict"
 
 import {MentionModel} from '../../models/mention-model.js';
-import {mentionKey, withoutParticle} from './mentions.js';
+import {mentionKey, PLACES_RULES_FROM, withoutParticle} from './mentions.js';
 import {collapsed, romanizations, sameGivenName} from './romanize.js';
 import {labelsOfItems} from './card-spellings.js';
 import {alignNames} from './spellings.js';
@@ -18,7 +18,7 @@ import {nameKeysOf} from './wikidata.js';
 import {nationalityOf} from './nationalities.js';
 import {cardCountries, countriesOfItems} from './countries.js';
 import {chooseCountries, countryCandidates} from './country-choice.js';
-import {countryName, countryNamed} from './country-names.js';
+import {countryDeclined, countryName, countryNamed} from './country-names.js';
 import {withNamesChecked, withNamesLinked} from './name-check.js';
 
 export const NAMES_PER_CARD = 4;
@@ -28,6 +28,10 @@ export const NAMES_PER_CARD = 4;
 const SURNAME_COUNTRY_SEEN = 100;
 // a name of a few of its articles is one named in passing: a quarter of them at least
 const SHARE_OF_CARD = 0.25;
+// a person the title of the card says is a name of it with a tenth of its articles, two at least: the card of "El mensaje de Emilio García
+// Silvero" had joined four stories (113 articles), 25 of them named him, and his chip was gone (the unsaved briefing of Enzo, 8.11.2026)
+const SHARE_OF_CARD_TITLED = 0.1;
+const LEAST_TITLED = 2;
 // the agencies a dispatch credits ("(Reuters) -", "AFP") are named by every news they wrote, as the
 // medium itself is by its own news
 const AGENCIES = new Set(['afp', 'ap', 'associated press', 'reuters', 'dpa', 'efe', 'ansa', 'ats', 'keystone-ats', 'sda',
@@ -103,8 +107,11 @@ const asOne = (items, weight) => {
     for (const item of ordered) {
         const group = groups.find(other => (item.qid && other.qid === item.qid)
             || ((!item.qid || !other.qid) && (sameName(other.key, item.key) || sameName(item.key, other.key))));
-        if (!group) groups.push({...item, ids: new Set(item.ids)});
-        else item.ids.forEach(id => group.ids.add(id));
+        if (!group) groups.push({...item, ids: new Set(item.ids), keys: new Set([item.key])});
+        else {
+            item.ids.forEach(id => group.ids.add(id));
+            group.keys.add(item.key);
+        }
     }
     return groups;
 };
@@ -117,8 +124,16 @@ export const cardNames = (rows, articles, options = {}) => chosenNames(rows, art
     .map(group => ({name: group.name, qid: group.qid ?? null, kind: group.kind}));
 
 // the rows chosen for a card, with their id (see cardNames)
-const chosenNames = (rows, articles, {media = [], max = NAMES_PER_CARD} = {}) => {
+const chosenNames = (rows, articles, {media = [], max = NAMES_PER_CARD, title = ''} = {}) => {
     const least = Math.max(1, Math.ceil(articles * SHARE_OF_CARD));
+    const leastTitled = Math.max(LEAST_TITLED, Math.ceil(articles * SHARE_OF_CARD_TITLED));
+    const words = (key) => key.replace(/[^\p{L}\p{N}']+/gu, ' ').trim();
+    const titleKey = ` ${words(mentionKey(title))} `;
+    // a person the title says: by the name shown, a writing of it of two words at least, or its family name alone ("Infantino"); a person
+    // linked or named in full only: the tagger takes a word of a title for one ("Effigy", "bonfire effigy": measured on the 593 cards of the
+    // last 40 briefings, 6 cards gained a name, 4 right, the 2 wrong ones a word alone with no item)
+    const inTitle = (group) => group.kind === 'person' && (group.qid || group.key.includes(' ')) && [...group.keys].map(words).some(key => key.length >= 4 && titleKey.includes(` ${key} `)
+        && (key === words(group.key) || key.includes(' ') || words(group.key).endsWith(` ${key}`)));
     // "Le Temps" of letemps.ch
     const own = new Set(media.map(site => mentionKey(String(site).split('.')[0]).replace(/[\s-]+/g, '')));
     const candidates = rows
@@ -133,7 +148,7 @@ const chosenNames = (rows, articles, {media = [], max = NAMES_PER_CARD} = {}) =>
     // MentionModel.namesOfArticles): the writing most met alone left the Argentine federation of 82 articles out of the card
     return asOne(candidates, row => row.inCard * 1000 + Math.min(row.news ?? 0, 999))
         .map(group => ({...group, inCard: Math.max(...group.ids, group.itemInCard ?? 0)}))
-        .filter(group => group.inCard >= least)
+        .filter(group => group.inCard >= least || (group.inCard >= leastTitled && inTitle(group)))
         .sort((a, b) => b.inCard - a.inCard || b.key.length - a.key.length)
         .slice(0, max);
 };
@@ -314,16 +329,19 @@ const readNames = async (cards) => {
         const least = Math.max(1, Math.ceil(card.ids.length * SHARE_OF_CARD));
         // a place or a country counts the articles naming its item under any writing, as a name does (see chosenNames)
         const taken = (row) => Math.max(row.inCard, row.itemInCard ?? 0);
-        const places = rows.filter(row => row.kind === 'location' && taken(row) >= least && !countryNamed(row.name));
-        return {storyId: card.storyId, names: chosenNames(rows, card.ids.length, {media: card.media}),
+        // a place with no item whose name is a country declined ("Hiszpanii", see country-names.js): that country
+        const declined = (row) => row.kind === 'location' && !row.qid ? countryDeclined(row.name, row.lang) : null;
+        const places = rows.filter(row => row.kind === 'location' && taken(row) >= least && !countryNamed(row.name) && !declined(row));
+        return {storyId: card.storyId, names: chosenNames(rows, card.ids.length, {media: card.media, title: card.title}),
             // the organisations its articles name, however few (an acronym of the card may be an alias of one of them)
             orgs: [...new Set(rows.filter(row => row.kind === 'organization' && row.qid).map(row => row.qid))],
             places: places.filter(row => row.qid),
             // the places never looked for in Wikidata, asked for first: "Carei", the town of a referee
             // named by 4 news, waited behind the most met names and its card had no country (19.10.2026)
-            toLink: places.filter(row => !row.qid && !row.linkedAt && writtenAsName(row.name)).map(row => row.id),
+            // (and the ones looked for before the rules of the places changed: see MentionModel.want)
+            toLink: places.filter(row => !row.qid && (!row.linkedAt || new Date(row.linkedAt) < PLACES_RULES_FROM) && writtenAsName(row.name)).map(row => row.id),
             countries: rows.filter(row => row.kind !== 'person' && taken(row) >= least)
-                .map(row => ({code: countryNamed(row.name), inCard: taken(row)})).filter(row => row.code),
+                .map(row => ({code: countryNamed(row.name) ?? declined(row), inCard: taken(row)})).filter(row => row.code),
             // the countries the words of the organisations' names say ("Eesti jalgpalliliit", "Fédération Algérienne"), see nationalities.js
             nationalities: rows.filter(row => row.kind === 'organization' && taken(row) >= least)
                 .map(row => ({code: nationalityOf(row.name, row.kind), inCard: taken(row)})).filter(row => row.code)};
