@@ -217,6 +217,9 @@ const ourDigits = (text) => text
 const sameWrittenFigures = (text) => ourDigits(twentyFourHours(text))
     // 20h15, 20:15 and 20.15 are one time, 19h00 and 19:00 the hour alone, as the 12-hour clock gives it
     .replace(/\b([01]?\d|2[0-3])(?:[\s ]?h[\s ]?|:|\.)(00|[0-5]\d)\b/gi, (time, hour, minutes) => minutes === '00' ? hour : `${hour}.${minutes}`)
+    // "4 mil 200" (Spanish), "4 mil e 200" (Portuguese) is one figure, 4200: read as "4000" and "200" it became "4000 200", 4000200, and the
+    // title "... negocio de 4 mil 200 mdd" stayed Spanish in a card in English (the unsaved briefing of Enzo of 9.11.2026)
+    .replace(/\b(\d{1,3})[\s\u00a0]?(?:mil|mila)[\s\u00a0]+(?:(?:e|y)[\s\u00a0]+)?(\d{1,3})(?![\d.,]?\d)/gi, (whole, thousands, rest) => String(Number(thousands) * 1000 + Number(rest)))
     // "13 mil euros" (Portuguese, Spanish), "13 tys." (Polish), "13 Tsd." (German): 13000
     .replace(/\b(\d{1,3})[\s ]?(?:mil|mila|tys|tsd)\b\.?/gi, (thousands, count) => `${count}000`)
     .replace(/\b1\/(4|8|16|32|64)(?!\d)/g, (round, last) => String(2 * Number(last)));
@@ -240,7 +243,8 @@ const CJK_PIECE = /(\d[\d,]*(?:\.\d+)?)\s*([천千백百만万萬억億조兆]+)
 const withCjkAmounts = (text) => text.replace(CJK_AMOUNT, amount => String(Math.round([...amount.matchAll(CJK_PIECE)]
     .reduce((sum, [, count, units]) => sum + Number(count.replace(/,/g, '')) * [...units].reduce((product, unit) => product * CJK_UNITS[unit], 1), 0))));
 // The words the other languages write a thousand, a million or a billion with after a figure ("2 million", "2 Millionen", "2 millones")
-const WORD_UNITS = [[1e3, 'thousand'], [1e6, 'millions?|millón|millones|milhão|milhões|millionen|miljoen|milioni|milione|mio|mln|miljoona'],
+// "mdd", "mdp", "mde": the millions of dollars, pesos or euros of the Mexican and Spanish press ("4 mil 200 mdd")
+const WORD_UNITS = [[1e3, 'thousand'], [1e6, 'millions?|millón|millones|milhão|milhões|millionen|miljoen|milioni|milione|mio|mln|miljoona|mdd|mdp|mde'],
     [1e9, 'billions?|milliards?|milliarden?|miliardi|miliardo|mrd']];
 const NUMBER = '\\d+(?:[.,\\u202f\\u00a0 ]\\d{3}(?!\\d))*(?:[.,]\\d+)?';
 const FIGURE = new RegExp(`(${NUMBER})(?:[\\s\\u00a0]*(${WORD_UNITS.map(([, words]) => words).join('|')})(?!\\p{L}))?`, 'giu');
