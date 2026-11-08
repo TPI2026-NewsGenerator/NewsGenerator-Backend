@@ -764,7 +764,7 @@ export const completeCards = async ({main, spare = []}, {briefingId = null, labe
             // what the card says, in the language of its lead: a name it spells out ("Fédération malgache de football
             // (FMF)") tells a name the check sent away (see name-check.js)
             text: [summaryOf(i)?.digest, summaryOf(i)?.summary, summaryOf(i)?.points].filter(Boolean).join('\n'), language: leads[i].lang ?? null,
-            sites: story.members.map(article => siteOf(article))})), {usage: usage.naming}).catch(err => {
+            sites: story.members.map(article => siteOf(article))})), {usage: usage.naming, reader: language}).catch(err => {
             console.error(`Briefing: the names of the cards were not read (${err.message})`);
             return new Map();
         }),

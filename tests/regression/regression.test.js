@@ -20,7 +20,7 @@ const {keepsFigures, splitSentences} = await import('../../services/utils/extrac
 const {alignNames} = await import('../../services/utils/spellings.js');
 const {withCleanNext} = await import('../../services/utils/card-analysis.js');
 const {searchNamesFor} = await import('../../services/utils/watch-names.js');
-const {tidyNames, withSurnamesLinked} = await import('../../services/utils/card-names.js');
+const {cardNames, tidyNames, withSurnamesLinked} = await import('../../services/utils/card-names.js');
 const {checkRewrite, neutralTitle} = await import('../../services/utils/neutral-titles.js');
 
 const corpus = JSON.parse(readFileSync(new URL('./corpus.json', import.meta.url), 'utf8'));
@@ -60,8 +60,12 @@ const FAMILIES = {
     // the names a card shows once tidied: a particle glued to a name, a declined form of a name linked, the spelling of Wikidata
     chips: ({input, expect: wanted}) => {
         const [names] = tidyNames([input.names], {stems: input.stems ?? [], labels: new Map(Object.entries(input.labels ?? {})),
-            orgs: [input.orgs ?? []], nameKeys: new Map(Object.entries(input.nameKeys ?? {}))});
+            orgs: [input.orgs ?? []], nameKeys: new Map(Object.entries(input.nameKeys ?? {})), translated: [Boolean(input.translated)]});
         expect(names.map(name => [name.name, name.qid ?? null])).toEqual(wanted.names);
+    },
+    // the names chosen for a card from the rows of its articles' mentions (MentionModel.namesOfArticles)
+    cardnames: ({input, expect: wanted}) => {
+        expect(cardNames(input.rows, input.articles, input.options ?? {}).map(name => [name.name, name.qid ?? null])).toEqual(wanted.names);
     },
     following: ({input, expect: wanted}) => {
         expect(searchNamesFor(input.row, input.following ?? null, new Set(input.common))).toEqual(wanted.names);

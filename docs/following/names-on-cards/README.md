@@ -28,7 +28,10 @@ stances of the same actor for the other angles of the card.
   ("Infantino", "Gianni Infantino"), the initials ("PSG" of "Paris Saint-Germain"); the writing shown is the
   one of an item, else the most met.
 - **How many.** Named by a quarter of the card's articles at least (`SHARE_OF_CARD`), the most named first,
-  4 at most (`NAMES_PER_CARD`). Stored in the briefing: `items[].names = [{name, qid, kind}]`.
+  4 at most (`NAMES_PER_CARD`). An item is counted by the articles that name it under any of its writings, once each
+  (`itemInCard` of `MentionModel.namesOfArticles`, since 8.11.2026): the Argentine federation of 82 articles was written "AFA" by
+  19, in two other ways by 6 and 4, and named by 24; the writing most met alone left it out of the card, and its country with it.
+  The same for the places and the countries named. Stored in the briefing: `items[].names = [{name, qid, kind}]`.
 - **Wikidata first.** The names shown without a qid get `mentions.wanted_at` (`MentionModel.want`): the
   background looks for them before the others (see [Ingestion > Names](../../ingestion/names/README.md)),
   so a name of a card opens the page of its item within minutes.

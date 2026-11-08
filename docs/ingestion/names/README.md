@@ -116,8 +116,10 @@ what finds the other angles of a card through its rare names.
   only after 6 letters: measured on the 120 forms the most met, 7 in 100 were another word; a hyphen only before a suffix
   of small letters: "Villarreal-PSG" is a match); an acronym the tagger could not link is the organisation the card's
   articles name that is called so in some language (`nameKeysOf`: "KFA" is an alias of the Korea Football Association in
-  Korean only, the search in English never finds it); and a name linked is spelled as Wikidata does when the letters are the
-  same, accents aside, as the translation of the card is ("Ceferin" under a text saying "Čeferin"). Nothing of it is linked
+  Korean only, the search in English never finds it); and a name linked is spelled as Wikidata does (`spelledNames`, once the names are linked): in a card whose text is
+  translated, an organisation not written as an acronym and a person in other letters than the Latin ones are shown by their label
+  ("Union Caribeña de Fútbol" under a text saying "Caribbean Football Union"), else when the letters are the same, accents aside
+  ("Ceferin" under a text saying "Čeferin"), as the translation of the card is. Nothing of it is linked
   in the base: the tagger's link is untouched, the tidy is on the card. Corpus family `chips`.
 - **Report and housekeeping.** Every hour the log says what each tagger did and what is left
   (`untaggedCount`); once a day `deleteUnused` deletes the names no news names any more that were never looked

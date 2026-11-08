@@ -128,8 +128,10 @@ const chosenNames = (rows, articles, {media = [], max = NAMES_PER_CARD} = {}) =>
         })
         // the articles of a row are not known, only how many: its count stands for them
         .map(row => ({...row, ids: [row.inCard]}));
+    // the articles that name an item are counted once each whatever the writings they name it with (the rows' itemInCard, see
+    // MentionModel.namesOfArticles): the writing most met alone left the Argentine federation of 82 articles out of the card
     return asOne(candidates, row => row.inCard * 1000 + Math.min(row.news ?? 0, 999))
-        .map(group => ({...group, inCard: Math.max(...group.ids)}))
+        .map(group => ({...group, inCard: Math.max(...group.ids, group.itemInCard ?? 0)}))
         .filter(group => group.inCard >= least)
         .sort((a, b) => b.inCard - a.inCard || b.key.length - a.key.length)
         .slice(0, max);
@@ -246,10 +248,18 @@ export const withInflectionsFolded = (names, rows) => once(names.map(name => {
         .sort((a, b) => b.stemSeen - a.stemSeen);
     return best ? {...name, name: best.name, qid: best.qid, ...('key' in name ? {key: mentionKey(best.name)} : {})} : name;
 }));
-// labels: Map qid -> the label of Wikidata in the Latin alphabet (see labelsOfItems)
-export const withWikidataSpelling = (names, labels) => names.map(name => {
+// A name linked as Wikidata spells it. labels: Map qid -> the label of Wikidata in the Latin alphabet (see labelsOfItems). The text of a
+// card translated spells its names as Wikidata does (see card-spellings.js): an organisation not written as an acronym, and a person
+// in other letters than the Latin ones, are shown by their label then (a card in Dutch said "Union Caribeña de Fútbol" and
+// "Confederación Asiática" under a text of "Caribbean Football Union" and "Asian Football Confederation", briefing 469 of 8.11.2026).
+// Else the letters of the label with other accents only ("Čeferin" for "Ceferin"), as the translation does
+const LATIN_ONLY = /^[\p{Script=Latin}\p{N}\p{M}\s.'’&,-]+$/u;
+export const withWikidataSpelling = (names, labels, {translated = false} = {}) => names.map(name => {
     const label = name.qid && labels.get(name.qid);
-    const spelled = label ? alignNames(name.name, [label]) : name.name;
+    if (!label) return name;
+    const asLabel = translated && !ACRONYM.test(name.name) && mentionKey(name.name) !== mentionKey(label)
+        && (name.kind === 'organization' || !LATIN_ONLY.test(name.name));
+    const spelled = asLabel ? label : alignNames(name.name, [label]);
     return spelled === name.name ? name : {...name, name: spelled};
 });
 // An acronym the tagger could not link ("KFA": the search in English of Wikidata does not find it, the Korea Football Association has it
@@ -264,15 +274,31 @@ export const withAcronymsLinked = (names, orgs, keys) => once(names.map(name => 
     const called = [...new Set(orgs)].filter(qid => (keys.get(qid) ?? []).includes(key));
     return called.length === 1 ? {...name, qid: called[0]} : name;
 }));
-// names: the names of each card; orgs: for each card, the items of the organisations its articles name
-export const tidyNames = (names, {stems = [], labels = new Map(), orgs = [], nameKeys = new Map()} = {}) =>
-    names.map((card, i) => withWikidataSpelling(withInflectionsFolded(withAcronymsLinked(withParticlesOff(card), orgs[i] ?? [], nameKeys), stems), labels));
+// names: the names of each card; orgs: for each card, the items of the organisations its articles name; translated: for each card,
+// whether its text is translated (the labels are asked of Wikidata apart, once the names are linked: see spelledNames)
+export const tidyNames = (names, {stems = [], labels = new Map(), orgs = [], nameKeys = new Map(), translated = []} = {}) =>
+    names.map((card, i) => withWikidataSpelling(withInflectionsFolded(withAcronymsLinked(withParticlesOff(card), orgs[i] ?? [], nameKeys), stems), labels,
+        {translated: Boolean(translated[i])}));
+// The names of these cards (read: [{storyId, names}], once linked) spelled as Wikidata does (see withWikidataSpelling); cards:
+// [{storyId, language}], the language of the lead of each, reader the one of the reader (codes): a card in another language is
+// translated. Wikidata or the database not answering leaves the names as they are
+const spelledNames = async (read, cards = [], reader = null) => {
+    const qids = [...new Set(read.flatMap(card => card.names.map(name => name.qid)).filter(Boolean))];
+    if (qids.length === 0) return read;
+    const labels = await labelsOfItems(qids).catch(err => {
+        console.error(`Names: the spellings of Wikidata were not read (${err.message})`);
+        return new Map();
+    });
+    const languageOf = new Map(cards.map(card => [card.storyId, card.language ?? null]));
+    return read.map(card => ({...card, names: withWikidataSpelling(card.names, labels,
+        {translated: Boolean(reader && languageOf.get(card.storyId) && languageOf.get(card.storyId) !== reader)})}));
+};
 
 // {storyId -> [{name, qid, kind}]} of these cards: [{storyId, ids (of its articles), media}]. The names
 // shown that Wikidata was never asked for are asked for first (see MentionModel.want): one that is an
 // item opens its page, with its links, instead of the page of the name. A family name alone is the
 // person it is the name of (see withSurnamesLinked)
-export const namesOfCards = async (cards) => new Map((await readNames(cards))
+export const namesOfCards = async (cards, {reader = null} = {}) => new Map((await spelledNames(await readNames(cards), cards, reader))
     .map(card => [card.storyId, card.names.map(group => ({name: group.name, qid: group.qid ?? null, kind: group.kind}))]));
 
 // [{storyId, names, places, toLink, countries}] of these cards (see namesOfCards): names the groups chosen,
@@ -285,7 +311,9 @@ const readNames = async (cards) => {
     const read = await Promise.all(cards.map(async (card) => {
         const rows = await MentionModel.namesOfArticles(card.ids, LEAST_NEWS);
         const least = Math.max(1, Math.ceil(card.ids.length * SHARE_OF_CARD));
-        const places = rows.filter(row => row.kind === 'location' && row.inCard >= least && !countryNamed(row.name));
+        // a place or a country counts the articles naming its item under any writing, as a name does (see chosenNames)
+        const taken = (row) => Math.max(row.inCard, row.itemInCard ?? 0);
+        const places = rows.filter(row => row.kind === 'location' && taken(row) >= least && !countryNamed(row.name));
         return {storyId: card.storyId, names: chosenNames(rows, card.ids.length, {media: card.media}),
             // the organisations its articles name, however few (an acronym of the card may be an alias of one of them)
             orgs: [...new Set(rows.filter(row => row.kind === 'organization' && row.qid).map(row => row.qid))],
@@ -293,8 +321,8 @@ const readNames = async (cards) => {
             // the places never looked for in Wikidata, asked for first: "Carei", the town of a referee
             // named by 4 news, waited behind the most met names and its card had no country (19.10.2026)
             toLink: places.filter(row => !row.qid && !row.linkedAt && writtenAsName(row.name)).map(row => row.id),
-            countries: rows.filter(row => row.kind !== 'person' && row.inCard >= least)
-                .map(row => ({code: countryNamed(row.name), inCard: row.inCard})).filter(row => row.code)};
+            countries: rows.filter(row => row.kind !== 'person' && taken(row) >= least)
+                .map(row => ({code: countryNamed(row.name), inCard: taken(row)})).filter(row => row.code)};
     }));
     const words = [...new Set(read.flatMap(card => card.names.map(surnameKey).filter(Boolean)))];
     const persons = await MentionModel.personsEndingWith(words).catch(err => {
@@ -308,16 +336,11 @@ const readNames = async (cards) => {
         return [];
     });
     const surnamed = withSurnamesLinked(read.map(card => card.names), persons, loose).map(withParticlesOff);
-    // the declined forms of the organisations linked, and how Wikidata spells the names linked (the database or Wikidata not answering
-    // leaves the names as they are)
+    // the declined forms of the organisations linked (the database not answering leaves the names as they are)
     const forms = [...new Map(surnamed.flatMap(names => names.flatMap(stemsOf)).map(pair => [pair.join(' '), pair])).values()];
     const stems = await MentionModel.inflectedForms(forms).catch(err => {
         console.error(`Names: the declined forms were not read (${err.message})`);
         return [];
-    });
-    const labels = await labelsOfItems([...surnamed.flatMap(names => names.map(name => name.qid)), ...stems.map(row => row.qid)].filter(Boolean)).catch(err => {
-        console.error(`Names: the spellings of Wikidata were not read (${err.message})`);
-        return new Map();
     });
     const orgs = read.map(card => card.orgs);
     const acronymOrgs = [...new Set(surnamed.flatMap((names, i) => names.some(isUnlinkedAcronym) ? orgs[i] : []))];
@@ -325,7 +348,7 @@ const readNames = async (cards) => {
         console.error(`Names: what the organisations of the cards are called was not read (${err.message})`);
         return new Map();
     });
-    const linked = tidyNames(surnamed, {stems, labels, orgs, nameKeys});
+    const linked = tidyNames(surnamed, {stems, orgs, nameKeys});
     const ids = [...linked.flatMap(names => names.filter(name => !name.qid && name.id).map(name => name.id)),
         ...read.flatMap(card => card.toLink)];
     if (ids.length > 0) await MentionModel.want({ids}).catch(err => console.error(`Names: not asked first in Wikidata (${err.message})`));
@@ -335,10 +358,11 @@ const readNames = async (cards) => {
 // {storyId -> {names, countries}} of these cards [{storyId, ids, media, titles}] (see namesOfCards): countries the codes ISO 3166-1 of
 // the countries of who and where it names, the main first (see countries.js), none when Wikidata does not
 // tell them
-export const namesAndCountriesOfCards = async (cards, {usage = null, choose = true} = {}) => {
+export const namesAndCountriesOfCards = async (cards, {usage = null, choose = true, reader = null} = {}) => {
     // a name is linked by its text for all its news: the card tells whether the item is the one it means, and
-    // which of its candidates when it has none
-    const read = await withNamesLinked(await withNamesChecked(await readNames(cards), cards, {usage}), cards, {usage});
+    // which of its candidates when it has none; then the names linked are spelled as Wikidata does (see withWikidataSpelling:
+    // reader, the language of the reader, tells which cards are translated)
+    const read = await spelledNames(await withNamesLinked(await withNamesChecked(await readNames(cards), cards, {usage}), cards, {usage}), cards, reader);
     const items = read.map(card => [...card.names, ...card.places]
         .filter(row => row.qid && !(row.bySurname < SURNAME_COUNTRY_SEEN) && !countryNamed(row.name))
         .map(row => ({qid: row.qid, weight: row.inCard, person: row.kind === 'person'})));

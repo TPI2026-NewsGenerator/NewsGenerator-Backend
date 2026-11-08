@@ -187,17 +187,23 @@ export const MentionModel = {
     setLink: async (id, qid) => prisma.$executeRawUnsafe(`
         UPDATE mentions SET qid = $2, linked_at = now() WHERE id = $1`, id, qid),
 
-    // The names of these news: [{id, name, kind, qid, lang, linkedAt, inCard, news}], inCard the news of
-    // them naming it, news the news naming it at all, counted up to 'upTo' (the UEFA would be counted
-    // in full otherwise, to be left out)
+    // The names of these news: [{id, name, kind, qid, lang, linkedAt, inCard, itemInCard, news}], inCard the news of
+    // them naming it, itemInCard the news of them naming its item of Wikidata under any writing, once each (the AFA is
+    // written "AFA" by 19 of 82, "Argentine Football Association" by 6, "Federazione calcistica argentina" by 4 and named by 38:
+    // the one of its writings the most met is far from it), null for a name with no item, news the news naming it at all,
+    // counted up to 'upTo' (the UEFA would be counted in full otherwise, to be left out)
     namesOfArticles: async (articleIds, upTo) => articleIds.length === 0 ? [] : prisma.$queryRawUnsafe(`
         WITH card AS (
             SELECT id_mention, count(*)::int AS in_card FROM article_mentions
             WHERE id_article = ANY($1::int[]) GROUP BY id_mention
+        ), items AS (
+            SELECT m.qid, count(DISTINCT am.id_article)::int AS in_card
+            FROM article_mentions am JOIN mentions m ON m.id = am.id_mention
+            WHERE am.id_article = ANY($1::int[]) AND m.qid IS NOT NULL GROUP BY m.qid
         )
-        SELECT m.id, m.name, m.kind, m.qid, m.lang, m.linked_at AS "linkedAt", c.in_card AS "inCard",
+        SELECT m.id, m.name, m.kind, m.qid, m.lang, m.linked_at AS "linkedAt", c.in_card AS "inCard", i.in_card AS "itemInCard",
                (SELECT count(*) FROM (SELECT 1 FROM article_mentions x WHERE x.id_mention = m.id LIMIT $2) t)::int AS news
-        FROM card c JOIN mentions m ON m.id = c.id_mention`, articleIds, upTo),
+        FROM card c JOIN mentions m ON m.id = c.id_mention LEFT JOIN items i ON i.qid = m.qid`, articleIds, upTo),
 
     // [{id_article, name, kind, qid}]: the names of these news that are an item of Wikidata, as the news
     // write them, the least met first (the ones a translation guesses the spelling of), 'limit' at most:

@@ -20,7 +20,7 @@ git, like the other benches) and says what held before and fails now, and the re
 
 ## What the corpus holds
 
-146 offline cases and 19 live ones, in families, most of them taken from the briefings of 6.11.2026:
+154 offline cases and 19 live ones, in families, most of them taken from the briefings of 6.11.2026:
 
 | Family | Asks of | Cases came from |
 |---|---|---|
@@ -32,6 +32,7 @@ git, like the other benches) and says what held before and fails now, and the re
 | `ifthen` | `withCleanNext`: the small letter after "If" and "then" | Talks, A change, The CTA, Kozo Tashima, FIFA, German nouns, French |
 | `romanized` | `withSurnamesLinked`: a person in Greek or Cyrillic letters linked to the person whose family name has the same Latin letters | "Τζιάνι Ινφαντίνο" (Wikidata: "Τζάνι"), Μέσι (one s), ντ as d or nt, Мбаппе, a Gerd among two Müllers, and what is left alone (another given name, two persons as met, a person met twice, an organisation) |
 | `chips` | `tidyNames`: the names a card shows | `KFA는`, `FIFA-e`, `Arsenala`, `Bayerns` and what is not a form of a name (Sportal, Marcas, Villarreal-PSG, a person), `KFA` an alias in Korean, "Ceferin" and "Čeferin" |
+| `cardnames` | `cardNames`: the names chosen for a card from the mentions of its articles | the Argentine federation of 82 articles written three ways (19, 6, 4) and named by 24, an item named three ways by the same 8 articles |
 | `following` | `searchNamesFor`: the names a person is followed by | Velasco (common), Čeferin and Rosetti (their own), García, the words the reader added |
 | `neutral` | `checkRewrite`, `neutralTitle`: the checks of a neutral title | the FA case (name lost), exclamation, figure, negation, question, quotation, a good rewrite, a teaser taken out |
 
