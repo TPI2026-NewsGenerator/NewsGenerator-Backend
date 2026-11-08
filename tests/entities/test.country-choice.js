@@ -27,13 +27,22 @@ const items = [{qid: 'Q1', weight: 5, person: true}, {qid: 'Q2', weight: 3}, {qi
 describe('countryCandidates', () => {
     it('should give the countries Wikidata found, with what brought each one, the heaviest first', () => {
         const candidates = countryCandidates(items, of, labels);
-        expect(candidates.map(candidate => [candidate.code, candidate.weight])).toEqual([['RO', 5], ['FR', 3], ['CH', 3]]);
-        expect(candidates.find(candidate => candidate.code === 'FR').via).toEqual([{name: 'L’Équipe', person: false, media: true, international: false, ofBody: false}]);
+        expect(candidates.map(candidate => [candidate.code, candidate.weight])).toEqual([['RO', 5], ['FR', 3], ['CH', 2]]);
+        expect(candidates.find(candidate => candidate.code === 'FR').via).toEqual([{name: 'L’Équipe', person: false, media: true, international: false}]);
     });
 
-    it('should say that a person is of an international body named on the card, and that a body is one', () => {
+    it('should not offer the country of a person of an international body the card names, as countries.js does not give it (8.11.2026)', () => {
+        // Infantino of the UEFA's seat: Switzerland comes from the body only, and from a person of it with no weight of its own
         const swiss = countryCandidates(items, of, labels).find(candidate => candidate.code === 'CH');
-        expect(swiss.via.map(via => [via.name, via.international, via.ofBody])).toEqual([['UEFA', true, false], ['Gianni Infantino', false, true]]);
+        expect(swiss.via.map(via => via.name)).toEqual(['UEFA']);
+        expect(swiss.weight).toBe(2);
+        // the president of the UEFA is Slovenian: a card naming the UEFA and him has no candidate, the AI that kept Slovenia in 2 runs of 5
+        // for a conflict of the UEFA with the FIFA is not asked
+        const president = new Map([['Q3', {country: null, international: true, bodies: [], media: false}],
+            ['Q6', {country: 'SI', international: false, bodies: ['Q3'], media: false}]]);
+        expect(countryCandidates([{qid: 'Q3', weight: 5}, {qid: 'Q6', weight: 5, person: true}], president, new Map())).toEqual([]);
+        // the same person on a card naming no body of his is Slovenian
+        expect(countryCandidates([{qid: 'Q6', weight: 5, person: true}], president, new Map()).map(candidate => candidate.code)).toEqual(['SI']);
     });
 
     it('should leave out an item without a country, and count an item once', () => {
@@ -54,7 +63,7 @@ describe('countryPrompt', () => {
         expect(prompt).toContain('The Romanian FA president. Is a candidate.');
         expect(prompt).toContain('FR France: L’Équipe (média)');
         expect(prompt).toContain('UEFA (organisation internationale, son siège)');
-        expect(prompt).toContain("Gianni Infantino (personne d'un organisme international)");
+        expect(prompt).not.toContain('Gianni Infantino');
         expect(prompt).toContain('RO Roumanie: Răzvan Burleanu (personne)');
     });
 });

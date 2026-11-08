@@ -76,7 +76,7 @@ const inTurn = async (task) => {
 };
 
 // what Ollama answered busy and sent to Gemini since the server started, for the benches and the logs
-export const aiStats = {busy: 0, gemini: 0};
+export const aiStats = {busy: 0, gemini: 0, fallback: 0};
 
 // The tokens of the calls, added to 'usage' when one is given: {calls, input, output}. 'output'
 // counts the reasoning of the model too, it is paid as any other token.
@@ -133,15 +133,27 @@ const askGemini = async (messages, usage, think) => {
     return (body.candidates?.[0]?.content?.parts ?? []).filter(part => !part.thought).map(part => part.text ?? '').join('');
 };
 
-// Ollama first, Gemini when it fails and a key is given. An answer of Ollama that is no JSON is no
-// failure of Ollama: the caller asks again. A call naming its own model never goes to Gemini, which
-// would answer with gemma: it fails instead, and its caller keeps what it has without it
-const ask = async (messages, usage, think, model, timeoutMs) => {
+// The model a call naming its own one (deepseek-v4-pro, see ai-ways.js and card-analysis.js) goes to when that one fails: a model the
+// free usage of Ollama covers (8.11.2026: "Free usage covers beam, gemma4:31b, gpt-oss:120b, gpt-oss:20b, nemotron-3-nano:30b..., upgrade to
+// use any cloud model"), the biggest of them. Never Gemini, which would answer with gemma
+export const FALLBACK_MODEL = process.env.OLLAMA_FALLBACK_MODEL || 'gpt-oss:120b';
+// 401, 402, 403, 404: the key, the plan, a model that is not there; 429: the quota. A model refused so is left aside for this long
+// (its fallback asked at once), then asked again; the other failures (5xx, network, no answer) are not remembered
+const PLAN_REFUSALS = [401, 402, 403, 404, 429];
+const modelPausedUntil = new Map();
+
+// {content, model}: Ollama first, Gemini when it fails and a key is given. An answer of Ollama that is no JSON is no
+// failure of Ollama: the caller asks again. A call naming its own model never goes to Gemini, which would answer with gemma: it goes
+// to 'fallback' (FALLBACK_MODEL unless the call says another, null for none, once) and fails if that fails too, and its caller keeps
+// what it has without it
+const ask = async (messages, usage, think, model, timeoutMs, fallback = FALLBACK_MODEL) => {
     const gemini = Boolean(process.env.AISTUDIO_API_KEY) && !model;
-    if (gemini && Date.now() < ollamaPausedUntil) return askGemini(messages, usage, think);
+    if (gemini && Date.now() < ollamaPausedUntil) return {content: await askGemini(messages, usage, think), model: GEMINI_MODEL};
+    const fallsBack = Boolean(model && fallback && fallback !== model);
+    if (fallsBack && Date.now() < (modelPausedUntil.get(model) ?? 0)) return ask(messages, usage, think, fallback, timeoutMs, null);
     for (let attempt = 0; ; attempt++) {
         try {
-            return await inTurn(() => askOllama(messages, usage, think, model, timeoutMs));
+            return {content: await inTurn(() => askOllama(messages, usage, think, model, timeoutMs)), model: model ?? MODEL};
         } catch (err) {
             if (isBusy(err)) aiStats.busy++;
             const waits = model ? OWN_MODEL_WAITS_MS : BUSY_WAITS_MS;
@@ -149,13 +161,19 @@ const ask = async (messages, usage, think, model, timeoutMs) => {
                 await new Promise(resolve => setTimeout(resolve, waits[attempt]));
                 continue;
             }
+            if (fallsBack) {
+                if (PLAN_REFUSALS.includes(err.status_code) && !isBusy(err)) modelPausedUntil.set(model, Date.now() + OLLAMA_PAUSE_MS);
+                aiStats.fallback++;
+                console.error(`AI: ${model} failed (${err.status_code ?? ''} ${err.message}), ${fallback} asked`);
+                return ask(messages, usage, think, fallback, timeoutMs, null);
+            }
             if (!gemini) throw err;
             // 401, 403: the key, 429: the quota. Else a call that failed alone (5xx, network), or
             // Ollama still busy
             if ([401, 403, 429].includes(err.status_code) && !isBusy(err)) ollamaPausedUntil = Date.now() + OLLAMA_PAUSE_MS;
             aiStats.gemini++;
             console.error(`AI: Ollama failed (${err.status_code ?? ''} ${err.message}), Gemini asked`);
-            return askGemini(messages, usage, think);
+            return {content: await askGemini(messages, usage, think), model: GEMINI_MODEL};
         }
     }
 };
@@ -164,10 +182,13 @@ const ask = async (messages, usage, think, model, timeoutMs) => {
 // profile, the stories of a briefing). format: 'json' is asked, but the model sometimes still wraps
 // its answer in a markdown json block, so that is removed before reading it. A conversation can be
 // given for the prompt, to ask again after an answer. model: another model of Ollama for this call
-// (see ai-ways.js), never answered by Gemini; timeoutMs: a call that reasons for minutes (see
-// card-analysis.js), OLLAMA_TIMEOUT_MS else
-export const ollamaJson = async (prompt, usage = null, {think, model, timeoutMs} = {}) => {
-    const content = await ask(Array.isArray(prompt) ? prompt : [{role: 'user', content: prompt}], usage, think, model, timeoutMs);
+// (see ai-ways.js), never answered by Gemini but by 'fallback' when it fails (see ask); timeoutMs: a call that reasons for minutes (see
+// card-analysis.js), OLLAMA_TIMEOUT_MS else; onModel(model): told the model that answered, for the cards that say who wrote them; the
+// models that answered a call with its own model are also added to usage.models
+export const ollamaJson = async (prompt, usage = null, {think, model, timeoutMs, fallback, onModel} = {}) => {
+    const {content, model: answeredBy} = await ask(Array.isArray(prompt) ? prompt : [{role: 'user', content: prompt}], usage, think, model, timeoutMs, fallback);
+    if (model && usage && !(usage.models ?? []).includes(answeredBy)) usage.models = [...(usage.models ?? []), answeredBy];
+    onModel?.(answeredBy);
 
     const raw = content.replace(/^\s*```(?:json)?\s*|\s*```\s*$/g, '');
     try {

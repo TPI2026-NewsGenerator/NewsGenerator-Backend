@@ -94,7 +94,9 @@ export const aiWaysOf = async (title, page, {language = 'en', usage = null} = {}
     const reader = writtenIn(language);
     if (sentences.length === 0 || !reader) return null;
     const source = new Set(figuresIn(`${title} ${sentences.map(sentence => sentence.text).join(' ')}`));
-    const ask = (prompt) => ollamaJson(prompt, usage, {model: WRITE_MODEL, think: false}).catch(err => {
+    // the model(s) that answered: deepseek-v4-pro, gpt-oss:120b when it failed (see FALLBACK_MODEL of ollama.js): the card says who wrote it
+    const writers = new Set();
+    const ask = (prompt) => ollamaJson(prompt, usage, {model: WRITE_MODEL, think: false, onModel: model => writers.add(model)}).catch(err => {
         console.error(`AI version: ${WRITE_MODEL} did not answer (${err.message})`);
         return null;
     });
@@ -126,5 +128,5 @@ ${figuresAgain(texts, source)}`;
         console.log(`AI version: a text of "${title.slice(0, 60)}" left out, a figure the article does not give`);
     }
     const ways = {points: points.texts.length > 0 ? points.texts : null, summary: summary.texts[0] ?? null};
-    return ways.points || ways.summary ? {...ways, model: WRITE_MODEL} : null;
+    return ways.points || ways.summary ? {...ways, model: [...writers].join(' + ') || WRITE_MODEL} : null;
 };

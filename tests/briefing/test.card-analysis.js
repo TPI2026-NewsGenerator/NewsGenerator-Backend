@@ -4,7 +4,7 @@
 //  File: test.card-analysis.js
 //  Description: The analysis of the cards that merit one: the cards picked without reasoning, each written with
 //               reasoning from its own sources, a line kept only when its cited sources give its figures and
-//               names, shown without ids nor "If"/"then", no other model when deepseek fails
+//               names, shown without ids nor "If"/"then", gpt-oss:120b when deepseek fails
 //
 
 import process from 'node:process';
@@ -19,6 +19,8 @@ jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 process.env.NER_URL = '';
 delete process.env.AISTUDIO_API_KEY;
 const {ANALYSIS_MODEL, analysesOf, capitalWordsOfCard, checkedLines, cleanNext, fittedArticles, lowerFirst, pickedCards, repeatsCard, withCleanNext} = await import('../../services/utils/card-analysis.js');
+
+const {newUsage} = await import('../../services/utils/ollama.js');
 
 const card = (n, storyId, extra = {}) => ({
     n, storyId, title: `Card ${n}`, titleTranslation: null, medium: 'rts.ch', summary: 'The FIFA Council will vote on 18 March in Rabat.',
@@ -258,7 +260,7 @@ describe('the analyses of a briefing', () => {
         expect(picked.map(entry => entry.n)).toEqual([9, 3, 1, 8, 2, 7, 5, 4]);
     });
 
-    it('should give a card no analysis when deepseek fails on it, no other model asked', async () => {
+    it('should give a card no analysis when deepseek and the model that takes its place both fail, Gemini never asked', async () => {
         chat.mockImplementation(async ({messages}) => {
             if (messages[0].content.startsWith('You choose which cards')) return answer({cards: [{n: 1}]});
             throw Object.assign(new Error('down'), {status_code: 503});
@@ -267,7 +269,22 @@ describe('the analyses of a briefing', () => {
         const result = await analysesOf([card(1, 11)], 'en');
 
         expect(result).toEqual({picked: [{storyId: 11, reason: null}], cards: {}});
-        expect(chat.mock.calls.every(([request]) => request.model === ANALYSIS_MODEL)).toBe(true);
+        // deepseek, then gpt-oss:120b for each call (8.11.2026), no other model
+        expect(new Set(chat.mock.calls.map(([request]) => request.model))).toEqual(new Set([ANALYSIS_MODEL, 'gpt-oss:120b']));
+    });
+
+    it('should write the analysis with gpt-oss:120b when deepseek fails on it, and say so in the usage', async () => {
+        chat.mockImplementation(async ({model, messages}) => {
+            if (messages[0].content.startsWith('You choose which cards')) return answer({cards: [{n: 1}]});
+            if (model === ANALYSIS_MODEL) throw Object.assign(new Error('down'), {status_code: 500});
+            return answer({why: [{text: 'UEFA says the plan of Infantino lacks support.', cites: ['A2 s1']}], next: []});
+        });
+        const usage = newUsage();
+
+        const result = await analysesOf([card(1, 11)], 'en', {usage});
+
+        expect(Object.keys(result.cards)).toEqual(['11']);
+        expect(usage.models).toContain('gpt-oss:120b');
     });
 
     it('should say each card done, written or not, so a long analysis is not taken for one abandoned', async () => {

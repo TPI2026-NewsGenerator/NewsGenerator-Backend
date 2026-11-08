@@ -1296,7 +1296,8 @@ export const cardAnalyses = async (items, articles, language, {usage = null, onP
         angles: item.angles ?? [], contested: item.contested ?? [], official: item.official ?? [],
     }));
     const {picked, cards: written} = cards.length === 0 ? {picked: [], cards: {}} : await analysesOf(cards, language, {usage, onPicked, onCard});
-    return {status: 'ready', model: ANALYSIS_MODEL, picked, dropped: Object.values(written).reduce((n, lines) => n + lines.dropped, 0),
+    // the model(s) that wrote it: gpt-oss:120b when deepseek failed (see FALLBACK_MODEL of ollama.js)
+    return {status: 'ready', model: usage?.models?.join(' + ') || ANALYSIS_MODEL, picked, dropped: Object.values(written).reduce((n, lines) => n + lines.dropped, 0),
         cards: Object.fromEntries(Object.entries(written).map(([storyId, lines]) =>
             [storyId, {why: lines.why, next: lines.next, timeline: timelines.get(Number(storyId))?.items ?? []}]))};
 };

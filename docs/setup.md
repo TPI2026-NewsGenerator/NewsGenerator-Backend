@@ -20,7 +20,7 @@ Every tool, its exact version and where it is used: [`tools.md`](tools.md) (chec
     when Ollama fails or does not answer within 120 s (`AISTUDIO_API_KEY`, see [Ollama](#ollama))
   - deepseek-v4-pro:0813 for the two texts the AI writes itself, the AI version of a card
     (`OLLAMA_WRITE_MODEL`) and the analysis of the cards (`OLLAMA_ANALYSIS_MODEL`): fewer meaning errors
-    and clearer than gemma4:31b where it was measured, at about 11 times its cost; no Gemini after it
+    and clearer than gemma4:31b where it was measured, at about 11 times its cost; gpt-oss:120b after it when it fails, never Gemini
 - **Names of the news:** [GLiNER](https://github.com/urchade/GLiNER) multi v2.1, a Python process of its
   own (`ner/`, see [Tagger](#tagger)), and [Wikidata](https://www.wikidata.org) for the items followed
 - **E-mail:** [Nodemailer](https://nodemailer.com/) through an SMTP account (`services/utils/mailer.js`)
@@ -85,7 +85,9 @@ once), and its JSON mode answers an error 500 for this model. The free tier lets
 6 and refuses the next ones at once (`bench/ollama-concurrency.mjs`, 14.10.2026), which lost the angles
 of a card. A call is given up after 120 s and asked of Gemini; Ollama answering "too many concurrent
 requests" is asked again after 2, 5 and 10 s. A call of deepseek-v4-pro waits longer (20 and 30 s more)
-and never goes to Gemini: failing only gives up what it was for.
+and never goes to Gemini: when it fails it goes to gpt-oss:120b (`OLLAMA_FALLBACK_MODEL`, since 8.11.2026, the biggest model the
+free usage of Ollama covers); a model the plan refuses (401, 402, 403, 404, 429) is left aside for 15 minutes, its fallback asked
+at once. Failing at both only gives up what it was for.
 
 ### Embedder
 

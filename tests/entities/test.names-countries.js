@@ -51,11 +51,17 @@ describe('namesAndCountriesOfCards, the country the words of a name say', () => 
         expect(await countriesOf([row('Paris Saint-Germain', 'organization', 'Q1', 3), row('Guinean Football Federation', 'organization', null, 2)], {Q1: psg})).toEqual(['FR']);
     });
 
-    it('should leave a card whose candidates are a person of an international body to its other evidence, never to the words of a name', async () => {
-        // the president of UEFA is Slovenian, UEFA's body: the country is a candidate (kept for the AI to refuse), not a lack of one
+    it('should not give a card the country of a person of an international body it names: a card of the UEFA and its president has none', async () => {
+        // the president of UEFA is Slovenian, UEFA's body: the rules do not give Slovenia, nor is it offered to the AI (8.11.2026)
+        const person = {country: 'SI', international: false, bodies: ['Q35572'], media: false};
+        expect(await countriesOf([row('UEFA', 'organization', 'Q35572'), row('Aleksander Čeferin', 'person', 'Q26819142')], {Q35572: UEFA, Q26819142: person})).toEqual([]);
+    });
+
+    it('should then give such a card the country of the words of a name it has: the Irish FA meeting the president of the UEFA', async () => {
+        // measured on 590 cards: the Irish FA was the only disagreement of the adjectives, and the right one (the card had Switzerland)
         const person = {country: 'SI', international: false, bodies: ['Q35572'], media: false};
         expect(await countriesOf([row('UEFA', 'organization', 'Q35572'), row('Aleksander Čeferin', 'person', 'Q26819142'), row('Irish FA', 'organization', null)],
-            {Q35572: UEFA, Q26819142: person})).toEqual([]);
+            {Q35572: UEFA, Q26819142: person})).toEqual(['IE']);
     });
 
     it('should not read a person, a place or a club of a short name for a country', async () => {

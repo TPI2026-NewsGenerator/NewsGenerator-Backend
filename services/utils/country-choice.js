@@ -23,7 +23,10 @@ const TITLES = 3;
 
 // The candidate countries of a card: items [{qid, weight, person}] (who and where it names), of: Map qid -> {country,
 // international, bodies, media} (see readCountries), labels: Map qid -> the name as the card writes it. Answers
-// [{code, weight, via: [{name, person, media, international, ofBody}]}], the heaviest first
+// [{code, weight, via: [{name, person, media, international}]}], the heaviest first. The people of an international body the card names
+// are not offered: they are not of their country (see cardCountries of countries.js, measured on 19.10.2026: 79 right of 84), and the
+// AI kept the country of the president of the UEFA, as the subject of the title the prompt tells to keep, in 2 runs of 5 on a conflict of
+// the UEFA with the FIFA (8.11.2026) when none of the 67 such candidates of the last 60 briefings had been kept
 export const countryCandidates = (items, of, labels = new Map()) => {
     const weights = new Map();
     for (const {qid, weight, person} of items) {
@@ -33,19 +36,18 @@ export const countryCandidates = (items, of, labels = new Map()) => {
     const byCode = new Map();
     for (const [qid, {weight, person}] of weights) {
         const info = of.get(qid);
-        if (!info?.country) continue;
+        if (!info?.country || (person && (info.bodies ?? []).some(body => international.has(body)))) continue;
         const entry = byCode.get(info.country) ?? {code: info.country, weight: 0, via: []};
         entry.weight += weight;
-        entry.via.push({name: labels.get(qid) ?? qid, person, media: Boolean(info.media), international: Boolean(info.international),
-            ofBody: person && (info.bodies ?? []).some(body => international.has(body))});
+        entry.via.push({name: labels.get(qid) ?? qid, person, media: Boolean(info.media), international: Boolean(info.international)});
         byCode.set(info.country, entry);
     }
     return [...byCode.values()].sort((a, b) => b.weight - a.weight).slice(0, MAX_CANDIDATES);
 };
 
-// what a candidate says of where it comes from: "Infantino (person of an international body)"
-const viaText = ({name, person, media, international, ofBody}) => {
-    const kind = media ? 'média' : international ? 'organisation internationale, son siège' : ofBody ? "personne d'un organisme international" : person ? 'personne' : null;
+// what a candidate says of where it comes from: "Burleanu (personne)"
+const viaText = ({name, person, media, international}) => {
+    const kind = media ? 'média' : international ? 'organisation internationale, son siège' : person ? 'personne' : null;
     return kind ? `${name} (${kind})` : name;
 };
 const candidateText = (candidate) => `${candidate.code} ${countryName(candidate.code, 'fr')}: ${candidate.via.slice(0, 3).map(viaText).join(', ')}`;

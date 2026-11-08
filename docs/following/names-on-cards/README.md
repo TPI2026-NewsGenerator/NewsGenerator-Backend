@@ -123,7 +123,10 @@ on the page ("Zambia", "United States · China") and next to its topic in the e-
   inclusion in FIFA governance review" Switzerland, a Greek referee's card France (the user, 03.11.2026: a wrong
   country looks unprofessional, none is better). `countryCandidates` (`country-choice.js`) gives, for each card, the
   countries Wikidata found for who and where it names, at most 6, each with what brought it ("L'Équipe (média)",
-  "UEFA (organisation internationale, son siège)", "Infantino (personne d'un organisme international)");
+  "UEFA (organisation internationale, son siège)"; the people of an international body the card names are not offered
+  since 8.11.2026, as the rules do not give them: the AI kept Slovenia, for the president of the UEFA the subject of the
+  title, in 2 runs of 5 on a conflict of the UEFA with the FIFA, and none of the 67 such candidates of the last 60 briefings
+  had been kept);
   `chooseCountries` asks the AI once for all the cards of the briefing which of them the news is about, from its
   titles and 350 characters of its sentences: the place it happens, its main actors' country, the country of the
   person or team that is the subject of the title; not the medium that tells it, the seat of a body, a person named in
