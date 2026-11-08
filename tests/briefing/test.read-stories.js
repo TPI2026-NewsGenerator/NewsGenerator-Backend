@@ -15,7 +15,7 @@ jest.unstable_mockModule('../../services/utils/contested.js', () => ({contestedO
 const aiWaysOf = jest.fn(async () => null);
 jest.unstable_mockModule('../../services/utils/ai-ways.js', () => ({aiWaysOf}));
 const glossariesOfStories = jest.fn(async () => new Map());
-jest.unstable_mockModule('../../services/utils/card-spellings.js', () => ({glossariesOfStories}));
+jest.unstable_mockModule('../../services/utils/card-spellings.js', () => ({glossariesOfStories, labelsOfItems: jest.fn(async () => new Map())}));
 const extract = await import('../../services/utils/extract.js');
 jest.unstable_mockModule('../../services/utils/extract.js', () => ({...extract, extractArticle: jest.fn()}));
 

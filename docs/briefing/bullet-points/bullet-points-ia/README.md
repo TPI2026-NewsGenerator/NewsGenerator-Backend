@@ -34,7 +34,7 @@ name and "it can get a fact wrong. The article's sentences above are the referen
 - The code takes each point's text (a plain string is accepted too), takes out the sentence numbers the AI still
   writes ("[13]", `unnumbered`), drops empty ones and keeps 4 at most (`MAX_POINTS`).
 - **Figures check** (`figuresFrom`): every figure of every point must be among the figures of the title and the
-  sentences (`figuresOf`). One point with another figure and all the points are left out (`points: null`, a line
+  sentences (`figureEntries`: a figure written with a unit, "2만" or "2 million", is its digits in full too). One point with another figure and all the points are left out (`points: null`, a line
   logged): the card keeps its published points.
 - **Asked again once** (`ATTEMPTS` = 2, 28.10.2026): the points and the summary are each asked a second time when
   the call failed (no JSON, a timeout, an error), gave nothing usable or failed the figures check. Before, 9 of 162

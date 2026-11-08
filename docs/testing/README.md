@@ -13,24 +13,25 @@ The rule of the project: **a problem reported on a card adds its case to the cor
 |---|---|---|---|
 | Offline | `tests/regression/corpus.json` run by `tests/regression/regression.test.js`: the logic with no AI, a test a case, named by it | every change, with the other tests (a few seconds) | `pnpm run regression` |
 | Live | the `live` cases of the same file asked of the real model by `bench/regression-run.mjs`: translations (dates, names, figures, languages), the language of a title with a wrong label, and rewrites of titles, checked by what they must hold, not by an exact text | before a deploy, or after a change of a prompt or of the model (about 1 minute, 16 000 tokens) | `pnpm run regression:live` |
-| Briefing | `scripts/briefing-audit.js <id>`: a briefing already written, checked against the same lessons, and its shares of cards with names, countries, angles, picture, AI version and its time, against the 3 before; and why the cards without a country have none (no name, names with no item, international bodies and their people, a country not read yet, a country the rules gave and the AI refused) | after a deploy, on the first briefing written | `pnpm run audit -- <id>` |
+| Briefing | `scripts/briefing-audit.js <id>` (or `<file.json> <profileId>` for a briefing never saved, as `bench/enzo-measure.mjs` writes it): a briefing already written, checked against the same lessons (the title, text, key points and digest of a card in another language translated, no sentence left in its language, how many are translated with a ⚠, a picture on every card...), and its shares of cards with names, countries, angles, picture, AI version and its time, against the 3 before; and why the cards without a country have none (no name, names with no item, international bodies and their people, a country not read yet, a country the rules gave and the AI refused) | after a deploy, on the first briefing written | `pnpm run audit -- <id>` |
 
 The offline layer needs no database nor key. The live runner saves its scorecard in `bench/data/regression/` (not kept in
 git, like the other benches) and says what held before and fails now, and the reverse. The audit writes nothing.
 
 ## What the corpus holds
 
-114 offline cases and 19 live ones, in families, most of them taken from the briefings of 6.11.2026:
+146 offline cases and 19 live ones, in families, most of them taken from the briefings of 6.11.2026:
 
 | Family | Asks of | Cases came from |
 |---|---|---|
 | `language` | `titleLanguage`: the language of a title from its letters and its label | angle badges read Norwegian, Galician, Catalan for German, Portuguese, Spanish; Polish read Catalan, Czech Slovenian, Slovak Bosnian; Serbian read Slovenian, Slovenian read Bosnian; the scripts |
-| `figures` | `keepsFigures`: a translation keeps every figure | Vietnamese dates 5/11, 20/2 to 20/6, times, rounds, thousands, a figure lost or changed |
+| `figures` | `keepsFigures`: a translation keeps every figure | Vietnamese dates 5/11, 20/2 to 20/6, times, rounds, thousands, a figure lost or changed, the units of number (Korean 만 억 천, Japanese and Chinese 万, "2 million" and "2 000 000") |
 | `dateline` | `splitSentences`: the dateline of an article leaves its first sentence | "November 6 –", weekday, year, time, place, and what is no dateline (a score, a range, a timeline) |
 | `sentences` | `splitSentences`: where a text is cut | German ordinals ("am 5. November", "21. Spieltag", "90. Minute"), abbreviations, glued sentences |
 | `names` | `alignNames`: a translated name as Wikidata spells it | Lekjaâ, Modrić, Čeferin, a consonant dropped, a vowel that is another person |
 | `ifthen` | `withCleanNext`: the small letter after "If" and "then" | Talks, A change, The CTA, Kozo Tashima, FIFA, German nouns, French |
 | `romanized` | `withSurnamesLinked`: a person in Greek or Cyrillic letters linked to the person whose family name has the same Latin letters | "Τζιάνι Ινφαντίνο" (Wikidata: "Τζάνι"), Μέσι (one s), ντ as d or nt, Мбаппе, a Gerd among two Müllers, and what is left alone (another given name, two persons as met, a person met twice, an organisation) |
+| `chips` | `tidyNames`: the names a card shows | `KFA는`, `FIFA-e`, `Arsenala`, `Bayerns` and what is not a form of a name (Sportal, Marcas, Villarreal-PSG, a person), `KFA` an alias in Korean, "Ceferin" and "Čeferin" |
 | `following` | `searchNamesFor`: the names a person is followed by | Velasco (common), Čeferin and Rosetti (their own), García, the words the reader added |
 | `neutral` | `checkRewrite`, `neutralTitle`: the checks of a neutral title | the FA case (name lost), exclamation, figure, negation, question, quotation, a good rewrite, a teaser taken out |
 

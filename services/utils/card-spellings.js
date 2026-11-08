@@ -30,6 +30,25 @@ const spelledOf = (qid) => {
     return label && LATIN_LABEL.test(label) ? label : null;
 };
 
+// the labels of these items not known yet, asked of Wikidata 50 at a time, in the background
+const readLabels = async (qids) => {
+    const missing = [...new Set(qids)].filter(qid => labels.get(qid) === undefined);
+    for (let i = 0; i < missing.length; i += 50) {
+        const asked = missing.slice(i, i + 50);
+        const found = new Map((await describeItems(asked, {background: true, batch: 50})).map(item => [item.qid, item.label]));
+        // a label that is the id itself: Wikidata has none in English
+        for (const qid of asked) labels.set(qid, found.has(qid) && found.get(qid) !== qid ? found.get(qid) : '');
+    }
+};
+
+// Map qid -> label of these items, the ones Wikidata spells in the Latin alphabet: what the translation of a card spells their names
+// with, and what the names a card shows are spelled with too (the chip said "Ceferin" and the text "Čeferin", 8.11.2026). Throws when
+// Wikidata or the database does not answer
+export const labelsOfItems = async (qids) => {
+    await readLabels(qids);
+    return new Map([...new Set(qids)].map(qid => [qid, spelledOf(qid)]).filter(([, label]) => label));
+};
+
 // Map storyId -> {glossary, names}: of the news of these stories, the names that are an item of Wikidata.
 // glossary [{written, spelled}]: the ones not written as it spells them ("Φραπάρ" is "Stéphanie Frappart"),
 // each item once, the most met first; names: the labels of all of them, the ones another medium of the card,
@@ -41,13 +60,7 @@ export const glossariesOfStories = async (stories) => {
     const glossaries = new Map();
     try {
         const rows = await MentionModel.linkedNamesOf(stories.flatMap(story => story.members.map(article => article.id)), MAX_NAMES);
-        const missing = [...new Set(rows.map(row => row.qid))].filter(qid => labels.get(qid) === undefined);
-        for (let i = 0; i < missing.length; i += 50) {
-            const asked = missing.slice(i, i + 50);
-            const found = new Map((await describeItems(asked, {background: true, batch: 50})).map(item => [item.qid, item.label]));
-            // a label that is the id itself: Wikidata has none in English
-            for (const qid of asked) labels.set(qid, found.has(qid) && found.get(qid) !== qid ? found.get(qid) : '');
-        }
+        await readLabels(rows.map(row => row.qid));
         for (const story of stories) {
             const ids = new Set(story.members.map(article => article.id));
             // each item with the news of the card naming it, and the writings of it

@@ -24,7 +24,7 @@ const ASK = {
     translate: async ({input}, usage) => {
         if (input.sentences) {
             const done = await translatePassages([input.sentences.map(text => ({text, quote: false}))], input.from, input.to, usage, {names: input.names ?? []});
-            // a sentence left in its language between parentheses is marked: the translation did not hold
+            // a sentence left in its language between parentheses, or translated with a warning, is marked: the translation did not hold
             return done === null || done.flat().some(sentence => sentence.text.includes(ORIGINAL_START)) ? {output: null} : {output: done.flat().map(sentence => sentence.text).join(' ')};
         }
         const done = await translateTexts(input.texts.map(text => ({text, from: input.from, names: input.names ?? [], glossary: []})), input.to, usage);

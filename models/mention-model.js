@@ -146,6 +146,15 @@ export const MentionModel = {
         GROUP BY w.word, m.qid
         ORDER BY w.word, seen DESC`, words),
 
+    // [{form, stem, name, qid, kind, stemSeen, formSeen}]: for each pair of keys [form, stem] ("arsenala", "arsenal"), the organisation
+    // linked to an item that the stem is, and how often each was met: the declined forms of a name are names of their own for the
+    // tagger, never linked (see tidyNames of card-names.js)
+    inflectedForms: async (pairs) => pairs.length === 0 ? [] : prisma.$queryRawUnsafe(`
+        SELECT p.form, p.stem, s.name, s.qid, s.kind, s.seen AS "stemSeen", f.seen AS "formSeen"
+        FROM unnest($1::text[], $2::text[]) AS p(form, stem)
+        JOIN mentions s ON s.key = p.stem AND s.kind = 'organization' AND s.qid IS NOT NULL
+        JOIN mentions f ON f.key = p.form AND f.kind = 'organization'`, pairs.map(pair => pair[0]), pairs.map(pair => pair[1])),
+
     // [{word, qid, seen, keys}]: for each of these family names, with their doubled letters as one ("mesi", see collapsed of
     // romanize.js), the persons linked to an item named in full whose family name is it so ("lionel messi"), each item once with how
     // often its writings were met, the most met first, and its writings (8 at most, the most met first: their given names are told

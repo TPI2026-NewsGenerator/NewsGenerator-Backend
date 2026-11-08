@@ -185,10 +185,45 @@ describe('translatePassages', () => {
 
         expect(await translatePassages(three, 'English', 'French')).toEqual([
             [s('Le VAR arrive en 1/8 de finale.'), s('(“He was fined $10,000.”)')], [s('Cela finit dimanche.')]]);
-        // in a briefing the sentence is marked, to be shown in italics
+        // in a briefing it is the translation that is shown, marked to be in italics, with a warning (see below)
         expect((await translatePassages(three, 'English', 'French', null, {marked: true}))[0][1])
-            .toEqual(s(`${ORIGINAL_START}(“He was fined $10,000.”)${ORIGINAL_END}`));
+            .toEqual(s(`${ORIGINAL_START}“Il a reçu une amende.” ⚠${ORIGINAL_END}`));
         expect(withoutOriginalMarks(`a ${ORIGINAL_START}(b)${ORIGINAL_END} c`)).toBe('a (b) c');
+    });
+
+    it('should show in a briefing the translation of a sentence whose figures it could not check, in italics with a warning (8.11.2026)', async () => {
+        // the second sentence never gets its figure back: the AI wrote "Il a reçu une amende." three times
+        const unchecked = () => chat.mockReset().mockImplementation(async ({messages}) => json({translations: messages.at(-1).content.includes('[3]')
+            ? ['Le VAR arrive en 1/8 de finale.', 'Il a reçu une amende.', 'Cela finit dimanche.'] : ['Il a reçu une amende.']}));
+        unchecked();
+
+        const marked = await translatePassages(three, 'English', 'French', null, {marked: true});
+
+        // its quotation marks stay around its words, the warning after them, all of it in italics
+        expect(marked[0][1]).toEqual(s(`${ORIGINAL_START}“Il a reçu une amende.” ⚠${ORIGINAL_END}`));
+        expect(marked[0][0]).toEqual(s('Le VAR arrive en 1/8 de finale.'));
+        expect(withoutOriginalMarks(marked[0][1].text)).toBe('“Il a reçu une amende.” ⚠');
+        // a page that cannot show a warning (the search) keeps the sentence in its own language, between parentheses
+        unchecked();
+        expect((await translatePassages(three, 'English', 'French'))[0][1]).toEqual(s('(“He was fined $10,000.”)'));
+    });
+
+    it('should leave in its own language a sentence the AI did not translate at all, even in a briefing', async () => {
+        // the second sentence comes back empty every time
+        chat.mockReset().mockImplementation(async ({messages}) => json({translations: messages.at(-1).content.includes('[3]')
+            ? ['Le VAR arrive en 1/8 de finale.', '', 'Cela finit dimanche.'] : ['']}));
+
+        const marked = await translatePassages(three, 'English', 'French', null, {marked: true});
+
+        expect(marked[0][1]).toEqual(s(`${ORIGINAL_START}(“He was fined $10,000.”)${ORIGINAL_END}`));
+    });
+
+    it('should show a translation whose figures it could not check even when most of the sentences are so, in a briefing only', async () => {
+        // every sentence loses a figure: the translation is shown with a warning each in a briefing, none anywhere else
+        chat.mockReset().mockResolvedValue(json({translations: ['Le VAR arrive.', 'Il a reçu une amende.', 'Cela finit.']}));
+        const marked = await translatePassages(three, 'English', 'French', null, {marked: true});
+        expect(marked.flat().map(sentence => withoutOriginalMarks(sentence.text))).toEqual(['Le VAR arrive. ⚠', '“Il a reçu une amende.” ⚠', 'Cela finit.']);
+        expect(await translatePassages(three, 'English', 'French')).toBeNull();
     });
 
     it('should give no translation when it could not translate half of the sentences', async () => {

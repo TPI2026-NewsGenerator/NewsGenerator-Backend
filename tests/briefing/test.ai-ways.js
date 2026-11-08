@@ -116,6 +116,21 @@ describe('the AI version of a card', () => {
         expect(chat).toHaveBeenCalledTimes(2);
     });
 
+    it('should take the figure of a Korean unit written in digits, as the translation does (8.11.2026: 2만 is 20,000)', async () => {
+        const korean = {content: '', blocks: [
+            {kind: 'text', text: 'KFA는 선거인단을 2만으로 대폭 확대해 12월 18일 회장 선거를 치를 계획이었다.'},
+            {kind: 'text', text: '계약 규모는 1억 원이다.'},
+        ]};
+        answering({points: {points: [{text: 'The electoral college grows to 20,000.'}, {text: 'The contract is worth 100 million won.'}]},
+            summary: {summary: 'The KFA planned the election for December 18 with 20,000 voters.'}});
+
+        const ways = await aiWaysOf('KFA', korean, {language: 'en'});
+
+        expect(ways.points).toHaveLength(2);
+        expect(ways.summary).toContain('20,000');
+        expect(chat).toHaveBeenCalledTimes(2);
+    });
+
     it('should give nothing when its model fails, Gemini never asked for it', async () => {
         chat.mockRejectedValue(Object.assign(new Error('down'), {status_code: 503}));
 

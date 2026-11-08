@@ -41,8 +41,14 @@ reader's, a machine translation is shown, marked as such, with the original one 
   (`services/utils/language.js`), the language of the page as fallback. When it is not the reader's, the
   sentences are translated one by one in one call (`translatePassages`); the answer is refused when it does
   not give one translation per sentence or when a translation loses a figure (`keepsFigures`: "1,000" and
-  "1 000", "7 p.m." and "19h00" are the same figure). Asked twice at most, then no translation: the reader gets
-  the original only.
+  "1 000", "7 p.m." and "19h00" are the same figure; since 8.11.2026 a unit of number is read too: the Korean, Chinese and
+  Japanese "2만" / "2万" is 20,000, "1억" 100 million, "12만 5천" 125,000, and "2 million" and "2 000 000" are one, see
+  `figureEntries`: a Korean sentence with "2만" was refused for a figure lost and left in Korean). Asked three times at most.
+  A sentence the AI translated but whose figures the check could not match is **shown translated, in italics, with a ⚠**
+  after it in a briefing (`UNCHECKED` of `original-marks.js`, since 8.11.2026, the user: a sentence should always be
+  translated; the card says what ⚠ means); a page that cannot warn (the search) leaves it in its language between
+  parentheses, in italics in a briefing, as before, and so does a sentence the AI did not translate at all. No translation
+  (the reader gets the original only) when the AI does not answer one per sentence, or for half of the sentences that have none.
 - No passage at all (a page with no text of its own): the card is unreadable and the next story of the reserve
   takes its place (`readableCards`, `services/utils/readable-cards.js`, 2 more rounds at most). A card whose
   article was read but whose passages the AI failed to choose is kept with `summaryError`.

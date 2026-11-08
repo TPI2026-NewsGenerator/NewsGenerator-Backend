@@ -10,8 +10,11 @@
 "use strict"
 
 import {MentionModel} from '../../models/mention-model.js';
-import {mentionKey} from './mentions.js';
+import {mentionKey, withoutParticle} from './mentions.js';
 import {collapsed, romanizations, sameGivenName} from './romanize.js';
+import {labelsOfItems} from './card-spellings.js';
+import {alignNames} from './spellings.js';
+import {nameKeysOf} from './wikidata.js';
 import {cardCountries, countriesOfItems} from './countries.js';
 import {chooseCountries, countryCandidates} from './country-choice.js';
 import {countryName, countryNamed} from './country-names.js';
@@ -191,6 +194,80 @@ export const withSurnamesLinked = (names, rows, loose = []) => {
     });
 };
 
+// The names of a card once tidied (the unsaved briefing of Enzo of 8.11.2026 showed "KFA는", "FIFA-e", "Arsenala" and "Ceferin" under a
+// text that said "Čeferin"): a particle of Korean or Japanese glued to a name is taken off ("KFA는" is the "KFA", see
+// withoutParticle), a declined form of an organisation linked is that organisation, and a name linked is spelled as Wikidata spells it
+// when the letters are the same (accents aside), as the translation of the card is
+//
+// A name that two writings of it make twice is one, the one linked first: the position of the first kept
+const once = (names) => {
+    const kept = [];
+    for (const name of names) {
+        const key = mentionKey(name.name);
+        const at = kept.findIndex(other => name.qid && other.qid === name.qid || (!name.qid || !other.qid) && mentionKey(other.name) === key);
+        if (at < 0) kept.push(name);
+        else if (name.qid && !kept[at].qid) kept[at] = name;
+    }
+    return kept;
+};
+const unglued = (name) => {
+    const bare = withoutParticle(name.name);
+    return bare === name.name ? name : {...name, name: bare, ...('key' in name ? {key: mentionKey(bare)} : {})};
+};
+export const withParticlesOff = (names) => once(names.map(unglued));
+
+// The endings a name takes in the languages with cases (Czech, Croatian, Albanian, Hungarian, German...): "Arsenala", "Juventusu",
+// "Bayerns". An organisation unlinked that is one of them added to a name linked, a hundred times more met than it is, is that name.
+// A one-letter "s" only after a name of six letters at least ("Marcas" is no "Marca"), and no other ending that makes another
+// word ("Sportal" is no "Sport"). Measured on the 120 forms of the base met the most, 8.11.2026: 7 in 100 were another word
+// (Udinese, Indians, Americans, staten...), most of them with an ending left out here
+const ENDINGS = ['a', 'e', 'i', 'u', 'y', 'om', 'em', 'it', 'in', 'ën', 'ës', 'ja', 'ju', 'ov', 's'];
+const MIN_STEM = 4;
+const MIN_STEM_FOR_S = 6;
+const MIN_STEM_SEEN = 100;
+const STEM_AHEAD = 5;
+// a stem and a suffix of small letters joined by a hyphen ("FIFA-e", "SAD-u"), never two names ("Villarreal-PSG") nor a word ("Sud-est")
+const HYPHEN_FORM = /^(\p{Lu}[\p{L}\d]*)-(\p{Ll}{1,3})$/u;
+// [[form key, stem key]] the stems an unlinked organisation may be a declined form of: see MentionModel.inflectedForms
+export const stemsOf = (name) => {
+    if (name.qid || name.kind !== 'organization') return [];
+    const key = mentionKey(name.name);
+    const hyphen = HYPHEN_FORM.exec(name.name);
+    if (hyphen) return [[key, mentionKey(hyphen[1])]];
+    if (/[\s-]/.test(key)) return [];
+    return ENDINGS.filter(ending => key.endsWith(ending) && key.length - ending.length >= (ending === 's' ? MIN_STEM_FOR_S : MIN_STEM))
+        .map(ending => [key, key.slice(0, -ending.length)]);
+};
+// rows: [{form, stem, name, qid, stemSeen, formSeen}] (see MentionModel.inflectedForms)
+export const withInflectionsFolded = (names, rows) => once(names.map(name => {
+    const stems = new Set(stemsOf(name).map(([, stem]) => stem));
+    const key = mentionKey(name.name);
+    const [best] = rows.filter(row => row.form === key && stems.has(row.stem) && row.stemSeen >= MIN_STEM_SEEN && row.stemSeen >= STEM_AHEAD * row.formSeen)
+        .sort((a, b) => b.stemSeen - a.stemSeen);
+    return best ? {...name, name: best.name, qid: best.qid, ...('key' in name ? {key: mentionKey(best.name)} : {})} : name;
+}));
+// labels: Map qid -> the label of Wikidata in the Latin alphabet (see labelsOfItems)
+export const withWikidataSpelling = (names, labels) => names.map(name => {
+    const label = name.qid && labels.get(name.qid);
+    const spelled = label ? alignNames(name.name, [label]) : name.name;
+    return spelled === name.name ? name : {...name, name: spelled};
+});
+// An acronym the tagger could not link ("KFA": the search in English of Wikidata does not find it, the Korea Football Association has it
+// as an alias in Korean only) is the organisation linked that the articles of the card name, when that one alone is called so in
+// some language. orgs: the items of the organisations the articles of the card name; keys: Map qid -> [key] what each is called (see
+// nameKeysOf). An acronym of three letters at least: "FA" is the alias of too many
+const ACRONYM_NAME = /^[\p{Lu}][\p{Lu}\p{N}&]{2,6}$/u;
+export const isUnlinkedAcronym = (name) => !name.qid && name.kind === 'organization' && ACRONYM_NAME.test(name.name);
+export const withAcronymsLinked = (names, orgs, keys) => once(names.map(name => {
+    if (!isUnlinkedAcronym(name)) return name;
+    const key = mentionKey(name.name);
+    const called = [...new Set(orgs)].filter(qid => (keys.get(qid) ?? []).includes(key));
+    return called.length === 1 ? {...name, qid: called[0]} : name;
+}));
+// names: the names of each card; orgs: for each card, the items of the organisations its articles name
+export const tidyNames = (names, {stems = [], labels = new Map(), orgs = [], nameKeys = new Map()} = {}) =>
+    names.map((card, i) => withWikidataSpelling(withInflectionsFolded(withAcronymsLinked(withParticlesOff(card), orgs[i] ?? [], nameKeys), stems), labels));
+
 // {storyId -> [{name, qid, kind}]} of these cards: [{storyId, ids (of its articles), media}]. The names
 // shown that Wikidata was never asked for are asked for first (see MentionModel.want): one that is an
 // item opens its page, with its links, instead of the page of the name. A family name alone is the
@@ -210,6 +287,8 @@ const readNames = async (cards) => {
         const least = Math.max(1, Math.ceil(card.ids.length * SHARE_OF_CARD));
         const places = rows.filter(row => row.kind === 'location' && row.inCard >= least && !countryNamed(row.name));
         return {storyId: card.storyId, names: chosenNames(rows, card.ids.length, {media: card.media}),
+            // the organisations its articles name, however few (an acronym of the card may be an alias of one of them)
+            orgs: [...new Set(rows.filter(row => row.kind === 'organization' && row.qid).map(row => row.qid))],
             places: places.filter(row => row.qid),
             // the places never looked for in Wikidata, asked for first: "Carei", the town of a referee
             // named by 4 news, waited behind the most met names and its card had no country (19.10.2026)
@@ -228,7 +307,25 @@ const readNames = async (cards) => {
         console.error(`Names: the persons of names in other letters were not read (${err.message})`);
         return [];
     });
-    const linked = withSurnamesLinked(read.map(card => card.names), persons, loose);
+    const surnamed = withSurnamesLinked(read.map(card => card.names), persons, loose).map(withParticlesOff);
+    // the declined forms of the organisations linked, and how Wikidata spells the names linked (the database or Wikidata not answering
+    // leaves the names as they are)
+    const forms = [...new Map(surnamed.flatMap(names => names.flatMap(stemsOf)).map(pair => [pair.join(' '), pair])).values()];
+    const stems = await MentionModel.inflectedForms(forms).catch(err => {
+        console.error(`Names: the declined forms were not read (${err.message})`);
+        return [];
+    });
+    const labels = await labelsOfItems([...surnamed.flatMap(names => names.map(name => name.qid)), ...stems.map(row => row.qid)].filter(Boolean)).catch(err => {
+        console.error(`Names: the spellings of Wikidata were not read (${err.message})`);
+        return new Map();
+    });
+    const orgs = read.map(card => card.orgs);
+    const acronymOrgs = [...new Set(surnamed.flatMap((names, i) => names.some(isUnlinkedAcronym) ? orgs[i] : []))];
+    const nameKeys = acronymOrgs.length === 0 ? new Map() : await nameKeysOf(acronymOrgs).catch(err => {
+        console.error(`Names: what the organisations of the cards are called was not read (${err.message})`);
+        return new Map();
+    });
+    const linked = tidyNames(surnamed, {stems, labels, orgs, nameKeys});
     const ids = [...linked.flatMap(names => names.filter(name => !name.qid && name.id).map(name => name.id)),
         ...read.flatMap(card => card.toLink)];
     if (ids.length > 0) await MentionModel.want({ids}).catch(err => console.error(`Names: not asked first in Wikidata (${err.message})`));

@@ -10,7 +10,7 @@
 "use strict"
 
 import process from 'node:process';
-import {figuresIn, figuresOf, sentencesOf} from './extract.js';
+import {figureEntries, figuresIn, sentencesOf} from './extract.js';
 import {writtenIn} from './language.js';
 import {ollamaJson} from './ollama.js';
 
@@ -76,11 +76,12 @@ Answer only in JSON: {"summary": "...", "sentences": [numbers]}`;
 // the numbers of sentences the AI still writes in its text, about 1 answer in 30: "... 580 000 unités [13]."
 const unnumbered = (text) => text.replace(/\s*\[\d+(?:\s*[,-]\s*\d+)*\]/g, '').replace(/\s+/g, ' ').trim();
 // a text of the AI keeps no figure the article does not give, checked rather than trusted
-const figuresFrom = (text, source) => figuresOf(text).every(figure => source.has(figure));
+// (a figure may be written several ways, "2 million" and "2000000": one of them is enough, see figureEntries)
+const figuresFrom = (text, source) => figureEntries(text).every(ways => ways.some(figure => source.has(figure)));
 // said to the AI after an answer with figures the article does not give: most of them are a number the
 // article writes in words, or a round of a cup, turned into digits (30.10.2026: 10 cards of 46)
 const figuresAgain = (texts, source) => {
-    const foreign = [...new Set(texts.flatMap(text => figuresOf(text).filter(figure => !source.has(figure))))];
+    const foreign = [...new Set(texts.flatMap(text => figureEntries(text).filter(ways => !ways.some(figure => source.has(figure))).map(ways => ways[0])))];
     return `Your previous answer has figures the article does not give: ${foreign.join(', ')}. Answer again: write each figure exactly as the article does (a number it spells out in words stays in words, a round of a cup keeps the article's wording) and calculate none.`;
 };
 

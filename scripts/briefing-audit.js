@@ -10,27 +10,36 @@
 //               same profile, and why the cards without a country have none. Writes nothing. After a deploy, on the first briefing written
 //
 //  node scripts/briefing-audit.js <briefingId>     (exit code 1 when a check fails)
+//  node scripts/briefing-audit.js <file.json> <profileId>     a briefing never saved (see bench/enzo-measure.mjs), its analysis and time aside
 //
 
 import 'dotenv/config';
 import process from 'node:process';
+import {readFileSync} from 'node:fs';
 import {prisma} from '../config/db.js';
 import {ProfileModel} from '../models/profile-model.js';
 import {MentionModel} from '../models/mention-model.js';
 import {NO_COUNTRY_BECAUSE, countryInfoOf, whyNoCountry} from '../services/utils/countries.js';
 import {lacksCapital, lowerFirst, capitalWordsOfCard} from '../services/utils/card-analysis.js';
 import {withoutDateline} from '../services/utils/extract.js';
+import {ORIGINAL_START, UNCHECKED} from '../services/utils/original-marks.js';
 import {readerLanguage, titleLanguage, writtenIn} from '../services/utils/language.js';
 
-const id = Number(process.argv[2]);
-if (!Number.isInteger(id)) {
-    console.error('node scripts/briefing-audit.js <briefingId>');
+// a briefing of the database by its id, or one never saved by its file (the cards as write() answers them, bench/enzo-measure.mjs saves
+// them in bench/data/enzo-measure-<profile>-<n>-raw.json) and the profile it was written for
+const [source, profileOfFile] = process.argv.slice(2);
+const ofFile = Boolean(source) && !/^\d+$/.test(source);
+const id = ofFile ? 2147483647 : Number(source);
+if (!ofFile && !Number.isInteger(id) || ofFile && !Number.isInteger(Number(profileOfFile))) {
+    console.error('node scripts/briefing-audit.js <briefingId>\nnode scripts/briefing-audit.js <file.json of the cards> <profileId>');
     process.exit(1);
 }
 
-const [row] = await prisma.$queryRawUnsafe('SELECT id, id_profile, created_at, finished_at, status, items, analysis FROM briefings WHERE id = $1', id);
+const [row] = ofFile
+    ? [{id: source, id_profile: Number(profileOfFile), created_at: null, finished_at: null, status: 'ready', items: JSON.parse(readFileSync(source, 'utf8')), analysis: null}]
+    : await prisma.$queryRawUnsafe('SELECT id, id_profile, created_at, finished_at, status, items, analysis FROM briefings WHERE id = $1', id);
 if (!row || row.status !== 'ready') {
-    console.error(`The briefing ${id} is not a ready one.`);
+    console.error(`The briefing ${source} is not a ready one.`);
     process.exit(1);
 }
 const profile = row.id_profile ? await ProfileModel.get(row.id_profile) : null;
@@ -46,7 +55,12 @@ const foreignAngles = angles.filter(angle => angle.language && angle.language !=
 const checks = [
     ['the title of a card in another language is translated', foreign.filter(item => !item.titleTranslation).map(item => `[${item.language}] ${short(item.title)}`)],
     ['the text of a card in another language is translated', foreign.filter(item => item.summary && !item.translation).map(item => `[${item.language}] ${short(item.title)}`)],
+    ['the key points of a card in another language are translated', foreign.filter(item => item.points && !item.pointsTranslation).map(item => `[${item.language}] ${short(item.title)}`)],
+    ['the digest of a card in another language is translated', foreign.filter(item => item.digest && !item.digestTranslation).map(item => `[${item.language}] ${short(item.title)}`)],
     ['the title of an angle in another language is translated', foreignAngles.filter(angle => !angle.titleTranslation).map(angle => `[${angle.language}] ${short(angle.title)}`)],
+    ['no sentence of a translation is left in the language of the article', foreign.filter(item => [item.translation, item.pointsTranslation, item.digestTranslation]
+        .some(text => String(text ?? '').includes(`${ORIGINAL_START}(`))).map(item => `[${item.language}] ${short(item.title)}`)],
+    ['every card has a picture', items.filter(item => !item.thumbnail && !item.illustration).map(item => short(item.titleTranslation ?? item.title))],
     ['no key point begins with a dateline', items.flatMap(item => ['summary', 'points', 'digest', 'translation', 'pointsTranslation', 'digestTranslation']
         .map(field => String(item[field] ?? '').split(/\n\n/)[0]).filter(first => withoutDateline(first) !== first).map(first => short(first)))],
     ['no name is spelled with other accents than its card', items.flatMap(item => {
@@ -69,7 +83,10 @@ const checks = [
 ];
 
 let failed = 0;
-console.log(`Briefing ${id} (profile ${row.id_profile}, reader ${language}): ${items.length} cards, ${foreign.length} in another language, ${angles.length} angles\n`);
+console.log(`Briefing ${ofFile ? source : id} (profile ${row.id_profile}, reader ${language}): ${items.length} cards, ${foreign.length} in another language, ${angles.length} angles`);
+// the sentences translated whose figures the check could not match to the original's, shown in italics with a warning (extract.js)
+const warned = foreign.filter(item => String(item.translation ?? '').includes(UNCHECKED));
+console.log(`${warned.length} card(s) with a sentence translated but marked ${UNCHECKED} (figures not matched)${warned.length > 0 ? `: ${warned.map(item => short(item.title, 40)).join(' | ')}` : ''}\n`);
 for (const [name, broken] of checks) {
     console.log(`${broken.length === 0 ? 'ok  ' : 'FAIL'} ${name}${broken.length > 0 ? ` (${broken.length})` : ''}`);
     for (const one of broken.slice(0, 5)) console.log(`       - ${one}`);
@@ -85,7 +102,7 @@ const measures = (list) => ({
 const before = row.id_profile ? await prisma.$queryRawUnsafe(
     `SELECT id, created_at, finished_at, items FROM briefings WHERE id_profile = $1 AND status = 'ready' AND id < $2 ORDER BY id DESC LIMIT 3`, row.id_profile, id) : [];
 if (before.length > 0) {
-    const now = {...measures(items), seconds: Math.round((new Date(row.finished_at) - new Date(row.created_at)) / 1000)};
+    const now = {...measures(items), ...(ofFile ? {} : {seconds: Math.round((new Date(row.finished_at) - new Date(row.created_at)) / 1000)})};
     const average = (key) => Math.round(before.map(one => key === 'seconds' ? (new Date(one.finished_at) - new Date(one.created_at)) / 1000 : measures(one.items ?? [])[key]).reduce((a, b) => a + b, 0) / before.length);
     console.log(`\nagainst the ${before.length} briefings of before (% of the cards; seconds):`);
     for (const key of Object.keys(now)) {

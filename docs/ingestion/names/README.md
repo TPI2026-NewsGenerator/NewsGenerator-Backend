@@ -108,6 +108,17 @@ what finds the other angles of a card through its rare names.
   3 times at least. Only a person is linked this way, never an organisation, and a name that mixes scripts or
   has Arabic, Hebrew or Chinese letters has no spelling. Read on the last 12 briefings: the one Greek name of a
   famous person linked, the four Greek persons of local news (no item in the persons linked) left alone.
+- **The names a card shows are tidied** (`tidyNames`, `services/utils/card-names.js`, since 8.11.2026, from the unsaved
+  briefing of Enzo): a particle of Korean or Japanese glued to a name in Latin letters is taken off ("KFA는" is the "KFA",
+  `withoutParticle` in `mentions.js`, also at the tagging: 349 organisations of the base were so); a declined form of an
+  organisation ("Arsenala", "FIFA-e", "Bayerns") is the organisation linked that it is the form of, when that one is met 5
+  times more and 100 times at least (`MentionModel.inflectedForms`, endings `a e i u y om em it in ën ës ja ju ov s`, "s"
+  only after 6 letters: measured on the 120 forms the most met, 7 in 100 were another word; a hyphen only before a suffix
+  of small letters: "Villarreal-PSG" is a match); an acronym the tagger could not link is the organisation the card's
+  articles name that is called so in some language (`nameKeysOf`: "KFA" is an alias of the Korea Football Association in
+  Korean only, the search in English never finds it); and a name linked is spelled as Wikidata does when the letters are the
+  same, accents aside, as the translation of the card is ("Ceferin" under a text saying "Čeferin"). Nothing of it is linked
+  in the base: the tagger's link is untouched, the tidy is on the card. Corpus family `chips`.
 - **Report and housekeeping.** Every hour the log says what each tagger did and what is left
   (`untaggedCount`); once a day `deleteUnused` deletes the names no news names any more that were never looked
   for in Wikidata. The ones looked for are kept on purpose, whether a news still names them or not (the user,

@@ -13,3 +13,5 @@
 export const ORIGINAL_START = '';
 export const ORIGINAL_END = '';
 export const withoutOriginalMarks = (text) => text?.replace(/[]/g, '') ?? text;
+// The sign after a sentence translated whose figures the check could not match to the original's (a briefing shows it in italics too)
+export const UNCHECKED = '⚠';

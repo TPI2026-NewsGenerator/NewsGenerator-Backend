@@ -12,7 +12,7 @@
 import {TOPICS, isTopic} from './topics.js';
 import {languageOf, ownLanguage, writtenIn} from './language.js';
 import {ollamaJson} from './ollama.js';
-import {ORIGINAL_END, ORIGINAL_START, withoutOriginalMarks} from './original-marks.js';
+import {ORIGINAL_END, ORIGINAL_START, UNCHECKED, withoutOriginalMarks} from './original-marks.js';
 import {alignNames, spellingNote, spellingsOf} from './spellings.js';
 
 // Summaries written by the AI changed what the article says in 4 of 30 articles, 3 of them again in
@@ -230,13 +230,32 @@ const ROUNDS = [
     [32, /шеснаесетин|šesnaestin|sechzehntelfinal|seizi[eè]mes? de finale|dieciseisavos|sedicesimi di final|dezasseis avos/i],
     [8, /четвртфинал|четвъртфинал|četvrtfinal|viertelfinal|quarts? de finale|cuartos? de final|quarti di final|quartos? de final|ćwierćfinał/i],
 ];
-// the figures of a sentence, whatever their separators: "1.1383" and "1,1383", "1,000" and "1 000" are
-// the same figure, "September 21, 2026" two of them, and "7 p.m." the same as "19h00"
-const figures = (text) => (sameWrittenFigures(text).match(/\d+(?:[.,\u202f\u00a0 ]\d{3}(?!\d))*(?:[.,]\d+)?/g) ?? [])
-    .map(figure => figure.replace(/[^\d]/g, ''));
-export const figuresOf = figures;
-// the figures of a text and the ones its words about the rounds of a cup give
-export const figuresIn = (text) => [...figures(text), ...ROUNDS.filter(([, words]) => words.test(text)).map(([round]) => String(round))];
+// The units of number Korean, Chinese and Japanese write after a figure: "2만" is 20,000, "1억" 100 million, "12만 5천" 125,000 (the
+// briefing of Enzo of 8.11.2026: a Korean sentence with "2만" was refused for a figure lost and left in Korean between parentheses).
+// 조 after a digit is also the count of an article of a law ("제3조"), so it is a unit only without the 제
+const CJK_UNITS = {천: 1e3, 千: 1e3, 백: 1e2, 百: 1e2, 만: 1e4, 万: 1e4, 萬: 1e4, 억: 1e8, 億: 1e8, 조: 1e12, 兆: 1e12};
+const CJK_PART = '(?<!제)\\d[\\d,]*(?:\\.\\d+)?\\s*[천千백百만万萬억億조兆]+';
+const CJK_AMOUNT = new RegExp(`${CJK_PART}(?:\\s*${CJK_PART})*`, 'gu');
+const CJK_PIECE = /(\d[\d,]*(?:\.\d+)?)\s*([천千백百만万萬억億조兆]+)/gu;
+const withCjkAmounts = (text) => text.replace(CJK_AMOUNT, amount => String(Math.round([...amount.matchAll(CJK_PIECE)]
+    .reduce((sum, [, count, units]) => sum + Number(count.replace(/,/g, '')) * [...units].reduce((product, unit) => product * CJK_UNITS[unit], 1), 0))));
+// The words the other languages write a thousand, a million or a billion with after a figure ("2 million", "2 Millionen", "2 millones")
+const WORD_UNITS = [[1e3, 'thousand'], [1e6, 'millions?|millón|millones|milhão|milhões|millionen|miljoen|milioni|milione|mio|mln|miljoona'],
+    [1e9, 'billions?|milliards?|milliarden?|miliardi|miliardo|mrd']];
+const NUMBER = '\\d+(?:[.,\\u202f\\u00a0 ]\\d{3}(?!\\d))*(?:[.,]\\d+)?';
+const FIGURE = new RegExp(`(${NUMBER})(?:[\\s\\u00a0]*(${WORD_UNITS.map(([, words]) => words).join('|')})(?!\\p{L}))?`, 'giu');
+const unitOf = (word) => WORD_UNITS.find(([, words]) => new RegExp(`^(?:${words})$`, 'iu').test(word))[0];
+// The figures of a sentence, whatever their separators: "1.1383" and "1,1383", "1,000" and "1 000" are the same figure, "September 21,
+// 2026" two of them, and "7 p.m." the same as "19h00". Each is the ways it may be written in digits: "2 million" is "2" or "2000000"
+// (the way it was written, or in full: the translation of "2 000 000" says "2 million" and the reverse), "2만" "20000" only
+export const figureEntries = (text) => [...withCjkAmounts(sameWrittenFigures(text)).matchAll(FIGURE)].map(([, number, unit]) => {
+    const raw = number.replace(/[^\d]/g, '');
+    if (!unit) return [raw];
+    const count = /^\d+[.,]\d{1,2}$/.test(number) ? Number(number.replace(',', '.')) : Number(raw);
+    return [raw, String(Math.round(count * unitOf(unit)))];
+});
+// the figures of a text and the ones its words about the rounds of a cup give, every way they may be written
+export const figuresIn = (text) => [...figureEntries(text).flat(), ...ROUNDS.filter(([, words]) => words.test(text)).map(([round]) => String(round))];
 // The months of the languages a translation is written in, by their number (accents off): a date written "5/11" or "tháng 11"
 // is "November 5" in a translation, whose month is a word and no figure (a card of 6.11.2026 with three such dates lost all its
 // translation: more than half of its sentences were refused, the Vietnamese was shown as it was)
@@ -265,15 +284,15 @@ const monthsNamed = (text) => {
 // a translation keeps every figure of the sentence it translates, checked here rather than trusted. A figure from 1 to 12 may
 // have become the month of its date (see MONTHS)
 export const keepsFigures = (original, translation) => {
-    const left = figures(translation);
+    const left = figureEntries(translation);
     const months = monthsNamed(translation);
-    return figures(original).every(figure => {
-        const i = left.indexOf(figure);
+    return figureEntries(original).every(ways => {
+        const i = left.findIndex(entry => entry.some(figure => ways.includes(figure)));
         if (i >= 0) {
             left.splice(i, 1);
             return true;
         }
-        const month = months.indexOf(Number(figure));
+        const month = months.indexOf(Number(ways[0]));
         if (month < 0) return false;
         months.splice(month, 1);
         return true;
@@ -305,7 +324,7 @@ ${sentences.map((sentence, i) => `[${i + 1}] ${sentence}`).join('\n')}
 
 Answer only in JSON: {"translations": ["...", one per sentence, in the same order]}`;
 
-export {ORIGINAL_END, ORIGINAL_START, withoutOriginalMarks};
+export {ORIGINAL_END, ORIGINAL_START, UNCHECKED, withoutOriginalMarks};
 const TRANSLATE_ATTEMPTS = 3;
 
 // The passages translated sentence by sentence: a sentence translated with all its figures is kept, the
@@ -320,6 +339,8 @@ export const translatePassages = async (passages, from, to, usage = null, {marke
     const done = new Array(sentences.length).fill(null);
     const note = spellingNote({glossary, names});
     const spelled = spellingsOf({glossary, names});
+    // the last translation of a sentence whose figures could not be matched to the original's, to show with a warning (see below)
+    const unchecked = new Array(sentences.length).fill(null);
     let lost = sentences.map((sentence, i) => i);
     for (let attempt = 0; attempt < TRANSLATE_ATTEMPTS && lost.length > 0; attempt++) {
         const answer = await ollamaJson(translatePrompt(lost.map(i => sentences[i]), from, to, attempt > 0, note), usage).catch(() => null);
@@ -327,16 +348,31 @@ export const translatePassages = async (passages, from, to, usage = null, {marke
         if (!Array.isArray(translations) || translations.length !== lost.length) continue;
         lost = lost.filter((i, k) => {
             const translation = translations[k];
-            if (typeof translation !== 'string' || !translation.trim() || !keepsFigures(sentences[i], translation)) return true;
-            done[i] = alignNames(translation.trim(), spelled, sentences[i]);
+            if (typeof translation !== 'string' || !translation.trim()) return true;
+            const written = alignNames(translation.trim(), spelled, sentences[i]);
+            if (!keepsFigures(sentences[i], translation)) {
+                unchecked[i] = written;
+                return true;
+            }
+            done[i] = written;
+            unchecked[i] = null;
             return false;
         });
     }
-    if (lost.length * 2 > sentences.length) return null;
+    // In a briefing a sentence the AI translated but whose figures the check could not match is shown translated, in italics, with a
+    // warning, rather than left in its own language (the user, 8.11.2026: it should be translated; the Korean "2만" of a card was
+    // refused for a figure lost and stayed Korean, and the guard is right to doubt a translation but not to take it from the reader).
+    // Where nothing can warn (the search) it is left in its language between parentheses as before. Only a sentence with no
+    // translation at all is lost
+    const shown = marked ? lost.filter(i => unchecked[i] === null) : lost;
+    if (shown.length * 2 > sentences.length) return null;
     let next = 0;
     return passages.map(passage => passage.map(sentence => {
         const i = next++;
         if (done[i] !== null) return {text: done[i], quote: sentence.quote};
+        if (marked && unchecked[i] !== null) {
+            return {text: `${ORIGINAL_START}${sentence.quote ? `“${unchecked[i]}”` : unchecked[i]} ${UNCHECKED}${ORIGINAL_END}`, quote: false};
+        }
         const original = `(${sentence.quote ? `“${sentence.text}”` : sentence.text})`;
         return {text: marked ? `${ORIGINAL_START}${original}${ORIGINAL_END}` : original, quote: false};
     }));

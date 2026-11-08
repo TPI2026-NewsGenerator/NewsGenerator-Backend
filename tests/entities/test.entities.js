@@ -26,7 +26,7 @@ jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel}));
 // the news the tagger read, and how many it has not (some: their texts are searched)
 const seenOf = jest.fn(async () => new Map());
-const MentionModel = {seenOf, articlesNamed: jest.fn(async () => []), personsEndingWith: jest.fn(async () => []), personsByLooseSurname: jest.fn(async () => []), anyUntagged: jest.fn(async () => true), qidsOfKey: jest.fn(async () => []),
+const MentionModel = {seenOf, articlesNamed: jest.fn(async () => []), personsEndingWith: jest.fn(async () => []), personsByLooseSurname: jest.fn(async () => []), inflectedForms: jest.fn(async () => []), anyUntagged: jest.fn(async () => true), qidsOfKey: jest.fn(async () => []),
     articlesOfStories: jest.fn(async () => []), namesOfArticles: jest.fn(async () => []), want: jest.fn(async () => 0),
     surnameSpread: jest.fn(async () => new Map())};
 jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel}));
@@ -47,7 +47,7 @@ const candidatesFor = jest.fn(async () => ({exact: [], others: []}));
 const describeItems = jest.fn(async () => []);
 jest.unstable_mockModule('../../services/utils/wikidata.js', async () => ({
     ...await import('../../services/utils/wikidata-names.js'),
-    readItem, searchItems, candidatesFor, describeItems, PERSON_SITELINKS: 10, SITELINKS_AHEAD: 3, readCountries: async () => new Map(), exactItems: async () => [], wikimediaHeaders: () => ({}), isQid: (value) => /^Q\d+$/.test(value ?? ''),
+    readItem, searchItems, candidatesFor, describeItems, nameKeysOf: async () => new Map(), PERSON_SITELINKS: 10, SITELINKS_AHEAD: 3, readCountries: async () => new Map(), exactItems: async () => [], wikimediaHeaders: () => ({}), isQid: (value) => /^Q\d+$/.test(value ?? ''),
 }));
 
 const {COMMON_NAME_FIRSTS, EntityService, commonNames, forgetLookups, mergeNews, namesFor, searchNamesFor} = await import('../../services/entity-service.js');

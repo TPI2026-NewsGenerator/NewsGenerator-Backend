@@ -13,6 +13,7 @@ import {isQid, kindOf, namesOf} from './wikidata-names.js';
 import process from 'node:process';
 import {mentionKey} from './mentions.js';
 import {countryNamed} from './country-names.js';
+import {memo} from './memo.js';
 
 export {isQid};
 
@@ -159,6 +160,27 @@ export const describeItems = async (qids, {background = false, batch = EXACT_FOU
         place: isPlace(item.claims ?? {}),
         work: Boolean(item.claims?.P577),
     }));
+};
+
+// Map qid -> [key] of everything each of these items is called, its labels and aliases in every language Wikidata has (see
+// mentionKey), kept for a week: "KFA" is an alias of the Korea Football Association in Korean only, so the search in English of the
+// acronym never finds it (the briefing of Enzo of 8.11.2026). Throws when Wikidata does not answer
+const nameKeys = memo({ttlMs: 7 * 24 * 3600e3, max: 3000});
+export const nameKeysOf = async (qids, {background = true} = {}) => {
+    const asked = [...new Set(qids.filter(isQid))];
+    const missing = asked.filter(qid => nameKeys.get(qid) === undefined);
+    for (let i = 0; i < missing.length; i += 50) {
+        const part = missing.slice(i, i + 50);
+        const params = new URLSearchParams({action: 'wbgetentities', ids: part.join('|'), props: 'labels|aliases', format: 'json'});
+        const entities = (await ask(`${API}?${params}`, {background})).entities ?? {};
+        for (const qid of part) {
+            const item = entities[qid];
+            nameKeys.set(qid, item && item.missing === undefined
+                ? [...new Set([...Object.values(item.labels ?? {}), ...Object.values(item.aliases ?? {}).flat()].map(name => mentionKey(name.value)).filter(Boolean))]
+                : []);
+        }
+    }
+    return new Map(asked.map(qid => [qid, nameKeys.get(qid) ?? []]));
 };
 
 // the items Wikidata finds for a name, pages of Wikimedia, of a family or given name aside, in its order

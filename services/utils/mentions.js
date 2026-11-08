@@ -42,6 +42,12 @@ export const acronymsOf = (name) => {
     return words.length < 2 ? [] : words.filter(word => ACRONYM.test(word) && /[A-Z].*[A-Z]/.test(word) && !ROMAN.test(word));
 };
 
+// The particles Korean and Japanese glue to a name written in Latin letters: "KFA는" is the KFA (the tagger gave 349 organisations
+// so, 8.11.2026). A word of the language after the name is none ("AC밀란", "FIFA회장" stay as they are)
+const PARTICLES = '은|는|이|가|을|를|의|와|과|도|에|로|으로|에서|에게|부터|까지|만|が|は|を|に|の|で|と|も|へ|や|から|まで|より';
+const WITH_PARTICLE = new RegExp(`^([\\p{Script=Latin}\\d][\\p{Script=Latin}\\d&.'’ -]*[\\p{Script=Latin}\\d])(?:${PARTICLES})$`, 'u');
+export const withoutParticle = (name) => WITH_PARTICLE.exec(name)?.[1] ?? name;
+
 // The names of one news as stored: once per name and kind, of the kinds asked, a letter at least and
 // not too long (a sentence taken for a name), and the acronyms inside them as organisations.
 // entities: as the tagger gives them, [{text, label, score}]
@@ -57,7 +63,7 @@ export const cleanMentions = (entities) => {
         return true;
     };
     for (const entity of Array.isArray(entities) ? entities : []) {
-        const name = String(entity?.text ?? '').replace(/\s+/g, ' ').replace(EDGES, '');
+        const name = withoutParticle(String(entity?.text ?? '').replace(/\s+/g, ' ').replace(EDGES, ''));
         if (add(name, entity?.label)) acronymsOf(name).forEach(acronym => add(acronym, 'organization'));
     }
     return names;
