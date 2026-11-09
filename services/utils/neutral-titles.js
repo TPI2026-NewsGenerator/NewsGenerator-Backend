@@ -418,7 +418,10 @@ export const sameFact = async (pairs, usage = null, {think, timeoutMs} = {}) =>
 export const REWRITES_AT_ONCE = 4;
 const JUDGED_AT_ONCE = 40;
 const VERIFIED_AT_ONCE = 6;
-const AI_TIMEOUT_MS = 240e3;
+// How long a rewrite or a second opinion (thinking on) may take before it is given up: 90 s. Measured on 9.11.2026 on 10 real titles: a rewrite
+// takes 2 to 21 s (median 15 s, about 2 600 tokens of reasoning), a second opinion on 4 titles 2 s. It was 240 s, for the models that reason
+// for minutes: a call that never answered cost a briefing 240 s for nothing (the briefing of Enzo of 9.11.2026: 455 s instead of 180)
+const AI_TIMEOUT_MS = 90e3;
 export const aiRewrittenTitles = async (entries, usage = {}, proposed = null) => {
     const kept = new Map();
     if (entries.length === 0 || process.env.AI_NEUTRAL_TITLES === 'off') return kept;
