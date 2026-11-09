@@ -7,7 +7,7 @@
 //               e-mail with the cards; a page already in the briefing, unreadable or private refused
 //
 
-import {beforeEach, describe, expect, it, jest} from '@jest/globals';
+import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const ofUser = jest.fn();
 const addItem = jest.fn(async () => -1);
@@ -57,6 +57,7 @@ const extract = await import('../../services/utils/extract.js');
 // the titles are translated by translateTextsSure (translateTexts and a second round): the mock answers both
 jest.unstable_mockModule('../../services/utils/extract.js', () => ({...extract, extractArticle, translateTexts, translateTextsSure: translateTexts}));
 const {BriefingService, completeCards, withoutTracking} = await import('../../services/briefing-service.js');
+const {ollamaJson} = await import('../../services/utils/ollama.js');
 
 // the cards the people and organisations were asked for, from the last call
 const namesAndCardsAsked = () => namesAndCountriesOfCards.mock.calls.at(-1)[0];
@@ -118,6 +119,44 @@ describe('BriefingService.importNews', () => {
         expect(cardOfLinks).toHaveBeenCalledWith(4, 7, ['https://news.example/strike', 'https://news.example/strike/'], 7);
         expect(analysis).toBeNull();
         expect(addAnalysisLines).not.toHaveBeenCalled();
+    });
+
+    describe('the last read of the AI (proofread.js)', () => {
+        const dated = 'GENÈVE – Les trains s’arrêteront lundi dans toute la Suisse à cause d’une grève du personnel.';
+        const bare = 'Les trains s’arrêteront lundi dans toute la Suisse à cause d’une grève du personnel.';
+        const proofreadPrompt = (prompt) => typeof prompt === 'string' && prompt.includes('You proofread the cards');
+        const datedExtract = () => extractArticle.mockResolvedValue({
+            passages: [[{text: 'Trains will stop on Monday.'}]], translation: [[{text: dated}]], points: [[{text: 'Trains will stop on Monday.'}]], pointsTranslation: [[{text: dated}]],
+            digest: [[{text: 'Trains will stop on Monday.'}]], digestTranslation: [[{text: dated}]], from: 'en', topic: 'transport', sourcing: 'named',
+        });
+        afterEach(() => ollamaJson.mockReset().mockImplementation(async () => ({})));
+
+        it('should take out the dateline the AI points at in the news a reader adds, as it does for the cards of a briefing', async () => {
+            datedExtract();
+            ollamaJson.mockImplementation(async (prompt) => proofreadPrompt(prompt) ? {cards: [{id: 1, problems: [{field: 'passages 1', kind: 'dateline', text: 'GENÈVE –'}]}]} : {});
+
+            await BriefingService.importNews(4, '7', 'https://news.example/strike');
+
+            const [, , added] = addItem.mock.calls[0];
+            expect([added.translation, added.pointsTranslation, added.digestTranslation]).toEqual([bare, bare, bare]);
+            expect(added.proofread).toEqual([{kind: 'dateline', text: 'GENÈVE –', fields: ['passages', 'points', 'digest']}]);
+            // the card was shown to the AI in the language of the reader
+            expect(ollamaJson.mock.calls.find(([prompt]) => proofreadPrompt(prompt))[0]).toContain('shown in French');
+        });
+
+        it('should add the news as it is when the AI fails to read it', async () => {
+            datedExtract();
+            ollamaJson.mockImplementation(async (prompt) => {
+                if (proofreadPrompt(prompt)) throw new Error('down');
+                return {};
+            });
+
+            await BriefingService.importNews(4, '7', 'https://news.example/strike');
+
+            const [, , added] = addItem.mock.calls[0];
+            expect(added.translation).toBe(dated);
+            expect(added.proofread).toBeUndefined();
+        });
     });
 
     it('should read the news with the story it is in, and the media that tell it, when we hold it', async () => {

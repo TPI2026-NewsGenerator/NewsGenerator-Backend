@@ -36,6 +36,7 @@ import {readerLanguage, scriptLanguage, writtenIn} from "./utils/language.js";
 import {VERSION_DAYS, forThePage, idsOf, restoredCard, swappedCard, versionsOfCards} from "./utils/card-versions.js";
 import {logBriefingChecks} from "./utils/briefing-checks.js";
 import {proofreadCards} from "./utils/proofread.js";
+import {foldCards, sameNewsGroups} from "./utils/card-merge.js";
 import {failedTitle, translatedTitles} from "./utils/title-translation.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {assertPublicUrl, hostOf, mediumOf} from "./utils/public-url.js";
@@ -931,7 +932,7 @@ export const completeCards = async ({main, spare = []}, {briefingId = null, labe
 export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) => {
     // the stories ranked and given to the AI grow with the cards wanted
     const scale = size / MAX_BRIEFING;
-    const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage(), titling: newUsage(), titleRewriting: newUsage(), proofreading: newUsage()};
+    const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage(), titling: newUsage(), titleRewriting: newUsage(), proofreading: newUsage(), duplicates: newUsage()};
     // the interests of the profile and of the projects it runs: each gets its share of the cards
     const [profile, interests, projects] = await Promise.all([ProfileModel.get(profileId), ProfileModel.briefingInterests(profileId),
         ProfileModel.projects(profileId)]);
@@ -1051,16 +1052,22 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     console.log(`Briefing: the AI chose ${chosenByAi.length} of ${candidates.length} stories, ${main.length} for the cards and ${spare.length} in reserve once the same news joined`);
 
     const {items, articles} = await completeCards({main, spare}, {briefingId, step, seconds, usage, wanted, interests, profile, language, trusted, feedUrls, hours});
-    // the analysis of the cards that merit one, from their articles read whole: written after the
-    // briefing is shown (it reasons for a minute or more a card, see card-analysis.js), never awaited
-    if (briefingId) analyze(briefingId, items, articles, language);
+    const label = briefingId ?? 'unsaved';
+    // the cards that tell the same news, read again as a whole once they are written (see card-merge.js): two readers, asked now, answer while
+    // the words of the cards are translated and proofread; never fails, never waits long
+    const sameNews = sameNewsGroups(items, language, {usage: usage.duplicates, label});
     // the words an article of another language says it has no confirmation with, in the reader's language
     const hedged = await withHedgedTranslated(items, language, usage.summarizing).catch(() => items);
     // the last read, by the AI, of what the reader will see: a dateline, a credit or a label the rules do not know yet, taken out when the code
     // checks it (see proofread.js); never fails, never waits long
-    const written = await proofreadCards(hedged, language, {usage: usage.proofreading, label: briefingId ?? 'unsaved'});
+    const proofread = await proofreadCards(hedged, language, {usage: usage.proofreading, label});
+    // the second card of a news both readers agree on is among the angles of the other: no news is hidden, a development taken for it is one click away
+    const written = foldCards(proofread, await sameNews, {label});
+    // the analysis of the cards that merit one, from their articles read whole: written after the
+    // briefing is shown (it reasons for a minute or more a card, see card-analysis.js), never awaited
+    if (briefingId) analyze(briefingId, written, articles, language);
     // the checks of the cards run on what the reader will see, named in the log: the reader is not to be the first to find what a check finds
-    logBriefingChecks(briefingId ?? 'unsaved', written, language);
+    logBriefingChecks(label, written, language);
     return written;
 };
 
@@ -1686,7 +1693,9 @@ export const importedCardOf = async ({address, links, language, usage, feedUrls 
     if (items.length === 0) {
         throw Object.assign(new Error('This page could not be read: no article in it, a paywall or a protected site.'), {status: 422});
     }
-    const [item] = await withHedgedTranslated(items, language, usage.summarizing).catch(() => items);
+    const hedged = await withHedgedTranslated(items, language, usage.summarizing).catch(() => items);
+    // the last read of the AI, as for the cards of a briefing (see write): a page the reader pastes opens with a dateline or a credit as often
+    const [item] = await proofreadCards(hedged, language, {usage: usage.proofreading, label: 'news added'});
     // what was for the briefing only (why chosen, the interest, the project, the follow-up, the thumb, the feeds blamed for a refusal) is not
     // the card's, as for a card copied from another briefing (see transferredCard)
     return {card: {...item, imported: true, mergedStoryIds: [], why: null, interest: null, project: null, followUp: null, vote: null, feedUrls: []}, item, articles};
@@ -1694,7 +1703,7 @@ export const importedCardOf = async ({address, links, language, usage, feedUrls 
 
 // The cards of a briefing opened again for the analysis of a card added (see analyseAdded): the same full set of usage counters
 // as a briefing's, since completeCards counts the tokens of each of its steps
-const usageOfAdded = () => Object.fromEntries(['summarizing', 'contesting', 'reviewing', 'angles', 'official', 'naming', 'titling', 'titleRewriting', 'writing']
+const usageOfAdded = () => Object.fromEntries(['summarizing', 'contesting', 'reviewing', 'angles', 'official', 'naming', 'titling', 'titleRewriting', 'proofreading', 'writing']
     .map(step => [step, newUsage()]));
 
 // The analysis of a card added to a ready briefing (see cardAnalyses): written after the card is shown, as the briefing's own are

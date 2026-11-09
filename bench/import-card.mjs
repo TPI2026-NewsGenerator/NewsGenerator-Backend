@@ -30,7 +30,7 @@ console.log(`news: ${address}`);
 
 const profile = await ProfileModel.get(profileId);
 const language = readerLanguage(profile ?? {});
-const usage = Object.fromEntries(['summarizing', 'contesting', 'reviewing', 'angles', 'official', 'naming', 'titling', 'titleRewriting', 'writing'].map(step => [step, newUsage()]));
+const usage = Object.fromEntries(['summarizing', 'contesting', 'reviewing', 'angles', 'official', 'naming', 'titling', 'titleRewriting', 'proofreading', 'writing'].map(step => [step, newUsage()]));
 const started = Date.now();
 const {card, item, articles} = await importedCardOf({address, links: [address], language, usage, feedUrls: await feedsOf(profileId),
     trusted: new Set(await FeedModel.trustedMedia(profileId)), hours: 48});

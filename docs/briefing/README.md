@@ -172,6 +172,44 @@ put in (220 cards): 220 taken out and the text restored. Found on the way: the A
 asked ("passages"): the first version of the step lost most of the datelines of the text to it (0 of 6 for three kinds), which only a run against
 the real AI shows and a test with a mocked one does not.
 
+## Two cards of one news
+
+The same news sometimes stood on two cards of one briefing (the user, 9.11.2026: "des fois la même histoire est présentée sur 2 cartes
+différentes"). The merge of the stories before the cards are read (`keepSameNews`, "in doubt, null") misses some, and a pairwise variant joined
+other developments of the same affair (decision log, 3.11.2026). Measured on 864 cards of 40 saved briefings (`bench/duplicate-cards.mjs`, pairs
+judged by two readers blind to the models, 66 pairs): **18 true pairs in 12 briefings (30 %)**; "Official: Galliani backed by Players and Coaches"
+and "FIGC Presidency: Italian football on the brink of a major shift", two cards of Liga MX with the same title, two cards on the access to the FFE
+documents.
+
+Once the cards are written, `sameNewsGroups` of `services/utils/card-merge.js` gives the whole briefing (the title, the media, the names and the
+first 50 words of each card) to **two readers at once**, gemma4:31b and deepseek-v4-pro with reasoning (no other model to fall back to: a vote of
+gemma with itself is no vote), and asks which cards tell the same news. They answer while the words of the cards are translated and proofread.
+Only the pairs **both** give are kept (and a group of three only when every card is paired with every other one by both):
+
+| the pairs given | true (of 18) | a development of the same affair |
+|---|---|---|
+| gemma alone | 14 | 11 of 27 |
+| deepseek with reasoning alone | 16 | 3 of 19 |
+| both | 14 | 1 of 15 |
+
+A second look pair by pair, with the definitions the judges had, accepted only 3 to 6 of the 18 true pairs with three models (each small
+detail made a difference): not used.
+
+**The second card is not removed, it becomes an angle of the other** (`foldCards`): the card best covered keeps its content and takes the place of the
+first of them; the other is put first among its angles (`angles[].folded`, its title as the reader saw it, its translation, its link, its media),
+its articles and its media are counted with the card's, its story is among the `mergedStoryIds` (it is not offered again as new), and the card says
+`joinedCards`. A pair that was a development, not one news, is then one click away where a development belongs: **no news is hidden by a wrong
+decision**. Each fold is written in the log (`Briefing 512: same news: "…" is among the angles of "…" (both readers agree)`). A reader that
+fails, answers what cannot be read or takes more than 130 s leaves the cards as they are; `AI_CARD_MERGE=off` switches it off. The step adds
+about 40 s to a briefing (the reasoning reader, 4 700 tokens written).
+
+Run for real, twice, on the same 40 briefings (`bench/duplicate-live.mjs`, the readers do not answer the same twice): 15 and 16 pairs agreed,
+13 true each time (of 18), the others developments of one affair or pairs the judges split on (1 development and 1 pair not judged the first
+time, 2 developments and 1 split the second); 12 and 14 briefings lose a card (864 → 849 and 848 cards), 500 to 600 s for the 40 at 3 at a time.
+So between 1 in 15 and 3 in 16 of the pairs folded are not one news, which is why they are folded among the angles and not removed. Limits: only the
+pairs a model grouped or with similar title words were judged, a duplicate with unlike titles no reader proposed was not seen; 66 pairs, 18 of
+them true.
+
 ## Neutral titles
 
 A card shows its title without the bait of its medium ("Information incroyable !", "Bomba zilei!", "Êtes-vous d'accord
