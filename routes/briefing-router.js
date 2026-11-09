@@ -29,6 +29,13 @@ router.get('/:id/affairs', authenticateToken,
 router.get('/:id/stories/:storyId/affair', authenticateToken,
     rateLimit({windowMs: 3600e3, max: 60, key: req => `affair ${req.user.id}`, message: 'Too many affairs asked, try again in an hour.'}),
     BriefingController.affair);
+// the other versions of the cards in the briefings of the other profiles of the account, and a card replaced by one of them (or back):
+// the briefings of the reader, read and written without any call of the AI
+router.get('/:id/versions', authenticateToken, BriefingController.versions);
+router.post('/:id/stories/:storyId/version', authenticateToken,
+    rateLimit({windowMs: 3600e3, max: 120, key: req => `version ${req.user.id}`, message: 'Too many versions used, try again in an hour.'}),
+    BriefingController.useVersion);
+router.delete('/:id/stories/:storyId/version', authenticateToken, BriefingController.restoreVersion);
 // the e-mail of the briefing is for the administrators only (see admin.js)
 const MAIL_REFUSED = 'Sending the briefing by e-mail is for the administrators.';
 router.get('/:id/stories/:storyId/pictures', authenticateToken, adminOnly(MAIL_REFUSED), BriefingController.pictures);

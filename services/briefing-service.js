@@ -33,6 +33,7 @@ import {AFFAIR_DAYS, storiesOfSameNames} from "./utils/affair-names.js";
 import {officialSourcesOf} from "./utils/official-sources.js";
 import {evolvedStories, REPEAT_HOURS, shownStories, withoutRepeats} from "./utils/repeats.js";
 import {readerLanguage, scriptLanguage, writtenIn} from "./utils/language.js";
+import {VERSION_DAYS, forThePage, idsOf, restoredCard, swappedCard, versionsOfCards} from "./utils/card-versions.js";
 import {translatedTitles} from "./utils/title-translation.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {assertPublicUrl, hostOf, mediumOf} from "./utils/public-url.js";
@@ -1785,7 +1786,8 @@ export const BriefingService = {
     latest: async (profileId) => {
         if (profileId === null) return null;
         const [row, profile] = await Promise.all([BriefingModel.latest(profileId), ProfileModel.get(profileId)]);
-        return withMarks(toBriefing(row), await EntityService.followTerms(profileId, profile?.watch_terms));
+        const briefing = withMarks(toBriefing(row), await EntityService.followTerms(profileId, profile?.watch_terms));
+        return briefing && {...briefing, items: briefing.items.map(forThePage)};
     },
 
     // the cards of a ready briefing the reader ticked (storyIds), in the order the reader gave them (see
@@ -1903,6 +1905,74 @@ export const BriefingService = {
             : `Briefing ${row.id}: news added by its link, tokens ${JSON.stringify(completed ? usages : usage)}`);
         const [item] = withMarks({items: [{...card, storyId}]}, await EntityService.followTerms(row.id_profile ?? null, profile?.watch_terms)).items;
         return {item, analysis: analysed ? lines : null, analyzing: analysing};
+    },
+
+    // The other versions the profiles of this reader's account have of the cards of a ready briefing (the same news written by another
+    // profile, from its own articles: see card-versions.js): {versions: {storyId: [{briefingId, profile, createdAt, title, source}]}},
+    // only the ones of a profile that reads in the same language, in its newest briefing of the last VERSION_DAYS days, with another lead article
+    versions: async (userId, briefingId) => {
+        const {row, briefing} = await readyBriefing(userId, briefingId);
+        const ids = [...new Set(briefing.items.filter(card => card.storyId > 0 && !card.imported).flatMap(idsOf))];
+        if (ids.length === 0) return {versions: {}};
+        const [own, rows] = await Promise.all([row.id_profile ? ProfileModel.get(row.id_profile) : null, BriefingModel.versionsOf(userId, row.id, ids, VERSION_DAYS)]);
+        const language = readerLanguage(own ?? {});
+        const profiles = new Map();
+        for (const idProfile of new Set(rows.map(one => one.idProfile))) profiles.set(idProfile, idProfile ? await ProfileModel.get(idProfile) : null);
+        const versions = versionsOfCards(briefing.items, rows, idProfile => idProfile !== row.id_profile && readerLanguage(profiles.get(idProfile) ?? {}) === language);
+        for (const list of Object.values(versions)) for (const one of list) one.profile = profiles.get(one.idProfile)?.name ?? null;
+        return {versions};
+    },
+
+    // A card of a ready briefing replaced by the version another briefing of this reader has of the same news (see versions and
+    // card-versions.js), where it stands: {item, analysis}, the card with the terms the profile follows marked in it and the analysis written
+    // for it. The way back is restoreVersion. 404 for a card or a briefing that is not there, 409 for one that is not the same news or
+    // not written for a reader of this language
+    useVersion: async (userId, briefingId, storyId, fromBriefingId) => {
+        const story = Number(storyId);
+        const from = Number(fromBriefingId);
+        if (!Number.isInteger(story) || story <= 0) throw Object.assign(new Error('storyId: the story of a card.'), {status: 400});
+        if (!Number.isInteger(from) || from <= 0) throw Object.assign(new Error('fromBriefingId: the briefing that has the other version.'), {status: 400});
+        const {row, briefing} = await readyBriefing(userId, briefingId);
+        const current = briefing.items.find(card => card.storyId === story && !card.imported);
+        if (!current) throw Object.assign(new Error('Unknown card.'), {status: 404});
+        if (from === row.id) throw Object.assign(new Error('The other version is in another briefing.'), {status: 409});
+        const other = await BriefingModel.ofUser(userId, from);
+        if (!other || other.status !== 'ready') throw Object.assign(new Error('Unknown briefing.'), {status: 404});
+        const own = new Set(idsOf(current));
+        const version = (Array.isArray(other.items) ? other.items : []).find(card => card.storyId > 0 && !card.imported && idsOf(card).some(id => own.has(id)));
+        if (!version) throw Object.assign(new Error('That briefing has no version of this news.'), {status: 404});
+        const [mine, theirs] = await Promise.all([row.id_profile ? ProfileModel.get(row.id_profile) : null, other.id_profile ? ProfileModel.get(other.id_profile) : null]);
+        if (readerLanguage(theirs ?? {}) !== readerLanguage(mine ?? {})) {
+            throw Object.assign(new Error('That version was written for a reader of another language.'), {status: 409});
+        }
+        // the analysis written for each of them, when it is ready
+        const linesOf = (briefingRow, card) => briefingRow.analysis?.status === 'ready' ? briefingRow.analysis?.cards?.[String(card.storyId)] ?? null : null;
+        const lines = linesOf(other, version);
+        const card = swappedCard(current, version, {briefingId: other.id, idProfile: other.id_profile ?? null, profile: theirs?.name ?? null,
+            createdAt: other.created_at?.toISOString?.() ?? other.created_at ?? null}, linesOf(row, current));
+        if (await BriefingModel.replaceCard(userId, row.id, story, card, {lines, setLines: lines !== null}) === 0) {
+            throw Object.assign(new Error('Unknown card.'), {status: 404});
+        }
+        console.log(`Briefing ${row.id}: the card ${story} replaced by its version of the briefing ${other.id}${lines ? ', with its analysis' : ''}`);
+        const [item] = withMarks({items: [card]}, await EntityService.followTerms(row.id_profile ?? null, mine?.watch_terms)).items;
+        return {item: forThePage(item), analysis: lines ?? linesOf(row, current)};
+    },
+
+    // A card replaced by another profile's version (see useVersion) back as this profile wrote it: {item, analysis}
+    restoreVersion: async (userId, briefingId, storyId) => {
+        const story = Number(storyId);
+        if (!Number.isInteger(story) || story <= 0) throw Object.assign(new Error('storyId: the story of a card.'), {status: 400});
+        const {row, briefing} = await readyBriefing(userId, briefingId);
+        const current = briefing.items.find(card => card.storyId === story);
+        const card = restoredCard(current);
+        if (!card) throw Object.assign(new Error('This card was not replaced.'), {status: 404});
+        const lines = current.previousVersion.lines ?? null;
+        if (await BriefingModel.replaceCard(userId, row.id, story, card, {lines, setLines: true}) === 0) {
+            throw Object.assign(new Error('Unknown card.'), {status: 404});
+        }
+        const profile = row.id_profile ? await ProfileModel.get(row.id_profile) : null;
+        const [item] = withMarks({items: [card]}, await EntityService.followTerms(row.id_profile ?? null, profile?.watch_terms)).items;
+        return {item: forThePage(item), analysis: lines};
     },
 
     // a news the reader added taken out of the briefing

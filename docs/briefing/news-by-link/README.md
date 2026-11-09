@@ -93,6 +93,36 @@ profile (30.10.2026: copied by its link, the card came without its angles, sourc
 - The tokens of the calls are logged ("news added by its link, tokens ..."). A news added takes about a minute or two, the
   page says so while it waits.
 
+## The version another profile wrote of a card
+
+The same news is the same story in every profile, but each profile reads it from the articles of its own sources, so the cards
+differ: the lead article, the picture, the points. A reader with several profiles (the user's friend, 9.11.2026: three profiles, the
+Wenger news better written in one than in the other) takes the version he prefers **without leaving the profile he reads and without
+a link to paste**: pasting the link was refused ("This news is already in the briefing": one of its articles is on a card), and a
+card added by its link is a news "of no story", beside the other card of the same story.
+
+- `GET /api/briefing/:id/versions` answers `{versions: {storyId: [{briefingId, profile, createdAt, title, source}]}}`: for each card of the
+  briefing, the same story (its story id, or one of the stories merged into it) in a card of the other ready briefings of the
+  account of the last 7 days (`BriefingModel.versionsOf`), with **another lead article**, of **another profile** that reads in the
+  **same language** (its translations are of that language); one version a profile, its newest briefing. No call of the AI.
+- The card shows, in its right column, "Another version: Chris wrote it from hln.be, in its briefing of 9 Nov, 07:23 — Use Chris's
+  version" (`BriefingCard.jsx`, `versions` and `onUseVersion`).
+- `POST /api/briefing/:id/stories/:storyId/version {fromBriefingId}` replaces the card **where it stands**
+  (`BriefingService.useVersion`, `swappedCard` of `services/utils/card-versions.js`, one statement `REPLACE_CARD`) and answers
+  `{item, analysis}`. The card keeps its story id (so its other media, its follow-ups and the affairs stay the card of that story), and what
+  belongs to this briefing: its place, why it was chosen for this profile, its interest and project, its follow-up, the thumb, the feeds a
+  refusal is blamed on, the mark of an e-mail sent. It takes the rest of the other version: lead article, title, picture, passages, points,
+  summary, AI version, other angles, official sources, denials, names, countries, and the analysis lines written for it (when that
+  briefing has its analysis ready, else the lines stay). What the reader of the other briefing wrote for its e-mail and its marks are not
+  carried (the terms this profile follows are marked again).
+- The card it replaced stays on the card (`previousVersion`, with its analysis lines) and the page is only told which one it was; the card
+  then says "Chris's version" and "Back to the one of this profile (lesoir.be)": `DELETE /api/briefing/:id/stories/:storyId/version`
+  (`restoreVersion`, `restoredCard`) brings it back with the thumb it has now. Replaced again, the way back is still the first card.
+- Both are after `authenticateToken` only (they read and write the reader's own briefings and call no AI); the POST 120 an hour per
+  reader. The news added by their link are not concerned (no story): the link of another article of the same news is still refused.
+- Tests: `tests/briefing/test.card-versions.js`, `tests/briefing/test.replace-card.js` (the SQL in the database, in a transaction rolled
+  back), `tests/briefing-versions.test.jsx` of the client.
+
 ## Diagrams
 
 - [Class diagram](briefing-news-by-link-class.png) ([source](briefing-news-by-link-class.puml))

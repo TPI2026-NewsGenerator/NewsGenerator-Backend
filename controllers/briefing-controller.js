@@ -111,6 +111,33 @@ export const BriefingController = {
         }
     },
 
+    // {versions: {storyId: [{briefingId, profile, createdAt, title, source}]}}: the versions the other profiles of the account have of the cards
+    versions: async (req, res) => {
+        try {
+            res.status(200).json(await BriefingService.versions(req.user.id, req.params.id));
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
+    // {fromBriefingId}: a card replaced by the version of another briefing of the reader, where it stands: {item, analysis}
+    useVersion: async (req, res) => {
+        try {
+            res.status(200).json(await BriefingService.useVersion(req.user.id, req.params.id, req.params.storyId, req.body?.fromBriefingId));
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
+    // a card replaced by another version back as its profile wrote it: {item, analysis}
+    restoreVersion: async (req, res) => {
+        try {
+            res.status(200).json(await BriefingService.restoreVersion(req.user.id, req.params.id, req.params.storyId));
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
     // the pictures of a card the reader can put in an e-mail instead of its own
     pictures: async (req, res) => {
         try {

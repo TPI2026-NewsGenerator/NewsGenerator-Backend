@@ -26,6 +26,20 @@ export const ADD_ITEM = `
       AND NOT EXISTS (SELECT 1 FROM ${CARDS}, ${LINKS_OF_CARD} WHERE article->>'url' = ANY($5::text[]))
     RETURNING (items->-1->>'storyId')::int AS "storyId"`;
 
+// A card of a ready briefing replaced by another at the same place (see BriefingModel.replaceCard). Exported for the tests, which run it in a
+// transaction rolled back. $1 the briefing, $2 the user, $3 the story of the card, $4 the new card, $5 its analysis lines ({why, next,
+// timeline}, or null), $6 whether the lines of the card are set (null taking them off); the analysis only when it is written
+export const REPLACE_CARD = `
+        UPDATE briefings
+        SET items = (SELECT jsonb_agg(CASE WHEN (item->>'storyId')::int = $3::int THEN $4::jsonb ELSE item END ORDER BY position)
+                     FROM jsonb_array_elements(items) WITH ORDINALITY AS cards(item, position)),
+            analysis = CASE WHEN $6::boolean AND analysis->>'status' = 'ready' AND jsonb_typeof(analysis->'cards') = 'object'
+                            THEN CASE WHEN $5::jsonb IS NULL OR $5::jsonb = 'null'::jsonb THEN analysis #- ARRAY['cards', ($3::int)::text]
+                                      ELSE jsonb_set(analysis, ARRAY['cards', ($3::int)::text], $5::jsonb) END
+                            ELSE analysis END
+        WHERE id = $1::int AND id_user = $2::int AND status = 'ready' AND jsonb_typeof(items) = 'array'
+          AND EXISTS (SELECT 1 FROM jsonb_array_elements(items) AS card WHERE (card->>'storyId')::int = $3::int)`;
+
 export const BriefingModel = {
     // hours: of news it is written from, size: the cards asked for
     create: async (userId, profileId, hours, size) => prisma.briefings.create({data: {id_user: userId, id_profile: profileId, status: 'running', step: 'starting', hours, size}}),
@@ -93,6 +107,29 @@ export const BriefingModel = {
               WHERE article->>'url' = ANY($3::text[]))
         ORDER BY ((card->>'storyId')::int > 0) DESC, b.created_at DESC
         LIMIT 1`, userId, exceptId, links, days))[0] ?? null,
+
+    // The cards of the other ready briefings of this user written in the last 'days' (the other profiles of the account) that are one of
+    // these stories, their story or one of the stories merged into them: the newest briefing of each profile first. [{briefingId, idProfile,
+    // createdAt, storyId, mergedStoryIds, title, leadUrl, source}], the cards of a story only (not the news added by the reader)
+    versionsOf: async (userId, exceptId, storyIds, days) => prisma.$queryRawUnsafe(`
+        SELECT DISTINCT ON (b.id_profile, (card->>'storyId')::int)
+               b.id AS "briefingId", b.id_profile AS "idProfile", b.created_at AS "createdAt", (card->>'storyId')::int AS "storyId",
+               CASE WHEN jsonb_typeof(card->'mergedStoryIds') = 'array' THEN card->'mergedStoryIds' ELSE '[]'::jsonb END AS "mergedStoryIds",
+               card->>'title' AS title, card->'lead'->>'url' AS "leadUrl", card->'lead'->>'source' AS source
+        FROM briefings b,
+             jsonb_array_elements(CASE WHEN jsonb_typeof(b.items) = 'array' THEN b.items ELSE '[]'::jsonb END) AS card
+        WHERE b.id_user = $1::int AND b.id <> $2::int AND b.status = 'ready' AND b.created_at > now() - make_interval(days => $4::int)
+          AND (card->>'storyId')::int > 0
+          AND ((card->>'storyId')::int = ANY($3::int[])
+               OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(CASE WHEN jsonb_typeof(card->'mergedStoryIds') = 'array' THEN card->'mergedStoryIds' ELSE '[]'::jsonb END) AS merged
+                          WHERE merged::int = ANY($3::int[])))
+        ORDER BY b.id_profile, (card->>'storyId')::int, b.created_at DESC`, userId, exceptId, storyIds, days),
+
+    // The card of a story of a ready briefing replaced by another (see BriefingService.useVersion), at the same place; the analysis lines
+    // of the card too when 'setLines' (lines null taking them off). One statement, as vote. 0 when the briefing is not a ready one of
+    // this user or has no such card
+    replaceCard: async (userId, briefingId, storyId, card, {lines = null, setLines = false} = {}) => prisma.$executeRawUnsafe(REPLACE_CARD,
+        briefingId, userId, storyId, JSON.stringify(card), lines === null ? null : JSON.stringify(lines), setLines),
 
     // The analysis lines ({why, next, timeline}) of a card added to a ready briefing of this user, saved with
     // its analysis: only when that analysis is written (a running one is saved whole again by the server
