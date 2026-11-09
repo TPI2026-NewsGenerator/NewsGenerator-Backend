@@ -1,7 +1,7 @@
 // An unsaved briefing of a profile (write(null, ...), nothing becomes "shown") with everything needed to
 // judge it by hand: the profile, each card with its passages, the news of its story (and merged ones),
 // its other angles, Contested and Official source. Writes bench/data/enzo-measure-<profile>-<n>.json
-//   node --env-file=.env bench/enzo-measure.mjs [profile=7] [hours=48] [n=1]
+//   node --env-file=.env bench/enzo-measure.mjs [profile=7] [hours=48] [n=1] [cards=10]
 import process from 'node:process';
 import {writeFileSync, mkdirSync} from 'node:fs';
 import pg from 'pg';
@@ -9,6 +9,8 @@ import {write} from '../services/briefing-service.js';
 import {aiStats} from '../services/utils/ollama.js';
 
 const [profileId, hours, n] = [Number(process.argv[2] ?? 7), Number(process.argv[3] ?? 48), process.argv[4] ?? '1'];
+// the cards asked for: 10, 20 or 30 (the size of a briefing), 10 when not given
+const size = process.argv[5] ? Number(process.argv[5]) : undefined;
 let seconds = '';
 const log = console.log;
 console.log = (...args) => {
@@ -18,7 +20,7 @@ console.log = (...args) => {
     log(...args);
 };
 const started = Date.now();
-const items = await write(null, profileId, hours);
+const items = await write(null, profileId, hours, size);
 const took = Math.round((Date.now() - started) / 1000);
 writeFileSync(`bench/data/enzo-measure-${profileId}-${n}-raw.json`, JSON.stringify(items));
 console.log = log;

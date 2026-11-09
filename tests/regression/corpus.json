@@ -384,7 +384,15 @@
         {"id":"dateline-none-var-is-the-subject","family":"dateline","origin":"\"VAR:\" is the subject of the sentence, not a place (a token of fewer than 4 letters, or a body, stays)",
             "input":{"text":"VAR: the system will be used in the cup from the next round of the competition, the league said."}, "expect":{"first":"VAR: the system will be used in the cup from the next round of the competition, the league said."}},
         {"id":"dateline-none-fifa-is-the-subject","family":"dateline","origin":"a body of the list (FIFA, UEFA, CAF...) and a colon is its statement: the actor is not lost",
-            "input":{"text":"FIFA: the world body said on Friday that the draw will be held in Zurich next week, without a date."}, "expect":{"first":"FIFA: the world body said on Friday that the draw will be held in Zurich next week, without a date."}}
+            "input":{"text":"FIFA: the world body said on Friday that the draw will be held in Zurich next week, without a date."}, "expect":{"first":"FIFA: the world body said on Friday that the draw will be held in Zurich next week, without a date."}},
+        {"id":"chips-capitals-word-of-its-label-is-no-acronym","family":"chips","origin":"briefing 7-17 of 9.11.2026 (Enzo), card of the Spanish referees: the chip said SEVILLA (7 capitals, taken for an acronym) under a text that says Sevilla FC",
+            "input":{"names":[{"name":"SEVILLA","qid":"Q10329","kind":"organization"}],"labels":{"Q10329":"Sevilla FC"},"translated":true}, "expect":{"names":[["Sevilla FC","Q10329"]]}},
+        {"id":"chips-capitals-word-of-its-label-a-club-and-a-city","family":"chips","origin":"the same for the other names in capitals a medium writes as a headline: BARCELONA, MADRID",
+            "input":{"names":[{"name":"BARCELONA","qid":"Q7156","kind":"organization"},{"name":"MADRID","qid":"Q8682","kind":"organization"}],"labels":{"Q7156":"FC Barcelona","Q8682":"Real Madrid CF"},"translated":true}, "expect":{"names":[["FC Barcelona","Q7156"],["Real Madrid CF","Q8682"]]}},
+        {"id":"chips-acronym-of-a-longer-name-stays","family":"chips","origin":"UEFA and KFA are acronyms: no word of their label is them, they stay as written",
+            "input":{"names":[{"name":"UEFA","qid":"Q35572","kind":"organization"},{"name":"KFA","qid":"Q482473","kind":"organization"}],"labels":{"Q35572":"Union of European Football Associations","Q482473":"Korea Football Association"},"translated":true}, "expect":{"names":[["UEFA","Q35572"],["KFA","Q482473"]]}},
+        {"id":"chips-capitals-of-a-card-not-translated-stay","family":"chips","origin":"a card whose text is not translated shows the name as its medium writes it (only the accents of the label are taken)",
+            "input":{"names":[{"name":"SEVILLA","qid":"Q10329","kind":"organization"}],"labels":{"Q10329":"Sevilla FC"},"translated":false}, "expect":{"names":[["SEVILLA","Q10329"]]}}
     ],
     "live": [
         {"id": "live-translate-vi-hdbank", "family": "translate", "origin": "briefing 414: all the text stayed Vietnamese",

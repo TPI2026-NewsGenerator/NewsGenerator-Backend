@@ -270,10 +270,15 @@ export const withInflectionsFolded = (names, rows) => once(names.map(name => {
 // "Confederación Asiática" under a text of "Caribbean Football Union" and "Asian Football Confederation", briefing 469 of 8.11.2026).
 // Else the letters of the label with other accents only ("Čeferin" for "Ceferin"), as the translation does
 const LATIN_ONLY = /^[\p{Script=Latin}\p{N}\p{M}\s.'’&,-]+$/u;
+// A name in capitals is an acronym unless it is a word of its label: "SEVILLA" (7 capitals, as a medium writes it in a headline) is a word of
+// "Sevilla FC", "UEFA" and "KFA" are no word of "Union of European Football Associations" nor of "Korea Football Association" (briefing of
+// Enzo of 9.11.2026: the chip of a card said SEVILLA under a text that says Sevilla FC)
+const isAcronymOf = (name, label) => ACRONYM.test(name)
+    && !(label.match(/[\p{L}\p{N}]+/gu) ?? []).some(word => word.length > 3 && mentionKey(word) === mentionKey(name));
 export const withWikidataSpelling = (names, labels, {translated = false} = {}) => names.map(name => {
     const label = name.qid && labels.get(name.qid);
     if (!label) return name;
-    const asLabel = translated && !ACRONYM.test(name.name) && mentionKey(name.name) !== mentionKey(label)
+    const asLabel = translated && !isAcronymOf(name.name, label) && mentionKey(name.name) !== mentionKey(label)
         && (name.kind === 'organization' || !LATIN_ONLY.test(name.name));
     const spelled = asLabel ? label : alignNames(name.name, [label]);
     return spelled === name.name ? name : {...name, name: spelled};

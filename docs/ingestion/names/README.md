@@ -118,7 +118,9 @@ what finds the other angles of a card through its rare names.
   articles name that is called so in some language (`nameKeysOf`: "KFA" is an alias of the Korea Football Association in
   Korean only, the search in English never finds it); and a name linked is spelled as Wikidata does (`spelledNames`, once the names are linked): in a card whose text is
   translated, an organisation not written as an acronym and a person in other letters than the Latin ones are shown by their label
-  ("Union Caribeña de Fútbol" under a text saying "Caribbean Football Union"), else when the letters are the same, accents aside
+  ("Union Caribeña de Fútbol" under a text saying "Caribbean Football Union"; a name in capitals is an acronym unless it is a word of its
+  label, `isAcronymOf`: "SEVILLA", as a medium writes it in a headline, is shown "Sevilla FC", "UEFA" and "KFA" stay; the 289 FIFA and 171 UEFA
+  chips of the 154 briefings saved are acronyms, only SEVILLA and MADRID change, 9.11.2026), else when the letters are the same, accents aside
   ("Ceferin" under a text saying "Čeferin"), as the translation of the card is. Nothing of it is linked
   in the base: the tagger's link is untouched, the tidy is on the card. Corpus family `chips`.
 - **Report and housekeeping.** Every hour the log says what each tagger did and what is left
