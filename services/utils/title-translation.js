@@ -8,7 +8,7 @@
 
 "use strict"
 
-import {translateTexts} from './extract.js';
+import {translateTextsSure} from './extract.js';
 import {languageCodeOf, titleLanguage, writtenIn} from './language.js';
 
 // In calls of 25, as the briefing translates: one call for 50 titles came back short and gave none
@@ -33,7 +33,7 @@ export const translatedTitles = async (items, language, usage = null) => {
     for (let start = 0; start < wanted.length; start += AT_ONCE) {
         const part = wanted.slice(start, start + AT_ONCE);
         const languages = [];
-        const translations = await translateTexts(part.map(i => ({text: read[i].title, from: writtenIn(read[i].language), ...(read[i].guessed ? {guess: true} : {})})), to, usage, {languages})
+        const translations = await translateTextsSure(part.map(i => ({text: read[i].title, from: writtenIn(read[i].language), ...(read[i].guessed ? {guess: true} : {})})), to, usage, {languages})
             .catch(() => part.map(() => null));
         part.forEach((i, j) => {
             answers.set(i, translations[j]);
@@ -49,3 +49,8 @@ export const translatedTitles = async (items, language, usage = null) => {
         return {language: written, translation};
     });
 };
+
+// Whether an answer of translatedTitles is a title that could not be translated: written in another language than the reader's, and none given
+// (a title already in the language of the reader, or the same once translated, has none either, and its language is the reader's)
+export const failedTitle = ({language: written, translation}, language) => Boolean(written) && written !== language && Boolean(writtenIn(written))
+    && Boolean(writtenIn(language)) && !translation;

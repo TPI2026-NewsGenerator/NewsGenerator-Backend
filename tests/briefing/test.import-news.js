@@ -54,8 +54,9 @@ jest.unstable_mockModule('../../services/utils/crawlers.js', () => ({Crawlers: {
 const aiWaysOf = jest.fn(async () => null);
 jest.unstable_mockModule('../../services/utils/ai-ways.js', () => ({aiWaysOf}));
 const extract = await import('../../services/utils/extract.js');
-jest.unstable_mockModule('../../services/utils/extract.js', () => ({...extract, extractArticle, translateTexts}));
-const {BriefingService, withoutTracking} = await import('../../services/briefing-service.js');
+// the titles are translated by translateTextsSure (translateTexts and a second round): the mock answers both
+jest.unstable_mockModule('../../services/utils/extract.js', () => ({...extract, extractArticle, translateTexts, translateTextsSure: translateTexts}));
+const {BriefingService, completeCards, withoutTracking} = await import('../../services/briefing-service.js');
 
 // the cards the people and organisations were asked for, from the last call
 const namesAndCardsAsked = () => namesAndCountriesOfCards.mock.calls.at(-1)[0];
@@ -325,5 +326,32 @@ describe('BriefingService.email with a news added', () => {
         const mail = sendMail.mock.calls[0][0];
         expect(mail.text.indexOf('01. Added news')).toBeGreaterThan(0);
         expect(mail.subject).toBe('Le briefing de Roberto · 13 octobre 2026 · 2 nouvelles');
+    });
+});
+
+describe('completeCards, a title that could not be translated', () => {
+    const lead = {id: 1, id_story: 55, link: 'https://news.example/strike', title: 'SBB: train strike on Monday', description: '', thumbnail: null, lang: 'en',
+        feed_url: 'https://feed.example/rss', medium: 'news.example', source_url: null, resolved_link: null, at: new Date('2026-10-13T05:00:00Z')};
+    const story = () => ({storyId: 55, best: lead, lead, members: [lead], mergedStoryIds: []});
+    const usage = () => Object.fromEntries(['summarizing', 'contesting', 'reviewing', 'angles', 'official', 'naming', 'titling', 'titleRewriting', 'writing']
+        .map(step => [step, {calls: 0, input: 0, output: 0}]));
+
+    it('should leave out the card of a briefing whose title stays in its language even asked again, and keep a news the reader added', async () => {
+        const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+        translateTexts.mockResolvedValueOnce([null]);
+        const {items} = await completeCards({main: [story()]}, {label: 'test', usage: usage(), language: 'fr', review: false});
+        expect(items).toEqual([]);
+        expect(error.mock.calls.flat().join(' ')).toContain('its title could not be translated');
+
+        translateTexts.mockResolvedValueOnce([null]);
+        const kept = await completeCards({main: [story()]}, {label: 'test', usage: usage(), language: 'fr', review: false, dropUntranslated: false});
+        expect(kept.items).toHaveLength(1);
+        expect(kept.items[0].titleTranslation).toBeNull();
+
+        // a title translated is a card kept
+        const done = await completeCards({main: [story()]}, {label: 'test', usage: usage(), language: 'fr', review: false});
+        expect(done.items).toHaveLength(1);
+        expect(done.items[0].titleTranslation).toBe('Grève des trains');
+        error.mockRestore();
     });
 });

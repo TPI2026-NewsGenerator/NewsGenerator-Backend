@@ -13,7 +13,7 @@ import {describe, expect, it, jest} from '@jest/globals';
 process.env.AISTUDIO_API_KEY = '';
 const chat = jest.fn();
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
-const {ORIGINAL_END, ORIGINAL_START, buildExtract, canSummarize, extractArticle, keepsFigures, passagesText, sentencesOf, shorterWays, splitSentences, translatePassages, translateTexts, translationFor, withoutDateline, withoutOriginalMarks} =
+const {ORIGINAL_END, ORIGINAL_START, buildExtract, canSummarize, extractArticle, keepsFigures, passagesText, sentencesOf, shorterWays, splitSentences, translatePassages, translateTexts, translateTextsSure, translationFor, withoutDateline, withoutOriginalMarks} =
     await import('../../services/utils/extract.js');
 const {newUsage} = await import('../../services/utils/ollama.js');
 
@@ -409,6 +409,30 @@ describe('translateTexts', () => {
         expect(prompt).toContain('lost or changed a figure');
         expect(prompt).toContain('[1] (German) Bayern gewinnt 3:1 in Dortmund');
         expect(prompt).not.toContain('El árbitro');
+    });
+});
+
+describe('translateTextsSure', () => {
+    const texts = [{text: 'Bayern gewinnt 3:1 in Dortmund', from: 'German'}, {text: 'El árbitro anuló el gol', from: 'Spanish'}];
+
+    it('should ask once more the texts that came back empty, and the ones only', async () => {
+        // the first round: the first text comes back without its figure three times; the second round answers it whole
+        chat.mockReset()
+            .mockResolvedValueOnce(json({translations: ['Le Bayern gagne', "L'arbitre a annulé le but"]}))
+            .mockResolvedValueOnce(json({translations: ['Le Bayern gagne']}))
+            .mockResolvedValueOnce(json({translations: ['Le Bayern gagne']}))
+            .mockResolvedValueOnce(json({translations: ['Le Bayern gagne 3-1 à Dortmund']}));
+        expect(await translateTextsSure(texts, 'French')).toEqual(['Le Bayern gagne 3-1 à Dortmund', "L'arbitre a annulé le but"]);
+        expect(chat.mock.calls.at(-1)[0].messages.at(-1).content).not.toContain('El árbitro');
+    });
+
+    it('should leave null the text that is still empty, and ask nothing more when every text came back', async () => {
+        chat.mockReset().mockResolvedValue(json({translations: ['Le Bayern gagne']}));
+        expect((await translateTextsSure([texts[0]], 'French'))[0]).toBeNull();
+
+        chat.mockReset().mockResolvedValueOnce(json({translations: ['Le Bayern gagne 3-1 à Dortmund', "L'arbitre a annulé le but"]}));
+        expect(await translateTextsSure(texts, 'French')).toEqual(['Le Bayern gagne 3-1 à Dortmund', "L'arbitre a annulé le but"]);
+        expect(chat).toHaveBeenCalledTimes(1);
     });
 });
 

@@ -28,8 +28,12 @@ reader's, a machine translation is shown, marked as such, with the original one 
   4 to 90 words a sentence (`MIN_SENTENCE_WORDS`, `MAX_SENTENCE_WORDS`). Glued sentences ("…les Bleus.Toute")
   are split, abbreviations ("M.", "U.S.") are not an end. A dash or a bullet opening a sentence is left out: the
   dateline "Zurich, 27 October 2026 —- The IFAB's..." showed as a point "—- The IFAB's..." (28.10.2026). The datelines of the
-  agencies and the captions of photos go too: "WASHINGTON (Reuters) -", "LONDON, Nov 6 (Reuters) -", "(CNN) —",
-  "EAST RUTHERFORD, NEW JERSEY - JULY 19:" (`withoutDateline`, 9.11.2026); a place in capitals and a colon alone ("NASA: …") stays.
+  agencies go too: "WASHINGTON (Reuters) -", "LONDON, Nov 6 (Reuters) -", "(CNN) —", "(GLO)-", and the city of a wire in capitals and a
+  colon, "ZURICH: …", "DAR ES SALAAM: …", or a credit ("HIBAPRESS: …") (`withoutDateline`, 9.11.2026; 11 such starts in the 154 briefings
+  saved, no other; a token of fewer than 4 letters and the bodies of `SUBJECTS` — "VAR: …", "FIFA: …" — are subjects and stay). The caption of
+  a photo, "EAST RUTHERFORD, NEW JERSEY - JULY 19: …", is **left out of the sentences** altogether (`isPhotoCaption`): it was the first key
+  point of a card, and is not a sentence of the article. Measured on the 709 cards of 14 days: no key point began with a time, a date or a
+  tag in brackets after the datelines above.
 - One call of the AI (`extractPrompt`, `ollamaJson` of `services/utils/ollama.js`): gemma4:31b on Ollama cloud,
   no thinking flag, Gemini (`gemma-4-31b-it`) when Ollama fails. It answers in JSON the numbers of 2 to 5
   sentences, the most important first, the `topic` and the `sourcing` (named, anonymous, none) shown beside the
@@ -62,6 +66,12 @@ reader's, a machine translation is shown, marked as such, with the original one 
   AI does not answer at all the asking stops. A card of another language still without its translation after all this is **left out and
   its place taken by the next story of the reserve** (`dropUntranslated` of `readStories`, `readableCards`), never shown half done; a
   news the reader adds by its link is kept as it is. The failures are in the server log ("Translation: …", `translationStats`).
+- The same for the **titles** (`translateTextsSure`, 9.11.2026): a title that came back without its translation is asked once more after a
+  pause (4 s); a card whose title is still in another language than the reader's is **left out and replaced by the next story of the
+  reserve**, like one whose passages could not be translated (`completeCards`, "its title could not be translated" in the log; a news the
+  reader added keeps it); an **other angle** whose title could not be translated is not shown (`anglesOf`, `failedTitle` of
+  `title-translation.js`, which the titles of the affairs and of their timelines use too). Not covered: a title in Latin letters under the
+  label of the language of the reader (a Spanish title of a feed declared English with no clear short words): only its script is read.
 - What a reader sees is checked by its letters, not by the label: `bench/translation-completeness.mjs [days]` reads the saved
   briefings text by text (title, passages, key points, digest, angles) against the reader's language, and `scripts/briefing-audit.js`
   has the same check ("no text a reader sees is written in another language than theirs", `shownLanguage`). On the 33 briefings of

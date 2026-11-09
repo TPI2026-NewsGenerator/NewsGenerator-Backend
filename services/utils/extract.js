@@ -50,8 +50,29 @@ const CAPS_PLACE = String.raw`\p{Lu}[\p{Lu}.'’]*(?:[ -]\p{Lu}[\p{Lu}.'’]*){0
 const DAY_MONTH = String.raw`(?:(\p{L}+)\.?\s+\d{1,2}|\d{1,2}\s+(\p{L}+)\.?)`;
 const CAPTION = new RegExp(String.raw`^${CAPS_PLACE}(?:,\s+${CAPS_PLACE})?\s+[–—−-]\s+${DAY_MONTH}(?:,\s*\d{4})?:\s+`, 'u');
 const WIRE = new RegExp(String.raw`^(?:${CAPS_PLACE}(?:,\s+(?:${CAPS_PLACE}|${DAY_MONTH}))?\s*)?\(\p{Lu}[\p{L}.&+ ]{1,24}\)\s*[–—−-]+\s+`, 'u');
+// The words under a photo open with their place and their date, "EAST RUTHERFORD, NEW JERSEY - JULY 19: …" (Getty, the agencies): not a sentence
+// of the article, the first key point of a card of 8.11.2026 was one. They are left out of the sentences, wherever they are
+const monthOf = (word) => MONTH_OF.has(word.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase());
+export const isPhotoCaption = (sentence) => {
+    const found = String(sentence ?? '').match(CAPTION);
+    return Boolean(found) && monthOf(found[1] ?? found[2]);
+};
+// The city a wire opens its article with, in capitals and a colon: "ZURICH: Arsene Wenger's trial…", "DAR ES SALAAM: …", "HIBAPRESS: …" (a credit). Measured on
+// the 154 briefings saved on 9.11.2026: 11 places and credits, none other. Not an organisation or a thing that is the subject of the sentence
+// ("VAR: the system…", "FIFA: the world body said…"), nor a token of fewer than 4 letters
+const SUBJECTS = new Set(['FIFA', 'UEFA', 'CAF', 'AFC', 'OFC', 'CONCACAF', 'CONMEBOL', 'IFAB', 'FIFPRO', 'VAR', 'VARS', 'IOC', 'CIO', 'WADA', 'NASA', 'NATO', 'OTAN',
+    'OPEC', 'UNESCO', 'UNICEF', 'UNHCR', 'EURO', 'COPA', 'AFCON', 'CAN', 'CHAN', 'NBA', 'NFL', 'NHL', 'MLB', 'ATP', 'WTA', 'FIBA', 'FINA', 'FIVB', 'FIFA2026', 'BREAKING', 'UPDATE',
+    'URGENT', 'OFFICIAL', 'EXCLUSIVE', 'VIDEO', 'PHOTOS', 'LIVE', 'OPINION', 'ANALYSIS', 'NEWS', 'ALERT', 'REPORT', 'STATEMENT']);
+const CITY_COLON = /^(\p{Lu}+(?:[ -]\p{Lu}+){0,3}):\s+(?=\p{Lu})/u;
+const cityDateline = (text) => {
+    const found = text.match(CITY_COLON);
+    if (!found || found[1].replace(/[^\p{L}]/gu, '').length < 4 || SUBJECTS.has(found[1])) return null;
+    return wordCount(text.slice(found[0].length)) >= 6 ? found[0] : null;
+};
 export const withoutDateline = (sentence) => {
     const text = String(sentence ?? '');
+    const city = cityDateline(text);
+    if (city) return text.slice(city.length);
     const place = text.match(CAPTION) ?? text.match(WIRE);
     if (place) {
         const written = place[1] ?? place[2];
@@ -107,7 +128,7 @@ const isSentence = (text) => {
 
 // the sentences of a text read flat, when the page gave no blocks
 export const splitSentences = (text) => {
-    const sentences = cut((text ?? '').slice(0, MAX_CONTENT_CHARS)).filter(isSentence).slice(0, MAX_SENTENCES);
+    const sentences = cut((text ?? '').slice(0, MAX_CONTENT_CHARS)).filter(sentence => isSentence(sentence) && !isPhotoCaption(sentence)).slice(0, MAX_SENTENCES);
     return sentences.length > 0 ? [undated(sentences[0]), ...sentences.slice(1)] : sentences;
 };
 
@@ -125,7 +146,7 @@ export const sentencesOf = ({content, blocks}) => {
         if (chars > MAX_CONTENT_CHARS) break;
         chars += block.text.length;
         for (const text of cut(block.text)) {
-            if (isSentence(text)) sentences.push({text: sentences.length === 0 ? undated(text) : text, quote: block.kind === 'quote'});
+            if (isSentence(text) && !isPhotoCaption(text)) sentences.push({text: sentences.length === 0 ? undated(text) : text, quote: block.kind === 'quote'});
         }
     }
     return sentences.slice(0, MAX_SENTENCES);
@@ -511,6 +532,23 @@ export const translateTexts = async (texts, to, usage = null, {languages = null}
         }
         open = open.filter(i => done[i] === null);
     }
+    return done;
+};
+
+// translateTexts, and what came back empty asked once more after a pause (the AI busy for the first round): the titles a card shows must be
+// translated, a card is left out when its title is not (see completeCards) and an angle with it
+export const translateTextsSure = async (texts, to, usage = null, {languages = null} = {}) => {
+    const done = await translateTexts(texts, to, usage, {languages});
+    const [pause] = translationWaits.rounds;
+    const open = done.map((translation, i) => i).filter(i => done[i] === null);
+    if (open.length === 0 || pause === undefined) return done;
+    await wait(pause);
+    const again = [];
+    const retried = await translateTexts(open.map(i => texts[i]), to, usage, {languages: languages ? again : null});
+    open.forEach((i, k) => {
+        done[i] = retried[k];
+        if (languages && again[k]) languages[i] = again[k];
+    });
     return done;
 };
 

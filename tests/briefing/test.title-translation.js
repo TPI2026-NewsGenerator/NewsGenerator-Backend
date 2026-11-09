@@ -11,7 +11,7 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 const ollamaJson = jest.fn();
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson}));
 const {scriptLanguage, titleLanguage, writtenIn} = await import('../../services/utils/language.js');
-const {translatedTitles} = await import('../../services/utils/title-translation.js');
+const {failedTitle, translatedTitles} = await import('../../services/utils/title-translation.js');
 
 const PERSIAN = 'افشاگری لوموند: فیفا مالیات‌های رئیس خود را در امریکا پرداخت کرده است';
 const CZECH = '„Můj cíl je jasný: sloužit fotbalu a lidem.“ Infantino má překvapivého vyzyvatele';
@@ -153,6 +153,23 @@ describe('translatedTitles', () => {
         ollamaJson.mockReset().mockRejectedValue(new Error('down'));
         const answers = await translatedTitles([{title: PERSIAN, label: 'en'}], 'en');
         expect(answers).toEqual([{language: 'fa', translation: null}]);
+    });
+
+    it('should ask again, after a pause, the titles that came back without a translation, and say which could not be translated at all', async () => {
+        // the AI fails for the three calls of the first round, then answers
+        ollamaJson.mockReset().mockRejectedValueOnce(new Error('down')).mockRejectedValueOnce(new Error('down')).mockRejectedValueOnce(new Error('down'));
+        translates();
+        const [answer] = await translatedTitles([{title: PERSIAN, label: 'en'}], 'en');
+        expect(answer.translation).toBe(`T: ${PERSIAN}`);
+
+        ollamaJson.mockReset().mockRejectedValue(new Error('down'));
+        const [failed] = await translatedTitles([{title: PERSIAN, label: 'en'}], 'en');
+        expect(failedTitle(failed, 'en')).toBe(true);
+        expect(failedTitle(answer, 'en')).toBe(false);
+        // a title in the language of the reader, or in one the AI cannot be asked, has no translation and has not failed
+        expect(failedTitle({language: 'en', translation: null}, 'en')).toBe(false);
+        expect(failedTitle({language: 'xx', translation: null}, 'en')).toBe(false);
+        expect(failedTitle({language: 'fa', translation: null}, 'xx')).toBe(false);
     });
 
     it('should ask nothing when every title is in the language of the reader', async () => {

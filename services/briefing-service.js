@@ -18,7 +18,7 @@ import {FeedbackService} from "./feedback-service.js";
 import {DiscoveryService} from "./discovery-service.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {newUsage} from "./utils/ollama.js";
-import {canSummarize, extractArticle, passagesText, sentencesOf, splitSentences, translateTexts, withoutOriginalMarks} from "./utils/extract.js";
+import {canSummarize, extractArticle, passagesText, sentencesOf, splitSentences, translateTexts, translateTextsSure, withoutOriginalMarks} from "./utils/extract.js";
 import {glossariesOfStories} from "./utils/card-spellings.js";
 import {alignNames, namesIn, spellingsOf} from "./utils/spellings.js";
 import {aiWaysOf} from "./utils/ai-ways.js";
@@ -34,7 +34,7 @@ import {officialSourcesOf} from "./utils/official-sources.js";
 import {evolvedStories, REPEAT_HOURS, shownStories, withoutRepeats} from "./utils/repeats.js";
 import {readerLanguage, scriptLanguage, writtenIn} from "./utils/language.js";
 import {VERSION_DAYS, forThePage, idsOf, restoredCard, swappedCard, versionsOfCards} from "./utils/card-versions.js";
-import {translatedTitles} from "./utils/title-translation.js";
+import {failedTitle, translatedTitles} from "./utils/title-translation.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {assertPublicUrl, hostOf, mediumOf} from "./utils/public-url.js";
 import {credibleStory, decodeLinks, googleAvailable, isGoogleNewsUrl, isNotNews, isRepeatedPage, pickCandidates} from "./utils/google-news.js";
@@ -488,7 +488,10 @@ export const anglesOf = async (stories, titles, {language, feedUrls, hours, trus
     const all = [...angles.values()].flat();
     const translated = await translatedTitles(all.map(other => ({title: other.title, label: other.article.lang})), language, usage)
         .catch(() => all.map(other => ({language: other.article.lang, translation: null})));
-    return new Map([...angles].map(([id, others]) => [id, others.map(other => {
+    // an angle whose title is in another language and could not be translated, even asked again, is not shown: the reader could not read it
+    const unreadable = new Set(all.filter(other => failedTitle(translated[all.indexOf(other)], language)));
+    if (unreadable.size > 0) console.error(`Briefing: ${unreadable.size} other angles are left out, their title could not be translated`);
+    return new Map([...angles].map(([id, others]) => [id, others.filter(other => !unreadable.has(other)).map(other => {
         const read = translated[all.indexOf(other)];
         return {
             ...toArticle(other.article, trusted),
@@ -726,7 +729,7 @@ export const completeCards = async ({main, spare = []}, {briefingId = null, labe
         // them, in the language of the title the e-mail will have
         const foreign = kept.map(([, lead]) => lead).filter(lead => lead.lang && lead.lang !== language && writtenIn(lead.lang) && writtenIn(language));
         const proposedForeign = foreign.filter(lead => titleProposal.has(lead));
-        const translations = foreign.length === 0 ? [] : await translateTexts([
+        const translations = foreign.length === 0 ? [] : await translateTextsSure([
             ...foreign.map(lead => ({text: shownTitle(lead), from: writtenIn(lead.lang), ...spellings.get(lead)})),
             ...proposedForeign.map(lead => ({text: titleProposal.get(lead).title, from: writtenIn(lead.lang), ...spellings.get(lead)})),
         ], writtenIn(language), usage.summarizing);
@@ -737,7 +740,12 @@ export const completeCards = async ({main, spare = []}, {briefingId = null, labe
             else titleProposal.delete(lead);
         });
         if (leftOut.size > 0) console.log(`Briefing: ${leftOut.size} cards on what the reader refuses left out (${[...leftOut.values()].join(' / ')})`);
-        return results.map(result => ({...result, leftOut: leftOut.get(String(result.story.storyId)) ?? null}));
+        // A card whose title could not be translated, even asked again, is left out as one whose passages could not be (see readStories): its place is
+        // taken by the next story of the reserve, a news the reader added keeps it (the user, 9.11.2026: no card half translated)
+        const untitled = new Set(dropUntranslated ? foreign.filter(lead => titleTranslation.get(lead) === null || titleTranslation.get(lead) === undefined) : []);
+        for (const lead of untitled) console.error(`Briefing: the story of "${lead.title}" (${lead.lang}) is left out, its title could not be translated`);
+        return results.map(result => untitled.has(leadOf(result)) ? {...result, unreadable: true, untranslated: true}
+            : {...result, leftOut: leftOut.get(String(result.story.storyId)) ?? null});
     };
     const {cards, unreadable, leftOut} = await readableCards(main, spare, read);
     if (unreadable + leftOut > 0) console.log(`Briefing: ${unreadable} chosen stories could not be read and ${leftOut} were left out, ${cards.filter(card => card.story.reserve).length} of the reserve took their place`);
