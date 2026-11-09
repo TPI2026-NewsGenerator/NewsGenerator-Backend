@@ -63,7 +63,9 @@ export const isPhotoCaption = (sentence) => {
 const SUBJECTS = new Set(['FIFA', 'UEFA', 'CAF', 'AFC', 'OFC', 'CONCACAF', 'CONMEBOL', 'IFAB', 'FIFPRO', 'VAR', 'VARS', 'IOC', 'CIO', 'WADA', 'NASA', 'NATO', 'OTAN',
     'OPEC', 'UNESCO', 'UNICEF', 'UNHCR', 'EURO', 'COPA', 'AFCON', 'CAN', 'CHAN', 'NBA', 'NFL', 'NHL', 'MLB', 'ATP', 'WTA', 'FIBA', 'FINA', 'FIVB', 'FIFA2026', 'BREAKING', 'UPDATE',
     'URGENT', 'OFFICIAL', 'EXCLUSIVE', 'VIDEO', 'PHOTOS', 'LIVE', 'OPINION', 'ANALYSIS', 'NEWS', 'ALERT', 'REPORT', 'STATEMENT']);
-const CITY_COLON = /^(\p{Lu}+(?:[ -]\p{Lu}+){0,3}):\s+(?=\p{Lu})/u;
+// a colon, or a dash with a space on each side: "WALVIS BAY – The Namibia Ports Authority…" (briefing of Enzo of 9.11.2026: the tagger made two names
+// of it, WALVIS and BAY)
+const CITY_COLON = /^(\p{Lu}+(?:[ -]\p{Lu}+){0,3})(?::|\s+[–—−-])\s+(?=\p{Lu})/u;
 const cityDateline = (text) => {
     const found = text.match(CITY_COLON);
     if (!found || found[1].replace(/[^\p{L}]/gu, '').length < 4 || SUBJECTS.has(found[1])) return null;

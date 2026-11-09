@@ -33,7 +33,7 @@ an extra the reader asks for: see [Bullet points (IA)](bullet-points-ia/README.m
 [Summary](../summary/README.md) or Bullet points, with "Read as" above the cards (`BriefingFormat`, a radix
 `ToggleGroup`, one always chosen). The choice is kept in the browser (`keepFormat`, `localStorage` key
 `newsgenerator.briefing-format`) and on the account ([Preferences](../../accounts/preferences/README.md)), and read back by `keptFormat` at the next visit, `'passages'` when nothing valid
-is kept. Under the points, "Show AI version" opens the [Bullet points (IA)](bullet-points-ia/README.md) when
+is kept. In the row of the title of the points, the switch "AI version" replaces them with the [Bullet points (IA)](bullet-points-ia/README.md) when
 the card has them: an extra on demand.
 
 **In the e-mail.** The bar of the cards ticked has its own "In the e-mail, as", preset to the page's way and

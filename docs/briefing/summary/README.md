@@ -35,7 +35,7 @@ see [Summary (IA)](summary-ia/README.md).
 **Chosen by the reader.** One way is shown at a time: [Key passages](../key-passages/README.md) (the default),
 Summary or [Bullet points](../bullet-points/README.md), with "Read as" above the cards. The choice is kept in the
 browser (`keepFormat`, `localStorage` key `newsgenerator.briefing-format`) and on the account
-([Preferences](../../accounts/preferences/README.md)), and read back by `keptFormat` at the next visit. Under the summary, "Show AI version" opens the [Summary (IA)](summary-ia/README.md) when the card
+([Preferences](../../accounts/preferences/README.md)), and read back by `keptFormat` at the next visit. In the row of the title of the summary, the switch "AI version" replaces it with the [Summary (IA)](summary-ia/README.md) when the card
 has one: an extra on demand, never in place of the published sentences.
 
 **In the e-mail.** The bar of the cards ticked has its own chooser, preset to the page's way. `format: 'digest'`

@@ -63,8 +63,9 @@ not awaited (`briefings.analysis`, the client asking every 8 s while it runs).
 
 A card shows **one way of reading at a time**, chosen by the reader with "Read as" (`BriefingFormat.jsx`,
 `formats.js`) and kept in the browser (`localStorage`): Key passages (the default), Summary or Bullet points, all
-three made of the article's own sentences. The AI version of a Summary or of Bullet points is an extra, shown on
-demand ("Show AI version") under them. The e-mail has its own choice of way (`format` of
+three made of the article's own sentences. The AI version of a Summary or of Bullet points is a switch ("AI version") over the sentences: on, it is
+shown **in place of** the article's own sentences, not under them (the user, 9.11.2026), and the switch puts them back (the original of a
+translation stays one click away under it). The e-mail has its own choice of way (`format` of
 `POST /briefing/:id/email`), and the cards whose AI version the reader ticked (`ai`).
 
 ## Overview diagrams

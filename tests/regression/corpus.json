@@ -392,7 +392,15 @@
         {"id":"chips-acronym-of-a-longer-name-stays","family":"chips","origin":"UEFA and KFA are acronyms: no word of their label is them, they stay as written",
             "input":{"names":[{"name":"UEFA","qid":"Q35572","kind":"organization"},{"name":"KFA","qid":"Q482473","kind":"organization"}],"labels":{"Q35572":"Union of European Football Associations","Q482473":"Korea Football Association"},"translated":true}, "expect":{"names":[["UEFA","Q35572"],["KFA","Q482473"]]}},
         {"id":"chips-capitals-of-a-card-not-translated-stay","family":"chips","origin":"a card whose text is not translated shows the name as its medium writes it (only the accents of the label are taken)",
-            "input":{"names":[{"name":"SEVILLA","qid":"Q10329","kind":"organization"}],"labels":{"Q10329":"Sevilla FC"},"translated":false}, "expect":{"names":[["SEVILLA","Q10329"]]}}
+            "input":{"names":[{"name":"SEVILLA","qid":"Q10329","kind":"organization"}],"labels":{"Q10329":"Sevilla FC"},"translated":false}, "expect":{"names":[["SEVILLA","Q10329"]]}},
+        {"id":"dateline-city-in-capitals-and-dash","family":"dateline","origin":"briefing 7-18 of 9.11.2026 (Enzo), the card of Namport: \"WALVIS BAY – The Namibia Ports Authority…\" opened the key points, and the tagger made two chips of it (WALVIS, BAY)",
+            "input":{"text":"WALVIS BAY – The Namibia Ports Authority (Namport) has called on the Namibia Football Association to account for every dollar of its sponsorship."}, "expect":{"first":"The Namibia Ports Authority (Namport) has called on the Namibia Football Association to account for every dollar of its sponsorship."}},
+        {"id":"dateline-city-in-capitals-and-hyphen","family":"dateline","origin":"the same with a hyphen between two spaces",
+            "input":{"text":"DAR ES SALAAM - Tanzania will host the draw for the tournament next week in the city, the federation said."}, "expect":{"first":"Tanzania will host the draw for the tournament next week in the city, the federation said."}},
+        {"id":"dateline-none-fifa-and-dash","family":"dateline","origin":"a body of the list and a dash is its statement: the actor is not lost",
+            "input":{"text":"FIFA – the world body said on Friday that the draw will be held in Zurich next week, without a date."}, "expect":{"first":"FIFA – the world body said on Friday that the draw will be held in Zurich next week, without a date."}},
+        {"id":"dateline-none-var-and-dash","family":"dateline","origin":"a token of fewer than 4 letters and a dash is a subject, not a place",
+            "input":{"text":"VAR – the system will be used in the cup from the next round of the competition, the league said."}, "expect":{"first":"VAR – the system will be used in the cup from the next round of the competition, the league said."}}
     ],
     "live": [
         {"id": "live-translate-vi-hdbank", "family": "translate", "origin": "briefing 414: all the text stayed Vietnamese",

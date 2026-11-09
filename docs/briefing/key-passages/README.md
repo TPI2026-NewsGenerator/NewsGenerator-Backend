@@ -29,7 +29,7 @@ reader's, a machine translation is shown, marked as such, with the original one 
   are split, abbreviations ("M.", "U.S.") are not an end. A dash or a bullet opening a sentence is left out: the
   dateline "Zurich, 27 October 2026 —- The IFAB's..." showed as a point "—- The IFAB's..." (28.10.2026). The datelines of the
   agencies go too: "WASHINGTON (Reuters) -", "LONDON, Nov 6 (Reuters) -", "(CNN) —", "(GLO)-", and the city of a wire in capitals and a
-  colon, "ZURICH: …", "DAR ES SALAAM: …", or a credit ("HIBAPRESS: …") (`withoutDateline`, 9.11.2026; 11 such starts in the 154 briefings
+  colon or a dash, "ZURICH: …", "WALVIS BAY – …", "DAR ES SALAAM: …", or a credit ("HIBAPRESS: …") (`withoutDateline`, 9.11.2026; 11 such starts in the 154 briefings
   saved, no other; a token of fewer than 4 letters and the bodies of `SUBJECTS` — "VAR: …", "FIFA: …" — are subjects and stay). The caption of
   a photo, "EAST RUTHERFORD, NEW JERSEY - JULY 19: …", is **left out of the sentences** altogether (`isPhotoCaption`): it was the first key
   point of a card, and is not a sentence of the article. Measured on the 709 cards of 14 days: no key point began with a time, a date or a
