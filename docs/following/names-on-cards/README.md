@@ -235,6 +235,28 @@ Italian (in, nel, nella, nello, nei, nelle) and Portuguese (em, no, na, nos, nas
 "In" of In Salah are words of a name. Applied when a card reads its places and when a place is linked; the places that found no item before 10.11.2026
 are looked for once more when a card names them (`PLACES_RULES_FROM`). Rare (27 places so in French among 489 000), common in a French headline.
 
+## A name that is no name
+
+A chip "refereeing" stood on a card of Corsica (the user, 9.11.2026): the tagger had taken "Arbitrage" for an organisation, the AI that links the names without
+an item had chosen the item "refereeing" among the ones so called. Of the 924 cards of the last 80 briefings, 377 of the 916 different chips had no item
+of Wikidata, and many were no names: the pairing of two teams ("Genoa-Milan", "Real Madrid-Sevilla", 31 of 470 names with no item), a name joined to a
+word ("FIFA-Präsident", "Fifa-valg", "DBU-formand", 20), a common noun ("World", "Hotline", "Policija", "Clubs", "Former Referee", 24), a fragment or a declined
+form ("FC", "UEFA-e", "Manchesteru City", 17), a word in capitals (8). Two rules, in the spirit of the proofreading (the AI points, the code decides):
+
+- **A concept of Wikidata** (`withoutConcepts` of `card-names.js`): a name linked to an item that is not a person and whose label has no capital letter
+  ("refereeing", "public prosecutor's office") is left out. A named organisation has a capital in its label, a brand with a small first letter ("eBay") another
+  further on; "bell hooks" is a person.
+- **A name with no item the AI says is no name** (`reviewNames` of `services/utils/name-review.js`, at the end of `write()`, with the other readings of the
+  cards): one call for the names with no item of the briefing (40 at most a call, with the title of their card), "when in doubt it is a name". Only a name
+  with NO item is left out, never one that is linked; an AI that points at more than 60 % of the names (over 6) is not believed; it never fails nor waits
+  more than 60 s. What was left out is in the log (`Briefing 512: names: "Genoa-Milan" (match) left out of the card …`) and on the card (`namesLeftOut`,
+  shown by `scripts/briefing-audit.js`). `AI_NAME_REVIEW=off` switches it off. The news a reader adds by its link goes through it too.
+
+Measured on the 40 last briefings (`bench/name-review-live.mjs`): 470 names with no item looked at, 100 left out (9 s for the 40, 566 tokens read and 75
+written a briefing). By reading the list: almost all are no names; the doubtful ones are acronyms and clubs written in a form of their language ("FAZ", the
+Zambian federation, "Gorice", "Comex", "Ланс"): they are chips with no item, so nothing is linked or lost but the chip. It does not point at every declined form
+("Manchesteru City" was left out on the second run, not on the first).
+
 ## Diagrams
 
 - [Class diagram](following-names-on-cards-class.png) ([source](following-names-on-cards-class.puml))

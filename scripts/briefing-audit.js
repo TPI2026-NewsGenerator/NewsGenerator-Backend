@@ -112,6 +112,12 @@ if (proofread.length > 0) {
     console.log(`\n${proofread.length} piece(s) the proofreading took out:`);
     for (const one of proofread.slice(0, 10)) console.log(`       - "${short(one.text, 60)}" (${one.kind}, ${one.fields.join(' and ')}) of "${short(one.card, 50)}"`);
 }
+// the names with no item of Wikidata that the AI said are no names (services/utils/name-review.js), left out of their card
+const leftOut = items.flatMap(item => (item.namesLeftOut ?? []).map(one => ({...one, card: item.titleTranslation ?? item.title})));
+if (leftOut.length > 0) {
+    console.log(`\n${leftOut.length} name(s) with no item left out as no names:`);
+    for (const one of leftOut.slice(0, 12)) console.log(`       - "${short(one.name, 40)}" (${one.why}) of "${short(one.card, 50)}"`);
+}
 const rewritten = items.filter(item => item.titleRewritten).length;
 const proposals = items.filter(item => item.titleProposal).length;
 console.log(`\ntitles rewritten by the AI: ${rewritten}, rewrites left to the editor: ${proposals}, analysis: ${row.analysis?.status ?? 'none'} (${Object.keys(row.analysis?.cards ?? {}).length} cards)`);

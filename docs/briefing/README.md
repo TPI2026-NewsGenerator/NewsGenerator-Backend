@@ -123,7 +123,8 @@ sees (the line of the choice, the AI version, a denial, a statement, the card it
 language than theirs. `scripts/briefing-audit.js`
 runs the same checks on a briefing already written (by its id, or a file of cards never saved), adds the ones of the analysis, written after the
 cards, the share of the cards with their names, countries, angles and picture against the last briefings of the profile, and why a card has no
-country. A line of the log that fails is a case for the corpus of `tests/regression`, then a rule of the code.
+country, then what the AI readings of the cards did (the pieces the proofreading took out, the names with no item left out as no names), so that each
+is read and, if the rules did not know it, becomes a case. A line of the log that fails is a case for the corpus of `tests/regression`, then a rule of the code.
 
 ## The proofreading before the reader
 

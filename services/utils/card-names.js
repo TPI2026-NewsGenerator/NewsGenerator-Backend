@@ -314,9 +314,17 @@ const spelledNames = async (read, cards = [], reader = null) => {
         return new Map();
     });
     const languageOf = new Map(cards.map(card => [card.storyId, card.language ?? null]));
-    return read.map(card => ({...card, names: withoutUnreadable(withWikidataSpelling(card.names, labels,
-        {translated: Boolean(reader && languageOf.get(card.storyId) && languageOf.get(card.storyId) !== reader)}), reader)}));
+    return read.map(card => ({...card, names: withoutUnreadable(withoutConcepts(withWikidataSpelling(card.names, labels,
+        {translated: Boolean(reader && languageOf.get(card.storyId) && languageOf.get(card.storyId) !== reader)}), labels), reader)}));
 };
+// A name linked to a concept, not to a named thing: "Arbitrage" taken for an organisation, linked by the AI among the items so called to the
+// item "refereeing" (the chip of a card of Corsica, 9.11.2026), "public prosecutor's office". The label of Wikidata of a concept has no capital
+// letter, that of a named organisation has one, a brand with a small first letter ("eBay", "iPhone") another further on. A person is left alone
+// ("bell hooks" is a person). labels: Map qid -> label in Latin letters (see labelsOfItems)
+export const withoutConcepts = (names, labels) => names.filter(name => {
+    const label = name.qid && name.kind !== 'person' ? labels.get(name.qid) : null;
+    return !(label && /^\p{Ll}/u.test(label) && !/\p{Lu}/u.test(label));
+});
 // A name that is no item of Wikidata and is written in the letters of another language than the reader's ("Παναθηναϊκό", "ФК Тиквеш": 31 of the 76
 // chips in other letters of the 80 briefings of the last 20 days, 9.11.2026) cannot be spelled: Wikidata has nothing to spell it with. It would
 // stand under an English text in Greek or Cyrillic letters, and open the page of a name the reader cannot read: it is left out (the text of the

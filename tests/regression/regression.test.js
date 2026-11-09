@@ -21,7 +21,7 @@ const {keepsFigures, splitSentences} = await import('../../services/utils/extrac
 const {alignNames} = await import('../../services/utils/spellings.js');
 const {withCleanNext} = await import('../../services/utils/card-analysis.js');
 const {searchNamesFor} = await import('../../services/utils/watch-names.js');
-const {cardNames, tidyNames, withoutUnreadable, withSurnamesLinked} = await import('../../services/utils/card-names.js');
+const {cardNames, tidyNames, withoutConcepts, withoutUnreadable, withSurnamesLinked} = await import('../../services/utils/card-names.js');
 const {nationalityOf} = await import('../../services/utils/nationalities.js');
 const {countryDeclined, countryNamed} = await import('../../services/utils/country-names.js');
 const {placeOfOneCountry} = await import('../../services/utils/wikidata.js');
@@ -81,8 +81,11 @@ const FAMILIES = {
     chips: ({input, expect: wanted}) => {
         const [names] = tidyNames([input.names], {stems: input.stems ?? [], labels: new Map(Object.entries(input.labels ?? {})),
             orgs: [input.orgs ?? []], nameKeys: new Map(Object.entries(input.nameKeys ?? {})), translated: [Boolean(input.translated)]});
-        // reader: the language of the reader, a name that is no item and is written in other letters is left out (withoutUnreadable)
-        expect((input.reader ? withoutUnreadable(names, input.reader) : names).map(name => [name.name, name.qid ?? null])).toEqual(wanted.names);
+        // reader: the language of the reader, a name that is no item and is written in other letters is left out (withoutUnreadable);
+        // concepts: a name linked to an item whose label has no capital letter is left out (withoutConcepts)
+        const unreadable = input.reader ? withoutUnreadable(names, input.reader) : names;
+        const kept = input.concepts ? withoutConcepts(unreadable, new Map(Object.entries(input.labels ?? {}))) : unreadable;
+        expect(kept.map(name => [name.name, name.qid ?? null])).toEqual(wanted.names);
     },
     // the country the name of an organisation says by its words: it starts with a country, or has an adjective of nationality
     nationality: ({input, expect: wanted}) => {

@@ -144,6 +144,18 @@ describe('BriefingService.importNews', () => {
             expect(ollamaJson.mock.calls.find(([prompt]) => proofreadPrompt(prompt))[0]).toContain('shown in French');
         });
 
+        it('should leave out of the names of the news a reader adds the ones with no item that the AI says are no names, as for a briefing', async () => {
+            namesAndCountriesOfCards.mockImplementationOnce(async (cards) => new Map(cards.map(one => [one.storyId, {names: [{name: 'SBB', qid: 'Q1', kind: 'organization'},
+                {name: 'Hotline', qid: null, kind: 'organization'}, {name: 'Valencia', qid: null, kind: 'organization'}], countries: ['CH']}])));
+            ollamaJson.mockImplementation(async (prompt) => typeof prompt === 'string' && prompt.includes('NOT the proper name of a person') ? {not_names: [{n: 1, why: 'common noun'}]} : {});
+
+            await BriefingService.importNews(4, '7', 'https://news.example/strike');
+
+            const [, , added] = addItem.mock.calls[0];
+            expect(added.names.map(name => name.name)).toEqual(['SBB', 'Valencia']);
+            expect(added.namesLeftOut).toEqual([{name: 'Hotline', why: 'common noun'}]);
+        });
+
         it('should add the news as it is when the AI fails to read it', async () => {
             datedExtract();
             ollamaJson.mockImplementation(async (prompt) => {

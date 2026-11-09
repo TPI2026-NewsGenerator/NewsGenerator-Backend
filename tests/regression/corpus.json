@@ -484,7 +484,19 @@
         {"id": "placename-fr-lower-case-stays", "family": "placename", "origin": "no capital after the preposition: not a place",
             "input": {"name":"Au greffe","lang":"fr"}, "expect": {"name":"Au greffe"}},
         {"id": "placename-en-language-stays", "family": "placename", "origin": "the language of the name decides: the prepositions of French are no words to take off an English name",
-            "input": {"name":"En Route","lang":"en"}, "expect": {"name":"En Route"}}
+            "input": {"name":"En Route","lang":"en"}, "expect": {"name":"En Route"}},
+        {"id": "chips-concept-refereeing", "family": "chips", "origin": "the chip \"refereeing\" of the card of Corsica of the briefings of Enzo of 9.11.2026: the tagger took \"Arbitrage\" for an organisation, the AI linked it to the item \"refereeing\" (Q94271838)",
+            "input": {"names":[{"name":"refereeing","qid":"Q94271838","kind":"organization"}],"labels":{"Q94271838":"refereeing"},"concepts":true}, "expect": {"names":[]}},
+        {"id": "chips-concept-public-prosecutors-office", "family": "chips", "origin": "a class of organisations, not an organisation: the label has no capital letter (briefings of the last 20 days)",
+            "input": {"names":[{"name":"public prosecutor's office","qid":"Q1092499","kind":"organization"}],"labels":{"Q1092499":"public prosecutor's office"},"concepts":true}, "expect": {"names":[]}},
+        {"id": "chips-concept-named-organisation-kept", "family": "chips", "origin": "FIFA has capitals in its label",
+            "input": {"names":[{"name":"FIFA","qid":"Q253414","kind":"organization"}],"labels":{"Q253414":"FIFA"},"concepts":true}, "expect": {"names":[["FIFA","Q253414"]]}},
+        {"id": "chips-concept-brand-with-a-small-first-letter-kept", "family": "chips", "origin": "eBay: a small first letter, a capital further on",
+            "input": {"names":[{"name":"eBay","qid":"Q58024","kind":"organization"}],"labels":{"Q58024":"eBay"},"concepts":true}, "expect": {"names":[["eBay","Q58024"]]}},
+        {"id": "chips-concept-person-with-a-lower-case-label-kept", "family": "chips", "origin": "bell hooks, a person, is written so",
+            "input": {"names":[{"name":"bell hooks","qid":"Q228676","kind":"person"}],"labels":{"Q228676":"bell hooks"},"concepts":true}, "expect": {"names":[["bell hooks","Q228676"]]}},
+        {"id": "chips-concept-no-item-kept-for-the-ai-to-judge", "family": "chips", "origin": "a name with no item has no label to read: the AI of name-review.js judges it",
+            "input": {"names":[{"name":"Hotline","qid":null,"kind":"organization"}],"labels":{},"concepts":true}, "expect": {"names":[["Hotline",null]]}}
     ],
     "live": [
         {"id": "live-translate-vi-hdbank", "family": "translate", "origin": "briefing 414: all the text stayed Vietnamese",
