@@ -6,11 +6,14 @@
 //               picking their numbers, and a translation that keeps every figure
 //
 
+import process from 'node:process';
 import {describe, expect, it, jest} from '@jest/globals';
 
+// no Gemini to answer in the place of the Ollama that fails here: a key from the .env would send the prompts of the tests to it
+process.env.AISTUDIO_API_KEY = '';
 const chat = jest.fn();
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
-const {ORIGINAL_END, ORIGINAL_START, buildExtract, canSummarize, extractArticle, keepsFigures, passagesText, sentencesOf, shorterWays, splitSentences, translatePassages, translateTexts, withoutDateline, withoutOriginalMarks} =
+const {ORIGINAL_END, ORIGINAL_START, buildExtract, canSummarize, extractArticle, keepsFigures, passagesText, sentencesOf, shorterWays, splitSentences, translatePassages, translateTexts, translationFor, withoutDateline, withoutOriginalMarks} =
     await import('../../services/utils/extract.js');
 const {newUsage} = await import('../../services/utils/ollama.js');
 
@@ -232,6 +235,58 @@ describe('translatePassages', () => {
     });
 });
 
+describe('translatePassages and translationFor, an AI that fails', () => {
+    const two = [[s('The VAR comes in the 1/8-finals.')], [s('It ends on Sunday.')]];
+
+    it('should ask one sentence at a time when the AI answers another number of translations', async () => {
+        chat.mockReset()
+            .mockResolvedValueOnce(json({translations: ['Le VAR arrive en 1/8 de finale. Cela finit dimanche.']}))
+            .mockResolvedValueOnce(json({translations: ['Le VAR arrive en 1/8 de finale.']}))
+            .mockResolvedValueOnce(json({translations: ['Cela finit dimanche.']}));
+        expect(await translatePassages(two, 'English', 'French')).toEqual([[s('Le VAR arrive en 1/8 de finale.')], [s('Cela finit dimanche.')]]);
+        expect(chat).toHaveBeenCalledTimes(3);
+        expect(chat.mock.calls[1][0].messages.at(-1).content).not.toContain('Sunday');
+    });
+
+    it('should ask again a call that failed instead of losing the translation of the card', async () => {
+        chat.mockReset()
+            .mockRejectedValueOnce(Object.assign(new Error('no answer'), {status_code: 502}))
+            .mockResolvedValueOnce(json({translations: ['Le VAR arrive en 1/8 de finale.', 'Cela finit dimanche.']}));
+        expect(await translatePassages(two, 'English', 'French')).toEqual([[s('Le VAR arrive en 1/8 de finale.')], [s('Cela finit dimanche.')]]);
+    });
+
+    it('should ask one sentence at a time when the AI answers something that is no JSON', async () => {
+        chat.mockReset()
+            .mockResolvedValueOnce({message: {content: '{"translations": [1] "The VAR comes in the 1/8-finals.", [2] "It ends on Sunday."]}'}})
+            .mockResolvedValueOnce(json({translations: ['Le VAR arrive en 1/8 de finale.']}))
+            .mockResolvedValueOnce(json({translations: ['Cela finit dimanche.']}));
+        expect(await translatePassages(two, 'English', 'French')).toEqual([[s('Le VAR arrive en 1/8 de finale.')], [s('Cela finit dimanche.')]]);
+        expect(chat).toHaveBeenCalledTimes(3);
+    });
+
+    it('should ask the whole card again, after a pause, when a briefing finds it without its translation', async () => {
+        // the AI is down for the three tries of the first round, back for the second
+        chat.mockReset().mockRejectedValueOnce(new Error('down')).mockRejectedValueOnce(new Error('down')).mockRejectedValueOnce(new Error('down'))
+            .mockResolvedValueOnce(json({translations: ['Le VAR arrive en 1/8 de finale.', 'Cela finit dimanche.']}));
+        const {from, translation} = await translationFor(two, 'fr', null, 'en', {marked: true});
+        expect(from).toBe('en');
+        expect(translation).toEqual([[s('Le VAR arrive en 1/8 de finale.')], [s('Cela finit dimanche.')]]);
+
+        // the search, which answers a reader waiting, does not ask it again
+        chat.mockReset().mockRejectedValue(new Error('down'));
+        expect((await translationFor(two, 'fr', null, 'en')).translation).toBeNull();
+        expect(chat).toHaveBeenCalledTimes(3);
+    });
+
+    it('should read the language of the passages from their letters, not from the label of the page: Persian passages of an English page', async () => {
+        const persian = [[s('به گزارش سایت رسمی فدراسیون فوتبال، فیفا در گزارشی با اشاره به نتایج درخشان دختران فوتسالیست ایران، از این تیم به عنوان یکی از مدعیان جدی رسیدن به دیدار پایانی یاد کرد.')]];
+        chat.mockReset().mockResolvedValueOnce(json({translations: ['According to the official site of the federation, FIFA named the team.']}));
+        const {from, translation} = await translationFor(persian, 'en', null, 'en', {marked: true});
+        expect(from).toBe('fa');
+        expect(translation[0][0].text).toContain('FIFA');
+    });
+});
+
 describe('translatePassages with the spelling of the names', () => {
     it('should tell the AI how Wikidata spells the names of the news, in every try', async () => {
         chat.mockReset().mockResolvedValueOnce(json({translations: ['Frappart led the seminar in 2026.']}));
@@ -312,17 +367,35 @@ describe('translateTexts', () => {
             .toEqual(['Frapar leads the seminar']);
     });
 
-    it('should leave out a translation that lost a figure, and ask again an answer of another length', async () => {
+    it('should leave out a translation that lost a figure, and ask one text at a time after an answer of another length', async () => {
         chat.mockReset()
+            // one translation for two texts: the two are asked one at a time, as the same list asked again came back as short
             .mockResolvedValueOnce(json({translations: ['Le Bayern gagne']}))
-            .mockResolvedValueOnce(json({translations: ['Le Bayern gagne à Dortmund', "L'arbitre a annulé le but"]}));
-        // the text that lost its figure is asked once more, alone (a third call, that loses it again here)
-        chat.mockResolvedValueOnce(json({translations: ['Le Bayern gagne à Dortmund']}));
+            .mockResolvedValueOnce(json({translations: ['Le Bayern gagne à Dortmund']}))
+            .mockResolvedValueOnce(json({translations: ["L'arbitre a annulé le but"]}))
+            // the text that lost its figure is asked once more, alone (a last call, that loses it again here)
+            .mockResolvedValueOnce(json({translations: ['Le Bayern gagne à Dortmund']}));
         expect(await translateTexts(texts, 'French')).toEqual([null, "L'arbitre a annulé le but"]);
-        expect(chat).toHaveBeenCalledTimes(3);
+        expect(chat).toHaveBeenCalledTimes(4);
+        expect(chat.mock.calls[1][0].messages.at(-1).content).not.toContain('El árbitro');
 
         chat.mockReset().mockResolvedValue(json({nothing: true}));
         expect(await translateTexts(texts, 'French')).toEqual([null, null]);
+    });
+
+    it('should ask again a call that failed, and give up on the texts left when the AI does not answer', async () => {
+        // the AI busy for two calls, then answering: the titles are translated all the same (the waits are none in the tests)
+        chat.mockReset()
+            .mockRejectedValueOnce(Object.assign(new Error('busy'), {status_code: 502}))
+            .mockRejectedValueOnce(Object.assign(new Error('busy'), {status_code: 502}))
+            .mockResolvedValueOnce(json({translations: ['Le Bayern gagne 3-1 à Dortmund', "L'arbitre a annulé le but"]}));
+        expect(await translateTexts(texts, 'French')).toEqual(['Le Bayern gagne 3-1 à Dortmund', "L'arbitre a annulé le but"]);
+        expect(chat).toHaveBeenCalledTimes(3);
+
+        // down for good: nothing is lost but the translation, and the asking stops (3 calls of the one try, not 3 tries of 3)
+        chat.mockReset().mockRejectedValue(Object.assign(new Error('down'), {status_code: 502}));
+        expect(await translateTexts(texts, 'French')).toEqual([null, null]);
+        expect(chat.mock.calls.length).toBeLessThanOrEqual(9);
     });
 
     it('should ask again, told of the figures, for a text that came back without one, and keep the ones that came back whole', async () => {

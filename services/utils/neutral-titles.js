@@ -138,10 +138,23 @@ const calmed = (title) => {
 const startsWithCapital = (text) => /^\p{Lu}/u.test(text);
 const capitalized = (text) => text.replace(/^(\P{L}*)(\p{L})/u, (all, before, letter) => before + letter.toUpperCase());
 
+// The label of access a medium puts in its titles, "[premium]" (diepresse.com, shown to a reader in a card of 7.11.2026), "(S+)", "(+)",
+// "[Abo]", "(réservé aux abonnés)", or "PREMIUM | " before the title: the paywall of the medium is no part of what the title says, and
+// is translated with it. Only between brackets or parentheses at an end of the title, or a word of access and a bar before it: a name
+// ("Disney+", "Premier League") or a word of the sentence ("plus") is no label
+const ACCESS_WORDS = String.raw`premium|plus|abo|paywall|subscribers?|subscription|s\+|\+|réservé aux abonnés|abonnés|payant|para assinantes|assinantes|suscriptores|solo suscriptores|für abonnenten|abonnenten|per abbonati|abbonati|abonnement`;
+const ACCESS_AT_END = new RegExp(String.raw`\s*[\[(]\s*(?:${ACCESS_WORDS})\s*[\])]\s*$`, 'iu');
+const ACCESS_AT_START = new RegExp(String.raw`^\s*(?:[\[(]\s*(?:${ACCESS_WORDS})\s*[\])]\s*[:|–—-]?|(?:premium|plus|abo)\s*\|)\s*`, 'iu');
+export const withoutAccessLabel = (title) => {
+    const bare = String(title).replace(ACCESS_AT_END, '').replace(ACCESS_AT_START, '').trim();
+    return bare !== title && realWordsOf(bare).length >= MIN_WORDS_LEFT ? bare : title;
+};
+
 // The title with the passages taken out that pass the checks, the exclamation mark at its end taken out and
 // the ones between two sentences made full stops; the title as it was when too little is left: fewer than
-// MIN_WORDS_LEFT words, or less than MIN_SHARE_LEFT of its words
-export const neutralTitle = (title, passages = []) => {
+// MIN_WORDS_LEFT words, or less than MIN_SHARE_LEFT of its words. The label of access of its medium is taken out first (see above)
+export const neutralTitle = (published, passages = []) => {
+    const title = withoutAccessLabel(published);
     const spans = passages.map(passage => takeable(title, passage)).filter(Boolean).sort((a, b) => a[0] - b[0]);
     let text = title;
     if (spans.length > 0) {

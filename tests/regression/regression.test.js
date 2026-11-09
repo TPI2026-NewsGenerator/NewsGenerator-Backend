@@ -16,7 +16,7 @@ import {describe, expect, it, jest} from '@jest/globals';
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat: jest.fn()}))}));
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 
-const {titleLanguage} = await import('../../services/utils/language.js');
+const {languageOf, ownLanguage, titleLanguage} = await import('../../services/utils/language.js');
 const {keepsFigures, splitSentences} = await import('../../services/utils/extract.js');
 const {alignNames} = await import('../../services/utils/spellings.js');
 const {withCleanNext} = await import('../../services/utils/card-analysis.js');
@@ -37,6 +37,11 @@ const FAMILIES = {
         if (wanted.language) expect(read.language).toBe(wanted.language);
         if (wanted.oneOf) expect(wanted.oneOf).toContain(read.language);
         expect(read.guessed).toBe(wanted.guessed);
+    },
+    // the language of a text read for itself, as the ingestion labels a news ('of': title and description, the label of the feed as the
+    // default) and as the passages of an article are read to be translated ('own': the label is the language the page read gave)
+    textlanguage: ({input, expect: wanted}) => {
+        expect(input.via === 'own' ? ownLanguage(input.text, input.label) : languageOf(input.text, input.label)).toBe(wanted.language);
     },
     figures: ({input, expect: wanted}) => {
         expect(keepsFigures(input.original, input.translation)).toBe(wanted.keeps);

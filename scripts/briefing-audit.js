@@ -23,7 +23,7 @@ import {NO_COUNTRY_BECAUSE, countryInfoOf, whyNoCountry} from '../services/utils
 import {lacksCapital, lowerFirst, capitalWordsOfCard} from '../services/utils/card-analysis.js';
 import {withoutDateline} from '../services/utils/extract.js';
 import {ORIGINAL_START, UNCHECKED} from '../services/utils/original-marks.js';
-import {readerLanguage, titleLanguage, writtenIn} from '../services/utils/language.js';
+import {readerLanguage, shownLanguage, titleLanguage, writtenIn} from '../services/utils/language.js';
 
 // a briefing of the database by its id, or one never saved by its file (the cards as write() answers them, bench/enzo-measure.mjs saves
 // them in bench/data/enzo-measure-<profile>-<n>-raw.json) and the profile it was written for
@@ -57,6 +57,14 @@ const checks = [
     ['the text of a card in another language is translated', foreign.filter(item => item.summary && !item.translation).map(item => `[${item.language}] ${short(item.title)}`)],
     ['the key points of a card in another language are translated', foreign.filter(item => item.points && !item.pointsTranslation).map(item => `[${item.language}] ${short(item.title)}`)],
     ['the digest of a card in another language is translated', foreign.filter(item => item.digest && !item.digestTranslation).map(item => `[${item.language}] ${short(item.title)}`)],
+    // what the reader SEES, read from its own letters and not from the label a feed gave the news (a Persian title of an English feed passed the checks
+    // above, 9.11.2026): the title, the passages, the key points, the digest and the titles of the other angles are written in the reader's language
+    ['no text a reader sees is written in another language than theirs', items.flatMap(item => [
+        ['title', item.titleTranslation ?? item.title], ['passages', item.translation ?? item.summary], ['key points', item.pointsTranslation ?? item.points],
+        ['digest', item.digestTranslation ?? item.digest], ...(item.angles ?? []).map(angle => ['angle title', angle.titleTranslation ?? angle.title]),
+    ].filter(([, text]) => text && String(text).length >= 12).map(([field, text]) => [field, text, shownLanguage(String(text).split(/\n\n/)[0])])
+        .filter(([, , written]) => written && written !== language)
+        .map(([field, text, written]) => `[${written}] ${field}: ${short(text, 50)}`))],
     ['the title of an angle in another language is translated', foreignAngles.filter(angle => !angle.titleTranslation).map(angle => `[${angle.language}] ${short(angle.title)}`)],
     ['no sentence of a translation is left in the language of the article', foreign.filter(item => [item.translation, item.pointsTranslation, item.digestTranslation]
         .some(text => String(text ?? '').includes(`${ORIGINAL_START}(`))).map(item => `[${item.language}] ${short(item.title)}`)],

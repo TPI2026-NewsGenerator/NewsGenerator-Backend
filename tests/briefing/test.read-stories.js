@@ -80,6 +80,33 @@ describe('readStories', () => {
         expect(aiWaysOf).not.toHaveBeenCalled();
     });
 
+    it('should say unreadable a story in another language than the reader whose passages could not be translated, so a spare takes its place', async () => {
+        Crawlers.Html.mockResolvedValue([{url: 'https://www.example.org/a', content: FULL}]);
+        extractArticle.mockResolvedValue({passages: [[{text: 'Die erste Meldung.'}]], translation: null, from: 'de', topic: null, sourcing: null});
+        const [read] = await readStories([story(1, article('https://www.example.org/a'))], {usage, language: 'en', dropUntranslated: true});
+        expect(read.unreadable).toBe(true);
+        expect(read.summary).toBeNull();
+
+        // the news a reader adds himself is kept as it is, and so is one in the language of the reader, or translated
+        const [kept] = await readStories([story(1, article('https://www.example.org/a'))], {usage, language: 'en', dropUntranslated: false});
+        expect(kept.unreadable).toBe(false);
+        extractArticle.mockResolvedValue({passages: [[{text: 'Die erste Meldung.'}]], translation: [[{text: 'The first report.'}]], from: 'de', topic: null, sourcing: null});
+        expect((await readStories([story(1, article('https://www.example.org/a'))], {usage, language: 'en', dropUntranslated: true}))[0].unreadable).toBe(false);
+        extractArticle.mockResolvedValue({passages: [[{text: 'The first report.'}]], translation: null, from: 'en', topic: null, sourcing: null});
+        expect((await readStories([story(1, article('https://www.example.org/a'))], {usage, language: 'en', dropUntranslated: true}))[0].unreadable).toBe(false);
+    });
+
+    it('should read the language of an article from the letters of its title before anything else: Persian under an English label', async () => {
+        Crawlers.Html.mockResolvedValue([{url: 'https://www.the-ffiri.com/a', content: FULL}]);
+        const persian = article('https://www.the-ffiri.com/a', 'اطلاعیه شماره ۶ صدور مجوز باشگاهی');
+        await readStories([story(1, persian)], {usage, language: 'en'});
+        expect(persian.lang).toBe('fa');
+        // the title of an English label in Latin letters keeps it
+        const english = article('https://www.example.org/a', 'Workshop on AFC club licensing requirements');
+        await readStories([story(2, english)], {usage, language: 'en'});
+        expect(english.lang).toBe('en');
+    });
+
     it('should keep a story read when the AI fails on it, without calling it unreadable', async () => {
         Crawlers.Html.mockResolvedValue([{url: 'https://www.example.org/a', content: FULL}]);
         extractArticle.mockRejectedValue(new Error('AI down'));

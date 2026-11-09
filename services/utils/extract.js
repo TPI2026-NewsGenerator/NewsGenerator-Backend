@@ -9,6 +9,7 @@
 
 "use strict"
 
+import process from 'node:process';
 import {TOPICS, isTopic} from './topics.js';
 import {languageOf, ownLanguage, writtenIn} from './language.js';
 import {ollamaJson} from './ollama.js';
@@ -41,8 +42,21 @@ export const canSummarize = (text) => wordCount(text) >= MIN_TEXT_WORDS;
 // it, and a figure after the dash ("November 6 – 8 November", a range) leaves it
 const WEEKDAY = /^(?:(?:mon|tues|wednes|thurs|fri|satur|sun)day|lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|luned[iì]|marted[iì]|mercoled[iì]|gioved[iì]|venerd[iì]|sabato|domenica|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)\.?,?\s+/iu;
 const DATELINE = new RegExp(String.raw`^(?:\p{Lu}[\p{L}.'’ -]{1,30},\s+)?(?:(?:\d{1,2}(?:st|nd|rd|th|er|º|\.)?\s+(?:of\s+|de\s+|del\s+|di\s+)?(\p{L}+)|(\p{L}+)\s+\d{1,2}(?:st|nd|rd|th)?)(?:,?\s+(?:de\s+)?\d{4})?(?:,?\s+(?:at\s+|à\s+|um\s+|alle\s+|a\s+las\s+)?\d{1,2}[:h.]\d{2})?|(?:0?[1-9]|[12]\d|3[01])[./](?:0?[1-9]|1[0-2])(?:[./]\d{2,4})?\.?)\s*[–—−-]+\s+(?!\d)`, 'u');
+// The place in capitals, with its state or country after it, that the datelines of the agencies and the captions of photos open with.
+// "EAST RUTHERFORD, NEW JERSEY - JULY 19: U.S. President Donald Trump and…" (the caption of a photo, the first key point of a card of
+// 8.11.2026), "WASHINGTON (Reuters) - The Senate…", "LONDON, Nov 6 (Reuters) - Britain's…", "(CNN) — …". A place in capitals alone with a
+// colon ("NASA: the agency said") is a subject, so a date or the agency between parentheses must say it is a dateline
+const CAPS_PLACE = String.raw`\p{Lu}[\p{Lu}.'’]*(?:[ -]\p{Lu}[\p{Lu}.'’]*){0,3}`;
+const DAY_MONTH = String.raw`(?:(\p{L}+)\.?\s+\d{1,2}|\d{1,2}\s+(\p{L}+)\.?)`;
+const CAPTION = new RegExp(String.raw`^${CAPS_PLACE}(?:,\s+${CAPS_PLACE})?\s+[–—−-]\s+${DAY_MONTH}(?:,\s*\d{4})?:\s+`, 'u');
+const WIRE = new RegExp(String.raw`^(?:${CAPS_PLACE}(?:,\s+(?:${CAPS_PLACE}|${DAY_MONTH}))?\s*)?\(\p{Lu}[\p{L}.&+ ]{1,24}\)\s*[–—−-]+\s+`, 'u');
 export const withoutDateline = (sentence) => {
     const text = String(sentence ?? '');
+    const place = text.match(CAPTION) ?? text.match(WIRE);
+    if (place) {
+        const written = place[1] ?? place[2];
+        if (written === undefined || MONTH_OF.has(written.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase())) return text.slice(place[0].length);
+    }
     const weekday = text.match(WEEKDAY)?.[0] ?? '';
     const found = text.slice(weekday.length).match(DATELINE);
     if (!found) return sentence;
@@ -331,6 +345,45 @@ Answer only in JSON: {"translations": ["...", one per sentence, in the same orde
 export {ORIGINAL_END, ORIGINAL_START, UNCHECKED, withoutOriginalMarks};
 const TRANSLATE_ATTEMPTS = 3;
 
+// The AI failing a translation is no reason to lose it (the user, 9.11.2026: "à chaque briefing une nouvelle n'est pas traduite"). A call
+// that FAILS (Ollama busy over its 6 places, no answer, an answer that is no JSON) is asked again after a wait, as the briefing sends
+// many at once and a minute later they pass: 'calls', the waits before each new try of one call; 'rounds', the waits before each new
+// round of a whole card whose translation came out empty (see translationFor). A call whose answer has another LENGTH than the texts
+// asked (two sentences glued, one dropped) is asked again one text at a time: the same list asked again comes back as short. Exported
+// so that the tests do not wait
+export const translationWaits = process.env.NODE_ENV === 'test' ? {calls: [0, 0], rounds: [0, 0]} : {calls: [3e3, 8e3], rounds: [4e3, 12e3]};
+const wait = (ms) => ms > 0 ? new Promise(resolve => setTimeout(resolve, ms)) : Promise.resolve();
+// what the translations did not do since the server started, for the logs: calls given up, answers of another length, cards given up
+export const translationStats = {callsLost: 0, sizeMismatches: 0, cardsLost: 0};
+
+// The answer of the AI to a prompt that returns "translations", one per text asked: the array, 'short' when it has another length (the
+// caller asks one text at a time, and so for an answer that is no JSON), null when the calls failed even after their waits. 'what' says in the logs what was asked
+const translationsOf = async (prompt, count, usage, what) => {
+    for (let failures = 0; ; failures++) {
+        try {
+            const answer = await ollamaJson(prompt, usage);
+            if (Array.isArray(answer?.translations) && answer.translations.length === count) return {translations: answer.translations, answer};
+            translationStats.sizeMismatches++;
+            console.error(`Translation: ${what}: ${Array.isArray(answer?.translations) ? answer.translations.length : 'no'} translations for ${count} texts`);
+            return {translations: 'short', answer};
+        } catch (err) {
+            // an answer that is no JSON ("[1] ..." written in the array, seen on a list of 15 titles, 9.11.2026) is the same list asked again
+            // to come back as broken: one text at a time, at once
+            if (/did not answer in JSON/.test(err.message ?? '')) {
+                translationStats.sizeMismatches++;
+                console.error(`Translation: ${what}: an answer that is no JSON`);
+                return {translations: 'short', answer: null};
+            }
+            if (failures >= translationWaits.calls.length) {
+                translationStats.callsLost++;
+                console.error(`Translation: ${what}: given up after ${failures + 1} calls (${err.message})`);
+                return {translations: null, answer: null};
+            }
+            await wait(translationWaits.calls[failures]);
+        }
+    }
+};
+
 // The passages translated sentence by sentence: a sentence translated with all its figures is kept, the
 // ones that are not are asked again (told so), then left in their language between parentheses (marked:
 // in italics, see above) instead of the whole card losing its translation to one of them (30.10.2026:
@@ -346,22 +399,36 @@ export const translatePassages = async (passages, from, to, usage = null, {marke
     // the last translation of a sentence whose figures could not be matched to the original's, to show with a warning (see below)
     const unchecked = new Array(sentences.length).fill(null);
     let lost = sentences.map((sentence, i) => i);
-    for (let attempt = 0; attempt < TRANSLATE_ATTEMPTS && lost.length > 0; attempt++) {
-        const answer = await ollamaJson(translatePrompt(lost.map(i => sentences[i]), from, to, attempt > 0, note), usage).catch(() => null);
-        const translations = answer?.translations;
-        if (!Array.isArray(translations) || translations.length !== lost.length) continue;
-        lost = lost.filter((i, k) => {
-            const translation = translations[k];
-            if (typeof translation !== 'string' || !translation.trim()) return true;
-            const written = alignNames(translation.trim(), spelled, sentences[i]);
-            if (!keepsFigures(sentences[i], translation)) {
-                unchecked[i] = written;
-                return true;
+    // one sentence a call once an answer had another length than the sentences asked (see translationWaits)
+    let alone = false;
+    // the AI did not answer the calls (given up after their waits): asking again at once would not change it
+    let down = false;
+    for (let attempt = 0; attempt < TRANSLATE_ATTEMPTS && lost.length > 0 && !down; attempt++) {
+        for (const group of alone ? lost.map(i => [i]) : [lost]) {
+            const {translations} = await translationsOf(translatePrompt(group.map(i => sentences[i]), from, to, attempt > 0, note), group.length, usage,
+                `${group.length} sentences of ${from}`);
+            if (translations === 'short') {
+                alone = true;
+                continue;
             }
-            done[i] = written;
-            unchecked[i] = null;
-            return false;
-        });
+            // the AI does not answer: the next sentences would not either
+            if (!translations) {
+                down = true;
+                break;
+            }
+            group.forEach((i, k) => {
+                const translation = translations[k];
+                if (typeof translation !== 'string' || !translation.trim()) return;
+                const written = alignNames(translation.trim(), spelled, sentences[i]);
+                if (!keepsFigures(sentences[i], translation)) {
+                    unchecked[i] = written;
+                    return;
+                }
+                done[i] = written;
+                unchecked[i] = null;
+            });
+        }
+        lost = lost.filter(i => done[i] === null);
     }
     // In a briefing a sentence the AI translated but whose figures the check could not match is shown translated, in italics, with a
     // warning, rather than left in its own language (the user, 8.11.2026: it should be translated; the Korean "2만" of a card was
@@ -417,21 +484,32 @@ const TEXTS_ATTEMPTS = 3;
 export const translateTexts = async (texts, to, usage = null, {languages = null} = {}) => {
     const done = new Array(texts.length).fill(null);
     let open = texts.map((item, i) => i);
-    for (let attempt = 0; attempt < TEXTS_ATTEMPTS && open.length > 0; attempt++) {
-        const answer = await ollamaJson(textsPrompt(open.map(i => texts[i]), to, attempt > 0), usage).catch(() => null);
-        const translations = answer?.translations;
-        if (!Array.isArray(translations) || translations.length !== open.length) continue;
-        open.forEach((i, k) => {
-            const said = Array.isArray(answer.languages) ? answer.languages[k] : null;
-            if (languages && texts[i].guess && typeof said === 'string' && said.trim()) languages[i] = said.trim();
-        });
-        open = open.filter((i, k) => {
-            // the AI often writes the number of the text again, its language sometimes: "[1] (German) ..."
-            const translation = typeof translations[k] === 'string' ? translations[k].replace(/^\s*\[\d+\]\s*(?:\([^)]*\)\s*)?/, '').trim() : '';
-            if (!translation || !keepsFigures(texts[i].text, translation)) return true;
-            done[i] = alignNames(translation, spellingsOf(texts[i]), texts[i].text);
-            return false;
-        });
+    // one text a call once an answer had another number of translations than the texts asked (see translationWaits)
+    let alone = false;
+    let down = false;
+    for (let attempt = 0; attempt < TEXTS_ATTEMPTS && open.length > 0 && !down; attempt++) {
+        for (const group of alone ? open.map(i => [i]) : [open]) {
+            const {translations, answer} = await translationsOf(textsPrompt(group.map(i => texts[i]), to, attempt > 0), group.length, usage,
+                `${group.length} titles or descriptions`);
+            if (translations === 'short') {
+                alone = true;
+                continue;
+            }
+            // the AI does not answer: the next texts would not either
+            if (!translations) {
+                down = true;
+                break;
+            }
+            group.forEach((i, k) => {
+                const said = Array.isArray(answer.languages) ? answer.languages[k] : null;
+                if (languages && texts[i].guess && typeof said === 'string' && said.trim()) languages[i] = said.trim();
+                // the AI often writes the number of the text again, its language sometimes: "[1] (German) ..."
+                const translation = typeof translations[k] === 'string' ? translations[k].replace(/^\s*\[\d+\]\s*(?:\([^)]*\)\s*)?/, '').trim() : '';
+                if (!translation || !keepsFigures(texts[i].text, translation)) return;
+                done[i] = alignNames(translation, spellingsOf(texts[i]), texts[i].text);
+            });
+        }
+        open = open.filter(i => done[i] === null);
     }
     return done;
 };
@@ -440,9 +518,21 @@ export const translateTexts = async (texts, to, usage = null, {languages = null}
 // are in that language already or could not be translated safely: {from, translation}
 export const translationFor = async (passages, language, usage = null, fallback = null, {marked = false, glossary = [], names = []} = {}) => {
     const from = ownLanguage(passages.flat().map(sentence => sentence.text).join(' '), fallback);
-    const translation = passages.length > 0 && from && from !== language && writtenIn(from) && writtenIn(language)
-        ? await translatePassages(passages, writtenIn(from), writtenIn(language), usage, {marked, glossary, names})
-        : null;
+    if (!(passages.length > 0 && from && from !== language && writtenIn(from) && writtenIn(language))) return {from, translation: null};
+    let translation = await translatePassages(passages, writtenIn(from), writtenIn(language), usage, {marked, glossary, names});
+    // A card of a briefing whose translation came out empty (the AI busy or down for all its calls) is asked again after a pause, twice
+    // at most: the card that is shown untranslated is worse than the 4 or 12 seconds. Not the search, which answers a reader waiting
+    if (marked) {
+        for (const pause of translationWaits.rounds) {
+            if (translation) break;
+            await wait(pause);
+            translation = await translatePassages(passages, writtenIn(from), writtenIn(language), usage, {marked, glossary, names});
+        }
+        if (!translation) {
+            translationStats.cardsLost++;
+            console.error(`Translation: a card of ${from} is left without its translation`);
+        }
+    }
     return {from, translation};
 };
 

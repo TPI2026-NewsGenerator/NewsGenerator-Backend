@@ -117,7 +117,9 @@ The code takes a teaser out only when it is a whole sentence apart from the rest
 with no figure, no negation, no acronym nor capitalized name (the fact of the title), not in a quotation and not
 a word of status ("Official"); and leaves the title as it was when fewer than 3 words or less than half remain. It
 also takes out the exclamation mark at the end of a title and turns the ones between two sentences into full stops
-(not in a quotation, not "Yahoo!"). The title as published stays in `item.titleAsPublished`: the card says "Title
+(not in a quotation, not "Yahoo!"). The label of access of a medium goes too, with no AI (`withoutAccessLabel`,
+9.11.2026): "[premium]", "(S+)", "(+)", "[Abo]", "(réservé aux abonnés)" at an end of the title, "PREMIUM | " before it; not "Disney+"
+nor a word of the sentence ("plus"). The title as published stays in `item.titleAsPublished`: the card says "Title
 shortened" and shows it on demand, as the original of a translated title.
 
 Measured on 320 titles of the cards of 14 days (`bench/neutral-titles.mjs`): taking out any passage the model found

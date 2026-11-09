@@ -32,7 +32,7 @@ import {nearCardsOf, otherAnglesOf, placeAngles, sameFactsOut} from "./utils/oth
 import {AFFAIR_DAYS, storiesOfSameNames} from "./utils/affair-names.js";
 import {officialSourcesOf} from "./utils/official-sources.js";
 import {evolvedStories, REPEAT_HOURS, shownStories, withoutRepeats} from "./utils/repeats.js";
-import {readerLanguage, writtenIn} from "./utils/language.js";
+import {readerLanguage, scriptLanguage, writtenIn} from "./utils/language.js";
 import {translatedTitles} from "./utils/title-translation.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {assertPublicUrl, hostOf, mediumOf} from "./utils/public-url.js";
@@ -527,7 +527,11 @@ const spellingOf = (spelling) => ({glossary: spelling?.glossary ?? [], names: sp
 // first lines only), summary null when the AI failed on a page read, glossary [{written, spelled}] how
 // Wikidata spells the names of its news and names the ones its news spell, that the translation is told of
 // (see card-spellings.js). A story of Google News only whose page is no news is left out
-export const readStories = async (chosen, {trusted = new Set(), language = null, usage, content = new Map(), first = false, step = async () => {}}) => {
+export const readStories = async (chosen, {trusted = new Set(), language = null, usage, content = new Map(), first = false, step = async () => {}, dropUntranslated = false}) => {
+    // The language of an article is read from the letters of its title before anything is asked of it: a Persian, Armenian or Cyrillic title of a
+    // feed whose label is English was read as the English version of its story (see toRead), its title was not translated, nor its passages
+    // when its page said English too (9.11.2026, the-ffiri.com: 3 cards of the 5 a reader of an English briefing reported)
+    for (const article of chosen.flatMap(story => story.members)) article.lang = scriptLanguage(article.title, article.lang) ?? article.lang;
     // the real address of the news of Google News to read, never asked twice (see google-news.js): of
     // the stories no feed lets read, and of the article in the language of the reader read first (the
     // French version of a card in Albanian was known in the last hours through Google News only)
@@ -574,7 +578,7 @@ export const readStories = async (chosen, {trusted = new Set(), language = null,
         if (!lead) return {unreadable: true};
         const texts = reads[i].filter(article => content.has(article.link))
             .map(article => ({...toArticle(article), page: content.get(article.link)}));
-        const [{passages, translation, points, pointsTranslation, digest, digestTranslation, topic, sourcing}, contested] = await Promise.all([
+        const [{passages, translation, points, pointsTranslation, digest, digestTranslation, topic, sourcing, from}, contested] = await Promise.all([
             extractArticle(lead.title, content.get(lead.link), {language, usage: usage.summarizing, marked: true, ...glossaries.get(story.storyId)}),
             contestedOf(lead.title, texts, {language, usage: usage.contesting}).catch(err => {
                 console.error(`Briefing: the denials of story ${story.storyId} were not read (${err.message})`);
@@ -583,6 +587,13 @@ export const readStories = async (chosen, {trusted = new Set(), language = null,
         ]);
         // no passage of the news in its page: what was read is not the article
         if (passages.length === 0) return {unreadable: true};
+        // An article in another language than the reader's whose passages the AI could not translate, even asked again (see translationFor): the card
+        // would show the reader sentences of a language they did not choose (the user, 9.11.2026: "ça rend le projet non-professionnel"). It gives way
+        // to the next story the AI chose, as a card that can't be read (see readableCards); a news the reader adds himself is kept as it is
+        if (dropUntranslated && from && from !== language && writtenIn(from) && writtenIn(language) && !translation) {
+            console.error(`Briefing: the story ${story.storyId} (${from}) is left out, its passages could not be translated`);
+            return {unreadable: true, untranslated: true};
+        }
         return {summary: {summary: passagesText(passages), translation: passagesText(translation),
             points: passagesText(points), pointsTranslation: passagesText(pointsTranslation),
             digest: passagesText(digest), digestTranslation: passagesText(digestTranslation),
@@ -639,11 +650,11 @@ ${projects.map(project => `- « ${project.name} » : ${project.text.replace(/\s+
 // countries, the pictures and the AI versions, then each story as a card of the briefing. 'main': the stories of the cards in
 // their order, 'spare': the next ones the AI chose, which take the places of the cards that can't be read. Shared by the
 // briefing and by a news the reader adds to it (see importedCardOf): review false, no spare. ctx: {briefingId (or label),
-// step, seconds, usage, wanted, interests, profile, language, trusted, feedUrls, hours, review, alsoShown (the stories of the
+// step, seconds, usage, wanted, interests, profile, language, trusted, feedUrls, hours, review, dropUntranslated (a story whose passages could not be translated gives way to the next one, true unless the reader added it), alsoShown (the stories of the
 // other cards of the briefing, which are no angle of these)}. Answers {items, articles}: the cards, and the articles of each read
 // whole for the analysis (see analysisArticles). The briefing never waits on any of the steps around the reading failing
 export const completeCards = async ({main, spare = []}, {briefingId = null, label = 'unsaved', step = async () => {}, seconds = {}, usage, wanted = '', interests = [],
-    profile = {}, language, trusted = new Set(), feedUrls = [], hours, review = true, alsoShown = []}) => {
+    profile = {}, language, trusted = new Set(), feedUrls = [], hours, review = true, alsoShown = [], dropUntranslated = true}) => {
     // 4. and 5. the chosen stories read, then 6. their cards read once more with their summary, which
     // says what a title may not: the ones on what the reader refuses are left out (see reviewCards).
     // The ones of the reserve take the places of the stories that can't be read or are left out. The
@@ -665,7 +676,7 @@ export const completeCards = async ({main, spare = []}, {briefingId = null, labe
     const read = async (chosen) => {
         const first = rounds++ === 0;
         if (first) await step('reading');
-        const results = await readStories(chosen, {trusted, language, usage, content, first, step});
+        const results = await readStories(chosen, {trusted, language, usage, content, first, step, dropUntranslated});
         const leads = new Map(results.filter(result => !result.unreadable).map(result => [result, leadOf(result)]));
         // a title its feed cut ("…raises…") whole from its page read, before it is translated or judged
         for (const lead of leads.values()) lead.title = wholeTitle(lead.title, content.get(lead.link)?.title, mediumOfArticle(lead));
@@ -1654,7 +1665,7 @@ export const importedCardOf = async ({address, links, language, usage, feedUrls 
         members = [lead];
     }
     const story = {storyId: known?.id_story ?? -1, best: lead, lead, members, mergedStoryIds: []};
-    const {items, articles} = await completeCards({main: [story]}, {label: 'news added', usage, language, trusted, feedUrls, hours, review: false, alsoShown: shown});
+    const {items, articles} = await completeCards({main: [story]}, {label: 'news added', usage, language, trusted, feedUrls, hours, review: false, alsoShown: shown, dropUntranslated: false});
     if (items.length === 0) {
         throw Object.assign(new Error('This page could not be read: no article in it, a paywall or a protected site.'), {status: 422});
     }

@@ -119,6 +119,11 @@ const longTextLanguage = (text, words) => {
 // is read by its words, and by its groups of letters when it is long
 export const languageOf = (text, fallback = null) => {
     if (fallback && !SETS[fallback]) return fallback;
+    // A text in the letters of another language than the Latin ones the short words know is that language, whatever the label of its
+    // feed (see scriptLanguage): the Persian news of an English feed (the-ffiri.com) were labelled English, and their titles and their
+    // passages shown untranslated to an English reader, in 5 briefings of 14 days (9.11.2026)
+    const script = scriptLanguage(text, fallback);
+    if (script) return script;
     const words = wordsLanguage(text, fallback);
     if (fallback) return words ?? fallback;
     return longTextLanguage(text ?? '', words);
@@ -131,6 +136,9 @@ export const languageOf = (text, fallback = null) => {
 // say another; shorter, or in a language written like another (NEAR_LANGUAGES), the default decides
 // as in languageOf
 export const ownLanguage = (text, fallback = null) => {
+    // its own letters first, a text of 490 Persian letters read from a page whose menus are English was taken for English (see languageOf)
+    const script = scriptLanguage(text, fallback);
+    if (script) return script;
     const trigrams = FRANC_CODES[franc(text ?? '', {minLength: MIN_TRIGRAM_CHARS})] ?? null;
     if (trigrams && !NEAR_LANGUAGES.has(trigrams) && languageOf(text) === trigrams) return trigrams;
     return languageOf(text, fallback);
@@ -308,6 +316,15 @@ const clearLanguage = (text) => {
         .sort((a, b) => b[1] - a[1]);
     if (hits[0][1] < MIN_HITS || hits[0][1] === hits[1][1]) return null;
     return FRANC_CODES[franc(text, {minLength: 10, only: FRANC_WORDS})] === hits[0][0] ? hits[0][0] : null;
+};
+
+// The language a text a reader SEES is written in, when it is clear: the letters of its script for the non-Latin ones, the short words and franc
+// together for the others (see clearLanguage), null when unsure (a name, a few words, a language the short words do not know). What the
+// audit of a briefing reads against the language of the reader: the label a feed gave a news is no proof of what is written in it (a Persian
+// title of an English feed passed a check by label, 9.11.2026)
+export const shownLanguage = (text) => {
+    const clean = String(text ?? '').replace(/[“”"«»„]/g, '').trim();
+    return scriptLanguage(clean) ?? clearLanguage(clean);
 };
 
 // whether these texts (the last news of one feed) are in several languages, see MIXED_OTHERS

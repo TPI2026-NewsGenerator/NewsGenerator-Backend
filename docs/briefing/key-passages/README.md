@@ -27,7 +27,9 @@ reader's, a machine translation is shown, marked as such, with the original one 
   than half of it. Limits: the first 12 000 characters (`MAX_CONTENT_CHARS`), 80 sentences (`MAX_SENTENCES`),
   4 to 90 words a sentence (`MIN_SENTENCE_WORDS`, `MAX_SENTENCE_WORDS`). Glued sentences ("…les Bleus.Toute")
   are split, abbreviations ("M.", "U.S.") are not an end. A dash or a bullet opening a sentence is left out: the
-  dateline "Zurich, 27 October 2026 —- The IFAB's..." showed as a point "—- The IFAB's..." (28.10.2026).
+  dateline "Zurich, 27 October 2026 —- The IFAB's..." showed as a point "—- The IFAB's..." (28.10.2026). The datelines of the
+  agencies and the captions of photos go too: "WASHINGTON (Reuters) -", "LONDON, Nov 6 (Reuters) -", "(CNN) —",
+  "EAST RUTHERFORD, NEW JERSEY - JULY 19:" (`withoutDateline`, 9.11.2026); a place in capitals and a colon alone ("NASA: …") stays.
 - One call of the AI (`extractPrompt`, `ollamaJson` of `services/utils/ollama.js`): gemma4:31b on Ollama cloud,
   no thinking flag, Gemini (`gemma-4-31b-it`) when Ollama fails. It answers in JSON the numbers of 2 to 5
   sentences, the most important first, the `topic` and the `sourcing` (named, anonymous, none) shown beside the
@@ -37,8 +39,12 @@ reader's, a machine translation is shown, marked as such, with the original one 
   the ones that follow each other into one passage.
 - The same answer makes the two shorter ways of the card, [Summary](../summary/README.md) and
   [Bullet points](../bullet-points/README.md) (`shorterWays`): no other call.
-- Translation (`translationFor`): the language of the passages is read by `languageOf`
-  (`services/utils/language.js`), the language of the page as fallback. When it is not the reader's, the
+- Translation (`translationFor`): the language of the passages is read by `ownLanguage`
+  (`services/utils/language.js`): **from its own letters first** (`scriptLanguage`: Persian, Arabic, Cyrillic, Armenian, Greek,
+  Chinese... whatever the label of the feed or the language of the page read, since 9.11.2026: Persian news of an English feed
+  were labelled English and shown untranslated, their titles too), then the short words and the groups of letters, the language
+  of the page as fallback. The same rule gives the label of a news at the ingestion (`languageOf`) and the language of each
+  article of a story chosen (`readStories`, before it picks the article to read). When it is not the reader's, the
   sentences are translated one by one in one call (`translatePassages`); the answer is refused when it does
   not give one translation per sentence or when a translation loses a figure (`keepsFigures`: "1,000" and
   "1 000", "7 p.m." and "19h00" are the same figure; since 8.11.2026 a unit of number is read too: the Korean, Chinese and
@@ -49,6 +55,19 @@ reader's, a machine translation is shown, marked as such, with the original one 
   translated; the card says what ⚠ means); a page that cannot warn (the search) leaves it in its language between
   parentheses, in italics in a briefing, as before, and so does a sentence the AI did not translate at all. No translation
   (the reader gets the original only) when the AI does not answer one per sentence, or for half of the sentences that have none.
+- A translation is not lost to the AI failing (9.11.2026, `translationWaits` of `extract.js`): a call that fails (Ollama busy over its
+  6 places, no answer, no JSON) is asked again after 3 s then 8 s; an answer with another number of translations than the sentences
+  (or titles) asked, or an answer that is no JSON (gemma wrote "[1] …" in the array of a list of 15 titles), is followed by the same texts **one at a time**, as the same list asked again came back as short; in a briefing a card
+  still without its translation is asked again as a whole after 4 s then 12 s (not in the search, which answers a reader waiting). When the
+  AI does not answer at all the asking stops. A card of another language still without its translation after all this is **left out and
+  its place taken by the next story of the reserve** (`dropUntranslated` of `readStories`, `readableCards`), never shown half done; a
+  news the reader adds by its link is kept as it is. The failures are in the server log ("Translation: …", `translationStats`).
+- What a reader sees is checked by its letters, not by the label: `bench/translation-completeness.mjs [days]` reads the saved
+  briefings text by text (title, passages, key points, digest, angles) against the reader's language, and `scripts/briefing-audit.js`
+  has the same check ("no text a reader sees is written in another language than theirs", `shownLanguage`). On the 33 briefings of
+  the 14 days before 9.11.2026: 16 had a text in another language (12 once the false alarms of the short words were removed), with the
+  Persian family (label English, 5 titles and 2 passages in the 3 last days), cards translated before the figure checks of 30.10 and
+  8.11.2026 (figure lost, "1/8-finals" and dates), and calls that failed once.
 - No passage at all (a page with no text of its own): the card is unreadable and the next story of the reserve
   takes its place (`readableCards`, `services/utils/readable-cards.js`, 2 more rounds at most). A card whose
   article was read but whose passages the AI failed to choose is kept with `summaryError`.
