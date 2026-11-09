@@ -10,9 +10,10 @@
 "use strict"
 
 import {MentionModel} from '../../models/mention-model.js';
-import {mentionKey, PLACES_RULES_FROM, withoutParticle} from './mentions.js';
+import {mentionKey, PLACES_RULES_FROM, withoutParticle, withoutPreposition} from './mentions.js';
 import {collapsed, romanizations, sameGivenName} from './romanize.js';
 import {labelsOfItems} from './card-spellings.js';
+import {scriptLanguage} from './language.js';
 import {alignNames} from './spellings.js';
 import {nameKeysOf} from './wikidata.js';
 import {nationalityOf} from './nationalities.js';
@@ -278,8 +279,11 @@ const isAcronymOf = (name, label) => ACRONYM.test(name)
 export const withWikidataSpelling = (names, labels, {translated = false} = {}) => names.map(name => {
     const label = name.qid && labels.get(name.qid);
     if (!label) return name;
-    const asLabel = translated && !isAcronymOf(name.name, label) && mentionKey(name.name) !== mentionKey(label)
-        && (name.kind === 'organization' || !LATIN_ONLY.test(name.name));
+    // a name in the letters of another language is no acronym of the reader's: "ФИФА" (Cyrillic capitals) is the FIFA, "ΟΥΕΦΑ" the UEFA (Enzo's
+    // briefings of 9.11.2026 showed them under an English text)
+    const otherLetters = !LATIN_ONLY.test(name.name);
+    const asLabel = translated && mentionKey(name.name) !== mentionKey(label)
+        && (otherLetters || (name.kind === 'organization' && !isAcronymOf(name.name, label)));
     const spelled = asLabel ? label : alignNames(name.name, [label]);
     return spelled === name.name ? name : {...name, name: spelled};
 });
@@ -305,15 +309,22 @@ export const tidyNames = (names, {stems = [], labels = new Map(), orgs = [], nam
 // translated. Wikidata or the database not answering leaves the names as they are
 const spelledNames = async (read, cards = [], reader = null) => {
     const qids = [...new Set(read.flatMap(card => card.names.map(name => name.qid)).filter(Boolean))];
-    if (qids.length === 0) return read;
-    const labels = await labelsOfItems(qids).catch(err => {
+    const labels = qids.length === 0 ? new Map() : await labelsOfItems(qids).catch(err => {
         console.error(`Names: the spellings of Wikidata were not read (${err.message})`);
         return new Map();
     });
     const languageOf = new Map(cards.map(card => [card.storyId, card.language ?? null]));
-    return read.map(card => ({...card, names: withWikidataSpelling(card.names, labels,
-        {translated: Boolean(reader && languageOf.get(card.storyId) && languageOf.get(card.storyId) !== reader)})}));
+    return read.map(card => ({...card, names: withoutUnreadable(withWikidataSpelling(card.names, labels,
+        {translated: Boolean(reader && languageOf.get(card.storyId) && languageOf.get(card.storyId) !== reader)}), reader)}));
 };
+// A name that is no item of Wikidata and is written in the letters of another language than the reader's ("Παναθηναϊκό", "ФК Тиквеш": 31 of the 76
+// chips in other letters of the 80 briefings of the last 20 days, 9.11.2026) cannot be spelled: Wikidata has nothing to spell it with. It would
+// stand under an English text in Greek or Cyrillic letters, and open the page of a name the reader cannot read: it is left out (the text of the
+// card, translated, names it). A name that is an item is kept, with its countries: it is the item that tells them
+export const withoutUnreadable = (names, reader) => reader ? names.filter(name => {
+    const written = name.qid ? null : scriptLanguage(name.name);
+    return !written || written === reader;
+}) : names;
 
 // {storyId -> [{name, qid, kind}]} of these cards: [{storyId, ids (of its articles), media}]. The names
 // shown that Wikidata was never asked for are asked for first (see MentionModel.want): one that is an
@@ -330,7 +341,9 @@ export const namesOfCards = async (cards, {reader = null} = {}) => new Map((awai
 // their items are left out
 const readNames = async (cards) => {
     const read = await Promise.all(cards.map(async (card) => {
-        const rows = await MentionModel.namesOfArticles(card.ids, LEAST_NEWS);
+        // a place the tagger gave with the preposition of a headline ("En Corse") is the place (see withoutPreposition)
+        const rows = (await MentionModel.namesOfArticles(card.ids, LEAST_NEWS))
+            .map(row => row.kind === 'location' ? {...row, name: withoutPreposition(row.name, row.lang)} : row);
         const least = Math.max(1, Math.ceil(card.ids.length * SHARE_OF_CARD));
         // a place or a country counts the articles naming its item under any writing, as a name does (see chosenNames)
         const taken = (row) => Math.max(row.inCard, row.itemInCard ?? 0);

@@ -10,8 +10,9 @@
 
 export const KINDS = ['person', 'organization', 'location'];
 // the places that found no item before this date are looked for once more when a card names them (see MentionModel.want): the rules that
-// link a place changed (the Wikipedia of its language, the country the items called so share), 8.11.2026
-export const PLACES_RULES_FROM = new Date('2026-11-09T00:00:00Z');
+// link a place changed (the Wikipedia of its language, the country the items called so share), 8.11.2026; the preposition of a headline taken off
+// the name of the place ("En Corse"), 9.11.2026
+export const PLACES_RULES_FROM = new Date('2026-11-10T00:00:00Z');
 const MAX_NAME = 120;
 
 // "La Fédération lettone de football" and "Fédération lettone de football" are one name; "Los Angeles"
@@ -50,6 +51,16 @@ export const acronymsOf = (name) => {
 const PARTICLES = '은|는|이|가|을|를|의|와|과|도|에|로|으로|에서|에게|부터|까지|만|が|は|を|に|の|で|と|も|へ|や|から|まで|より';
 const WITH_PARTICLE = new RegExp(`^([\\p{Script=Latin}\\d][\\p{Script=Latin}\\d&.'’ -]*[\\p{Script=Latin}\\d])(?:${PARTICLES})$`, 'u');
 export const withoutParticle = (name) => WITH_PARTICLE.exec(name)?.[1] ?? name;
+
+// The preposition the tagger took for the start of a place when a headline opens with it: "En Corse, l'arbitrage…" gave the place "En Corse", which
+// Wikidata does not know, and the card had no country (the briefing of Enzo of 9.11.2026); "En Corée du Sud", "Au Maroc", "À Paris" the same. Only the
+// prepositions of the language of the name that are no word of a name in it (the "A" of "A Coruña", the "Al" of "Al Ain", the "In" of "In Salah" stay),
+// and only before a capital: "Au greffe", "En otras latitudes" are no place
+const PREPOSITIONS = {fr: ['en', 'au', 'aux', 'à'], es: ['en'], it: ['in', 'nel', 'nella', 'nello', 'nei', 'nelle'], pt: ['em', 'no', 'na', 'nos', 'nas']};
+export const withoutPreposition = (name, language) => {
+    const found = /^(\p{L}+)\s+(\p{Lu}.*)$/u.exec(String(name ?? '').trim());
+    return found && (PREPOSITIONS[language] ?? []).includes(found[1].toLowerCase()) ? found[2] : name;
+};
 
 // The names of one news as stored: once per name and kind, of the kinds asked, a letter at least and
 // not too long (a sentence taken for a name), and the acronyms inside them as organisations.

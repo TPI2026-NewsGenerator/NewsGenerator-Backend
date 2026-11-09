@@ -210,6 +210,31 @@ Times "United States") and a French journalist quoted on a CAF card.
   0.37-0.58: hence the stories naming a rare name taken from 0.45, the closest first (`affair-names.js`).
 - Suggested on 13.10.2026: FIFA, UEFA, CAF, Gianni Infantino for the profile of the referees ([the former README](../../archive/readme-features-2026-10-24.md)).
 
+## A chip in the letters of another language, a place with a preposition
+
+A reader of English saw "ФИФА", "Джанни Инфантино" or "ΟΥΕΦΑ" as chips under an English text (the user, 9.11.2026: "pas qu'il y ait du texte d'une autre
+langue dans le briefing"): 76 chips in other letters in 31 of the 80 briefings of the last 20 days. Three causes, all of the family "a name is
+spelled as Wikidata does only when the code reads its label":
+
+- **The labels moved to "mul".** Wikidata keeps the name of a person written the same in every Latin language as a label of the language `mul`,
+  with none in English (`Q124138`, Gianni Infantino): `wbgetentities` with `languages=en` answered no label and `describeItems` gave the number of the
+  item. The calls that read a label now ask with `languagefallback=1` (`describeItems`, `readItem`, `placeItem`, the family names), which gives the
+  `mul` label as the English one.
+- **A Cyrillic or Greek acronym was kept as an acronym.** `withWikidataSpelling` kept a name in capitals unless it was a word of the label (to keep "UEFA"
+  against "Union of European Football Associations"): "ФИФА" was taken for one. A name in the letters of another language is no acronym of the reader's
+  and is spelled by its label when the card is translated.
+- **A name that is no item cannot be spelled** ("Παναθηναϊκό", "ФК Тиквеш": 31 of the 76): it is left out of the names of the card when it is written in
+  the letters of another language than the reader's (`withoutUnreadable`), the text of the card, translated, names it. An item is kept whatever its
+  letters: it tells the countries of the card.
+
+The audit of every briefing checks both (`no name a reader sees is written in the letters of another language than theirs`).
+
+A place the tagger gave with the preposition of a headline ("En Corse, l'arbitrage dans le football…" gave the place "En Corse"; Wikidata has no item
+of that name, the card had no country) is the place (`withoutPreposition` of `mentions.js`): the prepositions of French (en, au, aux, à), Spanish (en),
+Italian (in, nel, nella, nello, nei, nelle) and Portuguese (em, no, na, nos, nas), before a capital only; the "A" of A Coruña, the "Al" of Al Ain and the
+"In" of In Salah are words of a name. Applied when a card reads its places and when a place is linked; the places that found no item before 10.11.2026
+are looked for once more when a card names them (`PLACES_RULES_FROM`). Rare (27 places so in French among 489 000), common in a French headline.
+
 ## Diagrams
 
 - [Class diagram](following-names-on-cards-class.png) ([source](following-names-on-cards-class.puml))

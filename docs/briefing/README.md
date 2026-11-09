@@ -118,7 +118,9 @@ never fails the briefing: one line in the log, `Briefing 512: audit: all the che
 The checks (`cardChecks`): the title, the text, the key points and the digest of a card in another language are translated; no text a reader
 sees is written in another language than theirs, read from its letters (not from the label of its feed); no sentence of a translation is left
 in the language of the article; every card has a picture; no key point begins with a dateline or is the caption of a photo; no title keeps the
-label of a paywall; no name is spelled with other accents than its card; no angle has a language its title does not say. `scripts/briefing-audit.js`
+label of a paywall; no name is spelled with other accents than its card; no angle has a language its title does not say; no other sentence a reader
+sees (the line of the choice, the AI version, a denial, a statement, the card it follows) and no name (a chip) is written in the letters of another
+language than theirs. `scripts/briefing-audit.js`
 runs the same checks on a briefing already written (by its id, or a file of cards never saved), adds the ones of the analysis, written after the
 cards, the share of the cards with their names, countries, angles and picture against the last briefings of the profile, and why a card has no
 country. A line of the log that fails is a case for the corpus of `tests/regression`, then a rule of the code.

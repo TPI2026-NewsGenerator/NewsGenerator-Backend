@@ -14,7 +14,7 @@
 
 import {isPhotoCaption, withoutDateline} from './extract.js';
 import {ORIGINAL_START} from './original-marks.js';
-import {shownLanguage, titleLanguage, writtenIn} from './language.js';
+import {scriptLanguage, shownLanguage, titleLanguage, writtenIn} from './language.js';
 import {withoutAccessLabel} from './neutral-titles.js';
 
 const plain = (word) => word.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
@@ -41,6 +41,21 @@ export const cardChecks = (items, language) => {
         ].filter(([, text]) => text && String(text).length >= 12).map(([field, text]) => [field, text, shownLanguage(firstOf(text))])
             .filter(([, , written]) => written && written !== language)
             .map(([field, text, written]) => `[${written}] ${field}: ${short(text, 50)}`))],
+        // the rest of what a card shows in sentences: the line that tells why it was chosen, the version written by the AI, the sentence of someone who denies
+        // the news, the statement of a party, the card it follows, the words an article used to say it has no confirmation
+        ['no other sentence a reader sees is written in another language than theirs', items.flatMap(item => [
+            ['why', item.why], ...(item.ai?.points ?? []).map(point => ['AI points', point]), ['AI summary', item.ai?.summary],
+            ...(item.contested ?? []).map(denial => ['denial', denial.translation ?? denial.sentence]),
+            ...(item.official ?? []).map(post => ['statement', post.translation ?? post.title]),
+            ['follow-up', item.followUp?.title], ['unconfirmed', item.hedgedTranslation ?? item.hedged],
+        ].filter(([, text]) => text && String(text).length >= 12).map(([field, text]) => [field, text, shownLanguage(firstOf(text))])
+            .filter(([, , written]) => written && written !== language)
+            .map(([field, text, written]) => `[${written}] ${field}: ${short(text, 50)} (${short(item.titleTranslation ?? item.title, 30)})`))],
+        // a name is not translated, it is spelled: a chip in the letters of another language (Cyrillic for "Gianni Infantino") is a name Wikidata could spell
+        // in the language of the reader
+        ['no name a reader sees is written in the letters of another language than theirs', items.flatMap(item => (item.names ?? [])
+            .filter(name => { const written = scriptLanguage(name.name); return written && written !== language; })
+            .map(name => `[${scriptLanguage(name.name)}] ${name.name} (${short(item.titleTranslation ?? item.title, 40)})`))],
         ['the title of an angle in another language is translated', foreignAngles.filter(angle => !angle.titleTranslation).map(angle => `[${angle.language}] ${short(angle.title)}`)],
         ['no sentence of a translation is left in the language of the article', foreign.filter(item => [item.translation, item.pointsTranslation, item.digestTranslation]
             .some(text => String(text ?? '').includes(`${ORIGINAL_START}(`))).map(item => `[${item.language}] ${short(item.title)}`)],

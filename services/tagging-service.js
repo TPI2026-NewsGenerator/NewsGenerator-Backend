@@ -12,7 +12,7 @@
 import {MentionModel} from "../models/mention-model.js";
 import {RETENTION_DAYS} from "./feed-service.js";
 import {taggerDevice, taggerUrls, tagTexts} from "./utils/tagger.js";
-import {cleanMentions, mentionKey} from "./utils/mentions.js";
+import {cleanMentions, mentionKey, withoutPreposition} from "./utils/mentions.js";
 import {languageOf} from "./utils/language.js";
 import {BYLINE_SITELINKS, exactItems, famousHuman, placeItem, PERSON_SITELINKS} from "./utils/wikidata.js";
 import {mediaOf} from "./utils/country-names.js";
@@ -169,7 +169,7 @@ const link = async () => {
                 // the items the name may be, kept when it is left with none (see MentionModel.setCandidates)
                 const candidates = [];
                 if (row.kind === 'organization') qid = await organizationItem(row, linkUsage, candidates);
-                else if (row.kind === 'location') qid = await placeItem(row.name, row.lang ?? 'en');
+                else if (row.kind === 'location') qid = await placeItem(withoutPreposition(row.name, row.lang), row.lang ?? 'en');
                 else {
                     const qids = await exactItems(row.name, row.lang ?? 'en');
                     candidates.push(...qids);

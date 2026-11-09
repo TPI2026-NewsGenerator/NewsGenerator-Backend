@@ -39,6 +39,25 @@ describe('cardChecks', () => {
         expect(broken([card({title: 'The digital phantom goal: when technology in sport fails [premium]'})], 'no title keeps the label of a paywall')).toHaveLength(1);
     });
 
+    it('should find the other sentences a reader sees that are written in another language than theirs: the line of the choice, the AI version, a denial, a statement', () => {
+        const german = 'Der Verband hat am Montag einen neuen Schiedsrichter für das Finale ernannt, nachdem der Ausschuss lange beraten hatte.';
+        const name = 'no other sentence a reader sees is written in another language than theirs';
+        expect(broken([card()], name)).toHaveLength(0);
+        expect(broken([card({why: german}), card({ai: {points: [german, 'The federation named a referee for the final on Monday.'], summary: null}}),
+            card({contested: [{sentence: german, translation: null}]}), card({official: [{title: german, translation: null}]})], name)).toHaveLength(4);
+        // translated, they are read in the language of the reader
+        expect(broken([card({contested: [{sentence: german, translation: 'The federation named a referee for the final on Monday.'}],
+            official: [{title: german, translation: 'The federation named a referee for the final on Monday.'}]})], name)).toHaveLength(0);
+    });
+
+    it('should find a name a reader sees written in the letters of another language: a chip of a card in Russian under an English text', () => {
+        const name = 'no name a reader sees is written in the letters of another language than theirs';
+        expect(broken([card({names: [{name: 'Gianni Infantino', qid: 'Q124138'}, {name: 'UEFA', qid: 'Q35572'}, {name: 'Čeferin', qid: null}]})], name)).toHaveLength(0);
+        expect(broken([card({names: [{name: 'Джанни Инфантино', qid: 'Q124138'}, {name: 'Παναθηναϊκό', qid: null}]})], name)).toHaveLength(2);
+        // read in Russian, they are the reader's own
+        expect(cardChecks([card({names: [{name: 'ФИФА', qid: 'Q253414'}]})], 'ru').find(([title]) => title === name)[1]).toHaveLength(0);
+    });
+
     it('should find a card with no picture and an angle whose language its title does not say', () => {
         expect(broken([card({thumbnail: null})], 'every card has a picture')).toHaveLength(1);
         expect(broken([card({angles: [{title: 'Der Verband ernennt einen neuen Schiedsrichter für das Finale am Montag', language: 'en', titleTranslation: 'x'}]})],

@@ -21,13 +21,14 @@ const {keepsFigures, splitSentences} = await import('../../services/utils/extrac
 const {alignNames} = await import('../../services/utils/spellings.js');
 const {withCleanNext} = await import('../../services/utils/card-analysis.js');
 const {searchNamesFor} = await import('../../services/utils/watch-names.js');
-const {cardNames, tidyNames, withSurnamesLinked} = await import('../../services/utils/card-names.js');
+const {cardNames, tidyNames, withoutUnreadable, withSurnamesLinked} = await import('../../services/utils/card-names.js');
 const {nationalityOf} = await import('../../services/utils/nationalities.js');
 const {countryDeclined, countryNamed} = await import('../../services/utils/country-names.js');
 const {placeOfOneCountry} = await import('../../services/utils/wikidata.js');
 const {titlesOfCard} = await import('../../services/utils/card-titles.js');
 const {checkRewrite, neutralTitle} = await import('../../services/utils/neutral-titles.js');
 const {cutPiece} = await import('../../services/utils/proofread.js');
+const {withoutPreposition} = await import('../../services/utils/mentions.js');
 
 const corpus = JSON.parse(readFileSync(new URL('./corpus.json', import.meta.url), 'utf8'));
 
@@ -56,6 +57,10 @@ const FAMILIES = {
     proofread: ({input, expect: wanted}) => {
         expect(cutPiece(input.text, input.piece, {kind: input.kind, part: input.part, first: input.first})).toBe(wanted.text);
     },
+    // the name of a place the tagger gave with the preposition of a headline ("En Corse")
+    placename: ({input, expect: wanted}) => {
+        expect(withoutPreposition(input.name, input.lang)).toBe(wanted.name);
+    },
     // the cut of an article into the sentences it is shown in
     sentences: ({input, expect: wanted}) => {
         expect(splitSentences(input.text)).toEqual(wanted.sentences);
@@ -76,7 +81,8 @@ const FAMILIES = {
     chips: ({input, expect: wanted}) => {
         const [names] = tidyNames([input.names], {stems: input.stems ?? [], labels: new Map(Object.entries(input.labels ?? {})),
             orgs: [input.orgs ?? []], nameKeys: new Map(Object.entries(input.nameKeys ?? {})), translated: [Boolean(input.translated)]});
-        expect(names.map(name => [name.name, name.qid ?? null])).toEqual(wanted.names);
+        // reader: the language of the reader, a name that is no item and is written in other letters is left out (withoutUnreadable)
+        expect((input.reader ? withoutUnreadable(names, input.reader) : names).map(name => [name.name, name.qid ?? null])).toEqual(wanted.names);
     },
     // the country the name of an organisation says by its words: it starts with a country, or has an adjective of nationality
     nationality: ({input, expect: wanted}) => {

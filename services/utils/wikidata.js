@@ -149,7 +149,9 @@ export const describeItems = async (qids, {background = false, batch = EXACT_FOU
     const asked = [...new Set(qids.filter(isQid))].slice(0, batch);
     if (asked.length === 0) return [];
     const params = new URLSearchParams({action: 'wbgetentities', ids: asked.join('|'), props: 'labels|descriptions|claims|sitelinks',
-        languages: 'en', format: 'json'});
+        // the fallback: Wikidata keeps the name of a person written the same in every Latin language as a label of the language "mul", none in
+        // English ("Gianni Infantino" has none: the label read was his number, Q124138, and a card in Russian kept his name in Cyrillic)
+        languages: 'en', languagefallback: '1', format: 'json'});
     const entities = (await ask(`${API}?${params}`, {background})).entities ?? {};
     return asked.map(qid => entities[qid]).filter(item => item && item.missing === undefined).map(item => ({
         qid: item.id,
@@ -311,7 +313,7 @@ export const placeItem = async (name, language = 'en') => {
     const found = (await searchNamed(name, language)).map(item => item.id);
     if (found.length === 0) return null;
     const params = new URLSearchParams({action: 'wbgetentities', ids: found.join('|'), props: 'labels|aliases',
-        languages: [...new Set([language, 'en'])].join('|'), format: 'json'});
+        languages: [...new Set([language, 'en'])].join('|'), languagefallback: '1', format: 'json'});
     const entities = (await ask(`${API}?${params}`)).entities ?? {};
     const called = found.filter(qid => {
         const item = entities[qid];
@@ -527,7 +529,7 @@ const LINKED_KIND = {player: 'person', coach: 'person', chair: 'person', directo
 export const readItem = async (qid, language = 'en') => {
     if (!isQid(qid)) return null;
     const params = new URLSearchParams({action: 'wbgetentities', ids: qid, props: 'labels|aliases|descriptions|claims',
-        languages: languagesOf(language).join('|'), format: 'json'});
+        languages: languagesOf(language).join('|'), languagefallback: '1', format: 'json'});
     const item = (await ask(`${API}?${params}`)).entities?.[qid];
     if (!item || item.missing !== undefined) return null;
 
@@ -544,7 +546,7 @@ export const readItem = async (qid, language = 'en') => {
     if (kind === 'person' && targets('P734').length > 0) {
         const family = targets('P734').slice(0, 2);
         const answer = await ask(`${API}?${new URLSearchParams({action: 'wbgetentities', ids: family.join('|'), props: 'labels',
-            languages: languagesOf(language).join('|'), format: 'json'})}`).catch(() => ({}));
+            languages: languagesOf(language).join('|'), languagefallback: '1', format: 'json'})}`).catch(() => ({}));
         extra = [...extra, ...family.flatMap(id => valuesOf(answer.entities?.[id]?.labels, language).slice(0, 1))
             .filter(name => name.length >= 4)];
     }
