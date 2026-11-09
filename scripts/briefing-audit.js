@@ -21,9 +21,9 @@ import {ProfileModel} from '../models/profile-model.js';
 import {MentionModel} from '../models/mention-model.js';
 import {NO_COUNTRY_BECAUSE, countryInfoOf, whyNoCountry} from '../services/utils/countries.js';
 import {lacksCapital, lowerFirst, capitalWordsOfCard} from '../services/utils/card-analysis.js';
-import {withoutDateline} from '../services/utils/extract.js';
-import {ORIGINAL_START, UNCHECKED} from '../services/utils/original-marks.js';
-import {readerLanguage, shownLanguage, titleLanguage, writtenIn} from '../services/utils/language.js';
+import {cardChecks, short} from '../services/utils/briefing-checks.js';
+import {UNCHECKED} from '../services/utils/original-marks.js';
+import {readerLanguage, writtenIn} from '../services/utils/language.js';
 
 // a briefing of the database by its id, or one never saved by its file (the cards as write() answers them, bench/enzo-measure.mjs saves
 // them in bench/data/enzo-measure-<profile>-<n>-raw.json) and the profile it was written for
@@ -45,49 +45,19 @@ if (!row || row.status !== 'ready') {
 const profile = row.id_profile ? await ProfileModel.get(row.id_profile) : null;
 const language = readerLanguage(profile ?? {});
 const items = row.items ?? [];
-const plain = (word) => word.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
-const short = (text, n = 70) => String(text ?? '').replace(/\s+/g, ' ').slice(0, n);
 
-// the checks that must hold: each lists what breaks it
+// the checks that must hold: each lists what breaks it. The ones of the cards alone are the server's too (services/utils/briefing-checks.js, run after
+// every briefing it writes); the ones of the analysis are written after the cards, they are here only
 const foreign = items.filter(item => item.language && item.language !== language && writtenIn(item.language));
 const angles = items.flatMap(item => (item.angles ?? []).map(angle => ({...angle, card: item.storyId})));
-const foreignAngles = angles.filter(angle => angle.language && angle.language !== language && writtenIn(angle.language));
 const checks = [
-    ['the title of a card in another language is translated', foreign.filter(item => !item.titleTranslation).map(item => `[${item.language}] ${short(item.title)}`)],
-    ['the text of a card in another language is translated', foreign.filter(item => item.summary && !item.translation).map(item => `[${item.language}] ${short(item.title)}`)],
-    ['the key points of a card in another language are translated', foreign.filter(item => item.points && !item.pointsTranslation).map(item => `[${item.language}] ${short(item.title)}`)],
-    ['the digest of a card in another language is translated', foreign.filter(item => item.digest && !item.digestTranslation).map(item => `[${item.language}] ${short(item.title)}`)],
-    // what the reader SEES, read from its own letters and not from the label a feed gave the news (a Persian title of an English feed passed the checks
-    // above, 9.11.2026): the title, the passages, the key points, the digest and the titles of the other angles are written in the reader's language
-    ['no text a reader sees is written in another language than theirs', items.flatMap(item => [
-        ['title', item.titleTranslation ?? item.title], ['passages', item.translation ?? item.summary], ['key points', item.pointsTranslation ?? item.points],
-        ['digest', item.digestTranslation ?? item.digest], ...(item.angles ?? []).map(angle => ['angle title', angle.titleTranslation ?? angle.title]),
-    ].filter(([, text]) => text && String(text).length >= 12).map(([field, text]) => [field, text, shownLanguage(String(text).split(/\n\n/)[0])])
-        .filter(([, , written]) => written && written !== language)
-        .map(([field, text, written]) => `[${written}] ${field}: ${short(text, 50)}`))],
-    ['the title of an angle in another language is translated', foreignAngles.filter(angle => !angle.titleTranslation).map(angle => `[${angle.language}] ${short(angle.title)}`)],
-    ['no sentence of a translation is left in the language of the article', foreign.filter(item => [item.translation, item.pointsTranslation, item.digestTranslation]
-        .some(text => String(text ?? '').includes(`${ORIGINAL_START}(`))).map(item => `[${item.language}] ${short(item.title)}`)],
-    ['every card has a picture', items.filter(item => !item.thumbnail && !item.illustration).map(item => short(item.titleTranslation ?? item.title))],
-    ['no key point begins with a dateline', items.flatMap(item => ['summary', 'points', 'digest', 'translation', 'pointsTranslation', 'digestTranslation']
-        .map(field => String(item[field] ?? '').split(/\n\n/)[0]).filter(first => withoutDateline(first) !== first).map(first => short(first)))],
-    ['no name is spelled with other accents than its card', items.flatMap(item => {
-        const names = new Map((item.names ?? []).flatMap(name => String(name.name ?? '').split(/\s+/)).filter(word => /^\p{Lu}/u.test(word) && word.length >= 5).map(word => [plain(word), word]));
-        const text = [item.titleTranslation, item.translation, item.pointsTranslation, item.digestTranslation].filter(Boolean).join('\n');
-        return (text.match(/\p{L}[\p{L}\p{M}'’-]*\p{L}/gu) ?? []).map(word => word.replace(/['’]s$/, ''))
-            .filter(word => /^\p{Lu}/u.test(word) && word !== word.toUpperCase() && names.has(plain(word)) && names.get(plain(word)) !== word)
-            .map(word => `"${word}" for "${names.get(plain(word))}" (${short(item.titleTranslation ?? item.title, 40)})`);
-    })],
+    ...cardChecks(items, language),
     ['no "If" of the analysis keeps a capital that is no name', Object.entries(row.analysis?.cards ?? {}).flatMap(([storyId, card]) => {
         const known = capitalWordsOfCard(items.find(item => String(item.storyId) === storyId));
         return (card.next ?? []).filter(line => lowerFirst(line.if, known) !== line.if).map(line => `If ${short(line.if, 50)}`);
     })],
     ['no part of an "If" line lacks the capital English gives a nationality, a month or a day', Object.values(row.analysis?.cards ?? {}).flatMap(card => (card.next ?? [])
         .flatMap(line => [line.if, line.then]).filter(part => lacksCapital(String(part ?? '').match(/^\p{L}+/u)?.[0])).map(part => short(part, 50)))],
-    ['no angle has a language its title does not say', angles.filter(angle => angle.language && (() => {
-        const read = titleLanguage(angle.title, angle.language);
-        return read.language !== angle.language && !read.guessed;
-    })()).map(angle => `[${angle.language} for ${titleLanguage(angle.title, angle.language).language}] ${short(angle.title, 60)}`)],
 ];
 
 let failed = 0;
@@ -134,6 +104,13 @@ if (withoutCountry.length > 0) {
         console.log(`    ${String(cards.length).padStart(3)}  ${text}`);
         for (const item of cards.slice(0, 2)) console.log(`           - ${short(item.titleTranslation ?? item.title, 60)}`);
     }
+}
+// what the last read of the AI took out of the cards, checked by the code (services/utils/proofread.js): each piece is a case for the corpus if the
+// rules did not know it
+const proofread = items.flatMap(item => (item.proofread ?? []).map(one => ({...one, card: item.titleTranslation ?? item.title})));
+if (proofread.length > 0) {
+    console.log(`\n${proofread.length} piece(s) the proofreading took out:`);
+    for (const one of proofread.slice(0, 10)) console.log(`       - "${short(one.text, 60)}" (${one.kind}, ${one.fields.join(' and ')}) of "${short(one.card, 50)}"`);
 }
 const rewritten = items.filter(item => item.titleRewritten).length;
 const proposals = items.filter(item => item.titleProposal).length;

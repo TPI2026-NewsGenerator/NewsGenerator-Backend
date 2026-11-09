@@ -34,6 +34,8 @@ import {officialSourcesOf} from "./utils/official-sources.js";
 import {evolvedStories, REPEAT_HOURS, shownStories, withoutRepeats} from "./utils/repeats.js";
 import {readerLanguage, scriptLanguage, writtenIn} from "./utils/language.js";
 import {VERSION_DAYS, forThePage, idsOf, restoredCard, swappedCard, versionsOfCards} from "./utils/card-versions.js";
+import {logBriefingChecks} from "./utils/briefing-checks.js";
+import {proofreadCards} from "./utils/proofread.js";
 import {failedTitle, translatedTitles} from "./utils/title-translation.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {assertPublicUrl, hostOf, mediumOf} from "./utils/public-url.js";
@@ -929,7 +931,7 @@ export const completeCards = async ({main, spare = []}, {briefingId = null, labe
 export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) => {
     // the stories ranked and given to the AI grow with the cards wanted
     const scale = size / MAX_BRIEFING;
-    const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage(), titling: newUsage(), titleRewriting: newUsage()};
+    const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage(), titling: newUsage(), titleRewriting: newUsage(), proofreading: newUsage()};
     // the interests of the profile and of the projects it runs: each gets its share of the cards
     const [profile, interests, projects] = await Promise.all([ProfileModel.get(profileId), ProfileModel.briefingInterests(profileId),
         ProfileModel.projects(profileId)]);
@@ -1053,7 +1055,13 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     // briefing is shown (it reasons for a minute or more a card, see card-analysis.js), never awaited
     if (briefingId) analyze(briefingId, items, articles, language);
     // the words an article of another language says it has no confirmation with, in the reader's language
-    return withHedgedTranslated(items, language, usage.summarizing).catch(() => items);
+    const hedged = await withHedgedTranslated(items, language, usage.summarizing).catch(() => items);
+    // the last read, by the AI, of what the reader will see: a dateline, a credit or a label the rules do not know yet, taken out when the code
+    // checks it (see proofread.js); never fails, never waits long
+    const written = await proofreadCards(hedged, language, {usage: usage.proofreading, label: briefingId ?? 'unsaved'});
+    // the checks of the cards run on what the reader will see, named in the log: the reader is not to be the first to find what a check finds
+    logBriefingChecks(briefingId ?? 'unsaved', written, language);
+    return written;
 };
 
 // The news of the terms the profile follows (names or words, see cleanWatchTerms and EntityService): the

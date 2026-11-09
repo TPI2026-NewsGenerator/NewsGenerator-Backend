@@ -109,6 +109,69 @@ What the reader does with it:
 - [Following](../following/README.md): the news of what the profile follows, beside the cards
 - [the former README](../archive/readme-features-2026-10-24.md), "The briefing" and "Key passages"
 
+## The audit after every briefing
+
+The cards of a briefing are checked **by the server itself** once written (`logBriefingChecks` of `services/utils/briefing-checks.js`, called
+at the end of `write()`, 9.11.2026: the reader and his friends were the first to see what a check finds). No AI, nothing is changed, a failure
+never fails the briefing: one line in the log, `Briefing 512: audit: all the checks of the cards hold (30 cards)`, or on the error output
+`Briefing 512: audit: 2 checks of the cards fail: no key point begins with a dateline (3: WALVIS BAY – …); every card has a picture (1: …)`.
+The checks (`cardChecks`): the title, the text, the key points and the digest of a card in another language are translated; no text a reader
+sees is written in another language than theirs, read from its letters (not from the label of its feed); no sentence of a translation is left
+in the language of the article; every card has a picture; no key point begins with a dateline or is the caption of a photo; no title keeps the
+label of a paywall; no name is spelled with other accents than its card; no angle has a language its title does not say. `scripts/briefing-audit.js`
+runs the same checks on a briefing already written (by its id, or a file of cards never saved), adds the ones of the analysis, written after the
+cards, the share of the cards with their names, countries, angles and picture against the last briefings of the profile, and why a card has no
+country. A line of the log that fails is a case for the corpus of `tests/regression`, then a rule of the code.
+
+## The proofreading before the reader
+
+The same problems came back since the start of the project (a translation not done, a word nobody wants in a title or in the key points): every
+rule written for one of them left the next one. So the cards are read once more by the AI, **at the end of `write()`, before the audit**
+(`proofreadCards` of `services/utils/proofread.js`, 9.11.2026, the user: "une relecture pour éviter tout ça"). `AI_PROOFREAD=off` switches it off.
+
+- **The AI only points.** gemma4:31b is given the title and the first three paragraphs of each way of reading a card (key passages, bullet points,
+  summary) as the reader sees them, 20 cards a call, and answers the pieces that are not the article's own words, copied as written, with their
+  kind: dateline, credit, label, caption, foreign, junk. A card of the reader's language and a translated one are read the same way.
+- **The code decides** (`cutPiece`): a piece is taken out only when it is short (16 words, 8 in a title), copied as written at the start or at
+  the end of a sentence, set apart from it by a mark (`:` `–` `|` `)` `]`...), what follows it is the start of a sentence (not a lower case word:
+  "As Gazzetta dello Sport reports, the…" is the sentence, "AAP understands…" is the news), and enough is left (3 words of a title, 6 of a
+  paragraph). Moreover: a dateline only opens the first paragraph (a date and a dash further on open a line of a timeline); the place and the date
+  of a photo caption are not taken off its words (what is left would pass for a sentence of the article); a label that tells what the text is
+  (OPINION, Exclusive, Live...) or is no format of the page (the competition "Ligue 1:" the AI called a label) stays; a text in another language is
+  taken out as a whole paragraph only when its letters say it is (`shownLanguage`) and other paragraphs are left. A caption and a piece the code
+  does not accept are **only reported**. A piece verified in one way of reading is taken out of the others where it stands at the edge too: they
+  are made of the same sentences.
+- **What it did is written down**: in the log (`Briefing 512: proofread: took out "VIDEO:" (label, title) of the card "…"`, and `left` for what it
+  did not take out and why) and on the card (`proofread: [{kind, text, fields}]`, shown by `scripts/briefing-audit.js`). Each piece it took out or
+  left that the rules did not know is a case for the corpus (family `proofread`), then a rule of the code, so that the next briefing does not need
+  the AI for it.
+- **It never fails and never waits long**: the AI not answering, answering what cannot be read, or taking more than 90 s leaves the cards as they
+  are (one more try for a call that fails).
+
+**Measured** (`bench/proofread.mjs`, `bench/proofread-live.mjs`, 9.11.2026). 480 cards: 240 real ones of the briefings of 14 days (44 with a defect the
+code knows), 140 where 7 kinds of defect were put in, 100 clean ones. The flags the code would accept, judged against the known defects, and the 29
+that no known defect explained judged blind by two readers (27 of 29 agree):
+
+| | gemma4:31b | deepseek-v4-pro, thinking off | deepseek-v4-pro, thinking on |
+|---|---|---|---|
+| defects found (of 193) | 191 | 190 | 193 |
+| defects the code did not know, found and real | 20 | 13 | 22 |
+| false alarms | 0 | 0 | 4 |
+| time for the 480 cards | 71 s | 81 s | 1645 s |
+| tokens written | 17 000 | 18 000 | 228 000 |
+
+gemma4:31b is the model of the step: as good as the others on what it finds, no false alarm, 23 times faster than the model that reasons, which
+finds two more but takes out the source of a news (4 attribution clauses, "As Gazzetta dello Sport reports,"). The defects the rules did not know,
+13 real ones in 340 clean real cards (about 4 %): `VIDEO`, `(pic)`, `(Video)` and `Thursday briefing:` before or after a title, `by Paolo
+Moramarco` or `writes IAN LADYMAN` after one, `| Yalla Shoot`, `GENEVA --`, `Conakry –`, `NAIROBI, Kenya, November 4, 2026 –`.
+
+The production step itself (the three ways, the checks of the code): on the 229 cards of the 20 briefings saved for Enzo, 12 calls, 13 s, 87 000
+tokens read, 5 000 written; it took out 7 pieces, all 7 real defects (`ZURICH:` twice, `MBABANE –`, `WALVIS BAY –`, `October 14 –`, `| YSscores`,
+`[premium]`), and left 44 (captions already cleaned, a competition, an opinion, quotes in another language). On the same cards with 10 defects
+put in (220 cards): 220 taken out and the text restored. Found on the way: the AI copies the field as it reads it ("passages 1"), not as it was
+asked ("passages"): the first version of the step lost most of the datelines of the text to it (0 of 6 for three kinds), which only a run against
+the real AI shows and a test with a mocked one does not.
+
 ## Neutral titles
 
 A card shows its title without the bait of its medium ("Information incroyable !", "Bomba zilei!", "Êtes-vous d'accord

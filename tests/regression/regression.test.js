@@ -5,7 +5,7 @@
 //  Description: The corpus of regression of the briefing, offline: every case of tests/regression/corpus.json run through the logic that
 //               has no AI (the language of a title, the check of the figures of a translation, the dateline, the spelling of the names,
 //               the small letter after "If", the names a person is followed by, the checks of a neutral title, the countries of the places
-//               a name declines or several items share). A test a case, named by
+//               a name declines or several items share, the pieces the proofreading of the cards takes out or leaves). A test a case, named by
 //               it. A problem reported on a card adds its case to the corpus first, then the logic is fixed (see README.md)
 //
 
@@ -27,6 +27,7 @@ const {countryDeclined, countryNamed} = await import('../../services/utils/count
 const {placeOfOneCountry} = await import('../../services/utils/wikidata.js');
 const {titlesOfCard} = await import('../../services/utils/card-titles.js');
 const {checkRewrite, neutralTitle} = await import('../../services/utils/neutral-titles.js');
+const {cutPiece} = await import('../../services/utils/proofread.js');
 
 const corpus = JSON.parse(readFileSync(new URL('./corpus.json', import.meta.url), 'utf8'));
 
@@ -50,6 +51,10 @@ const FAMILIES = {
         const sentences = splitSentences(input.text);
         if (wanted.first) expect(sentences[0]).toBe(wanted.first);
         if (wanted.sentences) expect(sentences).toEqual(wanted.sentences);
+    },
+    // a piece the AI points at in the cards of a briefing (proofread.js), taken out only when the code checks it: the text left, null when the code leaves it
+    proofread: ({input, expect: wanted}) => {
+        expect(cutPiece(input.text, input.piece, {kind: input.kind, part: input.part, first: input.first})).toBe(wanted.text);
     },
     // the cut of an article into the sentences it is shown in
     sentences: ({input, expect: wanted}) => {
