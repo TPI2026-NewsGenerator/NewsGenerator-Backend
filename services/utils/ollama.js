@@ -135,8 +135,10 @@ const askGemini = async (messages, usage, think) => {
 
 // The model a call naming its own one (deepseek-v4-pro, see ai-ways.js and card-analysis.js) goes to when that one fails: a model the
 // free usage of Ollama covers (8.11.2026: "Free usage covers beam, gemma4:31b, gpt-oss:120b, gpt-oss:20b, nemotron-3-nano:30b..., upgrade to
-// use any cloud model"), the biggest of them. Never Gemini, which would answer with gemma
-export const FALLBACK_MODEL = process.env.OLLAMA_FALLBACK_MODEL || 'gpt-oss:120b';
+// use any cloud model"). gemma4:31b, the model of the app: on the 30 faithful articles of bench/formats-models.mjs judged blind (9.11.2026) it
+// had a meaning error in 1 article of 30 (deepseek 0 to 2, same as it), gpt-oss:120b in 4 to 11 (39 wrong statements of 120 outputs against 4
+// and 3), and answers in 1 s against 6 to 9 s. Never Gemini, which would answer with gemma without saying so
+export const FALLBACK_MODEL = process.env.OLLAMA_FALLBACK_MODEL || 'gemma4:31b';
 // 401, 402, 403, 404: the key, the plan, a model that is not there; 429: the quota. A model refused so is left aside for this long
 // (its fallback asked at once), then asked again; the other failures (5xx, network, no answer) are not remembered
 const PLAN_REFUSALS = [401, 402, 403, 404, 429];

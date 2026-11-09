@@ -4,7 +4,7 @@
 //  File: test.card-analysis.js
 //  Description: The analysis of the cards that merit one: the cards picked without reasoning, each written with
 //               reasoning from its own sources, a line kept only when its cited sources give its figures and
-//               names, shown without ids nor "If"/"then", gpt-oss:120b when deepseek fails
+//               names, shown without ids nor "If"/"then", gemma4:31b when deepseek fails
 //
 
 import process from 'node:process';
@@ -269,11 +269,11 @@ describe('the analyses of a briefing', () => {
         const result = await analysesOf([card(1, 11)], 'en');
 
         expect(result).toEqual({picked: [{storyId: 11, reason: null}], cards: {}});
-        // deepseek, then gpt-oss:120b for each call (8.11.2026), no other model
-        expect(new Set(chat.mock.calls.map(([request]) => request.model))).toEqual(new Set([ANALYSIS_MODEL, 'gpt-oss:120b']));
+        // deepseek, then gemma4:31b for each call (8.11.2026), no other model
+        expect(new Set(chat.mock.calls.map(([request]) => request.model))).toEqual(new Set([ANALYSIS_MODEL, 'gemma4:31b']));
     });
 
-    it('should write the analysis with gpt-oss:120b when deepseek fails on it, and say so in the usage', async () => {
+    it('should write the analysis with gemma4:31b when deepseek fails on it, and say so in the usage', async () => {
         chat.mockImplementation(async ({model, messages}) => {
             if (messages[0].content.startsWith('You choose which cards')) return answer({cards: [{n: 1}]});
             if (model === ANALYSIS_MODEL) throw Object.assign(new Error('down'), {status_code: 500});
@@ -284,7 +284,7 @@ describe('the analyses of a briefing', () => {
         const result = await analysesOf([card(1, 11)], 'en', {usage});
 
         expect(Object.keys(result.cards)).toEqual(['11']);
-        expect(usage.models).toContain('gpt-oss:120b');
+        expect(usage.models).toContain('gemma4:31b');
     });
 
     it('should say each card done, written or not, so a long analysis is not taken for one abandoned', async () => {

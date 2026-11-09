@@ -158,6 +158,8 @@ const valid = (from, sentences) => [...new Set((Array.isArray(from) ? from : [])
 // replacement is the sentence named (one of its own, else its first), null when it has none
 const grounded = async (items, sentences, usage) => {
     if (items.length === 0) return [];
+    // BENCH_NO_CHECK=1: the writing alone (the grounded variant was rejected on 15.10.2026), every statement kept as written
+    if (process.env.BENCH_NO_CHECK) return items.map(() => ({supported: true, checked: false, problem: null, replacement: null}));
     const answer = await ask(CHECK_MODEL, checkPrompt(items, sentences), usage, undefined);
     const verdicts = Array.isArray(answer?.statements) ? answer.statements : [];
     return items.map((item, i) => {
@@ -249,7 +251,8 @@ const out = await mapWithConcurrency(written.map(r => r.value), 4, async ({a, se
         groundedSummary, groundedSummaryMeasure: measure([groundedSummary.map(p => p.text).join(' ')], articleText),
     };
 });
-usageAt.after = await settledUsage(usageAt.written, usage.checkPoints.calls + usage.checkSummary.calls + usage.translate.calls);
+usageAt.after = process.env.BENCH_NO_CHECK ? usageAt.written
+    : await settledUsage(usageAt.written, usage.checkPoints.calls + usage.checkSummary.calls + usage.translate.calls);
 
 const results = out.map((r, i) => r.status === 'fulfilled' ? r.value : {id: articles[i].id, error: String(r.reason)});
 const ok = results.filter(r => !r.error);

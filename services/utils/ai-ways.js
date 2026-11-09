@@ -94,7 +94,7 @@ export const aiWaysOf = async (title, page, {language = 'en', usage = null} = {}
     const reader = writtenIn(language);
     if (sentences.length === 0 || !reader) return null;
     const source = new Set(figuresIn(`${title} ${sentences.map(sentence => sentence.text).join(' ')}`));
-    // the model(s) that answered: deepseek-v4-pro, gpt-oss:120b when it failed (see FALLBACK_MODEL of ollama.js): the card says who wrote it
+    // the model(s) that answered: deepseek-v4-pro, gemma4:31b when it failed (see FALLBACK_MODEL of ollama.js): the card says who wrote it
     const writers = new Set();
     const ask = (prompt) => ollamaJson(prompt, usage, {model: WRITE_MODEL, think: false, onModel: model => writers.add(model)}).catch(err => {
         console.error(`AI version: ${WRITE_MODEL} did not answer (${err.message})`);

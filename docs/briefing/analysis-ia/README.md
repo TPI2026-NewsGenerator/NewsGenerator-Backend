@@ -47,8 +47,8 @@ and the code drops a line whose figure or name those sources do not give.
   judged blind, 6 lines so, 5 of them judged no use and none useful; at 70% it dropped 2 useful lines of 13.
 - Saved `{status: 'ready', model, picked, dropped, cards: {storyId: {why, next, timeline}}}`. A card the
   AI fails on, or whose lines are all dropped, has none. A call of this model never goes to Gemini
-  (`ollama.js`): when it fails it goes to `gpt-oss:120b` (`FALLBACK_MODEL`, `OLLAMA_FALLBACK_MODEL`, since 8.11.2026), the analysis
-  then says "deepseek-v4-pro + gpt-oss" (`usage.models`); a failure of both is no analysis. An error of the whole run saves `{status: 'failed'}`.
+  (`ollama.js`): when it fails it goes to `gemma4:31b` (`FALLBACK_MODEL`, `OLLAMA_FALLBACK_MODEL`; `gpt-oss:120b` from 8.11.2026 to 9.11.2026), the analysis
+  then says "deepseek-v4-pro + gemma4" (`usage.models`); a failure of both is no analysis. An error of the whole run saves `{status: 'failed'}`.
 - An analysis still `running` with no card done for 12 minutes (`ANALYSIS_ABANDONED_MS`, counted from
   `beatAt`, else from `startedAt`: a server that stopped) is answered `failed` (`analysisOfRow`). Counted from
   its start until 17.10.2026, a long one (cards of up to 300 s each and their busy waits, 3 at a time, no

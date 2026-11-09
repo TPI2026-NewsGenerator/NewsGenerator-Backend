@@ -71,7 +71,7 @@ describe('the AI version of a card', () => {
 
         // the call that failed was answered by the model that takes its place (8.11.2026), and the card says both wrote it
         expect(ways).toEqual({points: ['A strike of 24 hours on Monday.'], summary: 'A strike of 24 hours on Monday.', model: expect.any(String)});
-        expect(ways.model.split(' + ').sort()).toEqual(['gpt-oss:120b', WRITE_MODEL].sort());
+        expect(ways.model.split(' + ').sort()).toEqual(['gemma4:31b', WRITE_MODEL].sort());
         expect(calls).toEqual({points: 2, summary: 2});
     });
 
@@ -133,7 +133,7 @@ describe('the AI version of a card', () => {
         expect(chat).toHaveBeenCalledTimes(2);
     });
 
-    it('should be written by gpt-oss:120b when its model fails, and say so (8.11.2026)', async () => {
+    it('should be written by gemma4:31b when its model fails, and say so (8.11.2026)', async () => {
         chat.mockImplementation(async ({model, messages}) => {
             if (model === WRITE_MODEL) throw Object.assign(new Error('down'), {status_code: 500});
             return messages[0].content.startsWith('You write the key points') ? answer({points: [{text: 'A strike of 24 hours on Monday.'}]})
@@ -142,7 +142,7 @@ describe('the AI version of a card', () => {
 
         const ways = await aiWaysOf('SBB strike on Monday', page, {language: 'en'});
 
-        expect(ways).toEqual({points: ['A strike of 24 hours on Monday.'], summary: 'A strike of 24 hours on Monday.', model: 'gpt-oss:120b'});
+        expect(ways).toEqual({points: ['A strike of 24 hours on Monday.'], summary: 'A strike of 24 hours on Monday.', model: 'gemma4:31b'});
         expect(globalThis.fetch).not.toHaveBeenCalled();
     });
 

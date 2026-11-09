@@ -10,7 +10,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const [dir] = process.argv.slice(2);
-const MODELS = ['gemma4:31b', 'deepseek-v4-pro:0813', 'kimi-k3', 'mistral-large-3:675b', 'deepseek-v4.1-flash'];
+// BENCH_MODELS=a,b,c: the models of a later round (9.11.2026: gemma4:31b, deepseek-v4-pro:0813 of 15.10, gpt-oss:120b)
+const MODELS = process.env.BENCH_MODELS?.split(',') ?? ['gemma4:31b', 'deepseek-v4-pro:0813', 'kimi-k3', 'mistral-large-3:675b', 'deepseek-v4.1-flash'];
 const read = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 const key = read(path.join(dir, 'key.json'));
 const overridesFile = path.join(dir, 'overrides.json');

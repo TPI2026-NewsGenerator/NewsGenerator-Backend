@@ -8,7 +8,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {sentencesOf} from '../services/utils/extract.js';
 
-const MODELS = ['gemma4:31b', 'deepseek-v4-pro:0813', 'kimi-k3', 'mistral-large-3:675b', 'deepseek-v4.1-flash'];
+// BENCH_MODELS=a,b,c: the models of a later round (9.11.2026: gemma4:31b, deepseek-v4-pro:0813 of 15.10, gpt-oss:120b)
+const MODELS = process.env.BENCH_MODELS?.split(',') ?? ['gemma4:31b', 'deepseek-v4-pro:0813', 'kimi-k3', 'mistral-large-3:675b', 'deepseek-v4.1-flash'];
 const [dir, per = '3'] = process.argv.slice(2);
 const read = (name) => JSON.parse(fs.readFileSync(new URL(`./data/faithful/${name}`, import.meta.url), 'utf8'));
 const articles = read('articles.json');

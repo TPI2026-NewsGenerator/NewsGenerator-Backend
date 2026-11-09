@@ -3,7 +3,7 @@
 //  Date: 08.11.2026
 //  File: test.ai-own-model.js
 //  Description: A call that names its own model (deepseek-v4-pro for the AI version and the analysis, see ai-ways.js and card-analysis.js)
-//               goes to gpt-oss:120b when that model fails, never to Gemini; a model the plan refuses (401, 402, 403, 404, 429) is left
+//               goes to gemma4:31b when that model fails, never to Gemini; a model the plan refuses (401, 402, 403, 404, 429) is left
 //               aside for a while, any other failure is not remembered; the model that answered is told
 //
 
@@ -38,8 +38,8 @@ describe('a call with its own model', () => {
         expect(usage.models).toEqual([OWN]);
     });
 
-    it('should go to gpt-oss:120b when it fails, never to Gemini, and say who answered', async () => {
-        expect(FALLBACK_MODEL).toBe('gpt-oss:120b');
+    it('should go to gemma4:31b when it fails, never to Gemini, and say who answered', async () => {
+        expect(FALLBACK_MODEL).toBe('gemma4:31b');
         chat.mockRejectedValueOnce(failed(500)).mockResolvedValueOnce(answer({a: 2}));
         const usage = newUsage();
         const told = [];
