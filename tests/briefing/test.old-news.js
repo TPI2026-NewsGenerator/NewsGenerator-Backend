@@ -106,7 +106,7 @@ describe('withoutOldNews', () => {
         expect(result.stories).toHaveLength(2);
     });
 
-    it('should give one news a medium, the first ones of the earlier coverage and the newest of the window', async () => {
+    it('should give one news a medium, the first ones given of the earlier coverage (the closest, as the query gives them) and the newest of the window', async () => {
         const earlier = Array.from({length: EARLIER + 3}, (_, i) => row(`Before ${i}`, 100 - i));
         const window = [row('Old one', 20, 'same.example'), row('Same medium', 19, 'same.example'), ...Array.from({length: 10}, (_, i) => row(`Now ${i}`, 10 - i))];
         const judge = answers();

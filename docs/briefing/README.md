@@ -371,7 +371,7 @@ later by media that wrote nothing before, so the briefing of today carries as ne
 
 **The rule** (`services/utils/old-news.js`, `notOldNews` after the candidates are picked and before the AI chooses): for each candidate whose
 story the media had told at least 12 hours (`GRACE_HOURS`) before the window began, the AI is given the headline, up to 5 earlier news (one per
-medium, the first ones, with their age) and up to 8 news of the window, and says whether the fact of the headline is **new** (it happened, was
+medium, the closest to the story by meaning first, with their age) and up to 8 news of the window, and says whether the fact of the headline is **new** (it happened, was
 announced or decided in the window, the event itself after its preview, a step further in the same affair) or **old** (the earlier coverage already
 told it: a medium picking it up late, a reminder, a recap, an analysis, a reaction to an old fact, a preview of an event played since). In doubt it
 is old. The old ones are not candidates; the log says them (`Briefing: 3 stories left out, the media told their news before the last 24 hours and only
@@ -394,6 +394,15 @@ Live, on a briefing of 10 cards of the profile of Enzo (43 candidates, bench/enz
 preview of a match played since; one call of 1 341 tokens in and 178 out (the stories of the candidates that have earlier news, 30 at most a call).
 The live cases of the corpus (`tests/regression`, family `oldnews`, 10 stories of the two sets: 5 old, 5 new) hold 10 of 10, each asked alone; a feature on the candidate Tashima, told
 a week after his candidacy, is judged new when asked alone and old among others (the other stories give the AI its measure): that case was left out of the corpus, a limit of the AI.
+
+**The closest earlier news first** (10.11.2026, `StoryModel.earlierNews`): the 5 earlier news given were the first in time of the story; they are now the closest to the story
+by the cosine of the vector of their text to its centroid (their closest one for each medium; a news with no vector yet, or a story with no centroid, after the others, in
+time). Measured on the 66 stories rated by hand (`bench/old-news-thread.mjs`, 3 runs, majority): first in time: 11 of the 18 old caught and 5 of the 40 new lost; closest first: 12 and
+4 (precision of the drops 69% -> 75%). A story with 3 to 5 earlier news was judged on the oldest, not on the one that
+told its fact. **The affair as the earlier coverage was measured and not built**: the 5 closest of the whole affair caught 15 of 18 and lost 5 of 40, but its part for the
+stories with no earlier news of their own (10 more asked) caught 1 old one, by luck (its neighbours told another fact), lost 1 new one and left 1 unsure; the closest news of
+the affair have the same similarity for the old and the new (median 0.89 and 0.90). The same method lost 2 of 40 new in the morning and 5 of 40 in the same run: 1 or 2
+stories are noise with 18 old ones.
 
 Not done: the affair (thread) as the earlier coverage, for a story that begins after its affair did (one old news of the second set had its earlier
 news only in the thread); and the threshold of a week the friend named: a window of 24 hours already asks for the facts of that day, and the AI says

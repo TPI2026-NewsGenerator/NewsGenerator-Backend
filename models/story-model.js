@@ -217,23 +217,27 @@ export const StoryModel = {
         ORDER BY a.link, (a.id_story IS NOT NULL) DESC, COALESCE(a.published_at, a.created_at) DESC`,
         links)).map(article => ({...article, title: cleanTitle(article.title, article.medium)})),
 
-    // The first news of these stories told before a date, one per medium, the first ones first, at most perStory for each: what the media
-    // had said of a story before the window of a briefing began (see old-news.js). Every medium, not the ones of a reader: it only tells the AI
-    // whether a fact is old. {id_story, at, medium, title}
+    // The news of these stories told before a date, the closest to the story by meaning first (the cosine distance of the vector of their text to the
+    // centroid of the story), one per medium (its closest), at most perStory for each: what the media had said of a story before the window of a briefing
+    // began (see old-news.js). The first in time were given first until 10.11.2026: on 66 stories rated by hand the closest first caught 12 of the 18 old
+    // ones and lost 4 of the 40 new, the first in time 11 and 5 (bench/old-news-thread.mjs: a story with 3 to 5 earlier news was judged on the oldest, not on
+    // the one that told its fact). A news with no vector yet, a story with no centroid: after the others, in time. Every medium, not the ones of a reader: it only
+    // tells the AI whether a fact is old. {id_story, at, medium, title}
     earlierNews: async ({storyIds, before, perStory}) => (await prisma.$queryRawUnsafe(`
         SELECT id_story, at, medium, title FROM (
-            SELECT news.*, row_number() OVER (PARTITION BY id_story ORDER BY at) AS place
+            SELECT news.*, row_number() OVER (PARTITION BY id_story ORDER BY distance NULLS LAST, at) AS place
             FROM (
                 SELECT DISTINCT ON (a.id_story, a.medium)
-                       a.id_story, a.medium, a.title, COALESCE(a.published_at, a.created_at) AS at
+                       a.id_story, a.medium, a.title, COALESCE(a.published_at, a.created_at) AS at, a.text_dense <=> s.centroid AS distance
                 FROM articles a
+                JOIN stories s ON s.id = a.id_story
                 WHERE a.id_story = ANY($1::int[])
                   AND COALESCE(a.published_at, a.created_at) < $2::timestamptz
-                ORDER BY a.id_story, a.medium, COALESCE(a.published_at, a.created_at)
+                ORDER BY a.id_story, a.medium, a.text_dense <=> s.centroid NULLS LAST, COALESCE(a.published_at, a.created_at)
             ) news
         ) ranked
         WHERE place <= $3::int
-        ORDER BY id_story, at`,
+        ORDER BY id_story, place`,
         storyIds, before, perStory)).map(article => ({...article, title: cleanTitle(article.title, article.medium)})),
 
     // the news of these stories the user can read, once per link, the newest first, their titles

@@ -20,7 +20,7 @@ import {ollamaJson} from './ollama.js';
 // used to tune the prompt, 4 of 7 and 0 of 17. A news is looked at only when media had told the story at least GRACE_HOURS before the window
 // began: a fact told 26 hours ago is not older than the 24 hours of a briefing (with no grace, the same prompt lost 4 new facts of 23, not 2)
 export const GRACE_HOURS = 12;
-export const EARLIER = 5;           // news of the earlier coverage given for each story, one per medium, the first ones
+export const EARLIER = 5;           // news of the earlier coverage given for each story, one per medium, the closest to the story first (see StoryModel.earlierNews)
 const IN_WINDOW = 8;                // news of the window given for each, one per medium, the newest
 export const ASK_BY = 30;           // stories judged in one call
 
@@ -36,7 +36,7 @@ const line = (row, now) => `- ${ago(row.at, now)}: ${row.title}`;
 // one news per medium, in the order they are given
 const onePerMedium = (rows) => rows.filter((row, at) => !row.medium || rows.findIndex(other => other.medium === row.medium) === at);
 
-// The questions of one call. stories: [{id, title, earlier: [{at, title, medium}] the first ones first, within: [{at, title, medium}]}]
+// The questions of one call. stories: [{id, title, earlier: [{at, title, medium}] the closest to the story first, within: [{at, title, medium}]}]
 export const oldNewsPrompt = (stories, hours, now = Date.now()) => `A reader gets a daily news briefing of the last ${spanOf(hours)}. For each story: the headline the reader sees, what the media had already published BEFORE those ${spanOf(hours)} (the earlier coverage), then what they published during them.
 
 ${stories.map(story => `[${story.id}] Headline: "${story.title}"
@@ -76,7 +76,7 @@ export const oldStories = async (stories, hours, {usage = null, now = Date.now()
 
 // The stories of a briefing without the ones that tell an old news, in their order. stories: [{storyId, members: [{at, title, medium}], followUp?}]
 // the ones of the window; earlierOf: Map storyId -> [{at, title, medium}] the news told before the window began (see StoryModel.earlierNews), the
-// first ones first. A story that follows a card of before (followUp, see repeats.js) was judged on what is new since, and a story with no news
+// closest to the story first. A story that follows a card of before (followUp, see repeats.js) was judged on what is new since, and a story with no news
 // of the window or none of before has nothing to compare. Answers {stories, left: [{storyId, earlier}]}
 export const withoutOldNews = async (stories, earlierOf, hours, {usage = null, now = Date.now(), judge = ollamaJson} = {}) => {
     const asked = stories.flatMap(story => {
