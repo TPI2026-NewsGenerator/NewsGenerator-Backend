@@ -334,6 +334,27 @@ describe('sameFact', () => {
         expect(normalizeSameFact(undefined, 3).size).toBe(0);
     });
 
+    it('should ask for the same MAIN fact in the loose prompt: the judgment, a detail and a nuance may go, the main fact may not, a doubt keeps the rewrite', () => {
+        const pairs = [{title: 'A1', proposal: 'B1', dropped: ['Total debacle']}, {title: 'A2', proposal: 'B2'}];
+        const loose = sameFactPrompt(pairs, {loose: true});
+        expect(loose).toContain('MÊME FAIT PRINCIPAL');
+        expect(loose).toContain('Dans le doute, oui si le fait principal est le même.');
+        expect(loose).not.toContain('EXACTEMENT');
+        expect(loose).toContain('[1]\nA : A1\nB : B1\nRetiré : Total debacle\n');
+        expect(loose).toContain('[2]\nA : A2\nB : B2\n');
+        // the strict one is still there, and the default of the function
+        expect(sameFactPrompt(pairs, {loose: false})).toContain('EXACTEMENT le même fait');
+        expect(sameFactPrompt(pairs)).toBe(sameFactPrompt(pairs, {loose: false}));
+        expect(sameFactPrompt(pairs)).toContain('Dans le doute, non.');
+    });
+
+    it('should ask the loose question when asked to, with the same answer rules', async () => {
+        ollamaJson.mockResolvedValue({pairs: [{n: 1, same: true}]});
+        const pairs = [{title: 'A new dawn? Kenya launch ambitious strategy', proposal: 'Kenya launch strategy'}];
+        expect([...await sameFact(pairs, null, {think: true, loose: true})]).toEqual([[0, {same: true, why: ''}]]);
+        expect(ollamaJson.mock.calls[0][0]).toBe(sameFactPrompt(pairs, {loose: true}));
+    });
+
     it('should ask the AI once for all the pairs, with thinking as asked', async () => {
         ollamaJson.mockResolvedValue({pairs: [{n: 1, same: true}]});
         const pairs = [{title: 'Incroyable ! Le PSG gagne', proposal: 'Le PSG gagne'}];
@@ -373,6 +394,21 @@ describe('aiRewrittenTitles', () => {
         const opinion = ollamaJson.mock.calls.find(([prompt]) => prompt.startsWith('Voici des paires'));
         expect(opinion[2].think).toBe(true);
         expect(ollamaJson.mock.calls.filter(([prompt]) => prompt.startsWith('Voici le titre')).every(([, , options]) => options.think === true)).toBe(true);
+    });
+
+    it('should ask the second opinion for the main fact by default (10.11.2026), the strict one with NEUTRAL_TITLES_CHECK=strict', async () => {
+        const rewrites = {'Historic: from this matchday onwards referees will speak': 'From this matchday onwards referees will speak', 'New scandal shakes FIFA': 'New allegations against FIFA'};
+        ollamaJson.mockImplementation(answers({rewrites, verdicts: [true, true]}));
+        expect((await aiRewrittenTitles(entries, {})).size).toBe(2);
+        expect(ollamaJson.mock.calls.find(([prompt]) => prompt.startsWith('Voici des paires'))[0]).toContain('MÊME FAIT PRINCIPAL');
+        ollamaJson.mockClear();
+        process.env.NEUTRAL_TITLES_CHECK = 'strict';
+        try {
+            expect((await aiRewrittenTitles(entries, {})).size).toBe(2);
+            expect(ollamaJson.mock.calls.find(([prompt]) => prompt.startsWith('Voici des paires'))[0]).toContain('EXACTEMENT le même fait');
+        } finally {
+            delete process.env.NEUTRAL_TITLES_CHECK;
+        }
     });
 
     it('should tell the second opinion which clause a rewrite left out with its names', async () => {

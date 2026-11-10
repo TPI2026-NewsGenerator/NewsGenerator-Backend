@@ -103,4 +103,48 @@ describe('the illustration of a card', () => {
         }
         expect(briefingMail({items: [{...card, pictures: undefined}]}).html).toContain('width="560"');
     });
+
+    describe('a standing picture cut to a landscape in the e-mail (10.11.2026)', () => {
+        const standing = (size) => ({storyId: 1, title: 'A news', summary: 'A passage.', thumbnail: 'https://media.fr/portrait.jpg', thumbnailSource: 'media.fr',
+            pictures: [{url: 'https://media.fr/portrait.jpg', source: 'media.fr', ...size}]});
+        const MSO = /<!--\[if mso\]>([\s\S]*?)<!\[endif\]-->/;
+
+        it('should put a standing picture in a box 56.25% as high as it is wide, the picture pulled up by 12% of what overflows, for the apps that know it', () => {
+            const {html} = briefingMail({items: [standing({width: 800, height: 1200})]});
+            const box = html.split('<!--[if !mso]><!-->')[1].split('<!--<![endif]-->')[0];
+            expect(box).toContain('height:0;padding-bottom:56.25%;overflow:hidden;border-radius:18px');
+            // 2:3: the picture is 1.5 times its width high, 0.9375 of it overflows the box: 12% of that, in % of the width
+            expect(box).toContain('margin:-11.25% 0 0');
+            expect(box).toContain('width="560"');
+            expect(box).toContain('max-width:560px');
+        });
+
+        it('should give Outlook of Windows the narrow picture of before, which does not know the crop', () => {
+            const {html} = briefingMail({items: [standing({width: 800, height: 1200})]});
+            const narrow = html.match(MSO)[1];
+            expect(narrow).toContain('width="280"');
+            expect(narrow).toContain('max-width:280px');
+            expect(narrow).not.toContain('overflow');
+        });
+
+        it('should pull up a less standing picture by less: 3:4 by 9.25%', () => {
+            expect(briefingMail({items: [standing({width: 900, height: 1200})]}).html).toContain('margin:-9.25% 0 0');
+        });
+
+        it('should not cut a picture that is wide, nearly square, or of no known size: they keep their one picture', () => {
+            for (const size of [{width: 1600, height: 900}, {width: 1000, height: 1000}, {width: 1000, height: 1050}, {}]) {
+                const {html} = briefingMail({items: [standing(size)]});
+                expect(html).not.toContain('<!--[if mso]>');
+                expect(html).not.toContain('padding-bottom:56.25%');
+            }
+            // a near-square one taller than wide keeps its cap
+            expect(briefingMail({items: [standing({width: 1000, height: 1050})]}).html).toContain('width="400"');
+        });
+
+        it('should show the same picture in both, and its credit once, under it', () => {
+            const {html} = briefingMail({items: [standing({width: 800, height: 1200})]});
+            expect(html.match(/https:\/\/media\.fr\/portrait\.jpg/g)).toHaveLength(2);
+            expect(html.match(/Picture — /g)).toHaveLength(1);
+        });
+    });
 });

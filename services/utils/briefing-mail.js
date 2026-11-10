@@ -20,6 +20,7 @@
 "use strict"
 
 import {languageName} from './language.js';
+import {isStanding} from './picture-sizes.js';
 import {countryNames} from './country-names.js';
 import {ORIGINAL_END, ORIGINAL_START, withoutOriginalMarks} from './original-marks.js';
 import {coverageOfCard} from './card-coverage.js';
@@ -464,14 +465,35 @@ const countriesOf = (card, t = ENGLISH) => countryNames(Array.isArray(card.ownCo
 const creditOf = (card, t = ENGLISH) => card.addedBy !== undefined
     ? card.addedBy ? fillText(t.labels.addedBy, {name: card.addedBy}) : t.labels.addedByYou
     : card.thumbnailSource;
-// A standing picture of known size (an illustration, see illustrations.js, or one of the pictures of its articles that the card was written with, see
-// pictures) narrower, so that it is no higher than MAX_PICTURE_HEIGHT: a portrait of Commons (2:3) would fill a phone's screen at 560 px wide. Not cut
-// to a landscape as the page does: a mail app that does not know the crop (Outlook) would show the whole of it, or stretch it
+// The size of the picture of a card when it is known: an illustration (see illustrations.js), or one of the pictures of its articles that the card was
+// written with (pictures); {} otherwise (a file of the reader, a card of before the sizes)
+const pictureSizeOf = (card) => card.thumbnail && card.thumbnail === card.illustration?.url ? card.illustration
+    : (card.pictures ?? []).find(picture => picture.url === card.thumbnail) ?? {};
+// A standing picture of known size narrower, so that it is no higher than MAX_PICTURE_HEIGHT: a portrait of Commons (2:3) would fill a phone's screen at
+// 560 px wide
 const MAX_PICTURE_HEIGHT = 420;
 const pictureWidth = (card) => {
-    const {width, height} = card.thumbnail && card.thumbnail === card.illustration?.url ? card.illustration
-        : (card.pictures ?? []).find(picture => picture.url === card.thumbnail) ?? {};
+    const {width, height} = pictureSizeOf(card);
     return width > 0 && height > width ? Math.min(560, Math.round(MAX_PICTURE_HEIGHT * width / height)) : 560;
+};
+// A picture taller than wide (see isStanding) is cut to the 16:9 landscape of the page, nearer its top where the face is (the user, 10.11.2026, a friend: a
+// photo in portrait mode): the picture is in a box as high as 56.25% of its width, the picture pulled up by CROP_ANCHOR% of what overflows. Both are
+// percentages of the width of the box, so that the crop follows it on a phone. Outlook of Windows (the Word engine, `mso`) does not know the crop, nor the
+// overflow: it gets the narrow picture of before. A mail app that does not read the negative margin shows the top of the picture, which is where the face
+// is; one that did not read the overflow would show the whole of it over the text below (not tried in the apps themselves: in a browser, and Outlook by its fallback)
+const CROP_ANCHOR = 12;
+const pictureHtml = (card, src, t) => {
+    const size = pictureSizeOf(card);
+    const width = pictureWidth(card);
+    const narrow = `<img src="${escape(src)}" alt="" width="${width}" style="display:block;width:100%;max-width:${width}px;height:auto;margin-top:20px;border:0;border-radius:18px;background:${t.c.deep}">`;
+    if (!isStanding(size)) return narrow;
+    const pulled = Math.round(CROP_ANCHOR * (size.height / size.width - 9 / 16) * 100) / 100;
+    return `<!--[if mso]>${narrow}<![endif]-->
+  <!--[if !mso]><!-->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin-top:20px"><tr><td style="padding:0">
+    <div style="height:0;padding-bottom:56.25%;overflow:hidden;border-radius:18px;background:${t.c.deep};font-size:0;line-height:0"><img src="${escape(src)}" alt="" width="560" style="display:block;width:100%;height:auto;margin:-${pulled}% 0 0;border:0"></div>
+  </td></tr></table>
+  <!--<![endif]-->`;
 };
 const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH, anchor = false) => {
     const sentences = wayOf(card, format, t);
@@ -479,7 +501,6 @@ const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH, an
     const countries = countriesOf(card, t);
     // the picture of Wikimedia Commons of who it names, not of the news: said so
     const illustration = Boolean(card.thumbnail) && card.thumbnail === card.illustration?.url;
-    const width = pictureWidth(card);
     // or a file of the reader joined to the e-mail (see mail-pictures.js)
     const picture = webUrl(card.thumbnail) ?? (/^cid:[\w.@-]+$/.test(card.thumbnail ?? '') ? card.thumbnail : null);
     return `
@@ -498,7 +519,7 @@ const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH, an
   <h2 style="margin:0;font:600 28px/1.15 ${FONT};letter-spacing:-.022em;color:${t.c.ink}">${escape(titleOf(card))}</h2>
   ${badgesHtml(card, t)}${namesHtml(card, t)}
   ${personal && card.why ? `<p style="margin:12px 0 0;font:400 20px/1.45 ${FONT};letter-spacing:-.01em;color:${t.c.mute}">${escape(card.why)}</p>` : ''}
-  ${picture ? `<img src="${escape(picture)}" alt="" width="${width}" style="display:block;width:100%;max-width:${width}px;height:auto;margin-top:20px;border:0;border-radius:18px;background:${t.c.deep}">
+  ${picture ? `${pictureHtml(card, picture, t)}
   ${credit ? `<p style="${t.s.caption};margin-top:6px">${escape(illustration ? t.labels.illustration : t.labels.picture)} — ${mediumHtml(credit, null, t)}</p>` : ''}` : ''}
   ${sentences.paragraphs.length > 0 ? `
   <div style="margin-top:28px">${heading(sentences.title, t)}</div>

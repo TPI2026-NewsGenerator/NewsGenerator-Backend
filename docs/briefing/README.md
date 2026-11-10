@@ -331,6 +331,23 @@ shade lost; bad: a fact added, changed or the news itself lost):
 - Cost for a briefing of 25 cards: about 6 titles rewritten, 20 s each with thinking (5 of 78 calls timed out at 120 s and
   went to Gemini), 21k tokens in all, a minute or two if the titles are done one after the other.
 
+**More titles by default** (10.11.2026, a friend of the user: the button of the editor works well; the user: "il y en a que 6% qui sont réécrites, ça
+devrait être par défaut"). On 536 cards of 14 days, 31 titles (5.8%) were rewritten, 17 more were a rewrite the checks or the second opinion had refused
+(`bench/title-proposals.mjs`). The bottleneck is the second opinion, not the judge: on 300 titles of the same 14 days (`bench/neutral-gate.mjs`) the judge flags
+62 (21%), the AI rewrites them, 43 pass the checks of the code, and the strict second opinion ("EXACTEMENT le même fait", "dans le doute, non") keeps 24 (8%).
+The 43 rewrites were rated by hand before the verdicts were read (`bench/data/neutral-gate-1110-labels.json`: 33 right, 9 mild, 1 bad); the strict opinion
+kept 23 right, 1 mild, no bad, and stopped 10 right ones (« A new dawn? Kenya launch ambitious strategy » -> « Kenya launch women's football strategy »,
+« Beyond the Pitch: Why the IGG's Probe… Marks a Turning Point » -> « The IGG's Probe into FUFA and Ugandan Sports Governance »). A second opinion on the
+**main fact** (`sameFactPrompt` with `loose: true`: the judgment, a detail, a nuance and the wording may go; the actor, the action or result, the figures, the
+certainty and what someone said may not; a doubt keeps the rewrite) keeps 38 (13% of the titles): 31 right, 6 mild, **1 bad** (« FIFA yielded under pressure from
+UEFA - Disputed documents available… » became « FIFA provides documents to UEFA - … », a recipient the title did not have), the same on two runs
+(`bench/neutral-loose.mjs`). It is now the default of `aiRewrittenTitles`; `NEUTRAL_TITLES_CHECK=strict` brings the strict one back. 43 pairs: it does not
+show the error is under about 7% of the rewrites. The code checks stay (a name, a figure, a negation, a quotation, a question). **Not widened**: the judge. The 60
+titles it left (of 300) rewritten all the same, as the button does for any title: 48 neutral already, 11 changed, all of them one word (« key », « already »,
+« successful », « record », « set to make history »), one losing a fact (« expects a record $5 billion » -> « expects $5 billion »). The title as published is one
+click away on the card (« Show the title as published ») and in the editor of the e-mail. A title both translated and rewritten has two originals, two buttons: « Show original » (the title in its language as the AI rewrote it, with the sentences of the article) and « Show the title as published » (the medium's own words, in their language, not translated); each line it shows says which it is (« German, as the AI rewrote it », « As the medium wrote it, German »). 7 live cases (family `titlesame` of `tests/regression`): a single
+pair asked alone is judged more strictly than in a batch of six (the card of the subpoenas of the Democrats, accepted in a batch, refused alone: left out).
+
 ## Cards of one news
 
 Two cards of one news that were not joined (the user, 03.11.2026: cards 1 and 2 of a briefing of Enzo's profile,

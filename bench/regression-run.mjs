@@ -16,6 +16,7 @@ import {newUsage} from '../services/utils/ollama.js';
 import {mergeStories} from '../services/utils/profile-ai.js';
 import {oldStories} from '../services/utils/old-news.js';
 import {chooseWeakCountries} from '../services/utils/country-choice.js';
+import {sameFact} from '../services/utils/neutral-titles.js';
 
 const flags = Object.fromEntries(process.argv.slice(2).filter(arg => arg.startsWith('--')).map(arg => arg.slice(2).split('=')));
 const corpus = JSON.parse(readFileSync(flags.corpus ?? new URL('../tests/regression/corpus.json', import.meta.url), 'utf8'));
@@ -57,6 +58,11 @@ const ASK = {
         const kept = (await chooseWeakCountries([input], usage)).get(0) ?? [];
         return {kept, output: kept.join(',') || 'none'};
     },
+    // a title and its neutral rewrite, the second opinion of the neutral titles by default (the main fact, thinking on): input {title, proposal}; output: "same" or "other"
+    titlesame: async ({input}, usage) => {
+        const same = (await sameFact([input], usage, {think: true, loose: true, timeoutMs: 120e3})).get(0)?.same === true;
+        return {same, output: same ? 'same' : 'other'};
+    },
     // the language of a title with the label of its feed wrong: what the words and the letters guess, and what the AI that translates it says
     languages: async ({input}, usage) => {
         const [answer] = await translatedTitles([{title: input.title, label: input.label}], CODES[input.to], usage);
@@ -80,6 +86,7 @@ const CHECKS = {
     ],
     oldnews: ({expect: wanted}, {old}) => [{name: wanted.old ? 'told again: old' : 'a new fact: kept', ok: old === wanted.old, detail: old ? 'judged old' : 'judged new'}],
     weakcountry: ({expect: wanted}, {kept}) => [{name: wanted.kept.length > 0 ? `keeps ${wanted.kept.join(', ')}` : 'keeps none', ok: kept.length === wanted.kept.length && wanted.kept.every(code => kept.includes(code)), detail: kept.join(',') || 'none'}],
+    titlesame: ({expect: wanted}, {same}) => [{name: wanted.same ? 'the same main fact' : 'another fact', ok: same === wanted.same, detail: same ? 'judged the same' : 'judged another'}],
     languages: ({expect: wanted}, {answer}) => [
         ...(wanted.language ? [{name: `is ${wanted.language}`, ok: answer.language === wanted.language, detail: `read ${answer.language}`}] : []),
         ...(wanted.oneOf ? [{name: `is one of ${wanted.oneOf.join(', ')}`, ok: wanted.oneOf.includes(answer.language), detail: `read ${answer.language}`}] : []),

@@ -381,11 +381,22 @@ export const judgedTitles = async (titles, usage = null) =>
 
 // Whether a title rewritten still tells the same fact as the title it comes from, asked of all the pairs of a briefing at
 // once: the second opinion that stands in for the reader of the editor when the rewrite is not shown first
-export const sameFactPrompt = (pairs) => `Voici des paires de titres d'actualité : le titre A tel que publié, le titre B sa réécriture neutre. Chaque paire a son numéro entre crochets.
+// loose (the user, 10.11.2026: "il y en a que 6% qui sont réécrites, ça devrait être par défaut"): the MAIN fact, not every detail; a doubt keeps the rewrite
+export const sameFactPrompt = (pairs, {loose = false} = {}) => loose ? looseSameFactPrompt(pairs) : `Voici des paires de titres d'actualité : le titre A tel que publié, le titre B sa réécriture neutre. Chaque paire a son numéro entre crochets.
 
 Pour chaque paire, dis si B dit EXACTEMENT le même fait que A, avec seulement moins de jugement, d'emphase ou d'appel au clic : mêmes acteurs, même action, mêmes chiffres, même degré de certitude (« aurait », « selon X », « pourrait »), une question restant une question.
 B peut avoir retiré le jugement du média : un adjectif, un adverbe, un nom qui juge ou dramatise (« fiasco », « alarme », « scandale ») ou son injonction (ce que le média dit que d'autres doivent faire : « le ministre doit réagir »), avec les noms qui n'étaient que dans ce passage. Ce n'est pas un fait : cela ne change pas la réponse.
 Réponds non si B ajoute un fait, en retire un, change un acteur ou un verbe en un autre qui ne veut pas dire la même chose (« réagit » n'est pas « annonce », « raids » n'est pas « intervient »), rend plus ou moins certain, ou si B dit quelque chose que A ne dit pas. Une règle dite comme un fait (« Les clubs doivent s'inscrire avant vendredi ») ou ce que quelqu'un dit ou demande est un fait : B ne peut pas la retirer. Quand une paire a une ligne « Retiré », c'est le passage de A qui n'est plus dans B : réponds oui seulement si ce passage est un jugement ou une injonction du média, non s'il dit qui a fait, dit ou décidé quoi. Dans le doute, non.
+
+${pairs.map((pair, i) => `[${i + 1}]\nA : ${pair.title}\nB : ${pair.proposal}${pair.dropped?.length ? `\nRetiré : ${pair.dropped.join(' / ')}` : ''}`).join('\n\n')}
+
+Réponds uniquement en JSON : {"pairs": [{"n": numéro, "same": true ou false, "why": "ce qui diffère, en quelques mots, vide si same"}]}`;
+
+const looseSameFactPrompt = (pairs) => `Voici des paires de titres d'actualité : le titre A tel que publié, le titre B sa réécriture neutre. Chaque paire a son numéro entre crochets.
+
+Pour chaque paire, dis si B dit le MÊME FAIT PRINCIPAL que A : mêmes acteurs, même action ou même résultat, mêmes chiffres, même degré de certitude (« aurait », « selon X », « pourrait »), une question restant une question. C'est un titre de moins de jugement, d'emphase ou d'appel au clic : B a le droit de retirer les mots qui jugent ou dramatisent (adjectif, adverbe, nom comme « fiasco », « scandale », « colère »), l'injonction du média (« le ministre doit réagir »), un détail secondaire ou une nuance de style, et de reformuler la phrase.
+Réponds non seulement si le fait principal change : B ajoute un fait, en retire un qui compte (qui a fait, dit ou décidé quoi, avec quel résultat ou quel chiffre), change un acteur ou un verbe en un autre qui ne veut pas dire la même chose (« réagit » n'est pas « annonce », « raids » n'est pas « intervient »), rend plus ou moins certain, change le sens (une accusation dite comme un fait, ou un fait réduit à une accusation), ou retire ce que quelqu'un a dit ou demandé. Quand une paire a une ligne « Retiré », c'est le passage de A qui n'est plus dans B : il ne compte que s'il dit qui a fait, dit ou décidé quoi.
+Dans le doute, oui si le fait principal est le même.
 
 ${pairs.map((pair, i) => `[${i + 1}]\nA : ${pair.title}\nB : ${pair.proposal}${pair.dropped?.length ? `\nRetiré : ${pair.dropped.join(' / ')}` : ''}`).join('\n\n')}
 
@@ -403,14 +414,18 @@ export const normalizeSameFact = (answer, count) => {
 };
 
 // pairs: [{title, proposal}] -> Map index -> {same, why}. Rejects when the AI fails
-export const sameFact = async (pairs, usage = null, {think, timeoutMs} = {}) =>
-    pairs.length === 0 ? new Map() : normalizeSameFact(await ollamaJson(sameFactPrompt(pairs), usage, {think, timeoutMs}), pairs.length);
+export const sameFact = async (pairs, usage = null, {think, timeoutMs, loose = false} = {}) =>
+    pairs.length === 0 ? new Map() : normalizeSameFact(await ollamaJson(sameFactPrompt(pairs, {loose}), usage, {think, timeoutMs}), pairs.length);
 
 // The titles of a briefing made neutral by the AI, by default (the user, 03.11.2026), in three steps measured on 300 real
 // titles (bench/neutral-gate.mjs): the AI says which titles have a judgment, an emphasis or a call to click (26% of them,
 // over-flagged and a few missed); those are rewritten, with the checks of the code; and a second opinion, thinking on,
-// says whether the rewrite tells exactly the same fact. A rewrite is kept only when it says so: 22 titles of 300 changed,
-// the 22 right by hand, the 28 mild or bad rewrites stopped. Any failure leaves the title as it is: a card never waits
+// says whether the rewrite tells the same fact. A rewrite is kept only when it says so: 22 titles of 300 changed with the strict
+// opinion ("EXACTEMENT le même fait"), the 22 right by hand, the 28 mild or bad rewrites stopped. The user (10.11.2026, a friend: the
+// editor's button works well, "il y en a que 6% qui sont réécrites, ça devrait être par défaut") asked for more: with the opinion on the MAIN fact
+// (loose, `NEUTRAL_TITLES_CHECK=strict` brings the strict one back) the 43 rewrites that passed the checks, rated by hand before: the strict kept
+// 24 (23 right, 1 mild, none bad), the loose 38 (31 right, 6 mild, 1 bad: "FIFA yielded under pressure from UEFA - documents available" became "FIFA
+// provides documents to UEFA") Any failure leaves the title as it is: a card never waits
 // on it. entries: [{title, passages, language}] (language: its name, "German", for the rewrite to be written in it).
 // Answers Map index -> the title rewritten, only for the ones kept. 'proposed', a Map given, is filled with the ones that were not, index ->
 // {title, problem, why}: what the AI wrote and what the checks, or the second opinion, found against it, for the reader of the editor to
@@ -445,7 +460,8 @@ export const aiRewrittenTitles = async (entries, usage = {}, proposed = null) =>
     });
     await mapWithConcurrency(chunksOf(proposals.sort((a, b) => a.index - b.index), VERIFIED_AT_ONCE), REWRITES_AT_ONCE, async (batch) => {
         try {
-            const verdicts = await sameFact(batch.map(({index, proposal, dropped}) => ({title: entries[index].title, proposal, dropped})), usage.verifying, {think: true, timeoutMs: AI_TIMEOUT_MS});
+            const verdicts = await sameFact(batch.map(({index, proposal, dropped}) => ({title: entries[index].title, proposal, dropped})), usage.verifying,
+                {think: true, timeoutMs: AI_TIMEOUT_MS, loose: process.env.NEUTRAL_TITLES_CHECK !== 'strict'});
             batch.forEach(({index, proposal}, at) => {
                 if (verdicts.get(at)?.same === true) kept.set(index, proposal);
                 else if (verdicts.has(at)) proposed?.set(index, {title: proposal, problem: 'second opinion', why: verdicts.get(at).why || null});

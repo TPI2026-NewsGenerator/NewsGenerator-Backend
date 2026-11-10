@@ -142,10 +142,17 @@ The cards sent count as read: their stories are left out of the next briefings f
   before a standing one of the same sharpness (the sharpness first: a small wide one does not beat a sharp standing one); (2) the AI choice (see
   [the picture chosen by the AI](README.md)) puts a wide picture in place of a standing one when it rates it as good (the margin of one point is zero),
   and a standing one in place of a wide one only for two points (`wideForStanding`); (3) the e-mail shows a standing picture of any article, not only an
-  illustration, at most 420 px high (the size is the one the card was written with, `pictures`; a card of before the sizes, a file of the reader keep
-  560 px). The page cuts a standing picture to its 16:9 landscape at 12% of its height (`object-[50%_12%]`, the size read when it loads): 25%, the
-  rule of the illustrations, cut the top of the head of the Commons portrait of Infantino, 12% shows the whole head. **Not done**: cutting the picture in
-  the e-mail (an Outlook that does not know the crop shows the whole of it, or stretches it, and no image library is installed to cut the file), nor another
+  illustration, cut to the 16:9 landscape of the page (see below; the size is the one the card was written with, `pictures`; a card of before the sizes, a file
+  of the reader keep their picture whole, 560 px). The page cuts a standing picture to its 16:9 landscape at 12% of its height (`object-[50%_12%]`, the size read when it loads): 25%, the
+  rule of the illustrations, cut the top of the head of the Commons portrait of Infantino, 12% shows the whole head. **The crop in the e-mail** (the user, 10.11.2026, `pictureHtml` of
+  `briefing-mail.js`): no image library is installed to cut the file, so the picture is cut by the HTML: a table of at most 560 px, a box of
+  `height:0; padding-bottom:56.25%; overflow:hidden` (16:9 of its own width) and the picture inside it pulled up by `margin-top: -(12% × (height / width − 9/16))`
+  (11.25% for a 2:3 picture, 9.25% for a 3:4): everything is a percentage of the width of the box, so the crop follows it on a phone. Only a picture
+  standing (width under 0.9 of its height, `isStanding`) is cut; a near-square one taller than wide keeps its 420 px cap, narrower. Outlook of Windows
+  (the Word engine, which knows neither the overflow nor the negative margin) gets, by a conditional comment (`<!--[if mso]>`), the narrow picture of before.
+  **Tried in a browser only** (the e-mail of `bench/mail-crop.mjs`, the head of the Commons portrait of Infantino whole in the box): not in Gmail, Apple Mail or
+  Outlook themselves. A mail app that does not read the negative margin shows the top of the picture, where the face is. A test of `scrollIntoView` on such a
+  picture moves the content of the box (an overflow hidden scrolls): it is no sign of a wrong crop. **Not done**: another
   photograph from the Commons category of the person: the category of Infantino holds 22 landscape photographs of 1 200 px or more, ceremonies and visits
   where he is a small figure among others (a medal ceremony of the Winter Youth Olympics), and telling the person from a crowd would be a recognition of
   a face by the AI, which is not asked.
