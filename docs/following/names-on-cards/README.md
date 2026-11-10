@@ -257,6 +257,25 @@ written a briefing). By reading the list: almost all are no names; the doubtful 
 Zambian federation, "Gorice", "Comex", "Ланс"): they are chips with no item, so nothing is linked or lost but the chip. It does not point at every declined form
 ("Manchesteru City" was left out on the second run, not on the first).
 
+## Two chips for one name, a title before a name
+
+The card of the US Monastir showed four chips for three names (briefing 7-24 of Enzo, 10.11.2026): "US Monastir", "USM" (the check of the card had sent "USM"
+away from USM Alger, the AI had linked it to the US Monastir) and "US" (the tagger gave the first word of the name as a name of its own, linked to the United
+States: an item in over 60 Wikipedias is never checked, see `CHECK_MAX_LINKS`). And "Mr. Asubío" stood as a person on a card of the Spanish referees. Three
+rules of `card-names.js`, none of them asks the AI:
+
+- **One item, one chip** (`withSameItemJoined`, the end of `spelledNames`): two names of one item are one, the one the most articles of the card give. It must
+  run after the AI has linked the names with no item: before, they had none. 5 cards of 1 446 in the last 80 briefings had one item twice ("FAZ" and
+  "Football Association of Zambia", "NFF" and "Norges Fotballforbund" three times, "RC" and "Lens").
+- **The word of a name is no name** (`withoutWordOfAnother`, with the tidying of the names): a country's name (`countryNamed`: "US", "Australia") that begins or
+  ends another name of the card is a word of that name. A country named alone stays, it is the national team or the country (38 such chips in the 80
+  briefings, none a word of another name).
+- **A title before a person with no item** (`withoutTitle`, in `chosenNames`, before the writings are made one): "Mr.", "Dr.", "Sr.", "Mme", "Herr"... are taken
+  off, so "Dr. Irvin Khoza" and "Irvin Khoza" are one person. A person with an item keeps what Wikidata calls it ("Dr. Seuss", "Don Mattingly"), an
+  organisation too ("Dr. Martens"). 3 of the 1 003 person chips of the 80 briefings began with a title, all with no item.
+
+The cases are in the regression corpus (`chips-same-item-*`, `chips-country-*`, `cardnames-title-*`).
+
 ## Diagrams
 
 - [Class diagram](following-names-on-cards-class.png) ([source](following-names-on-cards-class.puml))

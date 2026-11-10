@@ -138,6 +138,7 @@ const chosenNames = (rows, articles, {media = [], max = NAMES_PER_CARD, title = 
     // "Le Temps" of letemps.ch
     const own = new Set(media.map(site => mentionKey(String(site).split('.')[0]).replace(/[\s-]+/g, '')));
     const candidates = rows
+        .map(withoutTitle)
         .filter(row => row.kind !== 'location' && (row.qid || row.news >= LEAST_NEWS || row.inCard >= 2) && writtenAsName(row.name))
         .filter(row => {
             const key = mentionKey(row.name);
@@ -234,6 +235,26 @@ const unglued = (name) => {
     return bare === name.name ? name : {...name, name: bare, ...('key' in name ? {key: mentionKey(bare)} : {})};
 };
 export const withParticlesOff = (names) => once(names.map(unglued));
+// Two names of one item are one, once the AI has linked the ones that had no item: the card of the US Monastir showed "US Monastir" and "USM"
+// (the check of the card sent "USM" away from USM Alger, the AI linked it to the US Monastir: briefing 7-24 of Enzo, 10.11.2026), and 5 cards of
+// 1 446 in the last 80 briefings had one item twice (FAZ, NFF, RC). The first stays: the name the most articles of the card give
+export const withSameItemJoined = once;
+// A country's name that begins or ends another name of the card is a word of that name, not the country: the tagger gave "US" as a name of its
+// own, linked to the United States, beside "US Monastir" (the same card). A country named alone stays: the national team, the country (38 such
+// chips in the last 80 briefings, none a word of another name). A person is left alone
+export const withoutWordOfAnother = (names) => names.filter(name => {
+    if (name.kind === 'person' || !countryNamed(name.name)) return true;
+    const words = mentionKey(name.name).split(' ');
+    return !names.some(other => {
+        if (other === name || other.kind === 'person') return false;
+        const longer = mentionKey(other.name).split(' ');
+        return longer.length > words.length && (words.every((word, i) => longer[i] === word) || words.every((word, i) => longer.at(i - words.length) === word));
+    });
+});
+// The title before the name of a person with no item ("Mr. Asubío", "Dr. Irvin Khoza": 3 of the 1 003 person chips of the last 80 briefings) is
+// no part of the name: the person is the one named without it. A person with an item keeps what Wikidata calls it ("Dr. Seuss", "Don Mattingly")
+const TITLES = /^(?:Mr|Mrs|Ms|Mister|Míster|Dr|Dra|Sr|Sra|Mme|Mlle|Herr|Frau)\.?\s+(?=\p{Lu})/u;
+const withoutTitle = (row) => !row.qid && row.kind === 'person' && TITLES.test(row.name) ? {...row, name: row.name.replace(TITLES, '')} : row;
 
 // The endings a name takes in the languages with cases (Czech, Croatian, Albanian, Hungarian, German...): "Arsenala", "Juventusu",
 // "Bayerns". An organisation unlinked that is one of them added to a name linked, a hundred times more met than it is, is that name.
@@ -302,7 +323,7 @@ export const withAcronymsLinked = (names, orgs, keys) => once(names.map(name => 
 // names: the names of each card; orgs: for each card, the items of the organisations its articles name; translated: for each card,
 // whether its text is translated (the labels are asked of Wikidata apart, once the names are linked: see spelledNames)
 export const tidyNames = (names, {stems = [], labels = new Map(), orgs = [], nameKeys = new Map(), translated = []} = {}) =>
-    names.map((card, i) => withWikidataSpelling(withInflectionsFolded(withAcronymsLinked(withParticlesOff(card), orgs[i] ?? [], nameKeys), stems), labels,
+    names.map((card, i) => withWikidataSpelling(withInflectionsFolded(withAcronymsLinked(withoutWordOfAnother(withParticlesOff(card)), orgs[i] ?? [], nameKeys), stems), labels,
         {translated: Boolean(translated[i])}));
 // The names of these cards (read: [{storyId, names}], once linked) spelled as Wikidata does (see withWikidataSpelling); cards:
 // [{storyId, language}], the language of the lead of each, reader the one of the reader (codes): a card in another language is
@@ -314,8 +335,8 @@ const spelledNames = async (read, cards = [], reader = null) => {
         return new Map();
     });
     const languageOf = new Map(cards.map(card => [card.storyId, card.language ?? null]));
-    return read.map(card => ({...card, names: withoutUnreadable(withoutConcepts(withWikidataSpelling(card.names, labels,
-        {translated: Boolean(reader && languageOf.get(card.storyId) && languageOf.get(card.storyId) !== reader)}), labels), reader)}));
+    return read.map(card => ({...card, names: withSameItemJoined(withoutUnreadable(withoutConcepts(withWikidataSpelling(card.names, labels,
+        {translated: Boolean(reader && languageOf.get(card.storyId) && languageOf.get(card.storyId) !== reader)}), labels), reader))}));
 };
 // A name linked to a concept, not to a named thing: "Arbitrage" taken for an organisation, linked by the AI among the items so called to the
 // item "refereeing" (the chip of a card of Corsica, 9.11.2026), "public prosecutor's office". The label of Wikidata of a concept has no capital
