@@ -223,6 +223,11 @@ spelled as Wikidata does only when the code reads its label":
 - **A Cyrillic or Greek acronym was kept as an acronym.** `withWikidataSpelling` kept a name in capitals unless it was a word of the label (to keep "UEFA"
   against "Union of European Football Associations"): "ФИФА" was taken for one. A name in the letters of another language is no acronym of the reader's
   and is spelled by its label when the card is translated.
+- **A card that is not translated** (10.11.2026, the briefings 7-25 and 7-26 of Enzo): an English card, its lead being English, named Infantino in Latin
+  letters by his family name only; the family name was dropped as the person was linked by a Russian article, and the chip stayed "Джанни Инфантино".
+  A name linked in the letters of another language than the reader's is now spelled by its label whether the card is translated or not
+  (`withWikidataSpelling`, `reader`). The letters are told from the reader's language (`scriptLanguage(name, reader)`: a reader of Russian reads
+  Cyrillic, the guess among the languages of the script no longer says Macedonian for him), by this rule, by `withoutUnreadable` and by the audit.
 - **A name that is no item cannot be spelled** ("Παναθηναϊκό", "ФК Тиквеш": 31 of the 76): it is left out of the names of the card when it is written in
   the letters of another language than the reader's (`withoutUnreadable`), the text of the card, translated, names it. An item is kept whatever its
   letters: it tells the countries of the card.

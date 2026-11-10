@@ -17,6 +17,13 @@ export const VERSION_DAYS = 7;
 // the story of a card and the stories merged into it: the same news is any of them in the other briefing
 export const idsOf = (card) => [card?.storyId, ...(card?.mergedStoryIds ?? [])].filter(id => Number.isInteger(id) && id > 0);
 
+// Two cards are versions of one news when the story of one is the story of the other or one of the stories merged into it. Not when they only
+// share a story merged into both: a story joined to a card by mistake (the Croatian news of the outburst of a coach joined to the card of the
+// comment of the head of the referees on the goal of the same match, the briefing of Roberto 657 of 10.11.2026) would link the card of another news
+// to it, and "Use this version" would hide the news. On the 3 newest briefings of the account, 23 of the 24 pairs of cards that shared a story
+// were versions in this sense: the 24th was that one
+export const areVersions = (a, b) => idsOf(b).includes(a?.storyId) || idsOf(a).includes(b?.storyId);
+
 // What belongs to the briefing the card is in, and to the profile it was written for, not to the version of its news: its story and the
 // ones merged into it, why it was chosen, for which interest and project, whether it follows a card of the last days, the thumb of the
 // reader, the feeds a refusal is blamed on, the mark of an e-mail sent. Kept when the card is replaced
@@ -35,9 +42,8 @@ export const versionsOfCards = (items, rows, usable = () => true) => {
     const versions = {};
     for (const item of items) {
         if (!(item.storyId > 0) || item.imported) continue;
-        const own = new Set(idsOf(item));
         const found = rows.filter(row => row.leadUrl && row.leadUrl !== item.lead?.url && usable(row.idProfile)
-            && idsOf({storyId: row.storyId, mergedStoryIds: row.mergedStoryIds}).some(id => own.has(id)));
+            && areVersions(item, {storyId: row.storyId, mergedStoryIds: row.mergedStoryIds}));
         // the newest briefing of each profile: the same news is a card of each of its briefings of the week
         const newest = new Map();
         for (const row of found) {

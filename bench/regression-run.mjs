@@ -13,6 +13,7 @@ import {ORIGINAL_START, translatePassages, translateTexts} from '../services/uti
 import {languageOf} from '../services/utils/language.js';
 import {translatedTitles} from '../services/utils/title-translation.js';
 import {newUsage} from '../services/utils/ollama.js';
+import {mergeStories} from '../services/utils/profile-ai.js';
 
 const flags = Object.fromEntries(process.argv.slice(2).filter(arg => arg.startsWith('--')).map(arg => arg.slice(2).split('=')));
 const corpus = JSON.parse(readFileSync(flags.corpus ?? new URL('../tests/regression/corpus.json', import.meta.url), 'utf8'));
@@ -34,6 +35,12 @@ const ASK = {
         const answer = await bestRewrite(input.title, input.passages, usage, {language: input.language});
         return {answer, output: answer.title ?? answer.proposal ?? null};
     },
+    // stories [{id, title, description}], the first the card: the question of the same FACT (mergeStories) that decides whether a story of another
+    // language joins a card (see foreign-versions.js); output: the stories it joined to the first, as a list of ids
+    samefact: async ({input}, usage) => {
+        const merges = await mergeStories(input.stories.map(story => ({id: story.id, lead: {title: story.title, description: story.description}})), usage);
+        return {joined: input.stories.slice(1).map(story => story.id).filter(id => merges.get(id) === input.stories[0].id), output: [...merges].map(([id, into]) => `${id}->${into}`).join(' ')};
+    },
     // the language of a title with the label of its feed wrong: what the words and the letters guess, and what the AI that translates it says
     languages: async ({input}, usage) => {
         const [answer] = await translatedTitles([{title: input.title, label: input.label}], CODES[input.to], usage);
@@ -50,6 +57,10 @@ const CHECKS = {
             ...(wanted.excludes ?? []).map(text => ({name: `has not "${text}"`, ok: !output.includes(text), detail: output})),
             ...(wanted.language ? [{name: `is ${wanted.language}`, ok: [wanted.language, null].includes(languageOf(output)), detail: `read ${languageOf(output)}: ${output}`}] : []),
         ]),
+    ],
+    samefact: ({expect: wanted}, {joined, output}) => [
+        ...(wanted.joined ?? []).map(id => ({name: `story ${id} joins the card`, ok: joined.includes(id), detail: output})),
+        ...(wanted.separate ?? []).map(id => ({name: `story ${id} stays apart`, ok: !joined.includes(id), detail: output})),
     ],
     languages: ({expect: wanted}, {answer}) => [
         ...(wanted.language ? [{name: `is ${wanted.language}`, ok: answer.language === wanted.language, detail: `read ${answer.language}`}] : []),

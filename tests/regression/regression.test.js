@@ -81,7 +81,7 @@ const FAMILIES = {
     // the names a card shows once tidied: a particle glued to a name, a declined form of a name linked, the spelling of Wikidata
     chips: ({input, expect: wanted}) => {
         const [names] = tidyNames([input.names], {stems: input.stems ?? [], labels: new Map(Object.entries(input.labels ?? {})),
-            orgs: [input.orgs ?? []], nameKeys: new Map(Object.entries(input.nameKeys ?? {})), translated: [Boolean(input.translated)]});
+            orgs: [input.orgs ?? []], nameKeys: new Map(Object.entries(input.nameKeys ?? {})), translated: [Boolean(input.translated)], reader: input.reader ?? null});
         // reader: the language of the reader, a name that is no item and is written in other letters is left out (withoutUnreadable);
         // concepts: a name linked to an item whose label has no capital letter is left out (withoutConcepts); linked: the names once the AI
         // has linked the ones that had no item, two names of one item are one (withSameItemJoined)

@@ -297,13 +297,18 @@ const LATIN_ONLY = /^[\p{Script=Latin}\p{N}\p{M}\s.'’&,-]+$/u;
 // Enzo of 9.11.2026: the chip of a card said SEVILLA under a text that says Sevilla FC)
 const isAcronymOf = (name, label) => ACRONYM.test(name)
     && !(label.match(/[\p{L}\p{N}]+/gu) ?? []).some(word => word.length > 3 && mentionKey(word) === mentionKey(name));
-export const withWikidataSpelling = (names, labels, {translated = false} = {}) => names.map(name => {
+// A name linked in the letters of another language than the reader's is spelled by its label whether the card is translated or not (reader: the
+// language of the reader): an English card whose own articles name Infantino by his family name only, dropped as the person is linked by a Russian
+// article, showed "Джанни Инфантино" (briefings 7-25 and 7-26 of Enzo, 10.11.2026)
+export const withWikidataSpelling = (names, labels, {translated = false, reader = null} = {}) => names.map(name => {
     const label = name.qid && labels.get(name.qid);
     if (!label) return name;
     // a name in the letters of another language is no acronym of the reader's: "ФИФА" (Cyrillic capitals) is the FIFA, "ΟΥΕΦΑ" the UEFA (Enzo's
     // briefings of 9.11.2026 showed them under an English text)
     const otherLetters = !LATIN_ONLY.test(name.name);
-    const asLabel = translated && mentionKey(name.name) !== mentionKey(label)
+    const written = otherLetters && reader ? scriptLanguage(name.name, reader) : null;
+    const unreadable = Boolean(written) && written !== reader;
+    const asLabel = (translated || unreadable) && mentionKey(name.name) !== mentionKey(label)
         && (otherLetters || (name.kind === 'organization' && !isAcronymOf(name.name, label)));
     const spelled = asLabel ? label : alignNames(name.name, [label]);
     return spelled === name.name ? name : {...name, name: spelled};
@@ -322,9 +327,9 @@ export const withAcronymsLinked = (names, orgs, keys) => once(names.map(name => 
 }));
 // names: the names of each card; orgs: for each card, the items of the organisations its articles name; translated: for each card,
 // whether its text is translated (the labels are asked of Wikidata apart, once the names are linked: see spelledNames)
-export const tidyNames = (names, {stems = [], labels = new Map(), orgs = [], nameKeys = new Map(), translated = []} = {}) =>
+export const tidyNames = (names, {stems = [], labels = new Map(), orgs = [], nameKeys = new Map(), translated = [], reader = null} = {}) =>
     names.map((card, i) => withWikidataSpelling(withInflectionsFolded(withAcronymsLinked(withoutWordOfAnother(withParticlesOff(card)), orgs[i] ?? [], nameKeys), stems), labels,
-        {translated: Boolean(translated[i])}));
+        {translated: Boolean(translated[i]), reader}));
 // The names of these cards (read: [{storyId, names}], once linked) spelled as Wikidata does (see withWikidataSpelling); cards:
 // [{storyId, language}], the language of the lead of each, reader the one of the reader (codes): a card in another language is
 // translated. Wikidata or the database not answering leaves the names as they are
@@ -336,7 +341,7 @@ const spelledNames = async (read, cards = [], reader = null) => {
     });
     const languageOf = new Map(cards.map(card => [card.storyId, card.language ?? null]));
     return read.map(card => ({...card, names: withSameItemJoined(withoutUnreadable(withoutConcepts(withWikidataSpelling(card.names, labels,
-        {translated: Boolean(reader && languageOf.get(card.storyId) && languageOf.get(card.storyId) !== reader)}), labels), reader))}));
+        {translated: Boolean(reader && languageOf.get(card.storyId) && languageOf.get(card.storyId) !== reader), reader}), labels), reader))}));
 };
 // A name linked to a concept, not to a named thing: "Arbitrage" taken for an organisation, linked by the AI among the items so called to the
 // item "refereeing" (the chip of a card of Corsica, 9.11.2026), "public prosecutor's office". The label of Wikidata of a concept has no capital
@@ -351,7 +356,7 @@ export const withoutConcepts = (names, labels) => names.filter(name => {
 // stand under an English text in Greek or Cyrillic letters, and open the page of a name the reader cannot read: it is left out (the text of the
 // card, translated, names it). A name that is an item is kept, with its countries: it is the item that tells them
 export const withoutUnreadable = (names, reader) => reader ? names.filter(name => {
-    const written = name.qid ? null : scriptLanguage(name.name);
+    const written = name.qid ? null : scriptLanguage(name.name, reader);
     return !written || written === reader;
 }) : names;
 

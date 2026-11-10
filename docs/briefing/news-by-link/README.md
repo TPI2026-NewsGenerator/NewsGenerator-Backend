@@ -102,9 +102,14 @@ a link to paste**: pasting the link was refused ("This news is already in the br
 card added by its link is a news "of no story", beside the other card of the same story.
 
 - `GET /api/briefing/:id/versions` answers `{versions: {storyId: [{briefingId, profile, createdAt, title, source}]}}`: for each card of the
-  briefing, the same story (its story id, or one of the stories merged into it) in a card of the other ready briefings of the
-  account of the last 7 days (`BriefingModel.versionsOf`), with **another lead article**, of **another profile** that reads in the
-  **same language** (its translations are of that language); one version a profile, its newest briefing. No call of the AI.
+  briefing, the same story in a card of the other ready briefings of the account of the last 7 days (`BriefingModel.versionsOf`), with
+  **another lead article**, of **another profile** that reads in the **same language** (its translations are of that language); one
+  version a profile, its newest briefing. No call of the AI. "The same story" is `areVersions` of `card-versions.js`: the story of one card
+  is the story of the other or **one of the stories merged into it**. Two cards that only share a story merged into both are not versions
+  (10.11.2026: the Croatian news of the outburst of a coach had been joined by mistake to the card of the comment of the head of the referees on
+  the goal of the same match, in the briefing of one profile, and linked it to the card of the outburst in another; of the 24 pairs of
+  cards of the 3 newest briefings of the account that shared a story, 23 were versions in the narrow sense, the 24th was that one).
+  `useVersion` checks the same rule.
 - The card shows, in its right column, "Another version: Chris wrote it from hln.be, in its briefing of 9 Nov, 07:23 — Use Chris's
   version" (`BriefingCard.jsx`, `versions` and `onUseVersion`).
 - `POST /api/briefing/:id/stories/:storyId/version {fromBriefingId}` replaces the card **where it stands**

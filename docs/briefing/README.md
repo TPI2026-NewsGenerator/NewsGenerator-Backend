@@ -29,7 +29,18 @@ saved in `briefings.step` and shown on the page while it runs:
    in 5 of 50 with the rule (`bench/why-acronym`).
 3. **checking**: two calls together, the articles of each story that tell its news (`checkStories`) and the cards
    of one news joined (`mergeStories`), with the versions of a card in the reader's language (from 0.75) and in
-   other languages (from 0.78). The AI failing, the stories stay as the vectors grouped them.
+   other languages (from 0.78). The AI failing, the stories stay as the vectors grouped them. A story of another
+   language the check kept joins its card only if the question of the same FACT agrees too (`agreedVersions` of
+   `foreign-versions.js`, a call of `mergeStories` listing the cards that have such versions, then the versions): the
+   check keeps the reactions and the other statements on one event, "when in doubt keep", and joined to the card of the
+   comment of the head of the referees on a goal the news of the outburst of a coach after the same match (briefing of
+   Roberto 657, 10.11.2026), 6 of its 9 media being that other news. A story joined by mistake hides a news, a story not
+   joined stays a story of its own (a card, an angle, or folded into a card, see "Two cards of one news"). The AI
+   failing joins none; `AI_STRICT_VERSIONS=off` keeps what the check kept. Measured on the 1 177 stories joined to the
+   cards of the last 80 briefings (the question agreed with 771, disagreed with 406), 70 of them rated blind by two raters (94 %
+   agreement): the question kept 32 of the 35 that were the same news and left out 23 of the 35 that were another fact of the same
+   affair; extrapolated, the joins held 68 % of the same news before, 91 % now, and 12 % of the true joins are lost (93 of 798;
+   a sample of 70: the margins are some 8 points). The cases are in the live corpus (`samefact`, `bench/regression-run.mjs`).
 4. **reading**: up to 5 articles a story, a trusted medium first, else one in the reader's language, then one per
    medium; the real address of a news of Google News only when no feed lets read the story (10 a briefing).
 5. **summarizing**: for each story, 5 at once, two calls together on the first article read in full: its

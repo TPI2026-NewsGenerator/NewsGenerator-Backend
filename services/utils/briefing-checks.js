@@ -54,8 +54,8 @@ export const cardChecks = (items, language) => {
         // a name is not translated, it is spelled: a chip in the letters of another language (Cyrillic for "Gianni Infantino") is a name Wikidata could spell
         // in the language of the reader
         ['no name a reader sees is written in the letters of another language than theirs', items.flatMap(item => (item.names ?? [])
-            .filter(name => { const written = scriptLanguage(name.name); return written && written !== language; })
-            .map(name => `[${scriptLanguage(name.name)}] ${name.name} (${short(item.titleTranslation ?? item.title, 40)})`))],
+            .filter(name => { const written = scriptLanguage(name.name, language); return written && written !== language; })
+            .map(name => `[${scriptLanguage(name.name, language)}] ${name.name} (${short(item.titleTranslation ?? item.title, 40)})`))],
         ['the title of an angle in another language is translated', foreignAngles.filter(angle => !angle.titleTranslation).map(angle => `[${angle.language}] ${short(angle.title)}`)],
         ['no sentence of a translation is left in the language of the article', foreign.filter(item => [item.translation, item.pointsTranslation, item.digestTranslation]
             .some(text => String(text ?? '').includes(`${ORIGINAL_START}(`))).map(item => `[${item.language}] ${short(item.title)}`)],

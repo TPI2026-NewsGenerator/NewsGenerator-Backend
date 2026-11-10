@@ -19,7 +19,7 @@ jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel
 const profiles = {3: {name: 'Roberto', languages: ['en'], watch_terms: ['Wenger']}, 4: {name: 'Chris', languages: ['en'], watch_terms: []},
     5: {name: 'Enzo', languages: ['fr'], watch_terms: []}};
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: {get: jest.fn(async (id) => profiles[id] ?? null)}}));
-const {idsOf, restoredCard, swappedCard, versionsOfCards, forThePage} = await import('../../services/utils/card-versions.js');
+const {areVersions, idsOf, restoredCard, swappedCard, versionsOfCards, forThePage} = await import('../../services/utils/card-versions.js');
 const {BriefingService} = await import('../../services/briefing-service.js');
 
 // a card as a briefing saves it, as written by the profile it is of
@@ -33,9 +33,25 @@ describe('versionsOfCards', () => {
         title: `Wenger by ${leadUrl}`, leadUrl, source: leadUrl});
 
     it('should give the version another profile has of a card, by its story or by one of the stories merged into it', () => {
-        const versions = versionsOfCards(items, [row(4, 508, '2026-11-09T07:23:00Z', 10, 'https://hln.be/wenger'), row(3, 507, '2026-11-09T07:16:00Z', 99, 'https://x.example/a', [11])]);
+        // 507: a card whose own story is the one merged into this card (11); 508: the same story
+        const versions = versionsOfCards(items, [row(4, 508, '2026-11-09T07:23:00Z', 10, 'https://hln.be/wenger'), row(3, 507, '2026-11-09T07:16:00Z', 11, 'https://x.example/a')]);
         expect(versions[10].map(one => one.briefingId)).toEqual([508, 507]);
         expect(versions[20]).toBeUndefined();
+        // and the other way: this card is one of the stories merged into the card of the other
+        expect(versionsOfCards([card(11, 'lesoir.be')], [row(4, 508, '2026-11-09T07:23:00Z', 10, 'https://hln.be/wenger', [11])])[11].map(one => one.briefingId)).toEqual([508]);
+    });
+
+    it('should not give as a version a card that only shares with this one a story merged into both: it may be a news joined by mistake', () => {
+        // the cards of Enzo (card 28, the outburst of Leko) and Roberto (card 12, the comment of Lardot on the goal of the same match) of 10.11.2026:
+        // the story of Leko (2454827) was merged into the card of Lardot by mistake
+        const enzo = card(2433748, 'jutarnji.hr', {mergedStoryIds: [2454827]});
+        const roberto = row(4, 657, '2026-11-10T07:08:00Z', 2469527, 'https://dhnet.be/lardot', [2427405, 2454827]);
+        expect(versionsOfCards([enzo], [roberto])).toEqual({});
+        expect(areVersions(enzo, roberto)).toBe(false);
+        // the same news, each profile having its own story of it: each of them has the other's story merged into its card
+        expect(areVersions(card(10, 'a', {mergedStoryIds: [11]}), card(11, 'b', {mergedStoryIds: [10]}))).toBe(true);
+        expect(areVersions(card(10, 'a'), card(10, 'b'))).toBe(true);
+        expect(areVersions(card(-1, 'a'), card(-1, 'b'))).toBe(false);
     });
 
     it('should give one version a profile, the one of its newest briefing, and none with the same lead article', () => {
@@ -151,6 +167,13 @@ describe('BriefingService.versions, useVersion and restoreVersion', () => {
         await expect(BriefingService.useVersion(482, 507, 99, 508)).rejects.toMatchObject({status: 404});
         await expect(BriefingService.useVersion(482, 507, 10, 999)).rejects.toMatchObject({status: 404});
         await expect(BriefingService.useVersion(482, 507, 'x', 508)).rejects.toMatchObject({status: 400});
+        expect(replaceCard).not.toHaveBeenCalled();
+    });
+
+    it('should refuse a card that only shares a story merged into both with this one, which the page does not offer either', async () => {
+        // here: story 10 with 11 merged; there: story 99 with 11 merged too (a story joined to both cards, to one of them perhaps by mistake)
+        ofUser.mockImplementation(async (userId, id) => ({507: here, 508: {...there, items: [card(99, 'hln.be', {mergedStoryIds: [11]})]}}[id] ?? null));
+        await expect(BriefingService.useVersion(482, 507, 10, 508)).rejects.toMatchObject({status: 404});
         expect(replaceCard).not.toHaveBeenCalled();
     });
 

@@ -33,7 +33,7 @@ import {AFFAIR_DAYS, storiesOfSameNames} from "./utils/affair-names.js";
 import {officialSourcesOf} from "./utils/official-sources.js";
 import {evolvedStories, REPEAT_HOURS, shownStories, withoutRepeats} from "./utils/repeats.js";
 import {readerLanguage, scriptLanguage, writtenIn} from "./utils/language.js";
-import {VERSION_DAYS, forThePage, idsOf, restoredCard, swappedCard, versionsOfCards} from "./utils/card-versions.js";
+import {VERSION_DAYS, areVersions, forThePage, idsOf, restoredCard, swappedCard, versionsOfCards} from "./utils/card-versions.js";
 import {logBriefingChecks} from "./utils/briefing-checks.js";
 import {proofreadCards} from "./utils/proofread.js";
 import {foldCards, sameNewsGroups} from "./utils/card-merge.js";
@@ -55,6 +55,7 @@ import {labelsFor, withHedgedTranslated} from "./utils/mail-labels.js";
 import {illustrationsOf} from "./utils/illustrations.js";
 import {SHARP_WIDTH, sizesOf} from "./utils/picture-sizes.js";
 import {choosePictures, withAiPictures} from "./utils/picture-choice.js";
+import {agreedVersions} from "./utils/foreign-versions.js";
 import {SentMailModel} from "../models/sent-mail-model.js";
 import {EntityService} from "./entity-service.js";
 import {namesAndCountriesOfCards} from "./utils/card-names.js";
@@ -337,19 +338,23 @@ const keepSameNews = async (stories, usage, versions = [], across = new Map()) =
             foreign: foreign.filter((_, i) => same.has(others.length + i + 1)),
         } : null];
     }));
+    // the stories of other languages the check kept join their card only when the question of the same FACT agrees too (see foreign-versions.js):
+    // the check keeps the reactions and the other statements on one event, and a story joined by mistake hides a news
+    const foreignJoined = await agreedVersions(stories, story => kept.get(story.storyId)?.foreign ?? [], story => brief(story.best, DESCRIPTION_CHARS), usage.merging);
     let joinedAcross = 0;
     const cards = stories.map(story => {
         const same = kept.get(story.storyId);
         if (!same) return {...story};
+        const foreignOfCard = foreignJoined.get(story.storyId) ?? [];
         const members = [story.best, ...same.others];
         const links = new Set(members.map(article => article.link));
-        for (const article of same.foreign.flatMap(version => version.members)) {
+        for (const article of foreignOfCard.flatMap(version => version.members)) {
             if (links.has(article.link)) continue;
             links.add(article.link);
             members.push(article);
         }
-        joinedAcross += same.foreign.length;
-        return {...story, members, mergedStoryIds: [...(story.mergedStoryIds ?? []), ...same.foreign.map(version => version.storyId)]};
+        joinedAcross += foreignOfCard.length;
+        return {...story, members, mergedStoryIds: [...(story.mergedStoryIds ?? []), ...foreignOfCard.map(version => version.storyId)]};
     });
     if (joinedAcross > 0) console.log(`Briefing: ${joinedAcross} versions in other languages joined their card`);
 
@@ -1969,8 +1974,7 @@ export const BriefingService = {
         if (from === row.id) throw Object.assign(new Error('The other version is in another briefing.'), {status: 409});
         const other = await BriefingModel.ofUser(userId, from);
         if (!other || other.status !== 'ready') throw Object.assign(new Error('Unknown briefing.'), {status: 404});
-        const own = new Set(idsOf(current));
-        const version = (Array.isArray(other.items) ? other.items : []).find(card => card.storyId > 0 && !card.imported && idsOf(card).some(id => own.has(id)));
+        const version = (Array.isArray(other.items) ? other.items : []).find(card => card.storyId > 0 && !card.imported && areVersions(current, card));
         if (!version) throw Object.assign(new Error('That briefing has no version of this news.'), {status: 404});
         const [mine, theirs] = await Promise.all([row.id_profile ? ProfileModel.get(row.id_profile) : null, other.id_profile ? ProfileModel.get(other.id_profile) : null]);
         if (readerLanguage(theirs ?? {}) !== readerLanguage(mine ?? {})) {
