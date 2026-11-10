@@ -101,6 +101,35 @@ export const BriefingController = {
         }
     },
 
+    // {profiles: [{idProfile, profile, briefingId, createdAt, news: [{storyId, number, title, source, language, thumbnail, imported, inBriefing}]}], added,
+    // max}: the news of the newest briefing of each other profile of the account, to pick from in the editor of the e-mail
+    profilesNews: async (req, res) => {
+        try {
+            res.status(200).json(await BriefingService.profilesNews(req.user.id, req.params.id));
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
+    // {fromBriefingId, storyId}: a news of the briefing of another profile added to this briefing as it is there (201): {item, analysis, analyzing}
+    copyNews: async (req, res) => {
+        try {
+            res.status(201).json(await BriefingService.copyNews(req.user.id, req.params.id, req.body?.fromBriefingId, req.body?.storyId));
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
+    // {keep, drop}: two cards of the briefing that tell the same news made one, the reader keeping 'keep' with 'drop' folded into it:
+    // {item, at, removed}
+    foldNews: async (req, res) => {
+        try {
+            res.status(200).json(await BriefingService.foldNews(req.user.id, req.params.id, req.body?.keep, req.body?.drop));
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
     // a news added by its link taken out again
     removeNews: async (req, res) => {
         try {

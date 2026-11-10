@@ -26,6 +26,22 @@ export const ADD_ITEM = `
       AND NOT EXISTS (SELECT 1 FROM ${CARDS}, ${LINKS_OF_CARD} WHERE article->>'url' = ANY($5::text[]))
     RETURNING (items->-1->>'storyId')::int AS "storyId"`;
 
+// Two cards of a ready briefing made one, as the reader chose (see BriefingService.foldNews): the card kept, as it is once the other is folded into
+// it, takes the place of the first of the two, the other leaves the briefing with the analysis lines written for it. One statement, as the others.
+// $1 the briefing, $2 the user, $3 the story of the card kept, $4 the story of the card folded, $5 the card kept as it is now. Answers where the card
+// kept stands in the new list (from 0), nothing when the briefing is not a ready one of this user or has not both cards. Exported for the tests
+export const FOLD_ITEMS = `
+    UPDATE briefings
+    SET items = (SELECT COALESCE(jsonb_agg(CASE WHEN cards.position = first.at THEN $5::jsonb ELSE cards.card END ORDER BY cards.position), '[]'::jsonb)
+                 FROM jsonb_array_elements(briefings.items) WITH ORDINALITY AS cards(card, position),
+                      (SELECT min(t.position) AS at FROM jsonb_array_elements(briefings.items) WITH ORDINALITY AS t(card, position)
+                       WHERE (t.card->>'storyId')::int IN ($3::int, $4::int)) AS first
+                 WHERE cards.position = first.at OR (cards.card->>'storyId')::int NOT IN ($3::int, $4::int)),
+        analysis = CASE WHEN jsonb_typeof(analysis->'cards') = 'object' THEN jsonb_set(analysis, '{cards}', (analysis->'cards') - ($4::int)::text) ELSE analysis END
+    WHERE id = $1::int AND id_user = $2::int AND status = 'ready' AND jsonb_typeof(items) = 'array' AND $3::int <> $4::int
+      AND (SELECT count(*) FROM jsonb_array_elements(items) AS card WHERE (card->>'storyId')::int IN ($3::int, $4::int)) = 2
+    RETURNING (SELECT (t.position - 1)::int FROM jsonb_array_elements(briefings.items) WITH ORDINALITY AS t(card, position) WHERE (t.card->>'storyId')::int = $3::int) AS "at"`;
+
 // A card of a ready briefing replaced by another at the same place (see BriefingModel.replaceCard). Exported for the tests, which run it in a
 // transaction rolled back. $1 the briefing, $2 the user, $3 the story of the card, $4 the new card, $5 its analysis lines ({why, next,
 // timeline}, or null), $6 whether the lines of the card are set (null taking them off); the analysis only when it is written
@@ -79,6 +95,10 @@ export const BriefingModel = {
     addItem: async (userId, briefingId, item, {max, links}) => (await prisma.$queryRawUnsafe(ADD_ITEM,
         briefingId, userId, JSON.stringify(item), max, links))[0]?.storyId ?? null,
 
+    // Two cards made one (see FOLD_ITEMS): where the card kept stands in the new list, null when the statement found no such cards
+    foldItems: async (userId, briefingId, keepStoryId, dropStoryId, card) => (await prisma.$queryRawUnsafe(FOLD_ITEMS,
+        briefingId, userId, keepStoryId, dropStoryId, JSON.stringify(card)))[0]?.at ?? null,
+
     // a card added by the reader taken out again (a negative id), with the analysis lines it came with
     // (the next one added gets the same id): 0 when there is none
     removeItem: async (userId, briefingId, storyId) => prisma.$executeRawUnsafe(`
@@ -124,6 +144,32 @@ export const BriefingModel = {
                OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(CASE WHEN jsonb_typeof(card->'mergedStoryIds') = 'array' THEN card->'mergedStoryIds' ELSE '[]'::jsonb END) AS merged
                           WHERE merged::int = ANY($3::int[])))
         ORDER BY b.id_profile, (card->>'storyId')::int, b.created_at DESC`, userId, exceptId, storyIds, days),
+
+    // The news of the newest ready briefing of each other profile of this user written in the last 'days' (see BriefingService.profilesNews): one row
+    // a profile, [{briefingId, idProfile, createdAt, cards}], cards the news in their order, only what the editor of the e-mail lists of each
+    // ({number, storyId, ids: its story and the ones merged into it, title, source, language, thumbnail, imported, print: what a reader reads of it
+    // (see printOf of card-versions.js), links: the addresses of its lead and its articles}), the card itself staying in the database
+    profilesNews: async (userId, exceptId, exceptProfileId, days) => prisma.$queryRawUnsafe(`
+        SELECT DISTINCT ON (b.id_profile) b.id AS "briefingId", b.id_profile AS "idProfile", b.created_at AS "createdAt",
+               (SELECT COALESCE(jsonb_agg(jsonb_build_object(
+                           'number', t.position, 'storyId', (t.card->>'storyId')::int,
+                           'ids', jsonb_build_array((t.card->>'storyId')::int) || CASE WHEN jsonb_typeof(t.card->'mergedStoryIds') = 'array' THEN t.card->'mergedStoryIds' ELSE '[]'::jsonb END,
+                           'title', COALESCE(t.card->>'titleTranslation', t.card->>'title'), 'source', t.card->'lead'->>'source',
+                           'language', t.card->>'language', 'thumbnail', t.card->>'thumbnail',
+                           'imported', COALESCE((t.card->>'imported')::boolean, false),
+                           'print', jsonb_build_array(t.card->'lead'->>'url', COALESCE(t.card->>'titleTranslation', t.card->>'title'),
+                                COALESCE(NULLIF(t.card->>'translation', ''), t.card->>'summary'), COALESCE(NULLIF(t.card->>'pointsTranslation', ''), t.card->>'points'),
+                                COALESCE(NULLIF(t.card->>'digestTranslation', ''), t.card->>'digest'), t.card->'ai'->'points', t.card->'ai'->'summary'),
+                           'links', (SELECT COALESCE(jsonb_agg(article->>'url'), '[]'::jsonb)
+                                     FROM jsonb_array_elements(jsonb_build_array(t.card->'lead')
+                                          || CASE WHEN jsonb_typeof(t.card->'articles') = 'array' THEN t.card->'articles' ELSE '[]'::jsonb END) AS article)
+                       ) ORDER BY t.position), '[]'::jsonb)
+                FROM jsonb_array_elements(CASE WHEN jsonb_typeof(b.items) = 'array' THEN b.items ELSE '[]'::jsonb END) WITH ORDINALITY AS t(card, position)
+                WHERE (t.card->>'storyId') IS NOT NULL) AS cards
+        FROM briefings b
+        WHERE b.id_user = $1::int AND b.id <> $2::int AND b.status = 'ready' AND b.id_profile IS NOT NULL AND b.id_profile IS DISTINCT FROM $3::int
+          AND b.created_at > now() - make_interval(days => $4::int)
+        ORDER BY b.id_profile, b.created_at DESC`, userId, exceptId, exceptProfileId, days),
 
     // The card of a story of a ready briefing replaced by another (see BriefingService.useVersion), at the same place; the analysis lines
     // of the card too when 'setLines' (lines null taking them off). One statement, as vote. 0 when the briefing is not a ready one of

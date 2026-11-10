@@ -24,6 +24,19 @@ export const idsOf = (card) => [card?.storyId, ...(card?.mergedStoryIds ?? [])].
 // were versions in this sense: the 24th was that one
 export const areVersions = (a, b) => idsOf(b).includes(a?.storyId) || idsOf(a).includes(b?.storyId);
 
+// What a reader reads of a card, as a list: its lead article, its title, its key passages, its bullet points and its summary (the article's, in the
+// language of the reader when translated) and the AI's points and summary. Two cards of the same news that two profiles wrote from their own
+// articles differ by some of it (the lead article, the words the AI wrote); a card copied from another briefing keeps all of it. The SQL of
+// BriefingModel.profilesNews builds the same list ('print'): keep them the same. Strings with their spaces collapsed
+const flat = (value) => typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : Array.isArray(value) ? value.map(flat) : value ?? null;
+export const printOf = (card) => [card?.lead?.url, card?.titleTranslation ?? card?.title, card?.translation || card?.summary, card?.pointsTranslation || card?.points,
+    card?.digestTranslation || card?.digest, card?.ai?.points, card?.ai?.summary].map(flat);
+
+// The exact same card: the same article, the same title, the same key passages, the same points and summary, the same AI words, as a card copied
+// from another briefing is of the one it was copied from. A card of the same news another profile wrote, or even with the same lead article and
+// another AI text, is another card: the reader can have both (the user, 10.11.2026: a news is refused only when it is exactly the same one)
+export const sameCard = (a, b) => JSON.stringify(printOf(a)) === JSON.stringify(Array.isArray(b) ? b.map(flat) : printOf(b));
+
 // What belongs to the briefing the card is in, and to the profile it was written for, not to the version of its news: its story and the
 // ones merged into it, why it was chosen, for which interest and project, whether it follows a card of the last days, the thumb of the
 // reader, the feeds a refusal is blamed on, the mark of an e-mail sent. Kept when the card is replaced

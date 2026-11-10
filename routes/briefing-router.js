@@ -47,6 +47,16 @@ router.post('/:id/stories/:storyId/neutral-title', authenticateToken, adminOnly(
 router.post('/:id/news', authenticateToken, adminOnly(MAIL_REFUSED),
     rateLimit({windowMs: 3600e3, max: 30, key: req => `news ${req.user.id}`, message: 'Too many news added, try again in an hour.'}),
     BriefingController.importNews);
+// the news of the briefings of the other profiles of the account, listed and copied into this briefing from the editor of the e-mail: the
+// briefings of the reader, read and written without any call of the AI
+router.get('/:id/profiles-news', authenticateToken, adminOnly(MAIL_REFUSED), BriefingController.profilesNews);
+router.post('/:id/news/copy', authenticateToken, adminOnly(MAIL_REFUSED),
+    rateLimit({windowMs: 3600e3, max: 120, key: req => `news copy ${req.user.id}`, message: 'Too many news copied, try again in an hour.'}),
+    BriefingController.copyNews);
+// two cards of the same news made one, the reader choosing which one is kept (the other is folded into it)
+router.post('/:id/news/fold', authenticateToken, adminOnly(MAIL_REFUSED),
+    rateLimit({windowMs: 3600e3, max: 120, key: req => `news fold ${req.user.id}`, message: 'Too many cards folded, try again in an hour.'}),
+    BriefingController.foldNews);
 router.delete('/:id/news/:storyId', authenticateToken, adminOnly(MAIL_REFUSED), BriefingController.removeNews);
 // cards of a briefing sent by e-mail, a few times an hour and a day at most: each one goes through the
 // account of the server, which Gmail limits (500 a day), to any address the reader writes

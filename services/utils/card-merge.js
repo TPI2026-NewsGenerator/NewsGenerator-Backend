@@ -110,10 +110,15 @@ const withFolded = (card, others) => {
         angles: [...others.map(angleOf), ...(card.angles ?? []).filter(angle => !gone.has(angle.storyId) && !urls.has(angle.url))],
         articles: byUrl([...(card.articles ?? []), ...others.flatMap(other => other.articles ?? [])]),
         corroboration: card.corroboration ? {...card.corroboration, media: Math.max(mediaOf(card), mediaNames.length), mediaNames} : card.corroboration,
-        mergedStoryIds: [...new Set([...(card.mergedStoryIds ?? []), ...[...gone].filter(id => Number.isInteger(id) && id !== card.storyId)])],
+        mergedStoryIds: [...new Set([...(card.mergedStoryIds ?? []), ...[...gone].filter(id => Number.isInteger(id) && id > 0 && id !== card.storyId)])],
         joinedCards: [...(card.joinedCards ?? []), ...others.map(other => ({storyId: other.storyId, title: norm(other.titleTranslation ?? other.title)}))],
     };
 };
+
+// The card the reader chose to keep with the other card of the same news folded into it: among its angles, its articles and media counted with
+// its own (see withFolded). The two cards are what a briefing shows, not what the AI judged: the reader says they tell the same news (the editor
+// of the e-mail offers it when a news imported is close to a card of the briefing, see BriefingService.foldNews)
+export const foldInto = (keeper, dropped) => withFolded(keeper, [dropped]);
 
 // The cards of a briefing without the second card of each group: the card of a group that is the best covered (more media, then the first)
 // keeps its content and takes the place of the first of them; the others are among its angles. Cards not in a group are the same objects

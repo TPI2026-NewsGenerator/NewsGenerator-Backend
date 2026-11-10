@@ -19,7 +19,7 @@ jest.unstable_mockModule('../../models/briefing-model.js', () => ({BriefingModel
 const profiles = {3: {name: 'Roberto', languages: ['en'], watch_terms: ['Wenger']}, 4: {name: 'Chris', languages: ['en'], watch_terms: []},
     5: {name: 'Enzo', languages: ['fr'], watch_terms: []}};
 jest.unstable_mockModule('../../models/profile-model.js', () => ({ProfileModel: {get: jest.fn(async (id) => profiles[id] ?? null)}}));
-const {areVersions, idsOf, restoredCard, swappedCard, versionsOfCards, forThePage} = await import('../../services/utils/card-versions.js');
+const {areVersions, idsOf, printOf, restoredCard, sameCard, swappedCard, versionsOfCards, forThePage} = await import('../../services/utils/card-versions.js');
 const {BriefingService} = await import('../../services/briefing-service.js');
 
 // a card as a briefing saves it, as written by the profile it is of
@@ -66,6 +66,29 @@ describe('versionsOfCards', () => {
         const versions = versionsOfCards(items, [row(5, 600, '2026-11-09T07:00:00Z', 10, 'https://lemonde.fr/wenger'), row(4, 508, '2026-11-09T07:23:00Z', -1, 'https://added.example/b')],
             idProfile => idProfile !== 5);
         expect(versions).toEqual({});
+    });
+});
+
+describe('sameCard', () => {
+    it('should call the same card the one with the same article and the same words, whatever its place, id and spaces', () => {
+        const a = card(10, 'lesoir.be', {ai: {points: ['One.', 'Two.'], summary: 'A  summary.'}});
+        expect(sameCard(a, {...a, storyId: -4, imported: true, vote: 'up', sentAt: 'x', summary: ` ${a.summary}\n`})).toBe(true);
+        expect(sameCard(a, printOf(a))).toBe(true);
+    });
+
+    it('should not call the same a card of the same news written with other words, or with another lead article', () => {
+        const a = card(10, 'lesoir.be', {ai: {points: ['One.'], summary: 'A summary.'}});
+        expect(sameCard(a, {...a, ai: {points: ['Other.'], summary: 'A summary.'}})).toBe(false);
+        expect(sameCard(a, {...a, summary: 'Other passages.'})).toBe(false);
+        expect(sameCard(a, {...a, lead: {source: 'bbc.co.uk', url: 'https://bbc.co.uk/wenger'}})).toBe(false);
+        expect(sameCard(a, {...a, titleTranslation: 'Un autre titre'})).toBe(false);
+        expect(sameCard(a, card(20, 'bbc.co.uk'))).toBe(false);
+    });
+
+    it('should read the translation of the passages, the points and the summary before the article\'s own words', () => {
+        const a = card(10, 'lesoir.be', {translation: 'Passages translated.', pointsTranslation: 'Points translated.', digestTranslation: 'Digest translated.'});
+        expect(printOf(a).slice(2, 5)).toEqual(['Passages translated.', 'Points translated.', 'Digest translated.']);
+        expect(sameCard(a, {...a, translation: ''})).toBe(false);
     });
 });
 

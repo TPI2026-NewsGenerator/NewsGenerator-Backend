@@ -33,10 +33,10 @@ import {AFFAIR_DAYS, storiesOfSameNames} from "./utils/affair-names.js";
 import {officialSourcesOf} from "./utils/official-sources.js";
 import {evolvedStories, REPEAT_HOURS, shownStories, withoutRepeats} from "./utils/repeats.js";
 import {readerLanguage, scriptLanguage, writtenIn} from "./utils/language.js";
-import {VERSION_DAYS, areVersions, forThePage, idsOf, restoredCard, swappedCard, versionsOfCards} from "./utils/card-versions.js";
+import {VERSION_DAYS, areVersions, forThePage, idsOf, restoredCard, sameCard, swappedCard, versionsOfCards} from "./utils/card-versions.js";
 import {logBriefingChecks} from "./utils/briefing-checks.js";
 import {proofreadCards} from "./utils/proofread.js";
-import {foldCards, sameNewsGroups} from "./utils/card-merge.js";
+import {foldCards, foldInto, sameNewsGroups} from "./utils/card-merge.js";
 import {reviewNames, withoutNonNames} from "./utils/name-review.js";
 import {failedTitle, translatedTitles} from "./utils/title-translation.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
@@ -1587,10 +1587,25 @@ const readyBriefing = async (userId, briefingId) => {
 // The news a reader adds to a briefing by its link (see importNews), MAX_IMPORTED at most per briefing
 const MAX_IMPORTED = 10;
 const MAX_URL = 2000;
+// why a news cannot be added to a briefing whose cards are 'items', by these 'links' (its lead and its articles): one of them is already on a
+// card of it, or MAX_IMPORTED news were already added; null when it can
+const refusedNews = (items, links) => items.some(item => [item.lead, ...(item.articles ?? [])].some(article => links.includes(article?.url)))
+    ? Object.assign(new Error('This news is already in the briefing.'), {status: 409})
+    : items.filter(item => item.imported).length >= MAX_IMPORTED
+        ? Object.assign(new Error(`At most ${MAX_IMPORTED} news added to a briefing.`), {status: 400})
+        : null;
 const dateOf = (value) => {
     const date = value ? new Date(value) : null;
     return date && !Number.isNaN(date.getTime()) ? date.toISOString() : null;
 };
+
+// why a card of another profile's briefing cannot be copied into a briefing whose cards are 'items': exactly the same card is already there (409),
+// or MAX_IMPORTED news were already added (400); null when it can. A card that tells the same news with other words, or the same article, can
+const refusedCopy = (items, card) => items.some(item => sameCard(item, card))
+    ? Object.assign(new Error('This exact news is already in the briefing.'), {status: 409})
+    : items.filter(item => item.imported).length >= MAX_IMPORTED
+        ? Object.assign(new Error(`At most ${MAX_IMPORTED} news added to a briefing.`), {status: 400})
+        : null;
 
 // the card of a news added by its link: its page read as the cards' are, its key passages chosen and
 // translated as theirs; no story, no why, no other media, no angle nor official source
@@ -1873,11 +1888,7 @@ export const BriefingService = {
         const {row, briefing} = await readyBriefing(userId, briefingId);
         // checked before the page is read, and again by the statement that adds it: two news added at
         // the same time are read together
-        const refused = (items, links) => items.some(item => [item.lead, ...(item.articles ?? [])].some(article => links.includes(article?.url)))
-            ? Object.assign(new Error('This news is already in the briefing.'), {status: 409})
-            : items.filter(item => item.imported).length >= MAX_IMPORTED
-                ? Object.assign(new Error(`At most ${MAX_IMPORTED} news added to a briefing.`), {status: 400})
-                : null;
+        const refused = refusedNews;
         let links = [...new Set([address, asked])];
         const early = refused(briefing.items, links);
         if (early) throw early;
@@ -1941,6 +1952,104 @@ export const BriefingService = {
             : `Briefing ${row.id}: news added by its link, tokens ${JSON.stringify(completed ? usages : usage)}`);
         const [item] = withMarks({items: [{...card, storyId}]}, await EntityService.followTerms(row.id_profile ?? null, profile?.watch_terms)).items;
         return {item, analysis: analysed ? lines : null, analyzing: analysing};
+    },
+
+    // The news of the newest briefing of each other profile of the reader's account (the last TRANSFER_DAYS days), for the editor of the e-mail:
+    // {profiles: [{idProfile, profile, briefingId, createdAt, news: [{storyId, number, title, source, language, thumbnail, imported, inBriefing,
+    // similarTo}]}], added, max}, added the news already added to this briefing and max how many it takes. Only the profiles that read in the
+    // language of this one (their translations are of that language). inBriefing: exactly this card is already here (same article, same words, see
+    // sameCard): the only news that cannot be imported. similarTo: the number of the first card of this briefing that tells the same news (one of its
+    // articles is on it, or it is a version of it), null for none: said to the reader, never a reason to refuse (the user, 10.11.2026: the version of
+    // another profile can be better). No call of the AI
+    profilesNews: async (userId, briefingId) => {
+        const {row, briefing} = await readyBriefing(userId, briefingId);
+        const [own, rows] = await Promise.all([row.id_profile ? ProfileModel.get(row.id_profile) : null, BriefingModel.profilesNews(userId, row.id, row.id_profile ?? null, TRANSFER_DAYS)]);
+        const language = readerLanguage(own ?? {});
+        const profiles = [];
+        for (const one of rows) {
+            const profile = await ProfileModel.get(one.idProfile);
+            if (readerLanguage(profile ?? {}) !== language) continue;
+            profiles.push({idProfile: one.idProfile, profile: profile?.name ?? null, briefingId: one.briefingId, createdAt: one.createdAt,
+                news: (one.cards ?? []).map(({ids, links, print, ...card}) => {
+                    const close = briefing.items.findIndex(item => (links ?? []).some(link => [item.lead, ...(item.articles ?? [])].some(article => article?.url === link))
+                        || areVersions(item, {storyId: card.storyId, mergedStoryIds: (ids ?? []).slice(1)}));
+                    return {...card, inBriefing: briefing.items.some(item => sameCard(item, print)), similarTo: close < 0 ? null : close + 1};
+                })});
+        }
+        return {profiles, added: briefing.items.filter(item => item.imported).length, max: MAX_IMPORTED};
+    },
+
+    // A news of another profile's briefing added to this one, at the end of it, where the reader is (the editor of the e-mail): the card as that
+    // briefing shows it, with its angles, official sources and analysis (see transferredCard), as the news copied by its link. {item, analysis,
+    // analyzing: false}, as importNews. A news close to a card of this briefing (the same story, an article in common) is imported all the same: the
+    // other profile's version can be better, and the reader is not told it cannot be added (the user, 10.11.2026); only the exact same card is
+    // refused (409, see sameCard). 404 for a briefing or a card that is not there, 409 too for a briefing of the same profile or too old, or written
+    // for a reader of another language, 400 when MAX_IMPORTED news were added. No call of the AI
+    copyNews: async (userId, briefingId, fromBriefingId, storyId) => {
+        const from = Number(fromBriefingId);
+        const story = Number(storyId);
+        if (!Number.isInteger(from) || from <= 0) throw Object.assign(new Error('fromBriefingId: the briefing of the other profile.'), {status: 400});
+        if (!Number.isInteger(story) || story === 0) throw Object.assign(new Error('storyId: the card of that briefing.'), {status: 400});
+        const {row, briefing} = await readyBriefing(userId, briefingId);
+        if (from === row.id) throw Object.assign(new Error('That news is in another briefing.'), {status: 409});
+        const other = await BriefingModel.ofUser(userId, from);
+        if (!other || other.status !== 'ready') throw Object.assign(new Error('Unknown briefing.'), {status: 404});
+        if (!other.id_profile || other.id_profile === row.id_profile) throw Object.assign(new Error('Copy a news from the briefing of another profile.'), {status: 409});
+        if (Date.now() - new Date(other.created_at).getTime() > TRANSFER_DAYS * 24 * 3600e3) throw Object.assign(new Error('That briefing is too old.'), {status: 409});
+        const found = (Array.isArray(other.items) ? other.items : []).find(card => card.storyId === story);
+        if (!found) throw Object.assign(new Error('That briefing has no such news.'), {status: 404});
+        const [mine, theirs] = await Promise.all([row.id_profile ? ProfileModel.get(row.id_profile) : null, ProfileModel.get(other.id_profile)]);
+        if (readerLanguage(theirs ?? {}) !== readerLanguage(mine ?? {})) {
+            throw Object.assign(new Error('That profile reads in another language.'), {status: 409});
+        }
+        const lines = other.analysis?.status === 'ready' ? other.analysis.cards?.[String(story)] ?? null : null;
+        const card = transferredCard(found);
+        const known = refusedCopy(briefing.items, card);
+        if (known) throw known;
+        // no link is given to the statement: it would refuse a card that has an article of another card of this briefing, and only the exact same
+        // card is refused
+        const newId = await BriefingModel.addItem(userId, row.id, card, {max: MAX_IMPORTED, links: []});
+        if (newId === null) {
+            // another news added meanwhile filled the briefing or was this one, else the briefing is gone
+            const now = await BriefingModel.ofUser(userId, row.id);
+            throw (now?.status === 'ready' && refusedCopy(toBriefing(now).items, card)) || Object.assign(new Error('Unknown briefing.'), {status: 404});
+        }
+        const analysed = lines && await BriefingModel.addAnalysisLines(userId, row.id, newId, lines).catch(err => {
+            console.error(`Briefing ${row.id}: the analysis of the news copied was not saved (${err.message})`);
+            return 0;
+        });
+        console.log(`Briefing ${row.id}: news copied from the card ${story} of the briefing ${other.id}${analysed ? ', with its analysis' : ''}`);
+        const [item] = withMarks({items: [{...card, storyId: newId}]}, await EntityService.followTerms(row.id_profile ?? null, mine?.watch_terms)).items;
+        // the card of this briefing that tells the same news, to offer the reader to keep one of the two (see foldNews): an article in common, or a version of it
+        const urls = new Set([card.lead, ...(card.articles ?? [])].map(article => article?.url).filter(Boolean));
+        const closeAt = briefing.items.findIndex(one => [one.lead, ...(one.articles ?? [])].some(article => urls.has(article?.url)) || areVersions(one, found));
+        const close = closeAt < 0 ? null : briefing.items[closeAt];
+        return {item, analysis: analysed ? lines : null, analyzing: false,
+            similar: close ? {storyId: close.storyId, number: closeAt + 1, title: close.titleTranslation ?? close.title, source: close.lead?.source ?? null} : null};
+    },
+
+    // Two cards of a ready briefing that tell the same news made one, as the reader chose (the editor of the e-mail offers it when a news imported from
+    // another profile is close to a card of the briefing): the card 'keep' as it is with the card 'drop' folded into it (among its angles, its
+    // articles and media counted with its own, see foldInto), at the place of the first of the two; 'drop' leaves the briefing with its analysis lines.
+    // {item, at, removed}: the card kept as the page shows it, where it stands in the new list (from 0) and the storyId taken out. 400 for ids that are
+    // none or the same, 404 for a card that is not there. No call of the AI
+    foldNews: async (userId, briefingId, keepStoryId, dropStoryId) => {
+        const keep = Number(keepStoryId);
+        const drop = Number(dropStoryId);
+        if (!Number.isInteger(keep) || keep === 0 || !Number.isInteger(drop) || drop === 0 || keep === drop) {
+            throw Object.assign(new Error('keep, drop: the storyIds of two different cards of the briefing.'), {status: 400});
+        }
+        const {row, briefing} = await readyBriefing(userId, briefingId);
+        const kept = briefing.items.find(card => card.storyId === keep);
+        const dropped = briefing.items.find(card => card.storyId === drop);
+        if (!kept || !dropped) throw Object.assign(new Error('Unknown card.'), {status: 404});
+        const folded = foldInto(kept, dropped);
+        const at = await BriefingModel.foldItems(userId, row.id, keep, drop, folded);
+        if (at === null) throw Object.assign(new Error('Unknown card.'), {status: 404});
+        console.log(`Briefing ${row.id}: the card ${drop} folded into the card ${keep}, as the reader chose`);
+        const profile = row.id_profile ? await ProfileModel.get(row.id_profile) : null;
+        const [item] = withMarks({items: [folded]}, await EntityService.followTerms(row.id_profile ?? null, profile?.watch_terms)).items;
+        return {item, at, removed: drop};
     },
 
     // The other versions the profiles of this reader's account have of the cards of a ready briefing (the same news written by another

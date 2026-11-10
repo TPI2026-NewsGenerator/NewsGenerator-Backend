@@ -93,6 +93,50 @@ profile (30.10.2026: copied by its link, the card came without its angles, sourc
 - The tokens of the calls are logged ("news added by its link, tokens ..."). A news added takes about a minute or two, the
   page says so while it waits.
 
+## A news of another profile, imported from the editor of the e-mail
+
+The reader who works in the editor of the e-mail (the user, 10.11.2026) can import there a news of the briefing of another profile of the account,
+without leaving it and without a link: the button **Import from a profile** in the header of the editor (both layouts, on a phone just "Import") opens
+a panel with the profiles of the account (a button each), then the news of the briefing of the one chosen, in their order, with their medium; a click
+on one copies it into this briefing, ticked, at the end of the e-mail and chosen, so that its title, its sentences, its picture and its blocks can be
+changed at once. The panel stays open for the next one (a click outside it, Escape or its button close it). A news is **never refused
+because it looks like one already in the briefing**: the version another profile wrote of the same news can be better (the user, 10.11.2026: "je
+ne veux pas qu'un lecteur tombe sur le message déjà dans le briefing"). The row says "same news as 04 here" when a card of this briefing tells it (an
+article in common, or a version of it) and it is imported all the same; only **exactly the same card** says "Already here" and cannot be imported: the same
+lead article, title, key passages, points, summary and AI words (`sameCard` of `card-versions.js`, `printOf`: what a reader reads of a card). On the real
+briefings of 10.11.2026, of the 22 news of Roberto 1 was exactly a card of Enzo's briefing and 13 told the same news as one; of Chris's 22, none and 8
+(the first rule, an article in common, had marked them all "Already here"). The one just copied says "Added", and past 10 news added no more is offered.
+
+- `GET /api/briefing/:id/profiles-news` (`BriefingService.profilesNews`, `BriefingModel.profilesNews`: one statement, the cards of the newest ready
+  briefing of each other profile of the last 7 days listed by their number, title, medium, language, picture, what a reader reads of them (`print`, the
+  same list as `printOf`, equal for the 44 cards checked) and the links the check uses) answers
+  `{profiles: [{idProfile, profile, briefingId, createdAt, news: [{storyId, number, title, source, language, thumbnail, imported, inBriefing,
+  similarTo}]}], added, max}`. Only the profiles that read in the language of this one (their translations are of that language). `inBriefing`:
+  exactly this card is already here. `similarTo`: the number of the first card of this briefing that tells the same news, null for none. The card
+  itself stays in the database: the list is some kilobytes. No call of the AI.
+- `POST /api/briefing/:id/news/copy {fromBriefingId, storyId}` (`BriefingService.copyNews`) copies the card as the other briefing shows it, with its
+  angles, official sources and the analysis lines written for it, by the same rules as a news copied by its link (`transferredCard`: what was for the
+  other profile only, its why, interest, thumb, mark of an e-mail sent, is left out), at the end of the briefing with a negative id, and answers
+  `{item, analysis, analyzing: false}` as `importNews` does. The statement of `addItem` is given no link, which would refuse a card with an article of
+  another card of the briefing (a news added by its link keeps that rule). 404 for a briefing or a news that is not there, 409 for the exact same card
+  (`refusedCopy`), a briefing of the same profile, one older than 7 days or written for a reader of another language, 400 past `MAX_IMPORTED` (10).
+  120 an hour per reader. Both are for the administrators, as the e-mail is.
+- **A news imported that tells the same news as a card here** (the user, 10.11.2026): the answer of `copyNews` has `similar: {storyId, number,
+  title, source}`, the first card of the briefing with an article in common or that is a version of it. The editor then opens a message ("Same news as
+  card 10", `MailSameNews.jsx`) with the two versions side by side (their medium, how many media tell them, their first point: they often have the same
+  title) and three choices: **use the card here**, **use the news imported**, or **keep both**. The version not chosen is folded into the other:
+  `POST /api/briefing/:id/news/fold {keep, drop}` (`BriefingService.foldNews`, `foldInto` of `card-merge.js`, the fold of the cards of one news that the
+  AI that reads the cards does) puts it among the angles of the card kept ("Same affair, other angles"), its articles and media among its own ("Also
+  covered by"), and the card kept takes the place of the first of the two in the briefing, in one statement (`FOLD_ITEMS`, `BriefingModel.foldItems`,
+  tested in the database in a transaction rolled back); the card folded leaves with its analysis lines. `{item, at, removed}`. The ticks follow (the card
+  kept is ticked when either was), the e-mail puts it where the first of the two stood. Closing the message keeps both: nothing is refused or forced. A
+  card kept that was added by the reader stays one of the news added (counted in the 10).
+- The page (`Briefing.jsx`, `copyNews`; `MailImport.jsx`; `useMailDraft.importNews`) adds the card to the briefing and ticks it from the last state of the
+  ticks (several news copied one after the other are all ticked), then the draft puts it at the end of the order and chooses it.
+- Tests: `tests/briefing/test.copy-news.js` (server), `client/tests/mail-import.test.jsx` and the two cases of `client/tests/briefing-email.test.jsx`.
+  To see it with the real briefings of the account and nothing written: `server/bench/mail-import-mock-api.mjs` (launch configurations
+  `mock-api-mail-import` and a client on port 5177 pointed at it).
+
 ## The version another profile wrote of a card
 
 The same news is the same story in every profile, but each profile reads it from the articles of its own sources, so the cards
