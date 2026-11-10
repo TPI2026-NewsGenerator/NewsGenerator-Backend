@@ -56,15 +56,25 @@ export const dimensionsOf = (bytes) => {
 const isImage = (bytes) => bytes.length >= 4 && (bytes.readUInt32BE(0) === 0x89504e47 || bytes.subarray(0, 4).toString('latin1') === 'GIF8'
     || (bytes[0] === 0xff && bytes[1] === 0xd8) || (bytes.subarray(0, 4).toString('latin1') === 'RIFF' && bytes.length >= 12 && bytes.subarray(8, 12).toString('latin1') === 'WEBP'));
 
+// A refusal aimed at robots tells nothing of the picture: the CDN of tribuna.com answers a script with a challenge of Cloudflare (403,
+// cf-mitigated: challenge) for a picture that a browser loads (1920×1080), and the card of the briefing of Enzo of 9.11.2026 lost the one
+// picture it had. The page of the reader is a browser, which loads it or, if it cannot, hides it (onError of the card). The app does not try to
+// get past the wall: it does not know, and says so
+const ROBOT_REFUSALS = new Set([401, 403, 429]);
+
 // {width, height} of the image at this address; null when the address answers with something that is no
 // image (an error, a page, a format it can't read) so the browser would show none; undefined when it could
-// not be told (too slow, the connection failed)
+// not be told (too slow, the connection failed, a refusal aimed at robots)
 export const sizeOf = async (url) => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
         await assertPublicUrl(url);
         const response = await fetch(url, {headers: HEADERS, signal: controller.signal, redirect: 'follow'});
+        if (!response.ok && (ROBOT_REFUSALS.has(response.status) || response.headers.get('cf-mitigated'))) {
+            await response.body?.cancel();
+            return undefined;
+        }
         if (!response.ok || !response.body) return null;
         let bytes = Buffer.alloc(0);
         for await (const chunk of response.body) {

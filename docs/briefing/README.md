@@ -53,7 +53,10 @@ The picture of a card (`pictureOf`) is the one its article's page gives to be sh
 its feed gave after (since 18.10.2026: often a thumbnail); a site's picture for pages without one is never taken.
 Since 29.10.2026 the sizes of the pictures of all its articles are read (`sizesOf`, `picture-sizes.js`: the first
 bytes of each file, 8 at a time, 25 s at most for the briefing) and the card takes the first sharp one (560 px wide
-or more) in the order of its articles, lead first; a picture that does not load is left out, one on http comes
+or more) in the order of its articles, lead first; a picture that does not load (an address that is gone, a page, a format unknown) is left out,
+but not one the check was only refused (401, 403, 429, a challenge of Cloudflare: the CDN of tribuna.com answered a script so for a picture a browser
+loads, a card of the briefing of Enzo of 9.11.2026 lost its only one): its size is not known, the browser of the reader loads it or the card hides
+it. One on http comes
 last (the page is on https, its browser blocks it), and when none is sharp the widest is taken. The card keeps
 all that load (`pictures`) for the e-mail. Without any, its illustration, captioned "Illustration" and credited to its author and licence (see
 [e-mail](email/README.md)).

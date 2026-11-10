@@ -91,6 +91,21 @@ describe('sizeOf', () => {
         expect(globalThis.fetch).toHaveBeenCalledTimes(2);
     });
 
+    it('should give undefined, not null, for a refusal aimed at robots: the picture is not known to be dead, a browser loads it', async () => {
+        // the CDN of tribuna.com, 9.11.2026: a challenge of Cloudflare for a picture a browser loads
+        globalThis.fetch.mockResolvedValueOnce(answering('<html>Just a moment...</html>', {status: 403, headers: {'cf-mitigated': 'challenge', 'content-type': 'text/html'}}));
+        expect(await sizeOf('https://pictures.example/challenged')).toBeUndefined();
+        for (const status of [401, 403, 429]) {
+            globalThis.fetch.mockResolvedValueOnce(answering('refused', {status}));
+            expect(await sizeOf(`https://pictures.example/${status}`)).toBeUndefined();
+        }
+        // a picture that is not there, or gone, is dead
+        for (const status of [404, 410]) {
+            globalThis.fetch.mockResolvedValueOnce(answering('gone', {status}));
+            expect(await sizeOf(`https://pictures.example/${status}`)).toBeNull();
+        }
+    });
+
     it('should give undefined when the connection failed: not told, not dead', async () => {
         globalThis.fetch.mockRejectedValue(new TypeError('fetch failed'));
         expect(await sizeOf('https://cdn.example/a.jpg')).toBeUndefined();
