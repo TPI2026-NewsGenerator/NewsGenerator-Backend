@@ -14,7 +14,7 @@ jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel: 
 const describeItems = jest.fn();
 jest.unstable_mockModule('../../services/utils/wikidata.js', () => ({describeItems}));
 
-const {glossariesOfStories} = await import('../../services/utils/card-spellings.js');
+const {glossariesOfStories, withoutUntrustedLabels} = await import('../../services/utils/card-spellings.js');
 
 const story = (storyId, ...ids) => ({storyId, members: ids.map(id => ({id}))});
 const row = (id_article, name, qid) => ({id_article, name, kind: 'person', qid});
@@ -52,6 +52,13 @@ describe('glossariesOfStories', () => {
             glossary: [{written: 'Σαλάχ', spelled: 'Mohamed Salah'}], names: ['Stéphanie Frappart', 'Mohamed Salah']});
     });
 
+    it('should tell a translation nothing of an acronym the news write in Latin letters: it keeps it as written, and the tagger may have linked it to a namesake', async () => {
+        // "LNFP" of the card of the Moroccan federation, linked by its text to the league of Honduras (briefing 656 of Enzo, 10.11.2026)
+        linkedNamesOf.mockResolvedValue([row(1, 'LNFP', 'Q1418739'), row(1, 'FRMF', 'Q3116927'), row(1, 'Σαλάχ', 'Q4001')]);
+        describeItems.mockResolvedValue([{qid: 'Q1418739', label: 'Liga Nacional de Fútbol de Honduras'}, {qid: 'Q3116927', label: 'Royal Moroccan Football Federation'}, {qid: 'Q4001', label: 'Mohamed Salah'}]);
+        expect((await glossariesOfStories([story(10, 1)])).get(10)).toEqual({glossary: [{written: 'Σαλάχ', spelled: 'Mohamed Salah'}], names: ['Mohamed Salah']});
+    });
+
     it('should ask Wikidata once for the items it does not know, and remember the labels', async () => {
         linkedNamesOf.mockResolvedValue([row(5, 'Σαλάχ', 'Q9001')]);
         describeItems.mockResolvedValue([{qid: 'Q9001', label: 'Mohamed Salah'}]);
@@ -74,5 +81,38 @@ describe('glossariesOfStories', () => {
     it('should not ask anything of a briefing without a story', async () => {
         linkedNamesOf.mockResolvedValue([]);
         expect((await glossariesOfStories([])).size).toBe(0);
+    });
+});
+
+describe('withoutUntrustedLabels', () => {
+    const glossary = [{written: 'LNFP', spelled: 'Liga Nacional de Fútbol de Honduras'}, {written: 'Σαλάχ', spelled: 'Mohamed Salah'}];
+    const card = (changes = {}) => ({title: 'La FRMF reprend la main et clarifie le rôle de la LNFP', summary: 'La FRMF veut reprendre la main.',
+        titleTranslation: 'The FRMF takes back control and clarifies the role of the Liga Nacional de Fútbol de Honduras',
+        translation: 'The FRMF is reclaiming control; the Liga Nacional de Fútbol de Honduras has a smaller role.', pointsTranslation: 'The Liga Nacional de Fútbol de Honduras replaced a head.',
+        names: [{name: 'FRMF', qid: 'Q3116927'}, {name: 'LNFP', qid: null}], ai: {points: ['The Liga Nacional de Fútbol de Honduras replaced its head.'], summary: 'About the Liga Nacional de Fútbol de Honduras.'}, ...changes});
+
+    it('should put the written name back where the translation put the label of a link the check of the names refused', () => {
+        const fixed = withoutUntrustedLabels(card(), glossary);
+        expect(fixed.titleTranslation).toBe('The FRMF takes back control and clarifies the role of the LNFP');
+        expect(fixed.translation).toBe('The FRMF is reclaiming control; the LNFP has a smaller role.');
+        expect(fixed.pointsTranslation).toBe('The LNFP replaced a head.');
+        expect(fixed.ai).toEqual({points: ['The LNFP replaced its head.'], summary: 'About the LNFP.'});
+        // what was written by the article is not touched
+        expect(fixed.title).toBe(card().title);
+    });
+
+    it('should not give the acronym twice when the translation spelled it out and then wrote it', () => {
+        const fixed = withoutUntrustedLabels(card({titleTranslation: 'the role of the Liga Nacional de Fútbol de Honduras (LNFP)'}), glossary);
+        expect(fixed.titleTranslation).toBe('the role of the LNFP');
+    });
+
+    it('should leave a card as it is when the name is linked, or the article itself has the label', () => {
+        const linked = card({names: [{name: 'LNFP', qid: 'Q1418739'}]});
+        expect(withoutUntrustedLabels(linked, glossary)).toBe(linked);
+        const written = card({summary: 'La Liga Nacional de Fútbol de Honduras (LNFP) est citée.'});
+        expect(withoutUntrustedLabels(written, glossary)).toBe(written);
+        const none = card({names: [{name: 'FRMF', qid: 'Q3116927'}]});
+        expect(withoutUntrustedLabels(none, glossary)).toBe(none);
+        expect(withoutUntrustedLabels(card(), [])).toEqual(card());
     });
 });

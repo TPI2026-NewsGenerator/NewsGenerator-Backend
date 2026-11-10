@@ -53,6 +53,20 @@ describe('cardAnalyses, the story so far', () => {
         expect(cards[1].timeline[0].titleTranslation).toBe(`T: ${CYRILLIC}`);
     });
 
+    it('should keep only the stories created before the card: the same day, or after it, is no history of it', async () => {
+        // the card (story 1) was created on 11-05 at 10:00: what is of 11-03 and 11-02 is earlier, what is of 11-05 later in the day or of 11-06 is not
+        const at = (id, day, hour) => ({...row(id, `Title of ${id}`, 'en', 1), created_at: new Date(`2026-11-${day}T${hour}:00:00Z`), card_at: new Date('2026-11-05T10:00:00Z')});
+        earlierInThreads.mockResolvedValue([at(11, '06', '09'), at(12, '05', '14'), at(13, '05', '08'), at(14, '03', '10'), at(15, '02', '10')]);
+        const {cards} = await cardAnalyses([item], new Map([[1, [{title: 'x'}]]]), 'en');
+        expect(cards[1].timeline.map(one => one.title)).toEqual(['Title of 15', 'Title of 14', 'Title of 13']);
+    });
+
+    it('should keep every story when the database does not say when the card was created (the older rows of a bench)', async () => {
+        earlierInThreads.mockResolvedValue([row(11, LATIN, 'en', 2)]);
+        const {cards} = await cardAnalyses([item], new Map([[1, [{title: 'x'}]]]), 'en');
+        expect(cards[1].timeline).toHaveLength(1);
+    });
+
     it('should leave the titles as they are when the AI cannot translate them: the card is never kept waiting', async () => {
         earlierInThreads.mockResolvedValue([row(11, CYRILLIC, 'sr', 2)]);
         ollamaJson.mockRejectedValue(new Error('down'));

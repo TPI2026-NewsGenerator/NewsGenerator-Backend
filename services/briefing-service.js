@@ -19,7 +19,7 @@ import {DiscoveryService} from "./discovery-service.js";
 import {Crawlers} from "./utils/crawlers.js";
 import {newUsage} from "./utils/ollama.js";
 import {canSummarize, extractArticle, passagesText, sentencesOf, splitSentences, translateTexts, translateTextsSure, withoutOriginalMarks} from "./utils/extract.js";
-import {glossariesOfStories} from "./utils/card-spellings.js";
+import {glossariesOfStories, withoutUntrustedLabels} from "./utils/card-spellings.js";
 import {alignNames, namesIn, spellingsOf} from "./utils/spellings.js";
 import {aiWaysOf} from "./utils/ai-ways.js";
 import {ANALYSIS_MODEL, TIMELINE_MAX, analysesOf, capitalWordsOfCard, fittedArticles, withCleanNext} from "./utils/card-analysis.js";
@@ -927,7 +927,8 @@ export const completeCards = async ({main, spare = []}, {briefingId = null, labe
                 {medium: mediumOfArticle, fromGoogle})
                 .map(article => toArticle(article, trusted)),
         };
-    });
+    // a label of Wikidata that the translation was told for a name the check of the names then refused is the written name again (see card-spellings.js)
+    }).map((item, i) => withoutUntrustedLabels(item, spellings.get(leads[i])?.glossary));
     return {items, articles: analysisArticles(stories, {lead: (i) => leads[i], summary: (i) => summaryOf(i)?.summary,
         readOf: (article) => content.get(article.link)})};
 };
@@ -1317,7 +1318,10 @@ export const cardAnalyses = async (items, articles, language, {usage = null, onP
         const links = new Set((item.articles ?? []).map(article => article.url));
         // a title once: two stories of one medium can open with the same one
         const titles = new Set();
-        const rows = earlier.filter(row => row.card === item.storyId && !own.has(row.id) && row.title && !links.has(row.link))
+        // before the card: a story of its affair created after its own (the same day, an hour later) is no history, it tells the same news or
+        // another fact of the moment (35 of the 157 lines of "the story so far" of 12 briefings were not earlier than their card, 10.11.2026)
+        const rows = earlier.filter(row => row.card === item.storyId && !own.has(row.id) && row.title && !links.has(row.link)
+            && (!row.card_at || new Date(row.created_at) < new Date(row.card_at)))
             .filter(row => {
                 const title = row.title.toLowerCase().replace(/\s+/g, ' ').trim();
                 return !titles.has(title) && titles.add(title);

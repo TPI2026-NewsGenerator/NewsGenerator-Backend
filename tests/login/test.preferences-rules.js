@@ -16,6 +16,8 @@ describe('checkedPreferences', () => {
     it('should take every preference the page has, with a value it offers, as it is', () => {
         const body = {
             layout: 'matrix',
+            mailBlocks: ['picture', 'countries', 'media', 'names'],
+            pageBlocks: [],
             mailPresets: {short: ['media', 'contested'], standard: ['picture', 'countries', 'names'], everything: ['analysis', 'angles', 'affair', 'coverage']},
             pagePresets: {short: []},
             show: 'standard',
@@ -63,7 +65,23 @@ describe('checkedPreferences', () => {
         for (const aiFirst of ['true', 'yes', 1, 0, null, [true], {}]) refused({aiFirst});
     });
 
-    it('should refuse presets that are not the three of the page, each a list of its blocks', () => {
+    it('should take the list of blocks of the e-mail and of the page, empty as well, and refuse what is no list of blocks', () => {
+        for (const scope of ['mailBlocks', 'pageBlocks']) {
+            expect(checkedPreferences({[scope]: []})).toEqual({[scope]: []});
+            expect(checkedPreferences({[scope]: ['media']})).toEqual({[scope]: ['media']});
+            refused({[scope]: null});
+            refused({[scope]: 'media'});
+            refused({[scope]: {media: true}});
+            refused({[scope]: ['media', 'sparkles']});
+            refused({[scope]: ['media', 'media']});
+            refused({[scope]: [1]});
+            refused({[scope]: [null]});
+            // the presets are gone: a preset is no block
+            refused({[scope]: ['short']});
+        }
+    });
+
+    it('should still take the presets of before, to carry over what a reader had set, each a list of its blocks', () => {
         for (const scope of ['mailPresets', 'pagePresets']) {
             refused({[scope]: {}});
             refused({[scope]: 'short'});
@@ -92,10 +110,10 @@ describe('checkedPreferences', () => {
         expect(Buffer.byteLength(JSON.stringify({mailPresets: {short: ['media'], standard: ['media'], everything: ['media']}}))).toBeLessThan(MAX_PREFERENCES_BYTES);
     });
 
-    it('should take the biggest body there can be, both presets with every block in each', () => {
+    it('should take the biggest body there can be, every block in every list and in every old preset', () => {
         const every = ['picture', 'countries', 'media', 'contested', 'official', 'unconfirmed', 'names', 'analysis', 'angles', 'affair', 'coverage'];
         const lists = {short: every, standard: every, everything: every};
-        const body = {layout: 'frames', mailPresets: lists, pagePresets: lists, show: 'everything', format: 'passages', size: 30, followingNews: 100};
+        const body = {layout: 'frames', mailBlocks: every, pageBlocks: every, mailPresets: lists, pagePresets: lists, show: 'everything', format: 'passages', size: 30, followingNews: 100};
         expect(Buffer.byteLength(JSON.stringify(body))).toBeLessThan(MAX_PREFERENCES_BYTES);
         expect(checkedPreferences(body)).toEqual(body);
     });

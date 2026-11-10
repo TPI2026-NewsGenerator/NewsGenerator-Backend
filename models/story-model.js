@@ -191,10 +191,11 @@ export const StoryModel = {
         'SELECT id, id_thread FROM stories WHERE id = ANY($1::int[])', storyIds),
 
     // the earlier stories of the threads of these stories, created before 'before', the newest first,
-    // with the first article of each (its title, medium and address): {card, id, created_at, lang, title,
-    // medium, link}, card the story whose thread it is of (see card-analysis.js)
+    // with the first article of each (its title, medium and address): {card, card_at, id, created_at, lang, title,
+    // medium, link}, card the story whose thread it is of and card_at when it was created: the news "so far" of a
+    // card are the ones before it, not the ones of the same day (see cardAnalyses)
     earlierInThreads: async (storyIds, before) => prisma.$queryRawUnsafe(`
-        SELECT s.id AS card, o.id, o.created_at, o.lang, first.title, first.medium, first.link
+        SELECT s.id AS card, s.created_at AS card_at, o.id, o.created_at, o.lang, first.title, first.medium, first.link
         FROM stories s
         JOIN stories o ON o.id_thread = s.id_thread AND o.id <> s.id AND o.created_at < $2
         CROSS JOIN LATERAL (SELECT a.title, a.medium, COALESCE(a.resolved_link, a.link) AS link FROM articles a

@@ -53,6 +53,12 @@ and the code drops a line whose figure or name those sources do not give.
   `beatAt`, else from `startedAt`: a server that stopped) is answered `failed` (`analysisOfRow`). Counted from
   its start until 17.10.2026, a long one (cards of up to 300 s each and their busy waits, 3 at a time, no
   limit of cards) was said failed while it ran, and the page stopped asking for it until a reload.
+- "The story so far" holds the earlier stories of the thread of the card (`StoryModel.earlierInThreads`), the ones **created before the card's own story**:
+  until 10.11.2026 it was before the hour of the briefing, so a story of the same affair created the same day as the card, or after it (the
+  complaint of the AESAF of 10 Nov, told as it was for a card of 9 Nov), stood in its history. 35 of the 157 lines of 12 briefings (22 %), on 27
+  of the 70 cards that had a history, were not earlier than their card. Such a story is not history: it tells the same news (then it is among the media
+  that tell it) or another fact of the moment (then it is among the other angles: the two lists are not the same thing, the history is what came
+  before).
 - The e-mail carries the analysis of each card sent, the lines the reader kept (see `../email/README.md`).
 
 ## Measured

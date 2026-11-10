@@ -21,5 +21,5 @@ link and several profiles.
   (who, and whether an administrator), the checks of every route, signing out.
 - [Settings](settings/README.md): a new username, email or password, each with the current password; a
   new password ends the sessions of the other devices.
-- [Preferences](preferences/README.md): the layout of the e-mail editor, the presets, the way a card is read and
+- [Preferences](preferences/README.md): the layout of the e-mail editor, the blocks ticked, the way a card is read and
   the sizes, kept on the account so that every device shows the same.

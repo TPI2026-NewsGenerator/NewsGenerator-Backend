@@ -66,6 +66,14 @@ The cards sent count as read: their stories are left out of the next briefings f
   its data from the card (the denials, the official posts, the "not confirmed" words, the analysis, the angles), so the box and
   the badge go together; the lines taken out (`removed`) apply on top. A card with no entry, or no `blocks`, is sent as it
   was before: no badge, no names, no coverage, no affair. A badge is there when its block is on and the card has what it says.
+- **What the editor opens with** (client, `mailBlocks` preference, 10.11.2026): the editor opened with fixed blocks (`DEFAULT_BLOCKS`: everything
+  but the affair and its coverage) whatever the reader ticked in the settings, which only counted when they clicked a preset in the editor (a friend of
+  the user ticked "Told by" off in the settings and found it on in every e-mail). The three presets ("Short", "Standard", "Everything") are gone, a friend
+  of the user uses a single mode: the settings have ONE list of blocks for the e-mail, and the editor opens with it, put on for every story that has the
+  blocks, off for the others (`startingChoices` of `mailBlocks.js`, in `open` of `useMailDraft.js`). Until the reader ticks anything, the list is what
+  they had set for the presets (the preset they had changed, "Everything" first), else what the editor always opened with. They can still change a block for all the
+  stories, or for one, in the editor. Kept on the account, so it is the same on every profile and device. The page has its own list (`pageBlocks`), for the
+  cards.
 - The **coverage** (`coverageOfCard`, `services/utils/card-coverage.js`, the same count as the page's
   `cardCoverage.js`): how many media and languages, who told it first, the hours as bars (a table cell each, the one thing every
   mail app draws, 12 bars at most), the languages. The **affair** (`AffairService.forMail`: the view the page's tab shows and the

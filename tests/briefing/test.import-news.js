@@ -36,7 +36,7 @@ jest.unstable_mockModule('../../models/story-model.js', () => ({StoryModel: {art
 const ollama = await import('../../services/utils/ollama.js');
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({...ollama, ollamaJson: jest.fn(async () => ({}))}));
 jest.unstable_mockModule('../../services/utils/contested.js', () => ({contestedOf: jest.fn(async () => []), shownDenials: jest.fn(denials => denials ?? []), withoutDenied: jest.fn(posts => posts)}));
-jest.unstable_mockModule('../../services/utils/card-spellings.js', () => ({glossariesOfStories: jest.fn(async () => new Map()), labelsOfItems: jest.fn(async () => new Map())}));
+jest.unstable_mockModule('../../services/utils/card-spellings.js', () => ({glossariesOfStories: jest.fn(async () => new Map()), labelsOfItems: jest.fn(async () => new Map()), withoutUntrustedLabels: (card) => card}));
 const namesAndCountriesOfCards = jest.fn(async (cards) => new Map(cards.map(card => [card.storyId, {names: [{name: 'SBB', qid: 'Q1', kind: 'organization'}], countries: ['CH']}])));
 jest.unstable_mockModule('../../services/utils/card-names.js', () => ({namesAndCountriesOfCards}));
 const officialSourcesOf = jest.fn(async (cards) => new Map(cards.map(card => [card.id, [{party: 'SBB', title: 'Statement', url: 'https://sbb.example/s', channel: 'website'}]])));

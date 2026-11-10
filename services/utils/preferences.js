@@ -26,10 +26,13 @@ const FOLLOWING_NEWS = Array.from({length: 10}, (_, i) => (i + 1) * 10);
 
 const plain = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
-// {preset: [block]}: only the presets there are, each a list of blocks there are, none twice (the page sends the ones in order)
+// [block]: blocks there are, none twice (the page sends the ones in order)
+const blocksOf = (value) => Array.isArray(value) && new Set(value).size === value.length && value.every(block => BLOCKS.includes(block));
+
+// {preset: [block]}: only the presets there are, each a list of blocks there are. The presets are gone from the page (the user, 10.11.2026: one mode,
+// the blocks ticked in the settings) but what a reader had set stays on their account, to carry over into their list
 const presetsOf = (value) => plain(value) && Object.keys(value).length > 0
-    && Object.entries(value).every(([name, blocks]) => PRESET_NAMES.includes(name) && Array.isArray(blocks)
-        && new Set(blocks).size === blocks.length && blocks.every(block => BLOCKS.includes(block)));
+    && Object.entries(value).every(([name, blocks]) => PRESET_NAMES.includes(name) && blocksOf(blocks));
 
 // key: what the page calls it; accepts(value): whether the page could have chosen it; rule: what is said when it did not
 export const PREFERENCES = {
@@ -37,6 +40,9 @@ export const PREFERENCES = {
     mailPresets: {accepts: presetsOf, rule: `{${PRESET_NAMES.join(', ')}} each a list of the blocks ${BLOCKS.join(', ')}`},
     pagePresets: {accepts: presetsOf, rule: `{${PRESET_NAMES.join(', ')}} each a list of the blocks ${BLOCKS.join(', ')}`},
     show: {accepts: (value) => PRESET_NAMES.includes(value), rule: `one of ${PRESET_NAMES.join(', ')}`},
+    // the blocks ticked in the settings, one list for the e-mail and one for the page (an empty list is a choice: nothing but the title and the text)
+    mailBlocks: {accepts: blocksOf, rule: `a list of the blocks ${BLOCKS.join(', ')}`},
+    pageBlocks: {accepts: blocksOf, rule: `a list of the blocks ${BLOCKS.join(', ')}`},
     format: {accepts: (value) => WAYS.includes(value), rule: `one of ${WAYS.join(', ')}`},
     // the cards and the editor of the e-mail start on the AI version of the sentences, when the card has one (the user, 06.11.2026)
     aiFirst: {accepts: (value) => typeof value === 'boolean', rule: 'true or false'},

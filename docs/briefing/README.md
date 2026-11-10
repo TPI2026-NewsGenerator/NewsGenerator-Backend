@@ -53,6 +53,11 @@ saved in `briefings.step` and shown on the page while it runs:
    second opinion says they tell the same fact ([neutral by default](#neutral-by-default-evaluate-rewrite-verify)),
    and the titles in another language are translated. A card that can't be read takes the next
    story of the reserve, 2 more rounds at most (`readable-cards.js`).
+   A glossary told to the translation of a card (`glossariesOfStories`, `card-spellings.js`) has no acronym written in Latin letters: the translation keeps it as
+   written. The tagger links a name by its text alone, so "LNFP" of the card of the Moroccan federation was the league of Honduras, and its title
+   said "the role of the Liga Nacional de Fútbol de Honduras" (briefing 656 of Enzo, 10.11.2026; the check of the names took the link away
+   afterwards, too late for the words). For a link that gets there and that the check then refuses, `withoutUntrustedLabels` puts the written name back in
+   the translated texts of the card, unless the article itself has the label.
 6. **angles**: five parts together, none of which can fail the briefing: the [other angles](other-angles/README.md),
    the [official sources](official-source/README.md), the news of what the profile follows, the names shown
    on each card, and the AI version of the points and summary of the cards kept (asked of every story read until

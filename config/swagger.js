@@ -219,13 +219,13 @@ const options = {
                 "get": {
                     "tags": ["Login"],
                     "summary": "The display preferences kept on the account of the signed in user",
-                    "description": "What the reader set on any of their devices, so that another shows the same: the layout of the editor of the e-mail, the presets, the preset of the page, the reading way, whether the AI version comes first, the size of the next briefing and the news per name followed. {} until one is set; a key missing is a preference never set (the page keeps its own default). At most 60 reads per account in 10 minutes.",
+                    "description": "What the reader set on any of their devices, so that another shows the same: the layout of the editor of the e-mail, the blocks ticked for the e-mail and for the page, the reading way, whether the AI version comes first, the size of the next briefing and the news per name followed. {} until one is set; a key missing is a preference never set (the page keeps its own default). At most 60 reads per account in 10 minutes.",
                     "responses": {
                         "200": {
-                            "description": "{preferences: {layout, mailPresets, pagePresets, show, format, aiFirst, size, followingNews}}, each key only when set",
+                            "description": "{preferences: {layout, mailBlocks, pageBlocks, mailPresets, pagePresets, show, format, aiFirst, size, followingNews}}, each key only when set",
                             "content": {
                                 "application/json": {
-                                    "example": {"preferences": {"layout": "matrix", "show": "standard", "size": 20, "followingNews": 50}}
+                                    "example": {"preferences": {"layout": "matrix", "mailBlocks": ["picture", "countries", "media"], "size": 20, "followingNews": 50}}
                                 }
                             }
                         },
@@ -247,9 +247,11 @@ const options = {
                                     "minProperties": 1,
                                     "properties": {
                                         "layout": {"type": "string", "enum": ["frames", "matrix"], "description": "The editor of the e-mail"},
-                                        "mailPresets": {"type": "object", "example": {"short": ["media", "contested"]}, "description": "{short, standard, everything}: the blocks of a story each preset puts in the e-mail. Blocks: picture, countries, media, contested, official, unconfirmed, names, analysis, angles, affair, coverage"},
-                                        "pagePresets": {"type": "object", "description": "The same, for the page of the briefing"},
-                                        "show": {"type": "string", "enum": ["short", "standard", "everything"], "description": "The preset the page shows its cards in"},
+                                        "mailBlocks": {"type": "array", "items": {"type": "string"}, "example": ["picture", "countries", "media", "contested"], "description": "The blocks of a story the editor of the e-mail opens with. Blocks: picture, countries, media, contested, official, unconfirmed, names, analysis, angles, affair, coverage"},
+                                        "pageBlocks": {"type": "array", "items": {"type": "string"}, "description": "The same, for the cards of the page of the briefing"},
+                                        "mailPresets": {"type": "object", "deprecated": true, "example": {"short": ["media", "contested"]}, "description": "Before 10.11.2026: {short, standard, everything}, the blocks each preset put in the e-mail. Still kept, to carry over what a reader had set"},
+                                        "pagePresets": {"type": "object", "deprecated": true, "description": "The same, for the page of the briefing"},
+                                        "show": {"type": "string", "deprecated": true, "enum": ["short", "standard", "everything"], "description": "Before 10.11.2026: the preset the page showed its cards in"},
                                         "format": {"type": "string", "enum": ["points", "digest", "passages"], "description": "The way a card is read"},
                                         "aiFirst": {"type": "boolean", "description": "The cards and the editor of the e-mail start on the AI version of the sentences, when a card has one"},
                                         "size": {"type": "integer", "enum": [10, 20, 30], "description": "The cards of the next briefing"},

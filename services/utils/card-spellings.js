@@ -24,6 +24,11 @@ const DAY_MS = 24 * 3600e3;
 const labels = memo({ttlMs: 7 * DAY_MS, max: 5000});
 // a label in the Latin alphabet only: one that is Greek or Chinese tells nothing to a reader of English
 const LATIN_LABEL = /^[\p{Script=Latin}\p{N}\p{M}\s.'’&,-]+$/u;
+// An acronym the news write in Latin letters (LNFP, FKF, UEFA) is kept as written by the translation and needs no spelling: it is left out of what
+// a translation is told. The tagger links a name by its text alone, whatever the card: "LNFP" was the league of Honduras for the card of the
+// Moroccan federation, and its title was translated "...the role of the Liga Nacional de Fútbol de Honduras" (the briefing of Enzo 656 of
+// 10.11.2026). The check of the names took the link away afterwards, too late for the words already written
+const LATIN_ACRONYM = /^[A-Z][A-Z0-9&]{1,6}$/;
 
 const spelledOf = (qid) => {
     const label = labels.get(qid);
@@ -67,7 +72,7 @@ export const glossariesOfStories = async (stories) => {
             const items = new Map();
             for (const row of rows) {
                 const spelled = spelledOf(row.qid);
-                if (!ids.has(row.id_article) || !spelled) continue;
+                if (!ids.has(row.id_article) || !spelled || LATIN_ACRONYM.test(row.name)) continue;
                 const item = items.get(row.qid) ?? {spelled, news: new Set(), writings: new Map()};
                 item.news.add(row.id_article);
                 item.writings.set(row.name, (item.writings.get(row.name) ?? 0) + 1);
@@ -85,4 +90,32 @@ export const glossariesOfStories = async (stories) => {
         console.error(`Briefing: the spelling of the names was not asked of Wikidata (${err.message})`);
     }
     return glossaries;
+};
+
+// The texts of a card translated with a label of Wikidata that the check of the names then refused: the glossary the translation was told had
+// "written -> spelled" for a link the tagger made by the text of the name, and the final names of the card have that name with no item. The
+// label put there is the written name again in the words the translation made (the title, the passages, the points, the summary, the AI's
+// version), unless the article itself (the text as it was written) has the label. A card with no such name is the same object
+const TRANSLATED = ['titleTranslation', 'translation', 'pointsTranslation', 'digestTranslation'];
+const escaped = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+export const withoutUntrustedLabels = (card, glossary = []) => {
+    const unlinked = new Set((card.names ?? []).filter(name => !name.qid).map(name => mentionKey(name.name)));
+    const pairs = glossary.filter(pair => pair?.written && pair?.spelled && unlinked.has(mentionKey(pair.written)));
+    if (pairs.length === 0) return card;
+    const original = [card.title, card.summary, card.points, card.digest].filter(Boolean).join('\n').toLowerCase();
+    let changed = false;
+    const put = (text) => {
+        if (typeof text !== 'string') return text;
+        let out = text;
+        for (const {written, spelled} of pairs) {
+            if (original.includes(spelled.toLowerCase())) continue;
+            // "the LNFP (LNFP)": the translation had spelled it out and then given the acronym
+            out = out.replace(new RegExp(escaped(spelled), 'gi'), written).replace(new RegExp(`${escaped(written)} \\(${escaped(written)}\\)`, 'g'), written);
+        }
+        if (out !== text) changed = true;
+        return out;
+    };
+    const fixed = {...card, ...Object.fromEntries(TRANSLATED.filter(key => card[key]).map(key => [key, put(card[key])]))};
+    if (card.ai) fixed.ai = {...card.ai, ...(card.ai.points ? {points: card.ai.points.map(put)} : {}), ...(card.ai.summary ? {summary: put(card.ai.summary)} : {})};
+    return changed ? fixed : card;
 };

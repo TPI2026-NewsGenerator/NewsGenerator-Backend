@@ -1,7 +1,7 @@
 # Accounts > Preferences
 
-How the page looks for a reader (the layout of the e-mail editor, what the presets contain, the preset the
-page shows, the way a card is read, the size of the next briefing, the news per name followed) is kept on the
+How the page looks for a reader (the layout of the e-mail editor, the blocks ticked for the e-mail and for the page,
+the way a card is read, the size of the next briefing, the news per name followed) is kept on the
 account, so that a phone and a laptop show the same. Before (06.11.2026) each browser kept its own in
 `localStorage`; they are still kept there, so the page answers at once and works with no session or no
 network, and the account catches up.
@@ -13,7 +13,7 @@ network, and the account catches up.
   preference), read by `features/auth/AuthContext.jsx` (`startPreferences` once the session tells who the
   reader is, `endPreferences` when they sign out). The six preferences are defined in
   `features/briefing/` (`mailEditorLayout.js`, `blockPresets.js`, `formats.js`, `sizes.js`, `windows.js`),
-  each with its public helpers (`keptLayout` / `keepLayout`, `usePresets`, `keptShow` / `keepShow`, ...).
+  each with its public helpers (`keptLayout` / `keepLayout`, `useBlocks`, ...).
 - API: `GET /api/account/preferences` and `PUT /api/account/preferences` (`routes/account-router.js`,
   `controllers/account-controller.js`, `services/account-service.js`, rules in
   `services/utils/preferences.js`).
@@ -22,15 +22,15 @@ network, and the account catches up.
 | Key on the account | Value | Kept in the browser under |
 |---|---|---|
 | `layout` | `frames` or `matrix`: the editor of the e-mail | `newsgenerator.mail-editor` |
-| `mailPresets` | `{short, standard, everything}`, each a list of blocks: what the presets put in the e-mail | `newsgenerator.mail-presets` |
-| `pagePresets` | the same, for the page of the briefing | `newsgenerator.page-presets` |
-| `show` | `short`, `standard` or `everything`: the preset the page shows its cards in | `newsgenerator.briefing-show` |
+| `mailBlocks` | a list of blocks: what the editor of the e-mail opens with, and so what the e-mail has for every story that has them (the user, 10.11.2026: one mode instead of the three presets) | `newsgenerator.mail-blocks` |
+| `pageBlocks` | the same, for the cards of the page of the briefing | `newsgenerator.page-blocks` |
+| `mailPresets`, `pagePresets`, `show` | **before 10.11.2026**: `{short, standard, everything}`, each a list of blocks, and the preset the page showed. No page writes them any more, they are still accepted and kept: a reader who set them and has not ticked a list yet keeps what they had (the page's list is the preset it showed, the e-mail's the preset they had changed, `everything` first) | `newsgenerator.mail-presets`, `.page-presets`, `.briefing-show` |
 | `format` | `points`, `digest` or `passages`: the way a card is read | `newsgenerator.briefing-format` |
 | `aiFirst` | `true` or `false` (true when never set): the cards and the editor of the e-mail start on the AI version of the sentences | `newsgenerator.ai-first` |
 | `size` | 10, 20 or 30 (`BRIEFING_SIZES`): the cards of the next briefing | `newsgenerator.briefing-size` |
 | `followingNews` | 10 to 100, by 10 (`WATCH_LIMITS`): the news per name followed | `newsgenerator.following-news` |
 
-The blocks of a preset are `picture`, `countries`, `media`, `contested`, `official`, `unconfirmed`,
+The blocks of a list are `picture`, `countries`, `media`, `contested`, `official`, `unconfirmed`,
 `names`, `analysis`, `angles`, `affair` and `coverage`.
 
 **Stay on the device**, never sent: the theme (`theme`), the profile read (`newsgenerator.profile`) and the
@@ -41,11 +41,11 @@ last search (`newsgenerator.search`).
 - **The server.** `GET` gives `{preferences}`, the keys the reader set (`{}` until one is). `PUT` takes an
   object of the keys to change and gives `{preferences}` as now kept: it is partial, the keys sent are put
   over the ones kept by one SQL statement (`preferences || $1::jsonb`, `UserModel.mergePreferences`), so two
-  devices saving two different preferences at once keep both. A list of presets is replaced as a whole. The
+  devices saving two different preferences at once keep both. A list of blocks is replaced as a whole. The
   account is always the one of the session (`req.user.id`), never one named in the request.
 - **The rules** (`checkedPreferences`) are a whitelist: a body that is not an object, an empty one, a key
-  that is no preference, a value the page does not offer, a preset that is not `short`, `standard` or
-  `everything`, a block that does not exist or twice in a list, all answer 400 with the rule, and nothing
+  that is no preference, a value the page does not offer, a block that does not exist or twice in a list (an empty list is allowed: it is a choice),
+  a preset that is not `short`, `standard` or `everything` in the old presets, all answer 400 with the rule, and nothing
   is saved (not even the right keys of the same body). A body over 4096 bytes answers 413. An account
   that is gone answers 404, an error of the database 500 with no detail.
 - **Limits.** `authenticateToken`, then one counter per account and per route: 60 reads and 200 saves in
@@ -82,4 +82,4 @@ last search (`newsgenerator.search`).
 
 - [Settings](../settings/README.md): the username, the email and the password, with the password of now.
 - [Login and session](../login-and-session/README.md): the session the two calls need.
-- [Briefing > Email](../../briefing/email/README.md): the presets and the layout of the editor.
+- [Briefing > Email](../../briefing/email/README.md): the blocks and the layout of the editor.
