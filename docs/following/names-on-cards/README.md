@@ -177,6 +177,23 @@ on the page ("Zambia", "United States · China") and next to its topic in the e-
   Lens–Club Brugge, Ireland and Spain dropped from the Welsh FA's and Braga's cards), 4 worse (the United States of
   the Fox CEO, Italy of a Corriere dello Sport columnist, France of Wenger's candidacy, the Tunisia of a card told
   by a Tunisian newspaper only), the rest arguable (a player's nationality dropped for his club's country).
+- **A card no evidence gives a country to** (a friend of the user, 10.11.2026: "Vietnam, Kenya": an article in Vietnamese on the National Games of
+  Vietnam, a federation of Kenya named in full, and no country). On 400 cards of 21 days, 123 (31%) had none: 31 with no name, 69 with names but no
+  candidate (most of them the FIFA, the UEFA or the CAF: none is right), 23 whose candidates the AI refused. For a card with **no candidate at all**
+  and no country, `weakCandidates` (`country-choice.js`) gives two weak ones: the country of a person whose family name alone is linked (a person
+  named in full by fewer than 100 news, `SURNAME_COUNTRY_SEEN`, so left out of the rules: Mariga, named by 40, is the Kenyan of "Mariga rejects the
+  dismissal of FKF NEC members"; the 3 cards of 211 in 12 briefings with this evidence alone were all right: Nyamsi of Cameroon, Mariga of Kenya, Marelli
+  of Italy), and the country of **most of the sites** that tell the card, by their domain (`countryOfSites`: at least half of its sites, one each,
+  `.vn`, `.ug`, `.co.uk`; not `.com`, `.tv`, `.io`...). A card told by the press of many countries has none. A second question,
+  `chooseWeakCountries`, asks the AI, with the same answer rules (a candidate only, none in doubt), whether the card is **about** that country: the
+  site of a country that tells the FIFA, the VAR or another country does not make it a news of it, a namesake is not the person. A card the AI
+  refused the first candidates of is left as it is. Measured on the same 400 cards (`bench/country-gaps.mjs`): the question was asked for 43 cards,
+  the AI kept a country for 22, **all 22 right by hand** (Kenya for Mariga, Vietnam for the National Games and the Casper Cup, Uganda for the FUFA
+  Women's Cup, Thailand for a federation's futsal list, Portugal for the reform of its sports arbitration court "not the CAS of Switzerland", Italy for
+  the AIA's designations, Argentina for River's president on the VAR...), 21 refused rightly (the FIFA election told by sites of Vietnam, Syria,
+  Romania, France; the 2030 World Cup told by a site of the Dominican Republic), one missed (Colón of Argentina, the AI said none); cards with
+  no country 31% -> 25%. About 450 tokens in per card asked, a few cards a briefing. Live cases: family `weakcountry` of
+  `tests/regression`.
 - **A medium is a source, not a subject.** A news medium a card names (Wikidata: a newspaper, an agency, a
   channel, a news website, `MEDIA_KINDS` in `wikidata.js`) gives its country only when nothing else on the card
   gives one: "Bomb of the day! L'Équipe: Burleanu could be UEFA's candidate", told by three Romanian media, is

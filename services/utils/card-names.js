@@ -18,7 +18,7 @@ import {alignNames} from './spellings.js';
 import {nameKeysOf} from './wikidata.js';
 import {nationalityOf} from './nationalities.js';
 import {cardCountries, countriesOfItems} from './countries.js';
-import {chooseCountries, countryCandidates} from './country-choice.js';
+import {chooseCountries, chooseWeakCountries, countryCandidates, weakCandidates} from './country-choice.js';
 import {countryDeclined, countryName, countryNamed} from './country-names.js';
 import {withNamesChecked, withNamesLinked} from './name-check.js';
 
@@ -440,7 +440,12 @@ export const namesAndCountriesOfCards = async (cards, {usage = null, choose = tr
     const items = read.map(card => [...card.names, ...card.places]
         .filter(row => row.qid && !(row.bySurname < SURNAME_COUNTRY_SEEN) && !countryNamed(row.name))
         .map(row => ({qid: row.qid, weight: row.inCard, person: row.kind === 'person'})));
-    const countryOf = await countriesOfItems(items.flat().map(item => item.qid)).catch(err => {
+    // the persons a family name alone is linked to, who are named in full by too few news to say the country (see SURNAME_COUNTRY_SEEN): a weak
+    // evidence, asked of the AI only for a card nothing else gives a country to (see chooseWeakCountries)
+    const alone = read.map(card => card.names
+        .filter(row => row.qid && row.kind === 'person' && row.bySurname < SURNAME_COUNTRY_SEEN)
+        .map(row => ({qid: row.qid, weight: row.inCard, person: true, name: row.name})));
+    const countryOf = await countriesOfItems([...items.flat(), ...alone.flat()].map(item => item.qid)).catch(err => {
         console.error(`Names: the countries of the cards were not read (${err.message})`);
         return new Map();
     });
@@ -474,9 +479,23 @@ export const namesAndCountriesOfCards = async (cards, {usage = null, choose = tr
         return new Map();
     }) : new Map();
     const chosen = new Map([...answered].map(([at, codes]) => [toAsk[at].index, codes]));
+    const strong = read.map((card, i) => chosen.get(i) ?? rules[i]);
+    // a card with no candidate at all: the family name alone of a person, the country of most of its sites (the AI keeps one only when the card
+    // speaks of it; a card whose candidates the AI refused is left as it is: it is the AI's answer)
+    const weak = read.map((card, i) => strong[i].length === 0 && asked[i].candidates.length === 0
+        ? {titles: asked[i].titles, text: asked[i].text, candidates: weakCandidates(alone[i], countryOf, byStory.get(card.storyId)?.sites)} : null);
+    const weakAsk = weak.map((card, index) => card && card.candidates.length > 0 ? {...card, index} : null).filter(Boolean);
+    const weakAnswered = choose ? await chooseWeakCountries(weakAsk, usage).catch(err => {
+        console.error(`Names: the weak countries of the cards were not chosen by the AI (${err.message})`);
+        return new Map();
+    }) : new Map();
+    const weakChosen = new Map([...weakAnswered].map(([at, codes]) => [weakAsk[at].index, codes]));
     return new Map(read.map((card, i) => [card.storyId, {
         names: card.names.map(group => ({name: group.name, qid: group.qid ?? null, kind: group.kind})),
-        countries: chosen.get(i) ?? rules[i],
+        countries: strong[i].length > 0 ? strong[i] : weakChosen.get(i) ?? [],
+        // for the bench: the weak candidates asked and what the AI kept of them
+        weak: weak[i]?.candidates ?? [],
+        weakKept: weakChosen.get(i) ?? [],
         // for the bench: the rules' countries and the candidates asked
         rules: rules[i],
         candidates: asked[i].candidates,

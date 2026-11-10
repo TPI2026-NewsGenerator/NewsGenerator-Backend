@@ -15,7 +15,7 @@ jest.unstable_mockModule('../../services/utils/public-url.js', () => ({
         return new URL(value);
     }),
 }));
-const {dimensionsOf, sizeOf, sizesOf} = await import('../../services/utils/picture-sizes.js');
+const {dimensionsOf, isStanding, sizeOf, sizesOf} = await import('../../services/utils/picture-sizes.js');
 
 const png = (width, height) => {
     const bytes = Buffer.alloc(33);
@@ -73,6 +73,20 @@ describe('dimensionsOf', () => {
     it('should give none for the start of a file that does not tell it yet, or for no image', () => {
         expect(dimensionsOf(jpeg(1920, 1080).subarray(0, 30))).toBeNull();
         expect(dimensionsOf(Buffer.from('<!doctype html><html><head>'))).toBeNull();
+    });
+});
+
+describe('isStanding', () => {
+    it('should say a picture taller than wide is standing, a square or a landscape not', () => {
+        expect(isStanding({width: 3333, height: 5000})).toBe(true);
+        expect(isStanding({width: 864, height: 1080})).toBe(true);
+        expect(isStanding({width: 1000, height: 1000})).toBe(false);
+        expect(isStanding({width: 1000, height: 1050})).toBe(false);
+        expect(isStanding({width: 1600, height: 900})).toBe(false);
+    });
+
+    it('should not say standing a picture of no known size', () => {
+        for (const size of [undefined, null, {}, {width: 0, height: 0}, {width: 500}, {height: 500}]) expect(isStanding(size)).toBe(false);
     });
 });
 

@@ -464,11 +464,13 @@ const countriesOf = (card, t = ENGLISH) => countryNames(Array.isArray(card.ownCo
 const creditOf = (card, t = ENGLISH) => card.addedBy !== undefined
     ? card.addedBy ? fillText(t.labels.addedBy, {name: card.addedBy}) : t.labels.addedByYou
     : card.thumbnailSource;
-// A standing picture of known size (an illustration, see illustrations.js) narrower, so that it is no
-// higher than MAX_PICTURE_HEIGHT: a portrait of Commons (2:3) would fill a phone's screen at 560 px wide
+// A standing picture of known size (an illustration, see illustrations.js, or one of the pictures of its articles that the card was written with, see
+// pictures) narrower, so that it is no higher than MAX_PICTURE_HEIGHT: a portrait of Commons (2:3) would fill a phone's screen at 560 px wide. Not cut
+// to a landscape as the page does: a mail app that does not know the crop (Outlook) would show the whole of it, or stretch it
 const MAX_PICTURE_HEIGHT = 420;
 const pictureWidth = (card) => {
-    const {width, height} = card.thumbnail && card.thumbnail === card.illustration?.url ? card.illustration : {};
+    const {width, height} = card.thumbnail && card.thumbnail === card.illustration?.url ? card.illustration
+        : (card.pictures ?? []).find(picture => picture.url === card.thumbnail) ?? {};
     return width > 0 && height > width ? Math.min(560, Math.round(MAX_PICTURE_HEIGHT * width / height)) : 560;
 };
 const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH, anchor = false) => {

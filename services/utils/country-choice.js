@@ -13,7 +13,7 @@
 "use strict"
 
 import {ollamaJson} from './ollama.js';
-import {countryName} from './country-names.js';
+import {countryName, countryOfSite} from './country-names.js';
 import {MAX_COUNTRIES} from './countries.js';
 
 // the candidates shown at most for a card, the heaviest first, and the sentences of the card given with its titles
@@ -81,3 +81,53 @@ export const normalizeChoice = (answer, cards) => {
 // the cards given (each with at least one candidate): Map index -> [code]. Rejects when the AI fails
 export const chooseCountries = async (cards, usage = null) =>
     cards.length === 0 ? new Map() : normalizeChoice(await ollamaJson(countryPrompt(cards), usage), cards);
+
+// ---- the cards no evidence gives a country to (a friend of the user, 10.11.2026: an article in Vietnamese on the National Games of Vietnam, a
+// federation of Kenya named in full, and no country)
+
+// The sites of a card are of a country when most of them are, by their domain ("prosport.ro"): a card told by the press of one country is more
+// often a news of it than of the world. Answers the code or null. sites: the hosts of its articles
+export const SITES_SHARE = 0.5;
+export const countryOfSites = (sites = []) => {
+    const hosts = [...new Set(sites.filter(Boolean))];
+    const byCountry = new Map();
+    for (const host of hosts) {
+        const code = countryOfSite(host);
+        if (code) byCountry.set(code, (byCountry.get(code) ?? 0) + 1);
+    }
+    const [top] = [...byCountry].sort((a, b) => b[1] - a[1]);
+    return top && top[1] >= SITES_SHARE * hosts.length ? top[0] : null;
+};
+
+// The weak candidates of a card that has none: the country of a person its family name alone is linked to (items: [{qid, weight, person, name}], of,
+// see countryCandidates: the family name of a person named in full by fewer news than SURNAME_COUNTRY_SEEN of card-names.js), then the country of
+// most of its sites. [{code, kind: 'surname' | 'sites', name?, sites?}], at most MAX_COUNTRIES
+export const weakCandidates = (items, of, sites = []) => {
+    const labels = new Map(items.map(item => [item.qid, item.name]));
+    const found = countryCandidates(items, of, labels).map(candidate => ({code: candidate.code, kind: 'surname', name: candidate.via[0].name}));
+    const site = countryOfSites(sites);
+    if (site && !found.some(candidate => candidate.code === site)) found.push({code: site, kind: 'sites', sites: [...new Set(sites.filter(Boolean))].length});
+    return found.slice(0, MAX_COUNTRIES);
+};
+
+const weakText = (candidate) => candidate.kind === 'surname'
+    ? `${candidate.code} ${countryName(candidate.code, 'fr')}: « ${candidate.name} » (nom de famille seul, d'une personne connue de ce pays, incertain)`
+    : `${candidate.code} ${countryName(candidate.code, 'fr')}: les sites qui racontent l'actualité sont de ce pays`;
+
+// cards: [{titles, text, candidates}] (candidates from weakCandidates, at least one)
+export const weakPrompt = (cards) => `Voici des actualités pour lesquelles aucun pays n'a été trouvé de façon sûre. Pour chacune : ses titres, un extrait, et un pays soupçonné d'après un indice faible.
+
+Garde un pays seulement si l'actualité PARLE de ce pays : elle s'y passe, ou ses acteurs principaux en sont (leur équipe, leur fédération, leur institution, leur gouvernement), et si le texte ou les titres le montrent.
+- Indice « nom de famille seul » : à garder seulement si le texte nomme la personne en entier ou dit son pays ; un homonyme d'un autre pays n'est pas ce pays.
+- Indice « sites de ce pays » : le pays des sites qui racontent l'actualité ne suffit pas. Une actualité sur le football mondial, sur une organisation internationale (FIFA, UEFA, CAF), sur un autre pays ou sur un sujet général (l'arbitrage vidéo, les paris), racontée par des sites de ce pays, n'est pas de ce pays. Garde le pays si le texte nomme un lieu, une compétition, une fédération, un club ou une personne de ce pays.
+Dans le doute, ne garde pas : un pays faux est pire qu'aucun. Tu ne peux choisir que parmi les candidats, par leur code.
+
+${cards.map((card, i) => `[${i + 1}] ${card.titles.slice(0, TITLES).join(' | ')}
+${String(card.text ?? '').replace(/\s+/g, ' ').trim().slice(0, TEXT_CHARS)}
+Candidats : ${card.candidates.map(weakText).join(' ; ')}`).join('\n\n')}
+
+Réponds uniquement en JSON : {"cards": [{"n": numéro, "countries": ["code"]}]}`;
+
+// the cards given (each with at least one weak candidate): Map index -> [code]. Rejects when the AI fails
+export const chooseWeakCountries = async (cards, usage = null) =>
+    cards.length === 0 ? new Map() : normalizeChoice(await ollamaJson(weakPrompt(cards), usage), cards);

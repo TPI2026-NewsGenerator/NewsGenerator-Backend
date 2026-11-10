@@ -92,4 +92,15 @@ describe('the illustration of a card', () => {
         expect(own).toContain('Picture — media.&#8203;fr');
         expect(own).toContain('width="560"');
     });
+
+    it('should show a standing picture of an article no higher than 420 px too, as the card was written with its size (10.11.2026)', () => {
+        const card = {storyId: 1, title: 'A news', summary: 'A passage.', thumbnail: 'https://media.fr/portrait.jpg', thumbnailSource: 'media.fr',
+            pictures: [{url: 'https://media.fr/wide.jpg', width: 1600, height: 900}, {url: 'https://media.fr/portrait.jpg', source: 'media.fr', width: 800, height: 1200}]};
+        expect(briefingMail({items: [card]}).html).toContain('width="280"');
+        // a wide one, one whose size is not known (a card of before the sizes) and one the reader joined stay 560 px
+        for (const thumbnail of ['https://media.fr/wide.jpg', 'https://media.fr/other.jpg', 'cid:picture-1@newsgenerator']) {
+            expect(briefingMail({items: [{...card, thumbnail}]}).html).toContain('width="560"');
+        }
+        expect(briefingMail({items: [{...card, pictures: undefined}]}).html).toContain('width="560"');
+    });
 });

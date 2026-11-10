@@ -15,6 +15,7 @@ import {translatedTitles} from '../services/utils/title-translation.js';
 import {newUsage} from '../services/utils/ollama.js';
 import {mergeStories} from '../services/utils/profile-ai.js';
 import {oldStories} from '../services/utils/old-news.js';
+import {chooseWeakCountries} from '../services/utils/country-choice.js';
 
 const flags = Object.fromEntries(process.argv.slice(2).filter(arg => arg.startsWith('--')).map(arg => arg.slice(2).split('=')));
 const corpus = JSON.parse(readFileSync(flags.corpus ?? new URL('../tests/regression/corpus.json', import.meta.url), 'utf8'));
@@ -50,6 +51,12 @@ const ASK = {
         const old = await oldStories([{id: '1', title: input.title, earlier: rows(input.earlier), within: rows(input.within)}], input.hours, {usage, now});
         return {old: old.has('1'), output: old.has('1') ? 'old' : 'new'};
     },
+    // a card no evidence gives a country to, with the weak candidates (a family name alone, the country of its sites): input {titles, text, candidates: [{code, kind,
+    // name | sites}]}; output: the codes the AI keeps
+    weakcountry: async ({input}, usage) => {
+        const kept = (await chooseWeakCountries([input], usage)).get(0) ?? [];
+        return {kept, output: kept.join(',') || 'none'};
+    },
     // the language of a title with the label of its feed wrong: what the words and the letters guess, and what the AI that translates it says
     languages: async ({input}, usage) => {
         const [answer] = await translatedTitles([{title: input.title, label: input.label}], CODES[input.to], usage);
@@ -72,6 +79,7 @@ const CHECKS = {
         ...(wanted.separate ?? []).map(id => ({name: `story ${id} stays apart`, ok: !joined.includes(id), detail: output})),
     ],
     oldnews: ({expect: wanted}, {old}) => [{name: wanted.old ? 'told again: old' : 'a new fact: kept', ok: old === wanted.old, detail: old ? 'judged old' : 'judged new'}],
+    weakcountry: ({expect: wanted}, {kept}) => [{name: wanted.kept.length > 0 ? `keeps ${wanted.kept.join(', ')}` : 'keeps none', ok: kept.length === wanted.kept.length && wanted.kept.every(code => kept.includes(code)), detail: kept.join(',') || 'none'}],
     languages: ({expect: wanted}, {answer}) => [
         ...(wanted.language ? [{name: `is ${wanted.language}`, ok: answer.language === wanted.language, detail: `read ${answer.language}`}] : []),
         ...(wanted.oneOf ? [{name: `is one of ${wanted.oneOf.join(', ')}`, ok: wanted.oneOf.includes(answer.language), detail: `read ${answer.language}`}] : []),

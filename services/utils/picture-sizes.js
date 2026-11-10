@@ -23,6 +23,11 @@ const CONCURRENCY = 8;
 // the header of a JPEG can sit behind a long EXIF block: read until its size is found, no further
 const MAX_HEADER_BYTES = 256 * 1024;
 
+// A picture taller than wide (a portrait: 2:3, 3:4), known by its size {width, height}: the card shows it cut to a landscape, the e-mail no higher than a
+// landscape (see briefing-mail.js). A picture of unknown size is not said standing
+export const STANDING_RATIO = 0.9;
+export const isStanding = (size) => Boolean(size?.width > 0 && size?.height > 0) && size.width / size.height < STANDING_RATIO;
+
 // {width, height} of an image from its first bytes (PNG, GIF, JPEG, WebP), null while they don't tell it
 export const dimensionsOf = (bytes) => {
     if (bytes.length >= 24 && bytes.readUInt32BE(0) === 0x89504e47) {

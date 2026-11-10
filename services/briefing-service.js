@@ -54,7 +54,7 @@ import {briefingMail, isTimeZone, LABELS, MAIL_FORMATS, THEMES} from "./utils/br
 import {storyPictures, withChosenPictures} from "./utils/mail-pictures.js";
 import {labelsFor, withHedgedTranslated} from "./utils/mail-labels.js";
 import {illustrationsOf} from "./utils/illustrations.js";
-import {SHARP_WIDTH, sizesOf} from "./utils/picture-sizes.js";
+import {SHARP_WIDTH, isStanding, sizesOf} from "./utils/picture-sizes.js";
 import {choosePictures, withAiPictures} from "./utils/picture-choice.js";
 import {agreedVersions} from "./utils/foreign-versions.js";
 import {SentMailModel} from "../models/sent-mail-model.js";
@@ -221,6 +221,8 @@ export const candidatePictures = (articles, content = new Map()) => {
 // the ones too small. An address on http last: the page is on https and its browser blocks it, so the
 // card showed none while another article of its news had one (the user, 29.10.2026: maxifoot.fr, no
 // https, 6 of the 160 cards of 10 briefings)
+// A standing picture (see isStanding) comes after a wide one of the same sharpness: the card and the e-mail show a landscape (the user, 10.11.2026,
+// a friend: "une photo en mode portrait, est-ce possible d'en prendre une autre ?")
 export const pictureOf = (articles, content = new Map(), sizes = new Map()) => {
     const rank = ({thumbnail}) => {
         const size = sizes.get(thumbnail);
@@ -228,9 +230,10 @@ export const pictureOf = (articles, content = new Map(), sizes = new Map()) => {
         return (/^http:/i.test(thumbnail) ? 3 : 0) + tier;
     };
     const widthOf = ({thumbnail}) => sizes.get(thumbnail)?.width ?? 0;
+    const standing = ({thumbnail}) => isStanding(sizes.get(thumbnail)) ? 1 : 0;
     const [best] = candidatePictures(articles, content)
         .filter(picture => sizes.get(picture.thumbnail) !== null)
-        .sort((a, b) => rank(a) - rank(b) || (rank(a) % 3 === 2 ? widthOf(b) - widthOf(a) : 0));
+        .sort((a, b) => rank(a) - rank(b) || (rank(a) % 3 === 2 ? widthOf(b) - widthOf(a) : standing(a) - standing(b)));
     return best ?? {thumbnail: null, thumbnailSource: null};
 };
 

@@ -23,7 +23,7 @@ import {Buffer} from 'node:buffer';
 import {mapWithConcurrency} from './concurrency.js';
 import {newUsage, ollamaJson} from './ollama.js';
 import {assertPublicUrl} from './public-url.js';
-import {PICTURE_HEADERS, SHARP_WIDTH} from './picture-sizes.js';
+import {PICTURE_HEADERS, SHARP_WIDTH, isStanding} from './picture-sizes.js';
 
 // a model that reads pictures: gemma4:31b does, as the cloud models of the plan do not all
 export const PICTURE_MODEL = process.env.PICTURE_MODEL || 'gemma4:31b';
@@ -119,6 +119,16 @@ export const chooseLetter = ({ratings, best}, lead = 'A', margin = MARGIN) => {
     return theirs.q - (theirs.r >= 1 ? 0 : 3) >= mine.q + margin ? best : lead;
 };
 
+// The picture shown is standing, and the AI rates a wide one as good as it, relevant: the wide one (the user, 10.11.2026, a friend: a portrait photo in
+// the card and the e-mail). The best rated of the wide ones, the AI's choice first when it is one; the letter of the picture shown else.
+// wide: the letters of the pictures that are not standing
+export const wideForStanding = ({ratings, best}, lead, wide) => {
+    const mine = ratings[lead];
+    if (!mine || wide.includes(lead)) return lead;
+    const equal = wide.filter(letter => ratings[letter] && ratings[letter].q >= mine.q && ratings[letter].r >= Math.max(1, mine.r));
+    return equal.sort((a, b) => (b === best) - (a === best) || ratings[b].q - ratings[a].q || ratings[b].r - ratings[a].r || a.localeCompare(b))[0] ?? lead;
+};
+
 // The letters of the pictures of a card, turned by its story so that the picture shown is not always the "A" (a model may favour the first)
 const lettersOf = (storyId, count) => {
     const turn = Math.abs(Number(storyId) || 0) % count;
@@ -145,7 +155,11 @@ const judge = async ({item, candidates}, fetched, tokens) => {
     }
     const read = normalizeAnswer(answer, sorted);
     const leadLetter = letters[0];
-    const chosen = chooseLetter(read, leadLetter);
+    // the margin is one point less to put a wide picture in place of a standing one, one more to put a standing one in place of a wide one
+    const standingOf = (letter) => isStanding(byLetter.get(letter));
+    const adjust = (standingOf(leadLetter) ? -1 : 0) + (read.best && read.best !== leadLetter && standingOf(read.best) && !standingOf(leadLetter) ? 1 : 0);
+    let chosen = chooseLetter(read, leadLetter, MARGIN + adjust);
+    if (chosen === leadLetter && standingOf(leadLetter)) chosen = wideForStanding(read, leadLetter, sorted.filter(letter => !standingOf(letter)));
     if (chosen === leadLetter) return null;
     const picture = byLetter.get(chosen);
     return {storyId: item.storyId, thumbnail: picture.url, thumbnailSource: picture.source ?? null, from: lead.url, fromSource: item.thumbnailSource ?? null,

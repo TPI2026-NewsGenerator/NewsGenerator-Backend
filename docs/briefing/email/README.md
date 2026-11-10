@@ -135,6 +135,20 @@ The cards sent count as read: their stories are left out of the next briefings f
   (`storyPictures`, `illustration: true`), and taken by the e-mail (`bestPicture`, client) only when no
   picture of its articles is sharp. Captioned "Illustration — Wikimedia Commons · author, licence";
   a standing one is at most 420 px high in the e-mail (narrower).
+- **A picture in portrait mode** (a friend of the user, 10.11.2026: "une photo en mode portrait, est-ce possible de la couper en paysage ou d'en
+  prendre une autre ?", the standing portrait of Infantino of Commons in an e-mail). Measured on 733 cards of 21 days (`bench/portrait-count.mjs`): 9 show an
+  illustration of Commons, 6 of the 466 whose picture size is known (1.3%) stand, 2 of those 6 have a wide picture among their other articles'. Three
+  things, all of a standing picture (`isStanding`, `picture-sizes.js`: wider than 0.9 times its height is not): (1) `pictureOf` takes a wide picture
+  before a standing one of the same sharpness (the sharpness first: a small wide one does not beat a sharp standing one); (2) the AI choice (see
+  [the picture chosen by the AI](README.md)) puts a wide picture in place of a standing one when it rates it as good (the margin of one point is zero),
+  and a standing one in place of a wide one only for two points (`wideForStanding`); (3) the e-mail shows a standing picture of any article, not only an
+  illustration, at most 420 px high (the size is the one the card was written with, `pictures`; a card of before the sizes, a file of the reader keep
+  560 px). The page cuts a standing picture to its 16:9 landscape at 12% of its height (`object-[50%_12%]`, the size read when it loads): 25%, the
+  rule of the illustrations, cut the top of the head of the Commons portrait of Infantino, 12% shows the whole head. **Not done**: cutting the picture in
+  the e-mail (an Outlook that does not know the crop shows the whole of it, or stretches it, and no image library is installed to cut the file), nor another
+  photograph from the Commons category of the person: the category of Infantino holds 22 landscape photographs of 1 200 px or more, ceremonies and visits
+  where he is a small figure among others (a medal ceremony of the Winter Youth Olympics), and telling the person from a crowd would be a recognition of
+  a face by the AI, which is not asked.
 - `sendMail` (nodemailer, Gmail by default): no account 503, refused by the SMTP server 502 (its answer
   in the logs). Then `BriefingModel.markSent` writes `sentAt` on each card sent; the next briefings leave
   their stories out for 48 hours (`repeats.js`); a failure there is only logged.

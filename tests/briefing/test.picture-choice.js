@@ -18,7 +18,7 @@ jest.unstable_mockModule('../../services/utils/public-url.js', () => ({
         return new URL(value);
     }),
 }));
-const {CANDIDATES, candidatesOf, chooseLetter, choicePrompt, choosePictures, fetchPicture, normalizeAnswer, withAiPictures} = await import('../../services/utils/picture-choice.js');
+const {CANDIDATES, candidatesOf, chooseLetter, choicePrompt, choosePictures, fetchPicture, normalizeAnswer, wideForStanding, withAiPictures} = await import('../../services/utils/picture-choice.js');
 
 const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 16, 0x4a, 0x46, 0x49, 0x46, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0]);
 const quiet = () => ({log: jest.fn(), error: jest.fn()});
@@ -100,6 +100,58 @@ describe('chooseLetter', () => {
     it('should work for the picture shown under another letter', () => {
         expect(chooseLetter({ratings: {A: {q: 5, r: 2}, B: {q: 3, r: 2}}, best: 'A'}, 'B')).toBe('A');
         expect(chooseLetter({ratings: {A: {q: 5, r: 2}, B: {q: 3, r: 2}}, best: 'B'}, 'B')).toBe('B');
+    });
+});
+
+describe('wideForStanding', () => {
+    const ratings = {A: {q: 4, r: 2}, B: {q: 4, r: 2}, C: {q: 5, r: 1}, D: {q: 2, r: 2}};
+
+    it('should take the wide picture the AI chose when it is as good as the standing one shown', () => {
+        expect(wideForStanding({ratings, best: 'B'}, 'A', ['B', 'C'])).toBe('B');
+    });
+
+    it('should take the best rated of the wide ones when the AI chose the standing one, the AI not choosing a wide one', () => {
+        // C has a quality of 5 but a relevance below the one shown: B
+        expect(wideForStanding({ratings, best: 'A'}, 'A', ['B', 'C', 'D'])).toBe('B');
+        expect(wideForStanding({ratings: {...ratings, C: {q: 5, r: 2}}, best: 'A'}, 'A', ['B', 'C', 'D'])).toBe('C');
+    });
+
+    it('should keep the picture shown when no wide one is as good, relevant, or when it is wide itself or not rated', () => {
+        expect(wideForStanding({ratings, best: 'A'}, 'A', ['D'])).toBe('A');
+        expect(wideForStanding({ratings: {A: {q: 4, r: 2}, B: {q: 5, r: 0}}, best: 'A'}, 'A', ['B'])).toBe('A');
+        expect(wideForStanding({ratings, best: 'A'}, 'A', ['A', 'B'])).toBe('A');
+        expect(wideForStanding({ratings: {B: {q: 5, r: 2}}, best: 'B'}, 'A', ['B'])).toBe('A');
+        expect(wideForStanding({ratings, best: 'A'}, 'A', [])).toBe('A');
+    });
+});
+
+describe('choosePictures and a standing picture', () => {
+    const standing = (name) => ({...picture(name), width: 800, height: 1200});
+    // story 3, 3 pictures: the picture shown is the "A"
+    const standingFirst = [card(3, [standing('shown'), picture('wide'), picture('third')])];
+    const wideFirst = [card(3, [picture('shown'), standing('portrait'), picture('third')])];
+
+    it('should put a wide picture in place of a standing one the AI finds as good', async () => {
+        ollamaJson.mockResolvedValue({ratings: {A: {q: 4, r: 2}, B: {q: 4, r: 2}, C: {q: 3, r: 2}}, best: 'B'});
+        const changes = await choosePictures(standingFirst, {log: quiet()});
+        expect(changes.get(3)).toMatchObject({thumbnail: 'https://site.example/wide.jpg', from: 'https://site.example/shown.jpg'});
+    });
+
+    it('should put a wide picture in place of a standing one the AI chose, when a wide one is as good', async () => {
+        ollamaJson.mockResolvedValue({ratings: {A: {q: 4, r: 2}, B: {q: 4, r: 2}, C: {q: 3, r: 2}}, best: 'A'});
+        expect((await choosePictures(standingFirst, {log: quiet()})).get(3)).toMatchObject({thumbnail: 'https://site.example/wide.jpg'});
+    });
+
+    it('should keep a standing picture when the wide ones are worse or not relevant', async () => {
+        ollamaJson.mockResolvedValue({ratings: {A: {q: 4, r: 2}, B: {q: 3, r: 2}, C: {q: 5, r: 0}}, best: 'A'});
+        expect((await choosePictures(standingFirst, {log: quiet()})).size).toBe(0);
+    });
+
+    it('should not put a standing picture in place of a wide one for one point: it takes two', async () => {
+        ollamaJson.mockResolvedValue({ratings: {A: {q: 3, r: 2}, B: {q: 4, r: 2}, C: {q: 3, r: 2}}, best: 'B'});
+        expect((await choosePictures(wideFirst, {log: quiet()})).size).toBe(0);
+        ollamaJson.mockResolvedValue({ratings: {A: {q: 2, r: 2}, B: {q: 4, r: 2}, C: {q: 3, r: 2}}, best: 'B'});
+        expect((await choosePictures(wideFirst, {log: quiet()})).get(3)).toMatchObject({thumbnail: 'https://site.example/portrait.jpg'});
     });
 });
 

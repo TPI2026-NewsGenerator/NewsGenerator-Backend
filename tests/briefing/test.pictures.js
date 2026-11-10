@@ -123,6 +123,22 @@ describe('pictureOf', () => {
             expect(pictureOf(feeds, new Map(), small).thumbnail).toBe('https://b.example/big.jpg');
         });
 
+        it('should take a wide picture before a standing one of the same sharpness, a standing one when it is the only one (10.11.2026)', () => {
+            const standing = {width: 800, height: 1200};
+            const sizes = new Map([['https://a.example/small.jpg', standing], ['https://b.example/big.jpg', size(1200)], ['https://c.example/wide.jpg', size(1600)]]);
+            // the lead's picture stands, the next article's is a landscape
+            expect(pictureOf(feeds, new Map(), sizes).thumbnail).toBe('https://b.example/big.jpg');
+            const onlyStanding = new Map(feeds.map(feed => [feed.thumbnail, standing]));
+            expect(pictureOf(feeds, new Map(), onlyStanding).thumbnail).toBe('https://a.example/small.jpg');
+            // not measured: the order of the articles, as before
+            expect(pictureOf(feeds, new Map(), new Map()).thumbnail).toBe('https://a.example/small.jpg');
+        });
+
+        it('should not take a wide picture too small in place of a sharp standing one: the sharpness first', () => {
+            const sizes = new Map([['https://a.example/small.jpg', {width: 800, height: 1200}], ['https://b.example/big.jpg', size(300)], ['https://c.example/wide.jpg', size(250)]]);
+            expect(pictureOf(feeds, new Map(), sizes).thumbnail).toBe('https://a.example/small.jpg');
+        });
+
         it('should take a sharp picture on http only after the ones on https, even small ones', () => {
             const plain = {link: 'http://a.example/1', thumbnail: 'http://a.example/big.jpg'};
             const sizes = new Map([['http://a.example/big.jpg', size(1600)], ['https://b.example/big.jpg', size(300)]]);
