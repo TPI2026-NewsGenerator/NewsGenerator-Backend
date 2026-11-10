@@ -32,6 +32,7 @@ import {nearCardsOf, otherAnglesOf, placeAngles, sameFactsOut} from "./utils/oth
 import {AFFAIR_DAYS, storiesOfSameNames} from "./utils/affair-names.js";
 import {officialSourcesOf} from "./utils/official-sources.js";
 import {evolvedStories, REPEAT_HOURS, shownStories, withoutRepeats} from "./utils/repeats.js";
+import {notOldNews} from "./utils/old-news.js";
 import {readerLanguage, scriptLanguage, writtenIn} from "./utils/language.js";
 import {VERSION_DAYS, areVersions, forThePage, idsOf, restoredCard, sameCard, swappedCard, versionsOfCards} from "./utils/card-versions.js";
 import {logBriefingChecks} from "./utils/briefing-checks.js";
@@ -938,7 +939,7 @@ export const completeCards = async ({main, spare = []}, {briefingId = null, labe
 export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) => {
     // the stories ranked and given to the AI grow with the cards wanted
     const scale = size / MAX_BRIEFING;
-    const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage(), titling: newUsage(), titleRewriting: newUsage(), proofreading: newUsage(), duplicates: newUsage(), nameReview: newUsage(), picturing: newUsage()};
+    const usage = {repeats: newUsage(), aging: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage(), titling: newUsage(), titleRewriting: newUsage(), proofreading: newUsage(), duplicates: newUsage(), nameReview: newUsage(), picturing: newUsage()};
     // the interests of the profile and of the projects it runs: each gets its share of the cards
     const [profile, interests, projects] = await Promise.all([ProfileModel.get(profileId), ProfileModel.briefingInterests(profileId),
         ProfileModel.projects(profileId)]);
@@ -1015,7 +1016,8 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
         first: (stories, size) => shareOut(stories, size, story => story.interestId, interests),
     });
     const kept = new Set([...closest, ...choosable.filter(story => story.told && story.pooled && !closest.includes(story)).slice(0, TRUSTED_CANDIDATES * scale)]);
-    const candidates = choosable.filter(story => kept.has(story));
+    // the news the media told before the window began are not candidates when the window only tells them again (see old-news.js)
+    const candidates = await notOldNews(choosable.filter(story => kept.has(story)), {since, hours, usage: usage.aging, earlierNews: StoryModel.earlierNews});
 
     // 2. the AI chooses, against the whole profile and what it refuses
     await step('choosing');

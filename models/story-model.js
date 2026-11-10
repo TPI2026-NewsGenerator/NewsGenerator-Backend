@@ -217,6 +217,25 @@ export const StoryModel = {
         ORDER BY a.link, (a.id_story IS NOT NULL) DESC, COALESCE(a.published_at, a.created_at) DESC`,
         links)).map(article => ({...article, title: cleanTitle(article.title, article.medium)})),
 
+    // The first news of these stories told before a date, one per medium, the first ones first, at most perStory for each: what the media
+    // had said of a story before the window of a briefing began (see old-news.js). Every medium, not the ones of a reader: it only tells the AI
+    // whether a fact is old. {id_story, at, medium, title}
+    earlierNews: async ({storyIds, before, perStory}) => (await prisma.$queryRawUnsafe(`
+        SELECT id_story, at, medium, title FROM (
+            SELECT news.*, row_number() OVER (PARTITION BY id_story ORDER BY at) AS place
+            FROM (
+                SELECT DISTINCT ON (a.id_story, a.medium)
+                       a.id_story, a.medium, a.title, COALESCE(a.published_at, a.created_at) AS at
+                FROM articles a
+                WHERE a.id_story = ANY($1::int[])
+                  AND COALESCE(a.published_at, a.created_at) < $2::timestamptz
+                ORDER BY a.id_story, a.medium, COALESCE(a.published_at, a.created_at)
+            ) news
+        ) ranked
+        WHERE place <= $3::int
+        ORDER BY id_story, at`,
+        storyIds, before, perStory)).map(article => ({...article, title: cleanTitle(article.title, article.medium)})),
+
     // the news of these stories the user can read, once per link, the newest first, their titles
     // without the name of their medium or a date at the end (see titles.js)
     storyArticles: async ({storyIds, feedUrls, since}) => (await prisma.$queryRawUnsafe(`

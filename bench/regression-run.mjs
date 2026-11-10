@@ -14,6 +14,7 @@ import {languageOf} from '../services/utils/language.js';
 import {translatedTitles} from '../services/utils/title-translation.js';
 import {newUsage} from '../services/utils/ollama.js';
 import {mergeStories} from '../services/utils/profile-ai.js';
+import {oldStories} from '../services/utils/old-news.js';
 
 const flags = Object.fromEntries(process.argv.slice(2).filter(arg => arg.startsWith('--')).map(arg => arg.slice(2).split('=')));
 const corpus = JSON.parse(readFileSync(flags.corpus ?? new URL('../tests/regression/corpus.json', import.meta.url), 'utf8'));
@@ -41,6 +42,14 @@ const ASK = {
         const merges = await mergeStories(input.stories.map(story => ({id: story.id, lead: {title: story.title, description: story.description}})), usage);
         return {joined: input.stories.slice(1).map(story => story.id).filter(id => merges.get(id) === input.stories[0].id), output: [...merges].map(([id, into]) => `${id}->${into}`).join(' ')};
     },
+    // a headline against the news told before the window of its briefing and the news of the window (old-news.js): input {hours, title, earlier: [{hoursAgo,
+    // title}], within}; output: "old" or "new"
+    oldnews: async ({input}, usage) => {
+        const now = Date.now();
+        const rows = (list) => list.map((row, i) => ({at: new Date(now - row.hoursAgo * 3600e3), title: row.title, medium: `m${i}.example`}));
+        const old = await oldStories([{id: '1', title: input.title, earlier: rows(input.earlier), within: rows(input.within)}], input.hours, {usage, now});
+        return {old: old.has('1'), output: old.has('1') ? 'old' : 'new'};
+    },
     // the language of a title with the label of its feed wrong: what the words and the letters guess, and what the AI that translates it says
     languages: async ({input}, usage) => {
         const [answer] = await translatedTitles([{title: input.title, label: input.label}], CODES[input.to], usage);
@@ -62,6 +71,7 @@ const CHECKS = {
         ...(wanted.joined ?? []).map(id => ({name: `story ${id} joins the card`, ok: joined.includes(id), detail: output})),
         ...(wanted.separate ?? []).map(id => ({name: `story ${id} stays apart`, ok: !joined.includes(id), detail: output})),
     ],
+    oldnews: ({expect: wanted}, {old}) => [{name: wanted.old ? 'told again: old' : 'a new fact: kept', ok: old === wanted.old, detail: old ? 'judged old' : 'judged new'}],
     languages: ({expect: wanted}, {answer}) => [
         ...(wanted.language ? [{name: `is ${wanted.language}`, ok: answer.language === wanted.language, detail: `read ${answer.language}`}] : []),
         ...(wanted.oneOf ? [{name: `is one of ${wanted.oneOf.join(', ')}`, ok: wanted.oneOf.includes(answer.language), detail: `read ${answer.language}`}] : []),

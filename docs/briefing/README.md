@@ -16,7 +16,8 @@ saved in `briefings.step` and shown on the page while it runs:
    the window, in every language, of every shared feed, every reader's sources (but the ones the reader removed from
    this profile, `removed_sources`) and the Google News searches of the interests, are scored in SQL on the interests' vectors (`rank_profile_stories`, dense + 0.5 × sparse); 600
    ranked for 10 cards, each interest its share; the stories sent by e-mail in the last 48 h left out unless they
-   evolved; 40 candidates of feeds, 10 of Google News only, 10 of a trusted medium.
+   evolved; 40 candidates of feeds, 10 of Google News only, 10 of a trusted medium; then the candidates whose news
+   the media had told before the window and only tell again in it are left out ([News told before the window](#news-told-before-the-window)).
 2. **choosing**: the AI (`selectStories`, gemma4:31b) reads the candidates against the whole profile and its
    projects, with the thumbs as examples, and chooses more stories than cards (`chosenFor`: 20 for 10 cards, 30
    for 20, 45 for 30); each interest gets its share
@@ -344,3 +345,39 @@ the card above already answers it (`redundant`) joins the 2 duplicates found and
 developments of the same affair (a question and its answer, a candidacy and the election calendar). Not changed.
 A flag on the card for the reader ("maybe the same news as card 1", from that variant, joining nothing) was proposed
 the same day and put aside by the user, to come back to later.
+
+## News told before the window
+
+A friend of the user (10.11.2026, "one of the most important problems"): a big affair is taken up again the next day, and a week
+later by media that wrote nothing before, so the briefing of today carries as news a fact known for days. Repeats of the last 48 hours
+(`repeats.js`) only cover the cards sent by e-mail; this covers the facts the media had already reported, whatever the reader saw.
+
+**The rule** (`services/utils/old-news.js`, `notOldNews` after the candidates are picked and before the AI chooses): for each candidate whose
+story the media had told at least 12 hours (`GRACE_HOURS`) before the window began, the AI is given the headline, up to 5 earlier news (one per
+medium, the first ones, with their age) and up to 8 news of the window, and says whether the fact of the headline is **new** (it happened, was
+announced or decided in the window, the event itself after its preview, a step further in the same affair) or **old** (the earlier coverage already
+told it: a medium picking it up late, a reminder, a recap, an analysis, a reaction to an old fact, a preview of an event played since). In doubt it
+is old. The old ones are not candidates; the log says them (`Briefing: 3 stories left out, the media told their news before the last 24 hours and only
+tell it again` and one line each with the earlier fact). 30 stories a call, in parallel; a story that follows a card of before (`followUp`, already
+judged on what is new since), one with no earlier news and one with no news in the window are not asked. The earlier news are read from every
+medium, not only the reader's (`StoryModel.earlierNews`): they only tell the AI whether a fact is old. The briefing never fails on it: a failed
+query or call keeps every story, and when all of them were judged old none is left out. A news the reader adds by its link is never judged.
+
+**Why not the age alone.** On 14 saved briefings (336 cards of 3 profiles, `bench/old-news-age.mjs`) the first news of the story is older than the
+window plus 12 hours for 26% of the cards, but a story of the grouping is long (a week of one affair: 1 000 news, 400 media): the older news are often
+another fact. 40 of those cards drawn at random were rated by hand **before** any method ran (11 old, 23 new, 6 unsure, `bench/old-news-pack.mjs`,
+`bench/data/old-news-labels.json`): the age alone (drop what has earlier news) caught 10 of the 11 old and lost 18 of the 23 new, 36% of its drops
+right. The AI (gemma4:31b, `bench/old-news-methods.mjs`): without a grace it caught 8 of 11 and lost 4 of 23, with 12 hours 8 of 11 and 2 of 23 (80% of
+its drops right), thinking on changed nothing. The prompt was set on that first set. On a second set of 26 stories drawn after with another seed and
+rated before the method ran (7 old, 17 new, 2 unsure): **4 of the 7 old caught, none of the 17 new lost**. Both sets: 12 of 18 old caught, 2 of 40 new
+lost. The old ones missed: a viral news told by 4 media two days ago and by 100 today, a statement told by two media only, a story whose earlier news
+are in another story of its affair. The ratings are the assistant's, from the titles and their dates: a rule of the date of the **fact**, not of the volume
+of the coverage. Of all the cards, about 7% were old news: about 5% would be left out, and about 1 in 20 new facts of a story begun earlier replaced by the next candidate.
+Live, on a briefing of 10 cards of the profile of Enzo (43 candidates, bench/enzo-measure.mjs): 2 candidates left out, the old fact told by a Greek story three days earlier and the
+preview of a match played since; one call of 1 341 tokens in and 178 out (the stories of the candidates that have earlier news, 30 at most a call).
+The live cases of the corpus (`tests/regression`, family `oldnews`, 10 stories of the two sets: 5 old, 5 new) hold 10 of 10, each asked alone; a feature on the candidate Tashima, told
+a week after his candidacy, is judged new when asked alone and old among others (the other stories give the AI its measure): that case was left out of the corpus, a limit of the AI.
+
+Not done: the affair (thread) as the earlier coverage, for a story that begins after its affair did (one old news of the second set had its earlier
+news only in the thread); and the threshold of a week the friend named: a window of 24 hours already asks for the facts of that day, and the AI says
+which is old.
