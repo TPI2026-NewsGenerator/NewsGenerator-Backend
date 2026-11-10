@@ -1,0 +1,953 @@
+{
+ "about": "Real cases of the position of a football association on a person, for the API of the positions (services/utils/stance.js): the passage as the AI reads it (title and the sentences of the description that name the person or the association), the association the matching of names gave, and the position it must come to (null: none). \"live\" holds the gate (every case must hold, regression-run.mjs --corpus=tests/regression/stance-corpus.json), \"hard\" the cases a reader could label otherwise, measured apart by bench/federations/stance-bench.mjs. The labels were chosen by hand, with the reason in \"why\": a label that is wrong is corrected here, then the code.",
+ "live": [
+  {
+   "id": "live-stance-wales-mooney-step-down",
+   "family": "stance",
+   "origin": "bbc.co.uk, article #91646074 of the news kept on 10.11.2026, 2026-10-27; label by hand (Claude, to be disputed)",
+   "why": "The chief executive says the association keeps its view that he should step down: an explicit demand, in the association's name.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Football Association of Wales",
+     "country": "Wales",
+     "aliases": [
+      "FAW"
+     ]
+    },
+    "article": {
+     "title": "FAW boss renews call for Infantino to step down",
+     "passage": "Chief executive Noel Mooney says the Football Association of Wales retains the view that Fifa president Gianni Infantino should step down.",
+     "medium": "bbc.co.uk",
+     "date": "2026-10-27",
+     "lang": "en",
+     "url": "https://www.bbc.co.uk/sport/football/articles/cw054vdz9g7mo?at_medium=RSS&at_campaign=rss"
+    }
+   },
+   "expect": {
+    "position": "non_soutien_declare",
+    "stance": "against",
+    "speaker_kind": "executive",
+    "explicit": true,
+    "mark": "official"
+   }
+  },
+  {
+   "id": "live-stance-france-refuses-to-back",
+   "family": "stance",
+   "origin": "google.com, article #119525599 of the news kept on 10.11.2026, 2026-11-08; label by hand (Claude, to be disputed)",
+   "why": "The headline says the federation refuses to back him for a new term: its own decision, plainly. Title only (Google News).",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "French Football Federation",
+     "country": "France",
+     "aliases": [
+      "FFF",
+      "Fédération française de football"
+     ]
+    },
+    "article": {
+     "title": "FIFA : la FFF refuse de soutenir Gianni Infantino pour un nouveau mandat",
+     "passage": "",
+     "medium": "google.com",
+     "date": "2026-11-08",
+     "lang": "fr",
+     "url": "https://news.google.com/rss/articles/CBMitgFBVV95cUxNNUpDU0IyRjZQaE1OTVg4WEd4TjdnM0x0YzBHQzZFU05FbUpTZnBKZ2FlRm5GWFFNdU5KTEhSZEJsNDhBTnVxZmc5Q1lLOHRxTWw4a0g1aWtFLVhwWjl5VXoxN005QzI5eXZldmVSdzhhajJKOU9aclpTM1NMLTlZa1M2dVkwSzgtYnNpSmF1QlNBSWNoQnREVkM1Rk9mdThwdDVLZmJvTkl5bGZiVXdMU2otUVQwdw?oc=5"
+    }
+   },
+   "expect": {
+    "position": "non_soutien_declare",
+    "stance": "against",
+    "speaker_kind": "statement",
+    "explicit": true,
+    "mark": "official"
+   }
+  },
+  {
+   "id": "live-stance-france-diallo-jab",
+   "family": "stance",
+   "origin": "tuttomercatoweb.com, article #64900433 of the news kept on 10.11.2026, 2026-10-15; label by hand (Claude, to be disputed)",
+   "why": "The president criticises him again (\"a jab\"): his own words and a clear stance, but a criticism, not a refusal to support or a call to go.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "French Football Federation",
+     "country": "France",
+     "aliases": [
+      "FFF",
+      "Fédération française de football"
+     ]
+    },
+    "article": {
+     "title": "La stoccata a Infantino dalla Federcalcio francese: \"La solidarietà non è clientelismo\"",
+     "passage": "Il presidente della Federcalcio francese Philippe Diallo ha criticato, ancora una volta, il numero uno della FIFA Gianni Infantino a margine del Comitato Esecutivo della FFF: \"Credo fermamente nella solidarietà tra tutte le nazioni; il calcio deve svilupparsi...",
+     "medium": "tuttomercatoweb.com",
+     "date": "2026-10-15",
+     "lang": "it",
+     "url": "https://www.tuttomercatoweb.com/calcio-estero/stoccata-infantino-federcalcio-francese-la-solidarieta-clientelismo-2283726"
+    }
+   },
+   "expect": {
+    "position": "non_soutien_probable",
+    "stance": "against",
+    "speaker_kind": "president",
+    "explicit": false,
+    "mark": "official"
+   }
+  },
+  {
+   "id": "live-stance-germany-neuendorf-resign",
+   "family": "stance",
+   "origin": "sportschau.de, article #64403333 of the news kept on 10.11.2026, 2026-10-15; label by hand (Claude, to be disputed)",
+   "why": "The president and his European colleagues still demand his resignation after his apology: explicit.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "German Football Association",
+     "country": "Germany",
+     "aliases": [
+      "DFB",
+      "Deutscher Fußball-Bund"
+     ]
+    },
+    "article": {
+     "title": "Neuendorf und Co. fordern weiter Infantinos Rücktritt",
+     "passage": "Europas Fußball-Funktionäre um DFB-Chef Bernd Neuendorf fordern auch nach einer Entschuldigung von Gianni Infantino weiter den Rücktritt des FIFA-Präsidenten.",
+     "medium": "sportschau.de",
+     "date": "2026-10-15",
+     "lang": "de",
+     "url": "https://www.sportschau.de/fussball/neuendorf-und-co-fordern-weiter-infantinos-ruecktritt,infantino-opposition-will-weiter-ruecktritt-100.html"
+    }
+   },
+   "expect": {
+    "position": "non_soutien_declare",
+    "stance": "against",
+    "speaker_kind": "president",
+    "explicit": true,
+    "mark": "official"
+   }
+  },
+  {
+   "id": "live-stance-philippines-supports-reelection",
+   "family": "stance",
+   "origin": "pff.org.ph, article #113280392 of the news kept on 10.11.2026, 2026-11-06; label by hand (Claude, to be disputed)",
+   "why": "The federation's own website: \"PFF supports ... re-election\".",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Philippine Football Federation",
+     "country": "Philippines",
+     "aliases": [
+      "PFF"
+     ]
+    },
+    "article": {
+     "title": "PFF supports FIFA President Gianni Infantino’s re-election; to visit PH for Rizal Memorial Stadium rebuild",
+     "passage": "PFF is delighted to welcome FIFA President Gianni Infantino, who will visit the Philippines this month. With his steadfast support for football in developing countries like the Philippines, PFF is one with him in championing FIFA’s developmental goals. The post PFF supports FIFA President Gianni Infantino’s re-election; to visit PH for Rizal Memorial Stadium rebuild first appeared on Philippine Football Federation .",
+     "medium": "pff.org.ph",
+     "date": "2026-11-06",
+     "lang": "en",
+     "url": "https://pff.org.ph/pff-supports-fifa-president-gianni-infantinos-re-election-to-visit-ph-for-rizal-memorial-stadium-rebuild/"
+    }
+   },
+   "expect": {
+    "position": "soutien_declare",
+    "stance": "for",
+    "speaker_kind": "statement",
+    "explicit": true,
+    "mark": "official"
+   }
+  },
+  {
+   "id": "live-stance-mauritania-yahya-backs",
+   "family": "stance",
+   "origin": "africasoccer.com, article #64358411 of the news kept on 10.11.2026, 2026-10-15; label by hand (Claude, to be disputed)",
+   "why": "The president has thrown his support behind him and says he is the right person to lead.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Mauritanian Football Federation",
+     "country": "Mauritania",
+     "aliases": [
+      "FFRIM",
+      "Mauritania FA"
+     ]
+    },
+    "article": {
+     "title": "Mauritania FA president Ahmed Yahya backs Infantino to continue as FIFA president",
+     "passage": "Ahmed Yahya, president of the Mauritanian Football Federation and a member of the FIFA Council, has thrown his support behind Gianni Infantino, insisting that the FIFA president remains the right person to lead world football. Yahya believes the majority of football associations worldwide want Infantino to remain in office, highlighting his leadership, investment in football […] The article Mauritania FA president Ahmed Yahya backs Infantino to continue as FIFA president was written by Nuhu Adams and first appeared on AfricaSoccer.com .",
+     "medium": "africasoccer.com",
+     "date": "2026-10-15",
+     "lang": "en",
+     "url": "https://africasoccer.com/mauritania-fa-president-ahmed-yahya-backs-infantino-to-continue-as-fifa-president/"
+    }
+   },
+   "expect": {
+    "position": "soutien_declare",
+    "stance": "for",
+    "speaker_kind": "president",
+    "explicit": true,
+    "mark": "official"
+   }
+  },
+  {
+   "id": "live-stance-southafrica-jordaan-thanks",
+   "family": "stance",
+   "origin": "africasoccer.com, article #93951466 of the news kept on 10.11.2026, 2026-10-28; label by hand (Claude, to be disputed)",
+   "why": "The president thanks FIFA and says the continent benefited under his leadership: praise, no word on the election.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "South African Football Association",
+     "country": "South Africa",
+     "aliases": [
+      "SAFA"
+     ]
+    },
+    "article": {
+     "title": "South African football thriving on FIFA investment, says Jordaan",
+     "passage": "SAFA president credits Forward Programme for historic World Cup run and growth across the game South African Football Association (SAFA) President Danny Jordaan has thanked FIFA for backing African football, saying the continent has “benefited immensely” under the leadership of FIFA President Gianni Infantino and Vice President Patrice Motsepe.",
+     "medium": "africasoccer.com",
+     "date": "2026-10-28",
+     "lang": "en",
+     "url": "https://africasoccer.com/south-african-football-thriving-on-fifa-investment-says-jordaan/"
+    }
+   },
+   "expect": {
+    "position": "soutien_probable",
+    "stance": "for",
+    "speaker_kind": "president",
+    "explicit": false,
+    "mark": "official"
+   }
+  },
+  {
+   "id": "live-stance-jordan-prince-ali-pure-politics",
+   "family": "stance",
+   "origin": "lentedesportiva.com, article #89567764 of the news kept on 10.11.2026, 2026-10-26; label by hand (Claude, to be disputed)",
+   "why": "The chief of the association attacks his re-election bid (\"pure politics\", delegates silenced at the AFC congress): against, but no plain refusal to vote for him.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Jordan Football Association",
+     "country": "Jordan",
+     "aliases": [
+      "JFA"
+     ]
+    },
+    "article": {
+     "title": "FIFA president Gianni Infantino accused of ‘pure politics’ in fierce attack over re-election bid",
+     "passage": "Jordan Football Association chief Prince Ali bin Hussein says delegates were silenced at the AFC's extraordinary congress in Tokyo, where Sheikh Salman publicly endorsed Gianni Infantino for a fourth FIFA term. The post FIFA president Gianni Infantino accused of ‘pure politics’ in fierce attack over re-election bid appeared first on Lente Desportiva .",
+     "medium": "lentedesportiva.com",
+     "date": "2026-10-26",
+     "lang": "en",
+     "url": "https://lentedesportiva.com/fifa-president-gianni-infantino-accused-of-pure-politics-in-fierce-attack-over-re-election-bid/"
+    }
+   },
+   "expect": {
+    "position": "non_soutien_probable",
+    "stance": "against",
+    "speaker_kind": "president",
+    "explicit": false,
+    "mark": "official"
+   }
+  },
+  {
+   "id": "live-stance-jordan-askanews-pure-politics",
+   "family": "stance",
+   "origin": "askanews.it, article #89232623 of the news kept on 10.11.2026, 2026-10-26; label by hand (Claude, to be disputed)",
+   "why": "Same event in Italian (\"Presidente Jfa\"): the president denounces that he used the AFC congress for his re-election. The text is cut before the country.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Jordan Football Association",
+     "country": "Jordan",
+     "aliases": [
+      "JFA"
+     ]
+    },
+    "article": {
+     "title": "Presidente Jfa: “Congresso Afc pura politica, su iniziativa Infantino”",
+     "passage": "(askanews) – Il presidente della Fifa, Gianni Infantino, ha strumentalizzato il Congresso della Confederazione asiatica di calcio (Afc) per fini politici, in vista della sua candidatura alla rielezione per un quarto mandato dell’organo di governo del calcio mondiale.",
+     "medium": "askanews.it",
+     "date": "2026-10-26",
+     "lang": "it",
+     "url": "https://askanews.it/2026/10/26/presidente-jfa-congresso-afc-pura-politica-su-iniziativa-infantino/"
+    }
+   },
+   "expect": {
+    "position": "non_soutien_probable",
+    "stance": "against",
+    "speaker_kind": "president",
+    "explicit": false,
+    "mark": "official"
+   }
+  },
+  {
+   "id": "live-stance-norway-klaveness-critic",
+   "family": "stance",
+   "origin": "enca.com, article #57826979 of the news kept on 10.11.2026, 2026-10-13; label by hand (Claude, to be disputed)",
+   "why": "AFP calls the head of the federation a long-time critic: a description by the agency, not her words, so never declared.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Norwegian Football Federation",
+     "country": "Norway",
+     "aliases": [
+      "NFF"
+     ]
+    },
+    "article": {
+     "title": "Infantino could pull off 'Houdini' act as critics struggle for candidate",
+     "passage": "Infantino could pull off 'Houdini' act as critics struggle for candidate Estelle.Bronkhorst Tue, 10/13/2026 - 06:00 PARIS - Gianni Infantino could survive weeks of criticism and secure re-election as FIFA president in the absence of a heavy hitter to challenge him, observers have told AFP. Infantino, though, does crucially retain his core support in Africa and South America. Long-time Infantino critic Lise Klaveness, the head of the Norwegian Football Federation (NFF), has impressed many but has ruled out running.",
+     "medium": "enca.com",
+     "date": "2026-10-13",
+     "lang": "en",
+     "url": "https://www.enca.com/sport/infantino-could-pull-houdini-act-critics-struggle-candidate"
+    }
+   },
+   "expect": {
+    "position": "non_soutien_probable",
+    "stance": "against",
+    "explicit": false
+   }
+  },
+  {
+   "id": "live-stance-wenger-france-diallo-supports",
+   "family": "stance",
+   "origin": "google.com, article #96109591 of the news kept on 10.11.2026, 2026-10-29; label by hand (Claude, to be disputed)",
+   "why": "Another subject: the headline says the president of the FFF supports Wenger for the presidency of FIFA. Title only.",
+   "input": {
+    "subject": {
+     "name": "Arsène Wenger"
+    },
+    "association": {
+     "name": "French Football Federation",
+     "country": "France",
+     "aliases": [
+      "FFF",
+      "Fédération française de football"
+     ]
+    },
+    "article": {
+     "title": "«Il coche beaucoup de cases» : le président de la FFF, Philippe Diallo soutient Wenger pour la présidence de la FIFA",
+     "passage": "",
+     "medium": "google.com",
+     "date": "2026-10-29",
+     "lang": "fr",
+     "url": "https://news.google.com/rss/articles/CBMi8gFBVV95cUxPQjhfUzRvY3VKa2NpLVhLaDZMak4weV9TWlRiRXFqanRGdjJKSlZwYzFlY2VVanBlcHpaNF82aGRheFFCai1yLVJlS0FTOEstWmE5U3RMdDlocnJhMHZ3LWtUOFVvWGxwUzNnN1llci03ZzhyS241Y19sckNjRkE4bU1uRjZuUjZtOGJsQ2NBR0doU18zaHVfM01uSU1JZzB6REY0akw2QmpDeHlzelZTbUpLMjZ2SllPZzJGMURVQmlyYkdRcE5tdFdmUUVjbE1rbHNGejNrRDdJNnVSZF9ZQnY1VVB3a2gwQk5kczYyRlYwUQ?oc=5"
+    }
+   },
+   "expect": {
+    "position": "soutien_declare",
+    "stance": "for",
+    "speaker_kind": "president",
+    "explicit": true,
+    "mark": "official"
+   }
+  },
+  {
+   "id": "live-stance-wenger-france-diallo-door",
+   "family": "stance",
+   "origin": "pensebet.com, article #95635989 of the news kept on 10.11.2026, 2026-10-29; label by hand (Claude, to be disputed)",
+   "why": "The president \"opens the door wide\" to a candidacy of Wenger: favourable, not a support.",
+   "input": {
+    "subject": {
+     "name": "Arsène Wenger"
+    },
+    "association": {
+     "name": "French Football Federation",
+     "country": "France",
+     "aliases": [
+      "FFF",
+      "Fédération française de football"
+     ]
+    },
+    "article": {
+     "title": "Football : FIFA, Diallo verrait bien Wenger candidat",
+     "passage": "🌍 Le président de la FFF ouvre grand la porte à une candidature d'Arsène Wenger contre Gianni Infantino.",
+     "medium": "pensebet.com",
+     "date": "2026-10-29",
+     "lang": "fr",
+     "url": "https://pensebet.com/football-fifa-diallo-wenger-candidat-infantino/"
+    }
+   },
+   "expect": {
+    "position": "soutien_probable",
+    "stance": "for",
+    "speaker_kind": "president",
+    "explicit": false,
+    "mark": "official"
+   }
+  },
+  {
+   "id": "live-stance-japan-tashima-announces-self",
+   "family": "stance",
+   "origin": "timesofmalta.com, article #111418436 of the news kept on 10.11.2026, 2026-11-05; label by hand (Claude, to be disputed)",
+   "why": "Same article, the person asked about is Tashima: he supports himself, which says nothing of the association.",
+   "input": {
+    "subject": {
+     "name": "Kozo Tashima"
+    },
+    "association": {
+     "name": "Japan Football Association",
+     "country": "Japan",
+     "aliases": [
+      "JFA"
+     ]
+    },
+    "article": {
+     "title": "Top Japan FA official to stand against Infantino for FIFA presidency",
+     "passage": "Kozo Tashima, honorary president of the Japan Football Association, said on Thursday he will stand against Gianni Infantino in FIFA's presidential election in March.",
+     "medium": "timesofmalta.com",
+     "date": "2026-11-05",
+     "lang": "en",
+     "url": "https://sport.timesofmalta.com/2026/11/05/top-japan-fa-official-to-stand-against-infantino-for-fifa-presidency/"
+    }
+   },
+   "expect": {
+    "position": null
+   }
+  },
+  {
+   "id": "live-stance-italy-federcalcio-mauritana",
+   "family": "stance",
+   "origin": "milannews.it, article #67025377 of the news kept on 10.11.2026, 2026-10-16; label by hand (Claude, to be disputed)",
+   "why": "Matched through \"Federcalcio\": it is the federation of Mauritania, not the Italian one.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Italian Football Federation",
+     "country": "Italy",
+     "aliases": [
+      "FIGC",
+      "Federcalcio"
+     ]
+    },
+    "article": {
+     "title": "Il presidente della Federcalcio mauritana esprime il proprio sostegno a Gianni Infantino",
+     "passage": "(ANSA) - ROMA, 15 OTT - \"Sono certo che Gianni Infantino sia il presidente giusto. La maggioranza vuole che Gianni Infantino resti\".",
+     "medium": "milannews.it",
+     "date": "2026-10-16",
+     "lang": "it",
+     "url": "https://www.milannews.it/news/fifa-n-1-federazione-mauritana-infantino-presidente-giusto-632899"
+    }
+   },
+   "expect": {
+    "position": null
+   }
+  },
+  {
+   "id": "live-stance-moldova-fmf-is-mexico",
+   "family": "stance",
+   "origin": "infobae.com, article #86656369 of the news kept on 10.11.2026, 2026-10-25; label by hand (Claude, to be disputed)",
+   "why": "Matched through the initials FMF: it is the Mexican federation (the text says the Mexican team).",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Football Association of Moldova",
+     "country": "Moldova",
+     "aliases": [
+      "FMF"
+     ]
+    },
+    "article": {
+     "title": "En plena campaña por su continuidad en la FIFA, Gianni Infantino presume apoyo durante encuentro con Mikel Arriola y la FMF",
+     "passage": "El diálogo entre dirigentes ocurrió en Azerbaiyán, mientras la Selección Mexicana sumaba su primera victoria en la Copa Mundial y Festival Sub-15",
+     "medium": "infobae.com",
+     "date": "2026-10-25",
+     "lang": "es",
+     "url": "https://www.infobae.com/mexico/deportes/2026/10/25/en-plena-campana-por-su-continuidad-en-la-fifa-gianni-infantino-presume-apoyo-durante-encuentro-con-mikel-arriola-y-la-fmf/"
+    }
+   },
+   "expect": {
+    "position": null
+   }
+  },
+  {
+   "id": "live-stance-scotland-vega-asks-support",
+   "family": "stance",
+   "origin": "bbc.co.uk, article #116244396 of the news kept on 10.11.2026, 2026-11-07; label by hand (Claude, to be disputed)",
+   "why": "A former player urges the Scottish FA to back his bid: a request addressed to it, nothing it said.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Scottish Football Association",
+     "country": "Scotland",
+     "aliases": [
+      "Scottish FA",
+      "SFA"
+     ]
+    },
+    "article": {
+     "title": "Vega plea for Scottish FA backing against Infantino - gossip",
+     "passage": "Former Celtic Ramon Vega urges the Scottish FA to support his bid to oust Fifa president Gianni Infantino as Stephen Robinson admits he has no funds to add free agents to Aberdeen's squad.",
+     "medium": "bbc.co.uk",
+     "date": "2026-11-07",
+     "lang": "en",
+     "url": "https://www.bbc.co.uk/sport/football/articles/c6kg55rxxrzlo?at_medium=RSS&at_campaign=rss"
+    }
+   },
+   "expect": {
+    "position": null
+   }
+  },
+  {
+   "id": "live-stance-scotland-vega-asks-support-for-vega",
+   "family": "stance",
+   "origin": "bbc.co.uk, article #116244396 of the news kept on 10.11.2026, 2026-11-07; label by hand (Claude, to be disputed)",
+   "why": "Same text, the person asked about is Vega: the association has not answered the request.",
+   "input": {
+    "subject": {
+     "name": "Ramon Vega"
+    },
+    "association": {
+     "name": "Scottish Football Association",
+     "country": "Scotland",
+     "aliases": [
+      "Scottish FA",
+      "SFA"
+     ]
+    },
+    "article": {
+     "title": "Vega plea for Scottish FA backing against Infantino - gossip",
+     "passage": "Former Celtic Ramon Vega urges the Scottish FA to support his bid to oust Fifa president Gianni Infantino as Stephen Robinson admits he has no funds to add free agents to Aberdeen's squad.",
+     "medium": "bbc.co.uk",
+     "date": "2026-11-07",
+     "lang": "en",
+     "url": "https://www.bbc.co.uk/sport/football/articles/c6kg55rxxrzlo?at_medium=RSS&at_campaign=rss"
+    }
+   },
+   "expect": {
+    "position": null
+   }
+  },
+  {
+   "id": "live-stance-cameroon-eto-o-complaint",
+   "family": "stance",
+   "origin": "ig.com.br, article #67261865 of the news kept on 10.11.2026, 2026-10-16; label by hand (Claude, to be disputed)",
+   "why": "A complaint about the accusations against Eto'o: nothing on the election.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Cameroonian Football Federation",
+     "country": "Cameroon",
+     "aliases": [
+      "FECAFOOT"
+     ]
+    },
+    "article": {
+     "title": "Infantino pode ser alvo de denúncia após acusações contra Samuel Eto’o",
+     "passage": "Ex-jogador é acusado de receber R$ 3,8 milhões em sua conta pessoal referentes à verba de um amistoso com a Rússia, disputado em 2023",
+     "medium": "ig.com.br",
+     "date": "2026-10-16",
+     "lang": "pt",
+     "url": "https://esporte.ig.com.br/parceiros/jogada10/2026-10-16/infantino-pode-ser-alvo-de-denuncia-apos-acusacoes-contra-samuel-etoo.html"
+    }
+   },
+   "expect": {
+    "position": null
+   }
+  },
+  {
+   "id": "live-stance-nigeria-nff-is-norway",
+   "family": "stance",
+   "origin": "enca.com, article #57826979 of the news kept on 10.11.2026, 2026-10-13; label by hand (Claude, to be disputed)",
+   "why": "Matched through the initials NFF: it is the Norwegian federation.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Nigeria Football Federation",
+     "country": "Nigeria",
+     "aliases": [
+      "NFF"
+     ]
+    },
+    "article": {
+     "title": "Infantino could pull off 'Houdini' act as critics struggle for candidate",
+     "passage": "Infantino could pull off 'Houdini' act as critics struggle for candidate Estelle.Bronkhorst Tue, 10/13/2026 - 06:00 PARIS - Gianni Infantino could survive weeks of criticism and secure re-election as FIFA president in the absence of a heavy hitter to challenge him, observers have told AFP. Infantino, though, does crucially retain his core support in Africa and South America. Long-time Infantino critic Lise Klaveness, the head of the Norwegian Football Federation (NFF), has impressed many but has ruled out running.",
+     "medium": "enca.com",
+     "date": "2026-10-13",
+     "lang": "en",
+     "url": "https://www.enca.com/sport/infantino-could-pull-houdini-act-critics-struggle-candidate"
+    }
+   },
+   "expect": {
+    "position": null
+   }
+  },
+  {
+   "id": "live-stance-england-fa-in-wales-text",
+   "family": "stance",
+   "origin": "bbc.co.uk, article #91646074 of the news kept on 10.11.2026, 2026-10-27; label by hand (Claude, to be disputed)",
+   "why": "\"Football Association\" is the start of \"Football Association of Wales\": the text is about Wales.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "The Football Association",
+     "country": "England",
+     "aliases": [
+      "The FA",
+      "Football Association"
+     ]
+    },
+    "article": {
+     "title": "FAW boss renews call for Infantino to step down",
+     "passage": "Chief executive Noel Mooney says the Football Association of Wales retains the view that Fifa president Gianni Infantino should step down.",
+     "medium": "bbc.co.uk",
+     "date": "2026-10-27",
+     "lang": "en",
+     "url": "https://www.bbc.co.uk/sport/football/articles/cw054vdz9g7mo?at_medium=RSS&at_campaign=rss"
+    }
+   },
+   "expect": {
+    "position": null
+   }
+  },
+  {
+   "id": "live-stance-canada-concacaf-president",
+   "family": "stance",
+   "origin": "goal.com, article #63984954 of the news kept on 10.11.2026, 2026-10-15; label by hand (Claude, to be disputed)",
+   "why": "The president of Concacaf, not of the Canadian association, and about his own re-election.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Canadian Soccer Association",
+     "country": "Canada",
+     "aliases": [
+      "Canada Soccer",
+      "Victor Montagliani"
+     ]
+    },
+    "article": {
+     "title": "La légende du Real sur la photo : Infantino menacé par un rival secret aux élections de la FIFA | Goal.com Français",
+     "passage": "2026 12:57+02:00 Traduit par Une légende du Real sur la photo : Infantino menacé par un adversaire secret avant les élections de la FIFA Real Madrid Espagne Un candidat mystère de dernière minute : que va-t-il se passer au sein de la FIFA ? Le principal rival a annoncé qu'il ne souhaitait pas se lancer dans la bataille : Victor Montagliani, président de la Concacaf, l'instance dirigeante du football en Amérique du Nord, en Amérique centrale et dans les Caraïbes, bien qu'il ait été le premier choix de nombreux adversaires européens d'Infantino, se concentre désormais sur sa réélection à la tête de sa propre confédération.",
+     "medium": "goal.com",
+     "date": "2026-10-15",
+     "lang": "fr",
+     "url": "https://www.goal.com/fr/news/une-legende-du-real-sur-la-photo-infantino-menace-par-un-adversaire-secret-avant-les-elections-de-la-fifa/blt39cb0f3cdbed5f27"
+    }
+   },
+   "expect": {
+    "position": null
+   }
+  }
+ ],
+ "hard": [
+  {
+   "id": "live-stance-japan-okada-resigns",
+   "family": "stance",
+   "origin": "yahoo.com, article #93284806 of the news kept on 10.11.2026, 2026-10-28; label by hand (Claude, to be disputed)",
+   "hard": true,
+   "why": "The vice-president resigns over the AFC backing him: a protest of an officer, who does not bind the association. But the text says he protests the AFC's backing, not what he thinks of Infantino himself. (Moved to hard after the first measure of 10.11.2026.)",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Japan Football Association",
+     "country": "Japan",
+     "aliases": [
+      "JFA"
+     ]
+    },
+    "article": {
+     "title": "Japan legend Takeshi Okada abruptly quits as JFA vice-president over AFC's backing of FIFA boss Gianni Infantino",
+     "passage": "Japanese football legend Takeshi Okada has sensationally resigned from his position as vice-president of the Japan Football Association (JFA).",
+     "medium": "yahoo.com",
+     "date": "2026-10-28",
+     "lang": null,
+     "url": "https://sports.yahoo.com/articles/japan-legend-takeshi-okada-abruptly-111926894.html"
+    }
+   },
+   "expect": {
+    "position": "non_soutien_probable",
+    "stance": "against",
+    "speaker_kind": "deputy",
+    "explicit": false,
+    "mark": "official"
+   }
+  },
+  {
+   "id": "live-stance-japan-tashima-announces-vs-infantino",
+   "family": "stance",
+   "origin": "timesofmalta.com, article #111418436 of the news kept on 10.11.2026, 2026-11-05; label by hand (Claude, to be disputed)",
+   "hard": true,
+   "why": "The honorary president announces he will stand against Infantino. A rule to settle, not a fact: a former president does not bind the association (probable, as gemma4:31b reads it) or a rival candidate speaks for himself and gives his association nothing (none, as deepseek-v4-pro and gpt-oss:120b read it, and what is recommended). Label none; it was changed to probable and back on 10.11.2026, hence hard.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Japan Football Association",
+     "country": "Japan",
+     "aliases": [
+      "JFA"
+     ]
+    },
+    "article": {
+     "title": "Top Japan FA official to stand against Infantino for FIFA presidency",
+     "passage": "Kozo Tashima, honorary president of the Japan Football Association, said on Thursday he will stand against Gianni Infantino in FIFA's presidential election in March.",
+     "medium": "timesofmalta.com",
+     "date": "2026-11-05",
+     "lang": "en",
+     "url": "https://sport.timesofmalta.com/2026/11/05/top-japan-fa-official-to-stand-against-infantino-for-fifa-presidency/"
+    }
+   },
+   "expect": {
+    "position": null
+   }
+  },
+  {
+   "id": "live-stance-jordan-jfa-text-for-japan",
+   "family": "stance",
+   "origin": "askanews.it, article #89232623 of the news kept on 10.11.2026, 2026-10-26; label by hand (Claude, to be disputed)",
+   "hard": true,
+   "why": "The same text of \"Presidente Jfa\" given to Japan: the text is cut before the country, only the congress of the AFC tells it is Tokyo. A reader cannot be sure.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Japan Football Association",
+     "country": "Japan",
+     "aliases": [
+      "JFA"
+     ]
+    },
+    "article": {
+     "title": "Presidente Jfa: “Congresso Afc pura politica, su iniziativa Infantino”",
+     "passage": "(askanews) – Il presidente della Fifa, Gianni Infantino, ha strumentalizzato il Congresso della Confederazione asiatica di calcio (Afc) per fini politici, in vista della sua candidatura alla rielezione per un quarto mandato dell’organo di governo del calcio mondiale.",
+     "medium": "askanews.it",
+     "date": "2026-10-26",
+     "lang": "it",
+     "url": "https://askanews.it/2026/10/26/presidente-jfa-congresso-afc-pura-politica-su-iniziativa-infantino/"
+    }
+   },
+   "expect": {
+    "position": null
+   }
+  },
+  {
+   "id": "live-stance-spain-2030-final",
+   "family": "stance",
+   "origin": "estadiodeportivo.com, article #58513250 of the news kept on 10.11.2026, 2026-10-13; label by hand (Claude, to be disputed)",
+   "hard": true,
+   "why": "The \"support\" of the text is for a stadium for the 2030 final, not for a person. But it adds that the president of the RFEF has a close relationship with Infantino: a hint, not a stance.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Royal Spanish Football Federation",
+     "country": "Spain",
+     "aliases": [
+      "RFEF"
+     ]
+    },
+    "article": {
+     "title": "Marruecos intensifica su ofensiva para arrebatar a España la final del Mundial 2030",
+     "passage": "Louzán, presidente de la RFEF, echa un pulso a Marruecos por la final del Mundial 2030: \"Hay acuerdos firmados\" Infantino confirma un secreto a voces: el Mundial 2030 \"se estudiará con 64 selecciones\" La prensa marroquí ha comenzado a recoger declaraciones de dirigentes africanos que respaldan la posibilidad de que el recinto albergue la final. La prensa marroquí también cuestiona las infraestructuras españolas y ha criticado públicamente al presidente de la Real Federación Española de Fútbol (RFEF), Rafael Louzán , después de que defendiera que la final se disputase en España .",
+     "medium": "estadiodeportivo.com",
+     "date": "2026-10-13",
+     "lang": "es",
+     "url": "https://www.estadiodeportivo.com/futbol/mundial/marruecos-intensifica-ofensiva-para-arrebatar-espana-final-del-mundial-2030-20261013-548488.html"
+    }
+   },
+   "expect": {
+    "position": null
+   }
+  },
+  {
+   "id": "live-stance-england-chair-not-fit",
+   "family": "stance",
+   "origin": "yahoo.com, article #78057902 of the news kept on 10.11.2026, 2026-10-21; label by hand (Claude, to be disputed)",
+   "hard": true,
+   "why": "The title quotes the chair (\"Not fit to be FIFA president\") but the text says she questioned his fitness to lead: explicit or a doubt?",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "The Football Association",
+     "country": "England",
+     "aliases": [
+      "The FA",
+      "Football Association"
+     ]
+    },
+    "article": {
+     "title": "“Not fit to be FIFA president,” FA chair warns Infantino",
+     "passage": "gints.ivuskans/Depositphotos FIFA president faces FA chair’s warning The Fédération Internationale de Football Association (FIFA) faced criticism on October 15, 2026, when English Football Association chair Debbie Hewitt questioned President Gianni Infantino’s fitness to lead after a FIFA Council meeting in Zurich, Switzerland.",
+     "medium": "yahoo.com",
+     "date": "2026-10-21",
+     "lang": "en",
+     "url": "https://sports.yahoo.com/articles/not-fit-fifa-president-fa-133000707.html"
+    }
+   },
+   "expect": {
+    "position": "non_soutien_declare",
+    "stance": "against",
+    "speaker_kind": "president",
+    "explicit": true,
+    "mark": "official"
+   }
+  },
+  {
+   "id": "live-stance-australia-isaac-premature",
+   "family": "stance",
+   "origin": "theguardian.com, article #74951310 of the news kept on 10.11.2026, 2026-10-20; label by hand (Claude, to be disputed)",
+   "hard": true,
+   "why": "The chair appears to back the direction of FIFA but says it is premature to talk about support for him: mixed.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Football Australia",
+     "country": "Australia",
+     "aliases": []
+    },
+    "article": {
+     "title": "Football Australia chair Anter Isaac dismisses recent Fifa ructions as ‘growing pains’",
+     "passage": "Isaac appears to back current direction of world governing body But ‘premature’ to talk about support for Gianni Infantino Football Australia chair Anter Isaac has played down concerns around the controversial World Cup privatisation push engineered by Gianni Infantino ahead of a meeting of Asian confederation officials in Tokyo this week.",
+     "medium": "theguardian.com",
+     "date": "2026-10-20",
+     "lang": "en",
+     "url": "https://www.theguardian.com/sport/2026/oct/20/football-australia-chair-anter-isaac-dismisses-recent-fifa-complaints"
+    }
+   },
+   "expect": {
+    "position": null
+   }
+  },
+  {
+   "id": "live-stance-denmark-moller-challenger",
+   "family": "stance",
+   "origin": "insideworldfootball.com, article #108210413 of the news kept on 10.11.2026, 2026-11-04; label by hand (Claude, to be disputed)",
+   "hard": true,
+   "why": "The Danish FA repeats that UEFA will find a challenger: an expectation, not its vote.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Danish Football Association",
+     "country": "Denmark",
+     "aliases": [
+      "DBU"
+     ]
+    },
+    "article": {
+     "title": "UEFA will have a candidate to challenge Infantino for FIFA presidency, says Denmark’s Moller",
+     "passage": "November 4 – The Danish FA (DBU) has repeated their claim that UEFA will find a credible candidate to challenge FIFA boss Gianni Infantino in elections before November 18. With the electoral deadline drawing near, UEFA is running out of time to put forward a candidate to oust Infantino, who has resisted pressure to resign over his abandoned World Cup privatisation plans. However, DBU chairman Jesper Moller told Bold in an interview that “we have two more meetings scheduled for early November before we unveil the opposing candidate. The post UEFA will have a candidate to challenge Infantino for FIFA presidency, says Denmark’s Moller appeared first on Inside World Football .",
+     "medium": "insideworldfootball.com",
+     "date": "2026-11-04",
+     "lang": null,
+     "url": "https://www.insideworldfootball.com/2026/11/04/uefa-will-have-a-candidate-to-challenge-infantino-for-fifa-presidency-says-denmarks-moller/"
+    }
+   },
+   "expect": {
+    "position": "non_soutien_probable",
+    "stance": "against",
+    "explicit": false
+   }
+  },
+  {
+   "id": "live-stance-mexico-infantino-boasts",
+   "family": "stance",
+   "origin": "foxsports.com.mx, article #86029394 of the news kept on 10.11.2026, 2026-10-24; label by hand (Claude, to be disputed)",
+   "hard": true,
+   "why": "It is Infantino who boasts of the support of the Mexican federation: the claim of the person himself, not its word.",
+   "input": {
+    "subject": {
+     "name": "Gianni Infantino"
+    },
+    "association": {
+     "name": "Mexican Football Federation",
+     "country": "Mexico",
+     "aliases": [
+      "FMF"
+     ]
+    },
+    "article": {
+     "title": "Infantino presume respaldo para reelegirse en FIFA y se reúne con Mikel Arriola durante el Mundial Sub-15",
+     "passage": "Gianni Infantino se reunió con Mikel Arriola en el Mundial Sub-15 y presumió apoyo para su reelección",
+     "medium": "foxsports.com.mx",
+     "date": "2026-10-24",
+     "lang": "es",
+     "url": "https://www.foxsports.com.mx/2026/10/24/infantino-presume-respaldo-para-reelegirse-en-fifa-y-se-reune-con-mikel-arriola-durante-el-mundial-sub-15/"
+    }
+   },
+   "expect": {
+    "position": null
+   }
+  },
+  {
+   "id": "live-stance-beckham-uefa-dfb-weigh",
+   "family": "stance",
+   "origin": "google.com, article #100072268 of the news kept on 10.11.2026, 2026-10-30; label by hand (Claude, to be disputed)",
+   "hard": true,
+   "why": "UEFA and the DFB \"weigh\" Beckham as a challenger: a rumour of an idea, not a support.",
+   "input": {
+    "subject": {
+     "name": "David Beckham"
+    },
+    "association": {
+     "name": "German Football Association",
+     "country": "Germany",
+     "aliases": [
+      "DFB",
+      "Deutscher Fußball-Bund"
+     ]
+    },
+    "article": {
+     "title": "Someone else at the helm’: UEFA and DFB weigh David Beckham to challenge Infantino",
+     "passage": "",
+     "medium": "google.com",
+     "date": "2026-10-30",
+     "lang": "en",
+     "url": "https://news.google.com/rss/articles/CBMirgFBVV95cUxQS3ZTZ3NRVTktb1ItZ2V0TTIyYks4U2o0VlZIVlp0MjluZUNFNnBCb2xQZkZza2Z4TzJfVVZUT3FWNy1fSkJoVWpuVklWRWplc0VDclA0ZmlCczQ5RkJoYXBjcWx0ZDcyd1g1UkJCNlZVNmpFYWZQMlhuaDAweG9wLWowUjFteFIwMnJpcWNwVmFqSXVKSjBsNWVENmJlWG04M2pQZzlZX1pIODNtMkE?oc=5"
+    }
+   },
+   "expect": {
+    "position": null
+   }
+  }
+ ]
+}

@@ -1,0 +1,1003 @@
+{
+ "at": "2026-11-10T22:04:26.248Z",
+ "model": "deepseek-v4-pro",
+ "repeat": 1,
+ "usage": {
+  "calls": 30,
+  "input": 22844,
+  "output": 40139,
+  "models": [
+   "deepseek-v4-pro"
+  ]
+ },
+ "rows": [
+  {
+   "id": "live-stance-wales-mooney-step-down",
+   "hard": false,
+   "expected": "non_soutien_declare",
+   "positions": [
+    "non_soutien_declare"
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "Noel Mooney",
+      "speakerKind": "executive",
+      "stance": "against",
+      "toward": "person",
+      "explicit": true,
+      "mark": "official",
+      "quote": "Chief executive Noel Mooney says the Football Association of Wales retains the view that Fifa president Gianni Infantino should step down.",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": true,
+      "binds": true,
+      "position": "non_soutien_declare"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "against"
+   }
+  },
+  {
+   "id": "live-stance-france-refuses-to-back",
+   "hard": false,
+   "expected": "non_soutien_declare",
+   "positions": [
+    "non_soutien_declare"
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "",
+      "speakerKind": "statement",
+      "stance": "against",
+      "toward": "person",
+      "explicit": true,
+      "mark": "official",
+      "quote": "la FFF refuse de soutenir Gianni Infantino pour un nouveau mandat",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": true,
+      "binds": true,
+      "position": "non_soutien_declare"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "both"
+   }
+  },
+  {
+   "id": "live-stance-france-diallo-jab",
+   "hard": false,
+   "expected": "non_soutien_probable",
+   "positions": [
+    "non_soutien_probable"
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "Philippe Diallo",
+      "speakerKind": "president",
+      "stance": "against",
+      "toward": "person",
+      "explicit": false,
+      "mark": "official",
+      "quote": "Credo fermamente nella solidarietà tra tutte le nazioni; il calcio deve svilupparsi...",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": true,
+      "binds": true,
+      "position": "non_soutien_probable"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "against"
+   }
+  },
+  {
+   "id": "live-stance-germany-neuendorf-resign",
+   "hard": false,
+   "expected": "non_soutien_declare",
+   "positions": [
+    "non_soutien_declare"
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "Bernd Neuendorf",
+      "speakerKind": "president",
+      "stance": "against",
+      "toward": "person",
+      "explicit": true,
+      "mark": "official",
+      "quote": "Europas Fußball-Funktionäre um DFB-Chef Bernd Neuendorf fordern auch nach einer Entschuldigung von Gianni Infantino weiter den Rücktritt des FIFA-Präsidenten.",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": true,
+      "binds": true,
+      "position": "non_soutien_declare"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "against"
+   }
+  },
+  {
+   "id": "live-stance-philippines-supports-reelection",
+   "hard": false,
+   "expected": "soutien_declare",
+   "positions": [
+    "soutien_declare"
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "",
+      "speakerKind": "statement",
+      "stance": "for",
+      "toward": "person",
+      "explicit": true,
+      "mark": "official",
+      "quote": "PFF supports FIFA President Gianni Infantino’s re-election",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": true,
+      "binds": true,
+      "position": "soutien_declare"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "for"
+   }
+  },
+  {
+   "id": "live-stance-mauritania-yahya-backs",
+   "hard": false,
+   "expected": "soutien_declare",
+   "positions": [
+    "soutien_declare"
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "Ahmed Yahya",
+      "speakerKind": "president",
+      "stance": "for",
+      "toward": "person",
+      "explicit": true,
+      "mark": "official",
+      "quote": "has thrown his support behind Gianni Infantino, insisting that the FIFA president remains the right person to lead world football",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": true,
+      "binds": true,
+      "position": "soutien_declare"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "for"
+   }
+  },
+  {
+   "id": "live-stance-southafrica-jordaan-thanks",
+   "hard": false,
+   "expected": "soutien_probable",
+   "positions": [
+    "soutien_probable"
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "Danny Jordaan",
+      "speakerKind": "president",
+      "stance": "for",
+      "toward": "person",
+      "explicit": false,
+      "mark": "official",
+      "quote": "the continent has “benefited immensely” under the leadership of FIFA President Gianni Infantino",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": true,
+      "binds": true,
+      "position": "soutien_probable"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "for"
+   }
+  },
+  {
+   "id": "live-stance-jordan-prince-ali-pure-politics",
+   "hard": false,
+   "expected": "non_soutien_probable",
+   "positions": [
+    "non_soutien_probable"
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "Prince Ali bin Hussein",
+      "speakerKind": "president",
+      "stance": "against",
+      "toward": "person",
+      "explicit": false,
+      "mark": "official",
+      "quote": "delegates were silenced at the AFC's extraordinary congress in Tokyo, where Sheikh Salman publicly endorsed Gianni Infantino for a fourth FIFA term.",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": true,
+      "binds": true,
+      "position": "non_soutien_probable"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "both"
+   }
+  },
+  {
+   "id": "live-stance-jordan-askanews-pure-politics",
+   "hard": false,
+   "expected": "non_soutien_probable",
+   "positions": [
+    "non_soutien_probable"
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "",
+      "speakerKind": "president",
+      "stance": "against",
+      "toward": "person",
+      "explicit": false,
+      "mark": "official",
+      "quote": "Il presidente della Fifa, Gianni Infantino, ha strumentalizzato il Congresso della Confederazione asiatica di calcio (Afc) per fini politici",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": true,
+      "binds": true,
+      "position": "non_soutien_probable"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "for"
+   }
+  },
+  {
+   "id": "live-stance-norway-klaveness-critic",
+   "hard": false,
+   "expected": "non_soutien_probable",
+   "positions": [
+    "non_soutien_probable"
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "Lise Klaveness",
+      "speakerKind": "president",
+      "stance": "against",
+      "toward": "person",
+      "explicit": false,
+      "mark": "official",
+      "quote": "Long-time Infantino critic Lise Klaveness, the head of the Norwegian Football Federation (NFF), has impressed many but has ruled out running.",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": true,
+      "binds": true,
+      "position": "non_soutien_probable"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "both"
+   }
+  },
+  {
+   "id": "live-stance-wenger-france-diallo-supports",
+   "hard": false,
+   "expected": "soutien_declare",
+   "positions": [
+    "soutien_declare"
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "Philippe Diallo",
+      "speakerKind": "president",
+      "stance": "for",
+      "toward": "person",
+      "explicit": true,
+      "mark": "official",
+      "quote": "le président de la FFF, Philippe Diallo soutient Wenger pour la présidence de la FIFA",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": true,
+      "binds": true,
+      "position": "soutien_declare"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "for"
+   }
+  },
+  {
+   "id": "live-stance-wenger-france-diallo-door",
+   "hard": false,
+   "expected": "soutien_probable",
+   "positions": [
+    "soutien_declare"
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "Diallo",
+      "speakerKind": "president",
+      "stance": "for",
+      "toward": "person",
+      "explicit": true,
+      "mark": "official",
+      "quote": "Diallo verrait bien Wenger candidat",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": true,
+      "binds": true,
+      "position": "soutien_declare"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "against"
+   }
+  },
+  {
+   "id": "live-stance-japan-tashima-announces-self",
+   "hard": false,
+   "expected": null,
+   "positions": [
+    null
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": false,
+      "speaker": "Kozo Tashima",
+      "speakerKind": "candidate",
+      "stance": "against",
+      "toward": "other",
+      "explicit": true,
+      "mark": "official",
+      "quote": "Kozo Tashima, honorary president of the Japan Football Association, said on Thursday he will stand against Gianni Infantino in FIFA's presidential election in March.",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": false,
+      "position": null,
+      "why": "not_about_association"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "against"
+   }
+  },
+  {
+   "id": "live-stance-italy-federcalcio-mauritana",
+   "hard": false,
+   "expected": null,
+   "positions": [
+    null
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": false,
+      "speaker": "",
+      "speakerKind": "other",
+      "stance": "for",
+      "toward": "person",
+      "explicit": true,
+      "mark": "official",
+      "quote": "\"Sono certo che Gianni Infantino sia il presidente giusto. La maggioranza vuole che Gianni Infantino resti\".",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": false,
+      "position": null,
+      "why": "not_about_association"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "for"
+   }
+  },
+  {
+   "id": "live-stance-moldova-fmf-is-mexico",
+   "hard": false,
+   "expected": null,
+   "positions": [
+    null
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": false,
+      "speaker": "",
+      "speakerKind": "other",
+      "stance": "none",
+      "toward": "nobody",
+      "explicit": false,
+      "mark": "official",
+      "quote": "",
+      "quoteHeld": false
+     },
+     "decision": {
+      "signal": false,
+      "position": null,
+      "why": "not_about_association"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "for"
+   }
+  },
+  {
+   "id": "live-stance-scotland-vega-asks-support",
+   "hard": false,
+   "expected": null,
+   "positions": [
+    null
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": false,
+      "speaker": "Ramon Vega",
+      "speakerKind": "other",
+      "stance": "against",
+      "toward": "person",
+      "explicit": true,
+      "mark": "official",
+      "quote": "Former Celtic Ramon Vega urges the Scottish FA to support his bid to oust Fifa president Gianni Infantino",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": false,
+      "position": null,
+      "why": "not_about_association"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "both"
+   }
+  },
+  {
+   "id": "live-stance-scotland-vega-asks-support-for-vega",
+   "hard": false,
+   "expected": null,
+   "positions": [
+    null
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": false,
+      "speaker": "Ramon Vega",
+      "speakerKind": "candidate",
+      "stance": "for",
+      "toward": "person",
+      "explicit": true,
+      "mark": "official",
+      "quote": "Former Celtic Ramon Vega urges the Scottish FA to support his bid to oust Fifa president Gianni Infantino",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": false,
+      "position": null,
+      "why": "not_about_association"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "both"
+   }
+  },
+  {
+   "id": "live-stance-cameroon-eto-o-complaint",
+   "hard": false,
+   "expected": null,
+   "positions": [
+    null
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": false,
+      "speaker": "",
+      "speakerKind": "other",
+      "stance": "none",
+      "toward": "nobody",
+      "explicit": false,
+      "mark": "official",
+      "quote": "",
+      "quoteHeld": false
+     },
+     "decision": {
+      "signal": false,
+      "position": null,
+      "why": "not_about_association"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": false
+   }
+  },
+  {
+   "id": "live-stance-nigeria-nff-is-norway",
+   "hard": false,
+   "expected": null,
+   "positions": [
+    null
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": false,
+      "speaker": "",
+      "speakerKind": "other",
+      "stance": "none",
+      "toward": "nobody",
+      "explicit": false,
+      "mark": "official",
+      "quote": "Long-time Infantino critic Lise Klaveness, the head of the Norwegian Football Federation (NFF), has impressed many but has ruled out running.",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": false,
+      "position": null,
+      "why": "not_about_association"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "both"
+   }
+  },
+  {
+   "id": "live-stance-england-fa-in-wales-text",
+   "hard": false,
+   "expected": null,
+   "positions": [
+    null
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": false,
+      "speaker": "Noel Mooney",
+      "speakerKind": "other",
+      "stance": "against",
+      "toward": "person",
+      "explicit": true,
+      "mark": "official",
+      "quote": "the Football Association of Wales retains the view that Fifa president Gianni Infantino should step down",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": false,
+      "position": null,
+      "why": "not_about_association"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "against"
+   }
+  },
+  {
+   "id": "live-stance-canada-concacaf-president",
+   "hard": false,
+   "expected": null,
+   "positions": [
+    null
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": false,
+      "speaker": "Victor Montagliani",
+      "speakerKind": "other",
+      "stance": "none",
+      "toward": "nobody",
+      "explicit": false,
+      "mark": "official",
+      "quote": "Victor Montagliani, président de la Concacaf, l'instance dirigeante du football en Amérique du Nord, en Amérique centrale et dans les Caraïbes, bien qu'il ait été le premier choix de nombreux adversaires européens d'Infantino, se concentre désormais sur sa réélection à la tête de sa propre confédération.",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": false,
+      "position": null,
+      "why": "not_about_association"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "both"
+   }
+  },
+  {
+   "id": "live-stance-japan-okada-resigns",
+   "hard": true,
+   "expected": "non_soutien_probable",
+   "positions": [
+    null
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": false,
+      "speaker": "",
+      "speakerKind": "other",
+      "stance": "none",
+      "toward": "nobody",
+      "explicit": false,
+      "mark": "official",
+      "quote": "",
+      "quoteHeld": false
+     },
+     "decision": {
+      "signal": false,
+      "position": null,
+      "why": "not_about_association"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "both"
+   }
+  },
+  {
+   "id": "live-stance-japan-tashima-announces-vs-infantino",
+   "hard": true,
+   "expected": null,
+   "positions": [
+    null
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": false,
+      "speaker": "Kozo Tashima",
+      "speakerKind": "former",
+      "stance": "against",
+      "toward": "person",
+      "explicit": true,
+      "mark": "official",
+      "quote": "he will stand against Gianni Infantino in FIFA's presidential election in March",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": false,
+      "position": null,
+      "why": "not_about_association"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "against"
+   }
+  },
+  {
+   "id": "live-stance-jordan-jfa-text-for-japan",
+   "hard": true,
+   "expected": null,
+   "positions": [
+    "non_soutien_probable"
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "",
+      "speakerKind": "president",
+      "stance": "against",
+      "toward": "person",
+      "explicit": false,
+      "mark": "official",
+      "quote": "Congresso Afc pura politica, su iniziativa Infantino",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": true,
+      "binds": true,
+      "position": "non_soutien_probable"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "for"
+   }
+  },
+  {
+   "id": "live-stance-spain-2030-final",
+   "hard": true,
+   "expected": null,
+   "positions": [
+    null
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": false,
+      "speaker": "",
+      "speakerKind": "other",
+      "stance": "none",
+      "toward": "nobody",
+      "explicit": false,
+      "mark": "official",
+      "quote": "",
+      "quoteHeld": false
+     },
+     "decision": {
+      "signal": false,
+      "position": null,
+      "why": "not_about_association"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "both"
+   }
+  },
+  {
+   "id": "live-stance-england-chair-not-fit",
+   "hard": true,
+   "expected": "non_soutien_declare",
+   "positions": [
+    "non_soutien_probable"
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "Debbie Hewitt",
+      "speakerKind": "president",
+      "stance": "against",
+      "toward": "person",
+      "explicit": false,
+      "mark": "official",
+      "quote": "questioned President Gianni Infantino’s fitness to lead",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": true,
+      "binds": true,
+      "position": "non_soutien_probable"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "against"
+   }
+  },
+  {
+   "id": "live-stance-australia-isaac-premature",
+   "hard": true,
+   "expected": null,
+   "positions": [
+    null
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "Anter Isaac",
+      "speakerKind": "president",
+      "stance": "undecided",
+      "toward": "person",
+      "explicit": false,
+      "mark": "official",
+      "quote": "premature to talk about support for Gianni Infantino",
+      "quoteHeld": false
+     },
+     "decision": {
+      "signal": false,
+      "position": null,
+      "why": "stance_undecided"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "for"
+   }
+  },
+  {
+   "id": "live-stance-denmark-moller-challenger",
+   "hard": true,
+   "expected": "non_soutien_probable",
+   "positions": [
+    "non_soutien_declare"
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "Jesper Moller",
+      "speakerKind": "president",
+      "stance": "against",
+      "toward": "person",
+      "explicit": true,
+      "mark": "official",
+      "quote": "The Danish FA (DBU) has repeated their claim that UEFA will find a credible candidate to challenge FIFA boss Gianni Infantino in elections before November 18.",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": true,
+      "binds": true,
+      "position": "non_soutien_declare"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "against"
+   }
+  },
+  {
+   "id": "live-stance-mexico-infantino-boasts",
+   "hard": true,
+   "expected": null,
+   "positions": [
+    null
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": false,
+      "speaker": "Gianni Infantino",
+      "speakerKind": "candidate",
+      "stance": "for",
+      "toward": "person",
+      "explicit": true,
+      "mark": "official",
+      "quote": "presumió apoyo para su reelección",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": false,
+      "position": null,
+      "why": "not_about_association"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": false
+   }
+  },
+  {
+   "id": "live-stance-beckham-uefa-dfb-weigh",
+   "hard": true,
+   "expected": null,
+   "positions": [
+    null
+   ],
+   "passes": [
+    {
+     "reading": {
+      "about": true,
+      "speaker": "",
+      "speakerKind": "other",
+      "stance": "undecided",
+      "toward": "person",
+      "explicit": false,
+      "mark": "reported",
+      "quote": "UEFA and DFB weigh David Beckham to challenge Infantino",
+      "quoteHeld": true
+     },
+     "decision": {
+      "signal": false,
+      "position": null,
+      "why": "stance_undecided"
+     },
+     "error": null
+    }
+   ],
+   "keyword": {
+    "signal": true,
+    "side": "against"
+   }
+  }
+ ]
+}

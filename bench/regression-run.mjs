@@ -17,6 +17,7 @@ import {mergeStories} from '../services/utils/profile-ai.js';
 import {oldStories} from '../services/utils/old-news.js';
 import {chooseWeakCountries} from '../services/utils/country-choice.js';
 import {sameFact} from '../services/utils/neutral-titles.js';
+import {readStance} from '../services/utils/stance.js';
 
 const flags = Object.fromEntries(process.argv.slice(2).filter(arg => arg.startsWith('--')).map(arg => arg.slice(2).split('=')));
 const corpus = JSON.parse(readFileSync(flags.corpus ?? new URL('../tests/regression/corpus.json', import.meta.url), 'utf8'));
@@ -63,6 +64,12 @@ const ASK = {
         const same = (await sameFact([input], usage, {think: true, loose: true, timeoutMs: 120e3})).get(0)?.same === true;
         return {same, output: same ? 'same' : 'other'};
     },
+    // a passage of a news and the association the matching of names gave it (tests/regression/stance-corpus.json, run with --corpus=): the position
+    // the AI reads of that association on a person, decided by the code (stance.js): input {subject, association, article}; output: the position or "none"
+    stance: async ({input}, usage) => {
+        const {reading, decision} = await readStance(input, usage);
+        return {reading, decision, output: decision.position ?? 'none'};
+    },
     // the language of a title with the label of its feed wrong: what the words and the letters guess, and what the AI that translates it says
     languages: async ({input}, usage) => {
         const [answer] = await translatedTitles([{title: input.title, label: input.label}], CODES[input.to], usage);
@@ -87,6 +94,11 @@ const CHECKS = {
     oldnews: ({expect: wanted}, {old}) => [{name: wanted.old ? 'told again: old' : 'a new fact: kept', ok: old === wanted.old, detail: old ? 'judged old' : 'judged new'}],
     weakcountry: ({expect: wanted}, {kept}) => [{name: wanted.kept.length > 0 ? `keeps ${wanted.kept.join(', ')}` : 'keeps none', ok: kept.length === wanted.kept.length && wanted.kept.every(code => kept.includes(code)), detail: kept.join(',') || 'none'}],
     titlesame: ({expect: wanted}, {same}) => [{name: wanted.same ? 'the same main fact' : 'another fact', ok: same === wanted.same, detail: same ? 'judged the same' : 'judged another'}],
+    stance: ({expect: wanted}, {reading, decision}) => [{
+        name: wanted.position ? `reads ${wanted.position}` : 'reads no position',
+        ok: decision.position === wanted.position,
+        detail: `${decision.position ?? 'none'} (${decision.why ?? 'signal'})${reading ? `: about=${reading.about} kind=${reading.speakerKind} stance=${reading.stance} toward=${reading.toward} explicit=${reading.explicit} mark=${reading.mark}` : ''}`,
+    }],
     languages: ({expect: wanted}, {answer}) => [
         ...(wanted.language ? [{name: `is ${wanted.language}`, ok: answer.language === wanted.language, detail: `read ${answer.language}`}] : []),
         ...(wanted.oneOf ? [{name: `is one of ${wanted.oneOf.join(', ')}`, ok: wanted.oneOf.includes(answer.language), detail: `read ${answer.language}`}] : []),
