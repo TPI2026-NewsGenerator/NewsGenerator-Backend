@@ -53,7 +53,8 @@ import {briefingMail, isTimeZone, LABELS, MAIL_FORMATS, THEMES} from "./utils/br
 import {storyPictures, withChosenPictures} from "./utils/mail-pictures.js";
 import {labelsFor, withHedgedTranslated} from "./utils/mail-labels.js";
 import {illustrationsOf} from "./utils/illustrations.js";
-import {sizesOf} from "./utils/picture-sizes.js";
+import {SHARP_WIDTH, sizesOf} from "./utils/picture-sizes.js";
+import {choosePictures, withAiPictures} from "./utils/picture-choice.js";
 import {SentMailModel} from "../models/sent-mail-model.js";
 import {EntityService} from "./entity-service.js";
 import {namesAndCountriesOfCards} from "./utils/card-names.js";
@@ -199,8 +200,6 @@ const addressOf = (article) => article.resolved_link ?? article.link;
 // trusted: the media the reader trusts
 const isTrusted = (article, trusted) => trusted.has(mediumOfArticle(article));
 
-// Wide enough for the card and the e-mail, which shows 560 px (see briefing-mail.js)
-const SHARP_WIDTH = 560;
 const MAX_PICTURES = 10;
 
 // [{thumbnail, thumbnailSource}]: the pictures of these articles, each once, in their order: for each the
@@ -933,7 +932,7 @@ export const completeCards = async ({main, spare = []}, {briefingId = null, labe
 export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) => {
     // the stories ranked and given to the AI grow with the cards wanted
     const scale = size / MAX_BRIEFING;
-    const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage(), titling: newUsage(), titleRewriting: newUsage(), proofreading: newUsage(), duplicates: newUsage(), nameReview: newUsage()};
+    const usage = {repeats: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage(), titling: newUsage(), titleRewriting: newUsage(), proofreading: newUsage(), duplicates: newUsage(), nameReview: newUsage(), picturing: newUsage()};
     // the interests of the profile and of the projects it runs: each gets its share of the cards
     const [profile, interests, projects] = await Promise.all([ProfileModel.get(profileId), ProfileModel.briefingInterests(profileId),
         ProfileModel.projects(profileId)]);
@@ -1059,13 +1058,15 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     const sameNews = sameNewsGroups(items, language, {usage: usage.duplicates, label});
     // the names that no item of Wikidata stands for and that are no names (a pairing of two teams, a common noun), pointed at by the AI at the same time
     const notNames = reviewNames(items, {usage: usage.nameReview, label});
+    // the picture of each card looked at by the AI, which finds a better one among its articles' when it is much better (see picture-choice.js)
+    const aiPictures = choosePictures(items, {usage: usage.picturing, label});
     // the words an article of another language says it has no confirmation with, in the reader's language
     const hedged = await withHedgedTranslated(items, language, usage.summarizing).catch(() => items);
     // the last read, by the AI, of what the reader will see: a dateline, a credit or a label the rules do not know yet, taken out when the code
     // checks it (see proofread.js); never fails, never waits long
     const proofread = await proofreadCards(hedged, language, {usage: usage.proofreading, label});
     // the second card of a news both readers agree on is among the angles of the other: no news is hidden, a development taken for it is one click away
-    const written = withoutNonNames(foldCards(proofread, await sameNews, {label}), await notNames, {label});
+    const written = withoutNonNames(foldCards(withAiPictures(proofread, await aiPictures), await sameNews, {label}), await notNames, {label});
     // the analysis of the cards that merit one, from their articles read whole: written after the
     // briefing is shown (it reasons for a minute or more a card, see card-analysis.js), never awaited
     if (briefingId) analyze(briefingId, written, articles, language);

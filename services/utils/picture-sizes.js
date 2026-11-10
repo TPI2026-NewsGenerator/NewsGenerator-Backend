@@ -12,7 +12,11 @@ import {Buffer} from "node:buffer";
 import {mapWithConcurrency} from "./concurrency.js";
 import {assertPublicUrl} from "./public-url.js";
 
-const HEADERS = {'User-Agent': 'Mozilla/5.0 (compatible; NewsGenerator/1.0; self-hosted news reader)', Accept: 'image/*'};
+// Wide enough for the card and the e-mail, which shows 560 px (see briefing-mail.js)
+export const SHARP_WIDTH = 560;
+// the app says what it is to the sites it reads: it never passes for a browser (see ROBOT_REFUSALS)
+export const PICTURE_HEADERS = {'User-Agent': 'Mozilla/5.0 (compatible; NewsGenerator/1.0; self-hosted news reader)', Accept: 'image/*'};
+const HEADERS = PICTURE_HEADERS;
 const TIMEOUT_MS = 6000;
 const TOTAL_MS = 25000;
 const CONCURRENCY = 8;

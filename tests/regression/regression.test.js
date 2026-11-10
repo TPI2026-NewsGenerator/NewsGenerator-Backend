@@ -29,6 +29,7 @@ const {titlesOfCard} = await import('../../services/utils/card-titles.js');
 const {checkRewrite, neutralTitle} = await import('../../services/utils/neutral-titles.js');
 const {cutPiece} = await import('../../services/utils/proofread.js');
 const {withoutPreposition} = await import('../../services/utils/mentions.js');
+const {chooseLetter} = await import('../../services/utils/picture-choice.js');
 
 const corpus = JSON.parse(readFileSync(new URL('./corpus.json', import.meta.url), 'utf8'));
 
@@ -88,6 +89,11 @@ const FAMILIES = {
         const unconcept = input.concepts ? withoutConcepts(unreadable, new Map(Object.entries(input.labels ?? {}))) : unreadable;
         const kept = input.linked ? withSameItemJoined(unconcept) : unconcept;
         expect(kept.map(name => [name.name, name.qid ?? null])).toEqual(wanted.names);
+    },
+    // the picture a card ends up with when the AI has rated the pictures of its articles (quality 1-5, relevance 0-2) and named the best: the
+    // letter of the picture shown (lead) is kept unless the best is better by a point (see chooseLetter)
+    picturechoice: ({input, expect: wanted}) => {
+        expect(chooseLetter({ratings: input.ratings, best: input.best}, input.lead)).toBe(wanted.letter);
     },
     // the country the name of an organisation says by its words: it starts with a country, or has an adjective of nationality
     nationality: ({input, expect: wanted}) => {

@@ -61,6 +61,25 @@ last (the page is on https, its browser blocks it), and when none is sharp the w
 all that load (`pictures`) for the e-mail. Without any, its illustration, captioned "Illustration" and credited to its author and licence (see
 [e-mail](email/README.md)).
 
+**The picture chosen by the AI** (`choosePictures` of `picture-choice.js`, since 10.11.2026, at the end of `write()` with the other readings of the cards).
+The width says nothing of a blur, a logo or a picture of another subject (the user: two cards of the briefing of Enzo had "de très très mauvaise
+qualité", better pictures were among those of their articles). gemma4:31b, which reads pictures, is shown those of a card (the one shown and three
+others at most, wide enough, on https, as the files are: JPEG, PNG or WebP of 3 MB at most, fetched as the app is, never as a browser) with its title,
+the letters turned by story so that the one shown is not always the "A". It gives each a quality (1-5) and a relevance (0-2) and names the best; the code
+decides: the card keeps its picture unless the AI gives the other a quality at least one point above (the relevance of a picture counts for 3 points when
+it has none; a picture shown with a relevance of 0 against one that has some is replaced). A picture that does not load, or an AI that does not answer
+(`AI_PICTURES=off` switches it off, `PICTURE_MODEL` names another model that reads pictures), leaves the card as it is. The change is in the log
+(`Briefing 512: pictures: the picture of "…" changed (quality 3 -> 5, …)`), on the card (`pictureChosen`) and in `scripts/briefing-audit.js`.
+About 1 100 tokens a card, 10 s for the 11 cards of a briefing of 20 that have another picture.
+
+Measured on 60 cards and their 198 pictures (the first four of each, from the benches and the last 80 briefings), rated blind by two raters (quality and
+relevance; they agree at 0.75 on the quality, on the best picture for 46 cards of 60): the first sharp picture of the articles 3.98 of quality
+(5 pictures of 60 rated 2.5 or less); bytes per pixel 3.93 (no better); a Laplacian measure of sharpness 4.07, but it chose pictures of another subject
+(relevance 1.63 against 1.70) and needs an image library; the AI, its best choice always 4.12; the AI with the margin of one point 4.17, none of its
+changes breaking a card, 9 to 11 cards of 60 changed, the same on two runs. The margin was chosen after seeing the data: the gain is probably a little
+overestimated. The raters did not find the picture of the card 1 of that briefing poor (all four candidates 4 of 5), which the AI keeps too: it is the
+card of the pictures a reader sees larger than the raters did. `bench/picture-choice-live.mjs` runs it live on a briefing never saved.
+
 Then the cards are saved (`briefings.items`, status `ready`), and the [analysis](analysis-ia/README.md) starts,
 not awaited (`briefings.analysis`, the client asking every 8 s while it runs).
 

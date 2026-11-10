@@ -118,6 +118,15 @@ if (leftOut.length > 0) {
     console.log(`\n${leftOut.length} name(s) with no item left out as no names:`);
     for (const one of leftOut.slice(0, 12)) console.log(`       - "${short(one.name, 40)}" (${one.why}) of "${short(one.card, 50)}"`);
 }
+// the pictures the AI found much better than the one the articles' order gave (services/utils/picture-choice.js): the picture shown and the one it replaced
+const rechosen = items.filter(item => item.pictureChosen);
+if (rechosen.length > 0) {
+    console.log(`\n${rechosen.length} picture(s) chosen by the AI in place of the first one:`);
+    for (const item of rechosen.slice(0, 10)) {
+        const {shown, chosen} = item.pictureChosen.scores ?? {};
+        console.log(`       - "${short(item.titleTranslation ?? item.title, 50)}": quality ${shown?.q} -> ${chosen?.q}, relevance ${shown?.r} -> ${chosen?.r} (${item.pictureChosen.fromSource ?? '?'} -> ${item.thumbnailSource ?? '?'})`);
+    }
+}
 const rewritten = items.filter(item => item.titleRewritten).length;
 const proposals = items.filter(item => item.titleProposal).length;
 console.log(`\ntitles rewritten by the AI: ${rewritten}, rewrites left to the editor: ${proposals}, analysis: ${row.analysis?.status ?? 'none'} (${Object.keys(row.analysis?.cards ?? {}).length} cards)`);
