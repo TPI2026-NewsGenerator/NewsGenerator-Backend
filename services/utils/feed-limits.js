@@ -53,7 +53,7 @@ export const withinBridgeRoom = (feeds, room) => {
 
 // names of the parameters that carry a key in the address of a private feed (a paid newsletter, a
 // private podcast, a Patreon): "?key=", "?auth=", "?token="...
-const SECRET_PARAMS = /^(key|api[-_]?key|auth|authorization|token|access[-_]?token|secret|sig|signature|password|passwd|pass|pwd|session|sid|private|uid|user|userid|login|email|hash)$/i;
+export const SECRET_PARAMS = /^(key|api[-_]?key|auth|authorization|token|access[-_]?token|secret|sig|signature|password|passwd|pass|pwd|session|sid|private|uid|user|userid|login|email|hash)$/i;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // a random key: long, letters and figures mixed, not the words of a slug ("transfer-news-2026")

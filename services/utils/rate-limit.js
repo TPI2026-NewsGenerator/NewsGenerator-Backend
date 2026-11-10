@@ -12,8 +12,10 @@ const CLEAN_AT = 10000;     // addresses remembered before the old ones are forg
 
 // kept in memory: one server, and a restart only gives a few more tries. key: who is counted, the
 // address of the request by default (an account, after authenticateToken). cost: what a request
-// counts for, 1 by default (the sites of a list checked), 'max' at most in the window
-export const rateLimit = ({windowMs, max, message, key = (req) => req.ip, cost = () => 1}) => {
+// counts for, 1 by default (the sites of a list checked), 'max' at most in the window. body: the
+// answer of a refusal, {error, retryAfter} by default (the routes for another system, /api/v1, say
+// it in their own form, see api-key.js)
+export const rateLimit = ({windowMs, max, message, key = (req) => req.ip, cost = () => 1, body = (text, retryAfter) => ({error: text, retryAfter})}) => {
     const hits = new Map();         // who -> [{at, cost}], the oldest first
 
     return (req, res, next) => {
@@ -30,7 +32,7 @@ export const rateLimit = ({windowMs, max, message, key = (req) => req.ip, cost =
             const retryAfter = Math.ceil((last.at + windowMs - now) / 1000);
             res.set('Retry-After', String(retryAfter));
             // in the answer too: a client of another origin can not read the header
-            return res.status(429).json({error: message, retryAfter});
+            return res.status(429).json(body(message, retryAfter));
         }
 
         recent.push({at: now, cost: spent});

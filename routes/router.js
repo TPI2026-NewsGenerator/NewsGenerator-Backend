@@ -18,6 +18,7 @@ import briefingRouter from './briefing-router.js';
 import affairRouter from './affair-router.js';
 import entityRouter from './entity-router.js';
 import mailRouter from './mail-router.js';
+import v1Router from './v1-router.js';
 import cors from "cors";
 
 const router = express.Router();
@@ -36,5 +37,7 @@ router.use('/briefing', briefingRouter);
 router.use('/affairs', affairRouter);
 router.use('/entities', entityRouter);
 router.use('/mails', mailRouter);
+// for another system, by key (not by session): /api/v1/subjects, /api/v1/positions
+router.use('/v1', v1Router);
 
 export default router;

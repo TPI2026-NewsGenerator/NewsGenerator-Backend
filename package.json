@@ -22,7 +22,8 @@
     "docs:zip": "node docs-site/run.mjs zip",
     "regression": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/regression",
     "regression:live": "node --env-file=.env bench/regression-run.mjs",
-    "audit": "node scripts/briefing-audit.js"
+    "audit": "node scripts/briefing-audit.js",
+    "api-key": "node scripts/make-api-key.js"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
