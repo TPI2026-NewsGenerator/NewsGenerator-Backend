@@ -87,6 +87,49 @@ describe('organizationItem', () => {
         expect(others).toEqual([]);
     });
 
+    it('should link the acronym of an association by the country of the sites that write it, without asking Wikidata', async () => {
+        // "FKF": 144 news of Kenyan sites, an organisation Wikidata has no item for (11.11.2026)
+        sitesNaming.mockResolvedValue([{site: 'standardmedia.co.ke', news: 6}, {site: 'nation.africa.ke', news: 3}, {site: 'bbc.com', news: 1}]);
+        expect(await organizationItem({id: 50, name: 'FKF', lang: 'en'})).toBe('Q5465856');
+        // "FPF" is the Peruvian, Portuguese and Puerto Rican federations: the sites tell
+        sitesNaming.mockResolvedValue([{site: 'record.pt', news: 8}, {site: 'abola.pt', news: 5}]);
+        expect(await organizationItem({id: 51, name: 'FPF', lang: 'pt'})).toBe('Q309005');
+        expect(namedItems).not.toHaveBeenCalled();
+        expect(ollamaJson).not.toHaveBeenCalled();
+    });
+
+    it('should leave an acronym to Wikidata when the sites are of a country with no association of that acronym', async () => {
+        // "AFM" of Dutch sites is the Authority for the Financial Markets, not the association of Macao
+        sitesNaming.mockResolvedValue([{site: 'nu.nl', news: 9}, {site: 'nos.nl', news: 6}]);
+        namedItems.mockResolvedValueOnce([]);
+        const candidates = [];
+        expect(await organizationItem({id: 52, name: 'AFM', lang: 'nl'}, null, candidates)).toBeNull();
+        expect(namedItems).toHaveBeenCalledWith('AFM', 'nl');
+        expect(candidates).toEqual([]);
+    });
+
+    it('should only offer the acronym of one association to the card when the sites have no country, never link it', async () => {
+        // "CSA" is the Romanian club Steaua and the French regulator in the news: the string says nothing alone
+        sitesNaming.mockResolvedValue([{site: 'bbc.com', news: 9}]);
+        namedItems.mockResolvedValueOnce([]);
+        const offered = [];
+        expect(await organizationItem({id: 53, name: 'CSA', lang: 'en'}, null, offered)).toBeNull();
+        expect(offered).toEqual(['Q1032414']);
+
+        // Wikidata has items so named: they are decided as before, and the association is offered first to the card that chooses
+        namedItems.mockResolvedValueOnce([{qid: 'Q1', exact: false}, {qid: 'Q2', exact: true}]);
+        describeItems.mockResolvedValueOnce([{qid: 'Q1', label: 'A', description: '', links: 5, human: false, place: false, work: false},
+            {qid: 'Q2', label: 'B', description: '', links: 1, human: false, place: false, work: false}]);
+        ollamaJson.mockResolvedValueOnce({n: 0});
+        const candidates = [];
+        expect(await organizationItem({id: 54, name: 'FKF', lang: 'en'}, null, candidates)).toBeNull();
+        expect(candidates).toEqual(['Q5465856', 'Q1', 'Q2']);
+
+        // several associations share the acronym and the sites say none: not chosen
+        namedItems.mockResolvedValueOnce([]);
+        expect(await organizationItem({id: 55, name: 'FPF', lang: 'en'})).toBeNull();
+    });
+
     it('should hand back the items found for the name in the array given, whatever it answers', async () => {
         namedItems.mockResolvedValue([{qid: 'Q1', exact: false}, {qid: 'Q2', exact: true}]);
         describeItems.mockResolvedValueOnce([{qid: 'Q1', label: 'A', description: '', links: 5, human: false, place: false, work: false},

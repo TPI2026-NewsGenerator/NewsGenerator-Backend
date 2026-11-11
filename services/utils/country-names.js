@@ -38,7 +38,11 @@ const NAMED_IN = ['en', 'fr', 'de', 'es', 'it', 'pt', 'nl', 'pl', 'cs', 'sk', 's
     'ru', 'uk', 'tr', 'sv', 'da', 'nb', 'fi', 'et', 'lv', 'lt', 'sq', 'ar', 'he', 'ja', 'zh', 'ko', 'vi', 'id', 'ms',
     // the languages of the news that had none (Azerbaijani 390 places met, Macedonian 211, Uzbek 212, Catalan 158, Armenian 78...):
     // none of the names of the languages above is lost to them (measured, 8.11.2026)
-    'az', 'uz', 'kk', 'be', 'mk', 'ca', 'hy', 'ka', 'is', 'eu', 'gl'];
+    'az', 'uz', 'kk', 'be', 'mk', 'ca', 'hy', 'ka', 'is', 'eu', 'gl',
+    // the languages of the news in other scripts that had none (11.11.2026: "ایران" named by 1 818 news in Urdu, Persian and Pashto, "امریکا" 1 491,
+    // and 6 000 more with the names of the countries in these languages, none read: a card of these languages had no country): Intl knows
+    // all the 273 countries in each of them and not one of the names is the one of English, so none can meet a word of another language
+    'fa', 'ur', 'ps', 'tg', 'ky', 'mn', 'th', 'hi', 'mr', 'ne', 'bn', 'ta', 'te', 'kn', 'ml', 'gu', 'pa', 'si', 'km', 'lo', 'my', 'am'];
 // codes that are no country: the European Union, the eurozone, the United Nations, outlying Oceania,
 // pseudo-locales, unknown
 const NOT_COUNTRIES = new Set(['EU', 'EZ', 'UN', 'QO', 'XA', 'XB', 'ZZ']);

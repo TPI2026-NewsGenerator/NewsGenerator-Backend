@@ -3,7 +3,10 @@
   "qid": "Q383179",
   "name": "Afghanistan Football Federation",
   "level": "association",
-  "country": "AF"
+  "country": "AF",
+  "acronyms": [
+   "AFF"
+  ]
  },
  {
   "qid": "Q390598",
@@ -15,19 +18,29 @@
   "qid": "Q647526",
   "name": "Algerian Football Federation",
   "level": "association",
-  "country": "DZ"
+  "country": "DZ",
+  "acronyms": [
+   "FAF"
+  ]
  },
  {
   "qid": "Q622332",
   "name": "All India Football Federation",
   "level": "association",
-  "country": "IN"
+  "country": "IN",
+  "acronyms": [
+   "AIFF",
+   "AFC"
+  ]
  },
  {
   "qid": "Q623651",
   "name": "All Nepal Football Association",
   "level": "association",
-  "country": "NP"
+  "country": "NP",
+  "acronyms": [
+   "ANFA"
+  ]
  },
  {
   "qid": "Q317705",
@@ -39,13 +52,19 @@
   "qid": "Q1048119",
   "name": "Angolan Football Federation",
   "level": "association",
-  "country": "AO"
+  "country": "AO",
+  "acronyms": [
+   "FAF"
+  ]
  },
  {
   "qid": "Q2333265",
   "name": "Anguilla Football Association",
   "level": "association",
-  "country": "AI"
+  "country": "AI",
+  "acronyms": [
+   "AFA"
+  ]
  },
  {
   "qid": "Q540988",
@@ -57,7 +76,10 @@
   "qid": "Q496548",
   "name": "Argentine Football Association",
   "level": "association",
-  "country": "AR"
+  "country": "AR",
+  "acronyms": [
+   "AFA"
+  ]
  },
  {
   "qid": "Q1998399",
@@ -75,7 +97,10 @@
   "qid": "Q381129",
   "name": "Association of Football Federations of Azerbaijan",
   "level": "association",
-  "country": "AZ"
+  "country": "AZ",
+  "acronyms": [
+   "AFFA"
+  ]
  },
  {
   "qid": "Q222108",
@@ -93,19 +118,28 @@
   "qid": "Q622263",
   "name": "Bahrain Football Association",
   "level": "association",
-  "country": "BH"
+  "country": "BH",
+  "acronyms": [
+   "BFA"
+  ]
  },
  {
   "qid": "Q806536",
   "name": "Bangladesh Football Federation",
   "level": "association",
-  "country": "BD"
+  "country": "BD",
+  "acronyms": [
+   "BFF"
+  ]
  },
  {
   "qid": "Q612670",
   "name": "Barbados Football Association",
   "level": "association",
-  "country": "BB"
+  "country": "BB",
+  "acronyms": [
+   "BFA"
+  ]
  },
  {
   "qid": "Q777967",
@@ -117,13 +151,19 @@
   "qid": "Q279795",
   "name": "Bhutan Football Federation",
   "level": "association",
-  "country": "BT"
+  "country": "BT",
+  "acronyms": [
+   "BFF"
+  ]
  },
  {
   "qid": "Q834333",
   "name": "Bolivian Football Federation",
   "level": "association",
-  "country": "BO"
+  "country": "BO",
+  "acronyms": [
+   "FBF"
+  ]
  },
  {
   "qid": "Q2353192",
@@ -135,19 +175,28 @@
   "qid": "Q634742",
   "name": "Botswana Football Association",
   "level": "association",
-  "country": "BW"
+  "country": "BW",
+  "acronyms": [
+   "BFA"
+  ]
  },
  {
   "qid": "Q244754",
   "name": "Brazilian Football Confederation",
   "level": "association",
-  "country": "BR"
+  "country": "BR",
+  "acronyms": [
+   "CBF"
+  ]
  },
  {
   "qid": "Q746272",
   "name": "British Virgin Islands Football Association",
   "level": "association",
-  "country": "VG"
+  "country": "VG",
+  "acronyms": [
+   "BVIFA"
+  ]
  },
  {
   "qid": "Q630248",
@@ -165,73 +214,109 @@
   "qid": "Q921938",
   "name": "Cameroonian Football Federation",
   "level": "association",
-  "country": "CM"
+  "country": "CM",
+  "acronyms": [
+   "FECAFOOT"
+  ]
  },
  {
   "qid": "Q1032414",
   "name": "Canadian Soccer Association",
   "level": "association",
-  "country": "CA"
+  "country": "CA",
+  "acronyms": [
+   "CSA"
+  ]
  },
  {
   "qid": "Q2466978",
   "name": "Cayman Islands Football Association",
   "level": "association",
-  "country": "KY"
+  "country": "KY",
+  "acronyms": [
+   "CIFA"
+  ]
  },
  {
   "qid": "Q573747",
   "name": "Chinese Football Association",
   "level": "association",
-  "country": "CN"
+  "country": "CN",
+  "acronyms": [
+   "CFA"
+  ]
  },
  {
   "qid": "Q700929",
   "name": "Chinese Taipei Football Association",
   "level": "association",
-  "country": "TW"
+  "country": "TW",
+  "acronyms": [
+   "CTFA"
+  ]
  },
  {
   "qid": "Q830922",
   "name": "Colombian Football Federation",
   "level": "association",
-  "country": "CO"
+  "country": "CO",
+  "acronyms": [
+   "FCF"
+  ]
  },
  {
   "qid": "Q868584",
   "name": "Comoros Football Federation",
   "level": "association",
-  "country": "KM"
+  "country": "KM",
+  "acronyms": [
+   "FFC"
+  ]
  },
  {
   "qid": "Q168360",
   "name": "Confederation of African Football",
   "level": "confederation",
-  "country": null
+  "country": null,
+  "acronyms": [
+   "CAF"
+  ]
  },
  {
   "qid": "Q1129588",
   "name": "Cook Islands Football Association",
   "level": "association",
-  "country": "CK"
+  "country": "CK",
+  "acronyms": [
+   "CIFA"
+  ]
  },
  {
   "qid": "Q869327",
   "name": "Costa Rican Football Federation",
   "level": "association",
-  "country": "CR"
+  "country": "CR",
+  "acronyms": [
+   "FEDEFUT"
+  ]
  },
  {
   "qid": "Q328689",
   "name": "Croatian Football Federation",
   "level": "association",
-  "country": "HR"
+  "country": "HR",
+  "acronyms": [
+   "HNS"
+  ]
  },
  {
   "qid": "Q4136296",
   "name": "Curaçao Football Federation",
   "level": "association",
-  "country": "CW"
+  "country": "CW",
+  "acronyms": [
+   "FFK"
+  ]
  },
  {
   "qid": "Q473248",
@@ -255,7 +340,10 @@
   "qid": "Q744812",
   "name": "Dominican Football Federation",
   "level": "association",
-  "country": "DO"
+  "country": "DO",
+  "acronyms": [
+   "FEDO"
+  ]
  },
  {
   "qid": "Q1067403",
@@ -267,19 +355,28 @@
   "qid": "Q538118",
   "name": "Ecuadorian Football Federation",
   "level": "association",
-  "country": "EC"
+  "country": "EC",
+  "acronyms": [
+   "FEF"
+  ]
  },
  {
   "qid": "Q921881",
   "name": "Egyptian Football Association",
   "level": "association",
-  "country": "EG"
+  "country": "EG",
+  "acronyms": [
+   "EFA"
+  ]
  },
  {
   "qid": "Q988088",
   "name": "Equatoguinean Football Federation",
   "level": "association",
-  "country": "GQ"
+  "country": "GQ",
+  "acronyms": [
+   "FEGUIFUT"
+  ]
  },
  {
   "qid": "Q427896",
@@ -291,19 +388,28 @@
   "qid": "Q264335",
   "name": "Estonian Football Association",
   "level": "association",
-  "country": "EE"
+  "country": "EE",
+  "acronyms": [
+   "EJL"
+  ]
  },
  {
   "qid": "Q1193440",
   "name": "Eswatini Football Association",
   "level": "association",
-  "country": "SZ"
+  "country": "SZ",
+  "acronyms": [
+   "EFA"
+  ]
  },
  {
   "qid": "Q537717",
   "name": "Ethiopian Football Federation",
   "level": "association",
-  "country": "ET"
+  "country": "ET",
+  "acronyms": [
+   "EFF"
+  ]
  },
  {
   "qid": "Q268628",
@@ -315,7 +421,10 @@
   "qid": "Q463623",
   "name": "Federação Caboverdiana de Futebol",
   "level": "association",
-  "country": "CV"
+  "country": "CV",
+  "acronyms": [
+   "FCF"
+  ]
  },
  {
   "qid": "Q804049",
@@ -363,7 +472,10 @@
   "qid": "Q1061066",
   "name": "Fédération de Football de la Républic Islamique de Mauritanie",
   "level": "association",
-  "country": "MR"
+  "country": "MR",
+  "acronyms": [
+   "FFRIM"
+  ]
  },
  {
   "qid": "Q912098",
@@ -375,25 +487,37 @@
   "qid": "Q662763",
   "name": "Fédération Malagasy de Football",
   "level": "association",
-  "country": "MG"
+  "country": "MG",
+  "acronyms": [
+   "FMF"
+  ]
  },
  {
   "qid": "Q1094787",
   "name": "Fédération Nigérienne de Football",
   "level": "association",
-  "country": "NE"
+  "country": "NE",
+  "acronyms": [
+   "FENIFOOT"
+  ]
  },
  {
   "qid": "Q375485",
   "name": "Federation of Uganda Football Associations",
   "level": "association",
-  "country": "UG"
+  "country": "UG",
+  "acronyms": [
+   "FUFA"
+  ]
  },
  {
   "qid": "Q874992",
   "name": "Fédération Tchadienne de Football",
   "level": "association",
-  "country": "TD"
+  "country": "TD",
+  "acronyms": [
+   "FTFA"
+  ]
  },
  {
   "qid": "Q1048509",
@@ -411,7 +535,11 @@
   "qid": "Q622172",
   "name": "Football Association of Brunei Darussalam",
   "level": "association",
-  "country": "BN"
+  "country": "BN",
+  "acronyms": [
+   "NFABD",
+   "FABD"
+  ]
  },
  {
   "qid": "Q956927",
@@ -429,7 +557,10 @@
   "qid": "Q622321",
   "name": "Football Association of Hong Kong, China",
   "level": "association",
-  "country": "HK"
+  "country": "HK",
+  "acronyms": [
+   "HKFA"
+  ]
  },
  {
   "qid": "Q478734",
@@ -441,37 +572,55 @@
   "qid": "Q622257",
   "name": "Football Association of Indonesia",
   "level": "association",
-  "country": "ID"
+  "country": "ID",
+  "acronyms": [
+   "PSSI"
+  ]
  },
  {
   "qid": "Q497782",
   "name": "Football Association of Ireland",
   "level": "association",
-  "country": "IE"
+  "country": "IE",
+  "acronyms": [
+   "FAI"
+  ]
  },
  {
   "qid": "Q181740",
   "name": "Football Association of Malawi",
   "level": "association",
-  "country": "MW"
+  "country": "MW",
+  "acronyms": [
+   "FAM"
+  ]
  },
  {
   "qid": "Q622250",
   "name": "Football Association of Malaysia",
   "level": "association",
-  "country": "MY"
+  "country": "MY",
+  "acronyms": [
+   "FAM"
+  ]
  },
  {
   "qid": "Q622270",
   "name": "Football Association of Maldives",
   "level": "association",
-  "country": "MV"
+  "country": "MV",
+  "acronyms": [
+   "FAM"
+  ]
  },
  {
   "qid": "Q738074",
   "name": "Football Association of Moldova",
   "level": "association",
-  "country": "MD"
+  "country": "MD",
+  "acronyms": [
+   "FMF"
+  ]
  },
  {
   "qid": "Q738128",
@@ -495,13 +644,19 @@
   "qid": "Q725496",
   "name": "Football Association of Slovenia",
   "level": "association",
-  "country": "SI"
+  "country": "SI",
+  "acronyms": [
+   "NZS"
+  ]
  },
  {
   "qid": "Q1318927",
   "name": "Football Association of Thailand",
   "level": "association",
-  "country": "TH"
+  "country": "TH",
+  "acronyms": [
+   "FAT"
+  ]
  },
  {
   "qid": "Q337065",
@@ -513,13 +668,19 @@
   "qid": "Q275173",
   "name": "Football Association of Wales",
   "level": "association",
-  "country": "GB-WLS"
+  "country": "GB-WLS",
+  "acronyms": [
+   "FAW"
+  ]
  },
  {
   "qid": "Q765566",
   "name": "Football Association of Zambia",
   "level": "association",
-  "country": "ZM"
+  "country": "ZM",
+  "acronyms": [
+   "FAZ"
+  ]
  },
  {
   "qid": "Q781890",
@@ -537,7 +698,10 @@
   "qid": "Q1116647",
   "name": "Football Federation American Samoa",
   "level": "association",
-  "country": "AS"
+  "country": "AS",
+  "acronyms": [
+   "FFAS"
+  ]
  },
  {
   "qid": "Q391151",
@@ -555,7 +719,10 @@
   "qid": "Q2421684",
   "name": "Football Federation of Belize",
   "level": "association",
-  "country": "BZ"
+  "country": "BZ",
+  "acronyms": [
+   "FFB"
+  ]
  },
  {
   "qid": "Q387611",
@@ -579,25 +746,38 @@
   "qid": "Q602656",
   "name": "Football Federation of Chile",
   "level": "association",
-  "country": "CL"
+  "country": "CL",
+  "acronyms": [
+   "FFCh"
+  ]
  },
  {
   "qid": "Q780843",
   "name": "Football Federation of Honduras",
   "level": "association",
-  "country": "HN"
+  "country": "HN",
+  "acronyms": [
+   "FENAFUTH",
+   "FFH"
+  ]
  },
  {
   "qid": "Q1042614",
   "name": "Football Federation of Iran",
   "level": "association",
-  "country": "IR"
+  "country": "IR",
+  "acronyms": [
+   "FFIRI"
+  ]
  },
  {
   "qid": "Q528699",
   "name": "Football Federation of Kazakhstan",
   "level": "association",
-  "country": "KZ"
+  "country": "KZ",
+  "acronyms": [
+   "QFF"
+  ]
  },
  {
   "qid": "Q1289049",
@@ -609,25 +789,38 @@
   "qid": "Q630262",
   "name": "Football Federation of Macedonia",
   "level": "association",
-  "country": "MK"
+  "country": "MK",
+  "acronyms": [
+   "FFM",
+   "FSM"
+  ]
  },
  {
   "qid": "Q625729",
   "name": "Football Federation of Sri Lanka",
   "level": "association",
-  "country": "LK"
+  "country": "LK",
+  "acronyms": [
+   "FFSL"
+  ]
  },
  {
   "qid": "Q625805",
   "name": "Football Federation of Turkmenistan",
   "level": "association",
-  "country": "TM"
+  "country": "TM",
+  "acronyms": [
+   "FFT"
+  ]
  },
  {
   "qid": "Q2468903",
   "name": "Football Federation Samoa",
   "level": "association",
-  "country": "WS"
+  "country": "WS",
+  "acronyms": [
+   "FFS"
+  ]
  },
  {
   "qid": "Q5465856",
@@ -639,7 +832,10 @@
   "qid": "Q244750",
   "name": "French Football Federation",
   "level": "association",
-  "country": "FR"
+  "country": "FR",
+  "acronyms": [
+   "FFF"
+  ]
  },
  {
   "qid": "Q579192",
@@ -651,7 +847,10 @@
   "qid": "Q1007927",
   "name": "Gambia Football Association",
   "level": "association",
-  "country": "GM"
+  "country": "GM",
+  "acronyms": [
+   "GFA"
+  ]
  },
  {
   "qid": "Q371451",
@@ -663,7 +862,10 @@
   "qid": "Q154191",
   "name": "German Football Association",
   "level": "association",
-  "country": "DE"
+  "country": "DE",
+  "acronyms": [
+   "DFB"
+  ]
  },
  {
   "qid": "Q923074",
@@ -699,19 +901,28 @@
   "qid": "Q1028610",
   "name": "Guinean Football Federation",
   "level": "association",
-  "country": "GN"
+  "country": "GN",
+  "acronyms": [
+   "FGF"
+  ]
  },
  {
   "qid": "Q1029049",
   "name": "Guyana Football Federation",
   "level": "association",
-  "country": "GY"
+  "country": "GY",
+  "acronyms": [
+   "GFF"
+  ]
  },
  {
   "qid": "Q2604400",
   "name": "Haitian Football Federation",
   "level": "association",
-  "country": "HT"
+  "country": "HT",
+  "acronyms": [
+   "FHF"
+  ]
  },
  {
   "qid": "Q733029",
@@ -723,13 +934,19 @@
   "qid": "Q1475056",
   "name": "Iraq Football Association",
   "level": "association",
-  "country": "IQ"
+  "country": "IQ",
+  "acronyms": [
+   "IFA"
+  ]
  },
  {
   "qid": "Q620280",
   "name": "Irish Football Association",
   "level": "association",
-  "country": "GB-NIR"
+  "country": "GB-NIR",
+  "acronyms": [
+   "IFA"
+  ]
  },
  {
   "qid": "Q641712",
@@ -741,7 +958,10 @@
   "qid": "Q201897",
   "name": "Italian Football Federation",
   "level": "association",
-  "country": "IT"
+  "country": "IT",
+  "acronyms": [
+   "FIGC"
+  ]
  },
  {
   "qid": "Q923018",
@@ -753,19 +973,28 @@
   "qid": "Q578917",
   "name": "Jamaica Football Federation",
   "level": "association",
-  "country": "JM"
+  "country": "JM",
+  "acronyms": [
+   "JFF"
+  ]
  },
  {
   "qid": "Q579842",
   "name": "Japan Football Association",
   "level": "association",
-  "country": "JP"
+  "country": "JP",
+  "acronyms": [
+   "JFA"
+  ]
  },
  {
   "qid": "Q250720",
   "name": "Jordan Football Association",
   "level": "association",
-  "country": "JO"
+  "country": "JO",
+  "acronyms": [
+   "JFA"
+  ]
  },
  {
   "qid": "Q495584",
@@ -777,13 +1006,19 @@
   "qid": "Q1086979",
   "name": "Kuwait Football Association",
   "level": "association",
-  "country": "KW"
+  "country": "KW",
+  "acronyms": [
+   "KFA"
+  ]
  },
  {
   "qid": "Q622272",
   "name": "Kyrgyz Football Union",
   "level": "association",
-  "country": "KG"
+  "country": "KG",
+  "acronyms": [
+   "FFKR"
+  ]
  },
  {
   "qid": "Q623951",
@@ -795,19 +1030,28 @@
   "qid": "Q630231",
   "name": "Latvian Football Federation",
   "level": "association",
-  "country": "LV"
+  "country": "LV",
+  "acronyms": [
+   "LFF"
+  ]
  },
  {
   "qid": "Q1514606",
   "name": "Lebanese Football Association",
   "level": "association",
-  "country": "LB"
+  "country": "LB",
+  "acronyms": [
+   "LFA"
+  ]
  },
  {
   "qid": "Q570331",
   "name": "Lesotho Football Association",
   "level": "association",
-  "country": "LS"
+  "country": "LS",
+  "acronyms": [
+   "LFA"
+  ]
  },
  {
   "qid": "Q1129903",
@@ -819,7 +1063,10 @@
   "qid": "Q239089",
   "name": "Libyan Football Federation",
   "level": "association",
-  "country": "LY"
+  "country": "LY",
+  "acronyms": [
+   "LFF"
+  ]
  },
  {
   "qid": "Q387416",
@@ -837,31 +1084,46 @@
   "qid": "Q696850",
   "name": "Luxembourg Football Federation",
   "level": "association",
-  "country": "LU"
+  "country": "LU",
+  "acronyms": [
+   "FLF"
+  ]
  },
  {
   "qid": "Q1068648",
   "name": "Mali Football Federation",
   "level": "association",
-  "country": "ML"
+  "country": "ML",
+  "acronyms": [
+   "FEMAFOOT"
+  ]
  },
  {
   "qid": "Q728575",
   "name": "Malta Football Association",
   "level": "association",
-  "country": "MT"
+  "country": "MT",
+  "acronyms": [
+   "MFA"
+  ]
  },
  {
   "qid": "Q269119",
   "name": "Mauritius Football Association",
   "level": "association",
-  "country": "MU"
+  "country": "MU",
+  "acronyms": [
+   "MFA"
+  ]
  },
  {
   "qid": "Q1160682",
   "name": "Mexican Football Federation",
   "level": "association",
-  "country": "MX"
+  "country": "MX",
+  "acronyms": [
+   "FMF"
+  ]
  },
  {
   "qid": "Q623799",
@@ -879,13 +1141,20 @@
   "qid": "Q3116927",
   "name": "Moroccan Football Federation",
   "level": "association",
-  "country": "MA"
+  "country": "MA",
+  "acronyms": [
+   "FRMF",
+   "FMF"
+  ]
  },
  {
   "qid": "Q650130",
   "name": "Mozambican Football Federation",
   "level": "association",
-  "country": "MZ"
+  "country": "MZ",
+  "acronyms": [
+   "FMF"
+  ]
  },
  {
   "qid": "Q623756",
@@ -897,91 +1166,138 @@
   "qid": "Q750090",
   "name": "Namibia Football Association",
   "level": "association",
-  "country": "NA"
+  "country": "NA",
+  "acronyms": [
+   "NFA"
+  ]
  },
  {
   "qid": "Q1028524",
   "name": "National Football Federation of Guatemala",
   "level": "association",
-  "country": "GT"
+  "country": "GT",
+  "acronyms": [
+   "FENAFUTG"
+  ]
  },
  {
   "qid": "Q1307814",
   "name": "New Caledonian Football Federation",
   "level": "association",
-  "country": "NC"
+  "country": "NC",
+  "acronyms": [
+   "FCF"
+  ]
  },
  {
   "qid": "Q842596",
   "name": "New Zealand Football",
   "level": "association",
-  "country": "NZ"
+  "country": "NZ",
+  "acronyms": [
+   "NZF"
+  ]
  },
  {
   "qid": "Q2287945",
   "name": "Nicaraguan Football Federation",
   "level": "association",
-  "country": "NI"
+  "country": "NI",
+  "acronyms": [
+   "FENIFUT"
+  ]
  },
  {
   "qid": "Q932762",
   "name": "Nigeria Football Federation",
   "level": "association",
-  "country": "NG"
+  "country": "NG",
+  "acronyms": [
+   "NFF"
+  ]
  },
  {
   "qid": "Q623658",
   "name": "Northern Mariana Islands Football Association",
   "level": "association",
-  "country": "MP"
+  "country": "MP",
+  "acronyms": [
+   "NMIFA"
+  ]
  },
  {
   "qid": "Q474952",
   "name": "Norwegian Football Federation",
   "level": "association",
-  "country": "NO"
+  "country": "NO",
+  "acronyms": [
+   "NFF"
+  ]
  },
  {
   "qid": "Q1067949",
   "name": "Oman Football Association",
   "level": "association",
-  "country": "OM"
+  "country": "OM",
+  "acronyms": [
+   "OFA"
+  ]
  },
  {
   "qid": "Q623614",
   "name": "Pakistan Football Federation",
   "level": "association",
-  "country": "PK"
+  "country": "PK",
+  "acronyms": [
+   "PFF"
+  ]
  },
  {
   "qid": "Q623618",
   "name": "Palestinian Football Association",
   "level": "association",
-  "country": "PS"
+  "country": "PS",
+  "acronyms": [
+   "PFA"
+  ]
  },
  {
   "qid": "Q2287930",
   "name": "Panamanian Football Federation",
   "level": "association",
-  "country": "PA"
+  "country": "PA",
+  "acronyms": [
+   "FEPAFUT",
+   "Fepafut"
+  ]
  },
  {
   "qid": "Q1485130",
   "name": "Papua New Guinea Football Association",
   "level": "association",
-  "country": "PG"
+  "country": "PG",
+  "acronyms": [
+   "PNGFA",
+   "PNG"
+  ]
  },
  {
   "qid": "Q517883",
   "name": "Paraguayan Football Association",
   "level": "association",
-  "country": "PY"
+  "country": "PY",
+  "acronyms": [
+   "APF"
+  ]
  },
  {
   "qid": "Q680253",
   "name": "Peruvian Football Federation",
   "level": "association",
-  "country": "PE"
+  "country": "PE",
+  "acronyms": [
+   "FPF"
+  ]
  },
  {
   "qid": "Q623980",
@@ -999,19 +1315,28 @@
   "qid": "Q309005",
   "name": "Portuguese Football Federation",
   "level": "association",
-  "country": "PT"
+  "country": "PT",
+  "acronyms": [
+   "FPF"
+  ]
  },
  {
   "qid": "Q2605454",
   "name": "Puerto Rican Football Federation",
   "level": "association",
-  "country": "PR"
+  "country": "PR",
+  "acronyms": [
+   "FPF"
+  ]
  },
  {
   "qid": "Q622313",
   "name": "Qatar Football Association",
   "level": "association",
-  "country": "QA"
+  "country": "QA",
+  "acronyms": [
+   "QFA"
+  ]
  },
  {
   "qid": "Q631999",
@@ -1023,19 +1348,31 @@
   "qid": "Q381124",
   "name": "Royal Belgian Football Association",
   "level": "association",
-  "country": "BE"
+  "country": "BE",
+  "acronyms": [
+   "URBSFA",
+   "KBVB",
+   "KBFV",
+   "RBFA"
+  ]
  },
  {
   "qid": "Q213116",
   "name": "Royal Dutch Football Association",
   "level": "association",
-  "country": "NL"
+  "country": "NL",
+  "acronyms": [
+   "KNVB"
+  ]
  },
  {
   "qid": "Q207615",
   "name": "Royal Spanish Football Federation",
   "level": "association",
-  "country": "ES"
+  "country": "ES",
+  "acronyms": [
+   "RFEF"
+  ]
  },
  {
   "qid": "Q318386",
@@ -1053,7 +1390,10 @@
   "qid": "Q2528803",
   "name": "Saint Lucia Football Association",
   "level": "association",
-  "country": "LC"
+  "country": "LC",
+  "acronyms": [
+   "SLFA"
+  ]
  },
  {
   "qid": "Q2553207",
@@ -1065,7 +1405,10 @@
   "qid": "Q547761",
   "name": "Salvadoran Football Federation",
   "level": "association",
-  "country": "SV"
+  "country": "SV",
+  "acronyms": [
+   "FESFUT"
+  ]
  },
  {
   "qid": "Q125658",
@@ -1077,7 +1420,10 @@
   "qid": "Q621084",
   "name": "Saudi Football Federation",
   "level": "association",
-  "country": "SA"
+  "country": "SA",
+  "acronyms": [
+   "SAFF"
+  ]
  },
  {
   "qid": "Q478320",
@@ -1095,7 +1441,10 @@
   "qid": "Q614839",
   "name": "Seychelles Football Federation",
   "level": "association",
-  "country": "SC"
+  "country": "SC",
+  "acronyms": [
+   "SFF"
+  ]
  },
  {
   "qid": "Q1082194",
@@ -1113,25 +1462,37 @@
   "qid": "Q685899",
   "name": "Slovak Football Association",
   "level": "association",
-  "country": "SK"
+  "country": "SK",
+  "acronyms": [
+   "SFZ"
+  ]
  },
  {
   "qid": "Q1469434",
   "name": "Solomon Islands Football Federation",
   "level": "association",
-  "country": "SB"
+  "country": "SB",
+  "acronyms": [
+   "SIFF"
+  ]
  },
  {
   "qid": "Q524193",
   "name": "Somali Football Federation",
   "level": "association",
-  "country": "SO"
+  "country": "SO",
+  "acronyms": [
+   "SFF"
+  ]
  },
  {
   "qid": "Q833624",
   "name": "South African Football Association",
   "level": "association",
-  "country": "ZA"
+  "country": "ZA",
+  "acronyms": [
+   "SAFA"
+  ]
  },
  {
   "qid": "Q3040716",
@@ -1149,13 +1510,19 @@
   "qid": "Q1085464",
   "name": "Sudan Football Association",
   "level": "association",
-  "country": "SD"
+  "country": "SD",
+  "acronyms": [
+   "SFA"
+  ]
  },
  {
   "qid": "Q1854491",
   "name": "Surinamese Football Association",
   "level": "association",
-  "country": "SR"
+  "country": "SR",
+  "acronyms": [
+   "SVB"
+  ]
  },
  {
   "qid": "Q455428",
@@ -1173,19 +1540,29 @@
   "qid": "Q1186646",
   "name": "Syrian Football Association",
   "level": "association",
-  "country": "SY"
+  "country": "SY",
+  "acronyms": [
+   "SFA",
+   "FASF"
+  ]
  },
  {
   "qid": "Q2082037",
   "name": "Tahitian Football Federation",
   "level": "association",
-  "country": "PF"
+  "country": "PF",
+  "acronyms": [
+   "FTF"
+  ]
  },
  {
   "qid": "Q625726",
   "name": "Tajikistan Football Federation",
   "level": "association",
-  "country": "TJ"
+  "country": "TJ",
+  "acronyms": [
+   "FFT"
+  ]
  },
  {
   "qid": "Q962067",
@@ -1197,31 +1574,46 @@
   "qid": "Q9500",
   "name": "The Football Association",
   "level": "association",
-  "country": "GB-ENG"
+  "country": "GB-ENG",
+  "acronyms": [
+   "FA"
+  ]
  },
  {
   "qid": "Q1937479",
   "name": "Tonga Football Association",
   "level": "association",
-  "country": "TO"
+  "country": "TO",
+  "acronyms": [
+   "TFA"
+  ]
  },
  {
   "qid": "Q1193426",
   "name": "Trinidad and Tobago Football Association",
   "level": "association",
-  "country": "TT"
+  "country": "TT",
+  "acronyms": [
+   "TTFA"
+  ]
  },
  {
   "qid": "Q921559",
   "name": "Tunisian Football Federation",
   "level": "association",
-  "country": "TN"
+  "country": "TN",
+  "acronyms": [
+   "FTF"
+  ]
  },
  {
   "qid": "Q726183",
   "name": "Turkish Football Federation",
   "level": "association",
-  "country": "TR"
+  "country": "TR",
+  "acronyms": [
+   "TFF"
+  ]
  },
  {
   "qid": "Q255772",
@@ -1233,7 +1625,10 @@
   "qid": "Q2604237",
   "name": "U.S. Virgin Islands Soccer Federation",
   "level": "association",
-  "country": "VI"
+  "country": "VI",
+  "acronyms": [
+   "USVISA"
+  ]
  },
  {
   "qid": "Q140486",
@@ -1245,25 +1640,37 @@
   "qid": "Q35572",
   "name": "Union of European Football Associations",
   "level": "confederation",
-  "country": null
+  "country": null,
+  "acronyms": [
+   "UEFA"
+  ]
  },
  {
   "qid": "Q944522",
   "name": "United Arab Emirates Football Association",
   "level": "association",
-  "country": "AE"
+  "country": "AE",
+  "acronyms": [
+   "UAEFA"
+  ]
  },
  {
   "qid": "Q222131",
   "name": "United States Soccer Federation",
   "level": "association",
-  "country": "US"
+  "country": "US",
+  "acronyms": [
+   "USSF"
+  ]
  },
  {
   "qid": "Q722749",
   "name": "Uruguayan Football Association",
   "level": "association",
-  "country": "UY"
+  "country": "UY",
+  "acronyms": [
+   "AUF"
+  ]
  },
  {
   "qid": "Q621112",
@@ -1275,30 +1682,45 @@
   "qid": "Q1067795",
   "name": "Vanuatu Football Federation",
   "level": "association",
-  "country": "VU"
+  "country": "VU",
+  "acronyms": [
+   "VFF"
+  ]
  },
  {
   "qid": "Q849148",
   "name": "Venezuelan Football Federation",
   "level": "association",
-  "country": "VE"
+  "country": "VE",
+  "acronyms": [
+   "FVF"
+  ]
  },
  {
   "qid": "Q849362",
   "name": "Vietnam Football Federation",
   "level": "association",
-  "country": "VN"
+  "country": "VN",
+  "acronyms": [
+   "VFF"
+  ]
  },
  {
   "qid": "Q625790",
   "name": "Yemen Football Association",
   "level": "association",
-  "country": "YE"
+  "country": "YE",
+  "acronyms": [
+   "YFA"
+  ]
  },
  {
   "qid": "Q931302",
   "name": "Zimbabwe Football Association",
   "level": "association",
-  "country": "ZW"
+  "country": "ZW",
+  "acronyms": [
+   "ZIFA"
+  ]
  }
 ]

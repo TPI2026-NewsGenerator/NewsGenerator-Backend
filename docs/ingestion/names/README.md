@@ -118,6 +118,18 @@ what finds the other angles of a card through its rare names.
   Aude; the AI answers none for a card that is not about it. Left: the 2-letter acronyms are not linked on a card (`isUnlinkedAcronym`: "FA" is the alias
   of too many), so the bare FA reaches the card by its candidates only. `bench/acronym-types/kinds-of-club.sql` (for srv1) puts Q9500 first among the
   candidates of the two rows, takes off the three wrong links and, optionally, the links of the news to the words that came from a longer name.
+- **The acronyms of the associations** ("FKF", "SAFA", "AUF"; since 11.11.2026). 69 organisations of the database with no item bear the acronym of a
+  football association, 4,598 mentions: "FPF" 894 news, "GFA" 479, "PFF" 367, "SAFA" 149, "FKF" 144. The table of the associations
+  (`football-associations.json`) now holds the acronyms Wikidata gives (`acronyms`: P1813 and the English aliases, 137 associations,
+  `scripts/build-football-associations.js`) and `associationOfAcronym` adds the initials of the name ("Football Kenya Federation" is "FKF"),
+  never an acronym of less than three letters nor a confederation's. The same acronym is often several associations' ("FPF": Peru, Portugal,
+  Puerto Rico; "GFA": six) and the same string names every body that bears it ("CSA" is a Romanian club and a French regulator, "FSF" the
+  Senegalese federation, "TFA" a league of Tennessee: read on the titles, `bench/countries/acronym-titles.mjs`), so the name is **taken only when the
+  country of the sites that write it (`mediaOf`) is the country of one association that has it**: Portuguese sites, "FPF", the Portuguese federation.
+  Sites of another country ("AFM" of Dutch sites, "GFA" of French sites) or of none, or several associations of that country: not taken. With
+  no country of sites and one association only, the association is offered first to the card that chooses (like the bare "FA"), never linked.
+  Measured on the 69 (`bench/countries/acronym-gain.mjs`): 11 names taken at once, 1,622 mentions (FPF, SAFA, FKF, AUF, SFA, FEF, FAM, NFA, APF, ZIFA,
+  SIFF); 25 offered to the card (458); 33 left as before (2,519). `bench/countries/association-acronyms.sql` links the 11 names already in the database.
 - **Names with no space** (Korean, Japanese, Chinese; since 11.11.2026). Of the 5,619 Korean and 2,597 Japanese persons of the database 16 and 0 were
   linked ("손흥민", 71 news, looked for and left with no item). Four causes, one rule each (`services/utils/mentions.js`):
   (1) a name with no space was a word alone, asked of Wikidata last (110,000 names with a space wait before them) and kept only when its item was

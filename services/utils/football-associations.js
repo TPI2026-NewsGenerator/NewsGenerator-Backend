@@ -65,3 +65,48 @@ export const associationNamed = (name) => {
     const associations = associationsOfCountry(code);
     return associations.length === 1 ? associations[0].qid : null;
 };
+
+// ---- the acronyms of the associations (11.11.2026)
+// The news write the associations by their acronym: "FKF" of Kenya (144 news of 30 days), "SAFA" of South Africa (149), "AUF" of Uruguay (94), "FPF" of Portugal (894),
+// "TCIFA" of the Turks and Caicos Islands, and the tagger found them as organisations that Wikidata left with no item (69 of them in the database, 4 597 news: the
+// card showed no country, or the one of the media). The acronyms are the ones Wikidata has (the field "acronyms" of the table, see scripts/build-football-associations.js:
+// "SAFA", "PSSI", "FEF") and the initials of the name it gives the association ("Football Kenya Federation" is "FKF"), for the ones it has none of. The initials of a name
+// Wikidata gives in another language than English are not the acronym the press uses ("Federação Santomense de Futebol" gives "FSF", the Senegalese federation's), which is
+// one more reason to take an acronym only with the country of the sites to confirm it (see associationOfAcronym). Left out: an acronym of less than three letters ("FA", "AS", "UD": the bare words, see bareAssociationCandidates and acronymsOf) and the ones of the
+// confederations, which are no association of a country
+const SMALL_WORDS = new Set(['of', 'and', 'the', 'de', 'du', 'des', 'la', 'le', 'el', 'y', 'e', 'di', 'da', 'for', 'in']);
+const CONFEDERATIONS = new Set(['AFC', 'CAF', 'OFC', 'UEFA', 'FIFA', 'CONMEBOL', 'CONCACAF', 'FA']);
+const ACRONYM_FORM = /^[A-Z][A-Za-z0-9]{2,7}$/;
+const initialsOf = (name) => name.replace(/[,.'’()]/g, ' ').split(/\s+/)
+    .filter(word => word && !SMALL_WORDS.has(word.toLowerCase())).map(word => word.normalize('NFD')[0].toUpperCase()).join('');
+
+let byAcronym = null;
+const acronymTable = () => {
+    if (byAcronym) return byAcronym;
+    byAcronym = new Map();
+    for (const item of TABLE.filter(one => one.level === 'association' && one.country !== null)) {
+        for (const acronym of new Set([...(item.acronyms ?? []), initialsOf(item.name)])) {
+            if (!ACRONYM_FORM.test(acronym) || CONFEDERATIONS.has(acronym)) continue;
+            byAcronym.set(acronym, [...(byAcronym.get(acronym) ?? []), item]);
+        }
+    }
+    return byAcronym;
+};
+
+// The associations an acronym stands for, [{qid, name, country}], none for a name that is no acronym of one
+export const associationsOfAcronym = (name) => acronymTable().get(String(name ?? '').trim()) ?? [];
+
+// The item of the association an acronym of the news stands for, null when it says none. Several associations have the same acronym ("JFA" of Japan and Jordan, "FPF"
+// of Peru, Portugal and Puerto Rico, "GFA" of six): the country of the sites that write it tells, the one of most of them (see mediaOf of country-names.js): the association
+// of that country when there is one, none when there is none or when two have it (the "AFM" of the Dutch sites is the authority of the financial markets, and "FAT" of the
+// Vietnamese sites no Thai association). With no country of the sites, the association of an acronym of one only is given, and it is no more than a candidate: the same
+// string names every body that bears it ("CSA", "FSF", "TFA"), so organizationItem offers it to the card that chooses from its titles and never links the name to it
+export const associationOfAcronym = (name, country = null) => {
+    const found = associationsOfAcronym(name);
+    if (found.length === 0) return null;
+    if (country) {
+        const own = found.filter(item => item.country === country || item.country.startsWith(`${country}-`));
+        return own.length === 1 ? own[0].qid : null;
+    }
+    return found.length === 1 ? found[0].qid : null;
+};

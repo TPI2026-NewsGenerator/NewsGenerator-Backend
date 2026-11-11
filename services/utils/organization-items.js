@@ -13,8 +13,8 @@ import {describeItems, namedItems} from './wikidata.js';
 import {ollamaJson} from './ollama.js';
 import {MentionModel} from '../../models/mention-model.js';
 import {countriesOfItems} from './countries.js';
-import {ofOtherCountry} from './country-names.js';
-import {associationNamed, bareAssociationCandidates} from './football-associations.js';
+import {mediaOf, ofOtherCountry} from './country-names.js';
+import {associationNamed, associationOfAcronym, associationsOfAcronym, bareAssociationCandidates} from './football-associations.js';
 
 // Measured on 60 organisations often met and never linked (18.10.2026): one item called so left FIFA (an
 // album, a song of the same name), Juventus ("Juventus FC"), Liverpool (the city first) unlinked. Told
@@ -64,12 +64,25 @@ const elsewhere = async (id, qid) => {
 // tokens the AI took, counted in it; candidates: an array the qids found are added to (kept by the link loop when
 // there is no answer, for a card to choose among them). The association of FIFA a name says by its country ("Japan FA",
 // "Portuguese football federation") is told by the words, before Wikidata is asked: it calls them by their own names and found
-// none of these (see associationNamed)
+// none of these (see associationNamed). The acronym of an association ("FKF", "SAFA", "TCIFA") is told by the country of the sites that
+// write it (see associationOfAcronym): taken at once when it is the one of an association of that country, left to Wikidata as before
+// when the sites are of another country ("AFM" of the Dutch sites is no association). With no country of the sites it is never taken:
+// the string is the name of every body that bears it ("CSA" is the Romanian club Steaua, the French audiovisual regulator, Cricket South
+// Africa; "FSF" the Senegalese federation and not the one of Sao Tome whose initials it is; "TFA" a league of Tennessee, one of India;
+// read on the titles of 11.11.2026, bench/countries/acronym-titles.mjs), so it is offered first to the card that chooses, which reads its
+// own titles, like the bare "FA"
 export const organizationItem = async ({id, name, lang}, usage = null, candidates = null) => {
     const association = associationNamed(name);
     if (association) return association;
+    let byAcronym = null;
+    if (associationsOfAcronym(name).length > 0) {
+        const country = mediaOf(await MentionModel.sitesNaming(id)).country;
+        byAcronym = associationOfAcronym(name, country);
+        if (byAcronym && country) return byAcronym;
+    }
     // the bare "FA" has no item of its own: the English association is offered first to the card that chooses (see bareAssociationCandidates)
     candidates?.push(...bareAssociationCandidates(name));
+    if (byAcronym) candidates?.push(byAcronym);
     const found = await namedItems(name, lang ?? 'en');
     candidates?.push(...found.map(item => item.qid));
     if (found.length === 0) return null;

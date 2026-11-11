@@ -72,6 +72,26 @@ const list = [...byQid.values()].filter(item => !LEFT_OUT.has(item.name)).map(it
     };
 }).sort((a, b) => a.name.localeCompare(b.name));
 
+// The acronyms Wikidata has of each association (11.11.2026): its short name (P1813) and its aliases in English that look like an acronym ("SAFA", "PSSI",
+// "FEF"). The news write "FKF" or "TCIFA" for the bodies of Kenya and of the Turks and Caicos Islands, which Wikidata has no acronym of: football-associations.js
+// adds the initials of the name ("Football Kenya Federation" is "FKF"). Written when there is one
+const ACRONYM = /^[A-Z][A-Za-z0-9]{1,7}$/;
+for (let at = 0; at < list.length; at += 40) {
+    const batch = list.slice(at, at + 40);
+    const answer = await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&props=aliases|claims&languages=en&ids=${batch.map(item => item.qid).join('|')}`, {headers: wikimediaHeaders()});
+    if (!answer.ok) {
+        console.error(`Wikidata: HTTP ${answer.status}`);
+        process.exit(1);
+    }
+    const {entities} = await answer.json();
+    for (const item of batch) {
+        const entity = entities[item.qid] ?? {};
+        const short = (entity.claims?.P1813 ?? []).map(claim => claim.mainsnak?.datavalue?.value?.text ?? claim.mainsnak?.datavalue?.value);
+        const found = [...new Set([...short, ...(entity.aliases?.en ?? []).map(alias => alias.value)].filter(value => typeof value === 'string' && ACRONYM.test(value)))];
+        if (found.length > 0) item.acronyms = found;
+    }
+}
+
 writeFileSync(new URL('../services/utils/football-associations.json', import.meta.url), `${JSON.stringify(list, null, 1)}\n`);
 const without = list.filter(item => item.country === null && item.level === 'association');
 console.log(`${list.length} items (${list.filter(item => item.level === 'association').length} associations, ${list.filter(item => item.level === 'confederation').length} confederations), ${new Set(list.map(item => item.country).filter(Boolean)).size} country codes; associations without a country: ${without.map(item => item.name).join(', ') || 'none'}`);
