@@ -252,8 +252,12 @@ const ourDigits = (text) => text
 // on the cards of 30.10.2026: these made a translation or an AI version of 8 cards in 46 refused with
 // nothing wrong in them)
 const sameWrittenFigures = (text) => ourDigits(twentyFourHours(text))
-    // 20h15, 20:15 and 20.15 are one time, 19h00 and 19:00 the hour alone, as the 12-hour clock gives it
-    .replace(/\b([01]?\d|2[0-3])(?:[\s ]?h[\s ]?|:|\.)(00|[0-5]\d)\b/gi, (time, hour, minutes) => minutes === '00' ? hour : `${hour}.${minutes}`)
+    // A date written with dots, "09.11.2026" (German, Polish, Czech...), is three figures, the day, the month and the year, as "09/11/2026" is: read as a
+    // time ("09.11") and a year it made "0911" and "2026", and the "9 November 2026" a translation or an AI version writes has a "9" it did not
+    // find (the summary of 2 cards of 401 of the last briefings was refused for it, 11.11.2026)
+    .replace(/\b(0?[1-9]|[12]\d|3[01])\.(0?[1-9]|1[0-2])\.(\d{4}|\d{2})\b/g, '$1 $2 $3')
+    // 20h15, 20:15 and 20.15 are one time, 19h00 and 19:00 the hour alone, as the 12-hour clock gives it; "09:30" is "9:30": the hour keeps no zero
+    .replace(/\b([01]?\d|2[0-3])(?:[\s ]?h[\s ]?|:|\.)(00|[0-5]\d)\b/gi, (time, hour, minutes) => minutes === '00' ? String(Number(hour)) : `${Number(hour)}.${minutes}`)
     // "4 mil 200" (Spanish), "4 mil e 200" (Portuguese) is one figure, 4200: read as "4000" and "200" it became "4000 200", 4000200, and the
     // title "... negocio de 4 mil 200 mdd" stayed Spanish in a card in English (the unsaved briefing of Enzo of 9.11.2026)
     .replace(/\b(\d{1,3})[\s\u00a0]?(?:mil|mila)[\s\u00a0]+(?:(?:e|y)[\s\u00a0]+)?(\d{1,3})(?![\d.,]?\d)/gi, (whole, thousands, rest) => String(Number(thousands) * 1000 + Number(rest)))
@@ -291,7 +295,9 @@ const unitOf = (word) => WORD_UNITS.find(([, words]) => new RegExp(`^(?:${words}
 // (the way it was written, or in full: the translation of "2 000 000" says "2 million" and the reverse), "2만" "20000" only
 export const figureEntries = (text) => [...withCjkAmounts(sameWrittenFigures(text)).matchAll(FIGURE)].map(([, number, unit]) => {
     const raw = number.replace(/[^\d]/g, '');
-    if (!unit) return [raw];
+    // a whole number written with a zero in front, a day or a month ("09/11/2026"), is the same figure without it ("9 November"); never "0,5", which
+    // has a separator and is no 5
+    if (!unit) return /^0\d+$/.test(number) ? [raw, String(Number(raw))] : [raw];
     const count = /^\d+[.,]\d{1,2}$/.test(number) ? Number(number.replace(',', '.')) : Number(raw);
     return [raw, String(Math.round(count * unitOf(unit)))];
 });

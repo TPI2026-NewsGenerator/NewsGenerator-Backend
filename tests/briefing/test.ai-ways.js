@@ -118,6 +118,22 @@ describe('the AI version of a card', () => {
         expect(chat).toHaveBeenCalledTimes(2);
     });
 
+    it('should take "9 November" for the date the article writes 09/11/2026 or 09.11.2026, and "9:30" for 09:30 (11.11.2026: 2 summaries of 401 refused)', async () => {
+        const dated = {content: '', blocks: [
+            {kind: 'text', text: 'UEFA et la Commission européenne ont renouvelé leur accord le 09/11/2026 à Bruxelles.'},
+            {kind: 'text', text: 'La cérémonie a commencé à 09:30, la signature a suivi le 10.11.2026.'},
+        ]};
+        answering({points: {points: [{text: 'UEFA renewed its agreement on 9 November 2026.'}, {text: 'The ceremony began at 9:30 on 10 November 2026.'}]},
+            summary: {summary: 'On 9 November 2026 UEFA and the Commission renewed their agreement; the ceremony began at 9:30.'}});
+
+        const ways = await aiWaysOf('Accord UEFA', dated, {language: 'en'});
+
+        expect(ways.points).toHaveLength(2);
+        expect(ways.summary).toContain('9 November 2026');
+        // none asked again: the first answers were right
+        expect(chat).toHaveBeenCalledTimes(2);
+    });
+
     it('should take the figure of a Korean unit written in digits, as the translation does (8.11.2026: 2만 is 20,000)', async () => {
         const korean = {content: '', blocks: [
             {kind: 'text', text: 'KFA는 선거인단을 2만으로 대폭 확대해 12월 18일 회장 선거를 치를 계획이었다.'},
