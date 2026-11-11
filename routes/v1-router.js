@@ -11,9 +11,13 @@ import express from 'express'
 import {NewsExportController} from '../controllers/news-export-controller.js';
 import {PositionsController} from '../controllers/positions-controller.js';
 import {apiError, apiKey} from "../services/utils/api-key.js";
+import {apiLog} from "../services/utils/api-log.js";
 import {rateLimit} from "../services/utils/rate-limit.js";
 
 const router = express.Router();
+
+// one line in the log for every request, before the key is checked: the ones refused are written too (see api-log.js)
+router.use(apiLog());
 
 // every route needs a key, and each key has its own count: 60 a minute is far more than a map that keeps the
 // list a few minutes asks

@@ -67,6 +67,28 @@ port 5433) with `INGEST_IN_SERVER=false`: the background work stays on the machi
 [//]: # (How to deploy the application outside the dev environment.])
 
 
+## The calls of another system on /api/v1
+
+Each request to `/api/v1` (the news another system reads with its key) writes one line in the log of the API container, the
+refused ones too (see `services/utils/api-log.js`):
+
+```
+API v1: footballiq GET /api/v1/news 200 84 ms 50 items params cursor,limit,person
+API v1: - GET /api/v1/news 401 2 ms from 203.0.113.7
+```
+
+The line says the client (its name in `API_KEYS`, `-` when no key was accepted), the route, the status, the milliseconds, how many
+items an answer held, the names of the parameters and, for a request refused for its key only, the address it came from. Never a
+value asked, never a key. Docker stamps the time of each line, so on the server:
+
+```bash
+docker logs -t newsgenerator-api 2>&1 | grep "API v1: footballiq" | tail -5
+docker logs -t newsgenerator-api 2>&1 | grep "API v1: footballiq" | cut -c1-10 | sort | uniq -c
+```
+
+The first gives the last calls of the client, the second how many it made each day. The log of a container lasts as long as the
+container: a deploy that makes a new one starts it again.
+
 ## The documentation on /docs
 
 The documentation site (`pnpm run docs:build`, sent by `deploy.sh` to a folder of the project on the machine) is served by Caddy on
