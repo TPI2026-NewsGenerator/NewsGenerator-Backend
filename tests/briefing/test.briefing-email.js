@@ -1005,7 +1005,7 @@ describe('briefingMail with the blocks of a card', () => {
             expect(page).toMatch(/told by 2 media/);
             expect(page).toMatch(/color:#248A3D;font-weight:500">Official</);
             expect(page).toMatch(/color:#BF4800;font-weight:500">Contested</);
-            expect(page).toMatch(/color:#BF4800;font-weight:500">Reported</);
+            expect(page).toMatch(/color:#BF4800;font-weight:500">Unverified</);
         });
 
         it('should be in the text, and not there when the affair is not asked, nor built', () => {

@@ -99,7 +99,7 @@ export const LABELS = {
     thisAffair: 'This affair',
     affairStories: '{stories} stories told by {media} media',
     affairFigures: '{media} media · {news} news · {languages} languages',
-    reported: 'Reported',
+    reported: 'Unverified',
     official: 'Official',
     oneSmallerEvent: '+ 1 smaller event',
     smallerEvents: '+ {count} smaller events',
