@@ -36,6 +36,45 @@ describe('pageImage', () => {
     });
 });
 
+// a page with no picture to be shared at all, only the featured image its article shows (persianfootball.com, the card of 10.11.2026 with no
+// picture: a WordPress without an SEO plugin gives no og:image, no JSON-LD, the photo is the "wp-post-image" of its article)
+describe('pageImage and the featured image of the article', () => {
+    const body = (html, head = '') => parseHTML(`<!doctype html><html><head>${head}</head><body>${html}</body></html>`).document;
+    const featured = '<img width="640" height="426" src="https://www.example/news/wp-content/uploads/6256360-700x466.jpg" class="attachment-large size-large wp-post-image" alt="">';
+
+    it('should take the featured image of the article when the page gives none to be shared (11.11.2026)', () => {
+        expect(pageImage(body(`<article><header><div class="post-thumbnail">${featured}</div></header><p>Text</p></article>`), 'https://www.example/news/a'))
+            .toBe('https://www.example/news/wp-content/uploads/6256360-700x466.jpg');
+        expect(pageImage(body('<article><img src="/photos/lead.jpg" itemprop="image"><p>Text</p></article>'), 'https://www.example/news/a')).toBe('https://www.example/photos/lead.jpg');
+        expect(pageImage(body('<article><meta itemprop="image" content="https://cdn.example/m.jpg"><p>Text</p></article>'), 'https://www.example/a')).toBe('https://cdn.example/m.jpg');
+    });
+
+    it('should keep the picture to be shared first, and the structured data before the featured image', () => {
+        expect(pageImage(body(`<article>${featured}</article>`, '<meta property="og:image" content="https://cdn.example/og.jpg">'), 'https://www.example/a')).toBe('https://cdn.example/og.jpg');
+        expect(pageImage(body(`<article>${featured}</article>`, '<script type="application/ld+json">{"@type":"NewsArticle","image":"https://cdn.example/ld.jpg"}</script>'), 'https://www.example/a'))
+            .toBe('https://cdn.example/ld.jpg');
+    });
+
+    it('should not take the thumbnail of a related story, of a side column, nor a logo or a default picture', () => {
+        expect(pageImage(body(`<aside><article>${featured}</article></aside><p>Text</p>`), 'https://www.example/a')).toBeNull();
+        expect(pageImage(body(`<nav>${featured}</nav><footer>${featured}</footer>`), 'https://www.example/a')).toBeNull();
+        expect(pageImage(body('<article><img class="wp-post-image" src="https://cdn.example/uploads/UEFA-logo.jpeg"></article>'), 'https://www.example/a')).toBeNull();
+        expect(pageImage(body(`<article><img src="https://cdn.example/avatar.png"><p>Text</p></article>`), 'https://www.example/a')).toBeNull();
+    });
+
+    it('should give none when the featured image of the main article is a logo, never the thumbnail of a related story (calciomio.fr)', () => {
+        const logo = '<img class="wp-post-image" src="https://cdn.example/uploads/italian-football-federation-unveil-new-logo-1250x847.jpg">';
+        const related = '<img class="wp-post-image" src="https://cdn.example/uploads/switzerland-v-italy-420x249.jpg">';
+        expect(pageImage(body(`<article>${logo}<p>Text</p><article class="post">${related}</article></article>`), 'https://www.example/a')).toBeNull();
+    });
+
+    it('should take the first featured image of the main article when related stories follow it', () => {
+        const related = '<img class="wp-post-image" src="https://www.example/uploads/other-350x233.jpg">';
+        expect(pageImage(body(`<article>${featured}<p>Text</p></article><section class="related"><article>${related}</article></section>`), 'https://www.example/a'))
+            .toBe('https://www.example/news/wp-content/uploads/6256360-700x466.jpg');
+    });
+});
+
 describe('pageImage and the structured data of a page', () => {
     const ld = (data) => `<script type="application/ld+json">${JSON.stringify(data)}</script>`;
     const livescore = '<meta property="og:image" content="https://storage.lsmedia1.com/images/web/medium/news_article_default_image_3.jpg">';

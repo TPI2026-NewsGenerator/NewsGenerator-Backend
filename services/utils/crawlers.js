@@ -104,9 +104,26 @@ const articleImages = (document) => {
     }
     return found;
 };
+// The featured image an article shows at its top, for a page that gives none to be shared and has no JSON-LD (a WordPress without an SEO
+// plugin: persianfootball.com, the card of 10.11.2026 with no picture; of the 17 pages of 125 cards with none that gave nothing by the
+// rules above, 6 had a "wp-post-image" in their article, the photo of the news, bench/page-image-fallback.mjs). Only what the page declares
+// as the picture of its article, inside the <article>: the WordPress class of the featured image, the "image" of the microdata, the box of
+// the thumbnail. Never "the first image of the page": logos, avatars and the thumbnails of the related stories come first there; and
+// not what a side column, a menu or a footer holds. The first in the page is the one of the main article, and the only one: when it
+// is a logo or a default picture (calciomio.fr: "italian-football-federation-unveil-new-logo"), the next ones are the thumbnails of
+// the related stories, which are not the picture of this news
+const FEATURED_IMAGE = 'article img.wp-post-image, article [itemprop="image"], article .post-thumbnail img';
+const featuredImages = (document) => {
+    const element = [...document.querySelectorAll(FEATURED_IMAGE)].find(found => !found.closest('aside, nav, footer'));
+    if (!element) return [];
+    // a meta or a link of the microdata, an img, or a box around the image (its own img or its url)
+    const own = element.matches('meta') ? [element.getAttribute('content')] : element.matches('link') ? [element.getAttribute('href')] : [];
+    const picture = element.matches('img') ? element : element.querySelector('img, meta[itemprop="url"]');
+    return [...own, picture?.getAttribute('src'), picture?.getAttribute('data-src'), picture?.getAttribute('data-lazy-src'), picture?.getAttribute('content')].filter(Boolean);
+};
 export const pageImage = (document, url) => {
     const addresses = [...document.querySelectorAll(PAGE_IMAGE)].map(element => element.getAttribute('content') ?? element.getAttribute('href') ?? '');
-    for (const address of [...addresses, ...articleImages(document)].map(address => address.trim())) {
+    for (const address of [...addresses, ...articleImages(document), ...featuredImages(document)].map(address => address.trim())) {
         try {
             const image = new URL(address, url);
             if (address && /^https?:$/.test(image.protocol) && !DEFAULT_IMAGE.test(image.pathname)) return image.href;
