@@ -18,7 +18,7 @@ import {alignNames} from './spellings.js';
 import {nameKeysOf} from './wikidata.js';
 import {nationalityOf} from './nationalities.js';
 import {cardCountries, countriesOfItems} from './countries.js';
-import {chooseCountries, chooseWeakCountries, countryCandidates, weakCandidates} from './country-choice.js';
+import {agreedCountries, chooseCountries, chooseWeakCountries, countriesShown, countryCandidates, readCountries, weakCandidates} from './country-choice.js';
 import {countryDeclined, countryName, countryNamed} from './country-names.js';
 import {withAcronymsOfSitesCountry, withNamesChecked, withNamesLinked} from './name-check.js';
 
@@ -490,9 +490,25 @@ export const namesAndCountriesOfCards = async (cards, {usage = null, choose = tr
         return new Map();
     }) : new Map();
     const weakChosen = new Map([...weakAnswered].map(([at, codes]) => [weakAsk[at].index, codes]));
+    const decided = read.map((card, i) => strong[i].length > 0 ? strong[i] : weakChosen.get(i) ?? []);
+    // the countries decided are kept when an AI that reads the card with no candidate names them too (see readCountries: 76% right of what is
+    // shown before, 90% after; a card it does not answer keeps its countries)
+    const toRead = decided.map((codes, index) => ({index, codes})).filter(card => card.codes.length > 0);
+    const reading = choose ? await readCountries(toRead.map(({index}) => ({titles: asked[index].titles, text: asked[index].text})), usage).catch(err => {
+        console.error(`Names: the countries of the cards were not read again by the AI (${err.message})`);
+        return new Map();
+    }) : new Map();
+    const readAt = new Map([...reading].map(([at, codes]) => [toRead[at].index, codes]));
+    const agreed = decided.map((codes, i) => agreedCountries(codes, readAt.get(i)));
+    // a card that names an international body shows its main country only (see countriesShown)
+    const countries = agreed.map((codes, i) => countriesShown(codes, {international: evidence[i].some(item => countryOf.get(item.qid)?.international)}));
     return new Map(read.map((card, i) => [card.storyId, {
         names: card.names.map(group => ({name: group.name, qid: group.qid ?? null, kind: group.kind})),
-        countries: strong[i].length > 0 ? strong[i] : weakChosen.get(i) ?? [],
+        countries: countries[i],
+        // for the bench: the countries decided before the reading, what the reading dropped, and what the card naming a body lost after it
+        decided: decided[i],
+        dropped: decided[i].filter(code => !agreed[i].includes(code)),
+        cut: agreed[i].filter(code => !countries[i].includes(code)),
         // for the bench: the weak candidates asked and what the AI kept of them
         weak: weak[i]?.candidates ?? [],
         weakKept: weakChosen.get(i) ?? [],

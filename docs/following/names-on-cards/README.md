@@ -194,6 +194,46 @@ on the page ("Zambia", "United States · China") and next to its topic in the e-
   Romania, France; the 2030 World Cup told by a site of the Dominican Republic), one missed (Colón of Argentina, the AI said none); cards with
   no country 31% -> 25%. About 450 tokens in per card asked, a few cards a briefing. Live cases: family `weakcountry` of
   `tests/regression`.
+- **The countries decided are read again** (since 11.11.2026). The user found the countries "not very precise". Measured on 120 cards of the last
+  briefings (`bench/countries/measure.mjs`, two blind judges with the definition the AI of `country-choice.js` has): the product showed 105 countries,
+  **76% right, 20% wrong**, a wrong country on 13% of the cards, found 75% of what both judges name, the main country right 97%. Errors: a namesake
+  (Strauss, German), a list ("Top 30 leagues": GB, DE, IT), the FIFA politics (Vega, Infantino: the seat or the people of a body), an expatriate
+  person; misses: acronyms of small bodies and Persian cards (both fixed above). Ways tested on the same cards: an AI that reads the card and
+  names the countries itself, with no candidate, finds 96% but is right on 77%; **the countries the product decided and that AI names too** are
+  right on **91%** (86 shown, 5 wrong, a wrong country on 4% of the cards) and found 74%; the union is 69% right. So `readCountries`
+  (`country-choice.js`) asks the AI, 15 cards a call, to name the countries each card is about (the definition of the judges, the titles and
+  450 characters of the sentences, **no candidate and not the product's answer**), and `agreedCountries` keeps the countries decided that it names
+  too, in the order shown; it never adds one ("a wrong country is worse than none", 03.11.2026). A card it does not answer, and all of them when it
+  fails, keep their countries; `choose: false` skips it. About 170 tokens a card (8 calls, 17k in, 3k out, for the 120), 5k a briefing of 30 cards.
+  The card gives `decided` (before) and `dropped` (what the reading took off) for the benches. **Run again end to end** (`measure.mjs e2e`: the whole
+  `namesAndCountriesOfCards`, with the text and titles of production, on the same 120 cards, 169 AI calls, 82k tokens in): before the reading 109
+  countries, 76% right, 21 wrong, a wrong country on 16 cards, 78% found; **after it 93 countries, 85% right, 10 wrong, 7 cards with a wrong country,
+  75% found**. The 91% above is the AI reading the text the judges read; with the production text the AI differs on some cards (the FIFA candidate
+  Vega kept Japan, Spain kept for a resignation at the FIFA, Morocco on a card of the Portuguese stadium) and drops 4 right ones (Senegal, Iran in
+  Persian, Switzerland, Great Britain): the figure to retain is 85%, and a run of the AI varies by a few points. The rule was chosen before the
+  remeasure, not tuned on it, but the judges are AI too and share the definition: the real gain may be smaller. Live cases: family `countryreading`
+  of `tests/regression` (7 wrong countries it must take off, 6 right ones it must keep).
+- **A card that names an international body shows its first country only** (since 11.11.2026, `countriesShown`, `country-choice.js`; the body is any
+  item Wikidata flags `international` among the card's names: FIFA, UEFA, CAF, AFC, CONMEBOL, the IOC...). After the reading the first country was
+  right 92% of the time, the second 40% and the third 50%: 7 of the 10 wrong countries were secondary ones, almost all on cards about the politics of the
+  FIFA (the other hosts of the World Cup 2030, the countries that support Infantino, the nationality of a referee), where the AI agrees with the
+  product on the wrong country (three readings did, so more readings do not help). **Checked on a second sample** of 120 cards of 14 older briefings,
+  none judged before, two new blind judges (identical labels on 117 of 120): precision (both judges / at least one) and countries found, on 240 cards:
+
+  | | sample 1 (the rule was set on it) | sample 2 (new cards) | the two together |
+  |---|---|---|---|
+  | before the reading | 77% / 82%, 78% found | 90% / 92%, 71% found | 83% / 86%, 74.5% found, 27 wrong |
+  | + the reading of the AI | 84% / 89%, 74.5% | 94% / 97%, 71% | 89% / 93%, 72.7%, 13 wrong |
+  | **+ the rule (built)** | 90% / 95%, 72.6% | 95% / 98%, 68.4% | **92% / 96%, 70.5%, 6 wrong** |
+  | first country only, everywhere | 91% / 96%, 68.9% | 96% / 98%, 67.5% | 94% / 97%, 68.2%, 5 wrong |
+
+  The reading holds on both samples (wrong countries 27 to 13, a few points of countries found). **The rule holds less well**: on sample 1 it took 6 wrong
+  countries off and lost 2 right ones; on the new cards it took 1 wrong off and lost 3 right ones (India–Pakistan, Russia–Ukraine, the Nigeria–Brazil final:
+  a match of two countries on a card that names the body, where the second country is an actor, like the referee of the UEFA delegated to a match in the corpus
+  family `maincountry`). Over the 240 cards it is worth about 3 points of precision for 2 of countries found, and the gain comes mostly from the week
+  of the FIFA election; on a calm week it is close to neutral. Left to do if it matters: tell a match of two countries from a news of a body, or keep the
+  first country everywhere (the last row). Ways tested and left: more readings of the AI (the errors are shared), the country named in the title
+  (separates 1 case in 9). `bench/countries/measure.mjs` (`COUNTRIES_DIR=bench/data/countries-fresh ... build 120 14`, `run`, `e2e`, `score`).
 - **A medium is a source, not a subject.** A news medium a card names (Wikidata: a newspaper, an agency, a
   channel, a news website, `MEDIA_KINDS` in `wikidata.js`) gives its country only when nothing else on the card
   gives one: "Bomb of the day! L'Équipe: Burleanu could be UEFA's candidate", told by three Romanian media, is

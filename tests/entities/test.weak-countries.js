@@ -172,3 +172,82 @@ describe('namesAndCountriesOfCards, the weak evidence', () => {
         expect(asked('aucun pays n\'a été trouvé de façon sûre')).toBe(0);
     });
 });
+
+// the countries decided are read again by an AI that sees no candidate, and kept when it names them too (11.11.2026)
+describe('namesAndCountriesOfCards, the countries read again', () => {
+    const readings = () => ollamaJson.mock.calls.filter(([text]) => text.includes('In doubt, keep none')).length;
+    // "Macdonald Mariga" named in full: the rules and the AI choosing among the candidates give Kenya
+    const marigaInFull = () => {
+        namesOfArticles.mockResolvedValue([row('Macdonald Mariga', 'person', 'Q313893')]);
+        countriesOfItems.mockResolvedValue(new Map([['Q313893', KENYAN]]));
+    };
+    const answers = (choice, reading) => ollamaJson.mockImplementation(async (prompt) => prompt.includes('In doubt, keep none') ? reading : choice);
+
+    it('should keep the country when the AI reading the card names it too', async () => {
+        marigaInFull();
+        answers({cards: [{n: 1, countries: ['KE']}]}, {cards: [{n: 1, countries: ['KE']}]});
+        const [found] = (await namesAndCountriesOfCards([card()])).values();
+        expect(found.countries).toEqual(['KE']);
+        expect(found.dropped).toEqual([]);
+        expect(readings()).toBe(1);
+    });
+
+    it('should drop the country the AI reading the card does not name (a namesake, a person named in passing)', async () => {
+        marigaInFull();
+        answers({cards: [{n: 1, countries: ['KE']}]}, {cards: [{n: 1, countries: []}]});
+        const [found] = (await namesAndCountriesOfCards([card()])).values();
+        expect(found.countries).toEqual([]);
+        expect(found.decided).toEqual(['KE']);
+        expect(found.dropped).toEqual(['KE']);
+    });
+
+    it('should never add a country: the AI naming one the product did not show changes nothing', async () => {
+        marigaInFull();
+        answers({cards: [{n: 1, countries: ['KE']}]}, {cards: [{n: 1, countries: ['KE', 'TZ']}]});
+        expect([...(await namesAndCountriesOfCards([card()])).values()][0].countries).toEqual(['KE']);
+    });
+
+    it('should keep the countries when the AI does not answer the card, or fails', async () => {
+        marigaInFull();
+        answers({cards: [{n: 1, countries: ['KE']}]}, {cards: []});
+        expect([...(await namesAndCountriesOfCards([card()])).values()][0].countries).toEqual(['KE']);
+        ollamaJson.mockImplementation(async (prompt) => {
+            if (prompt.includes('In doubt, keep none')) throw new Error('down');
+            return {cards: [{n: 1, countries: ['KE']}]};
+        });
+        const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+        expect([...(await namesAndCountriesOfCards([card()])).values()][0].countries).toEqual(['KE']);
+        expect(error).toHaveBeenCalledWith(expect.stringContaining('were not read again by the AI'));
+        error.mockRestore();
+    });
+
+    it('should show the first country only on a card that names an international body, and say what it cut', async () => {
+        // a Kenyan person in full and a Romanian referee, on a card that names the UEFA (flagged international by Wikidata)
+        const ROMANIAN = {country: 'RO', international: false, bodies: [], media: false};
+        namesOfArticles.mockResolvedValue([row('Macdonald Mariga', 'person', 'Q313893', 5), row('Istvan Kovacs', 'person', 'Q555', 3), row('UEFA', 'organization', 'Q35572')]);
+        countriesOfItems.mockResolvedValue(new Map([['Q313893', KENYAN], ['Q555', ROMANIAN], ['Q35572', UEFA]]));
+        answers({cards: [{n: 1, countries: ['KE', 'RO']}]}, {cards: [{n: 1, countries: ['KE', 'RO']}]});
+        const [withBody] = (await namesAndCountriesOfCards([card()])).values();
+        expect(withBody.decided).toEqual(['KE', 'RO']);
+        expect(withBody.countries).toEqual(['KE']);
+        expect(withBody.cut).toEqual(['RO']);
+        expect(withBody.dropped).toEqual([]);
+
+        // the same two people with no body on the card: both countries are shown
+        namesOfArticles.mockResolvedValue([row('Macdonald Mariga', 'person', 'Q313893', 5), row('Istvan Kovacs', 'person', 'Q555', 3)]);
+        const [withoutBody] = (await namesAndCountriesOfCards([card()])).values();
+        expect(withoutBody.countries).toEqual(['KE', 'RO']);
+        expect(withoutBody.cut).toEqual([]);
+    });
+
+    it('should not read a card with no country, nor anything without the AI (choose: false)', async () => {
+        namesOfArticles.mockResolvedValue([]);
+        ollamaJson.mockResolvedValue({cards: []});
+        await namesAndCountriesOfCards([card()]);
+        expect(readings()).toBe(0);
+        marigaInFull();
+        const [off] = (await namesAndCountriesOfCards([card()], {choose: false})).values();
+        expect(off.countries).toEqual(['KE']);
+        expect(readings()).toBe(0);
+    });
+});

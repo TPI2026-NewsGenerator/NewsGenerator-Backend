@@ -131,3 +131,67 @@ Réponds uniquement en JSON : {"cards": [{"n": numéro, "countries": ["code"]}]}
 // the cards given (each with at least one weak candidate): Map index -> [code]. Rejects when the AI fails
 export const chooseWeakCountries = async (cards, usage = null) =>
     cards.length === 0 ? new Map() : normalizeChoice(await ollamaJson(weakPrompt(cards), usage), cards);
+
+// ---- the countries a card shows, read again by an AI that sees no candidate (11.11.2026)
+// The countries of a card come from the names it holds (Wikidata) and the AI only chooses among them, so a namesake, a person of an international body, a list of
+// leagues or an expatriate gives a country the news is not about. Measured on 120 cards of the last briefings against two blind judges (bench/countries/measure.mjs):
+// the product showed 105 countries, 76% right, 20% wrong, a wrong country on 13% of the cards; an AI that reads the card and names the countries itself, with no
+// candidate and no knowledge of the product's answer, is right on 74% but finds 96% of what the judges name; the countries both give, 90% right, a wrong one on 5% of
+// the cards, 74% found (the cards left with none go from 17 to 19 of the 120). "A wrong country is worse than none" (03.11.2026): the countries the product shows are
+// kept when the AI names them too
+export const READING_DEFINITION = `For each card, give the countries the news is ABOUT, as ISO 3166-1 alpha-2 codes (GB for the United Kingdom and for England, Scotland, Wales and Northern Ireland), the main one first, three at most.
+A country is kept when the news takes place there, or when its main actors are of it and speak or act for it: their team, their government, their institution, their company.
+Do NOT keep: the country of the medium that reports the news; the seat of an international body when the news is not about that country (FIFA and Switzerland, UN and the United States); the country of a person who is only named in passing; the country of a namesake; the country of a person who runs for or sits in an international body, unless the news is about their country.
+A news may have NO country (an empty list). In doubt, keep none: a wrong country is worse than none.`;
+export const READ_CHARS = 450;
+export const READ_BATCH = 15;
+const READ_TIMEOUT_MS = 120e3;
+
+// cards: [{titles, text}]
+export const readingPrompt = (cards) => `${READING_DEFINITION}
+
+${cards.map((card, i) => `[${i + 1}] ${card.titles.slice(0, TITLES).join(' | ')}
+    ${String(card.text ?? '').replace(/\s+/g, ' ').trim().slice(0, READ_CHARS)}`).join('\n\n')}
+
+Answer only in JSON: {"cards": [{"n": number, "countries": ["FR"]}]}`;
+
+// the codes the AI gave for each card it answered: Map index (from 0) -> [code], any country (it is not given candidates); a card it left out has no entry
+export const normalizeReading = (answer, count) => {
+    const read = new Map();
+    for (const item of Array.isArray(answer?.cards) ? answer.cards : []) {
+        const index = Number(String(item?.n ?? '').replace(/^\[|\]$/g, '')) - 1;
+        if (!Number.isInteger(index) || index < 0 || index >= count || read.has(index) || !Array.isArray(item?.countries)) continue;
+        read.set(index, [...new Set(item.countries.map(code => String(code ?? '').trim().toUpperCase()).filter(code => /^[A-Z]{2}$/.test(code)))]);
+    }
+    return read;
+};
+
+// the cards given ({titles, text}): Map index -> [code], READ_BATCH cards a call. A batch the AI fails is left out (its cards have no entry) and the others are kept;
+// rejects when the AI failed on every batch
+export const readCountries = async (cards, usage = null) => {
+    const read = new Map();
+    let failure = null, answered = 0;
+    for (let from = 0; from < cards.length; from += READ_BATCH) {
+        const batch = cards.slice(from, from + READ_BATCH);
+        try {
+            for (const [at, codes] of normalizeReading(await ollamaJson(readingPrompt(batch), usage, {timeoutMs: READ_TIMEOUT_MS}), batch.length)) read.set(from + at, codes);
+            answered++;
+        } catch (err) {
+            failure = err;
+        }
+    }
+    if (answered === 0 && failure) throw failure;
+    return read;
+};
+
+// the countries shown that the AI reading the card names too, in the order shown; all of them when it did not answer that card (read: its codes, or undefined)
+export const agreedCountries = (shown, read) => read === undefined ? shown : shown.filter(code => read.includes(code));
+
+// ---- a card that names an international body shows its main country only (11.11.2026)
+// After the reading the countries shown were 92% right for the first one, 40% for the second and 50% for the third: 7 of the 10 wrong countries of the 120 cards were
+// secondary ones, and almost all on the cards of the politics of the FIFA (the hosts of the World Cup 2030 beside the country of a stadium, the countries that support
+// Infantino, the nationality of a referee), where the AI reading the card agrees with the product on the wrong country (three readings did). On the 5 cards of the sample
+// that name a body and show several countries, keeping the first only took 6 wrong countries off and 2 right ones (the country of a referee a body delegated); the
+// precision went from 85% to 91% and the countries found from 75% to 73%. Set on the errors of that sample: to be checked on cards it has not seen (bench/countries).
+// 'international': whether the card names an item Wikidata flags as an international body (FIFA, UEFA, CAF, AFC, CONMEBOL, the IOC...), see readCountries of wikidata.js
+export const countriesShown = (countries, {international = false} = {}) => international ? countries.slice(0, 1) : countries;
