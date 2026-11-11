@@ -16,6 +16,7 @@ import {prisma} from '../config/db.js';
 import {ProfileModel} from '../models/profile-model.js';
 import {feedsOf} from '../services/briefing-service.js';
 import {buildAffair} from '../services/utils/affair.js';
+import {withShownMarks} from '../services/utils/affair-marks.js';
 import {readerLanguage} from '../services/utils/language.js';
 import {newUsage} from '../services/utils/ollama.js';
 
@@ -62,7 +63,7 @@ if (!affair.affair) {
     console.log(`AFFAIR: ${affair.title}${affair.written ? '' : `  (the card’s own title; the AI proposed "${affair.proposed}")`}`);
     console.log(`  covers: ${affair.about}`);
     console.log(`  pool ${JSON.stringify(affair.pool)}`);
-    for (const event of affair.events) {
+    for (const event of withShownMarks(affair.events)) {
         const marks = [event.reported ? `reported(${event.reported})` : '', event.official ? 'OFFICIAL' : '', event.denial ? 'DENIAL' : ''].filter(Boolean).join(' ');
         console.log(`${event.at.slice(5, 16)} ${event.kind === 'key' ? 'KEY  ' : '     '} m${String(event.media.length).padStart(3)} L${event.languages.length} ${event.storyIds.length > 1 ? `x${event.storyIds.length}` : '  '} ${marks} | ${(event.titleTranslation ?? event.title).slice(0, 100)}`);
     }

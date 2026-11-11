@@ -113,6 +113,39 @@ describe('checkAffair', () => {
         ollamaJson.mockRejectedValue(new Error('down'));
         await expect(checkAffair({affair: affair([event(1, 48)]), now: NOW, fresh: [story(10, [news('A', 'a.com', 1)], 1)]})).rejects.toThrow('down');
     });
+
+    // the AI that reads the events gives their marks (see affair-marks.js): the new ones and the ones an affair followed before had none
+    it('should read the marks of the new events and of the ones that have none from their news, and leave the structure as it was', async () => {
+        ollamaJson.mockImplementation(async (prompt) => {
+            if (prompt.includes('For each news:')) return {news: [{n: 1, in: true, kind: 'minor', as: null, says: null}]};
+            if (prompt.includes('List the groups of events')) return {same: []};
+            if (prompt.includes('An EVENT of an affair')) {
+                const ids = [...prompt.matchAll(/^\[(\d+)\] /gm)].map(match => Number(match[1]));
+                return {events: ids.map(id => ({id, official: true, contested: false, reported: false}))};
+            }
+            throw new Error(`unexpected prompt: ${prompt.slice(0, 60)}`);
+        });
+        const held = new Map([[1, story(1, [news('The club said in a statement: an old fact', 'a.com', 48), news('An old fact', 'b.com', 47)], 48)]]);
+        const result = await checkAffair({affair: affair([event(1, 48)]), held, now: NOW,
+            fresh: [story(10, [news('The club issued a statement on a new fact', 'c.com', 1)], 1)]});
+        expect(result.events.find(one => one.id === 1).marks).toMatchObject({official: true, contested: false, reported: null});
+        expect(result.events.find(one => one.id === 10).marks).toMatchObject({official: true});
+        expect(result.events.find(one => one.id === 10)).toMatchObject({official: false, denial: false});
+    });
+
+    it('should leave the events unmarked when the AI that reads them fails, and still ring what the second opinion lets through', async () => {
+        jest.spyOn(console, 'error').mockImplementation(() => {});
+        ollamaJson.mockImplementation(async (prompt) => {
+            if (prompt.includes('For each news:')) return {news: [{n: 1, in: true, kind: 'key', as: null, says: null}]};
+            if (prompt.includes('An EVENT of an affair')) throw new Error('down');
+            if (prompt.includes('RIGHT NOW')) return {news: [{n: 1, notify: true}]};
+            return {same: []};
+        });
+        const result = await checkAffair({affair: affair([event(1, 48)]), now: NOW,
+            fresh: [story(10, [news('A fact', 'a.com', 2), news('A fact', 'b.com', 1)], 2)]});
+        expect(result.events.find(one => one.id === 10).marks).toBeUndefined();
+        expect(result.alerts.map(alert => alert.id)).toEqual([10]);
+    });
 });
 
 describe('mergedNew', () => {

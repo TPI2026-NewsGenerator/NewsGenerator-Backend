@@ -15,6 +15,7 @@ import {AFFAIR_DAYS} from './affair-names.js';
 import {CLOSE_LIKENESS, storiesWithNews, translateEvents} from './affair.js';
 import {confirmEvents, FACTS_SHOWN, JUDGED_AT_ONCE, judgeStories, sameFactEvents} from './affair-judge.js';
 import {eventsOf, mergedNew, refreshedEvent} from './affair-events.js';
+import {markEvents} from './affair-marks.js';
 import {coverageOf, mergedCoverage} from './affair-coverage.js';
 import {mapWithConcurrency} from './concurrency.js';
 import {newUsage} from './ollama.js';
@@ -73,6 +74,11 @@ export const checkAffair = async ({affair, fresh, held = new Map(), now = new Da
     const before = new Map(known.map(event => [event.id, event.kind]));
     const recentAt = +now - RECENT_DAYS * DAY_MS;
     events = events.map(event => +new Date(event.at) >= recentAt ? refreshedEvent(event, held) : event);
+
+    // 4b. the marks of the events read from their news by the AI (see affair-marks.js): the new and the grown ones, and the ones that have none yet
+    // (an affair followed before the marks were read by the AI) while their news are held. An AI that fails leaves them asked again at the next check
+    const storyOf = new Map([...held, ...judged.map(item => [item.story.storyId, item.story])]);
+    events = await markEvents(events, event => event.storyIds.flatMap(id => storyOf.get(id)?.news ?? []), {usage, again: merged.touched});
 
     // 5. a key event the reader was not told of is read once more: only a new fact that changes where the affair stands rings
     const candidates = events.filter(event => event.kind === 'key' && !event.asked);

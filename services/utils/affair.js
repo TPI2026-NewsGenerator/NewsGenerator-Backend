@@ -14,6 +14,7 @@ import {StoryModel} from '../../models/story-model.js';
 import {AFFAIR_DAYS, storiesOfSameNames} from './affair-names.js';
 import {affairFileOf, FACTS_SHOWN, JUDGED_AT_ONCE, judgeStories, sameFactEvents} from './affair-judge.js';
 import {datedAt, eventsOf, joinedEvents} from './affair-events.js';
+import {markEvents} from './affair-marks.js';
 import {coverageOf} from './affair-coverage.js';
 import {mapWithConcurrency} from './concurrency.js';
 import {translatedTitles} from './title-translation.js';
@@ -147,7 +148,9 @@ export const buildAffair = async ({storyId, title, language, feedUrls, file = un
         console.error(`Affair ${storyId}: the events telling one fact were not joined (${err.message})`);
         return [];
     });
-    const events = joinedEvents(found, same, language);
+    // the marks of each event read from its news by the AI (Official, Contested, Reported: see affair-marks.js); an AI that fails leaves them to the words
+    const storyOf = new Map(judged.map(item => [item.story.storyId, item.story]));
+    const events = await markEvents(joinedEvents(found, same, language), (event) => event.storyIds.flatMap(id => storyOf.get(id)?.news ?? []), {usage});
 
     // the titles of another language than the reader's, translated (marked as translated by the client)
     await translateEvents(events, language, usage);

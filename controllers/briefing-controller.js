@@ -22,10 +22,10 @@ export const BriefingController = {
         }
     },
 
-    // the affair of a card: its events in time order and how widely the media told it (see AffairService.view)
+    // the affair of a card: its events in time order and how widely the media told it (see AffairService.shownView)
     affair: async (req, res) => {
         try {
-            res.status(200).json(await AffairService.view(req.user.id, req.params.id, req.params.storyId));
+            res.status(200).json(await AffairService.shownView(req.user.id, req.params.id, req.params.storyId));
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});
         }

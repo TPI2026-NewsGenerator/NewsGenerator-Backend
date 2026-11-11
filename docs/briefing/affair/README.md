@@ -45,10 +45,64 @@ Nothing is chosen by the reader: the system finds the affair, names it, and buil
    news, unless the feed got it wrong (a page re-dated, dated ahead): the day we saw the story then stands.
    The lead of an event is its story in the reader's language, else the most told; its title is translated (the language read from its letters, see [Other angles](../other-angles/README.md)) when
    it is in another language, the original on demand.
-5. **The marks**, never a verdict: *Reported* (half of its news hedge, `hedging.js`), *Official* (the AI says a party
-   announced it **and** a news of it quotes a statement or a release, `statements.js`), *Contested* (the AI says
-   someone denies it **and** a verb of denial is in its news, `contested.js`). An event is *key* only when the AI
-   says it brings a new fact **and** two media tell it or a party announces or denies it.
+5. **The marks**, never a verdict, read from the event by an AI that is shown its lead title and up to 8 of its news (the ones a word fired
+   on first, then other media; title and 240 characters of text), 6 events in a call, no thinking (`affair-marks.js`, 11.11.2026, the user's
+   definitions): *Official* (a party the event is about **issued a statement or a communiqué itself**: a formal statement or release in its own name, an
+   official announcement, a decision it publishes; not an interview, nor remarks to journalists, nor a quote; the AI says it **and** a news of the event
+   holds the words of a statement or a communiqué, `statements.js`),
+   *Contested* (someone named **disputes the fact** the event reports: a denial, a rejection, a formal challenge before a body such as an appeal; not a
+   criticism or a protest), *Unverified* (called *Reported* until 11.11.2026: the badge is named so on the page and in the e-mail, `event.reported` stays its field; the coverage **as a whole**, most of the news shown and not one of them, tells it as unconfirmed, **and** a news
+   of the event holds a word of hedging, `hedging.js`, whose words the tooltip shows). The marks are kept in `event.marks` and given to the page and to the
+   e-mail in the fields they read (`withShownMarks`); the fields of the words (`official`, `denial`, `reported`) stay what they were, because they
+   tell a denial apart from what it denies, make a key event and ring the alerts. An event is *key* only when the AI says it brings a new fact **and**
+   two media tell it or a party announces or denies it. The new and grown events are marked at each check, the ones of an affair followed before at
+      its next check; an AI that fails leaves the old marks, asked again. Measured on the events the AI read (see below), the code as deployed on 11.11.2026: the
+   three badges now show on 7.5, 4.4 and 2.1 events in 100 (3.5, 0.3 and 0.8 before) at 97%, 93% and 89 to 95% precision and 41%, 62% and 31 to 33% recall (97%, 100%,
+   57% and 19%, 5%, 7% before). A run of the AI varies by a few points: the ranges are the ones of the runs made; 230 events of 3 profiles, 7 and 3 badges before.
+
+   *Reported* is read from the words of `hedging.js` ("reportedly", "selon des sources", "σύμφωνα με πληροφορίες"...), measured on
+   11.11.2026 (`bench/hedging/`: 14 days of the database, 2 million news): of 93 marked news read one by one, **half told something
+   else**. The "alleged" of a crime report says that the guilt is not proved, not that the news is not confirmed (24 of 93, 15 of
+   19 in Spanish): `allegedly`, `presunto`, `presuntamente` and their kin are no longer words (the user, 11.11.2026). A rumour that
+   the article denies ("White House denies the rumours"), says is over ("ending weeks of speculation") or confirms is told as a
+   fact, and the Italian "rumore" is a noise. And from Greek on, one news in five was in a language where no word existed: the list
+   now holds 37 entries (about forty languages, `WORDS`), each word read in its real contexts (`bench/hedging/verify.mjs`) before it stayed.
+   Measured after: the hedged share of a language went from 2.2 / 1.4 / 0.64 / 0.5 / 0.67 % (en, es, fr, it, de) to 1.6 / 0.3 / 0.66 / 0.24 /
+   0.78 %, and from 0 % to 0.1 - 2.4 % in the languages after Greek. What the words cannot read stays: a sentence that ends the speculation is not the
+   one that holds the word, a speculation of a market is no hedge (two cases of the corpus marked `known`). An AI veto on the news
+   the words mark was measured the same day (`bench/hedging/veto.mjs`, 390 news judged by two blind judges that agreed on 97%): reading
+   the title and the beginning of the text it takes the precision of the words from 53 to 82% (63 to 85% at the natural proportions of the news) and
+   loses 3 of 83 real hedges; the title alone (what `judgeStories` reads) loses 31 of them and is no use; thinking mode adds 4 points for six
+   times the tokens. Not built: the events are read as a whole instead (below).
+
+   **The three badges measured on the events** (`bench/hedging/events.mjs` and `event-marks.mjs`, 11.11.2026: 150 cards of the last briefings built with
+   `buildAffair`, 71 affairs, 912 distinct events; 230 events read by two blind judges, 88 to 97% agreement; figures at the natural proportions of the events):
+
+   | badge | the product shows it on | precision | recall | an AI that reads the event (lead title + 8 news, title and 240 characters) | the AI **and** a word in some news |
+   |---|---|---|---|---|---|
+   | Official | 3.7 events in 100 | 100% (34 of 34) | 10% | 90% / 59%, shown on 25 in 100 | 100% / 17% |
+   | Contested | 0.3 in 100 (3 events) | 100% (3 of 3) | 5% | 81% / 79%, 6 in 100 | 91% / 17% |
+   | Reported | 0.8 in 100 (9 events) | 57% (4 of 7) | 7% | 68% / 96%, 9 in 100 | 95% / 38%, 2.4 in 100 |
+
+   The badges are right when they appear and almost never appear: "the AI says it from the title **and** a word says it" multiplies two weak
+   recalls (the title only; the words of five languages). Reading the text of the event, the AI finds 4 to 6 times more at the same or a better precision
+   for 400 tokens an event (13 s for 230 events). What these figures do not say: the judges' definitions are broader than the tooltips (Official: a party
+   said it itself, interviews and press conferences included, 88% agreement; Contested: a named party contests, an appeal included), the judges saw the
+   news with a word first (it favours "Reported" on an event where one news in twenty hedges, which the "half of the news" rule leaves out on purpose),
+   and 7 and 3 badges are few to judge a precision by.
+
+   **Built the same day** (`affair-marks.js`, `bench/hedging/event-marks.mjs product`), the AI reading the event with the user's definitions
+   (Official: first everything a party says itself; Contested: a named person disputes the fact; Reported: the coverage as a whole, with a word of
+   hedging in some news), measured again on the same 230 events: Official 30.5 events in 100, 85% precision, 68% recall; Contested 4.2 in 100, 95% and 61%;
+   Reported 2.0 in 100, 94% and 31%. A run of the AI varies by a few points. The wording of Contested was made stricter once after a first run (69%
+   precision: a criticism or a protest was taken for a dispute), on these same events: its figure is the least independent.
+
+   **Official restricted to statements and communiqués** (the user, the same day): the 146 events that a judge had called official were read again by
+   four blind judges with the restricted definition (96% agreement). The AI alone with the restricted wording showed it on 25 events in 100 at 64% precision
+   (86% on the sample, but the false ones are in the large pool of events with no word of a statement, where each stands for eight); the AI **and** the
+   words of a statement or a communiqué in some news: 5.9 in 100, 98% precision, 32% recall (before: 3.5 in 100, 97%, 19% with the same judges).
+   The false ones of the AI alone were pages of a body that list data (profiles, standings), quotes and filings. Cost: 40 calls and 91 000 tokens for
+   230 events, 13 to 18 s; in the product only the new and grown events are asked.
 6. **The coverage** (`coverageOf`, no AI): the media and the news of all the stories of the affair, whatever
    their language, each link once, the first medium to tell it, the media of each day, the languages, and the media
    one after the other as they joined. It counts what we read: it says how much it is told, not whether it is true.

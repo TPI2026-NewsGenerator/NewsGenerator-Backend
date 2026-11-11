@@ -15,6 +15,7 @@ import {ProfileModel} from '../models/profile-model.js';
 import {feedsOf} from './briefing-service.js';
 import {PushService} from './push-service.js';
 import {affairFile, buildAffair, translateEvents} from './utils/affair.js';
+import {withShownMarks} from './utils/affair-marks.js';
 import {watchAffair} from './utils/affair-watch.js';
 import {mapWithConcurrency} from './utils/concurrency.js';
 import {readerLanguage} from './utils/language.js';
@@ -135,13 +136,20 @@ export const AffairService = {
         });
     },
 
+    // The affair of a card as the page reads it: the three marks of its events are the ones the AI read in their news (see withShownMarks). The
+    // affair kept to be followed (see follow) stays the one view gives, with what the watch counts on
+    shownView: async (userId, briefingId, storyId) => {
+        const view = await AffairService.view(userId, briefingId, storyId);
+        return view.affair ? {...view, events: withShownMarks(view.events)} : view;
+    },
+
     // The affair of a card for the e-mail (see withAffairs): its title, its events, its coverage and the size of its thread ({stories, media},
     // null when the database does not tell), null when the card is no affair. Built by the AI the first time, as view does
     forMail: async (userId, briefingId, storyId) => {
         const view = await AffairService.view(userId, briefingId, storyId);
         if (!view.affair) return null;
         const [stats] = await AffairModel.threadStats([Number(storyId)]).catch(() => []);
-        return {title: view.title, events: view.events, coverage: view.coverage, chip: stats ? {stories: Number(stats.stories), media: Number(stats.media)} : null};
+        return {title: view.title, events: withShownMarks(view.events), coverage: view.coverage, chip: stats ? {stories: Number(stats.stories), media: Number(stats.media)} : null};
     },
 
     // --- the affairs a reader follows ---
@@ -198,8 +206,8 @@ export const AffairService = {
         const alerts = await AffairModel.alertsOf(row.id);
         return {
             id: row.id, title: row.title, language: row.language, followedAt: row.created_at, checkedAt: row.checked_at, lastEventAt: row.last_event_at,
-            events: row.view.events, coverage: row.view.coverage,
-            alerts: alerts.map(alert => ({id: alert.id, at: alert.created_at, read: alert.read_at !== null, event: alert.event})),
+            events: withShownMarks(row.view.events), coverage: row.view.coverage,
+            alerts: alerts.map(alert => ({id: alert.id, at: alert.created_at, read: alert.read_at !== null, event: withShownMarks([alert.event])[0]})),
         };
     },
 
