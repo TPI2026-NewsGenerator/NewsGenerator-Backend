@@ -29,6 +29,8 @@ __pycache__/
 
 # benches: the code is kept, the data they record is not
 /bench/data
+# the same for the measure of the positions (its four scorecards were committed before, they stay tracked)
+/bench/federations/data
 
 # the documentation site: its venv and the site built (pnpm run docs, docs:build)
 .venv-docs/
