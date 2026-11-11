@@ -27,7 +27,7 @@ jest.unstable_mockModule('../../models/sent-mail-model.js', () => ({SentMailMode
 // the affair of a card for the e-mail: built by the AI, and the service of the affairs reads the briefing service (see withAffairs)
 const forMail = jest.fn(async () => null);
 jest.unstable_mockModule('../../services/affair-service.js', () => ({AffairService: {forMail}}));
-const {BriefingService, previewHtml, withAffairs, withBlocks, withOwnCountries, withOwnTexts, withOwnTitles, withoutTakenOut} = await import('../../services/briefing-service.js');
+const {BriefingService, previewHtml, withAffairs, withBlocks, withOwnCountries, withOwnDescriptions, withOwnTexts, withOwnTitles, withoutTakenOut} = await import('../../services/briefing-service.js');
 const {briefingMail, LABELS} = await import('../../services/utils/briefing-mail.js');
 
 const card = (storyId, title, changes = {}) => ({
@@ -322,6 +322,56 @@ describe('briefingMail', () => {
         expect(html).toContain('&lt;script&gt;');
         expect(() => withOwnTitles(briefing.items, {1: 'x'.repeat(301)})).toThrow(/300/);
         expect(() => withOwnTitles(briefing.items, [1])).toThrow();
+    });
+
+    // the sentence under the title of a card (11.11.2026, a friend: the description could not be changed in the editor): the reader writes their own,
+    // sent to anyone, or none at all; the reason the card was chosen for them is for them only
+    describe('the description the reader wrote', () => {
+        const cards = [card(1, 'First story', {why: 'Why the AI chose it.'}), card(2, 'Second story', {why: 'Another reason.'}), card(3, 'Third story')];
+        const mail = (descriptions, options = {}) => briefingMail({hours: 24, finishedAt: '2026-11-11T06:01:00.000Z', items: withOwnDescriptions(cards, descriptions)}, options);
+
+        it('should show the text the reader wrote instead of the reason of the card, in the e-mail and its text', () => {
+            const {html, text} = mail({1: '  The Togolese   federation hands over <b>its league</b>  '});
+            expect(html).toContain('The Togolese federation hands over &lt;b&gt;its league&lt;/b&gt;');
+            expect(html).not.toContain('Why the AI chose it.');
+            expect(text).toContain('The Togolese federation hands over <b>its league</b>');
+            expect(text).not.toContain('Why the AI chose it.');
+            // a card with no entry keeps its own
+            expect(html).toContain('Another reason.');
+            expect(text).toContain('Another reason.');
+        });
+
+        it('should send what the reader wrote to another address too, where the reason of the card stays for the reader', () => {
+            const {html, text} = mail({1: 'Mine.'}, {sender: 'lecteur'});
+            expect(html).toContain('Mine.');
+            expect(text).toContain('Mine.');
+            expect(html).not.toContain('Another reason.');
+            expect(text).not.toContain('Another reason.');
+        });
+
+        it('should show none when the reader cleared it, and write one for a card that has none', () => {
+            const {html, text} = mail({1: '', 3: 'Written for a card without a reason.'});
+            expect(html).not.toContain('Why the AI chose it.');
+            expect(text).not.toContain('Why the AI chose it.');
+            expect(html).toContain('Written for a card without a reason.');
+        });
+
+        it('should refuse what is no text of 500 characters at most for a card', () => {
+            expect(withOwnDescriptions(cards, undefined)).toBe(cards);
+            expect(withOwnDescriptions(cards, null)).toBe(cards);
+            expect(() => withOwnDescriptions(cards, {1: 'x'.repeat(501)})).toThrow(/500/);
+            expect(() => withOwnDescriptions(cards, {1: ['a']})).toThrow(/descriptions/);
+            expect(() => withOwnDescriptions(cards, ['a'])).toThrow(/descriptions/);
+            expect(withOwnDescriptions(cards, {1: 'x'.repeat(500)})[0].ownWhy).toHaveLength(500);
+        });
+
+        it('should be sent by BriefingService.email and shown by its preview', async () => {
+            const sent = [undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined];
+            await BriefingService.email(4, 7, [1, 2], undefined, ...sent, {1: 'Written by the reader.', 2: ''});
+            const {html} = sendMail.mock.calls[0][0];
+            expect(html).toContain('Written by the reader.');
+            await expect(BriefingService.email(4, 7, [1], undefined, ...sent, 'text')).rejects.toMatchObject({status: 400});
+        });
     });
 
     it('should leave out the denials and the other angles the reader took out, and their title once none is left', () => {

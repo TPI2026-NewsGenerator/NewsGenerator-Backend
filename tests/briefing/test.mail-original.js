@@ -79,13 +79,21 @@ describe('GET /api/mails/:token', () => {
 describe('POST /api/briefing/:id/email', () => {
     it('should give the service what the reader sent, and no address of the site: the e-mail has no link to a copy any more', async () => {
         await request('POST', '/api/briefing/7/email', {headers: {Host: 'news.example'}, body: {storyIds: [1], format: 'points', ai: [1], texts: {1: ['My point.']}, countries: {1: ['FR']}, theme: 'dark', timeZone: 'Europe/Paris'}});
-        expect(email).toHaveBeenCalledWith(4, '7', [1], undefined, undefined, undefined, undefined, 'points', [1], {1: ['My point.']}, {1: ['FR']}, 'dark', 'Europe/Paris', undefined);
+        expect(email).toHaveBeenCalledWith(4, '7', [1], undefined, undefined, undefined, undefined, 'points', [1], {1: ['My point.']}, {1: ['FR']}, 'dark', 'Europe/Paris', undefined, undefined);
+    });
+
+    it('should give the service the descriptions the reader wrote under the titles (11.11.2026)', async () => {
+        const descriptions = {1: 'My words.', 2: ''};
+        await request('POST', '/api/briefing/7/email', {body: {storyIds: [1, 2], descriptions}});
+        expect(email).toHaveBeenCalledWith(4, '7', [1, 2], undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, descriptions);
+        await request('POST', '/api/briefing/7/email/preview', {body: {storyIds: [1], descriptions}});
+        expect(preview).toHaveBeenLastCalledWith(4, '7', [1], undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, descriptions);
     });
 
     it('should give the service the blocks the reader chose for the cards (the user, 5.11.2026)', async () => {
         const blocks = {1: {names: true, coverage: true, contested: false}};
         await request('POST', '/api/briefing/7/email', {body: {storyIds: [1], blocks}});
-        expect(email).toHaveBeenCalledWith(4, '7', [1], undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, blocks);
+        expect(email).toHaveBeenCalledWith(4, '7', [1], undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, blocks, undefined);
     });
 });
 
@@ -95,7 +103,7 @@ describe('POST /api/briefing/:id/email/preview', () => {
         const res = await request('POST', '/api/briefing/7/email/preview', {body: {storyIds: [1, 2], to: 'friend@example.org', format: 'points', ai: [1], theme: 'dark', timeZone: 'Europe/Paris', blocks}});
         expect(res.status).toBe(200);
         expect(JSON.parse(res.text)).toEqual({html: '<!doctype html><p>Preview</p>'});
-        expect(preview).toHaveBeenCalledWith(4, '7', [1, 2], 'friend@example.org', undefined, undefined, undefined, 'points', [1], undefined, undefined, 'dark', 'Europe/Paris', blocks);
+        expect(preview).toHaveBeenCalledWith(4, '7', [1, 2], 'friend@example.org', undefined, undefined, undefined, 'points', [1], undefined, undefined, 'dark', 'Europe/Paris', blocks, undefined);
         expect(email).not.toHaveBeenCalled();
     });
 

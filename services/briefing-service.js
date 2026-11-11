@@ -1468,6 +1468,24 @@ export const withOwnTitles = (items, titles) => {
     });
 };
 
+// The cards with the description the reader wrote for the e-mail, {storyId: text}: the sentence under the title. It replaces the reason the card was
+// chosen (ownWhy; that one is for the reader only, see briefing-mail.js), an empty text is none at all, a card with no entry keeps its own (the user,
+// 11.11.2026, a friend: the description could not be changed in the editor)
+const MAX_OWN_DESCRIPTION = 500;
+export const withOwnDescriptions = (items, descriptions) => {
+    if (descriptions === undefined || descriptions === null) return items;
+    if (typeof descriptions !== 'object' || Array.isArray(descriptions) || !Object.values(descriptions).every(text => typeof text === 'string')) {
+        throw Object.assign(new Error('descriptions: {storyId: text}.'), {status: 400});
+    }
+    return items.map(item => {
+        const text = Object.hasOwn(descriptions, String(item.storyId)) ? descriptions[String(item.storyId)] : undefined;
+        if (text === undefined) return item;
+        const own = text.replace(/\s+/g, ' ').trim();
+        if (own.length > MAX_OWN_DESCRIPTION) throw Object.assign(new Error(`A description has ${MAX_OWN_DESCRIPTION} characters at most.`), {status: 400});
+        return {...item, ownWhy: own};
+    });
+};
+
 // the cards with the sentences the reader wrote for the e-mail in the way it is sent, {storyId:
 // [paragraph]}: a point, or a paragraph of the summary or of the key passages, each; one left empty keeps
 // its own. They replace the article's sentences and the AI version alike
@@ -1765,7 +1783,7 @@ const analyseAdded = async (userId, briefingId, storyId, item, articles, languag
 // its follow-up, the thumb, the mark of an e-mail sent) is left out, the places of the terms are marked
 // again for this one
 export const transferredCard = (card) => {
-    const {storyId, sentAt, vote, ownTitle, ownText, marks, found, analysis, ...kept} = card;
+    const {storyId, sentAt, vote, ownTitle, ownText, ownWhy, marks, found, analysis, ...kept} = card;
     return {...kept, imported: true, transferred: true, mergedStoryIds: [], followUp: null, vote: null, feedUrls: [],
         why: null, interest: null, project: null};
 };
@@ -1792,7 +1810,7 @@ const picturesOfItem = async (item) => storyPictures(item,
 
 // The e-mail of the cards ticked, built as it is sent (BriefingService.email) or shown (BriefingService.preview, which sends nothing and
 // marks nothing): {mail: {subject, html, text}, attachments, address, toOther, user, row, ticked}. See email for what its parameters are
-const builtMail = async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = [], texts = undefined, countries = undefined, theme = 'light', timeZone = undefined, blocks = undefined, {preview = false} = {}) => {
+const builtMail = async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = [], texts = undefined, countries = undefined, theme = 'light', timeZone = undefined, blocks = undefined, descriptions = undefined, {preview = false} = {}) => {
     if (!Array.isArray(storyIds) || storyIds.length === 0 || !storyIds.every(storyId => Number.isInteger(storyId) && storyId !== 0)) {
         throw Object.assign(new Error('storyIds: the cards ticked, one at least.'), {status: 400});
     }
@@ -1824,7 +1842,7 @@ const builtMail = async (userId, briefingId, storyIds, to, pictures, titles, rem
     // a picture of the story chosen is credited to its medium
     const changed = ticked.filter(item => pictures && typeof pictures === 'object' && typeof pictures[String(item.storyId)]?.url === 'string');
     const known = new Map((await Promise.all(changed.map(picturesOfItem))).flat().map(picture => [picture.url, picture.source]));
-    const {items: chosen, attachments} = await withChosenPictures(withOwnCountries(withOwnTexts(withBlocks(withoutTakenOut(withOwnTitles(ticked, titles), removed), blocks), texts), countries), pictures, {sender, known});
+    const {items: chosen, attachments} = await withChosenPictures(withOwnCountries(withOwnTexts(withBlocks(withoutTakenOut(withOwnDescriptions(withOwnTitles(ticked, titles), descriptions), removed), blocks), texts), countries), pictures, {sender, known});
     const items = await withAffairs(chosen, userId, briefingId);
     // the AI version asked for a card: sent when the card has one in that way, else the card as published
     const inAi = new Set(ai);
@@ -1863,10 +1881,11 @@ export const BriefingService = {
     // theme: 'light' (the default) or 'dark', the colours of the e-mail (one of THEMES, the user, 2.11.2026);
     // timeZone: the one of the reader's browser ("Europe/Paris"), the hours of the e-mail are written in it (Zurich
     // when not given); blocks: {storyId: {media, contested, official, unconfirmed, names, analysis, angles, affair, coverage}}, what the
-    // reader puts in the e-mail and leaves out of it for some cards (see withBlocks). No copy is kept any more: the e-mail has no link to
+    // reader puts in the e-mail and leaves out of it for some cards (see withBlocks); descriptions: {storyId: text}, the sentence under the title the reader wrote
+    // for some cards, "" for none (see withOwnDescriptions). No copy is kept any more: the e-mail has no link to
     // one (the user, 13.10.2026)
-    email: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = [], texts = undefined, countries = undefined, theme = 'light', timeZone = undefined, blocks = undefined) => {
-        const {mail, attachments, address, toOther, user, row, ticked} = await builtMail(userId, briefingId, storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme, timeZone, blocks);
+    email: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = [], texts = undefined, countries = undefined, theme = 'light', timeZone = undefined, blocks = undefined, descriptions = undefined) => {
+        const {mail, attachments, address, toOther, user, row, ticked} = await builtMail(userId, briefingId, storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme, timeZone, blocks, descriptions);
         await sendMail({to: address, replyTo: toOther && user?.email ? user.email : undefined, ...mail, attachments});
         // sent, they are read: their stories are left out of the next briefings (see notShownBefore). The
         // e-mail is gone already, a failure here only lets them come back
@@ -1877,8 +1896,8 @@ export const BriefingService = {
     // The e-mail as it would be sent, the same call as email, answered as its page: {html}. The address `to` only decides whether it goes to
     // another than the reader (their reasons for the cards are left out then): a wrong one is left out, the reader is still typing it. Nothing
     // is sent and no story is marked as read: the editor shows it while the reader changes what is in it
-    preview: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = [], texts = undefined, countries = undefined, theme = 'light', timeZone = undefined, blocks = undefined) => {
-        const {mail, attachments} = await builtMail(userId, briefingId, storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme, timeZone, blocks, {preview: true});
+    preview: async (userId, briefingId, storyIds, to, pictures, titles, removed, format = 'passages', ai = [], texts = undefined, countries = undefined, theme = 'light', timeZone = undefined, blocks = undefined, descriptions = undefined) => {
+        const {mail, attachments} = await builtMail(userId, briefingId, storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme, timeZone, blocks, descriptions, {preview: true});
         return {html: previewHtml(mail.html, attachments)};
     },
 
@@ -2173,6 +2192,39 @@ export const BriefingService = {
         // a proposal the checks refused is shown all the same, with what they found: {title, problem}
         if (!proposal.title && proposal.reason === 'unsafe' && proposal.proposal) return {title: proposal.proposal, problem: proposal.problem};
         return {title: proposal.title, ...(proposal.reason ? {reason: proposal.reason} : {})};
+    },
+
+    // The AI version of a card that has none, written when the reader asks for it (11.11.2026: the AI failed while three briefings of the
+    // morning were written, 0 of their 49 cards had one, and nothing asked again). The page of the lead article, the one its passages are
+    // from, is read again, the AI writes the points and the summary from its sentences (see aiWaysOf, the figures checked as when a briefing
+    // is written) and the card keeps them. {ai: {points, summary, model}}, the one the card has already when it has one; {ai: null, reason}
+    // when none was written: 'no-answer' (the AI did not answer: asked again later), 'unbacked' (what it wrote was refused for a figure the
+    // article does not give), 'unreadable' (the page could not be read again). Two calls of the AI
+    writeAiVersion: async (userId, briefingId, storyId) => {
+        const story = Number(storyId);
+        if (!Number.isInteger(story) || story === 0) throw Object.assign(new Error('storyId: the story of a card.'), {status: 400});
+        const {row, briefing} = await readyBriefing(userId, briefingId);
+        const item = briefing.items.find(card => card.storyId === story);
+        if (!item) throw Object.assign(new Error('Unknown card.'), {status: 404});
+        const has = (card) => Boolean(card?.ai?.points?.length || card?.ai?.summary);
+        if (has(item)) return {ai: item.ai};
+        const address = item.lead?.url ?? item.articles?.[0]?.url;
+        const [page] = address ? await Crawlers.Html([address]).catch(() => []) : [];
+        if (!page?.content) return {ai: null, reason: 'unreadable'};
+        const profile = row.id_profile ? await ProfileModel.get(row.id_profile) : null;
+        const usage = newUsage();
+        const report = {failed: 0, rejected: false};
+        const ai = await aiWaysOf(item.lead?.title ?? item.titleAsPublished ?? item.title, page, {language: readerLanguage(profile ?? {}), usage, report}).catch(() => null);
+        console.log(`Briefing ${row.id}: AI version asked for the card ${story}, ${ai ? 'written' : `none (${report.failed > 0 ? 'no answer' : report.rejected ? 'refused' : 'nothing to write from'})`}, tokens ${JSON.stringify(usage)}`);
+        if (!ai) return {ai: null, reason: report.failed > 0 ? 'no-answer' : report.rejected ? 'unbacked' : 'unreadable'};
+        if (await BriefingModel.setAi(userId, row.id, story, ai) === 0) {
+            // another call wrote one first, or the card is gone: the reader gets what the card has now
+            const now = await BriefingModel.ofUser(userId, row.id);
+            const card = now?.status === 'ready' ? toBriefing(now).items.find(one => one.storyId === story) : null;
+            if (!has(card)) throw Object.assign(new Error('Unknown card.'), {status: 404});
+            return {ai: card.ai};
+        }
+        return {ai};
     },
 
     // the thumb of the reader on a card: 'up' (good for me), 'down' (not for me) or null (taken back).

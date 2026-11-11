@@ -42,16 +42,16 @@ export const BriefingController = {
         }
     },
 
-    // {storyIds, to?, pictures?, titles?, removed?, format?, ai?, texts?, countries?, theme?, timeZone?, blocks?}: the cards of the briefing the
+    // {storyIds, to?, pictures?, titles?, removed?, format?, ai?, texts?, countries?, theme?, timeZone?, blocks?, descriptions?}: the cards of the briefing the
     // reader ticked, sent to the address to, else to the one of their account, with the pictures and
     // titles they chose, without the denials and other angles they took out, their sentences in the way
     // chosen (format), the ones they wrote instead (texts), the countries they chose (countries), in light colours
     // or dark (theme), with the hours of their time zone (timeZone), with the blocks they put in or left out for some cards (blocks: the
-    // badges, who it is about, the analysis, the angles, the affair, the coverage, see withBlocks)
+    // badges, who it is about, the analysis, the angles, the affair, the coverage, see withBlocks), the description they wrote under some titles (descriptions)
     email: async (req, res) => {
         try {
-            const {storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme, timeZone, blocks} = req.body ?? {};
-            await BriefingService.email(req.user.id, req.params.id, storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme, timeZone, blocks);
+            const {storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme, timeZone, blocks, descriptions} = req.body ?? {};
+            await BriefingService.email(req.user.id, req.params.id, storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme, timeZone, blocks, descriptions);
             res.status(204).end();
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});
@@ -62,8 +62,8 @@ export const BriefingController = {
     // is sent, no story is marked as read
     emailPreview: async (req, res) => {
         try {
-            const {storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme, timeZone, blocks} = req.body ?? {};
-            res.status(200).json(await BriefingService.preview(req.user.id, req.params.id, storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme, timeZone, blocks));
+            const {storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme, timeZone, blocks, descriptions} = req.body ?? {};
+            res.status(200).json(await BriefingService.preview(req.user.id, req.params.id, storyIds, to, pictures, titles, removed, format, ai, texts, countries, theme, timeZone, blocks, descriptions));
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});
         }
@@ -180,6 +180,15 @@ export const BriefingController = {
     neutralTitle: async (req, res) => {
         try {
             res.status(200).json(await BriefingService.neutralTitle(req.user.id, req.params.id, req.params.storyId));
+        } catch (error) {
+            res.status(error.status || 500).json({error: error.message ?? String(error)});
+        }
+    },
+
+    // {ai: {points, summary, model}} or {ai: null, reason}: the AI version of a card that has none, written now (see writeAiVersion)
+    writeAiVersion: async (req, res) => {
+        try {
+            res.status(200).json(await BriefingService.writeAiVersion(req.user.id, req.params.id, req.params.storyId));
         } catch (error) {
             res.status(error.status || 500).json({error: error.message ?? String(error)});
         }

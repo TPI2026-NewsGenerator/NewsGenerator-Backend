@@ -36,6 +36,11 @@ router.post('/:id/stories/:storyId/version', authenticateToken,
     rateLimit({windowMs: 3600e3, max: 120, key: req => `version ${req.user.id}`, message: 'Too many versions used, try again in an hour.'}),
     BriefingController.useVersion);
 router.delete('/:id/stories/:storyId/version', authenticateToken, BriefingController.restoreVersion);
+// the AI version of a card that has none, written when the reader asks (the AI had failed when the briefing was written): a page read and two
+// calls of the AI each
+router.post('/:id/stories/:storyId/ai-version', authenticateToken,
+    rateLimit({windowMs: 3600e3, max: 60, key: req => `ai-version ${req.user.id}`, message: 'Too many AI versions asked, try again in an hour.'}),
+    BriefingController.writeAiVersion);
 // the e-mail of the briefing is for the administrators only (see admin.js)
 const MAIL_REFUSED = 'Sending the briefing by e-mail is for the administrators.';
 router.get('/:id/stories/:storyId/pictures', authenticateToken, adminOnly(MAIL_REFUSED), BriefingController.pictures);

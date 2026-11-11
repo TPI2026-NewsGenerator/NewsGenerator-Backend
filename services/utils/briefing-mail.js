@@ -459,8 +459,10 @@ const titleOf = (card) => card.ownTitle ?? card.titleTranslation ?? card.title;
 // (ownCountries, codes, see withOwnCountries) as they are, else the ones found, whatever the title says (see country-names.js)
 const countriesOf = (card, t = ENGLISH) => countryNames(Array.isArray(card.ownCountries) ? card.ownCountries : card.countries ?? [], {locale: t.language});
 
-// personal: the why of the card, written to the reader ("that you follow"), left out of an e-mail to
-// another; format: the way its sentences are shown (see wayOf)
+// The sentence under the title: the one the reader wrote for the e-mail (ownWhy, see withOwnDescriptions: sent to anyone, "" is none), else the why of the
+// card, written to the reader ("that you follow"), which is left out of an e-mail to another (personal false)
+const whyOf = (card, personal) => typeof card.ownWhy === 'string' ? card.ownWhy : personal ? card.why ?? '' : '';
+// personal: whether it goes to the reader (see whyOf); format: the way its sentences are shown (see wayOf)
 // the credit of the picture: its medium, or who added the file (see withChosenPictures)
 const creditOf = (card, t = ENGLISH) => card.addedBy !== undefined
     ? card.addedBy ? fillText(t.labels.addedBy, {name: card.addedBy}) : t.labels.addedByYou
@@ -518,7 +520,7 @@ const cardHtml = (card, i, personal = true, format = 'passages', t = ENGLISH, an
   </tr></table>
   <h2 style="margin:0;font:600 28px/1.15 ${FONT};letter-spacing:-.022em;color:${t.c.ink}">${escape(titleOf(card))}</h2>
   ${badgesHtml(card, t)}${namesHtml(card, t)}
-  ${personal && card.why ? `<p style="margin:12px 0 0;font:400 20px/1.45 ${FONT};letter-spacing:-.01em;color:${t.c.mute}">${escape(card.why)}</p>` : ''}
+  ${whyOf(card, personal) ? `<p style="margin:12px 0 0;font:400 20px/1.45 ${FONT};letter-spacing:-.01em;color:${t.c.mute}">${escape(whyOf(card, personal))}</p>` : ''}
   ${picture ? `${pictureHtml(card, picture, t)}
   ${credit ? `<p style="${t.s.caption};margin-top:6px">${escape(illustration ? t.labels.illustration : t.labels.picture)} — ${mediumHtml(credit, null, t)}</p>` : ''}` : ''}
   ${sentences.paragraphs.length > 0 ? `
@@ -579,7 +581,7 @@ ${cards.map((card, i) => cardHtml(card, i, !sender, format, t, anchors)).join(''
                 `${String(i + 1).padStart(2, '0')}. ${titleOf(card)}${countries.length > 0 ? ` (${countries.join(', ')})` : ''}`,
                 ...(badgesOf(card, t).length > 0 ? [badgesOf(card, t).map(badge => badge.words).join(' · ')] : []),
                 ...(namesOf(card).length > 0 ? [`${L.whoItIsAbout}: ${namesOf(card).join(', ')}`] : []),
-                sender ? '' : card.why ?? '',
+                whyOf(card, !sender),
                 '',
                 wayText(wayOf(card, format, t)),
                 lead ? `${fillText(L.readAt, {source: lead.source})}: ${lead.url}` : '',

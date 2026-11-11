@@ -88,8 +88,10 @@ const figuresAgain = (texts, source) => {
 // The points and the summary written by the AI in the reader's language (a code), from the same sentences
 // as the key passages: {points: ['...'], summary: '...', model}, either null when its call failed, gave
 // nothing usable or a figure the article does not have, twice (ATTEMPTS). null when there is nothing to
-// write from
-export const aiWaysOf = async (title, page, {language = 'en', usage = null} = {}) => {
+// write from. report: {failed, rejected}, given by the caller that tells the reader why none was written (see
+// BriefingService.writeAiVersion): failed counts the calls that got no answer, rejected is set when a text was left out for a figure
+// the article does not give
+export const aiWaysOf = async (title, page, {language = 'en', usage = null, report = null} = {}) => {
     const sentences = page ? sentencesOf(page) : [];
     const reader = writtenIn(language);
     if (sentences.length === 0 || !reader) return null;
@@ -98,6 +100,7 @@ export const aiWaysOf = async (title, page, {language = 'en', usage = null} = {}
     const writers = new Set();
     const ask = (prompt) => ollamaJson(prompt, usage, {model: WRITE_MODEL, think: false, onModel: model => writers.add(model)}).catch(err => {
         console.error(`AI version: ${WRITE_MODEL} did not answer (${err.message})`);
+        if (report) report.failed += 1;
         return null;
     });
     // Each text is asked up to ATTEMPTS times: a call that failed, an answer that is no JSON or one with a
@@ -126,6 +129,7 @@ ${figuresAgain(texts, source)}`;
     ]);
     if ((points.rejected && points.texts.length === 0) || (summary.rejected && summary.texts.length === 0)) {
         console.log(`AI version: a text of "${title.slice(0, 60)}" left out, a figure the article does not give`);
+        if (report) report.rejected = true;
     }
     const ways = {points: points.texts.length > 0 ? points.texts : null, summary: summary.texts[0] ?? null};
     return ways.points || ways.summary ? {...ways, model: [...writers].join(' + ') || WRITE_MODEL} : null;

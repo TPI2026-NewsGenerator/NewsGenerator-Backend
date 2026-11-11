@@ -85,6 +85,27 @@ describe('the AI version of a card', () => {
         expect(chat).toHaveBeenCalledTimes(3);
     });
 
+    // told to the reader who asks for a version a card does not have (11.11.2026): the AI did not answer, or what it wrote was refused
+    it('should say in a report why none was written: the AI did not answer, or a figure the article does not give', async () => {
+        chat.mockRejectedValue(Object.assign(new Error('down'), {status_code: 500}));
+        const down = {failed: 0, rejected: false};
+        expect(await aiWaysOf('SBB strike on Monday', page, {language: 'en', report: down})).toBeNull();
+        expect(down.failed).toBeGreaterThan(0);
+        expect(down.rejected).toBe(false);
+
+        chat.mockReset();
+        answering({points: {points: [{text: 'A strike of 48 hours on Monday.'}]}, summary: {summary: 'A strike of 48 hours on Monday.'}});
+        const wrong = {failed: 0, rejected: false};
+        expect(await aiWaysOf('SBB strike on Monday', page, {language: 'en', report: wrong})).toBeNull();
+        expect(wrong).toEqual({failed: 0, rejected: true});
+
+        chat.mockReset();
+        answering({points: {points: [{text: 'A strike of 24 hours on Monday.'}]}, summary: {summary: 'A strike of 24 hours on Monday.'}});
+        const fine = {failed: 0, rejected: false};
+        expect(await aiWaysOf('SBB strike on Monday', page, {language: 'en', report: fine})).not.toBeNull();
+        expect(fine).toEqual({failed: 0, rejected: false});
+    });
+
     it('should tell the AI which figures are not the article\'s when it asks again, and keep the points that are right', async () => {
         const asked = [];
         chat.mockImplementation(async ({messages}) => {

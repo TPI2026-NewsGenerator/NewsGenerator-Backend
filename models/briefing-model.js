@@ -56,6 +56,15 @@ export const REPLACE_CARD = `
         WHERE id = $1::int AND id_user = $2::int AND status = 'ready' AND jsonb_typeof(items) = 'array'
           AND EXISTS (SELECT 1 FROM jsonb_array_elements(items) AS card WHERE (card->>'storyId')::int = $3::int)`;
 
+// The AI version of a card that has none, kept in it (see BriefingModel.setAi). Exported for the tests, which run it in a transaction rolled back. $1 the
+// briefing, $2 the user, $3 the story of the card, $4 the version ({points, summary, model}) as JSON
+export const SET_AI = `
+    UPDATE briefings
+    SET items = (SELECT jsonb_agg(CASE WHEN (item->>'storyId')::int = $3::int THEN item || jsonb_build_object('ai', $4::jsonb) ELSE item END ORDER BY position)
+                 FROM jsonb_array_elements(items) WITH ORDINALITY AS cards(item, position))
+    WHERE id = $1::int AND id_user = $2::int AND status = 'ready' AND jsonb_typeof(items) = 'array'
+      AND EXISTS (SELECT 1 FROM jsonb_array_elements(items) AS card WHERE (card->>'storyId')::int = $3::int AND jsonb_typeof(card->'ai') IS DISTINCT FROM 'object')`;
+
 export const BriefingModel = {
     // hours: of news it is written from, size: the cards asked for
     create: async (userId, profileId, hours, size) => prisma.briefings.create({data: {id_user: userId, id_profile: profileId, status: 'running', step: 'starting', hours, size}}),
@@ -277,6 +286,10 @@ export const BriefingModel = {
         WHERE id = $1 AND id_user = $2 AND status = 'ready'
           AND EXISTS (SELECT 1 FROM jsonb_array_elements(items) AS card WHERE (card->>'storyId')::int = $3)`,
         briefingId, userId, storyId, vote),
+
+    // The AI version of a card that has none ({points, summary, model}, see BriefingService.writeAiVersion), kept in the card. One statement, as the
+    // vote: 0 when the briefing is not a ready one of this user, has no such card, or the card has a version already (another call wrote it first)
+    setAi: async (userId, briefingId, storyId, ai) => prisma.$executeRawUnsafe(SET_AI, briefingId, userId, storyId, JSON.stringify(ai)),
 
     // the stories this profile gave a thumb since 'since', the newest vote first: [{title, vote, feedUrls}].
     // One per story, the last one: a card can come back in the next briefing, and two thumbs on it are
