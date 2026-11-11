@@ -70,6 +70,21 @@ Macedonian feed read Bulgarian, and a Polish or a Czech title read Catalan or Sl
 
 The articles are protected: the corpus keeps titles and passages of a sentence or two, for the use of the project only.
 
+## Tests and the database
+
+Seven suites ask the real database, the one of the server and of the ingestion, because what they test lives there: `assign_stories`,
+`rank_profile_stories` (`test.stories.js`), `assign_threads` (`test.threads.js`), the cards (`test.add-item.js`, `test.fold-items.js`,
+`test.replace-card.js`), the sources removed (`test.removed-sources.js`) and the keyword filter (`test.news-filter.js`). Each of their
+tests runs in a transaction **rolled back at its end**, on news dated 2100 (or in a language of its own, `zz`) so that it never meets a real
+one, with a feed of its own: the url of a feed is unique, and two suites inserting the same one waited for each other (`test.stories` and
+`test.threads`, whose 30 s of timeout were reached when the whole suite ran, 11.11.2026). A test that needs a function of the database
+which the migration has not created yet is skipped, with a warning. The other suites mock the database.
+
+What was slow was not the contention but the function: `assign_threads` read the whole table of stories (1.9 million) to update the 2 waiting,
+6 s a call, which the six tests paid several times each, and the ingestion with them (`db/add_threads.sql`, 96 ms since the fix). `test.threads.js`
+installs the function of the repository in the transaction of each test (rolled back: the base keeps its own version), so it checks the SQL of the
+repository whatever is deployed, and does not wait for the migration. The tests have 60 s since the database is shared. Two suites with the same fixed row would wait for each other again: give a test its own.
+
 ## Limits
 
 - The offline layer does not ask the AI: what the AI writes (a rewrite, a translation) is only checked by the live layer, and

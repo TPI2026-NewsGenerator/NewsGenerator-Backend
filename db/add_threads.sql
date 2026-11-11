@@ -139,6 +139,7 @@ DECLARE
     -- threads at least as close are sorted, 640 a story instead of 136 000 in English. Its 20th was at
     -- 0.48 to 0.58 of likeness, while 13 000 English threads were above 0.50 (9.10.2026)
     sample constant integer := 32;
+    waiting integer[];
     batch integer[];
     bounds double precision[];
     -- the shortlist of the i-th story of the batch in row i, its closest first, NULL after its last
@@ -179,7 +180,11 @@ DECLARE
     n_merged integer := 0;
 BEGIN
     -- each story waiting reads its own news (LATERAL): joined, Postgres read every news of a story,
-    -- a page each since their vectors are in the row (1.4 s for one story waiting)
+    -- a page each since their vectors are in the row (1.4 s for one story waiting).
+    -- The stories waiting are listed first (i_stories_waiting) and only they are read and updated: a comparison of two columns
+    -- cannot be counted by Postgres, which guessed 644 115 stories of 1.9 million, joined the whole table to update 2 of them and
+    -- took 6 s a call (11.11.2026, auto_explain: the tests of this function took 5 to 16 s each)
+    waiting := ARRAY(SELECT id FROM stories WHERE grouped_at > COALESCE(threaded_at, '-infinity'));
     UPDATE stories st
     SET centroid = l2_normalize(m.centroid)::halfvec(1024), media = m.media
     FROM (
@@ -189,9 +194,9 @@ BEGIN
                              COALESCE(array_agg(DISTINCT a.medium) FILTER (WHERE a.medium IS NOT NULL), '{}') AS media
                       FROM articles a
                       WHERE a.id_story = x.id AND a.text_dense IS NOT NULL) news
-        WHERE x.grouped_at > COALESCE(x.threaded_at, '-infinity') AND news.centroid IS NOT NULL
+        WHERE x.id = ANY(waiting) AND news.centroid IS NOT NULL
     ) m
-    WHERE st.id = m.id_story;
+    WHERE st.id = ANY(waiting) AND st.id = m.id_story;
 
     batch := ARRAY(SELECT id FROM stories
                    WHERE grouped_at > COALESCE(threaded_at, '-infinity') AND centroid IS NOT NULL

@@ -6,6 +6,7 @@
 //               stories (assign_stories) and the stories closest to a profile (rank_profile_stories)
 //
 
+import {randomUUID} from 'node:crypto';
 import process from 'node:process'
 import 'dotenv/config';
 import {jest} from '@jest/globals';
@@ -23,9 +24,9 @@ try {
     console.warn('Database, pgvector or db/add_briefing.sql not available, the story tests are skipped');
 }
 afterAll(() => pool.end());
-// the database is the one of the server, shared with the ingestion: a call of a function takes
-// about 1 s there even with nothing to judge, and a test makes several
-jest.setTimeout(30_000);
+// the database is the one of the server, shared with the ingestion: a call of a function takes a fraction of a second there, more when the
+// server is busy, and a test makes several; 60 s leaves room for it
+jest.setTimeout(60_000);
 
 const SINCE = '2099-12-31T00:00:00Z';
 const THRESHOLD = 0.70;
@@ -43,12 +44,18 @@ const dense = (...values) => {
 };
 const NO_WORDS = toSparsevec({});
 
+// a feed of its own for each test: the url of a feed is unique, so two suites inserting the same one in their transactions waited for each other
+// (test.stories and test.threads, 30 s of timeout reached when the whole suite ran, 11.11.2026)
+const feedUrl = (name = 'feed') => `https://test.invalid/${name}-${randomUUID()}`;
+
 // the test in a transaction, with one feed; rolled back whatever happens
 const inTransaction = async (test) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        const {rows: [feed]} = await client.query("INSERT INTO feeds (url) VALUES ('https://test.invalid/feed') RETURNING id");
+        // the url of the feed of the test, the one a reader of the feed reads (see rank)
+        client.feedUrl = feedUrl();
+        const {rows: [feed]} = await client.query('INSERT INTO feeds (url) VALUES ($1) RETURNING id', [client.feedUrl]);
         await test(client, feed.id);
     } finally {
         await client.query('ROLLBACK');
@@ -180,7 +187,7 @@ const assign = async (client, sparseWeight = 1) => (await client.query('SELECT *
     }));
 
     it('should put the same news met in another feed of its medium in its story', () => inTransaction(async (client, feed) => {
-        const {rows: [{id: other}]} = await client.query("INSERT INTO feeds (url) VALUES ('https://test.invalid/other') RETURNING id");
+        const {rows: [{id: other}]} = await client.query('INSERT INTO feeds (url) VALUES ($1) RETURNING id', [feedUrl('other')]);
         const a = await news(client, feed, {minute: 1, link: 'https://paper.invalid/news', title: dense(1, 0)});
         const b = await news(client, other, {minute: 2, link: 'https://paper.invalid/news', title: dense(1, 0)});
         await assign(client);
@@ -191,7 +198,7 @@ const assign = async (client, sparseWeight = 1) => (await client.query('SELECT *
     // news met again, it put every news of such a medium in one story (459 in 48 h, 5.10.2026). The
     // embedder gives them all the same title vector and no words: too little for one medium alone
     it('should not take an empty title for the same news, but still a same link', () => inTransaction(async (client, feed) => {
-        const {rows: [{id: other}]} = await client.query("INSERT INTO feeds (url) VALUES ('https://test.invalid/other') RETURNING id");
+        const {rows: [{id: other}]} = await client.query('INSERT INTO feeds (url) VALUES ($1) RETURNING id', [feedUrl('other')]);
         const a = await news(client, feed, {minute: 1, medium: 'paper', heading: '', title: dense(1, 0), text: dense(1, 0, 0)});
         const b = await news(client, feed, {minute: 2, medium: 'paper', heading: '', title: dense(1, 0), text: dense(0, 1, 0)});
         const c = await news(client, feed, {minute: 3, medium: 'paper', heading: ' \t', title: dense(1, 0), text: dense(0, 0, 1)});
@@ -324,7 +331,7 @@ const assign = async (client, sparseWeight = 1) => (await client.query('SELECT *
         return {user: profile.id, rugby, fashion, s1, s2, s3, best, a2};
     };
 
-    const rank = async (client, user, {feeds = ['https://test.invalid/feed'], languages = ['en'], excluded = []} = {}) => (await client.query(
+    const rank = async (client, user, {feeds = [client.feedUrl], languages = ['en'], excluded = []} = {}) => (await client.query(
         'SELECT * FROM public.rank_profile_stories($1, $2, $3, $4, 0.5, $5, 10)', [user, feeds, languages, SINCE, excluded])).rows;
 
     it('should rank the stories by their news closest to any interest', () => inTransaction(async (client, feed) => {

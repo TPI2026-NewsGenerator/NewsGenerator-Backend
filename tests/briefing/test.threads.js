@@ -6,6 +6,8 @@
 //               (assign_threads, db/add_threads.sql)
 //
 
+import {randomUUID} from 'node:crypto';
+import {readFileSync} from 'node:fs';
 import process from 'node:process'
 import 'dotenv/config';
 import {jest} from '@jest/globals';
@@ -14,6 +16,14 @@ import {toVector} from '../../services/utils/embedder.js'
 
 // The function lives in the database, so it is tested there. Every test runs in a transaction rolled
 // back at its end, in a language of its own ('zz') so its stories never meet real ones.
+// The function of the repository (db/add_threads.sql) is installed in that transaction, so that the test checks the SQL of the repository whatever
+// the base has deployed: with the version before 11.11.2026 each call took 6 s (it read the whole table of stories) and the suite timed out when
+// the whole project was tested; installed in a transaction that is rolled back, the base keeps the version it has (DDL is transactional in Postgres)
+const sql = readFileSync(new URL('../../db/add_threads.sql', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const from = sql.indexOf('CREATE OR REPLACE FUNCTION public.assign_threads(');
+const to = sql.indexOf('$$;', sql.indexOf('AS $$', from) + 5) + 3;
+if (from < 0 || to < 3) throw new Error('assign_threads not found in db/add_threads.sql');
+const ASSIGN_THREADS = sql.slice(from, to);
 const pool = new pg.Pool({connectionString: process.env.DATABASE_URL});
 let dbAvailable = true;
 try {
@@ -23,9 +33,9 @@ try {
     console.warn('Database, pgvector or db/add_threads.sql not available, the thread tests are skipped');
 }
 afterAll(() => pool.end());
-// the database is the one of the server, shared with the ingestion: a call of a function takes
-// about 1 s there even with nothing to judge, and a test makes several
-jest.setTimeout(30_000);
+// the database is the one of the server, shared with the ingestion: a call of assign_threads took 6 s there even with nothing to judge (it read the
+// whole table of stories, see db/add_threads.sql) and a test makes several; 60 s leaves room for a busy server
+jest.setTimeout(60_000);
 
 const THRESHOLD = 0.75;
 const SAME_MEDIUM_MARGIN = 0.10;
@@ -41,14 +51,19 @@ const dense = (...values) => {
     return toVector(vector);
 };
 
+// a feed of its own for each test: the url of a feed is unique, so two suites inserting the same one in their transactions waited for each other
+// (test.stories and test.threads, 30 s of timeout reached when the whole suite ran, 11.11.2026)
+const feedUrl = () => `https://test.invalid/feed-${randomUUID()}`;
+
 const inTransaction = async (test) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
+        await client.query(ASSIGN_THREADS);
         // the stories of the real news waiting for their thread are left out, in the transaction only:
         // judged with the test ones, thousands of them after a first read took minutes
         await client.query("UPDATE stories SET threaded_at = now() WHERE grouped_at > COALESCE(threaded_at, '-infinity')");
-        const {rows: [feed]} = await client.query("INSERT INTO feeds (url) VALUES ('https://test.invalid/feed') RETURNING id");
+        const {rows: [feed]} = await client.query('INSERT INTO feeds (url) VALUES ($1) RETURNING id', [feedUrl()]);
         await test(client, feed.id);
     } finally {
         await client.query('ROLLBACK');

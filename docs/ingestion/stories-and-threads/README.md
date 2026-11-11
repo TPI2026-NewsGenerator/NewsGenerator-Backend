@@ -33,7 +33,9 @@ background work calls after each batch of news.
   mostly name another one (`different_matches`). Nothing above: a new story. A news without a title is a
   story of its own.
 - **A story joins a thread** (`assign_threads`, `db/add_threads.sql`): each story grouped since it was last
-  judged gets its centroid again (`l2_normalize(avg(text_dense))`, `halfvec(1024)`) and its media, then joins
+  judged gets its centroid again (`l2_normalize(avg(text_dense))`, `halfvec(1024)`) and its media (the stories waiting are listed first,
+  by `i_stories_waiting`, and only they are read: a comparison of two columns cannot be counted by Postgres, which joined the 1.9 million
+  stories to update 2 of them, 6 s a call, 96 ms since 11.11.2026), then joins
   the thread of its language, active in the last 7 days, whose stories it resembles on average above
   **0.75**, judged on the stories of other media (through shared media: 0.10 more), or starts one.
   The threads are first shortlisted, 20 per story, for the whole batch in one query Postgres runs on 3 cores
