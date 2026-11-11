@@ -23,8 +23,9 @@ const {withCleanNext} = await import('../../services/utils/card-analysis.js');
 const {searchNamesFor} = await import('../../services/utils/watch-names.js');
 const {cardNames, tidyNames, withoutConcepts, withoutUnreadable, withSameItemJoined, withSurnamesLinked} = await import('../../services/utils/card-names.js');
 const {nationalityOf} = await import('../../services/utils/nationalities.js');
+const {countriesShown} = await import('../../services/utils/country-choice.js');
 const {countryDeclined, countryNamed} = await import('../../services/utils/country-names.js');
-const {associationNamed, bareAssociationCandidates} = await import('../../services/utils/football-associations.js');
+const {associationNamed, associationOfAcronym, bareAssociationCandidates} = await import('../../services/utils/football-associations.js');
 const {placeOfOneCountry} = await import('../../services/utils/wikidata.js');
 const {titlesOfCard} = await import('../../services/utils/card-titles.js');
 const {checkRewrite, neutralTitle} = await import('../../services/utils/neutral-titles.js');
@@ -112,6 +113,16 @@ const FAMILIES = {
     // or association ("FA" of "Japan FA" and "FA Cup", "FC" of "FC Barcelona"): 74 to 100% of the news of such a bare word hold a longer name
     acronyms: ({input, expect: wanted}) => {
         expect(acronymsOf(input.name)).toEqual(wanted.acronyms);
+    },
+    // the association an acronym of the news ("FKF", "TCIFA", "SAFA") stands for, by the country of the sites that write it: the one that has it when it is
+    // alone or when the sites are of its country, none when several have it and nothing tells, or when the sites are of another country ("AFM" of the
+    // Dutch sites is the financial authority)
+    associationacronym: ({input, expect: wanted}) => {
+        expect(associationOfAcronym(input.name, input.country ?? null)).toBe(wanted.qid);
+    },
+    // the countries shown on a card, after the reading of the AI: a card that names an international body shows the first one only
+    maincountry: ({input, expect: wanted}) => {
+        expect(countriesShown(input.countries, {international: input.international})).toEqual(wanted.countries);
     },
     // the items a card may choose for the bare word of an association ("FA"), which Wikidata does not offer
     barefa: ({input, expect: wanted}) => {

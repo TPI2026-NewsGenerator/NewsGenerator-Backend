@@ -15,7 +15,7 @@ import {translatedTitles} from '../services/utils/title-translation.js';
 import {newUsage} from '../services/utils/ollama.js';
 import {mergeStories} from '../services/utils/profile-ai.js';
 import {oldStories} from '../services/utils/old-news.js';
-import {chooseWeakCountries} from '../services/utils/country-choice.js';
+import {agreedCountries, chooseWeakCountries, readCountries} from '../services/utils/country-choice.js';
 import {sameFact} from '../services/utils/neutral-titles.js';
 import {readStance} from '../services/utils/stance.js';
 
@@ -59,6 +59,12 @@ const ASK = {
         const kept = (await chooseWeakCountries([input], usage)).get(0) ?? [];
         return {kept, output: kept.join(',') || 'none'};
     },
+    // a card with the countries the pipeline decided, read by the AI that names its own with no candidate (country-choice.js readCountries): input {titles, text,
+    // shown}; output: the countries shown that it names too (agreedCountries)
+    countryreading: async ({input}, usage) => {
+        const kept = agreedCountries(input.shown, (await readCountries([input], usage)).get(0));
+        return {kept, output: kept.join(',') || 'none'};
+    },
     // a title and its neutral rewrite, the second opinion of the neutral titles by default (the main fact, thinking on): input {title, proposal}; output: "same" or "other"
     titlesame: async ({input}, usage) => {
         const same = (await sameFact([input], usage, {think: true, loose: true, timeoutMs: 120e3})).get(0)?.same === true;
@@ -93,6 +99,7 @@ const CHECKS = {
     ],
     oldnews: ({expect: wanted}, {old}) => [{name: wanted.old ? 'told again: old' : 'a new fact: kept', ok: old === wanted.old, detail: old ? 'judged old' : 'judged new'}],
     weakcountry: ({expect: wanted}, {kept}) => [{name: wanted.kept.length > 0 ? `keeps ${wanted.kept.join(', ')}` : 'keeps none', ok: kept.length === wanted.kept.length && wanted.kept.every(code => kept.includes(code)), detail: kept.join(',') || 'none'}],
+    countryreading: ({expect: wanted}, {kept}) => [{name: wanted.kept.length > 0 ? `keeps ${wanted.kept.join(', ')}` : 'keeps none', ok: kept.length === wanted.kept.length && wanted.kept.every(code => kept.includes(code)), detail: kept.join(',') || 'none'}],
     titlesame: ({expect: wanted}, {same}) => [{name: wanted.same ? 'the same main fact' : 'another fact', ok: same === wanted.same, detail: same ? 'judged the same' : 'judged another'}],
     stance: ({expect: wanted}, {reading, decision}) => [{
         name: wanted.position ? `reads ${wanted.position}` : 'reads no position',
