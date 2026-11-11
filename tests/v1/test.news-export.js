@@ -9,6 +9,7 @@
 //               here: the model is a double that answers what the SQL would
 //
 
+import {readFileSync} from 'node:fs';
 import http from 'node:http';
 import process from 'node:process';
 import {afterAll, beforeAll, beforeEach, describe, expect, it, jest} from '@jest/globals';
@@ -24,6 +25,7 @@ jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
 const {default: v1Router} = await import('../../routes/v1-router.js');
 const {cleanText, decodeCursor, encodeCursor, isShareable, regexesOfTerms} = await import('../../services/news-export-service.js');
 const {associationsOfCountry} = await import('../../services/utils/football-associations.js');
+const TABLE = JSON.parse(readFileSync(new URL('../../services/utils/football-associations.json', import.meta.url), 'utf8'));
 
 const KEY = newApiKey();
 process.env.API_KEYS = `friend:${hashOfKey(KEY)}`;
@@ -166,6 +168,17 @@ describe('what is asked of the database', () => {
         // a confederation is of no country
         expect(associationsOfCountry('CH').map(item => item.name)).toEqual(['Swiss Football Association']);
         expect(associationsOfCountry('AQ')).toEqual([]);
+    });
+
+    it('should give one association to every country but the United Kingdom: no member that left, the two Congos apart', () => {
+        const codes = Object.groupBy(TABLE.filter(item => item.level === 'association'), item => item.country);
+        expect(Object.entries(codes).filter(([code, items]) => items.length > 1 && !code.startsWith('GB')).map(([code]) => code)).toEqual([]);
+        // a membership that ended (Saarland until 1957, the Netherlands Antilles until 2011, the first association of Brunei until 2009)
+        expect(TABLE.map(item => item.name)).not.toContain('Saarland Football Association');
+        expect(associationsOfCountry('DE').map(item => item.qid)).toEqual(['Q154191']);
+        // Wikidata gives the Democratic Republic of the Congo's association the country of the Republic
+        expect(associationsOfCountry('CD').map(item => item.qid)).toEqual(['Q568669']);
+        expect(associationsOfCountry('CG').map(item => item.qid)).toEqual(['Q921528']);
     });
 
     it('should pass the other filters as they were asked', async () => {

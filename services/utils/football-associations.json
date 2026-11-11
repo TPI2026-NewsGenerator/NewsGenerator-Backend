@@ -150,12 +150,6 @@
   "country": "VG"
  },
  {
-  "qid": "Q1436012",
-  "name": "Brunei Football Association",
-  "level": "association",
-  "country": "BN"
- },
- {
   "qid": "Q630248",
   "name": "Bulgarian Football Union",
   "level": "association",
@@ -363,7 +357,7 @@
   "qid": "Q568669",
   "name": "Fédération Congolaise de Football-Association",
   "level": "association",
-  "country": "CG"
+  "country": "CD"
  },
  {
   "qid": "Q1061066",
@@ -912,12 +906,6 @@
   "country": "GT"
  },
  {
-  "qid": "Q371055",
-  "name": "Netherlands Antillean Football Union",
-  "level": "association",
-  "country": "AN"
- },
- {
   "qid": "Q1307814",
   "name": "New Caledonian Football Federation",
   "level": "association",
@@ -1060,12 +1048,6 @@
   "name": "Rwanda Football Federation",
   "level": "association",
   "country": "RW"
- },
- {
-  "qid": "Q531173",
-  "name": "Saarland Football Association",
-  "level": "association",
-  "country": "DE"
  },
  {
   "qid": "Q2528803",

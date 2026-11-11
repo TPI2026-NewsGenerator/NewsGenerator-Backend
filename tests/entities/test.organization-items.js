@@ -56,6 +56,20 @@ describe('organizationItem', () => {
         expect(ollamaJson).not.toHaveBeenCalled();
     });
 
+    it('should link the association a name says by its country without asking Wikidata nor the AI, and ask for the ones that say two', async () => {
+        const candidates = [];
+        expect(await organizationItem({id: 30, name: 'Japan FA', lang: 'en'}, null, candidates)).toBe('Q579842');
+        expect(await organizationItem({id: 31, name: 'Portuguese football federation', lang: 'en'})).toBe('Q309005');
+        expect(namedItems).not.toHaveBeenCalled();
+        expect(ollamaJson).not.toHaveBeenCalled();
+        expect(candidates).toEqual([]);
+
+        // "Irish FA" is the association of Northern Ireland in the English press, the Republic has the FAI: Wikidata is asked as before
+        namedItems.mockResolvedValueOnce([]);
+        expect(await organizationItem({id: 32, name: 'Irish FA', lang: 'en'})).toBeNull();
+        expect(namedItems).toHaveBeenCalledWith('Irish FA', 'en');
+    });
+
     it('should hand back the items found for the name in the array given, whatever it answers', async () => {
         namedItems.mockResolvedValue([{qid: 'Q1', exact: false}, {qid: 'Q2', exact: true}]);
         describeItems.mockResolvedValueOnce([{qid: 'Q1', label: 'A', description: '', links: 5, human: false, place: false, work: false},

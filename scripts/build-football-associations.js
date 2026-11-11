@@ -17,9 +17,13 @@ const FIFA = 'Q253414';
 // the confederations are no association of a country: they come apart, level "confederation"
 const CONFEDERATION = /^(confederation of african|asian football confederation|union of european|oceania football|conmebol|south american football|concacaf|confederation of north)/i;
 
+// A membership that ended is no member (11.11.2026): the Saarland Football Association (until 1957), the first Brunei association (until
+// 2009) and the Netherlands Antillean Football Union (until 2011) were still listed, so that Germany, Brunei had two associations
 const query = `
 SELECT ?fa ?faLabel ?iso WHERE {
-  ?fa wdt:P463 wd:${FIFA} ; wdt:P31 ?type .
+  ?fa p:P463 ?membership ; wdt:P31 ?type .
+  ?membership ps:P463 wd:${FIFA} .
+  FILTER NOT EXISTS { ?membership pq:P582 ?end }
   ?type rdfs:label "association football federation"@en .
   OPTIONAL { ?fa wdt:P17 ?country . ?country wdt:P297 ?iso . }
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
@@ -51,6 +55,9 @@ const OWN_CODE = {
     'Guam Football Association': 'GU', 'Puerto Rican Football Federation': 'PR', 'U.S. Virgin Islands Soccer Federation': 'VI',
     'Football Association of Hong Kong, China': 'HK', 'Royal Dutch Football Association': 'NL', 'Bonaire Football Federation': 'BQ',
     'Northern Mariana Islands Football Association': 'MP', 'Sint Maarten Soccer Association': 'SX',
+    // Wikidata gives the association of the Democratic Republic of the Congo (FECOFA, described so) the country of the other Congo
+    // (P17 Q971, Republic of the Congo): the filter "country=CD" found nothing and "CG" found both (11.11.2026)
+    'Fédération Congolaise de Football-Association': 'CD',
 };
 // a regional body of several countries, no association of one
 const LEFT_OUT = new Set(['Association of Football Federations of CIS']);

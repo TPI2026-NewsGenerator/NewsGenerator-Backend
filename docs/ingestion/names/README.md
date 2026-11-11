@@ -83,7 +83,14 @@ what finds the other angles of a card through its rare names.
   "Liverpool F.C.", the city coming first), no person among them, or none; kept when the item is in 10
   Wikipedias at least, 1 when one item only was called so (the AI agrees it is the one: Instagram, a work,
   ChatGPT, the European Union, a population). About 390 tokens a name, counted in the hourly report of the
-  tagger.
+  tagger. Before all that (since 11.11.2026) the association of FIFA a name says by its country is told by the words
+  (`associationNamed`, `services/utils/football-associations.js`): "Japan FA", "Portugal's soccer federation", "Portuguese
+  football federation", "Soccer-Japan FA". Wikidata calls them by their own names ("Japan Football Association"), so the 1 661
+  mentions of such names in the database had 494 left with no item, "Portugal FA" 101 times and "Japan FA" 85; none was linked to
+  another item, so the rule changes no link made. The country is read by `countryNamed`, or by an adjective of nationality in one
+  word; left to Wikidata and the AI: the United Kingdom (four associations), Ireland ("Irish FA" is the Northern Irish one in the
+  English press, the FAI the Republic's: 625 news), the two Congos, the adjective of the United States, Australia and Canada
+  ("American football federation" is gridiron), "FF" (the Swedish clubs) and a cup ("Jordan FA Cup")
   A place (`placeItem`, since 18.10.2026): a country is the item of its code ISO (`countryNamed`, then a
   search `haswbstatement:P297=CN`): the search shows the People's Republic as "China PR", the item called
   "China" is the cultural region. Another place is the one item called so by its name or one of its other

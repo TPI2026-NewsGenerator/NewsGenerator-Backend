@@ -14,6 +14,7 @@ import {ollamaJson} from './ollama.js';
 import {MentionModel} from '../../models/mention-model.js';
 import {countriesOfItems} from './countries.js';
 import {ofOtherCountry} from './country-names.js';
+import {associationNamed} from './football-associations.js';
 
 // Measured on 60 organisations often met and never linked (18.10.2026): one item called so left FIFA (an
 // album, a song of the same name), Juventus ("Juventus FC"), Liverpool (the city first) unlinked. Told
@@ -61,8 +62,12 @@ const elsewhere = async (id, qid) => {
 
 // the qid of an organisation ({id, name, lang} of mentions), null when none can be told; usage: the
 // tokens the AI took, counted in it; candidates: an array the qids found are added to (kept by the link loop when
-// there is no answer, for a card to choose among them)
+// there is no answer, for a card to choose among them). The association of FIFA a name says by its country ("Japan FA",
+// "Portuguese football federation") is told by the words, before Wikidata is asked: it calls them by their own names and found
+// none of these (see associationNamed)
 export const organizationItem = async ({id, name, lang}, usage = null, candidates = null) => {
+    const association = associationNamed(name);
+    if (association) return association;
     const found = await namedItems(name, lang ?? 'en');
     candidates?.push(...found.map(item => item.qid));
     if (found.length === 0) return null;

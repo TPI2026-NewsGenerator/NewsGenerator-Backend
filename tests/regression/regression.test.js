@@ -24,6 +24,7 @@ const {searchNamesFor} = await import('../../services/utils/watch-names.js');
 const {cardNames, tidyNames, withoutConcepts, withoutUnreadable, withSameItemJoined, withSurnamesLinked} = await import('../../services/utils/card-names.js');
 const {nationalityOf} = await import('../../services/utils/nationalities.js');
 const {countryDeclined, countryNamed} = await import('../../services/utils/country-names.js');
+const {associationNamed} = await import('../../services/utils/football-associations.js');
 const {placeOfOneCountry} = await import('../../services/utils/wikidata.js');
 const {titlesOfCard} = await import('../../services/utils/card-titles.js');
 const {checkRewrite, neutralTitle} = await import('../../services/utils/neutral-titles.js');
@@ -98,6 +99,11 @@ const FAMILIES = {
     // the country the name of an organisation says by its words: it starts with a country, or has an adjective of nationality
     nationality: ({input, expect: wanted}) => {
         expect(nationalityOf(input.name, input.kind)).toBe(wanted.code);
+    },
+    // the association of FIFA an organisation's name says by its words, "Japan FA", "Portuguese football federation": the item it is
+    // linked to without asking Wikidata, null when the name says none or several (Irish, English, Congo)
+    association: ({input, expect: wanted}) => {
+        expect(associationNamed(input.name)).toBe(wanted.qid);
     },
     // the country a place is by its name declined by the cases of a language ("Hiszpanii"), or by the name of a country the Intl of the
     // languages lacks ("Großbritannien")

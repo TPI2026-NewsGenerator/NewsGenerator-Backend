@@ -20,7 +20,8 @@ git, like the other benches) and says what held before and fails now, and the re
 
 ## What the corpus holds
 
-215 offline cases and 19 live ones, in families, most of them taken from the briefings of 6.11.2026:
+345 offline cases and 48 live ones, in families (the first ones taken from the briefings of 6.11.2026; the table lists the oldest families, the
+others are named in `corpus.json`):
 
 | Family | Asks of | Cases came from |
 |---|---|---|
@@ -37,6 +38,7 @@ git, like the other benches) and says what held before and fails now, and the re
 | `cardtitles` | `titlesOfCard`: the titles of a card given to the AI that reads it | the title of the card first when it joined four stories (Silvero), a title no article carries, a card with no title |
 | `places` | `placeOfOneCountry`: the item of a place called so by several items of one country | "Corse" (island and language), "Barcelona", "Lens", and what is left ("Georgia": two countries, little known places, no country) |
 | `nationality` | `nationalityOf`: the country the words of an organisation's name say | "Eesti jalgpalliliit", "Argentina FA", "Fédération Algérienne", "التحكيم الأردني", and what is not one (AS Roma, Congo RDC, a person, a country, two countries' adjective) |
+| `association` | `associationNamed`: the association of FIFA a name says by its country, linked without asking Wikidata | "Portugal FA" (101 news), "Japan FA" (85), "Portuguese football federation", "Portugal's soccer federation", "Soccer-Japan FA", "Equatorial Guinea FA", and what is left: "Irish FA" (625 news: the association of Northern Ireland or the Republic's), "English FA" (four associations), "Congo FA", "American football federation", "Kalmar FF", "Sabah FA", "Jordan FA Cup" |
 | `following` | `searchNamesFor`: the names a person is followed by | Velasco (common), Čeferin and Rosetti (their own), García, the words the reader added |
 | `neutral` | `checkRewrite`, `neutralTitle`: the checks of a neutral title | the FA case (name lost), exclamation, figure, negation, question, quotation, a good rewrite, a teaser taken out |
 
