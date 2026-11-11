@@ -32,6 +32,8 @@ const {cutPiece} = await import('../../services/utils/proofread.js');
 const {acronymsOf, cjkLanguages, isFullName, nameForms, withoutPreposition} = await import('../../services/utils/mentions.js');
 const {BREAK, withoutBreaks, withScriptBreaks} = await import('../../services/utils/tagger.js');
 const {chooseLetter} = await import('../../services/utils/picture-choice.js');
+const {hedgedBy} = await import('../../services/utils/hedging.js');
+const {hasOfficialStatement} = await import('../../services/utils/statement-words.js');
 
 const corpus = JSON.parse(readFileSync(new URL('./corpus.json', import.meta.url), 'utf8'));
 
@@ -154,6 +156,16 @@ const FAMILIES = {
     },
     following: ({input, expect: wanted}) => {
         expect(searchNamesFor(input.row, input.following ?? null, new Set(input.common))).toEqual(wanted.names);
+    },
+    // the words an article hedges with ("reportedly", "selon des sources"), null when it states its news plainly: the title and the description as
+    // the news came in. A rumour the article denies or says is over, the "alleged" of a crime report and the Italian noise ("rumore") are no hedge
+    hedging: ({input, expect: wanted}) => {
+        expect(hedgedBy(...input.texts)).toBe(wanted.hedged);
+    },
+    // the words of a statement or of a communiqué the badge "Official" of an event asks for in one of its news, in the seven languages of
+    // statements.js and in the ones added for the badge alone: a word inside another one ("kongresmen", "doświadczenie") is no statement
+    officialwords: ({input, expect: wanted}) => {
+        expect(hasOfficialStatement(input.text)).toBe(wanted.found);
     },
     neutral: ({input, expect: wanted}) => {
         if (input.removals) {
