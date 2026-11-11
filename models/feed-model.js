@@ -26,6 +26,28 @@ const newsOfDay = keptResult(async () => new Map((await prisma.$queryRawUnsafe(`
     WHERE a.created_at > now() - interval '24 hours'
     GROUP BY f.url`)).map(row => [row.url, row.news])), {minutes: 15});
 
+// Whether the index of the text searched without its accents is built (db/add_plain_search.sql): then the keywords are searched on that text, the
+// letters as they are, 0.6 s for a week of every feed; else with the accents in classes of letters, 30 to 60 s (see Filter.toPattern). Asked every
+// PLAIN_CHECK_MS until it is, then kept: a server started before the migration works as it did and takes the index up by itself once it is
+// built (a failed build leaves an index that is not valid, which does not count)
+const PLAIN_FUNCTION = 'public.plain_text';
+const PLAIN_CHECK_MS = 5 * 60e3;
+let plainSearch = {ready: false, askedAt: 0};
+const hasPlainSearch = async () => {
+    if (plainSearch.ready || Date.now() - plainSearch.askedAt < PLAIN_CHECK_MS) return plainSearch.ready;
+    plainSearch = {ready: false, askedAt: Date.now()};
+    try {
+        plainSearch.ready = (await prisma.$queryRawUnsafe(`
+            SELECT 1 FROM pg_index i JOIN pg_class c ON c.oid = i.indexrelid
+            WHERE c.relname = 'i_articles_search_plain' AND i.indisvalid AND i.indisready`)).length > 0;
+    } catch {
+        plainSearch.ready = false;
+    }
+    return plainSearch.ready;
+};
+// to ask again at once (the tests)
+export const forgetPlainSearch = () => { plainSearch = {ready: false, askedAt: 0}; };
+
 export const FeedModel = {
     // make sure every url has a row in feeds, then return these rows
     syncFeeds: async (urls) => {
@@ -95,8 +117,9 @@ export const FeedModel = {
     // when the feed gives none), both optional
     searchArticles: async ({feedUrls, keywords, timeframe = {}}) => {
         // $1 to $3 are used below, the keyword patterns start at $4
-        // search_text is prepared by Postgres and has a trigram index, so the regex search uses the index
-        const keywordsSql = Filter.keywordsSql(keywords, 4, 'a.search_text');
+        // search_text is prepared by Postgres and has a trigram index, so the regex search uses the index; folded (the accents taken off the text and
+        // the pattern by plain_text, which has its own index) when that index is built
+        const keywordsSql = Filter.keywordsSql(keywords, 4, 'a.search_text', {fold: await hasPlainSearch() ? PLAIN_FUNCTION : null});
         if (!keywordsSql) return [];
 
         return prisma.$queryRawUnsafe(`

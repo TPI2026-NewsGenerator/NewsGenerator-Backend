@@ -163,6 +163,8 @@ Indexes:
 - `i_articles_created_at` on `created_at`, for the purge of the old articles
 - `i_articles_search_text` **GIN** on `search_text` with `gin_trgm_ops`, which is what makes the
   keyword search and the grouping of duplicates possible
+- `i_articles_search_plain` **GIN** on `plain_text(search_text)` (the text without its accents) with `gin_trgm_ops`: the
+  keyword search of the interface reads it once built (`db/add_plain_search.sql`, see [Keywords](../search/keywords/README.md))
 - `i_articles_story` on `id_story`
 - `i_articles_not_embedded` on `created_at` WHERE `embedded_at IS NULL`, the news waiting for vectors
 - `i_articles_untagged` on `created_at DESC` WHERE `entities_at IS NULL`, the news waiting for the tagger
@@ -509,6 +511,7 @@ is added before its feed is first read.
 | Function | Script | What |
 |---|---|---|
 | `article_search_text` | `add_articles_search.sql` | the text the keyword search reads, generated in `articles.search_text` |
+| `plain_text` | `add_plain_search.sql` | `unaccent` made IMMUTABLE, so that an index can hold the text without its accents |
 | `medium_of`, `figures_of`, `title_names` | `add_briefing.sql` | the medium of a link, the figures and the names of a title |
 | `matchup_team`, `matchup_of`, `different_matches` | `add_briefing.sql` | two news of two different matches never join one story |
 | `assign_stories` | `add_briefing.sql` | each news with vectors joins a story or starts one |

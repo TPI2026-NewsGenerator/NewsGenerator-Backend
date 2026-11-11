@@ -61,10 +61,14 @@ const isAcronym = (text) =>
 
 // Postgres regex of a term, used case-insensitive with ~* (acronyms turn it case-sensitive, see CASE_SENSITIVE).
 // Its letters are searched with and without their accents, as the JavaScript matcher below: "-Barça"
-// left the news writing "Barca", "Zürich" found 52 news of 30 days and 218 with "Zurich"
-const toPattern = ({ text, exact }) => {
+// left the news writing "Barca", "Zürich" found 52 news of 30 days and 218 with "Zurich".
+// By classes of letters ("[aàáâãäå]") unless fold is given: Postgres then folds the accents of the text and of the pattern
+// (see keywordsSql) and the letters are written as they are. The index of trigrams reads a class of more than 4 letters as any
+// letter, so "infantino" had almost no trigram left to ask for and the search of a week on every feed took 30 to 60 s (0.6 s with the
+// letters as they are, 4.2 million news, 11.11.2026)
+const toPattern = ({ text, exact }, { fold = false } = {}) => {
     const options = isAcronym(text) ? CASE_SENSITIVE : '';
-    const literal = (part) => anyAccent(escapeRegex(part));
+    const literal = (part) => fold ? escapeRegex(part) : anyAccent(escapeRegex(part));
     if (exact) {
         return options + WORD_START + text.split(/\s+/).map(literal).join('[[:space:]]+') + WORD_END;
     }
@@ -72,16 +76,26 @@ const toPattern = ({ text, exact }) => {
     return options + WORD_START + literal(text) + end;
 };
 
+const MIN_FOLDED = 3;
+
 // SQL condition on 'column' (the text searched, see articles.search_text in db/add_articles_search.sql),
 // the patterns are parameters numbered from $firstParam
 // alternatives with OR, their terms with AND, excluded terms with NOT:
 // "(col ~* $4) OR (col ~* $5 AND col ~* $6) AND NOT (col ~* $7)"
+// fold: the name of a SQL function that takes the accents off a text (db/add_plain_search.sql: public.plain_text), applied to the column and to
+// each pattern, whose letters are then written as they are: "fold(col) ~* fold($4::text)". The index of the expression answers it. null: the
+// accents are in classes of letters in the patterns, as before the index existed
 // null when there is nothing to filter
-const keywordsSql = ({groups, excluded}, firstParam, column) => {
+const keywordsSql = ({groups, excluded}, firstParam, column, { fold = null } = {}) => {
     const params = [];
     const match = (term) => {
-        params.push(toPattern(term));
-        return `${column} ~* $${firstParam + params.length - 1}`;
+        // only the terms the index of trigrams can serve are folded: three letters or digits at least, and no acronym in capitals (its regex is
+        // case-sensitive, which the index does not answer: "VAR" reads every news of the window, 1.4 s on 546 000 news and 3.8 s with the accents
+        // folded of each). The others keep the classes of accents on the column as it is, scanned as before
+        const folded = Boolean(fold) && !isAcronym(term.text) && term.text.replace(/[^\p{L}\p{N}]/gu, '').length >= MIN_FOLDED;
+        params.push(toPattern(term, { fold: folded }));
+        const param = `$${firstParam + params.length - 1}`;
+        return folded ? `${fold}(${column}) ~* ${fold}(${param}::text)` : `${column} ~* ${param}`;
     };
 
     const wanted = groups.map(terms => '(' + terms.map(match).join(' AND ') + ')').join(' OR ');
@@ -120,8 +134,10 @@ const withoutAccents = (text) => text.normalize('NFD').replace(/\p{M}/gu, '');
 
 // The letters of Latin-1 with an accent, by the letter without it: "e" -> "èéêë". A letter of a term
 // is searched as any of them ("Barça" -> "B[aàáâãäå]r[cç][aàáâãäå]"), the other scripts as written.
-// Measured on 30 days (bench/accent-patterns.mjs): 8 to 100 ms a term, the trigram index still used;
-// with Latin Extended-A too (Polish, Czech...) up to 330 ms, and 1 s with every Latin letter
+// Measured on 30 days at 1 million news (bench/accent-patterns.mjs): 8 to 100 ms a term, the trigram index still used;
+// with Latin Extended-A too (Polish, Czech...) up to 330 ms, and 1 s with every Latin letter. At 4.2 million news the classes
+// cost 30 to 60 s a week (see toPattern, fold): they stay for the texts Postgres does not fold (JavaScript below, the search before
+// the index of the folded text is built, the terms it cannot serve)
 const ACCENTED = new Map();
 for (let code = 0xC0; code <= 0xFF; code++) {
     const letter = String.fromCodePoint(code);
