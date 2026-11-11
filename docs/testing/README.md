@@ -20,7 +20,7 @@ git, like the other benches) and says what held before and fails now, and the re
 
 ## What the corpus holds
 
-345 offline cases and 48 live ones, in families (the first ones taken from the briefings of 6.11.2026; the table lists the oldest families, the
+410 offline cases and 48 live ones, in families (the first ones taken from the briefings of 6.11.2026; the table lists the oldest families, the
 others are named in `corpus.json`):
 
 | Family | Asks of | Cases came from |
@@ -39,6 +39,10 @@ others are named in `corpus.json`):
 | `places` | `placeOfOneCountry`: the item of a place called so by several items of one country | "Corse" (island and language), "Barcelona", "Lens", and what is left ("Georgia": two countries, little known places, no country) |
 | `nationality` | `nationalityOf`: the country the words of an organisation's name say | "Eesti jalgpalliliit", "Argentina FA", "Fédération Algérienne", "التحكيم الأردني", and what is not one (AS Roma, Congo RDC, a person, a country, two countries' adjective) |
 | `association` | `associationNamed`: the association of FIFA a name says by its country, linked without asking Wikidata | "Portugal FA" (101 news), "Japan FA" (85), "Portuguese football federation", "Portugal's soccer federation", "Soccer-Japan FA", "Equatorial Guinea FA", and what is left: "Irish FA" (625 news: the association of Northern Ireland or the Republic's), "English FA" (four associations), "Congo FA", "American football federation", "Kalmar FF", "Sabah FA", "Jordan FA Cup" |
+| `scripts` | `withScriptBreaks`, `withoutBreaks`: the text sent to the tagger, cut at the changes of alphabet where Japanese has no space | "PSV佐野航大が今季初アシスト" (an organisation of the whole clause), "インファンティーノ現会長に批判集まる中" (a person of 5 news), "FW上田綺世は幻の先制弾", a foreign name in katakana whole with its middle dot, "10年ぶりの準決勝進出", and what is left alone (Korean, Chinese in han alone, Latin letters, a no-break space of the news) |
+| `fullname` | `isFullName`: a person written with no space is a name in full, not a word alone | "손흥민" (71 news), "구자욱", "大谷翔平", "森保一", "小柳ルミ子", "ミゲル・ロハス", "FW大橋祐紀", and what stays a word alone: "트럼프" (158 news), "디아즈", "채령", "宮本", "インファンティーノ", "アリソン", a clause |
+| `nameforms` | `nameForms`: the forms of a name looked for, the name first, then without the particle, title or position glued to it | "구자욱이", "김민재를", "박진만 감독이", "박재만 기자" (a byline), "筒香嘉智内野手", "FW大橋祐紀", "宮本恒靖会長", "三笘薫選手が", and what has none: "이 대통령", "さくら", "監督", a Latin name |
+| `namelanguage` | `cjkLanguages`: the language a Korean, Japanese or Chinese name is looked for in, from its letters, not the label of its feed | Korean names with no language (3 518) or labelled English (206), han alone (Japanese or Chinese), and a Latin name left to the language of its news |
 | `following` | `searchNamesFor`: the names a person is followed by | Velasco (common), Čeferin and Rosetti (their own), García, the words the reader added |
 | `neutral` | `checkRewrite`, `neutralTitle`: the checks of a neutral title | the FA case (name lost), exclamation, figure, negation, question, quotation, a good rewrite, a teaser taken out |
 

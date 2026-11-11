@@ -16,7 +16,7 @@ import {countriesOfItems} from './countries.js';
 import {ollamaJson} from './ollama.js';
 import {mapWithConcurrency} from './concurrency.js';
 import {countryOfSite} from './country-names.js';
-import {mentionKey} from './mentions.js';
+import {isFullName, mentionKey} from './mentions.js';
 import {MentionModel} from '../../models/mention-model.js';
 
 // A name is linked once for all its news, by its text: its context is not the card's. Of 242 names shown on
@@ -209,7 +209,7 @@ Answer in JSON only: {"n": 0}`;
 export const withNamesLinked = async (read, cards, {usage = null} = {}) => {
     const cardOf = new Map(cards.map(card => [card.storyId, card]));
     const rows = read.flatMap(card => card.names
-        .filter(row => !row.qid && row.id && (row.kind === 'organization' || (row.kind === 'person' && mentionKey(row.name).includes(' '))))
+        .filter(row => !row.qid && row.id && (row.kind === 'organization' || (row.kind === 'person' && isFullName(row.name))))
         .map(row => ({card, row})))
         .filter(({card}) => (cardOf.get(card.storyId)?.titles ?? []).length > 0);
     if (rows.length === 0) return read;

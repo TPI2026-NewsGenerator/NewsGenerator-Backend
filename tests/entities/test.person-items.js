@@ -12,17 +12,22 @@ const describeItems = jest.fn();
 const readCountries = jest.fn(async (qids) => new Map(qids.map(qid => [qid, {country: 'MX', international: false, bodies: []}])));
 const ollamaJson = jest.fn();
 const titlesNaming = jest.fn(async () => ['Uruguay fracasa en su innovación de las tarjetas virtuales']);
+const exactItems = jest.fn();
+const famousHuman = jest.fn();
+const sitesNaming = jest.fn(async () => []);
 const wikidata = await import('../../services/utils/wikidata.js');
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
-jest.unstable_mockModule('../../services/utils/wikidata.js', () => ({...wikidata, describeItems, readCountries}));
+jest.unstable_mockModule('../../services/utils/wikidata.js', () => ({...wikidata, describeItems, readCountries, exactItems, famousHuman}));
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson, newUsage: () => ({calls: 0, input: 0, output: 0})}));
-jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel: {titlesNaming}}));
-const {WORD_SITELINKS, familyName, personItem} = await import('../../services/utils/person-items.js');
+jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel: {titlesNaming, sitesNaming}}));
+const {WORD_SITELINKS, familyName, linkPerson, personItem} = await import('../../services/utils/person-items.js');
 
 const VARELA = {qid: 'Q16238998', label: 'Eduardo Varela', description: 'Mexican journalist', links: 0, human: true};
 
 beforeEach(() => {
     describeItems.mockReset();
+    exactItems.mockReset();
+    famousHuman.mockReset();
     ollamaJson.mockReset();
     titlesNaming.mockClear();
     readCountries.mockClear();
@@ -100,5 +105,92 @@ describe('familyName', () => {
         expect(familyName('Kevin De Bruyne')).toBe(false);
         expect(familyName('Eduardo Varela')).toBe(false);
         expect(familyName('Infantino')).toBe(false);
+    });
+});
+
+describe('linkPerson', () => {
+    const human = (qid, label, links) => ({qid, label, description: 'person', links, human: true});
+
+    it('should link a Korean or Japanese name written with no space as a name in full: no word alone, whose item is labelled so in English', async () => {
+        exactItems.mockResolvedValueOnce(['Q1']);
+        describeItems.mockResolvedValueOnce([human('Q1', 'Son Heung-min', 80)]);
+        expect(await linkPerson({id: 1, name: '손흥민', lang: 'ko'})).toEqual({qid: 'Q1', candidates: ['Q1']});
+        expect(exactItems).toHaveBeenCalledWith('손흥민', 'ko');
+        exactItems.mockResolvedValueOnce(['Q2']);
+        describeItems.mockResolvedValueOnce([human('Q2', 'Shohei Ohtani', 90)]);
+        expect((await linkPerson({id: 2, name: '大谷翔平', lang: 'ja'})).qid).toBe('Q2');
+        expect(ollamaJson).not.toHaveBeenCalled();
+    });
+
+    it('should look for the name without the particle, the title or the position glued to it when the name as written is known to nobody', async () => {
+        exactItems.mockResolvedValueOnce([]).mockResolvedValueOnce(['Q3']);
+        describeItems.mockResolvedValueOnce([human('Q3', 'Koo Ja-wook', 12)]);
+        expect(await linkPerson({id: 3, name: '구자욱이', lang: 'ko'})).toEqual({qid: 'Q3', candidates: ['Q3']});
+        expect(exactItems.mock.calls).toEqual([['구자욱이', 'ko'], ['구자욱', 'ko']]);
+        exactItems.mockReset();
+        // han: Japanese then Chinese for each form, until one is known
+        exactItems.mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce(['Q4']);
+        describeItems.mockResolvedValueOnce([human('Q4', 'Yuki Ohashi', 6)]);
+        expect((await linkPerson({id: 4, name: 'FW大橋祐紀', lang: 'ja'})).qid).toBe('Q4');
+        expect(exactItems.mock.calls).toEqual([['FW大橋祐紀', 'ja'], ['FW大橋祐紀', 'zh'], ['大橋祐紀', 'ja']]);
+    });
+
+    it('should look for a name in the language of its letters, whatever the language kept with it: none, English, or the other of han alone', async () => {
+        exactItems.mockResolvedValueOnce(['Q1']);
+        describeItems.mockResolvedValueOnce([human('Q1', 'Son Heung-min', 80)]);
+        expect((await linkPerson({id: 1, name: '손흥민', lang: null})).qid).toBe('Q1');
+        expect(exactItems).toHaveBeenLastCalledWith('손흥민', 'ko');
+        exactItems.mockResolvedValueOnce(['Q1']);
+        describeItems.mockResolvedValueOnce([human('Q1', 'Son Heung-min', 80)]);
+        await linkPerson({id: 1, name: '손흥민', lang: 'en'});
+        expect(exactItems).toHaveBeenLastCalledWith('손흥민', 'ko');
+        // han alone: Japanese first, then Chinese, until one knows it
+        exactItems.mockReset();
+        exactItems.mockResolvedValueOnce([]).mockResolvedValueOnce(['Q12']);
+        describeItems.mockResolvedValueOnce([human('Q12', 'Chiang Wan-an', 40)]);
+        expect((await linkPerson({id: 2, name: '蔣萬安', lang: null})).qid).toBe('Q12');
+        expect(exactItems.mock.calls).toEqual([['蔣萬安', 'ja'], ['蔣萬安', 'zh']]);
+        // other letters: the language of the news, English when it has none
+        exactItems.mockReset();
+        exactItems.mockResolvedValue([]);
+        await linkPerson({id: 3, name: 'Gianni Infantino', lang: 'it'});
+        await linkPerson({id: 4, name: 'Gianni Infantino', lang: null});
+        expect(exactItems.mock.calls).toEqual([['Gianni Infantino', 'it'], ['Gianni Infantino', 'en']]);
+    });
+
+    it('should look for the forms in order, one after the other, and not for a form that is a word alone', async () => {
+        // 박진만 감독이: nothing is known as written, nor without the particle: the name is the third form
+        describeItems.mockResolvedValueOnce([human('Q5', 'Park Jin-man', 9)]);
+        exactItems.mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce(['Q5']);
+        expect((await linkPerson({id: 5, name: '박진만 감독이', lang: 'ko'})).qid).toBe('Q5');
+        expect(exactItems.mock.calls.map(call => call[0])).toEqual(['박진만 감독이', '박진만 감독', '박진만']);
+        // 채령이: the form 채령 is two syllables, a word alone: only the name as written is looked for
+        exactItems.mockReset();
+        exactItems.mockResolvedValueOnce([]);
+        expect(await linkPerson({id: 6, name: '채령이', lang: 'ko'})).toEqual({qid: null, candidates: []});
+        expect(exactItems).toHaveBeenCalledTimes(1);
+    });
+
+    it('should leave a foreign family name alone in hangul a word alone, as Trump is', async () => {
+        exactItems.mockResolvedValueOnce(['Q6']);
+        describeItems.mockResolvedValueOnce([human('Q6', 'Donald Trump', 300)]);
+        expect(await linkPerson({id: 7, name: '트럼프', lang: 'ko'})).toEqual({qid: null, candidates: ['Q6']});
+        // several humans called so: the famous one only for a name in full
+        exactItems.mockResolvedValueOnce(['Q7', 'Q8']);
+        expect(await linkPerson({id: 8, name: '디아즈', lang: 'ko'})).toEqual({qid: null, candidates: ['Q7', 'Q8']});
+        expect(famousHuman).not.toHaveBeenCalled();
+        exactItems.mockResolvedValueOnce(['Q9', 'Q10']);
+        famousHuman.mockResolvedValueOnce('Q9');
+        expect((await linkPerson({id: 9, name: '김민재', lang: 'ko'})).qid).toBe('Q9');
+        expect(famousHuman).toHaveBeenCalledWith(['Q9', 'Q10'], expect.objectContaining({least: 10}));
+    });
+
+    it('should work as it did for a name with a space: the item, the famous one, none', async () => {
+        exactItems.mockResolvedValueOnce(['Q11']);
+        describeItems.mockResolvedValueOnce([human('Q11', 'Gianni Infantino', 70)]);
+        expect((await linkPerson({id: 10, name: 'Gianni Infantino', lang: 'en'})).qid).toBe('Q11');
+        exactItems.mockResolvedValueOnce([]);
+        expect(await linkPerson({id: 11, name: 'Nobody Known', lang: 'en'})).toEqual({qid: null, candidates: []});
+        expect(exactItems).toHaveBeenLastCalledWith('Nobody Known', 'en');
     });
 });

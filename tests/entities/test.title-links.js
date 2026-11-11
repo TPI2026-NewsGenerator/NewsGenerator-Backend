@@ -92,6 +92,36 @@ describe('linkedByTitle', () => {
         expect((await linkedByTitle([{id: 1, name: 'Mohammed Ibrahim', kind: 'person', lang: 'en'}])).size).toBe(0);
     });
 
+    it('should link a Korean or Japanese person by the article of the name as written, else of the name without what is glued to it', async () => {
+        // "구자욱이" (a particle): no article in Korean nor in English as written, one for "구자욱"
+        fetch.mockResolvedValueOnce(answer([])).mockResolvedValueOnce(answer([])).mockResolvedValueOnce(answer([page('구자욱', 'Q10')]));
+        describeItems.mockResolvedValueOnce([item('Q10', 'Koo Ja-wook', 'South Korean baseball player', {human: true})]);
+        const linked = await linkedByTitle([{id: 1, name: '구자욱이', kind: 'person', lang: 'ko'}]);
+        expect([...linked]).toEqual([[1, 'Q10']]);
+        const titles = fetch.mock.calls.map(call => new URL(call[0]).searchParams.get('titles'));
+        expect(titles).toEqual(['구자욱이', '구자욱이', '구자욱']);
+        expect(fetch.mock.calls[0][0]).toContain('https://ko.wikipedia.org/w/api.php');
+        expect(fetch.mock.calls[2][0]).toContain('https://ko.wikipedia.org/w/api.php');
+    });
+
+    it('should ask the Wikipedia of the letters of a name, whatever the language kept with it', async () => {
+        fetch.mockResolvedValueOnce(answer([page('손흥민', 'Q13')]));
+        describeItems.mockResolvedValueOnce([item('Q13', 'Son Heung-min', 'South Korean footballer', {human: true})]);
+        const linked = await linkedByTitle([{id: 1, name: '손흥민', kind: 'person', lang: null}]);
+        expect([...linked]).toEqual([[1, 'Q13']]);
+        expect(fetch.mock.calls[0][0]).toContain('https://ko.wikipedia.org/w/api.php');
+    });
+
+    it('should ask the form first only for the names of a Wikipedia that has them, and not look again for the ones found', async () => {
+        // 大谷翔平 is an article as written; 森保監督 is none, its form 森保 is two han: a word alone, never asked
+        fetch.mockResolvedValueOnce(answer([page('大谷翔平', 'Q11')])).mockResolvedValueOnce(answer([]));
+        describeItems.mockResolvedValueOnce([item('Q11', 'Shohei Ohtani', 'Japanese baseball player', {human: true})]);
+        const linked = await linkedByTitle([{id: 1, name: '大谷翔平', kind: 'person', lang: 'ja'}, {id: 2, name: '森保監督', kind: 'person', lang: 'ja'}]);
+        expect([...linked]).toEqual([[1, 'Q11']]);
+        expect(fetch).toHaveBeenCalledTimes(2);
+        expect(new URL(fetch.mock.calls[0][0]).searchParams.get('titles')).toBe('大谷翔平|森保監督');
+    });
+
     it('should ask nothing when no name is a person in full or a place', async () => {
         expect((await linkedByTitle([{id: 1, name: 'Napoli', kind: 'organization', lang: 'it'}, {id: 2, name: 'Pedri', kind: 'person', lang: 'es'}])).size).toBe(0);
         expect(fetch).not.toHaveBeenCalled();

@@ -9,7 +9,11 @@
 "use strict"
 
 import {prisma} from '../config/db.js';
-import {PLACES_RULES_FROM} from '../services/utils/mentions.js';
+import {PLACES_RULES_FROM, UNSPACED_FULL_NAME_SQL} from '../services/utils/mentions.js';
+
+// a person of one word, a family name alone or a mononym: no space in the name and not a Korean, Japanese or Chinese name in full (isFullName of
+// mentions.js): these were all taken for a word, 10 294 Korean, Japanese and Chinese persons waited behind 110 000 names with a space (11.11.2026)
+const ONE_WORD = `(key NOT LIKE '% %' AND NOT ${UNSPACED_FULL_NAME_SQL})`;
 
 const ARTICLE = `a.id, a.id_feed, a.link, a.title, a.description, a.published_at, a.created_at, a.id_story,
        a.source_url, a.resolved_link, a.medium, a.lang`;
@@ -92,16 +96,16 @@ export const MentionModel = {
         WITH wanted AS (
             SELECT id FROM mentions WHERE linked_at IS NULL AND wanted_at IS NOT NULL ORDER BY wanted_at LIMIT $2
         ), often AS (
-            SELECT id FROM mentions WHERE linked_at IS NULL AND seen >= $1 AND NOT (kind = 'person' AND key NOT LIKE '% %')
+            SELECT id FROM mentions WHERE linked_at IS NULL AND seen >= $1 AND NOT (kind = 'person' AND ${ONE_WORD})
             ORDER BY seen DESC LIMIT $2
         ), words AS (
-            SELECT id FROM mentions WHERE linked_at IS NULL AND seen >= $1 AND kind = 'person' AND key NOT LIKE '% %'
+            SELECT id FROM mentions WHERE linked_at IS NULL AND seen >= $1 AND kind = 'person' AND ${ONE_WORD}
             ORDER BY seen DESC LIMIT $2
         )
         SELECT m.id, m.name, m.kind, m.lang, m.seen FROM mentions m
         WHERE m.id IN (SELECT id FROM wanted UNION SELECT id FROM often
                        UNION SELECT id FROM words WHERE (SELECT count(*) FROM often) < $2)
-        ORDER BY m.wanted_at NULLS LAST, (m.kind = 'person' AND m.key NOT LIKE '% %'), m.seen DESC LIMIT $2`, least, limit),
+        ORDER BY m.wanted_at NULLS LAST, (m.kind = 'person' AND ${ONE_WORD}), m.seen DESC LIMIT $2`, least, limit),
 
     // these names (ids) or the names written so (key) looked for in Wikidata before the others: shown to
     // a reader. The ones looked for already are not looked for again, but for the persons in full and the
@@ -119,7 +123,7 @@ export const MentionModel = {
         const again = ids.length === 0 ? 0 : await prisma.$executeRawUnsafe(`
             UPDATE mentions SET linked_at = NULL, wanted_at = now()
             WHERE id = ANY($1::int[]) AND qid IS NULL AND candidates IS NULL AND linked_at IS NOT NULL
-              AND kind IN ('person', 'organization') AND NOT (kind = 'person' AND key NOT LIKE '% %')`, ids);
+              AND kind IN ('person', 'organization') AND NOT (kind = 'person' AND ${ONE_WORD})`, ids);
         const places = ids.length === 0 ? 0 : await prisma.$executeRawUnsafe(`
             UPDATE mentions SET linked_at = NULL, wanted_at = now()
             WHERE id = ANY($1::int[]) AND qid IS NULL AND kind = 'location' AND linked_at IS NOT NULL AND linked_at < $2`, ids, PLACES_RULES_FROM);

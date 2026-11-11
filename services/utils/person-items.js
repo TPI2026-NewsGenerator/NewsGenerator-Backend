@@ -8,9 +8,10 @@
 
 "use strict"
 
-import {describeItems, PERSON_SITELINKS, readCountries} from './wikidata.js';
+import {BYLINE_SITELINKS, describeItems, exactItems, famousHuman, PERSON_SITELINKS, readCountries} from './wikidata.js';
 import {ollamaJson} from './ollama.js';
-import {mentionKey} from './mentions.js';
+import {cjkLanguages, isFullName, mentionKey, nameForms} from './mentions.js';
+import {mediaOf} from './country-names.js';
 import {MentionModel} from '../../models/mention-model.js';
 
 // Measured on persons linked to the one item called so, in 0 to 9 Wikipedias, judged by hand (bench/lone-items,
@@ -59,11 +60,41 @@ export const personItem = async ({id, name}, qid, usage = null) => {
     // 3 hours (20.10.2026), the person would wait at the head of the queue meanwhile
     const [item] = await describeItems([qid]);
     if (!item?.human) return null;
-    if (!mentionKey(name).includes(' ')) return mentionKey(item.label ?? '') === mentionKey(name) && item.links >= WORD_SITELINKS ? qid : null;
+    if (!isFullName(name)) return mentionKey(item.label ?? '') === mentionKey(name) && item.links >= WORD_SITELINKS ? qid : null;
     if (item.links >= PERSON_SITELINKS || (item.links >= 1 && !familyName(name))) return qid;
     const titles = await MentionModel.titlesNaming(id, TITLES);
     if (titles.length === 0) return null;
     const country = (await readCountries([qid])).get(qid)?.country ?? null;
     const answer = await ollamaJson(lonePrompt(name, titles, {...item, country}), usage);
     return answer?.same === 'yes' ? qid : null;
+};
+
+// {qid, candidates} of a person ({id, name, lang} of mentions) by the search of Wikidata: the items called exactly so, in the first of the forms of the
+// name that has any (the name itself, then without the particle, title or position glued to it: see nameForms; a form which is a word alone is not
+// looked for, the name as it is always is). The only one, a human known enough (personItem); among several, the one far better known (famousHuman),
+// the byline of a site as strict as ever. A name in full only: "Russell" alone, the F1 driver, became Bertrand Russell (18.10.2026); a family name
+// alone is told on its card (see withSurnamesLinked). The candidates are the items found, kept when the person is left with none
+export const linkPerson = async (row, usage = null) => {
+    let qids = [];
+    let name = row.name;
+    for (const form of nameForms(row.name)) {
+        if (form !== row.name && !isFullName(form)) continue;
+        // in the language of its letters for Korean, Japanese and Chinese (han alone: both), else in the one of its news
+        for (const language of cjkLanguages(form, row.lang) ?? [row.lang ?? 'en']) {
+            qids = await exactItems(form, language);
+            if (qids.length > 0) break;
+        }
+        if (qids.length > 0) {
+            name = form;
+            break;
+        }
+    }
+    let qid = null;
+    if (qids.length === 1) qid = await personItem({...row, name}, qids[0], usage);
+    else if (qids.length > 1 && isFullName(name)) {
+        // a byline needs a person far better known; the country of its media tells the local one
+        const media = mediaOf(await MentionModel.sitesNaming(row.id));
+        qid = await famousHuman(qids, {least: media.byline ? BYLINE_SITELINKS : PERSON_SITELINKS, country: media.country});
+    }
+    return {qid, candidates: qids};
 };

@@ -29,7 +29,8 @@ const {placeOfOneCountry} = await import('../../services/utils/wikidata.js');
 const {titlesOfCard} = await import('../../services/utils/card-titles.js');
 const {checkRewrite, neutralTitle} = await import('../../services/utils/neutral-titles.js');
 const {cutPiece} = await import('../../services/utils/proofread.js');
-const {withoutPreposition} = await import('../../services/utils/mentions.js');
+const {cjkLanguages, isFullName, nameForms, withoutPreposition} = await import('../../services/utils/mentions.js');
+const {BREAK, withoutBreaks, withScriptBreaks} = await import('../../services/utils/tagger.js');
 const {chooseLetter} = await import('../../services/utils/picture-choice.js');
 
 const corpus = JSON.parse(readFileSync(new URL('./corpus.json', import.meta.url), 'utf8'));
@@ -104,6 +105,26 @@ const FAMILIES = {
     // linked to without asking Wikidata, null when the name says none or several (Irish, English, Congo)
     association: ({input, expect: wanted}) => {
         expect(associationNamed(input.name)).toBe(wanted.qid);
+    },
+    // the text sent to the tagger, where Japanese has no space: a break (shown |) between the runs of kana, han and Latin letters, and what comes
+    // back is the name as the news wrote it, with no break
+    scripts: ({input, expect: wanted}) => {
+        const sent = withScriptBreaks(input.text);
+        expect(sent.replaceAll(BREAK, '|')).toBe(wanted.text);
+        if (!input.text.includes('\u00a0')) expect(withoutBreaks(sent)).toBe(input.text);
+    },
+    // a person written in an alphabet with no space (hangul, han, kana) is a name in full as one with a space, not a word alone, when it has the
+    // shape of one: Korean family name and 2 or 3 syllables, Japanese or Chinese 3 to 8 letters with a han (or a middle dot between katakana)
+    fullname: ({input, expect: wanted}) => {
+        expect(isFullName(input.name)).toBe(wanted.full);
+    },
+    // the language a Korean, Japanese or Chinese name is looked for in: its own letters tell it, not the label of the feed (null for other letters)
+    namelanguage: ({input, expect: wanted}) => {
+        expect(cjkLanguages(input.name, input.lang)).toEqual(wanted.languages);
+    },
+    // the forms of a name looked for, the name first, then without the particle, the title or the position glued to it
+    nameforms: ({input, expect: wanted}) => {
+        expect(nameForms(input.name)).toEqual(wanted.forms);
     },
     // the country a place is by its name declined by the cases of a language ("Hiszpanii"), or by the name of a country the Intl of the
     // languages lacks ("Großbritannien")

@@ -9,7 +9,7 @@
 "use strict"
 
 import {describeItems, wikimediaHeaders} from './wikidata.js';
-import {mentionKey} from './mentions.js';
+import {cjkLanguages, isFullName, nameForms} from './mentions.js';
 import {mediaOf} from './country-names.js';
 import {familyName} from './person-items.js';
 import {MentionModel} from '../../models/mention-model.js';
@@ -89,9 +89,20 @@ const ofKind = (kind, item) => kind === 'person' ? item.human : !item.human && !
 // (no article, a page of homonyms, another kind of item, a family name after a particle, a name one site
 // writes) is left out, to be searched name by name; Wikipedia or Wikidata failing throws
 export const linkedByTitle = async (rows) => {
-    const own = rows.filter(row => row.kind === 'location' || (row.kind === 'person' && mentionKey(row.name).includes(' ') && !familyName(row.name)));
+    // the titles to look for: a place by its name, a person by the forms of its name that are in full (a Korean name is "구자욱이" in the news and "구자욱"
+    // the article, see nameForms), the name as it is first
+    const titlesOf = (row) => row.kind === 'location' ? [row.name]
+        : row.kind === 'person' ? nameForms(row.name).filter(form => isFullName(form) && !familyName(form)) : [];
+    const own = rows.filter(row => titlesOf(row).length > 0);
     if (own.length === 0) return new Map();
-    const articles = await articlesOf(own);
+    const articles = new Map();
+    for (let rank = 0; ; rank++) {
+        const pending = own.filter(row => !articles.has(row.id) && titlesOf(row)[rank] !== undefined);
+        if (pending.length === 0) break;
+        // a Korean name is looked for in the Korean Wikipedia whatever the language kept with it (see cjkLanguages)
+        const found = await articlesOf(pending.map(row => ({...row, name: titlesOf(row)[rank], lang: cjkLanguages(titlesOf(row)[rank], row.lang)?.[0] ?? row.lang})));
+        found.forEach((article, id) => articles.set(id, article));
+    }
     const asked = own.filter(row => articles.has(row.id) && !articles.get(row.id).disambiguation);
     if (asked.length === 0) return new Map();
     const items = new Map();

@@ -29,6 +29,8 @@ loop work(url)
         alt news waiting
             Tagging -> Tagging : textOf: title + 700 characters of the\ndescription, each text once
             Tagging -> TaggerJs : tagTexts(url, texts)
+            note right : Japanese cut at the changes of alphabet
+(withScriptBreaks): it has no space
             TaggerJs -> Ner : POST /entities {texts} (280 s at most)
             Ner --> TaggerJs : per text, a list of {text, label, score}: person,\norganization, location above 0.5
             Tagging -> Mentions : cleanMentions(entities)
@@ -62,7 +64,9 @@ loop link()
                 Tagging -> Model : setLink(id, qid)
                 note right : no pause: 41% of the queue
             else searched in Wikidata
-                Tagging -> Wiki : exactItems(name, lang) (the text found or the label),\nor for an organisation organizationItem: associationNamed\n(\"Japan FA\", by the words), else namedItems,\ndescribeItems, ofOtherCountry, the AI choosing from 5\ntitles (titlesNaming), or for a place placeItem (below)
+                Tagging -> Wiki : exactItems(name, lang) (the text found or the label),\nor for a person linkPerson: the forms of the name (nameForms:
+without particle, title, position), searched in the language
+of its letters (cjkLanguages), or for an organisation organizationItem: associationNamed\n(\"Japan FA\", by the words), else namedItems,\ndescribeItems, ofOtherCountry, the AI choosing from 5\ntitles (titlesNaming), or for a place placeItem (below)
                 Wiki -> WikiApi : wbsearchentities in its language\n(then in English), 10 found at most
                 alt 429 or too busy
                     Wiki --> Tagging : paused: nobody of the process asks\nfor Retry-After or 30 s

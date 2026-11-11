@@ -12,13 +12,12 @@
 import {MentionModel} from "../models/mention-model.js";
 import {RETENTION_DAYS} from "./feed-service.js";
 import {taggerDevice, taggerUrls, tagTexts} from "./utils/tagger.js";
-import {cleanMentions, mentionKey, withoutPreposition} from "./utils/mentions.js";
+import {cleanMentions, withoutPreposition} from "./utils/mentions.js";
 import {languageOf} from "./utils/language.js";
-import {BYLINE_SITELINKS, exactItems, famousHuman, placeItem, PERSON_SITELINKS} from "./utils/wikidata.js";
-import {mediaOf} from "./utils/country-names.js";
+import {placeItem} from "./utils/wikidata.js";
 import {countriesOfItems} from "./utils/countries.js";
 import {organizationItem} from "./utils/organization-items.js";
-import {personItem} from "./utils/person-items.js";
+import {linkPerson} from "./utils/person-items.js";
 import {linkedByTitle} from "./utils/title-links.js";
 import {newUsage} from "./utils/ollama.js";
 
@@ -171,18 +170,11 @@ const link = async () => {
                 if (row.kind === 'organization') qid = await organizationItem(row, linkUsage, candidates);
                 else if (row.kind === 'location') qid = await placeItem(withoutPreposition(row.name, row.lang), row.lang ?? 'en');
                 else {
-                    const qids = await exactItems(row.name, row.lang ?? 'en');
-                    candidates.push(...qids);
-                    // a full name only: "Russell" alone, the F1 driver, became Bertrand Russell (18.10.2026); a
-                    // family name alone is told on its card (see withSurnamesLinked)
-                    const fullName = mentionKey(row.name).includes(' ');
-                    // a person: the item a human, in a Wikipedia at least, else the AI tells (see person-items.js)
-                    if (qids.length === 1) qid = row.kind === 'person' ? await personItem(row, qids[0], linkUsage) : qids[0];
-                    else if (qids.length > 1 && row.kind === 'person' && fullName) {
-                        // a byline needs a person far better known; the country of its media tells the local one
-                        const media = mediaOf(await MentionModel.sitesNaming(row.id));
-                        qid = await famousHuman(qids, {least: media.byline ? BYLINE_SITELINKS : PERSON_SITELINKS, country: media.country});
-                    }
+                    // a person: the item a human, in a Wikipedia at least, else the AI tells; a name in full only; the name as the news write
+                    // it and without what is glued to it in Korean and Japanese (see linkPerson)
+                    const found = await linkPerson(row, linkUsage);
+                    qid = found.qid;
+                    candidates.push(...found.candidates);
                 }
                 await MentionModel.setLink(row.id, qid);
                 if (qid === null && row.kind !== 'location') await MentionModel.setCandidates(row.id, [...new Set(candidates)].slice(0, MAX_CANDIDATES));

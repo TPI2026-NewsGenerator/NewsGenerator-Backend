@@ -22,7 +22,13 @@ what finds the other angles of a card through its rare names.
   graphics card (`BATCH`), none another tagger of the process is reading (`taken`). Off, failing or with
   nothing left: asked again after 60 s (`WAIT_MS`).
 - **What is tagged.** `textOf`: the title and 700 characters of the description (`TAGGED_CHARS`), each text
-  once. `tagTexts` posts them to `/entities` (280 s at most, `NER_TOKEN` or else `EMBEDDER_TOKEN`).
+  once. `tagTexts` posts them to `/entities` (280 s at most, `NER_TOKEN` or else `EMBEDDER_TOKEN`). Since 11.11.2026 a text with
+  Japanese is sent cut at the changes of alphabet (`withScriptBreaks`, `services/utils/tagger.js`): Japanese has no space and the
+  tagger cuts a text at the spaces, so a whole clause was one word and came back as one name ("PSV佐野航大が今季初アシスト" an
+  organisation, "インファンティーノ現会長に批判集まる中" a person). A break (a no-break space, a space for the tagger) goes between the
+  runs of katakana, hiragana, han and Latin letters or digits, and is taken out of the names that come back; Korean (it has its
+  spaces) and Chinese in han alone (no change of alphabet to cut at) are left as they are. On 40 Japanese news: 22 persons of 10
+  characters on average, 56 of 6 with the breaks (`bench/cjk-names`). Chinese stays unread by words: it would need a segmenter.
 - **The tagger.** `ner/server.py`: `urchade/gliner_multi-v2.1`, labels person, organization, location,
   threshold 0.5, 1000 characters a text and 256 texts a request at most, fp32.
 - **Cleaned.** `cleanMentions` (`services/utils/mentions.js`) keeps each name once per kind, under its key
@@ -36,7 +42,8 @@ what finds the other angles of a card through its rare names.
   `article_mentions` (`db/add_named_entities.sql`, index `i_articles_untagged` in `db/add_untagged_index.sql`).
 - **Linked to Wikidata.** One loop (`link`): `toLink` takes 50 names never looked for, first the ones a reader
   saw (`wanted_at`, set by a card or the page of a name, `db/add_mentions_wanted.sql`), then the ones named by
-  3 news or more (`LINK_LEAST`), the most named first, the persons of one word last. Since 22.10.2026 the
+  3 news or more (`LINK_LEAST`), the most named first, the persons of one word last (a Korean, Japanese or Chinese name with no space is not
+  one word: see "Names with no space" below). Since 22.10.2026 the
   persons in full and the places among them are first linked at once by the title of an article of the
   Wikipedia of their language (`linkedByTitle`, `services/utils/title-links.js`: `action=query&redirects=1`,
   50 titles a call, English for the ones not found, without the pause, Wikidata being searched name by name only
@@ -98,6 +105,28 @@ what finds the other angles of a card through its rare names.
   writing per item); of several, the place (a position, P625, no human) in 3 times more Wikipedias than the
   next one, 30 at least (`famousPlace`): "Paris" is the capital, not Paris in Texas. The calls to the API of Wikidata are spaced by 400 ms (`MIN_GAP_MS`, 150 a minute, 2 to 4 a name); nothing left:
   10 minutes. A 429 or "too busy" pauses every call of the process to Wikidata for `Retry-After` or 30 s.
+- **Names with no space** (Korean, Japanese, Chinese; since 11.11.2026). Of the 5,619 Korean and 2,597 Japanese persons of the database 16 and 0 were
+  linked ("손흥민", 71 news, looked for and left with no item). Four causes, one rule each (`services/utils/mentions.js`):
+  (1) a name with no space was a word alone, asked of Wikidata last (110,000 names with a space wait before them) and kept only when its item was
+  labelled so in English: `isFullName` takes for a name in full a Korean family name and 2 or 3 syllables ("구자욱"), 3 to 8 letters of han, kana, the
+  prolonged sound mark and the middle dot with a han ("大谷翔平", "小柳ルミ子"), or a foreign name in katakana with its middle dot ("ミゲル・ロハス"), with
+  a footballer's position glued to it ("FW大橋祐紀"); a foreign family name alone ("트럼프", 158 news, "디아즈", "インファンティーノ") stays a word
+  alone, as "Trump" is. The queue of `toLink` and `want` read the same rule in SQL (`UNSPACED_FULL_NAME_SQL`; the two agree on the 8,694 names of the
+  database). (2) The language kept with the name is the one of its first news: none for 3,518 Korean names, English for 206, so the search went out in
+  English: `cjkLanguages` reads it from the letters (hangul Korean, kana Japanese, han alone Japanese then Chinese), for the search of Wikidata and for the
+  Wikipedia of the title. (3) What the tagger takes for the name often holds a word glued to it: a particle ("구자욱이", 58 news, "김민재를"), a title ("박진만
+  감독", "박재만 기자", a byline), a position ("FW大橋祐紀", "ローレンス・マルコDF"), a title or "et al" ("宮本恒靖会長", "筒香嘉智内野手", "佐藤龍之介ら"):
+  `nameForms` gives the name first, then without each (once, in the order of the text; the ones in hiragana only after han, katakana or Latin letters), and
+  `linkPerson` (`person-items.js`, the step of the loop for a person) looks for the first form that is a name in full and that Wikidata knows; the name as
+  written is always looked for first, so that a real name ending like a particle is found as it is. `linkedByTitle` does the same on the titles of the
+  Wikipedia. (4) The tagger itself, see "What is tagged". Measured on the persons seen 3 times or more the queue now reaches (`bench/cjk-names/measure.mjs`,
+  70 a script at random, the rest of the pipeline as it is): 119 of 172 linked, 69% (Korean 40 of 70, Japanese kana 20 of 32, han 59 of 70; 62%, 59% and 79%
+  of their mentions), against 0 before; 20 by the title of an article. Read by hand, 3 wrong ("양승우", a Korean footballer of the English seventh division, was a
+  photographer in 1 Wikipedia; "ファビオ・シウバ" of a Dortmund report an MMA fighter; "이동욱" the actor for a baseball player): 2.5%, the rate of the rule in Latin
+  letters (2 of 107), so no AI check was added for the items of few Wikipedias. The ones left have no item called so (the referees and players of the
+  J.League are mostly in `jawiki` alone, and were linked), or a name that is only a title ("森保監督", "ロバーツ監督": a family name alone). Not done: Chinese in
+  han alone (no segmenter), a Korean name told from its title in the clause ("이 대통령"), the voiced marks of kana (`mentionKey` takes them off: "パリ" and
+  "バリ" are one key).
 - **A family name alone** on a card (`withSurnamesLinked`, `services/utils/card-names.js`, since 18.10.2026):
   "Infantino" is no item of Wikidata (a family name, a village, a page of namesakes). It is the person linked
   whose name ends with it (`MentionModel.personsEndingWith`, read through the index of the names linked),
