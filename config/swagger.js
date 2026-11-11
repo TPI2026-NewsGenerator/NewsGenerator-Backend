@@ -1221,7 +1221,7 @@ const options = {
                         "hedged": {
                             "type": "string",
                             "nullable": true,
-                            "description": "The words the article itself used to say it has no confirmation (\"reportedly\", \"selon des sources\"...), null when it states its news plainly. Read from the title and the description, no AI involved.",
+                            "description": "The words the article itself used to say it has no confirmation (\"reportedly\", \"selon des sources\", \"σύμφωνα με πληροφορίες\"...), null when it states its news plainly. Read from the title and the description, no AI involved, in about forty languages (since 11.11.2026; before, five). Not counted: the \"alleged\" of a crime report (\"allegedly\", \"presunto\"), a rumour the article denies, says is over or confirms, and a word that only looks like one (the Italian \"rumore\", a noise). The words are given as the article wrote them.",
                             "example": "reportedly"
                         },
                         "corroboration": {
