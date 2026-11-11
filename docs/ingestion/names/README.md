@@ -34,7 +34,12 @@ what finds the other angles of a card through its rare names.
 - **Cleaned.** `cleanMentions` (`services/utils/mentions.js`) keeps each name once per kind, under its key
   (`mentionKey`: small letters, no accent, no quote around it, no English "'s", no leading article when two
   words are left); a name over 120 characters is dropped; an acronym inside a longer name ("UEFA" of "UEFA
-  Nations League") is added as an organisation.
+  Nations League") is added as an organisation, except the words that name a KIND of club or association (`KINDS_OF_CLUB` of
+  `mentions.js`, since 11.11.2026): "FA" of "Japan FA" and "FA Cup", "FC" of "FC Barcelona", "AS", "SC", "AC", "CF", "SV", "RC",
+  "FK", "IF", "FF", "IK", "UD". Added, they were organisations of their own, 111,002 news of 15.8 million links, 67,487 of them of "FC"
+  linked to the concept "association football club", 5,106 of "RC" linked to RC Strasbourg (the news of RC Lens, RC Vannes), 476 of "IF" to a
+  Faroese club. 74 to 100% of the news of such a bare word name a longer name holding it, against 9 to 43% for the bodies of two or three
+  letters, which stay (OM, EU, UN, AZ, AFC; "SK" too: SK Hynix is a company), `bench/acronym-types`.
 - **Saved.** `MentionModel.save` (`models/mention-model.js`), one transaction: the news are marked
   (`entities_at = now()`) with `FOR UPDATE SKIP LOCKED`, so a news the grouping holds is left for later; the
   names go in `mentions` (`UNIQUE (key, kind)`, `seen` counted up), in the order of their key so that two
@@ -105,6 +110,14 @@ what finds the other angles of a card through its rare names.
   writing per item); of several, the place (a position, P625, no human) in 3 times more Wikipedias than the
   next one, 30 at least (`famousPlace`): "Paris" is the capital, not Paris in Texas. The calls to the API of Wikidata are spaced by 400 ms (`MIN_GAP_MS`, 150 a minute, 2 to 4 a name); nothing left:
   10 minutes. A 429 or "too busy" pauses every call of the process to Wikidata for `Retry-After` or 30 s.
+- **"FA" alone** (since 11.11.2026). 2,928 mentions and no item: 1,029 of the 1,400 news of 30 days that name it also name a longer name that holds it
+  ("FA Cup" 264, "Japan FA" 85, "Portuguese FA" 80...): the acronym added by the cleaning, no longer added (above). The 371 others write the bare word
+  and it says nothing alone: about 40% are British media and aggregators in English (the English association), about 25% Spanish media of Uruguay and
+  Chile (the Frente Amplio, a party), a few Football Australia or the Egyptian association. No item of its own then: the card chooses, offered the
+  English association first (`bareAssociationCandidates`, `football-associations.js`), where Wikidata offered a badge of Wikipedia and a village of the
+  Aude; the AI answers none for a card that is not about it. Left: the 2-letter acronyms are not linked on a card (`isUnlinkedAcronym`: "FA" is the alias
+  of too many), so the bare FA reaches the card by its candidates only. `bench/acronym-types/kinds-of-club.sql` (for srv1) puts Q9500 first among the
+  candidates of the two rows, takes off the three wrong links and, optionally, the links of the news to the words that came from a longer name.
 - **Names with no space** (Korean, Japanese, Chinese; since 11.11.2026). Of the 5,619 Korean and 2,597 Japanese persons of the database 16 and 0 were
   linked ("손흥민", 71 news, looked for and left with no item). Four causes, one rule each (`services/utils/mentions.js`):
   (1) a name with no space was a word alone, asked of Wikidata last (110,000 names with a space wait before them) and kept only when its item was

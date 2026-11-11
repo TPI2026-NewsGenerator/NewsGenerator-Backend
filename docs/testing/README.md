@@ -20,7 +20,7 @@ git, like the other benches) and says what held before and fails now, and the re
 
 ## What the corpus holds
 
-410 offline cases and 48 live ones, in families (the first ones taken from the briefings of 6.11.2026; the table lists the oldest families, the
+440 offline cases and 48 live ones, in families (the first ones taken from the briefings of 6.11.2026; the table lists the oldest families, the
 others are named in `corpus.json`):
 
 | Family | Asks of | Cases came from |
@@ -43,6 +43,8 @@ others are named in `corpus.json`):
 | `fullname` | `isFullName`: a person written with no space is a name in full, not a word alone | "손흥민" (71 news), "구자욱", "大谷翔平", "森保一", "小柳ルミ子", "ミゲル・ロハス", "FW大橋祐紀", and what stays a word alone: "트럼프" (158 news), "디아즈", "채령", "宮本", "インファンティーノ", "アリソン", a clause |
 | `nameforms` | `nameForms`: the forms of a name looked for, the name first, then without the particle, title or position glued to it | "구자욱이", "김민재를", "박진만 감독이", "박재만 기자" (a byline), "筒香嘉智内野手", "FW大橋祐紀", "宮本恒靖会長", "三笘薫選手が", and what has none: "이 대통령", "さくら", "監督", a Latin name |
 | `namelanguage` | `cjkLanguages`: the language a Korean, Japanese or Chinese name is looked for in, from its letters, not the label of its feed | Korean names with no language (3 518) or labelled English (206), han alone (Japanese or Chinese), and a Latin name left to the language of its news |
+| `acronyms` | `acronymsOf`: the acronyms a longer name adds as organisations | "UEFA" of "UEFA Nations League", "UN", "EU", "OM", "AFC", "SK" of "SK Hynix" (kept), and not the words that name a kind of club or association: "FA" of "Japan FA", "FA Cup", "The FA", "FC" of "FC Barcelona", "AS Roma", "Valencia CF", "Hamburger SV", "RC Strasbourg Alsace" |
+| `barefa` | `bareAssociationCandidates`: the item a card may choose for the bare "FA" or "Football Association" | Q9500 first; nothing for "Japan FA" nor "FAI" |
 | `following` | `searchNamesFor`: the names a person is followed by | Velasco (common), Čeferin and Rosetti (their own), García, the words the reader added |
 | `neutral` | `checkRewrite`, `neutralTitle`: the checks of a neutral title | the FA case (name lost), exclamation, figure, negation, question, quotation, a good rewrite, a teaser taken out |
 
@@ -86,7 +88,6 @@ installs the function of the repository in the transaction of each test (rolled 
 repository whatever is deployed, and does not wait for the migration. The tests have 60 s since the database is shared. Two suites with the same fixed row would wait for each other again: give a test its own.
 
 ## Limits
-
 - The offline layer does not ask the AI: what the AI writes (a rewrite, a translation) is only checked by the live layer, and
   by what the code checks of it (figures, names, quotations).
 - The live layer is not a measure of quality: it holds what must hold in any good answer, and says when it stops holding.

@@ -70,6 +70,23 @@ describe('organizationItem', () => {
         expect(namedItems).toHaveBeenCalledWith('Irish FA', 'en');
     });
 
+    it('should offer the English association first for the bare FA, which Wikidata does not offer, and leave it with no item', async () => {
+        // Wikidata gives a badge of Wikipedia and a village of the Aude for "FA"; the AI finds none of them
+        namedItems.mockResolvedValueOnce([{qid: 'Q17437796', exact: true}, {qid: 'Q1149583', exact: true}]);
+        describeItems.mockResolvedValueOnce([
+            {qid: 'Q17437796', label: 'featured article', description: 'badge', links: 0, human: false, place: false, work: false},
+            {qid: 'Q1149583', label: 'Fa', description: 'commune in Aude, France', links: 36, human: false, place: true, work: false}]);
+        ollamaJson.mockResolvedValueOnce({n: 0});
+        const candidates = [];
+        expect(await organizationItem({id: 40, name: 'FA', lang: 'en'}, null, candidates)).toBeNull();
+        expect(candidates).toEqual(['Q9500', 'Q17437796', 'Q1149583']);
+        // a name which is not the bare word is offered nothing more
+        namedItems.mockResolvedValueOnce([]);
+        const others = [];
+        expect(await organizationItem({id: 41, name: 'FAI', lang: 'en'}, null, others)).toBeNull();
+        expect(others).toEqual([]);
+    });
+
     it('should hand back the items found for the name in the array given, whatever it answers', async () => {
         namedItems.mockResolvedValue([{qid: 'Q1', exact: false}, {qid: 'Q2', exact: true}]);
         describeItems.mockResolvedValueOnce([{qid: 'Q1', label: 'A', description: '', links: 5, human: false, place: false, work: false},

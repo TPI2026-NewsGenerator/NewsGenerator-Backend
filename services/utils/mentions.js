@@ -39,11 +39,18 @@ export const mentionKey = (name) => String(name ?? '')
 // PSG" as one name, and the news names the UEFA, the FIFA, the PSG too. On 2662 news of 30 days
 // (bench/ner-recall.mjs, 13.10.2026) the names of the UEFA were in 72 of what the tagger read and in 35
 // of its names, Infantino in 17 and 16. A roman figure ("LFF II lyga") is none
+// The words that name a KIND of club or association are none: "FA" of "Japan FA", "FA Cup", "The FA", "FC" of "FC Barcelona", "AS Roma", "Valencia CF". Added
+// so they were organisations of their own, 67 482 mentions of "FC" (linked to the concept "association football club"), 9 274 of "AS", 5 105 of "RC"
+// (linked to RC Strasbourg), 2 928 of "FA" (1 029 of the 1 400 news of 30 days named a longer name holding it, 74%: the bare FA the 371 others write
+// is the English association, Football Australia, the Egyptian one... according to the press). 74 to 100% of the news of each hold a longer name,
+// against 9 to 43% for the bodies of two or three letters (OM, EU, UN, AZ, AFC), which stay (bench/acronym-types, 11.11.2026). "SK" stays: SK Hynix is a
+// company of the SK group, SK Rapid a club
+const KINDS_OF_CLUB = new Set(['FA', 'FC', 'AS', 'SC', 'AC', 'CF', 'SV', 'RC', 'FK', 'IF', 'FF', 'IK', 'UD']);
 const ACRONYM = /^[A-Z][A-Z0-9&]{1,5}$/;
 const ROMAN = /^[IVXLCDM]+$/;
 export const acronymsOf = (name) => {
     const words = name.split(/[\s\-–/]+/);
-    return words.length < 2 ? [] : words.filter(word => ACRONYM.test(word) && /[A-Z].*[A-Z]/.test(word) && !ROMAN.test(word));
+    return words.length < 2 ? [] : words.filter(word => ACRONYM.test(word) && /[A-Z].*[A-Z]/.test(word) && !ROMAN.test(word) && !KINDS_OF_CLUB.has(word));
 };
 
 // The particles Korean and Japanese glue to a name written in Latin letters: "KFA는" is the KFA (the tagger gave 349 organisations

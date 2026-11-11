@@ -14,7 +14,7 @@ import {ollamaJson} from './ollama.js';
 import {MentionModel} from '../../models/mention-model.js';
 import {countriesOfItems} from './countries.js';
 import {ofOtherCountry} from './country-names.js';
-import {associationNamed} from './football-associations.js';
+import {associationNamed, bareAssociationCandidates} from './football-associations.js';
 
 // Measured on 60 organisations often met and never linked (18.10.2026): one item called so left FIFA (an
 // album, a song of the same name), Juventus ("Juventus FC"), Liverpool (the city first) unlinked. Told
@@ -68,6 +68,8 @@ const elsewhere = async (id, qid) => {
 export const organizationItem = async ({id, name, lang}, usage = null, candidates = null) => {
     const association = associationNamed(name);
     if (association) return association;
+    // the bare "FA" has no item of its own: the English association is offered first to the card that chooses (see bareAssociationCandidates)
+    candidates?.push(...bareAssociationCandidates(name));
     const found = await namedItems(name, lang ?? 'en');
     candidates?.push(...found.map(item => item.qid));
     if (found.length === 0) return null;

@@ -72,6 +72,15 @@ describe('cleanMentions', () => {
     });
 });
 
+describe('cleanMentions, the kinds of club', () => {
+    it('should not add the word that names a kind of club or association as an organisation of its own, and keep the one the tagger gives', () => {
+        // 74 to 100% of the news of the bare FA, FC, AS... hold a longer name, which they came from (bench/acronym-types, 11.11.2026)
+        const names = cleanMentions([{text: 'Japan FA', label: 'organization'}, {text: 'FC Barcelona', label: 'organization'}, {text: 'The FA', label: 'organization'},
+            {text: 'FA', label: 'organization'}, {text: 'EU Commission', label: 'organization'}, {text: 'FA Cup and UEFA', label: 'organization'}]);
+        expect(names.map(name => name.key)).toEqual(['japan fa', 'fc barcelona', 'the fa', 'fa', 'eu commission', 'eu', 'fa cup and uefa', 'uefa']);
+    });
+});
+
 describe('rareNames', () => {
     it('should keep the people and bodies named by most of the card and few other news', () => {
         const rows = [

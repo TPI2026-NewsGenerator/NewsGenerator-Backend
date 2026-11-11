@@ -43,6 +43,16 @@ const BODY = /^(.+?)(?:['’]s)? (?:FA|football association|football federation|
 const DOUBTFUL = new Set(['IE', 'CG', 'CD']);
 const FOOTBALL_IS_ANOTHER_SPORT = new Set(['US', 'CA', 'AU']);
 
+// The bare word of an association ("FA", "Football Association"), written with no country, says nothing alone: on the 371 news of 30 days that write "FA" and no
+// longer name holding it (bench/acronym-types, 11.11.2026), about 40% are British media and aggregators in English (the English association), about 25% Spanish media
+// of Uruguay and Chile (the Frente Amplio, a political party), a few Football Australia, the Egyptian association... So it has no item of its own, and the card,
+// which sees the titles and the countries of its media, chooses (see MentionModel.setCandidates, withNamesLinked) among what it is offered. Wikidata offers the
+// wrong ones for "FA" (a badge of Wikipedia, a village of the Aude) and the sport and the federation of Norway first for "Football Association": the English
+// association is offered first; when the card is not about it, the AI answers none
+const ENGLISH_FA = 'Q9500';
+const BARE = new Set(['fa', 'football association']);
+export const bareAssociationCandidates = (name) => BARE.has(String(name ?? '').trim().toLowerCase()) ? [ENGLISH_FA] : [];
+
 // the item of the association a name says, null when it says none or can't tell between several
 export const associationNamed = (name) => {
     // the headline of a news agency starts with its sport ("Soccer-Japan FA says..."), the tagger keeps it in the name

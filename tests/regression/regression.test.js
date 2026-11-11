@@ -24,12 +24,12 @@ const {searchNamesFor} = await import('../../services/utils/watch-names.js');
 const {cardNames, tidyNames, withoutConcepts, withoutUnreadable, withSameItemJoined, withSurnamesLinked} = await import('../../services/utils/card-names.js');
 const {nationalityOf} = await import('../../services/utils/nationalities.js');
 const {countryDeclined, countryNamed} = await import('../../services/utils/country-names.js');
-const {associationNamed} = await import('../../services/utils/football-associations.js');
+const {associationNamed, bareAssociationCandidates} = await import('../../services/utils/football-associations.js');
 const {placeOfOneCountry} = await import('../../services/utils/wikidata.js');
 const {titlesOfCard} = await import('../../services/utils/card-titles.js');
 const {checkRewrite, neutralTitle} = await import('../../services/utils/neutral-titles.js');
 const {cutPiece} = await import('../../services/utils/proofread.js');
-const {cjkLanguages, isFullName, nameForms, withoutPreposition} = await import('../../services/utils/mentions.js');
+const {acronymsOf, cjkLanguages, isFullName, nameForms, withoutPreposition} = await import('../../services/utils/mentions.js');
 const {BREAK, withoutBreaks, withScriptBreaks} = await import('../../services/utils/tagger.js');
 const {chooseLetter} = await import('../../services/utils/picture-choice.js');
 
@@ -105,6 +105,15 @@ const FAMILIES = {
     // linked to without asking Wikidata, null when the name says none or several (Irish, English, Congo)
     association: ({input, expect: wanted}) => {
         expect(associationNamed(input.name)).toBe(wanted.qid);
+    },
+    // the acronyms a longer name adds as organisations of their own ("UEFA" of "UEFA Nations League"), but not the word that names a KIND of club
+    // or association ("FA" of "Japan FA" and "FA Cup", "FC" of "FC Barcelona"): 74 to 100% of the news of such a bare word hold a longer name
+    acronyms: ({input, expect: wanted}) => {
+        expect(acronymsOf(input.name)).toEqual(wanted.acronyms);
+    },
+    // the items a card may choose for the bare word of an association ("FA"), which Wikidata does not offer
+    barefa: ({input, expect: wanted}) => {
+        expect(bareAssociationCandidates(input.name)).toEqual(wanted.candidates);
     },
     // the text sent to the tagger, where Japanese has no space: a break (shown |) between the runs of kana, han and Latin letters, and what comes
     // back is the name as the news wrote it, with no break
