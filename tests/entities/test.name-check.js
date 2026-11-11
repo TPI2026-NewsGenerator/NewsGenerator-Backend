@@ -22,7 +22,7 @@ jest.unstable_mockModule('../../services/utils/wikipedia-search.js', () => ({sea
 jest.unstable_mockModule('../../services/utils/countries.js', () => ({countriesOfItems}));
 jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel: {candidatesOf}}));
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson, newUsage: () => ({calls: 0, input: 0, output: 0})}));
-const {CHECK_MAX_LINKS, PERSON_LEAST, checkPrompt, countriesOfSites, expansionOf, linkPrompt, mainCountryOfSites, withNamesChecked, withNamesLinked} = await import('../../services/utils/name-check.js');
+const {CHECK_MAX_LINKS, PERSON_LEAST, checkPrompt, countriesOfSites, expansionOf, linkPrompt, mainCountryOfSites, withAcronymsOfSitesCountry, withNamesChecked, withNamesLinked} = await import('../../services/utils/name-check.js');
 
 const cards = [{storyId: 1, titles: ['Hernández Hernández, árbitro de Primera división: "El arbitraje es aprender a resetear"']}];
 const MALTA = {qid: 'Q58305', label: 'Maltese First Division', description: 'sports league', links: 14, human: false};
@@ -240,5 +240,82 @@ describe('a name the check sent away', () => {
         searchedItems.mockResolvedValue(['Q900']);
         await withNamesLinked(await withNamesChecked(many, [bare]), [bare]);
         expect(searchedItems).toHaveBeenCalledTimes(10);
+    });
+});
+
+// "FTF" is the Tunisian federation, Togo's, Tahiti's: a name is linked once for all its news, to the item most of them are of (Tunisia's), and the AI
+// checking the card said "yes" to it every time: the card of togofoot.tg of 10.11.2026 about the Togolese federation was a card of Tunisia
+describe('an acronym linked to a body of another country than the sites of its card', () => {
+    const TUNISIAN = {qid: 'Q921559', label: 'Tunisian Football Federation', description: 'governing body of association football in Tunisia', links: 30, human: false};
+    const TOGOLESE = {qid: 'Q1048509', label: 'Fédération Togolaise de Football', description: 'governing body of association football in Togo', links: 25, human: false};
+    const TEAM = {qid: 'Q191595', label: "Togo men's national football team", description: 'national team', links: 53, human: false};
+    const ITALIAN = {qid: 'Q201897', label: 'Italian Football Federation', description: 'governing body of association football in Italy', links: 60, human: false};
+    const FRENCH = {qid: 'Q20', label: 'French Football Federation', description: 'governing body of association football in France', links: 80, human: false};
+    const COUNTRIES = {Q921559: {country: 'TN', international: false}, Q1048509: {country: 'TG', international: false}, Q191595: {country: 'TG', international: false},
+        Q201897: {country: 'IT', international: false}, Q20: {country: 'FR', international: false}, Q35572: {country: null, international: true}};
+    const togo = {storyId: 1, titles: ['La FTF confie les commandes du football professionnel à la LPFT'], sites: ['togofoot.tg'], topic: 'sport'};
+    const ftf = (qid = 'Q921559', name = 'FTF', kind = 'organization') => [{storyId: 1, names: [{name, qid, kind, id: 5}, {name: 'LPFT', qid: null, kind: 'organization', id: 6}], places: []}];
+
+    beforeEach(() => {
+        countriesOfItems.mockReset();
+        countriesOfItems.mockImplementation(async (qids) => new Map(qids.filter(qid => COUNTRIES[qid]).map(qid => [qid, COUNTRIES[qid]])));
+        describeItems.mockImplementation(async (qids) => [TUNISIAN, TOGOLESE, TEAM, ITALIAN, FRENCH].filter(item => qids.includes(item.qid)));
+    });
+
+    it('should look for the body of the country of the sites called so and link the one the AI chooses (the card of togofoot.tg)', async () => {
+        searchedItems.mockResolvedValue(['Q1048509', 'Q191595']);
+        ollamaJson.mockResolvedValueOnce({n: 2});
+        const [card] = await withAcronymsOfSitesCountry(ftf(), [togo]);
+        expect(card.names[0].qid).toBe('Q1048509');
+        expect(searchedItems).toHaveBeenCalledWith('FTF Togo');
+        // the item it was linked to stays among the choices, first; the countries of the sites are told to the AI
+        const prompt = ollamaJson.mock.calls[0][0];
+        expect(prompt).toContain('[1] Tunisian Football Federation: governing body of association football in Tunisia (30 Wikipedias)');
+        expect(prompt).toContain('[2] Fédération Togolaise de Football: governing body of association football in Togo (25 Wikipedias)');
+        expect(prompt).toContain('Countries of the sites that published the news: Togo (1).');
+    });
+
+    it('should keep the link when the AI keeps the item it had, answers none or badly, or fails (FIGC of a French site)', async () => {
+        const french = {storyId: 1, titles: ['Présidence de la FIGC : le football italien au bord du grand basculement'], sites: ['sofoot.fr']};
+        searchedItems.mockResolvedValue(['Q20']);
+        for (const answer of [{n: 1}, {n: 0}, {n: 9}, null]) {
+            ollamaJson.mockResolvedValueOnce(answer);
+            expect((await withAcronymsOfSitesCountry(ftf('Q201897', 'FIGC'), [french]))[0].names[0].qid).toBe('Q201897');
+        }
+        ollamaJson.mockRejectedValueOnce(new Error('no answer'));
+        expect((await withAcronymsOfSitesCountry(ftf('Q201897', 'FIGC'), [french]))[0].names[0].qid).toBe('Q201897');
+        searchedItems.mockRejectedValueOnce(new Error('Wikipedia down'));
+        expect((await withAcronymsOfSitesCountry(ftf('Q201897', 'FIGC'), [french]))[0].names[0].qid).toBe('Q201897');
+    });
+
+    it('should ask nothing when the search finds no item of the country of the sites', async () => {
+        searchedItems.mockResolvedValue(['Q201897', 'Q35572']);
+        const french = {storyId: 1, titles: ['Présidence de la FIGC'], sites: ['sofoot.fr']};
+        expect((await withAcronymsOfSitesCountry(ftf('Q201897', 'FIGC'), [french]))[0].names[0].qid).toBe('Q201897');
+        expect(ollamaJson).not.toHaveBeenCalled();
+    });
+
+    it('should leave alone what is no acronym of a body of another country than the one all its sites are of', async () => {
+        const mixed = {...togo, sites: ['togofoot.tg', 'lapresse.tn']};
+        const unknown = {...togo, sites: ['togofoot.com', 'bbc.com']};
+        const same = {...togo, sites: ['lapresse.tn']};
+        for (const [read, card] of [[ftf(), mixed], [ftf(), unknown], [ftf(), same], [ftf('Q921559', 'Tunisian Football Federation'), togo], [ftf('Q921559', 'FTF', 'person'), togo],
+            [ftf('Q35572', 'UEFA'), togo], [ftf('Q921559', 'FT'), togo], [ftf('Q921559', 'Ftf'), togo]]) {
+            expect((await withAcronymsOfSitesCountry(read, [card]))[0].names[0].qid).toBe(read[0].names[0].qid);
+        }
+        expect(searchedItems).not.toHaveBeenCalled();
+        expect(ollamaJson).not.toHaveBeenCalled();
+    });
+
+    it('should look again for MAX_RELINK names a briefing, and leave the names as they are when Wikidata cannot tell the countries', async () => {
+        searchedItems.mockResolvedValue(['Q1048509']);
+        ollamaJson.mockResolvedValue({n: 2});
+        const many = [{storyId: 1, names: Array.from({length: 13}, (_, i) => ({name: `FT${String.fromCharCode(65 + i)}`, id: 30 + i, qid: 'Q921559', kind: 'organization'})), places: []}];
+        await withAcronymsOfSitesCountry(many, [togo]);
+        expect(searchedItems).toHaveBeenCalledTimes(10);
+        searchedItems.mockClear();
+        countriesOfItems.mockRejectedValue(new Error('Wikidata asked to wait.'));
+        expect((await withAcronymsOfSitesCountry(ftf(), [togo]))[0].names[0].qid).toBe('Q921559');
+        expect(searchedItems).not.toHaveBeenCalled();
     });
 });

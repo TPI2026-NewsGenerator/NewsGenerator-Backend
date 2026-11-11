@@ -20,7 +20,7 @@ import {nationalityOf} from './nationalities.js';
 import {cardCountries, countriesOfItems} from './countries.js';
 import {chooseCountries, chooseWeakCountries, countryCandidates, weakCandidates} from './country-choice.js';
 import {countryDeclined, countryName, countryNamed} from './country-names.js';
-import {withNamesChecked, withNamesLinked} from './name-check.js';
+import {withAcronymsOfSitesCountry, withNamesChecked, withNamesLinked} from './name-check.js';
 
 export const NAMES_PER_CARD = 4;
 // a family name alone tells the country of the person it is linked to when that person is named in full
@@ -436,7 +436,7 @@ export const namesAndCountriesOfCards = async (cards, {usage = null, choose = tr
     // a name is linked by its text for all its news: the card tells whether the item is the one it means, and
     // which of its candidates when it has none; then the names linked are spelled as Wikidata does (see withWikidataSpelling:
     // reader, the language of the reader, tells which cards are translated)
-    const read = await spelledNames(await withNamesLinked(await withNamesChecked(await readNames(cards), cards, {usage}), cards, {usage}), cards, reader);
+    const read = await spelledNames(await withNamesLinked(await withAcronymsOfSitesCountry(await withNamesChecked(await readNames(cards), cards, {usage}), cards, {usage}), cards, {usage}), cards, reader);
     const items = read.map(card => [...card.names, ...card.places]
         .filter(row => row.qid && !(row.bySurname < SURNAME_COUNTRY_SEEN) && !countryNamed(row.name))
         .map(row => ({qid: row.qid, weight: row.inCard, person: row.kind === 'person'})));

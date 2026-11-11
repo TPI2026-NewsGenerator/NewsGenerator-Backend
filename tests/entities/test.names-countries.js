@@ -16,7 +16,7 @@ jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel: 
     personsByLooseSurname: jest.fn(async () => []), inflectedForms: jest.fn(async () => []), want: jest.fn(async () => 0)}}));
 const countries = await import('../../services/utils/countries.js');
 jest.unstable_mockModule('../../services/utils/countries.js', () => ({...countries, countriesOfItems}));
-jest.unstable_mockModule('../../services/utils/name-check.js', () => ({withNamesChecked: jest.fn(async read => read), withNamesLinked: jest.fn(async read => read)}));
+jest.unstable_mockModule('../../services/utils/name-check.js', () => ({withAcronymsOfSitesCountry: jest.fn(async read => read), withNamesChecked: jest.fn(async read => read), withNamesLinked: jest.fn(async read => read)}));
 const countryChoice = await import('../../services/utils/country-choice.js');
 jest.unstable_mockModule('../../services/utils/country-choice.js', () => ({...countryChoice, chooseCountries: jest.fn(async () => new Map())}));
 jest.unstable_mockModule('../../services/utils/card-spellings.js', () => ({labelsOfItems: jest.fn(async () => new Map())}));

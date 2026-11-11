@@ -255,3 +255,64 @@ export const withNamesLinked = async (read, cards, {usage = null} = {}) => {
     console.log(`Briefing: ${asked.length} names with no item chosen among their candidates on their card (${sentAway.length} sent away by the check, searched again), ${linked} linked${listOf(linkedNames)}`);
     return read;
 };
+
+// An acronym of a national body is shared by the bodies of several countries: "FTF" is the Tunisian federation, Togo's, Tahiti's. A name is linked
+// once for all its news, to the item most of them are of (Tunisia's: 14 of the 35 news of the month), and the check above said "yes" to it every time
+// (it asks whether the item fits the titles, which name no country: replayed three times on the card of togofoot.tg, 11.11.2026), so the card of the
+// Togolese federation showed Tunisia. When every site of a card that has a country is of one country and the item an acronym is linked to is of
+// another, the body of that country called so is looked for (the Wikipedia search of "FTF Togo", as for a name the check sent away) and the AI chooses
+// among it and the item it had, with the titles and the countries of the sites (the Togolese federation 3 times of 3). Of the 12 acronyms of the cards
+// of the briefings that this holds for (193 acronyms linked with a country, 1 293 cards, bench/acronym-country.mjs), 2 were wrong (FTF, FMF of a Malagasy
+// card) and 10 right (FIGC on French sites, CBF on a Portuguese one, DAZN, WSL, FAW...): nothing is moved unless the search finds an item of that country, and the
+// item the name had is among the choices, so the AI keeping it is its answer. MAX_RELINK names a briefing: a search and a call each
+const ACRONYM_BODY = /^[\p{Lu}][\p{Lu}\p{N}&]{2,6}$/u;
+// the country every site that has one is of, null when they are of several or none has one
+const countryOfAllSites = (sites = []) => {
+    const codes = new Set(sites.map(countryOfSite).filter(Boolean));
+    return codes.size === 1 ? [...codes][0] : null;
+};
+
+// read: [{storyId, names}] (see card-names.js readNames), cards: [{storyId, titles, sites, topic}]: the same cards, the acronyms of the sites' country
+// linked to the item the AI chooses. Whatever fails (Wikidata, Wikipedia, the AI) leaves the name as it was
+export const withAcronymsOfSitesCountry = async (read, cards, {usage = null} = {}) => {
+    const cardOf = new Map(cards.map(card => [card.storyId, card]));
+    const rows = read.flatMap(card => card.names
+        .filter(row => row.qid && row.kind === 'organization' && ACRONYM_BODY.test(row.name) && !String(row.qid).startsWith('country:'))
+        .map(row => ({card, row, country: countryOfAllSites(cardOf.get(card.storyId)?.sites)})))
+        .filter(({card, country}) => country && (cardOf.get(card.storyId)?.titles ?? []).length > 0);
+    if (rows.length === 0) return read;
+    let own = new Map();
+    try {
+        own = await countriesOfItems(rows.map(({row}) => row.qid));
+    } catch (err) {
+        console.error(`Names: the countries of the acronyms of the cards were not read (${err.message})`);
+        return read;
+    }
+    const asked = rows.filter(({row, country}) => {
+        const info = own.get(row.qid);
+        return info?.country && !info.international && info.country !== country;
+    }).slice(0, MAX_RELINK);
+    if (asked.length === 0) return read;
+    const moved = [];
+    await mapWithConcurrency(asked, CHECK_CONCURRENCY, async ({card, row, country}) => {
+        const found = (await searchedItems(`${row.name} ${countryName(country)}`)).filter(qid => qid !== row.qid);
+        if (found.length === 0) return;
+        const there = await countriesOfItems(found);
+        const ofCountry = found.filter(qid => there.get(qid)?.country === country);
+        if (ofCountry.length === 0) return;
+        await describe([row.qid, ...ofCountry]);
+        // the item it had first: the AI keeping it is a choice
+        const candidates = [row.qid, ...ofCountry].map(qid => described.get(qid)).filter(Boolean);
+        if (candidates.length < 2 || candidates[0].qid !== row.qid) return;
+        const meta = cardOf.get(card.storyId);
+        const answer = await ollamaJson(linkPrompt({name: row.name, kind: row.kind, titles: (meta.titles ?? []).slice(0, TITLES),
+            countries: countriesOfSites(meta.sites), topic: meta.topic ?? null,
+            others: card.names.filter(other => other !== row).map(other => other.name), candidates}), usage);
+        const chosen = candidates[Number(answer?.n) - 1];
+        if (!chosen || chosen.qid === row.qid) return;
+        moved.push(`${row.name}: ${candidates[0].label} -> ${chosen.label}`);
+        row.qid = chosen.qid;
+    });
+    console.log(`Briefing: ${asked.length} acronyms linked to a body of another country than their card's sites looked for again, ${moved.length} moved${listOf(moved)}`);
+    return read;
+};
