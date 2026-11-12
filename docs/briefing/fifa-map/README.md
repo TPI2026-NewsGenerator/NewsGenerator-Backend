@@ -106,6 +106,10 @@ latest vote decides for everyone**. The page says first what it does not know: m
    (`fifa_dismissed`); the candidate comes with `origin: "news"` and `found` (status, articles, media, the words) on `subjects`, and is read like any other (the 30 days of news, about
    150 000 tokens). Any reader can mark it `withdrawn`. See the measure in the quality page.
 
+14. **Where it stands.** `node --env-file=.env scripts/fifa-status.js` (read only) tells, for each candidate, whether its news are read (`computing` while the first 30 days are read, then `ready`), its signals (established, uncertain,
+   waiting for the second reading), when its news were last looked at and how many news that name him wait for the next run, the checks of the sources of the readers that wait, the notes, the presidents and the last audit.
+   The server reads the news every `FIFA_WATCH_MINUTES`; a run that finds nothing says nothing in the log.
+
 ## When a rule of the guide changes
 
 The signals already read keep the answer of the old rule, so a rule is applied to its FAMILY, never to one line by hand: `node --env-file=.env scripts/fifa-reread.js --family=praise`
