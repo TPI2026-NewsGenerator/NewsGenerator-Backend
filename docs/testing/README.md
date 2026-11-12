@@ -4,6 +4,8 @@ A briefing is made of many small rules (the language of a title, the check of th
 the cut of a text into sentences...) that each hold on the cases they were written for and break on the next one. The corpus
 is one list of real, hard cases, run at every change, so that a rule fixed for one card is not undone by the next feature.
 
+The figures of how right each detector is (precision and recall of the badges, of the countries, of the links of names...) are in [Quality](../quality/README.md); the corpus below holds the cases, not the rates.
+
 The rule of the project: **a problem reported on a card adds its case to the corpus first (it fails), then the logic is fixed
 (it passes).** The card itself is never the target: it was read and sent already. The case keeps the family of the problem.
 

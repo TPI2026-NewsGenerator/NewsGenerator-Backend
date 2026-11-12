@@ -149,6 +149,8 @@ nav:
       - Names on cards: following/names-on-cards/README.md
   - Testing:
       - The corpus of regression: testing/README.md
+  - Quality:
+      - How right the detectors are: quality/README.md
   - Client: client/README.md
   - Archive:
       - The former README (24.10.2026): archive/readme-features-2026-10-24.md
