@@ -154,13 +154,13 @@ const group = (rows, key) => {
 const voted = (position) => position !== null && position.position !== 'inconnue';
 
 // The sources the readers' choices stand on, the newest first: of each reader the decision that stands (for or against) when it carries a source.
-// [{subject_qid, value, by, at, note, url, medium, check, found, checked_at}]
+// [{kind: 'choice', subject_qid, value, by, at, note, url, medium, check, found, checked_at}]
 export const sourcesOf = (votes) => {
     const list = [];
     for (const [subject, rows] of group(votes, vote => vote.subject_qid)) {
         for (const state of standing(rows)) {
             const vote = state.decision;
-            if (vote?.source_url && ['for', 'against'].includes(vote.value)) list.push({subject_qid: subject, value: vote.value, by: vote.username, at: new Date(vote.created_at).toISOString(), note: vote.note ?? '', ...sourceOf(vote)});
+            if (vote?.source_url && ['for', 'against'].includes(vote.value)) list.push({kind: 'choice', subject_qid: subject, value: vote.value, by: vote.username, at: new Date(vote.created_at).toISOString(), note: vote.note ?? '', ...sourceOf(vote)});
         }
     }
     return list.sort((a, b) => new Date(b.at) - new Date(a.at));
@@ -216,6 +216,7 @@ export const buildSheet = ({member, subjects, signals, votes, leader = null, col
             stance: signal.stance, level: signal.level, mark: signal.mark,
             speaker: {name: signal.speaker ?? '', role: ROLE[signal.speaker_kind] ?? '', binds: ['president', 'executive', 'statement'].includes(signal.speaker_kind)},
             sentence: signal.sentence, translation: null, url: signal.url, medium: signal.medium, published_at: new Date(signal.published_at).toISOString(), lang: signal.lang,
+            added_by: signal.added_by ?? null, source_id: signal.source_id ?? null,
         })),
         history,
     };

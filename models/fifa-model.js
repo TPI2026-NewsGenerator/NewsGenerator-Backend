@@ -70,13 +70,13 @@ export const FifaModel = {
 
     insertSignal: async (signal) => prisma.$executeRawUnsafe(`
         INSERT INTO fifa_signals (subject_qid, member_qid, hash, certainty, uncertain_reason, stance, level, mark, speaker_kind, speaker, matched, sentence, title, description, quote,
-            lang, url, medium, published_at, news_count, media_count, read_by, confirmed)
+            lang, url, medium, published_at, news_count, media_count, read_by, confirmed, source_id)
         VALUES ($1::text, $2::text, $3::text, $4::text, $5::text, $6::text, $7::text, $8::text, $9::text, $10::text, $11::text, $12::text, $13::text, $14::text, $15::text,
-            $16::text, $17::text, $18::text, $19::timestamptz, $20::int, $21::int, $22::text[], $23::boolean)
+            $16::text, $17::text, $18::text, $19::timestamptz, $20::int, $21::int, $22::text[], $23::boolean, $24::int)
         ON CONFLICT (subject_qid, member_qid, hash) DO UPDATE SET news_count = GREATEST(fifa_signals.news_count, EXCLUDED.news_count), media_count = GREATEST(fifa_signals.media_count, EXCLUDED.media_count),
             updated_at = CASE WHEN EXCLUDED.news_count > fifa_signals.news_count OR EXCLUDED.media_count > fifa_signals.media_count THEN now() ELSE fifa_signals.updated_at END`,
         signal.subject_qid, signal.member_qid, signal.hash, signal.certainty, signal.uncertain_reason, signal.stance, signal.level, signal.mark, signal.speaker_kind, signal.speaker, signal.matched,
-        signal.sentence, signal.title, signal.description, signal.quote, signal.lang, signal.url, signal.medium, signal.published_at, signal.news_count, signal.media_count, signal.read_by, signal.confirmed),
+        signal.sentence, signal.title, signal.description, signal.quote, signal.lang, signal.url, signal.medium, signal.published_at, signal.news_count, signal.media_count, signal.read_by, signal.confirmed, signal.source_id ?? null),
 
     // the passages whose second reading failed: read again, a few at a time
     unconfirmed: async (limit) => prisma.$queryRawUnsafe(`
@@ -96,8 +96,11 @@ export const FifaModel = {
         WHERE s.certainty = 'established' AND (s.sentence ~* $1::text OR s.title ~* $1::text OR s.description ~* $1::text) ORDER BY s.id`, pattern),
 
     // every signal the map is made of (the passages left out are in it: they are the count of articles)
-    signals: async () => prisma.$queryRawUnsafe(`SELECT ${SIGNAL} FROM fifa_signals s`),
-    signalsOf: async (memberQid) => prisma.$queryRawUnsafe(`SELECT ${SIGNAL} FROM fifa_signals s WHERE s.member_qid = $1::text`, memberQid),
+    // source_id, added_by: the signal comes from a page a reader added on its own (and who), not from the news
+    signals: async () => prisma.$queryRawUnsafe(`SELECT ${SIGNAL}, s.source_id, u.username AS added_by FROM fifa_signals s
+        LEFT JOIN fifa_sources fs ON fs.id = s.source_id LEFT JOIN users u ON u.id = fs.user_id`),
+    signalsOf: async (memberQid) => prisma.$queryRawUnsafe(`SELECT ${SIGNAL}, s.source_id, u.username AS added_by FROM fifa_signals s
+        LEFT JOIN fifa_sources fs ON fs.id = s.source_id LEFT JOIN users u ON u.id = fs.user_id WHERE s.member_qid = $1::text`, memberQid),
 
     // --- the audit
     // established signals for the audit: the ones of the last days first, then older ones, [{id, ..., recent}]
@@ -142,8 +145,29 @@ export const FifaModel = {
     // a check that waited a day (the AI never answered) is told as unreadable
     expireSources: async () => prisma.$executeRawUnsafe(`
         UPDATE fifa_votes SET source_check = 'unreadable', source_checked_at = now() WHERE source_check = 'pending' AND created_at < now() - interval '1 day'`),
-    sourcesSince: async (userId, hours = 24) => (await prisma.$queryRawUnsafe(
-        `SELECT count(*)::int AS n FROM fifa_votes WHERE user_id = $1::int AND source_url <> '' AND created_at >= now() - make_interval(hours => $2::int)`, userId, hours))[0].n,
+    // the sources a reader added in the last hours, joined to a choice or on their own
+    sourcesSince: async (userId, hours = 24) => (await prisma.$queryRawUnsafe(`
+        SELECT (SELECT count(*) FROM fifa_votes WHERE user_id = $1::int AND source_url <> '' AND created_at >= now() - make_interval(hours => $2::int))::int
+             + (SELECT count(*) FROM fifa_sources WHERE user_id = $1::int AND created_at >= now() - make_interval(hours => $2::int))::int AS n`, userId, hours))[0].n,
+
+    // --- the sources a reader adds on their own, with no candidate. The same page added again by the same reader for the same association changes the word only
+    addSource: async ({userId, memberQid, url, medium, note}) => (await prisma.$queryRawUnsafe(`
+        WITH added AS (
+            INSERT INTO fifa_sources (user_id, member_qid, url, medium, note) VALUES ($1::int, $2::text, $3::text, $4::text, $5::text)
+            ON CONFLICT (user_id, member_qid, url) DO UPDATE SET note = EXCLUDED.note
+            RETURNING id, user_id, member_qid, url, medium, note, state, readings, checked_at, created_at)
+        SELECT a.*, u.username FROM added a JOIN users u ON u.id = a.user_id`, userId, memberQid, url, medium, note))[0],
+    pagesOf: async (memberQid) => prisma.$queryRawUnsafe(`
+        SELECT s.id, s.user_id, u.username, s.url, s.medium, s.note, s.state, s.readings, s.checked_at, s.created_at
+        FROM fifa_sources s JOIN users u ON u.id = s.user_id WHERE s.member_qid = $1::text ORDER BY s.created_at DESC, s.id DESC`, memberQid),
+    sourceById: async (id) => (await prisma.$queryRawUnsafe(`SELECT id, user_id, member_qid, url, state FROM fifa_sources WHERE id = $1::int`, id))[0] ?? null,
+    setPageCheck: async (id, {state, readings = []}) => prisma.$executeRawUnsafe(
+        `UPDATE fifa_sources SET state = $2::text, readings = $3::jsonb, checked_at = now() WHERE id = $1::int`, id, state, JSON.stringify(readings)),
+    pendingPages: async (limit) => prisma.$queryRawUnsafe(`
+        SELECT id FROM fifa_sources WHERE state = 'pending' AND created_at < now() - interval '3 minutes' AND created_at >= now() - interval '1 day' ORDER BY id LIMIT $1::int`, limit),
+    expirePages: async () => prisma.$executeRawUnsafe(`
+        UPDATE fifa_sources SET state = 'unreadable', checked_at = now() WHERE state = 'pending' AND created_at < now() - interval '1 day'`),
+    deletePage: async (id) => prisma.$executeRawUnsafe(`DELETE FROM fifa_sources WHERE id = $1::int`, id),
 
     // --- the presidents
     // What the news of the last 30 days say of each president: [{lid, articles, last_at}] (the articles of the last 30 days only) and [{lid, medium, link, title, at}] for the

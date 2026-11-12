@@ -513,6 +513,7 @@ Added 12.11.2026 by `add_fifa_map.sql`, to the twenty-five above. See [The FIFA 
 | news_count, media_count | integer | NOT NULL, default 1 — the news and the media that wrote this sentence |
 | read_by | text[] | the models that read it |
 | confirmed | boolean | NOT NULL, default true — false when the second reading failed: read again at the next run |
+| source_id | integer | null, FK to `fifa_sources` ON DELETE CASCADE — the signal comes from a page a reader added on its own, not from the news |
 | created_at | timestamptz | NOT NULL, default `now()` |
 | updated_at | timestamptz | NOT NULL, default `now()` — when the signal last changed (second reading, rule read again, more news); `GET /api/v1/fifa/news` goes on from it, see [API v1](../api-v1/README.md) |
 
@@ -546,6 +547,20 @@ Only added. The vote that decides is the latest decision of each reader who has 
 | created_at | timestamptz | NOT NULL, default `now()` |
 
 A word on an association, visible to every signed-in reader; its author or an administrator takes it off.
+
+#### fifa_sources
+| Column | Type | |
+|---|---|---|
+| id | integer | PK |
+| user_id | integer | NOT NULL, FK to `users` ON DELETE CASCADE |
+| member_qid | text | NOT NULL — the association |
+| url, medium | text | NOT NULL — the page, and its medium |
+| note | text | NOT NULL, default '' |
+| state | text | NOT NULL, default 'pending', CHECK in (`pending`, `says`, `unclear`, `unreadable`) — what the AI read in the page |
+| readings | jsonb | NOT NULL, default '[]' — the established readings, one for each candidate: `{subject_qid, stance, level, found}` |
+| checked_at, created_at | timestamptz | |
+
+UNIQUE `(user_id, member_qid, url)`. A page a reader adds on its own, with no candidate: read as a news, the signals it gives are in `fifa_signals` (`source_id`, ON DELETE CASCADE) and count like the others.
 
 #### fifa_dismissed
 | Column | Type | |

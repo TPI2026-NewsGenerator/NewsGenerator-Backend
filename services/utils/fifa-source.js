@@ -108,3 +108,24 @@ export const checkOf = ({readings, expected}) => {
     if (other.length > 0) return {check: 'contradicts', found: String(best(other).passage.sentence).replace(/\s+/g, ' ').slice(0, 400)};
     return {check: 'unclear', found: ''};
 };
+
+// The passages of a page for SEVERAL candidates (a source a reader adds on its own, with no candidate): for each candidate the ones that name the association and him,
+// the ones with a word of support or opposition first, at most MAX_PASSAGES in all (about 4 600 tokens each). [{subject, passage}]
+export const passagesOfPage = ({page, url, member, subjects, index, members, now = new Date()}) => subjects
+    .flatMap(subject => passagesOfSource({page, url, member, subject, index, members, now}).map(passage => ({subject, passage})))
+    .sort((a, b) => Number(b.passage.stanceWords.support || b.passage.stanceWords.oppose) - Number(a.passage.stanceWords.support || a.passage.stanceWords.oppose))
+    .slice(0, MAX_PASSAGES);
+
+// What a page says when no side was expected: the established readings, one for each candidate (the declared one first). entries: [{subject, passage, reading}] ->
+// {check: "says" (at least one), "unclear" (none), readings: [{subject_qid, stance, level, found}]}; null when every reading failed (the check is made again later)
+export const readingsOfPage = (entries) => {
+    if (entries.length > 0 && entries.every(one => one.reading.unreadable)) return null;
+    const established = entries.filter(one => one.reading.status === 'established')
+        .sort((a, b) => Number(b.reading.level === 'declared') - Number(a.reading.level === 'declared'));
+    const readings = [];
+    for (const one of established) {
+        if (readings.some(reading => reading.subject_qid === one.subject.qid)) continue;
+        readings.push({subject_qid: one.subject.qid, stance: one.reading.stance, level: one.reading.level, found: String(one.passage.sentence).replace(/\s+/g, ' ').slice(0, 400)});
+    }
+    return {check: readings.length > 0 ? 'says' : 'unclear', readings};
+};

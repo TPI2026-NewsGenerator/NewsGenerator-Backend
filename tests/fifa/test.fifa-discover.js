@@ -10,7 +10,7 @@ import {setTimeout as sleep} from 'node:timers/promises';
 import {afterEach, beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const model = Object.fromEntries(['subjects', 'dismissed', 'discoveryNews', 'personsOfArticles', 'addSubject', 'deleteSubject', 'news', 'markChecked', 'linkedNames', 'mentionNames',
-    'knownHashes', 'insertSignal', 'unconfirmed', 'expireSources', 'pendingSources'].map(name => [name, jest.fn()]));
+    'knownHashes', 'insertSignal', 'unconfirmed', 'expireSources', 'pendingSources', 'expirePages', 'pendingPages'].map(name => [name, jest.fn()]));
 jest.unstable_mockModule('../../models/fifa-model.js', () => ({FifaModel: model}));
 const ollamaJson = jest.fn();
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson, newUsage: () => ({calls: 0, input: 0, output: 0})}));
@@ -48,6 +48,8 @@ beforeEach(() => {
     model.unconfirmed.mockResolvedValue([]);
     model.expireSources.mockResolvedValue(0);
     model.pendingSources.mockResolvedValue([]);
+    model.expirePages.mockResolvedValue(0);
+    model.pendingPages.mockResolvedValue([]);
     wikidata.describeItems.mockImplementation(async ([qid]) => [{qid, label: qid === TASHIMA.qid ? 'Kozo Tashima' : 'Sepp Blatter', human: true}]);
 });
 

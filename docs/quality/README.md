@@ -345,7 +345,9 @@ First run of the judgment, dry, on the 14 days: 5 persons judged, 2 added by the
 the map) and 3 refused (Blatter, Obi, Macron: both models said no), which is right for the 5, **on 5 persons only: it shows the rule works, it is not a precision**. 7 calls, 4 400 tokens.
 Not measured: other weeks, other languages than those of the 30 days, the status (declared or rumoured) against the truth. The source a reader joins to a choice (a link) is read by the same chain
 as the news and only informs; read on 4 real pages (5 tried, 1 not readable): 1 said it ("CAF supports Infantino"), 3 unclear (the page does not name the association and the candidate in one
-sentence), a count too small to give a rate.
+sentence), a count too small to give a rate. The same page added with no candidate (read for the four candidates of the map): on 5 real pages, 1 gave a reading (CAF: for the president in
+office, declared), 3 gave no passage (the association is not named with a candidate in one sentence, or by its acronym only), 1 was not readable. A page added on its own now gives signals like a news (they count for the position): the chain is the one measured on the news, but **no wrong-colour rate was measured for
+pages a reader pastes**; they are limited to 20 a day for each reader, tied to their author, and taken off with the source.
 
 ## What these figures do not say
 

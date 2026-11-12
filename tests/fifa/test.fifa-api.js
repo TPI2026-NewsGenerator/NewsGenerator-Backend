@@ -16,7 +16,7 @@ import express from 'express';
 // the mentions of the presidents are kept a quarter of an hour: not here, each test asks again
 process.env.FIFA_MENTIONS_CACHE_MS = '0';
 const model = Object.fromEntries(['subjects', 'addSubject', 'markChecked', 'setSubjectStatus', 'deleteSubject', 'news', 'linkedNames', 'mentionNames', 'knownHashes', 'insertSignal',
-    'unconfirmed', 'updateSignal', 'signals', 'signalsOf', 'votes', 'votesOf', 'votesOfPair', 'addVote', 'deleteVote', 'leaders', 'replaceLeaders', 'audits', 'auditSample', 'lastAudit', 'addAudit', 'mentionsOfLeaders', 'addVotes', 'voteById', 'setSourceCheck', 'sourcesSince', 'expireSources', 'pendingSources', 'notesOf', 'addNote', 'noteById', 'deleteNote', 'dismiss', 'dismissed'].map(name => [name, jest.fn()]));
+    'unconfirmed', 'updateSignal', 'signals', 'signalsOf', 'votes', 'votesOf', 'votesOfPair', 'addVote', 'deleteVote', 'leaders', 'replaceLeaders', 'audits', 'auditSample', 'lastAudit', 'addAudit', 'mentionsOfLeaders', 'addVotes', 'voteById', 'setSourceCheck', 'sourcesSince', 'expireSources', 'pendingSources', 'notesOf', 'addNote', 'noteById', 'deleteNote', 'dismiss', 'dismissed', 'addSource', 'sourceById', 'setPageCheck', 'pagesOf', 'pendingPages', 'expirePages', 'deletePage'].map(name => [name, jest.fn()]));
 // the address of a source is checked against the network of the server with a DNS lookup: not here
 const publicUrl = await import('../../services/utils/public-url.js');
 jest.unstable_mockModule('../../services/utils/public-url.js', () => ({...publicUrl, assertPublicUrl: jest.fn(async (value) => new URL(value))}));
@@ -66,7 +66,7 @@ const reader = () => ++nextUser;
 beforeEach(() => {
     for (const fn of Object.values(model)) fn.mockReset();
     model.mentionsOfLeaders.mockResolvedValue({counts: [], latest: []});
-    for (const name of ['subjects', 'signals', 'signalsOf', 'votes', 'votesOf', 'votesOfPair', 'leaders', 'news', 'unconfirmed', 'mentionNames', 'linkedNames', 'notesOf']) model[name].mockResolvedValue([]);
+    for (const name of ['subjects', 'signals', 'signalsOf', 'votes', 'votesOf', 'votesOfPair', 'leaders', 'news', 'unconfirmed', 'mentionNames', 'linkedNames', 'notesOf', 'pagesOf']) model[name].mockResolvedValue([]);
     model.subjects.mockResolvedValue([INFANTINO]);
     model.addVote.mockResolvedValue([{id: 1}]);
     model.addVotes.mockResolvedValue([]);
@@ -341,6 +341,75 @@ describe('the source a reader joins to a choice', () => {
         expect(sheet.sources).toEqual([expect.objectContaining({subject_qid: INFANTINO.qid, value: 'for', by: 'reader7', url: CLEAN, medium: 'example.com', check: 'says', found: 'The JFA will back Infantino.',
             checked_at: '2026-11-12T12:00:00.000Z', note: 'See paragraph 3'})]);
         expect(sheet.votes.find(one => one.by === 'reader7').source).toMatchObject({check: 'says'});
+    });
+});
+
+describe('the source a reader adds on its own, with no candidate', () => {
+    const PAGE = 'https://www.example.com/news/jfa-and-the-race?utm=1#top';
+    const CLEAN = 'https://www.example.com/news/jfa-and-the-race?utm=1';
+    const row = (more = {}) => ({id: 31, user_id: 9, username: 'reader9', member_qid: JAPAN, url: CLEAN, medium: 'example.com', note: '', state: 'pending', readings: [], checked_at: null, created_at: new Date('2026-11-13T09:00:00Z'), ...more});
+
+    it('should keep a page added on its own with no candidate, answer it pending and as the reader\'s own, and start no vote', async () => {
+        model.addSource.mockResolvedValue(row({note: 'Interview of the president'}));
+        const {status, body} = await call('/sources', {method: 'POST', user: 9, body: {member: JAPAN, source: {url: PAGE}, note: ' Interview of the president '}});
+        expect(status).toBe(201);
+        expect(model.addSource).toHaveBeenCalledWith({userId: 9, memberQid: JAPAN, url: CLEAN, medium: 'example.com', note: 'Interview of the president'});
+        expect(body.source).toMatchObject({id: 31, kind: 'page', subject_qid: null, value: null, by: 'reader9', url: CLEAN, medium: 'example.com', check: 'pending', found: '', readings: [], mine: true});
+        expect(model.addVote).not.toHaveBeenCalled();
+        expect(model.addVotes).not.toHaveBeenCalled();
+    });
+
+    it('should accept the address as a plain string, and refuse a missing one, a bad one, an association that does not exist, and a reader who is not signed in', async () => {
+        model.addSource.mockResolvedValue(row());
+        const post = (body, user = reader()) => call('/sources', {method: 'POST', user, body});
+        expect((await post({member: JAPAN, source: PAGE})).status).toBe(201);
+        for (const source of [undefined, '', 'not an address', 'ftp://example.com/a', 'https://name:secret@example.com/a']) {
+            const answer = await post({member: JAPAN, source});
+            expect([source, answer.status]).toEqual([source, 422]);
+        }
+        expect((await post({member: 'Q1', source: PAGE})).status).toBe(422);
+        expect((await call('/sources', {method: 'POST', body: {member: JAPAN, source: PAGE}})).status).toBe(401);
+        expect(model.addSource).toHaveBeenCalledTimes(1);
+    });
+
+    it('should refuse a private address, and stop a reader at their sources of the day, the ones joined to a choice counted too', async () => {
+        const {assertPublicUrl} = await import('../../services/utils/public-url.js');
+        assertPublicUrl.mockRejectedValueOnce(Object.assign(new Error('"intranet" is a private address, it can\'t be used.'), {status: 400}));
+        expect((await call('/sources', {method: 'POST', user: reader(), body: {member: JAPAN, source: 'http://intranet/a'}})).status).toBe(400);
+        model.sourcesSince.mockResolvedValue(20);
+        expect((await call('/sources', {method: 'POST', user: reader(), body: {member: JAPAN, source: PAGE}})).status).toBe(429);
+        expect(model.addSource).not.toHaveBeenCalled();
+    });
+
+    it('should let the author or an administrator take a source added on its own off, and nobody else', async () => {
+        model.sourceById.mockResolvedValue({id: 31, user_id: 9, member_qid: JAPAN, url: CLEAN, state: 'says'});
+        expect((await call('/sources/31', {method: 'DELETE', user: 10})).status).toBe(403);
+        expect(model.deletePage).not.toHaveBeenCalled();
+        expect((await call('/sources/31', {method: 'DELETE', user: 9})).status).toBe(204);
+        expect((await call('/sources/31', {method: 'DELETE', user: 1000})).status).toBe(204);
+        expect(model.deletePage).toHaveBeenCalledTimes(2);
+        model.sourceById.mockResolvedValue(null);
+        expect((await call('/sources/32', {method: 'DELETE', user: 9})).status).toBe(404);
+    });
+
+    it('should tell on the sheet which signals come from a page a reader added, and who added it', async () => {
+        model.signalsOf.mockResolvedValue([{...signal, id: 7, source_id: 31, added_by: 'reader9'}, signal]);
+        const sheet = (await call(`/associations/${JAPAN}`, {user: 9})).body;
+        expect(sheet.signals.find(one => one.id === 7)).toMatchObject({source_id: 31, added_by: 'reader9'});
+        expect(sheet.signals.find(one => one.id === 1)).toMatchObject({source_id: null, added_by: null});
+    });
+
+    it('should list on the sheet the sources added on their own with the ones of the choices, newest first, with the candidate the page speaks of when it does', async () => {
+        const choice = {user_id: 7, username: 'reader7', subject_qid: INFANTINO.qid, member_qid: JAPAN, value: 'for', note: '', seen: '', created_at: new Date('2026-11-12T10:00:00Z'),
+            source_url: 'https://other.example.org/b', source_medium: 'example.org', source_check: 'says', source_found: 'The JFA backs him.', source_checked_at: new Date('2026-11-12T10:01:00Z')};
+        model.votesOf.mockResolvedValue([choice]);
+        model.pagesOf.mockResolvedValue([row({state: 'says', checked_at: new Date('2026-11-13T09:01:00Z'),
+            readings: [{subject_qid: INFANTINO.qid, stance: 'against', level: 'declared', found: 'The JFA will not back Infantino.'}]}), row({id: 30, user_id: 8, username: 'reader8', created_at: new Date('2026-11-11T09:00:00Z'), url: 'https://x.example.net/c', state: 'unclear'})]);
+        const sheet = (await call(`/associations/${JAPAN}`, {user: 9})).body;
+        expect(sheet.sources.map(one => [one.kind, one.url])).toEqual([['page', CLEAN], ['choice', 'https://other.example.org/b'], ['page', 'https://x.example.net/c']]);
+        expect(sheet.sources[0]).toMatchObject({id: 31, subject_qid: INFANTINO.qid, value: 'against', check: 'says', found: 'The JFA will not back Infantino.', checked_at: '2026-11-13T09:01:00.000Z', mine: true,
+            readings: [expect.objectContaining({subject_qid: INFANTINO.qid, stance: 'against', level: 'declared'})]});
+        expect(sheet.sources[2]).toMatchObject({subject_qid: null, value: null, check: 'unclear', mine: false});
     });
 });
 

@@ -118,6 +118,27 @@ CREATE TABLE IF NOT EXISTS public.fifa_dismissed (
     dismissed_at timestamp with time zone NOT NULL DEFAULT now()
 );
 
+-- 13.11.2026, a source a reader adds on its own, with no candidate (a page about an association): the AI reads it for every candidate of the map as it reads the news; the
+-- signals it gives are kept in fifa_signals (source_id) and count like the ones of the news, and go with the source when it is taken off. readings: what the page says, for
+-- the sheet ([{subject_qid, stance, level, found}]). state: pending (not read yet), says (a reading is established), unclear, unreadable
+CREATE TABLE IF NOT EXISTS public.fifa_sources (
+    id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id integer NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    member_qid text NOT NULL,
+    url text NOT NULL,
+    medium text NOT NULL DEFAULT '',
+    note text NOT NULL DEFAULT '',
+    state text NOT NULL DEFAULT 'pending' CHECK (state IN ('pending', 'says', 'unclear', 'unreadable')),
+    readings jsonb NOT NULL DEFAULT '[]'::jsonb,
+    checked_at timestamp with time zone,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    UNIQUE (user_id, member_qid, url)
+);
+CREATE INDEX IF NOT EXISTS i_fifa_sources_member ON public.fifa_sources (member_qid, created_at DESC);
+CREATE INDEX IF NOT EXISTS i_fifa_sources_pending ON public.fifa_sources (id) WHERE state = 'pending';
+ALTER TABLE public.fifa_signals ADD COLUMN IF NOT EXISTS source_id integer REFERENCES public.fifa_sources(id) ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS i_fifa_signals_source ON public.fifa_signals (source_id) WHERE source_id IS NOT NULL;
+
 -- The president of each association as Wikidata has it (P488), read once a day
 CREATE TABLE IF NOT EXISTS public.fifa_leaders (
     member_qid text PRIMARY KEY,

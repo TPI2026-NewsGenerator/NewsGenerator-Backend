@@ -9,7 +9,7 @@
 import {describe, expect, it} from '@jest/globals';
 import {MEMBERS, MEMBER_LIST, memberOfFifa} from '../../services/utils/fifa-members.js';
 import {aliasIndexOf} from '../../services/utils/fifa-passages.js';
-import {checkOf, cleanSourceUrl, newsOfPage, passagesOfSource, sourceOfBody} from '../../services/utils/fifa-source.js';
+import {checkOf, cleanSourceUrl, newsOfPage, passagesOfPage, passagesOfSource, readingsOfPage, sourceOfBody} from '../../services/utils/fifa-source.js';
 
 const jp = memberOfFifa('JPN');
 const den = memberOfFifa('DEN');
@@ -70,6 +70,40 @@ describe('passagesOfSource', () => {
         const found = passages(text);
         expect(found).toHaveLength(6);
         expect(found[0].sentence).toContain('oppose');
+    });
+});
+
+describe('passagesOfPage and readingsOfPage (a page added with no candidate)', () => {
+    const WENGER = {qid: 'Q47576', name: 'Arsene Wenger', terms: ['wenger']};
+    const entries = (text) => passagesOfPage({page: page(text), url: URL_OF_PAGE, member: jp, subjects: [SUBJECT, WENGER], index, members: MEMBERS, now: NOW});
+
+    it('should find the passages for every candidate of the map, each told with the candidate it is about, the ones with a word of support first', () => {
+        const found = entries(`The ${jp.association} met Infantino in Zurich. The ${jp.association} will back Wenger at the congress.`);
+        expect(found.map(one => one.subject.qid)).toEqual([WENGER.qid, SUBJECT.qid]);
+        expect(found.every(one => one.passage.member.qid === jp.qid)).toBe(true);
+        expect(entries('The weather was fine.')).toEqual([]);
+    });
+
+    it('should read at most six passages in all, whatever the number of candidates', () => {
+        const text = Array.from({length: 5}, (_, at) => `The ${jp.association} met Infantino for the ${at + 1}th time. The ${jp.association} met Wenger for the ${at + 1}th time.`).join(' ');
+        expect(entries(text)).toHaveLength(6);
+    });
+
+    const read = (subject, status, stance, level, sentence = 'A sentence.') => ({subject, passage: {sentence}, reading: {status, stance, level}});
+
+    it('should say what the page says: one established reading for each candidate, the declared one first, none when nothing is established', () => {
+        const answer = readingsOfPage([read(SUBJECT, 'established', 'against', 'probable', 'Probable.'), read(WENGER, 'established', 'for', 'declared', 'Declared.'), read(SUBJECT, 'established', 'against', 'declared', 'Also declared.')]);
+        expect(answer).toEqual({check: 'says', readings: [
+            {subject_qid: WENGER.qid, stance: 'for', level: 'declared', found: 'Declared.'},
+            {subject_qid: SUBJECT.qid, stance: 'against', level: 'declared', found: 'Also declared.'},
+        ]});
+        expect(readingsOfPage([read(SUBJECT, 'uncertain', 'for', 'probable')])).toEqual({check: 'unclear', readings: []});
+        expect(readingsOfPage([])).toEqual({check: 'unclear', readings: []});
+    });
+
+    it('should answer nothing when every reading failed, so that the check is made again later', () => {
+        expect(readingsOfPage([{subject: SUBJECT, passage: {sentence: 's'}, reading: {unreadable: true}}])).toBeNull();
+        expect(readingsOfPage([{subject: SUBJECT, passage: {sentence: 's'}, reading: {unreadable: true}}, read(SUBJECT, 'established', 'for', 'declared')])).toMatchObject({check: 'says'});
     });
 });
 

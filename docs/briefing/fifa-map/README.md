@@ -83,6 +83,14 @@ latest vote decides for everyone**. The page says first what it does not know: m
    "wrong"; a page that never names the association with the candidate in one sentence is always unclear), `unreadable` (not an article, too large, fetch failed), `pending` while it waits
    (an AI that does not answer leaves it pending: the watch makes it again for a day, then unreadable; `FIFA_SOURCE_CHECK=off` reads none). **It informs and decides nothing**: the choice of the
    reader is what colours the map. The sheet lists the sources the choices stand on (`sources`, newest first) and each position carries the one of its deciding vote (`human.source`).
+   **A source can also be added on its own, with no candidate** (`POST /api/fifa/sources` `{member, source: {url}, note?}`, `DELETE /api/fifa/sources/:id` for its author or an administrator; table `fifa_sources`;
+   10 in 10 minutes, and the 20 a day are shared with the sources of the choices): the page is read for EVERY candidate of the map (at most six passages in all, the ones with a word of support or opposition first),
+   and the source keeps the established readings, one for each candidate (`readings`: the candidate, for or against, declared or probable, the sentence); `check` is `says` when one is established,
+   `unclear` when none is, `unreadable`, or `pending`. **The page is read as a news**: what it gives (every passage the code attributes to the association, established or uncertain, read by the same two models)
+   is kept in `fifa_signals` (`source_id`) and **counts for the position like the news** (a signal of the sheet says `added_by` the reader and `source_id`); a page with no usable date (none, or in the future)
+   gives uncertain signals only, since the date of a signal says how old a position is; a source taken off takes its signals with it; `FIFA_PAGE_SIGNALS=off` keeps the pages as information only. It comes in the same
+   `sources` of the sheet as `kind: "page"` (the choices' are `kind: "choice"`), with `subject_qid`, `value` and `found` of its first reading and `mine`. Not measured: how often a page a reader pastes
+   gives a wrong colour (the chain is the one measured on the news, the pages are not from our feeds); the readers are limited to 20 sources a day and an administrator takes a source off.
 12. **Notes.** Any signed-in reader adds a note on an association (`POST /api/fifa/notes`, 1 to 500 characters, ten an hour), visible to every reader on its sheet (`notes`, newest
    first, `mine` for the reader who wrote it); its author or an administrator takes it off (`DELETE /api/fifa/notes/:id`). The word a reader writes with a vote stays on the vote.
 13. **Candidates found in the news.** Once a day (`FIFA_DISCOVER=off` looks for none; `node --env-file=.env scripts/fifa-discover.js [--days=14] [--apply]` shows what would be added) the news of

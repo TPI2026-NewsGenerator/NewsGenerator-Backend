@@ -136,6 +136,26 @@ export const FifaController = {
         }
     },
 
+    // {member, source: {url}, note?}: a source added on its own, with no candidate -> 201 {source}
+    addSource: async (req, res) => {
+        try {
+            const {member, source, note} = req.body ?? {};
+            res.status(201).json(await FifaService.addSource({userId: req.user.id, member, source, note}));
+        } catch (error) {
+            fail(res, error);
+        }
+    },
+
+    // the author of a source added on its own or an administrator takes it off
+    removeSource: async (req, res) => {
+        try {
+            await FifaService.removeSource({id: req.params.id, userId: req.user.id, admin: await isAdmin(req.user.id)});
+            res.status(204).end();
+        } catch (error) {
+            fail(res, error);
+        }
+    },
+
     // the last audits of the positions shown (an administrator)
     audits: async (req, res) => {
         try {

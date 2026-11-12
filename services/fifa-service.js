@@ -24,7 +24,7 @@ import {memo} from './utils/memo.js';
 import {mentionKey} from './utils/mentions.js';
 import {describeItems, isQid, searchItems, wikimediaHeaders} from './utils/wikidata.js';
 import {leaderOfPage, pageUrl, sameName} from './utils/fifa-site.js';
-import {checkOf, passagesOfSource, readSourcePage, sourceOfBody} from './utils/fifa-source.js';
+import {checkOf, passagesOfPage, passagesOfSource, readingsOfPage, readSourcePage, sourceOfBody} from './utils/fifa-source.js';
 import {candidateVerdictOf, collectPersons, judgmentOf, MIN_MEDIA, promptOfCandidate} from './utils/fifa-discovery.js';
 import {assertPublicUrl} from './utils/public-url.js';
 import {setTimeout as sleep} from 'node:timers/promises';
@@ -175,8 +175,10 @@ const checkSource = async (id, usage = newUsage()) => {
 // the checks that waited (the AI did not answer, or the server was stopped): made again a few at a time; one that waited a day is told unreadable
 const recheckSources = async (usage) => {
     await FifaModel.expireSources();
+    await FifaModel.expirePages();
     let done = 0;
     for (const row of await FifaModel.pendingSources(SOURCE_RECHECK_PER_RUN)) if (await checkSource(row.id, usage)) done++;
+    for (const row of await FifaModel.pendingPages(SOURCE_RECHECK_PER_RUN)) if (await checkPage(row.id, usage)) done++;
     return done;
 };
 
@@ -195,6 +197,66 @@ const startCheck = (id) => {
     if (!id || process.env.FIFA_SOURCE_CHECK === 'off') return;
     setImmediate(() => { checkSource(id).catch(error => console.error(`FIFA map: a source was not checked (${error.message})`)); });
 };
+// --- the sources a reader adds on their own, with no candidate (a page about an association: the AI says which candidates it speaks of, if it does)
+const checkingPages = new Set();
+
+// The page read as the news are, for every candidate of the map: {state: says | unclear | unreadable} and the established readings (one for each candidate), kept on the
+// source; and what it gave is kept as the signals of the news are (fifa_signals, source_id) and counts for the position like them (FIFA_PAGE_SIGNALS=off: it only informs).
+// A page with no usable date gives uncertain signals only (its date says how old the position is). The AI that does not answer leaves it "pending" (the watch makes it
+// again, for a day)
+const checkPage = async (id, usage = newUsage()) => {
+    if (checkingPages.has(id)) return null;
+    checkingPages.add(id);
+    try {
+        const row = await FifaModel.sourceById(id);
+        if (!row || row.state !== 'pending') return null;
+        const finish = async (state, readings = []) => { await FifaModel.setPageCheck(id, {state, readings}); return state; };
+        const member = MEMBERS.get(row.member_qid);
+        if (!member) return finish('unreadable');
+        let page = null;
+        try {
+            page = await readSourcePage(row.url);
+        } catch (error) {
+            console.warn(`FIFA map: the source ${row.url} was not read (${error.message})`);
+        }
+        if (!page) return finish('unreadable');
+        const entries = passagesOfPage({page, url: row.url, member, subjects: await FifaModel.subjects(), index: aliasIndexOf({members: MEMBER_LIST}), members: MEMBERS});
+        if (entries.length === 0) return finish('unclear');
+        const results = await mapWithConcurrency(entries, 2, ({passage, subject}) => readPassage({passage, subject}, {usage}));
+        const read = entries.map((entry, at) => ({...entry, reading: results[at].status === 'fulfilled' ? results[at].value : {unreadable: true}}));
+        const answer = readingsOfPage(read);
+        if (!answer) return null;
+        if (process.env.FIFA_PAGE_SIGNALS !== 'off') {
+            const dated = Number.isFinite(Date.parse(page.publishedAt)) && new Date(page.publishedAt) <= new Date();
+            for (const {subject, passage, reading} of read) {
+                // a passage the code cannot attribute to the association, or a reading the model could not give, is not kept
+                if (reading.byCode || reading.unreadable) continue;
+                const signal = {...signalRow(subject, passage, reading), source_id: id};
+                if (!dated && signal.certainty === 'established') Object.assign(signal, {certainty: 'uncertain', uncertain_reason: 'other'});
+                await FifaModel.insertSignal(signal);
+            }
+        }
+        cache.clear();
+        return finish(answer.check, answer.readings);
+    } finally {
+        checkingPages.delete(id);
+    }
+};
+
+const startPageCheck = (id) => {
+    if (!id || process.env.FIFA_SOURCE_CHECK === 'off') return;
+    setImmediate(() => { checkPage(id).catch(error => console.error(`FIFA map: a source was not checked (${error.message})`)); });
+};
+
+// a source added on its own as the sheet gives it: {id, kind: "page", subject_qid, value, by, at, note, url, medium, check, found, checked_at, readings, mine}. subject_qid, value and
+// found are the first reading (the candidate the page speaks of, for or against, the sentence), null or empty when the page says nothing clear
+const pageShape = (row, userId) => {
+    const readings = Array.isArray(row.readings) ? row.readings : [];
+    return {id: row.id, kind: 'page', subject_qid: readings[0]?.subject_qid ?? null, value: readings[0]?.stance ?? null, by: row.username, at: new Date(row.created_at).toISOString(), note: row.note ?? '',
+        url: row.url, medium: row.medium ?? '', check: row.state, found: readings[0]?.found ?? '', checked_at: row.checked_at ? new Date(row.checked_at).toISOString() : null, readings,
+        mine: userId !== null && row.user_id === userId};
+};
+
 const noteOf = (note) => String(note ?? '').trim().slice(0, NOTE_MAX);
 const noteShape = (note, userId) => ({id: note.id, by: note.username, at: new Date(note.created_at).toISOString(), text: note.text, mine: userId !== null && note.user_id === userId});
 
@@ -280,11 +342,12 @@ export const FifaService = {
     association: async (qid, userId = null) => {
         const member = MEMBERS.get(qid);
         if (!member) throw fail(404, 'No such association.');
-        const [subjects, signals, votes, leaders, notes] = await Promise.all([FifaModel.subjects(), FifaModel.signalsOf(qid), FifaModel.votesOf(qid), FifaModel.leaders(), FifaModel.notesOf(qid)]);
+        const [subjects, signals, votes, leaders, notes, pages] = await Promise.all([FifaModel.subjects(), FifaModel.signalsOf(qid), FifaModel.votesOf(qid), FifaModel.leaders(), FifaModel.notesOf(qid), FifaModel.pagesOf(qid)]);
         const leader = leaders.find(row => row.member_qid === qid);
-        return {...buildSheet({member, subjects, signals, votes, colour: colourSetting(),
-            leader: leader ? {name: leader.name, role: leader.role, person_qid: leader.person_qid, since: leader.since ? new Date(leader.since).toISOString().slice(0, 10) : null} : null}),
-        notes: notes.map(note => noteShape(note, userId))};
+        const sheet = buildSheet({member, subjects, signals, votes, colour: colourSetting(),
+            leader: leader ? {name: leader.name, role: leader.role, person_qid: leader.person_qid, since: leader.since ? new Date(leader.since).toISOString().slice(0, 10) : null} : null});
+        // the sources of the choices that stand and the ones added on their own, the newest first
+        return {...sheet, sources: [...sheet.sources, ...pages.map(page => pageShape(page, userId))].sort((a, b) => new Date(b.at) - new Date(a.at)), notes: notes.map(note => noteShape(note, userId))};
     },
 
     // --- the notes: a word on an association, visible to every reader. 1 to 500 characters; the author or an administrator takes it off
@@ -302,6 +365,28 @@ export const FifaService = {
         if (note.user_id !== userId && !admin) throw fail(403, 'Only its author or an administrator takes a note off.');
         await FifaModel.deleteNote(note.id);
     },
+
+    // --- a source added on its own, with no candidate: the link of a page about an association (a word of the reader, 280 characters). The AI reads it for every candidate
+    // of the map and says which it speaks of (for or against), if it does; it informs and decides nothing. The same checks as the source of a choice (a public page, 20 a day)
+    addSource: async ({userId, member, source, note = ''}) => {
+        if (!MEMBERS.has(member)) throw fail(422, 'member: no such association.');
+        const given = await sourceFor(userId, source, true);
+        if (!given) throw fail(422, 'source: the address of the page.');
+        const row = await FifaModel.addSource({userId, memberQid: member, url: given.url, medium: given.medium, note: noteOf(note)});
+        if (row.state === 'pending') startPageCheck(row.id);
+        return {source: pageShape(row, userId)};
+    },
+
+    // the reader who added it or an administrator takes it off
+    removeSource: async ({id, userId, admin = false}) => {
+        const row = await FifaModel.sourceById(Number(id));
+        if (!row) throw fail(404, 'No such source.');
+        if (row.user_id !== userId && !admin) throw fail(403, 'Only its author or an administrator takes a source off.');
+        await FifaModel.deletePage(row.id);
+    },
+
+    // the check of a source added on its own, by its id (what the background makes; for the scripts and the tests)
+    checkPage: (id) => checkPage(id),
 
     // The presidents, each with what the news of the last 30 days say of him: the articles that name him and the latest one (medium, link, title). The mentions
     // are a bonus: when the query fails the presidents are still given

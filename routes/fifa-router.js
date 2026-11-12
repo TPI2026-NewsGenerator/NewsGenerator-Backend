@@ -48,6 +48,11 @@ router.post('/notes', authenticateToken,
     rateLimit({windowMs: 3600e3, max: 10, key: req => `fifa note ${req.user.id}`, message: 'Too many notes, try again in an hour.'}),
     FifaController.addNote);
 router.delete('/notes/:id', authenticateToken, FifaController.removeNote);
+// a source added on its own, with no candidate (the AI reads the page): the same budget as a vote (the author or an administrator takes it off)
+router.post('/sources', authenticateToken,
+    rateLimit({windowMs: 10 * 60e3, max: 10, key: req => `fifa source ${req.user.id}`, message: 'Too many sources in a short time, try again in a few minutes.'}),
+    FifaController.addSource);
+router.delete('/sources/:id', authenticateToken, FifaController.removeSource);
 // the weekly audit of the positions shown: how far a third model and the readers agree with them (see fifa-audit.js)
 router.get('/audits', authenticateToken, adminOnly('Only an administrator reads the audits.'), FifaController.audits);
 router.delete('/votes/:id', authenticateToken, adminOnly('Only an administrator takes a vote off.'), FifaController.removeVote);
