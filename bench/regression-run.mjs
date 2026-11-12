@@ -18,6 +18,7 @@ import {oldStories} from '../services/utils/old-news.js';
 import {agreedCountries, chooseWeakCountries, readCountries} from '../services/utils/country-choice.js';
 import {sameFact} from '../services/utils/neutral-titles.js';
 import {readStance} from '../services/utils/stance.js';
+import {relatedLines} from '../services/utils/timeline-relevance.js';
 
 const flags = Object.fromEntries(process.argv.slice(2).filter(arg => arg.startsWith('--')).map(arg => arg.slice(2).split('=')));
 const corpus = JSON.parse(readFileSync(flags.corpus ?? new URL('../tests/regression/corpus.json', import.meta.url), 'utf8'));
@@ -65,6 +66,12 @@ const ASK = {
         const kept = agreedCountries(input.shown, (await readCountries([input], usage)).get(0));
         return {kept, output: kept.join(',') || 'none'};
     },
+    // a card and the earlier stories of its thread, the ones of its own affair kept (timeline-relevance.js): input {title, summary, lines: [{date, title}]}; output: the
+    // places kept, from 0. An AI that fails keeps every line, so the case then fails
+    timelinerelated: async ({input}, usage) => {
+        const kept = (await relatedLines({title: input.title, summary: input.summary}, input.lines, usage)).map(line => input.lines.indexOf(line));
+        return {kept, output: kept.join(',') || 'none'};
+    },
     // a title and its neutral rewrite, the second opinion of the neutral titles by default (the main fact, thinking on): input {title, proposal}; output: "same" or "other"
     titlesame: async ({input}, usage) => {
         const same = (await sameFact([input], usage, {think: true, loose: true, timeoutMs: 120e3})).get(0)?.same === true;
@@ -100,6 +107,8 @@ const CHECKS = {
     oldnews: ({expect: wanted}, {old}) => [{name: wanted.old ? 'told again: old' : 'a new fact: kept', ok: old === wanted.old, detail: old ? 'judged old' : 'judged new'}],
     weakcountry: ({expect: wanted}, {kept}) => [{name: wanted.kept.length > 0 ? `keeps ${wanted.kept.join(', ')}` : 'keeps none', ok: kept.length === wanted.kept.length && wanted.kept.every(code => kept.includes(code)), detail: kept.join(',') || 'none'}],
     countryreading: ({expect: wanted}, {kept}) => [{name: wanted.kept.length > 0 ? `keeps ${wanted.kept.join(', ')}` : 'keeps none', ok: kept.length === wanted.kept.length && wanted.kept.every(code => kept.includes(code)), detail: kept.join(',') || 'none'}],
+    timelinerelated: ({expect: wanted}, {kept}) => [{name: wanted.kept.length > 0 ? `keeps the lines ${wanted.kept.join(', ')}` : 'keeps no line',
+        ok: kept.length === wanted.kept.length && wanted.kept.every(place => kept.includes(place)), detail: kept.join(',') || 'none'}],
     titlesame: ({expect: wanted}, {same}) => [{name: wanted.same ? 'the same main fact' : 'another fact', ok: same === wanted.same, detail: same ? 'judged the same' : 'judged another'}],
     stance: ({expect: wanted}, {reading, decision}) => [{
         name: wanted.position ? `reads ${wanted.position}` : 'reads no position',

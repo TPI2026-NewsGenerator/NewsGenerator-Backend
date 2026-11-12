@@ -22,12 +22,12 @@ git, like the other benches) and says what held before and fails now, and the re
 
 ## What the corpus holds
 
-617 offline cases and 61 live ones (`countryreading`: 13 cards of the countries measure, 7 whose wrong countries the reading must take off, 6 whose right ones it must keep; the arguable "federations that support Infantino" is left out), in families (the first ones taken from the briefings of 6.11.2026; the table lists the oldest families, the
+619 offline cases and 64 live ones (`countryreading`: 13 cards of the countries measure, 7 whose wrong countries the reading must take off, 6 whose right ones it must keep; the arguable "federations that support Infantino" is left out. `timelinerelated`: 3 cards of the story so far, the six lines of Nigeria on a card of Kenya that must all go, and two cards whose lines are all of their affair), in families (the first ones taken from the briefings of 6.11.2026; the table lists the oldest families, the
 others are named in `corpus.json`):
 
 | Family | Asks of | Cases came from |
 |---|---|---|
-| `language` | `titleLanguage`: the language of a title from its letters and its label | angle badges read Norwegian, Galician, Catalan for German, Portuguese, Spanish; Polish read Catalan, Czech Slovenian, Slovak Bosnian; Serbian read Slovenian, Slovenian read Bosnian; the scripts |
+| `language` | `titleLanguage`: the language of a title from its letters and its label | angle badges read Norwegian, Galician, Catalan for German, Portuguese, Spanish; Polish read Catalan, Czech Slovenian, Slovak Bosnian; Serbian read Slovenian, Slovenian read Bosnian; the scripts; a Vietnamese post with no label (capitals or not), read by its accents |
 | `figures` | `keepsFigures`: a translation keeps every figure | Vietnamese dates 5/11, 20/2 to 20/6, times, rounds, thousands, a figure lost or changed, the units of number (Korean 만 억 천, Japanese and Chinese 万, "2 million" and "2 000 000"), "4 mil 200 mdd" (Spanish: 4 200 millions of dollars, read 4 000 200 before 9.11.2026) |
 | `dateline` | `splitSentences`: the dateline of an article leaves its first sentence | "November 6 –", weekday, year, time, place, and what is no dateline (a score, a range, a timeline) |
 | `sentences` | `splitSentences`: where a text is cut | German ordinals ("am 5. November", "21. Spieltag", "90. Minute"), abbreviations, glued sentences |

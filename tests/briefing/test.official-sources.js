@@ -13,7 +13,7 @@ jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat: jest.fn
 jest.unstable_mockModule('../../models/official-model.js', () => ({OfficialModel: {}}));
 jest.unstable_mockModule('../../models/feed-model.js', () => ({FeedModel: {saveResolvedLinks: jest.fn()}}));
 jest.unstable_mockModule('../../models/mention-model.js', () => ({MentionModel: {}}));
-const {MAX_OFFICIAL, candidatesOf, confirmedOf, itemsOfNamed, normalizeParties, partyName, withDenialsNamed, withPartiesNamed, withSiteLinks, withStatements} = await import('../../services/utils/official-sources.js');
+const {MAX_OFFICIAL, candidatesOf, confirmedOf, itemsOfNamed, normalizeParties, partyName, withDenialsNamed, withPartiesNamed, withSiteLinks, withStatements, withTitlesTranslated} = await import('../../services/utils/official-sources.js');
 
 describe('withStatements', () => {
     const post = (party) => ({party, channel: 'site'});
@@ -244,6 +244,47 @@ describe('withSiteLinks', () => {
         const decode = jest.fn();
         await withSiteLinks([{party: 'UEFA', channel: 'site', url: UEFA}], decode);
         expect(decode).not.toHaveBeenCalled();
+    });
+});
+
+// The Vietnamese post of the federation was shown as written to an English reader (a friend of the user, 12.11.2026): no short word of the 9
+// languages is Vietnamese and a title is far under the 200 letters franc wants, so its language was never told
+describe('withTitlesTranslated', () => {
+    const VIETNAMESE = 'LĐBĐVN KIÊN QUYẾT XỬ LÝ CÁC HÀNH VI VI PHẠM LIÊN QUAN ĐẾN BÓNG ĐÁ';
+    const post = (title) => ({party: 'VFF', title, url: 'https://vff.example/a', channel: 'site'});
+    const said = (title, language) => ({party: 'VFF', title, url: 'https://x/a', channel: 'reported', language, translation: null});
+
+    it('should translate the title of a post in Vietnamese, and tell its language', async () => {
+        const titles = jest.fn(async (items) => items.map(() => ({language: 'vi', translation: 'LĐBĐVN is determined to deal with football violations'})));
+        const items = [post(VIETNAMESE)];
+        await withTitlesTranslated(items, 'en', null, jest.fn(), titles);
+        expect(titles).toHaveBeenCalledWith([{title: VIETNAMESE, label: null}], 'en', null);
+        expect(items[0].language).toBe('vi');
+        expect(items[0].translation).toBe('LĐBĐVN is determined to deal with football violations');
+    });
+
+    it('should leave a post with no translation when the AI could not, and a post in the language of the reader as it is', async () => {
+        const items = [post(VIETNAMESE), post('UEFA confirms the draw')];
+        await withTitlesTranslated(items, 'en', null, jest.fn(), async () => { throw new Error('timeout'); });
+        expect(items.map(item => item.translation)).toEqual([null, null]);
+        const plain = [post('UEFA confirms the draw')];
+        await withTitlesTranslated(plain, 'en', null, jest.fn(), async (rows) => rows.map(() => ({language: 'en', translation: null})));
+        expect(plain[0].translation).toBeNull();
+    });
+
+    it('should translate a statement a card reports in another language with the language the AI said, and keep it when it is the reader\'s', async () => {
+        const translate = jest.fn(async (items) => items.map(() => 'We will act firmly'));
+        const items = [said('Chúng tôi sẽ xử lý nghiêm', 'vi'), said('We will act', 'en')];
+        await withTitlesTranslated(items, 'en', null, translate, async () => []);
+        expect(translate).toHaveBeenCalledTimes(1);
+        expect(translate.mock.calls[0][0]).toEqual([{text: 'Chúng tôi sẽ xử lý nghiêm', from: 'Vietnamese'}]);
+        expect(items.map(item => item.translation)).toEqual(['We will act firmly', null]);
+    });
+
+    it('should leave a statement untranslated when its translation failed', async () => {
+        const items = [said('Chúng tôi sẽ xử lý nghiêm', 'vi')];
+        await withTitlesTranslated(items, 'en', null, async () => { throw new Error('timeout'); }, async () => []);
+        expect(items[0].translation).toBeNull();
     });
 });
 

@@ -59,6 +59,14 @@ and the code drops a line whose figure or name those sources do not give.
   of the 70 cards that had a history, were not earlier than their card. Such a story is not history: it tells the same news (then it is among the media
   that tell it) or another fact of the moment (then it is among the other angles: the two lists are not the same thing, the history is what came
   before).
+- **Only the lines of its own affair** (`timeline-relevance.js`, 12.11.2026). A thread gathers the stories that *look alike* (0.75 on average), so
+  the card of the FKF of Kenya asking a FIFA normalisation committee had six lines of the NFF of Nigeria asking one (a friend of the user): a line
+  of another country's own dispute, the other sports of the same Games, or another match of the same league. One AI call a card that has an
+  analysis (about 450 tokens) reads the titles of the newest 24 lines against the card and keeps the ones of the same affair (the same parties:
+  earlier steps, causes, the other candidates of one election); 12 at most are shown, and the same lines go to the analysis (`T1`...). An AI that
+  fails or answers no list leaves the lines as they were. Measured by hand on 166 lines: 96% of the lines kept right, about 11% of the right ones lost
+  (the sagas); a rule by countries and the likeness of the stories were measured and rejected (see [Quality](../../quality/README.md)).
+  `bench/timeline-so-far/` holds the measures, `live-timelinerelated-*` the three live cases.
 - The e-mail carries the analysis of each card sent, the lines the reader kept (see `../email/README.md`).
 
 ## Measured

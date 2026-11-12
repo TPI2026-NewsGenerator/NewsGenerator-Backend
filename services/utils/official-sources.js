@@ -18,7 +18,8 @@ import {Crawlers} from './crawlers.js';
 import {hostOf, mediumOf} from './public-url.js';
 import {statementsOf} from './statements.js';
 import {translateTexts} from './extract.js';
-import {languageOf, writtenIn} from './language.js';
+import {writtenIn} from './language.js';
+import {translatedTitles} from './title-translation.js';
 import {OfficialModel} from '../../models/official-model.js';
 import {FeedModel} from '../../models/feed-model.js';
 import {decodeLinks, isGoogleNewsUrl} from './google-news.js';
@@ -396,6 +397,26 @@ export const withStatements = (posts, statements) => {
     return [...posts, ...statements.filter(statement => !said.has(statement.party.toLowerCase()))].slice(0, MAX_OFFICIAL);
 };
 
+// The title of a post and the statement of a party quoted in another language than the reader's, translated for them. The language of a
+// post is read from the letters of its title (see translatedTitles): the short words know 9 languages only, so the Vietnamese title of
+// the post of a federation ("LĐBĐVN KIÊN QUYẾT XỬ LÝ...") was told no language and shown untranslated (a friend of the user, 12.11.2026).
+// A statement keeps the language the AI said when it read the article. Changes the items, never throws
+export const withTitlesTranslated = async (items, language, usage = null, translate = translateTexts, titles = translatedTitles) => {
+    const posts = items.filter(item => item.channel !== 'reported');
+    const read = await titles(posts.map(post => ({title: post.title, label: null})), language, usage)
+        .catch(() => posts.map(() => ({language: null, translation: null})));
+    posts.forEach((post, i) => {
+        post.language = read[i]?.language ?? null;
+        post.translation = read[i]?.translation ?? null;
+    });
+    const foreign = items.filter(item => item.channel === 'reported' && item.language && item.language !== language
+        && writtenIn(item.language) && writtenIn(language));
+    if (foreign.length === 0) return;
+    const translations = await translate(foreign.map(item => ({text: item.title, from: writtenIn(item.language)})), writtenIn(language), usage)
+        .catch(() => []);
+    foreign.forEach((item, i) => { item.translation = translations[i] ?? null; });
+};
+
 // The posts of a party's site read through Google News get the address of the site, saved for the next
 // briefings: "said it" on a link of news.google.com did not show it came from uefa.com. Of the 18
 // briefings of 12-14.10.2026, 8 of the 9 posts shown were such links (2 distinct ones), both decoded in
@@ -507,17 +528,8 @@ export const officialSourcesOf = async (cards, usage = null, {language = 'en', d
     const shown = cards.map((card, i) => withStatements(judged[i].status === 'fulfilled' ? judged[i].value : [],
         withPartiesNamed(reported[i], cardParties[i], called)));
     // the statements quoted and the titles of the posts in another language than the reader's
-    // translated, as the denials are (the user, 18.10.2026: the posts too). A post's language told by
-    // its title
-    for (const item of shown.flat()) if (item.channel !== 'reported') item.language = languageOf(item.title);
-    const foreign = shown.flat().filter(item => item.language && item.language !== language
-        && writtenIn(item.language) && writtenIn(language));
-    const [translations] = await Promise.all([
-        foreign.length === 0 ? [] : translateTexts(foreign.map(item => ({text: item.title, from: writtenIn(item.language)})),
-            writtenIn(language), usage).catch(() => []),
-        withSiteLinks(shown.flat()),
-    ]);
-    foreign.forEach((item, i) => { item.translation = translations[i] ?? null; });
+    // translated, as the denials are (the user, 18.10.2026: the posts too)
+    await Promise.all([withTitlesTranslated(shown.flat(), language, usage), withSiteLinks(shown.flat())]);
     done('links');
     console.log(`Official sources: ${cards.length} cards, ${qids.length} items, ${readable.length} read, `
         + `${shown.flat().filter(item => item.channel === 'reported').length} statements, seconds ${JSON.stringify(seconds)}`);

@@ -67,6 +67,46 @@ describe('cardAnalyses, the story so far', () => {
         expect(cards[1].timeline).toHaveLength(1);
     });
 
+    // the thread gathers the stories that look alike: a card of the FKF of Kenya had the lines of the NFF of Nigeria (a friend of the user, 12.11.2026)
+    describe('only the earlier news of its own affair', () => {
+        const same = (...places) => ollamaJson.mockImplementation(async (prompt) => /EARLIER STORIES/.test(prompt)
+            ? {same: places}
+            : {translations: [...prompt.matchAll(/^\[\d+\] \([^)]*\) (.*)$/gm)].map(match => `T: ${match[1]}`)});
+
+        it('should keep the lines the AI says are of the affair of the card, and leave the others out', async () => {
+            earlierInThreads.mockResolvedValue([row(11, 'Nigeria normalisation committee', 'en', 3), row(12, 'FKF expels its members', 'en', 2), row(13, 'Nigeria again', 'en', 1)]);
+            same(2);
+            const {cards} = await cardAnalyses([item], new Map([[1, [{title: 'x'}]]]), 'en');
+            expect(cards[1].timeline.map(one => one.title)).toEqual(['FKF expels its members']);
+        });
+
+        it('should show no line when none is of the affair of the card', async () => {
+            earlierInThreads.mockResolvedValue([row(11, 'Nigeria normalisation committee', 'en', 3), row(12, 'Nigeria again', 'en', 1)]);
+            same();
+            const {cards} = await cardAnalyses([item], new Map([[1, [{title: 'x'}]]]), 'en');
+            expect(cards[1].timeline).toEqual([]);
+        });
+
+        it('should keep every line when the AI cannot say', async () => {
+            const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+            earlierInThreads.mockResolvedValue([row(11, 'One', 'en', 3), row(12, 'Two', 'en', 1)]);
+            ollamaJson.mockRejectedValue(new Error('down'));
+            const {cards} = await cardAnalyses([item], new Map([[1, [{title: 'x'}]]]), 'en');
+            expect(cards[1].timeline).toHaveLength(2);
+            error.mockRestore();
+        });
+
+        it('should ask once a card, with the card and its lines in the prompt', async () => {
+            earlierInThreads.mockResolvedValue([row(11, 'One', 'en', 3)]);
+            same(1);
+            await cardAnalyses([item], new Map([[1, [{title: 'x'}]]]), 'en');
+            const asked = ollamaJson.mock.calls.map(call => call[0]).filter(prompt => /EARLIER STORIES/.test(prompt));
+            expect(asked).toHaveLength(1);
+            expect(asked[0]).toContain('CARD: A title');
+            expect(asked[0]).toContain('One');
+        });
+    });
+
     it('should leave the titles as they are when the AI cannot translate them: the card is never kept waiting', async () => {
         earlierInThreads.mockResolvedValue([row(11, CYRILLIC, 'sr', 2)]);
         ollamaJson.mockRejectedValue(new Error('down'));

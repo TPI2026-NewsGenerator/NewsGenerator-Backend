@@ -40,6 +40,7 @@ import {proofreadCards} from "./utils/proofread.js";
 import {foldCards, foldInto, sameNewsGroups} from "./utils/card-merge.js";
 import {reviewNames, withoutNonNames} from "./utils/name-review.js";
 import {failedTitle, translatedTitles} from "./utils/title-translation.js";
+import {relatedLines} from "./utils/timeline-relevance.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
 import {assertPublicUrl, hostOf, mediumOf} from "./utils/public-url.js";
 import {credibleStory, decodeLinks, googleAvailable, isGoogleNewsUrl, isNotNews, isRepeatedPage, pickCandidates} from "./utils/google-news.js";
@@ -1318,19 +1319,30 @@ export const cardAnalyses = async (items, articles, language, {usage = null, onP
     // the earlier stories of each card's affair, its own stories and articles left out, the oldest first
     const earlier = shown.length === 0 ? [] : await StoryModel.earlierInThreads(shown.map(item => item.storyId), now);
     const day = (date) => date.toISOString().slice(0, 10);
-    const timelines = new Map(shown.map(item => {
+    const candidates = new Map(shown.map(item => {
         const own = new Set([item.storyId, ...(item.mergedStoryIds ?? [])]);
         const links = new Set((item.articles ?? []).map(article => article.url));
         // a title once: two stories of one medium can open with the same one
         const titles = new Set();
         // before the card: a story of its affair created after its own (the same day, an hour later) is no history, it tells the same news or
         // another fact of the moment (35 of the 157 lines of "the story so far" of 12 briefings were not earlier than their card, 10.11.2026)
-        const rows = earlier.filter(row => row.card === item.storyId && !own.has(row.id) && row.title && !links.has(row.link)
+        return [item.storyId, earlier.filter(row => row.card === item.storyId && !own.has(row.id) && row.title && !links.has(row.link)
             && (!row.card_at || new Date(row.created_at) < new Date(row.card_at)))
             .filter(row => {
                 const title = row.title.toLowerCase().replace(/\s+/g, ' ').trim();
                 return !titles.has(title) && titles.add(title);
-            });
+            })];
+    }));
+    // only the lines of the card's own affair: the thread gathers the stories that look alike, so a card of the federation of Kenya had the lines of
+    // the one of Nigeria (a friend of the user, 12.11.2026), see timeline-relevance.js. The newest TIMELINE_MAX * 2 are read, an AI that fails
+    // leaves the lines as they are
+    const related = new Map((await mapWithConcurrency(shown, AI_CONCURRENCY, async (item) => {
+        const rows = candidates.get(item.storyId).slice(0, TIMELINE_MAX * 2);
+        return [item.storyId, await relatedLines({title: item.titleTranslation ?? item.title, summary: item.summary},
+            rows.map(row => ({date: day(row.created_at), title: row.title, medium: row.medium, row})), usage)];
+    })).filter(result => result.status === 'fulfilled').map(result => result.value));
+    const timelines = new Map(shown.map(item => {
+        const rows = related.has(item.storyId) ? related.get(item.storyId).map(line => line.row) : candidates.get(item.storyId);
         return [item.storyId, {days: new Set(rows.map(row => day(row.created_at)).filter(date => date < day(now))).size,
             items: rows.slice(0, TIMELINE_MAX).reverse().map(row => ({date: day(row.created_at), title: row.title, medium: row.medium,
                 url: row.link, titleTranslation: null, label: row.lang}))}];
