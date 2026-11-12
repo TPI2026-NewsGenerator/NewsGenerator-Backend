@@ -2,7 +2,7 @@
 //  Author: Fabian Rostello
 //  Date: 12.11.2026
 //  File: sent-repeats.js
-//  Description: A card that tells the news of a card the reader got BY E-MAIL in the last days does not come back, unless it tells something new or the
+//  Description: A card that tells the news of a card the reader got BY E-MAIL, however long ago, does not come back, unless it tells something new or the
 //               reader follows its affair (the user, 12.11.2026: a news sent by e-mail is not shown again the next day or the days after, unless the
 //               story evolved or the reader ticked "Follow this affair"). repeats.js does it before the AI chooses, on the stories chosen only: a story
 //               joined to a card afterwards (a version in the reader's language, a version in another one, see keepSameNews) is never looked at, and
@@ -24,9 +24,18 @@ import {writtenIn} from './language.js';
 import {mapWithConcurrency} from './concurrency.js';
 import {withoutOriginalMarks, UNCHECKED} from './original-marks.js';
 
+// A news sent is acquired for good (the user, 12.11.2026: "du moment que la nouvelle a été envoyée par mail elle est acquise, même 48 h après"). The cards
+// sent are read back as far as the stories they were made of are kept (RETENTION_DAYS = 30): after that a card has no story, no vector to find it by.
+// Beyond the 48 h of repeats.js 21 of 725 cards told again a card sent 2 to 11 days before (judged blind, bench/dup-eval.mjs olderWrite): the look finds 4
+// of them (all within 4 days: later the news is told again with more details, which the strict look calls a development) and hides none of 85 others
+export const SENT_DAYS = 30;
+// What brings a card sent to the look when the reader of the list did not give it: the cosine of the centroids of their stories, the closest card sent of each
+// card of today. At 0.70 it holds 18 of the 21 repeats and gives 7 cards a briefing to look at, at 0.75 13 and 5 (0.85: 9 and 2). The look found 4 of the 21, all of
+// a high likeness, so 0.75: a live briefing with 0.70 and every pair gave 137 pairs, 13 looks and 18 500 tokens for no card left out
+export const SENT_LIKENESS = 0.75;
 const RECEIVED_MAX = 80;            // the cards sent shown to the reader of the list: the newest, one per story
 const CANDIDATES_PER_CARD = 2;      // the cards sent a card is looked at against
-const LOOKS_MAX = 12;               // looks for a briefing
+const LOOKS_MAX = 20;               // looks for a briefing
 const LOOK_CONCURRENCY = 3;
 const TODAY_WORDS = 50;
 const RECEIVED_WORDS = 30;
@@ -56,7 +65,7 @@ export const viewOf = (item) => ({
     media: Number(item.corroboration?.media) || 1,
 });
 
-// The cards sent by e-mail in the last days, one per story (the last time it was sent), the newest RECEIVED_MAX, the oldest first.
+// The cards sent by e-mail in the last SENT_DAYS, one per story (the last time it was sent), the oldest first.
 // rows: see BriefingModel.sentCardsSince: [{storyId, mergedStoryIds, title, text, source, media, shownAt}]
 export const receivedCards = (rows) => {
     const byStory = new Map();
@@ -65,7 +74,7 @@ export const receivedCards = (rows) => {
         if (!(row.storyId > 0) || ids.size === 0) continue;       // a card the reader added (a negative id) is of no story
         byStory.set(row.storyId, {ids, title: norm(row.title), text: plain(row.text), source: row.source ?? '', media: Number(row.media) || 1, shownAt: new Date(row.shownAt)});
     }
-    return [...byStory.values()].sort((a, b) => a.shownAt - b.shownAt).slice(-RECEIVED_MAX);
+    return [...byStory.values()].sort((a, b) => a.shownAt - b.shownAt);
 };
 
 // ---- 1. the candidates
@@ -95,6 +104,20 @@ export const normalizeRepeats = (answer, todayCount, receivedCount) => (Array.is
 
 // The cards of today that share a story (their own or one joined to them) with a card sent: [today, received]
 export const sharedPairs = (today, received) => today.flatMap((card, i) => received.flatMap((old, j) => [...card.ids].some(id => old.ids.has(id)) ? [[i, j]] : []));
+
+// The pairs [today, received, likeness] the centroids of the stories say are close (rows: [{a: a story of a card sent, b: a story of a card of today,
+// likeness}], see StoryModel.likenessBetween), the closest first, each pair once
+export const closePairs = (today, received, rows) => {
+    const best = new Map();
+    const holder = (cards, id) => cards.findIndex(card => card.ids.has(id));
+    for (const row of rows) {
+        const i = holder(today, row.b), j = holder(received, row.a);
+        if (i < 0 || j < 0) continue;
+        const key = `${i}:${j}`;
+        if (!best.has(key) || best.get(key)[2] < row.likeness) best.set(key, [i, j, row.likeness]);
+    }
+    return [...best.values()].sort((x, y) => y[2] - x[2]);
+};
 
 // ---- 2. the look at a pair
 // the wording measured on 12.11.2026 (bench/dup-eval.mjs strict): the first reader's definition of the verdicts, strict on the details. The wording
@@ -126,7 +149,7 @@ const dayOf = (date) => date.toISOString().slice(0, 10);
 // The cards of the briefing that repeat a card sent: [{index, storyId, title, earlier: {title, shownAt}}]. 'followed': the ids of the stories of the
 // affairs the reader follows, a card of one of them is never left out. Never throws: nothing is left out on a failure or a doubt.
 // AI_SENT_REPEATS=off switches it off
-export const repeatedCards = async (items, received, language, {usage = null, label = 'unsaved', log = console, followed = new Set()} = {}) => {
+export const repeatedCards = async (items, received, language, {usage = null, label = 'unsaved', log = console, followed = new Set(), close = []} = {}) => {
     if (items.length === 0 || received.length === 0 || process.env.AI_SENT_REPEATS === 'off') return [];
     const started = Date.now();
     let timer;
@@ -136,14 +159,17 @@ export const repeatedCards = async (items, received, language, {usage = null, la
         const late = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`no answer in ${DEADLINE_MS / 1e3} s`)), DEADLINE_MS); });
         const run = async () => {
             const shared = sharedPairs(today, received);
-            // a reader that fails leaves the free candidates (the stories shared) to the look
-            const listed = await ollamaJson(listPrompt(today, received, language), usage, {timeoutMs: READER_TIMEOUT_MS})
-                .then(answer => normalizeRepeats(answer, today.length, received.length), err => {
-                    log.error(`Briefing ${label}: sent repeats: the reader of the list did not answer (${err.message}), only the stories shared are looked at`);
+            const near = [...new Map(closePairs(today, received, close).reverse().map(([i, j]) => [i, [i, j]])).values()];
+            // the reader of the list is shown the newest cards sent only; a reader that fails leaves the other candidates (the stories shared, the stories close) to the look
+            const shown = received.slice(-RECEIVED_MAX);
+            const offset = received.length - shown.length;
+            const listed = await ollamaJson(listPrompt(today, shown, language), usage, {timeoutMs: READER_TIMEOUT_MS})
+                .then(answer => normalizeRepeats(answer, today.length, shown.length).map(([i, j]) => [i, j + offset]), err => {
+                    log.error(`Briefing ${label}: sent repeats: the reader of the list did not answer (${err.message}), only the stories shared or close are looked at`);
                     return [];
                 });
             const seen = new Set();
-            const pairs = [...shared, ...listed].filter(([i, j]) => !exempt[i] && !seen.has(`${i}:${j}`) && seen.add(`${i}:${j}`));
+            const pairs = [...shared, ...listed, ...near].filter(([i, j]) => !exempt[i] && !seen.has(`${i}:${j}`) && seen.add(`${i}:${j}`));
             const byCard = new Map();
             for (const [i, j] of pairs) byCard.set(i, [...(byCard.get(i) ?? []), j].slice(0, CANDIDATES_PER_CARD));
             const asked = [...byCard].sort((a, b) => a[0] - b[0]).flatMap(([i, list]) => list.map(j => [i, j])).slice(0, LOOKS_MAX);
@@ -153,7 +179,7 @@ export const repeatedCards = async (items, received, language, {usage = null, la
                 if (looks[k].status === 'fulfilled' && looks[k].value === 'SAME' && !repeated.has(i)) repeated.set(i, j);
             });
             const failed = looks.filter(look => look.status === 'rejected' || look.value === null).length;
-            log.log(`Briefing ${label}: sent repeats: ${shared.length} cards share a story with a card sent, ${listed.length} pairs by the reader, ${asked.length} looked at${failed ? ` (${failed} not answered)` : ''}, ${repeated.size} left out, ${Math.round((Date.now() - started) / 1000)} s (tokens ${JSON.stringify(usage)})`);
+            log.log(`Briefing ${label}: sent repeats: ${shared.length} cards share a story with a card sent, ${listed.length} pairs by the reader, ${near.length} close in the vectors, ${asked.length} looked at${failed ? ` (${failed} not answered)` : ''}, ${repeated.size} left out, ${Math.round((Date.now() - started) / 1000)} s (tokens ${JSON.stringify(usage)})`);
             return [...repeated].map(([i, j]) => ({index: i, storyId: items[i].storyId, title: today[i].title, earlier: {title: received[j].title, shownAt: received[j].shownAt}}));
         };
         return await Promise.race([run(), late]);

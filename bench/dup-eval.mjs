@@ -507,12 +507,24 @@ const eventPrompt = (a, b) => {
         '- DIFFERENT: not the same affair, or only the same broad subject.', '',
         'Decide on the event, not on the details. Answer only in JSON: {"verdict": "SAME" or "DEVELOPMENT" or "DIFFERENT", "why": "one short sentence"}'].join(NL);
 };
+// the pairs the look is run on: the judged pairs whose earlier card was sent (within 48 h), or with PAIRS=W the ones older than 48 h (judgeW-key.json)
+const pairsToLook = () => {
+    if (process.env.PAIRS !== 'W') return JSON.parse(readFileSync(`${DIR}/final.json`, 'utf8')).filter(one => one.kind === 'across' && one.earlierSent);
+    const verdicts = new Map();
+    for (let slice = 1; slice <= 10; slice++) {
+        const file = `${DIR}/verdicts-W-${String(slice).padStart(2, '0')}.json`;
+        if (existsSync(file)) for (const [n, value] of Object.entries(JSON.parse(readFileSync(file, 'utf8')))) verdicts.set(Number(n), typeof value === 'string' ? value : value.verdict);
+    }
+    return JSON.parse(readFileSync(`${DIR}/judgeW-key.json`, 'utf8')).map(one => ({...one, kind: 'across', earlierSent: true, verdict: verdicts.get(one.n)}));
+};
+const suffix = () => `${process.env.PAIRS === 'W' ? '-W' : ''}${process.env.LOOK === 'event' ? '-event' : ''}`;
+
 const strict = async (name) => {
     const config = STRICT[name];
     if (!config) throw new Error(`config: ${Object.keys(STRICT).join(', ')}`);
     const {newUsage, ollamaJson} = await import('../services/utils/ollama.js');
     const {mapWithConcurrency} = await import('../services/utils/concurrency.js');
-    const final = JSON.parse(readFileSync(`${DIR}/final.json`, 'utf8')).filter(one => one.kind === 'across' && one.earlierSent);
+    const final = pairsToLook();
     const briefings = new Map(load().map(briefing => [briefing.id, briefing]));
     const usage = newUsage();
     const started = Date.now();
@@ -525,7 +537,7 @@ const strict = async (name) => {
         return {n: one.n, verdict: typeof answer?.verdict === 'string' ? answer.verdict : null, why: answer?.why ?? null};
     });
     const rows = results.map(result => result.status === 'fulfilled' ? result.value : {verdict: null});
-    writeFileSync(`${DIR}/strict-${name}${process.env.LOOK === 'event' ? '-event' : ''}.json`, JSON.stringify({name, usage, seconds: Math.round((Date.now() - started) / 1000), rows}));
+    writeFileSync(`${DIR}/strict-${name}${suffix()}.json`, JSON.stringify({name, usage, seconds: Math.round((Date.now() - started) / 1000), rows}));
     console.log(`${name}: ${rows.length} pairs, ${Math.round((Date.now() - started) / 1000)} s, tokens ${JSON.stringify(usage)}`);
 };
 
@@ -536,7 +548,7 @@ const strictScore = () => {
     console.log(`${final.length} pairs where the earlier card was sent: ${JSON.stringify(final.reduce((acc, one) => { acc[one.verdict] = (acc[one.verdict] ?? 0) + 1; return acc; }, {}))}; sharing a story: ${final.filter(sharedStory).length} (SAME ${final.filter(one => sharedStory(one) && one.verdict === 'SAME').length} of ${final.filter(one => one.verdict === 'SAME').length} SAME)`);
     const saved = {};
     for (const name of Object.keys(STRICT)) {
-        const file = `${DIR}/strict-${name}${process.env.LOOK === 'event' ? '-event' : ''}.json`;
+        const file = `${DIR}/strict-${name}${suffix()}.json`;
         if (!existsSync(file)) continue;
         saved[name] = new Map(JSON.parse(readFileSync(file, 'utf8')).rows.map((row, i) => [final[i].n, row.verdict]));
         const table = {};
@@ -552,8 +564,73 @@ const strictScore = () => {
     }
 };
 
+// ---- the window (the user, 12.11.2026: "du moment que la nouvelle a été envoyée par mail elle est acquise, même après 48 h"): the cards of a briefing against the cards SENT
+// more than 48 h before (up to the oldest briefing saved), by the vectors of the cards. Writes judgeW-*.md and judgeW-key.json for the judges
+const OLD_LOW = Number(process.env.LOW ?? 0.75);
+const older = () => {
+    const briefings = load();
+    const vec = JSON.parse(readFileSync(`${DIR}/vectors.json`, 'utf8'));
+    const vecOf = (card) => vec[forVector(card)];
+    const byProfile = new Map();
+    for (const briefing of briefings) { if (!byProfile.has(briefing.profile)) byProfile.set(briefing.profile, []); byProfile.get(briefing.profile).push(briefing); }
+    const pairs = [];
+    let cards = 0, withOlder = 0;
+    for (const [profile, list] of byProfile) for (const briefing of list) {
+        const t = Date.parse(briefing.at);
+        // the cards sent before this briefing was made and more than 48 h before it
+        const sent = list.flatMap(other => other.cards.map(card => ({other, card}))).filter(({card}) => card.sentAt && Date.parse(card.sentAt) < t - 48 * 3600e3);
+        cards += briefing.cards.length;
+        if (sent.length > 0) withOlder += briefing.cards.length;
+        for (const card of briefing.cards) {
+            let best = null;
+            for (const {other, card: old} of sent) {
+                if (old.storyId === card.storyId && other.id === briefing.id) continue;
+                const cos = cosine(vecOf(card), vecOf(old));
+                const s = shared(card, old);
+                const score = cos + (s.story || s.url ? 1 : 0);
+                if (!best || score > best.score) best = {score, cos, other, old, exact: s.story || s.url};
+            }
+            if (best && (best.cos >= OLD_LOW || best.exact)) pairs.push({profile, briefing: briefing.id, b: card, a: best.old, aBriefing: best.other.id, cos: best.cos, exact: best.exact,
+                ageH: Math.round((t - Date.parse(best.old.sentAt)) / 3600e3)});
+        }
+    }
+    return {pairs, cards, withOlder};
+};
+
+const olderWrite = () => {
+    const {pairs, cards, withOlder} = older();
+    const NL = String.fromCharCode(10);
+    const view = (card) => `${card.title} (${card.source}${card.publishedAt ? `, published ${card.publishedAt.slice(0, 16).replace('T', ' ')}` : ''}, ${card.media} media)${NL}${words(card.text).slice(0, 110).join(' ')}`;
+    const key = pairs.map((pair, i) => ({n: i + 1, profile: pair.profile, briefing: pair.briefing, b: pair.b.n, aBriefing: pair.aBriefing, a: pair.a.n, cos: Math.round(pair.cos * 1000) / 1000, exact: pair.exact, ageH: pair.ageH, bTitle: pair.b.title, aTitle: pair.a.title}));
+    const parts = pairs.map((pair, i) => [`## Pair ${i + 1}`, '', `**Card A** (read in an earlier briefing) — ${view(pair.a)}`, '', `**Card B** (shown later) — ${view(pair.b)}`, ''].join(NL));
+    writeFileSync(`${DIR}/judgeW-key.json`, JSON.stringify(key));
+    for (let i = 0; i < parts.length; i += 40) writeFileSync(`${DIR}/judgeW-${String(i / 40 + 1).padStart(2, '0')}.md`, parts.slice(i, i + 40).join(NL));
+    const byAge = {};
+    for (const pair of pairs) { const k = pair.ageH < 96 ? '48-96 h' : pair.ageH < 168 ? '4-7 days' : '7 days and more'; byAge[k] = (byAge[k] ?? 0) + 1; }
+    console.log(`${cards} cards, ${withOlder} of briefings with a card sent more than 48 h before; ${pairs.length} pairs (cos >= ${OLD_LOW} or a story/article shared) ${JSON.stringify(byAge)}; ${pairs.filter(pair => pair.exact).length} sharing a story or an article`);
+};
+
+const olderScore = () => {
+    const key = JSON.parse(readFileSync(`${DIR}/judgeW-key.json`, 'utf8'));
+    const verdicts = new Map();
+    for (let slice = 1; slice <= 10; slice++) {
+        const file = `${DIR}/verdicts-W-${String(slice).padStart(2, '0')}.json`;
+        if (existsSync(file)) for (const [n, value] of Object.entries(JSON.parse(readFileSync(file, 'utf8')))) verdicts.set(Number(n), typeof value === 'string' ? value : value.verdict);
+    }
+    const table = {};
+    for (const one of key) {
+        const band = one.ageH < 96 ? '48-96 h' : one.ageH < 168 ? '4-7 days' : '7 days and more';
+        const k = `${band} ${verdicts.get(one.n) ?? 'NOT JUDGED'}`;
+        table[k] = (table[k] ?? 0) + 1;
+    }
+    console.log(JSON.stringify(table, null, 1));
+    for (const one of key.filter(pair => verdicts.get(pair.n) === 'SAME')) console.log(`  SAME ${one.ageH} h cos ${one.cos}${one.exact ? ' exact' : ''} p${one.profile} b${one.briefing}#${one.b} "${one.bTitle.slice(0, 60)}" <- b${one.aBriefing}#${one.a} "${one.aTitle.slice(0, 60)}"`);
+};
+
 const [command, argument] = process.argv.slice(2);
-if (command === 'strict') await strict(argument);
+if (command === 'olderWrite') olderWrite();
+else if (command === 'olderScore') olderScore();
+else if (command === 'strict') await strict(argument);
 else if (command === 'strictScore') strictScore();
 else if (command === 'crossScore') crossScore();
 else if (command === 'cross') await cross();

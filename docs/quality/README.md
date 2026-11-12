@@ -216,6 +216,8 @@ the affair. On the 98 judged pairs whose earlier card was sent (29 SAME, 56 DEVE
 | The two readers, then the pair look of gemma | 8 (28%) | 0 of 8 | 12.11.2026 |
 | **Built** (`sent-repeats.js`): a story shared with a card sent, or paired by one reader of the list, then the look of gemma4:31b with reasoning | 11 (38%), none hidden of 56 developments; with deepseek 14 and 1 | 0 | 12.11.2026 |
 | The look judging "a NEW EVENT" (details do not count), gemma with reasoning | 28 of 29 | 23 of 56 developments called the same news: dropped | 12.11.2026 |
+| **Sent more than 48 h before** (up to 11 days): 106 pairs by the vectors of the cards, one judge | 21 the same news (15 at 48-96 h, 5 at 4-7 days, 1 later); the look of gemma with reasoning finds 4 | 0 of 85 | 12.11.2026 |
+| Candidates for those old cards: the centroid of their stories against the cards of today (from 0.70 / 0.75 / 0.85) | 18 / 13 / 9 of the 21 | 7.2 / 5.0 / 2.2 cards a briefing to look at | 12.11.2026 |
 
 The look pair by pair is stricter than the two judges (they called SAME some pairs where a card adds a detail): it is the safe side for a rule that must not hide an evolution.
 

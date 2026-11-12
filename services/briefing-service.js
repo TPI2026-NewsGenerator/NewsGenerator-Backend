@@ -38,7 +38,7 @@ import {VERSION_DAYS, areVersions, forThePage, idsOf, restoredCard, sameCard, sw
 import {logBriefingChecks} from "./utils/briefing-checks.js";
 import {proofreadCards} from "./utils/proofread.js";
 import {foldCards, foldInto, sameNewsGroups} from "./utils/card-merge.js";
-import {receivedCards, repeatedCards, withoutSentRepeats} from "./utils/sent-repeats.js";
+import {SENT_DAYS, SENT_LIKENESS, receivedCards, repeatedCards, withoutSentRepeats} from "./utils/sent-repeats.js";
 import {AffairModel} from "../models/affair-model.js";
 import {reviewNames, withoutNonNames} from "./utils/name-review.js";
 import {failedTitle, translatedTitles} from "./utils/title-translation.js";
@@ -940,14 +940,21 @@ export const completeCards = async ({main, spare = []}, {briefingId = null, labe
         readOf: (article) => content.get(article.link)})};
 };
 
-// The cards of the briefing that tell the news of a card the profile sent by e-mail in the last REPEAT_HOURS (see sent-repeats.js), the stories of the
+// The cards of the briefing that tell the news of a card the profile sent by e-mail in the last SENT_DAYS (see sent-repeats.js), the stories of the
 // affairs the reader follows excepted. Nothing is left out on a doubt: a failing query or reader gives none
 const sentRepeatsOf = async (items, {profileId, userId, language, usage, label}) => {
     try {
-        const received = receivedCards(await BriefingModel.sentCardsSince(profileId, new Date(Date.now() - REPEAT_HOURS * 3600e3)));
+        const received = receivedCards(await BriefingModel.sentCardsSince(profileId, new Date(Date.now() - SENT_DAYS * 24 * 3600e3)));
         if (received.length === 0) return [];
         const followed = new Set((await AffairModel.followedStories(userId)).flatMap(affair => [affair.anchor_story, ...(affair.story_ids ?? [])]).filter(id => id > 0));
-        return await repeatedCards(items, received, language, {usage, label, followed});
+        // the stories close to the cards sent in the vectors, whatever their age: the candidates the reader of the list (the newest cards) cannot give
+        const sentIds = [...new Set(received.flatMap(card => [...card.ids]))];
+        const todayIds = [...new Set(items.flatMap(item => [item.storyId, ...(item.mergedStoryIds ?? [])]).filter(id => id > 0))];
+        const close = process.env.AI_SENT_REPEATS_CLOSE === 'off' ? [] : await StoryModel.likenessBetween(sentIds, todayIds, SENT_LIKENESS).catch(err => {
+            console.error(`Briefing ${label}: sent repeats: the stories close to the cards sent were not looked for (${err.message})`);
+            return [];
+        });
+        return await repeatedCards(items, received, language, {usage, label, followed, close});
     } catch (err) {
         console.error(`Briefing ${label}: sent repeats: not looked for (${err.message})`);
         return [];

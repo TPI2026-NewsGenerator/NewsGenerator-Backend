@@ -12,7 +12,7 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const ollamaJson = jest.fn();
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson, newUsage: () => ({calls: 0, input: 0, output: 0})}));
-const {listPrompt, lookPrompt, normalizeLook, normalizeRepeats, receivedCards, repeatedCards, sharedPairs, viewOf, withoutSentRepeats} = await import('../../services/utils/sent-repeats.js');
+const {closePairs, listPrompt, lookPrompt, normalizeLook, normalizeRepeats, receivedCards, repeatedCards, sharedPairs, viewOf, withoutSentRepeats} = await import('../../services/utils/sent-repeats.js');
 const {ORIGINAL_START, ORIGINAL_END} = await import('../../services/utils/original-marks.js');
 
 const item = (storyId, title, changes = {}) => ({
@@ -43,11 +43,12 @@ describe('receivedCards', () => {
         expect([...cards[0].ids].sort()).toEqual([7, 8, 9]);
     });
 
-    it('should keep the newest 80', () => {
-        const rows = Array.from({length: 90}, (_, i) => row(i + 1, `Card ${i + 1}`, new Date(Date.UTC(2026, 10, 10, 0, i)).toISOString()));
-        const cards = receivedCards(rows);
-        expect(cards).toHaveLength(80);
-        expect(cards[0].title).toBe('Card 11');
+    it('should keep every card sent, however old, the oldest first', () => {
+        const rows = Array.from({length: 90}, (_, i) => row(i + 1, `Card ${i + 1}`, new Date(Date.UTC(2026, 9, 20, 0, i)).toISOString()));
+        const cards = receivedCards(rows.reverse());
+        expect(cards).toHaveLength(90);
+        expect(cards[0].title).toBe('Card 1');
+        expect(cards.at(-1).title).toBe('Card 90');
     });
 });
 
@@ -80,6 +81,15 @@ describe('normalizeRepeats', () => {
     });
 });
 
+describe('closePairs', () => {
+    it('should pair the card of today holding a story with the card sent holding the other, the closest first, once', () => {
+        const today = [viewOf(item(1, 'A')), viewOf(item(2, 'B', {mergedStoryIds: [60]}))];
+        const received = receivedCards([row(50, 'Sent one'), row(51, 'Sent two', undefined, {mergedStoryIds: [70]})]);
+        const rows = [{a: 50, b: 2, likeness: 0.74}, {a: 50, b: 60, likeness: 0.81}, {a: 70, b: 1, likeness: 0.72}, {a: 999, b: 1, likeness: 0.9}, {a: 51, b: 888, likeness: 0.9}];
+        expect(closePairs(today, received, rows)).toEqual([[1, 0, 0.81], [0, 1, 0.72]]);
+    });
+});
+
 describe('sharedPairs and normalizeLook', () => {
     it('should pair the cards sharing a story, their own or one joined to them', () => {
         const today = [viewOf(item(1, 'A')), viewOf(item(2, 'B', {mergedStoryIds: [50]})), viewOf(item(3, 'C'))];
@@ -103,7 +113,7 @@ describe('repeatedCards', () => {
         const log = quiet();
         const left = await repeatedCards(items, received, 'en', {label: 9, log});
         expect(left).toEqual([{index: 0, storyId: 1, title: 'Wenger considers a bid', earlier: {title: 'Wenger weighs a run', shownAt: new Date('2026-11-11T08:00:00Z')}}]);
-        expect(log.log.mock.calls[0][0]).toMatch(/Briefing 9: sent repeats: 0 cards share a story with a card sent, 1 pairs by the reader, 1 looked at, 1 left out/);
+        expect(log.log.mock.calls[0][0]).toMatch(/Briefing 9: sent repeats: 0 cards share a story with a card sent, 1 pairs by the reader, 0 close in the vectors, 1 looked at, 1 left out/);
     });
 
     it('should keep a card the look calls a development, the evolution the reader came for', async () => {
@@ -151,6 +161,26 @@ describe('repeatedCards', () => {
         expect(log.error.mock.calls[0][0]).toMatch(/Briefing 4: sent repeats: the reader of the list did not answer \(429 too many requests\)/);
     });
 
+    it('should look at a card the stories say is close to a card sent, even when the reader of the list gives nothing', async () => {
+        ai({repeats: []});
+        const left = await repeatedCards(items, received, 'en', {log: quiet(), close: [{a: 21, b: 3, likeness: 0.78}]});
+        expect(left.map(one => [one.storyId, one.earlier.title])).toEqual([[3, 'Tashima is a candidate']]);
+    });
+
+    it('should show the reader of the list the newest 80 cards sent only, and keep the others for the look', async () => {
+        const many = receivedCards(Array.from({length: 90}, (_, i) => row(i + 1, `Card ${i + 1}`, new Date(Date.UTC(2026, 9, 20, 0, i)).toISOString())));
+        ai({repeats: [{today: 1, received: 1}]});
+        const left = await repeatedCards([item(500, 'Today')], many, 'en', {log: quiet(), close: [{a: 2, b: 500, likeness: 0.7}]});
+        const prompt = ollamaJson.mock.calls[0][0];
+        expect(prompt).toContain('[R80] Card 90');
+        expect(prompt).not.toContain('[R81]');
+        expect(prompt).toContain('[R1] Card 11');
+        expect(prompt).not.toContain('] Card 10 ');
+        // the reader's first card is the 11th sent: the pair it gives is [today, 11th]; the pair of the vectors is [today, 2nd], asked after it
+        expect(left[0].earlier.title).toBe('Card 11');
+        expect(ollamaJson.mock.calls.filter(call => call[0].startsWith('A reader received Card A'))[0][0]).toContain('Card A: Card 11 ');
+    });
+
     it('should keep every card when a look is not answered, or says anything but the same news', async () => {
         ai({repeats: [{today: 1, received: 1}, {today: 3, received: 2}], look: new Error('timeout')});
         expect(await repeatedCards(items, received, 'en', {log: quiet()})).toEqual([]);
@@ -177,11 +207,11 @@ describe('repeatedCards', () => {
         expect(ollamaJson).not.toHaveBeenCalled();
     });
 
-    it('should look at no more than twelve pairs', async () => {
+    it('should look at no more than twenty pairs', async () => {
         const many = Array.from({length: 20}, (_, i) => item(100 + i, `Card ${i}`, {mergedStoryIds: [20]}));
         ai({repeats: []});
         await repeatedCards(many, received, 'en', {log: quiet()});
-        expect(ollamaJson.mock.calls.filter(call => call[0].startsWith('A reader received Card A'))).toHaveLength(12);
+        expect(ollamaJson.mock.calls.filter(call => call[0].startsWith('A reader received Card A'))).toHaveLength(20);
     });
 
     it('should count the tokens of every call in the usage it is given', async () => {

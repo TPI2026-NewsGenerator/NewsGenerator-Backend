@@ -373,18 +373,20 @@ the same day and put aside by the user, to come back to later.
 
 ## A news sent by e-mail does not come back
 
-The rule of the user (12.11.2026): a news the reader got **by e-mail** is not shown again the next day or the days after, **unless it evolved or the
-reader follows its affair**. Only the cards sent count as read (the user kept the rule of 14.10.2026: "not sent = not read"; 59% of the news told again
+The rule of the user (12.11.2026): a news the reader got **by e-mail** is not shown again the next day or the days after, **for good** ("once sent it is
+acquired, even after 48 h"), **unless it evolved or the reader follows its affair**. Only the cards sent count as read (the user kept the rule of 14.10.2026: "not sent = not read"; 59% of the news told again
 across briefings were cards never sent, which stay as they are). `repeats.js` already leaves out the stories sent before the AI chooses, but it reads the
 chosen stories only: a story joined to a card afterwards by `keepSameNews` (a version in the reader's language or in another one) was never looked at, and its
 question "did it evolve?" answers yes for 42 of 48 cards, because a living affair always has news since (`bench/dup-eval.mjs evolve`, 12.11.2026).
 
 `services/utils/sent-repeats.js` reads the cards once they are written (`sentRepeatsOf` of `briefing-service.js`, with the fold of the cards of one news and
 while the words are translated and proofread):
-1. **Candidates.** The cards of the profile sent by e-mail in the last 48 h (`BriefingModel.sentCardsSince`, one per story, the newest 80). A card of today
-   that shares a story (its own or one joined to it) with one of them is a candidate, at no cost. A reader of the whole list (the model of the briefing,
-   about 4 000 tokens in) pairs the cards of today with the cards sent that tell the same news: more candidates.
-2. **The look.** Each pair (12 at most) is read with the first three paragraphs of both cards: "same news, development or different?", with the definitions of
+1. **Candidates.** The cards of the profile sent by e-mail in the last 30 days (`SENT_DAYS`, the retention of the news: later the story and its vector are
+   gone), one per story (`BriefingModel.sentCardsSince`). A card of today that shares a story (its own or one joined to it) with one of them is a candidate, at
+   no cost. A reader of the whole list (the model of the briefing, the newest 80 cards sent, about 4 000 tokens in) pairs the cards of today with the cards
+   sent that tell the same news. And the closest card sent of each card of today by the centroids of their stories, from 0.75 (`StoryModel.likenessBetween`,
+   two lists of ids, no search of the month: the 9 s a card of a scan of 14 days of stories are not paid), whatever its age; `AI_SENT_REPEATS_CLOSE=off` for none.
+2. **The look.** Each pair (2 a card, 20 at most) is read with the first three paragraphs of both cards: "same news, development or different?", with the definitions of
    the judges of the bench and "be strict: a figure, a statement, a new step that the other card lacks is a development". gemma4:31b with reasoning
    (`OLLAMA_REPEAT_MODEL` for another). Only a **same** verdict leaves the card out.
 3. **The affairs followed.** A card whose story (or a story joined to it) is one of the affairs the reader follows (`AffairModel.followedStories`) is never
@@ -393,7 +395,7 @@ while the words are translated and proofread):
 Nothing is left out on a doubt: a reader that fails (the stories shared are still looked at), a look that is not answered or not "same", a failing query, an
 answer that cannot be read, more than 150 s, no card sent, all keep the cards. `AI_SENT_REPEATS=off` switches it off. A card left out is not replaced: the
 briefing is one card shorter. The log says each (`Briefing 512: sent repeats: "…" is left out, it tells the news of "…" sent on 2026-11-11`) and counts
-(`3 cards share a story with a card sent, 3 pairs by the reader, 3 looked at, 0 left out`).
+(`4 cards share a story with a card sent, 2 pairs by the reader, 10 close in the vectors, 8 looked at, 0 left out`).
 
 **Measured** on the 98 pairs of 47 saved briefings whose earlier card had been sent (29 the same news, 56 developments, 13 different; two blind judges),
 `bench/dup-eval.mjs strict`, 12.11.2026:
@@ -411,6 +413,15 @@ model draws well (loosened, the look takes out 40% of the developments), and the
 development hidden in 56 does not show the error is under about 5%. Live on the profile of Enzo, a briefing not saved: 3 cards sharing a story with a card
 sent, 3 looked at, 3 developments (a Blatter interview with other statements, the IRS complaint with more details, a supervisor of the Serbian federation whose
 assembly is cancelled), 4 calls, 5 700 tokens read and 1 300 written (about 2% of the 390 000 of a briefing); nothing is asked of a profile that sent no card.
+
+**Beyond 48 hours** (the first version looked back 48 h only, as `repeats.js` does; the user, 12.11.2026: a news sent is acquired for good). 106 pairs of a card of a
+briefing with a card sent more than 48 h before it (the cosine of the vectors of the cards 0.75 or more, or a story shared), 17 days of briefings of 3 profiles, judged
+by one judge: **21 the same news** (15 at 48 to 96 h, 5 at 4 to 7 days, 1 later), 85 developments or different. The look of gemma4:31b with reasoning finds **4** of the 21,
+all within 4 days, and hides none of the 85: later, the same news comes back with more details, which the strict look calls a development. Live on the profile of
+Enzo (44 cards sent in the 2 days, 300 and more in the 30), with every pair of the centroids from 0.70: 137 pairs, 13 looks, 18 500 tokens, nothing left out; with the
+closest card of each card from 0.75: 10 pairs, 8 looks, 9 calls, 11 300 tokens read and 2 900 written (about 3.6% of a briefing), nothing left out. So the longer window
+costs about 3% of the tokens of a briefing for about one card in ten briefings; `AI_SENT_REPEATS_CLOSE=off` keeps the 48 hours' worth of candidates only (the stories
+shared and the reader of the list).
 
 ## News told before the window
 
