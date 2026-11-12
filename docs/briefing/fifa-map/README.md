@@ -13,6 +13,7 @@ latest vote decides for everyone**. The page says first what it does not know: m
   `GET /api/fifa/people?q=` (the persons of Wikidata a reader picks a candidate from), `POST /api/fifa/subjects` (a reader adds a candidate),
   `PATCH /api/fifa/subjects/:qid` (its status), `POST /api/fifa/votes`; an administrator can `DELETE /api/fifa/subjects/:qid` and
   `DELETE /api/fifa/votes/:id`. The session of the reader (cookie), not the key of `/api/v1`.
+  The passages selected are also given to another system, which judges them again, by `GET /api/v1/fifa/news` (key of a client, see [API v1](../../api-v1/README.md)).
 - Server: `services/fifa-service.js` (the reading in the background, what the page asks), `models/fifa-model.js`, `controllers/fifa-controller.js`,
   `routes/fifa-router.js`; the pure parts in `services/utils/`: `fifa-members.json` (made by `scripts/build-fifa-members.js`), `fifa-passages.js`
   (which sentences are read), `fifa-attribution.js` (which association a passage is about), `fifa-reading.js` + `fifa-guide.md` + `fifa-labels.js`

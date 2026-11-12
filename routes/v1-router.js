@@ -8,6 +8,8 @@
 
 import process from 'node:process';
 import express from 'express'
+import {BriefingExportController} from '../controllers/briefing-export-controller.js';
+import {FifaExportController} from '../controllers/fifa-export-controller.js';
 import {NewsExportController} from '../controllers/news-export-controller.js';
 import {PositionsController} from '../controllers/positions-controller.js';
 import {apiError, apiKey} from "../services/utils/api-key.js";
@@ -31,6 +33,11 @@ router.use(rateLimit({
 
 // the news that name a person and/or an association, which the other party reads its own way (the first thing it is given)
 router.get('/news', NewsExportController.list);
+
+// The news WE select, for the other party to judge again (slower and more surely than we do) and send its verdict back: the passages the map of the
+// FIFA presidency selected (one item a passage, with how we read it), and the cards the briefings of all the readers chose (one item a story, no reader named)
+router.get('/fifa/news', FifaExportController.list);
+router.get('/briefing/news', BriefingExportController.list);
 
 // The positions computed by us (fixed answers, see positions-service.js) are set aside since 10.11.2026: the friend reads the news and
 // does the work himself. Served only when V1_POSITIONS_MOCK=on, never by default, so that a deploy shows nothing made up

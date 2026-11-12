@@ -514,8 +514,9 @@ Added 12.11.2026 by `add_fifa_map.sql`, to the twenty-five above. See [The FIFA 
 | read_by | text[] | the models that read it |
 | confirmed | boolean | NOT NULL, default true — false when the second reading failed: read again at the next run |
 | created_at | timestamptz | NOT NULL, default `now()` |
+| updated_at | timestamptz | NOT NULL, default `now()` — when the signal last changed (second reading, rule read again, more news); `GET /api/v1/fifa/news` goes on from it, see [API v1](../api-v1/README.md) |
 
-Indexes on `(member_qid, subject_qid)` and, partial, on the unconfirmed ones.
+Indexes on `(member_qid, subject_qid)`, `(updated_at, id)` and, partial, on the unconfirmed ones.
 
 #### fifa_votes
 | Column | Type | |

@@ -91,6 +91,9 @@ nav:
       - Tools: tools.md
       - Database: database/mld.md
   - Diagrams: diagrams.md
+  - API for another system:
+      - api-v1/README.md
+      - What we need back, for FootballIQ (FR): api-v1/besoins-en-retour.md
   - Accounts:
       - accounts/README.md
       - Signup: accounts/signup/README.md
