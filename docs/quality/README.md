@@ -221,6 +221,22 @@ the affair. On the 98 judged pairs whose earlier card was sent (29 SAME, 56 DEVE
 
 The look pair by pair is stricter than the two judges (they called SAME some pairs where a card adds a detail): it is the safe side for a rule that must not hide an evolution.
 
+**News told late** (the user, 12.11.2026: a news of a week ago taken up by another paper a week later). The age gate (`old-news.js`) asks the AI only about a story whose own story holds news
+from before the window; a news told after more than 48 h of silence starts a new story (the grouping joins a news to the stories of the last 48 h), so it has none, and the benches of
+the gate drew their cards among the ones whose first news was older than the window: this case was never measured. 60 cards really delivered (the saved briefings since 10.11.2026, drawn at random,
+`bench/late-news.mjs`), the earlier coverage taken from each place, one blind judge on the titles, then the real prompt and model of the gate run on it:
+
+| Measure | Result | Date |
+|---|---|---|
+| Cards delivered that tell a fact already told before the window | **8 of 60 (13%)**, 4 UNSURE; for 4 of the 8 the own story has no earlier news; an affair or a close story holds it for 7 of 8 | 12.11.2026 |
+| The age gate as built (the own story only) on these cards | asked 6 cards, flags **0 of 8** old, 0 of 48 new | 12.11.2026 |
+| ... adding the affair (thread) to the own story | asked 19, flags **5 of 8** old, **2 of 48** new (own else affair: 4 and 2) | 12.11.2026 |
+| ... adding the close stories of the 14 days before (the vectors) | asked 60, flags 7 of 8 old, **5 of 48** new; the close stories alone 6 and 9. A scan of the stories of 14 days costs 6 to 9.5 s a card on the database | 12.11.2026 |
+| The query of the affair (the closest earlier news of the stories of the thread) | 4 ms the median, 26 ms the slowest, 40 cards | 12.11.2026 |
+
+One judge, titles only, 60 cards: 8 old ones is a small number (13%, from 6% to 24%), and "flags 0 of 8" is a replay on cards that were delivered, so it does not say whether the gate ran in
+production when they were made.
+
 Not measured: what the reader read on the page (the page counts nothing since the tracking of the cards seen was dropped on 14.10.2026: "not sent by e-mail = not read"),
 duplicates with unlike vectors, and the cost in cards a wrong flag would hide (a development of one affair).
 
