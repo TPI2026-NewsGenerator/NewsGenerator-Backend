@@ -332,6 +332,45 @@ export const FifaService = {
         cache.clear();
     },
 
+    // --- when a rule of the guide changes
+    // The established signals of a FAMILY (their words match `pattern`, a regular expression of Postgres) read again with the rules of now, one by one by the same
+    // reading as the news that come: the family is corrected by the logic, no line by hand. apply false: nothing is written, the answer says what would change.
+    // reason: the reason of the rule that changed (uncertain "praise"): only a change that comes from it is kept; the others ("readings_disagree": the two
+    // models do not give the same answer every time, 3 of 23 here) are told as noise and never written, or a family read again would lose true positives.
+    // {read, unchanged, unread, changed: [{id, member, before, after, reason, sentence}], noise: [...], applied}
+    reread: async ({pattern, reason = null, apply = false}) => {
+        if (typeof pattern !== 'string' || pattern.trim() === '') throw fail(422, 'pattern: the words of the family.');
+        const rows = await FifaModel.establishedMatching(pattern);
+        const usage = newUsage();
+        const results = await mapWithConcurrency(rows, CONCURRENCY, async (row) => {
+            const passage = {hash: row.hash, member: MEMBERS.get(row.member_qid), matched: row.matched, sentence: row.sentence,
+                article: {title: row.title, description: row.description, medium: row.medium, lang: row.lang, date: new Date(row.published_at).toISOString().slice(0, 10), url: row.url}};
+            if (!passage.member) return null;
+            return readPassage({passage, subject: {name: row.subject_name}}, {usage});
+        });
+        const answer = {read: rows.length, unchanged: 0, unread: 0, changed: [], noise: [], applied: 0, tokens: usage};
+        for (let at = 0; at < rows.length; at++) {
+            const row = rows[at];
+            const reading = results[at].status === 'fulfilled' ? results[at].value : null;
+            // a reading the model could not give (unconfirmed) is no new word: the signal stays as it is
+            if (!reading || reading.reason === 'unconfirmed' || reading.unreadable) { answer.unread++; continue; }
+            const same = reading.status === 'established' && reading.stance === row.stance && reading.level === row.level;
+            if (same) { answer.unchanged++; continue; }
+            const one = {id: row.id, member: MEMBERS.get(row.member_qid)?.fifa, before: `established ${row.stance}/${row.level}`,
+                after: reading.status === 'established' ? `established ${reading.stance}/${reading.level}` : reading.status, reason: reading.reason ?? '', sentence: String(row.sentence).replace(/\s+/g, ' ').slice(0, 200)};
+            if (reason !== null && !(reading.status === 'uncertain' && reading.reason === reason)) { answer.noise.push(one); continue; }
+            answer.changed.push(one);
+            if (apply) {
+                await FifaModel.updateSignal(row.id, {certainty: reading.status, uncertain_reason: reading.status === 'uncertain' ? reading.reason : '', stance: reading.stance,
+                    level: reading.status === 'discarded' ? 'none' : reading.level, mark: reading.mark, speaker_kind: reading.speaker_kind, speaker: reading.speaker, quote: reading.quote,
+                    read_by: reading.readBy, confirmed: reading.confirmed});
+                answer.applied++;
+            }
+        }
+        if (apply) cache.clear();
+        return answer;
+    },
+
     // --- the audit
     // A sample of the established signals (the ones of the last days first) read again by a third model, and the votes of the readers against the news:
     // {auditor, sampled, agreed, unreadable, votes_total, votes_contradicting, verdict, details, report}. dry: nothing is kept

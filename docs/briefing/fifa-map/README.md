@@ -70,6 +70,16 @@ latest vote decides for everyone**. The page says first what it does not know: m
    `warning` (with the disagreements listed: look at them, and think of `FIFA_COLOUR=declared` or `off`), under 10 signals `too_few`. It is an agreement with a model, not the
    truth: the gold set of `bench/fifa` is the truth, this is the live drift.
 
+## When a rule of the guide changes
+
+The signals already read keep the answer of the old rule, so a rule is applied to its FAMILY, never to one line by hand: `node --env-file=.env scripts/fifa-reread.js --family=praise`
+reads again the established signals whose words match (a regular expression of Postgres) with the rules of now, by the same reading as the news that come, and says what changes;
+nothing is written without `--apply`, and only a change that comes from the rule itself (here the reason `praise`) is written: the two models do not give the same answer every
+time, so a family read again also shows "noise" (a signal that would turn `readings_disagree`), told and left alone. The rule of 12.11.2026 (decided by the user): praise or thanks of
+the person, or of what FIFA did under him, with no word of the election, of his staying or of the association backing him, is no position (`uncertain`, reason `praise`, shown as
+"praise only"); it counts as support only when the same sentence says one of those. It was found on the South African association, whose president thanked FIFA and said the continent
+"benefited immensely under the leadership" of its president.
+
 ## Measured
 
 On a gold set of 308 passages of 4 candidates (labelled by three labellers, 12.11.2026), the chain above gives **3.3 % of wrong colours (2 of 60 shown) on the half

@@ -66,6 +66,8 @@ speaker who is not clear, a reported claim); `none` when there is no stance.
 - `reported`: a rumour, a hedged claim, an unnamed source;
 - `denied`: the association or the person denies it;
 - `past`: a position taken earlier and no longer current ("it backed him in 2023");
+- `praise`: thanks, praise or congratulations of the person or of what FIFA did under him, with no word of the election, of his staying or of
+  the association backing him (rule 5);
 - `ambiguous`: the wording is unclear, the association has not chosen (`undecided`), the sentence mixes both sides, or you cannot say whether
   it is a position;
 - `other`: none of the above (say why in `note`).
@@ -84,8 +86,11 @@ speaker who is not clear, a reported claim); `none` when there is no stance.
 4. **Criticism by a bound speaker** that does not say "I oppose" or "I will not vote for him" is `against`, level `probable`, and is
    `established` (a bound speaker, official, a stance toward the person). A plain "we will not back him", "he must step down" is
    `declared`.
-5. **Thanks, praise, congratulations** to the person by a bound speaker are `for`, level `probable`, `established`, when the passage is about
-   the election or his leadership. A thank-you for a visit or a tournament is `about_election` false.
+5. **Thanks, praise, congratulations** to the person, and praise of what FIFA did under him (its programmes, its funding, its results: "the continent
+   has benefited immensely under the leadership of the president") are NOT a position by themselves (decided by the user, 12.11.2026): the status is
+   `uncertain`, the reason `praise`, whatever the other fields say. They count as `for` (`probable`, `established`) only when the same sentence also
+   says that he should stay or be re-elected, or that the association backs him or will vote for him. A thank-you for a visit or a tournament, with
+   nothing about him or his post, is `about_election` false.
 6. **"Looking for a challenger", "weighing a run"** by an association (UEFA looks for someone to stand against him) is a stance `against`
    when it names the association as the one doing it and is told plainly; `reported` when hedged.
 7. **A passage about the person as a candidate for another post, or about a person with the same surname**: `about_election` false.

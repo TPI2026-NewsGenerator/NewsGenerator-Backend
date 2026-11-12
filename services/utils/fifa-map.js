@@ -27,7 +27,7 @@ export const levelsOf = (colour) => colour === 'off' ? ['inconnue']
 
 // the names the page has for the reasons a reading is only uncertain
 const REASON = {not_binding: 'speaker_not_binding', reported: 'rumour', request: 'request_not_position', rival: 'rival_from_association', ambiguous: 'ambiguous',
-    readings_disagree: 'readings_disagree', unconfirmed: 'unconfirmed', denied: 'denied', past: 'past', other: 'other'};
+    readings_disagree: 'readings_disagree', unconfirmed: 'unconfirmed', denied: 'denied', past: 'past', praise: 'praise_only', other: 'other'};
 export const reasonFor = (reason) => REASON[reason] ?? reason ?? '';
 
 const VOTED = {for: 'soutien_declare', against: 'non_soutien_declare', unknown: 'inconnue'};

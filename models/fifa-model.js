@@ -68,6 +68,13 @@ export const FifaModel = {
             quote = $9::text, read_by = $10::text[], confirmed = $11::boolean WHERE id = $1::int`,
         id, reading.certainty, reading.uncertain_reason, reading.stance, reading.level, reading.mark, reading.speaker_kind, reading.speaker, reading.quote, reading.read_by, reading.confirmed),
 
+    // the established signals of a FAMILY: the ones whose title, description or sentence match a pattern (a regular expression of Postgres, case ignored),
+    // to be read again when a rule of the guide changes (FifaService.reread)
+    establishedMatching: async (pattern) => prisma.$queryRawUnsafe(`
+        SELECT s.id, s.subject_qid, s.member_qid, s.hash, s.matched, s.sentence, s.title, s.description, s.lang, s.url, s.medium, s.published_at, s.stance, s.level, j.name AS subject_name
+        FROM fifa_signals s JOIN fifa_subjects j ON j.qid = s.subject_qid
+        WHERE s.certainty = 'established' AND (s.sentence ~* $1::text OR s.title ~* $1::text OR s.description ~* $1::text) ORDER BY s.id`, pattern),
+
     // every signal the map is made of (the passages left out are in it: they are the count of articles)
     signals: async () => prisma.$queryRawUnsafe(`SELECT ${SIGNAL} FROM fifa_signals s`),
     signalsOf: async (memberQid) => prisma.$queryRawUnsafe(`SELECT ${SIGNAL} FROM fifa_signals s WHERE s.member_qid = $1::text`, memberQid),

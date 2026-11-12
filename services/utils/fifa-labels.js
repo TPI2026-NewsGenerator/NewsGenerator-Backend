@@ -18,7 +18,7 @@ export const VOCAB = {
     mark: ['official', 'reported', 'denied'],
     level: ['declared', 'probable', 'none'],
     status: ['established', 'uncertain', 'discarded'],
-    reason: ['', 'not_binding', 'rival', 'request', 'reported', 'denied', 'past', 'ambiguous', 'other'],
+    reason: ['', 'not_binding', 'rival', 'request', 'reported', 'denied', 'past', 'praise', 'ambiguous', 'other'],
     confidence: ['high', 'low'],
 };
 // only these speak as the association
@@ -28,7 +28,7 @@ export const ROLE = {president: 'President', executive: 'Executive', statement: 
     candidate: 'Candidate', government: 'Government', other: 'Other', none: ''};
 
 // a doubt the fields cannot show: the reader's own, it keeps a reading uncertain whatever the fields say
-export const HELD_BACK = ['request', 'past', 'ambiguous', 'other'];
+export const HELD_BACK = ['request', 'past', 'praise', 'ambiguous', 'other'];
 
 // What makes a reading unusable (the words are none of the guide's, a stance with no level): [] when the code can decide its status. The status
 // and the reason a model gives are not checked here, the code decides them (statusOf): a model that calls a deputy "established" is read as uncertain
