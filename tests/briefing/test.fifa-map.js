@@ -9,7 +9,7 @@
 
 import {describe, expect, it} from '@jest/globals';
 import {MEMBER_LIST, memberOfFifa} from '../../services/utils/fifa-members.js';
-import {buildMap, buildSheet, colourSetting, confirmationsOf, decisiveVote, leanOf, levelsOf, reasonFor} from '../../services/utils/fifa-map.js';
+import {buildMap, buildSheet, colourSetting, confirmationsOf, decisiveVote, leanOf, levelsOf, reasonFor, recentCoverage} from '../../services/utils/fifa-map.js';
 
 const NOW = new Date('2026-11-12T12:00:00Z');
 const SUBJECT = {qid: 'Q124138', name: 'Gianni Infantino', color_index: 1, status: 'incumbent', state: 'ready'};
@@ -56,6 +56,27 @@ describe('buildMap', () => {
     it('should count the articles and the media of an association over every candidate, as its coverage', () => {
         const answer = map([signal(jp, '2026-11-01T10:00:00Z', {news_count: 3, medium: 'a.com'}), signal(jp, '2026-11-02T10:00:00Z', {news_count: 2, medium: 'b.com', subject_qid: WENGER.qid})]);
         expect(memberRow(answer, jp).coverage).toEqual({articles_30d: 5, media_30d: 2});
+    });
+
+    it('should count only the last 30 days in the figures of the articles, and an article that names two candidates once', () => {
+        const link = 'https://example.com/same-article';
+        const answer = map([
+            signal(jp, '2026-11-01T10:00:00Z', {news_count: 3, medium: 'a.com'}),
+            signal(jp, '2026-09-01T10:00:00Z', {news_count: 4, medium: 'old.com'}),
+            signal(jp, '2026-11-05T10:00:00Z', {news_count: 2, medium: 'b.com', url: link}),
+            signal(jp, '2026-11-05T10:00:00Z', {news_count: 2, medium: 'b.com', url: link, subject_qid: WENGER.qid}),
+        ]);
+        expect(memberRow(answer, jp).coverage).toEqual({articles_30d: 5, media_30d: 2});
+        // the position of the candidate carries the same figures as the sheet: the old signal still counts for the position, not for the figure
+        expect(memberRow(answer, jp).positions[SUBJECT.qid]).toMatchObject({signals_count: 3, articles_30d: 5, media_30d: 2});
+        expect(memberRow(answer, jp).positions[WENGER.qid]).toMatchObject({articles_30d: 2, media_30d: 1});
+        expect(recentCoverage([], NOW)).toEqual({articles_30d: 0, media_30d: 0});
+    });
+
+    it('should keep on the map an association whose only signals are older than 30 days, with a figure of 0', () => {
+        const answer = map([signal(jp, '2026-08-01T10:00:00Z', {certainty: 'uncertain', uncertain_reason: 'past', level: 'none', news_count: 2})]);
+        expect(memberRow(answer, jp).positions[SUBJECT.qid]).toMatchObject({uncertain_count: 1, articles_30d: 0, media_30d: 0});
+        expect(memberRow(answer, jp).coverage).toEqual({articles_30d: 0, media_30d: 0});
     });
 
     it('should put only the declared in colour with FIFA_COLOUR=declared, and the probable among the uncertain', () => {

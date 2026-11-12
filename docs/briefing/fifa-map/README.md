@@ -62,6 +62,9 @@ latest vote decides for everyone**. The page says first what it does not know: m
    100 presidents from the site (it is down or changed) leaves the ones of the week before. Each president carries his `source` (`fifa` or `wikidata`) and its page.
    What the news say of him comes with it, from our own tagged news of the last 30 days: the number of articles that name him and the latest one (medium, link, title),
    asked by his item of Wikidata or by his name, kept a quarter of an hour (`GET /api/fifa/presidents`: `articles_30d`, `last_mention`).
+   The figures of articles of an association (`coverage` of the map, `articles_30d` / `media_30d` of each position and of the sheet) are the ones of the last 30 days
+   too (`recentCoverage` in `fifa-map.js`): a signal stands for the articles that carry its passage and is dated by the news it shows; an older one still colours (a position
+   stays 90 days) but is not counted, and an article that names two candidates (two signals, one link) is counted once.
 10. **The weekly audit** (`services/utils/fifa-audit.js`, `FifaService.audit`, `node --env-file=.env scripts/fifa-audit.js [--days=7] [--sample=30] [--dry]`). Once a week
    (`FIFA_AUDIT_DAYS`, checked every hour, so a deploy does not start the week again) a random sample of 30 established signals (the ones of the last days first) is read
    again by a **third model**, of a family that read neither time (`FIFA_AUDIT_MODEL`, `gpt-oss:120b`); it agrees when it says established on the same side. The

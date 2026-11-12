@@ -105,7 +105,8 @@ export const FifaModel = {
     deleteVote: async (id) => prisma.$executeRawUnsafe(`DELETE FROM fifa_votes WHERE id = $1::int`, id),
 
     // --- the presidents
-    // What the news of the last 30 days say of each president: [{lid, articles, last_at}] and [{lid, medium, link, title, at}] for the latest one. A president with an item of
+    // What the news of the last 30 days say of each president: [{lid, articles, last_at}] (the articles of the last 30 days only) and [{lid, medium, link, title, at}] for the
+    // latest one, however old it is (a president not named for two months still shows when he was last). A president with an item of
     // Wikidata is looked for by it (the tagger linked the name), one without by his name as it is compared (the key of mentions: "philippe diallo"). leaders: [{lid, qid, key}]
     mentionsOfLeaders: async (leaders) => {
         if (leaders.length === 0) return {counts: [], latest: []};
@@ -117,7 +118,8 @@ export const FifaModel = {
                 UNION
                 SELECT l.lid, am.id_article FROM leaders l JOIN mentions m ON m.key = l.key AND m.kind = 'person' JOIN article_mentions am ON am.id_mention = m.id WHERE l.qid IS NULL)`;
         const counts = await prisma.$queryRawUnsafe(`${HIT}
-            SELECT h.lid, count(*)::int AS articles, max(COALESCE(a.published_at, a.created_at)) AS last_at FROM hit h JOIN articles a ON a.id = h.id_article GROUP BY h.lid`, ...params);
+            SELECT h.lid, count(*)::int AS articles, max(COALESCE(a.published_at, a.created_at)) AS last_at FROM hit h JOIN articles a ON a.id = h.id_article
+            WHERE COALESCE(a.published_at, a.created_at) >= now() - interval '30 days' GROUP BY h.lid`, ...params);
         const latest = await prisma.$queryRawUnsafe(`${HIT}
             SELECT DISTINCT ON (h.lid) h.lid, medium_of(a.link) AS medium, a.link, a.title, COALESCE(a.published_at, a.created_at) AS at
             FROM hit h JOIN articles a ON a.id = h.id_article ORDER BY h.lid, COALESCE(a.published_at, a.created_at) DESC`, ...params);

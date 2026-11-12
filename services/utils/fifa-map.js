@@ -72,6 +72,23 @@ const withColour = (signals, colour) => signals.map(signal => {
 });
 const dated = (signal) => ({...signal, date: signal.published_at});
 
+const THIRTY_DAYS_MS = 30 * 24 * 3600 * 1000;
+
+// The articles and the media of the LAST 30 DAYS that name an association with a candidate: the figure of the list, of the tooltip and of the sheet. A signal stands for
+// news_count articles and is dated by the news it shows; the older ones are not counted (they still colour: a position stays 90 days). The same article names two
+// candidates in two signals with the same link: it is counted once (the larger count), never twice
+export const recentCoverage = (signals, now = new Date()) => {
+    const from = now.getTime() - THIRTY_DAYS_MS;
+    const byLink = new Map();
+    for (const signal of signals) {
+        if (new Date(signal.published_at).getTime() < from) continue;
+        const key = signal.url ?? `signal:${signal.id}`;
+        const articles = signal.news_count ?? 0;
+        if (articles > (byLink.get(key)?.articles ?? -1)) byLink.set(key, {articles, medium: signal.medium});
+    }
+    return {articles_30d: [...byLink.values()].reduce((sum, one) => sum + one.articles, 0), media_30d: new Set([...byLink.values()].map(one => one.medium)).size};
+};
+
 // The position of one association on one candidate: {position, since, previous, changed, stale, signals_count, last_signal_at, uncertain_count, articles_30d,
 // media_30d, basis, human?, ai_position?}, or null when there is nothing to say
 // The position a confirmation would be a confirmation of (what the page shows the reader before they confirm): the one a reader set, else the one of the news
@@ -82,18 +99,19 @@ export const basePosition = ({signals, votes, colour, now}) => {
 
 export const positionFor = ({signals, votes, colour, now}) => {
     const read = positionOf(withColour(signals, colour).map(dated), now);
-    const articles = signals.reduce((sum, signal) => sum + (signal.news_count ?? 0), 0);
-    const media = new Set(signals.map(signal => signal.medium)).size;
+    // anything read at all (even a passage left out) keeps the association on the map; the figures shown are the ones of the last 30 days
+    const read_ever = signals.reduce((sum, signal) => sum + (signal.news_count ?? 0), 0);
+    const coverage = recentCoverage(signals, now);
     const basis = signals.filter(signal => signal.certainty === 'established' && read.position !== 'inconnue')
         .sort((a, b) => new Date(b.published_at) - new Date(a.published_at)).slice(0, 2).map(signal => ({medium: signal.medium, published_at: new Date(signal.published_at).toISOString(), url: signal.url}));
     const human = decisiveVote(votes);
     // what a confirmation is a confirmation OF: the position a reader set, else the one of the news (not the one it is drawn at after a confirmation)
     const base = human ? VOTED[human.value] : read.position;
     const confirmed = confirmationsOf(votes, base);
-    if (read.position === 'inconnue' && read.uncertain === 0 && articles === 0 && !human && !confirmed) return null;
+    if (read.position === 'inconnue' && read.uncertain === 0 && read_ever === 0 && !human && !confirmed) return null;
     const answer = {
         position: read.position, since: read.since, previous: read.previous, changed: read.changed, stale: read.stale, signals_count: read.signals, last_signal_at: read.lastSignalAt,
-        uncertain_count: read.uncertain, articles_30d: articles, media_30d: media, basis,
+        uncertain_count: read.uncertain, ...coverage, basis,
     };
     if (!human) {
         // validated by hand: solid, at the declared level, never old; the reading of the news stays visible as ai_position
@@ -148,7 +166,7 @@ export const buildMap = ({members, subjects, signals, votes, leaders = new Map()
         return {
             qid: member.qid, fifa: member.fifa, name: member.name, association: member.association, level: member.level, confederation: member.confederation, iso: member.iso,
             lat: member.lat, lng: member.lng, leader: leaders.get(member.qid) ?? null, lean: leanOf(positions),
-            coverage: {articles_30d: mine.reduce((sum, signal) => sum + (signal.news_count ?? 0), 0), media_30d: new Set(mine.map(signal => signal.medium)).size},
+            coverage: recentCoverage(mine, now),
             positions,
         };
     });
