@@ -224,11 +224,15 @@ describe('buildSheet', () => {
         expect(sheet.signals[1]).toMatchObject({speaker: {name: 'Salman', role: 'President', binds: true}, url: expect.stringContaining('https://')});
     });
 
-    it('should tell the reversal of the AFC, and the vote with who gave it', () => {
+    it('should tell the reversal of the AFC with the article of the signal that made each change, and the vote with who gave it', () => {
+        const article = expect.stringContaining('https://example.com/');
         expect(sheet.history).toEqual([
-            {subject_qid: SUBJECT.qid, date: '2026-09-10T10:00:00Z', from: 'inconnue', to: 'non_soutien_declare', kind: 'first'},
-            {subject_qid: SUBJECT.qid, date: '2026-10-23T10:00:00Z', from: 'non_soutien_declare', to: 'soutien_declare', kind: 'reversal'},
+            {subject_qid: SUBJECT.qid, date: '2026-09-10T10:00:00Z', from: 'inconnue', to: 'non_soutien_declare', kind: 'first', url: article, medium: 'example.com'},
+            {subject_qid: SUBJECT.qid, date: '2026-10-23T10:00:00Z', from: 'non_soutien_declare', to: 'soutien_declare', kind: 'reversal', url: article, medium: 'example.com'},
         ]);
+        // the link of a change is the one of the signal dated that day, and none when the signal has none
+        const bare = buildSheet({member: afc, subjects: [SUBJECT], signals: [signal(afc, '2026-09-10T10:00:00Z', {url: undefined, medium: undefined})], votes: [], now: NOW});
+        expect(bare.history[0]).toMatchObject({kind: 'first', url: null, medium: null});
         expect(sheet.votes).toEqual([{subject_qid: SUBJECT.qid, value: 'for', by: 'reader1', at: '2026-10-30T10:00:00.000Z', note: 'It said so on its site', seen: '', source: null}]);
         expect(sheet.positions[SUBJECT.qid]).toMatchObject({position: 'soutien_declare', human: {value: 'for'}});
     });

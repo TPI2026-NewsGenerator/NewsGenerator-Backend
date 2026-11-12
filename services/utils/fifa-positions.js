@@ -59,8 +59,9 @@ export const positionOf = (signals, now = new Date()) => {
     };
 };
 
-// The changes of position of an association on a person, in order: [{date, from, to, kind}], kind "first" (a position after none), "reversal" (the other
-// side) or "weakened" (the same side, declared to probable). Replayed signal by signal with the same rules as positionOf, so the page shows what the map showed
+// The changes of position of an association on a person, in order: [{date, from, to, kind, url, medium}], kind "first" (a position after none), "reversal" (the other
+// side) or "weakened" (the same side, declared to probable); url and medium: the article of the signal that made the change (null when the signal has none), so the page can
+// send the reader to it. Replayed signal by signal with the same rules as positionOf, so the page shows what the map showed
 export const historyOf = (signals) => {
     const established = signals.filter(signal => signal.certainty === 'established' && ['for', 'against'].includes(signal.stance)).sort((a, b) => day(a.date) - day(b.date));
     const changes = [];
@@ -69,7 +70,8 @@ export const historyOf = (signals) => {
         const now = positionOf(established.slice(0, i + 1), new Date(established[i].date)).position;
         if (now === before) continue;
         const side = (position) => position.startsWith('non_') ? 'against' : position === 'inconnue' ? 'none' : 'for';
-        changes.push({date: established[i].date, from: before, to: now, kind: before === 'inconnue' ? 'first' : side(before) !== side(now) ? 'reversal' : 'weakened'});
+        changes.push({date: established[i].date, from: before, to: now, kind: before === 'inconnue' ? 'first' : side(before) !== side(now) ? 'reversal' : 'weakened',
+            url: established[i].url ?? null, medium: established[i].medium ?? null});
         before = now;
     }
     return changes;
