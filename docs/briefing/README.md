@@ -348,13 +348,14 @@ titles it left (of 300) rewritten all the same, as the button does for any title
 click away on the card (« Show the title as published ») and in the editor of the e-mail. A title both translated and rewritten has two originals, two buttons: « Show original » (the title in its language as the AI rewrote it, with the sentences of the article) and « Show the title as published » (the medium's own words, in their language, not translated); each line it shows says which it is (« German, as the AI rewrote it », « As the medium wrote it, German »). 7 live cases (family `titlesame` of `tests/regression`): a single
 pair asked alone is judged more strictly than in a batch of six (the card of the subpoenas of the Democrats, accepted in a batch, refused alone: left out).
 
-**A rewrite the checks refused is the title of the e-mail** (12.11.2026, a friend of the user: the editor showed the proposal but the title was not the neutral one, he
-had only to accept it; the user chose "the e-mail only"). The briefing keeps the rewrite the checks or the second opinion refused as `item.titleProposal`
-`{title, problem}` (translated into the language of the title of the card). The editor of the e-mail opens with it as the title of the e-mail
-(`startingTitles` in `useMailDraft.js` of the client), against the title of the card, word by word, with what was found against it ("Check it before you send it: it
-leaves out a name of the title"); "Keep the title" puts the title of the card back. **The card of the page keeps the title as published**: a refused rewrite never
-enters the card. On 429 cards of 7 days: 56 rewrites accepted (13%, the title of the card and of the e-mail), 24 refused (5.6%, 12 by the second opinion, 5 name
-lost, 2 name added, 2 quotation, 1 each length, exclamation, question), now the title of the e-mail (`bench/neutral-titles-stats.mjs`).
+**A rewrite the checks refused stays a proposal, said refused** (12.11.2026). The briefing keeps the rewrite the checks or the second opinion refused as `item.titleProposal`
+`{title, problem}` (translated into the language of the title of the card). The editor of the e-mail shows it against the title of the card, word by word, titled
+"Neutral title proposed, refused by the checks", with what was found against it ("Refused by the checks: it leaves out a name of the title. The e-mail keeps the title of
+the card unless you use this one anyway"); "Use it anyway" puts it in the e-mail, "Keep the title" closes it. **The title of the e-mail stays the one of the card**:
+a refused rewrite enters neither the card nor the e-mail by itself. Tried and taken back the same day: a friend of the user said the editor showed the proposal but the title was not the neutral one, he
+had only to accept it, and the e-mail was made to open with the refused rewrite (client commit `47cda27`, "the e-mail only"); the user took it back, the refused title is not sent
+without being read, only said refused. On 429 cards of 7 days: 56 rewrites accepted (13%, the title of the card and of the e-mail), 24 refused (5.6%, 12 by the second opinion, 5 name
+lost, 2 name added, 2 quotation, 1 each length, exclamation, question), offered in the editor as refused (`bench/neutral-titles-stats.mjs`).
 
 ## Cards of one news
 
