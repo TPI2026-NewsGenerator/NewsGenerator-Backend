@@ -107,7 +107,7 @@ CREATE INDEX IF NOT EXISTS i_fifa_notes_member ON public.fifa_notes (member_qid,
 
 -- 12.11.2026, the candidates the news name: the map adds one by itself when two readings of the news say a person is a candidate for the presidency of FIFA.
 -- origin: "seed" (the president in office, put there by this file), "reader" (a reader added the person), "news" (found in the news; found = what was found:
--- status, articles, media, the words); an administrator who takes a candidate off the map is remembered in fifa_dismissed so that the news do not bring the person back
+-- status, articles, media, the words); a candidate taken off the map (by a reader, or an administrator for the president in office) is remembered in fifa_dismissed so that the news do not bring the person back
 ALTER TABLE public.fifa_subjects ADD COLUMN IF NOT EXISTS origin text NOT NULL DEFAULT 'reader';
 ALTER TABLE public.fifa_subjects DROP CONSTRAINT IF EXISTS fifa_subjects_origin_check;
 ALTER TABLE public.fifa_subjects ADD CONSTRAINT fifa_subjects_origin_check CHECK (origin IN ('seed', 'reader', 'news'));

@@ -583,14 +583,42 @@ describe('the candidates', () => {
         expect((await call('/people?q=w', {user: reader()})).status).toBe(422);
     });
 
-    it('should let any reader change the status of a candidate and only an administrator remove one', async () => {
+    it('should let any reader change the status of a candidate', async () => {
         expect((await call(`/subjects/${INFANTINO.qid}`, {method: 'PATCH', user: reader(), body: {status: 'withdrawn'}})).status).toBe(204);
         expect(model.setSubjectStatus).toHaveBeenCalledWith(INFANTINO.qid, 'withdrawn');
         expect((await call(`/subjects/${INFANTINO.qid}`, {method: 'PATCH', user: reader(), body: {status: 'elected'}})).status).toBe(422);
-        expect((await call(`/subjects/${INFANTINO.qid}`, {method: 'DELETE', user: reader()})).status).toBe(403);
-        expect((await call(`/subjects/${INFANTINO.qid}`, {method: 'DELETE', user: reader(), admin: true})).status).toBe(204);
-        expect(model.deleteSubject).toHaveBeenCalledWith(INFANTINO.qid);
-        // the news do not bring back a candidate an administrator took off
-        expect(model.dismiss).toHaveBeenCalledWith(INFANTINO.qid);
+    });
+
+    describe('taking a candidate off the map', () => {
+        const FOUND = {...INFANTINO, qid: 'Q215244', name: 'Arsene Wenger', status: 'rumoured', origin: 'news', color_index: 2};
+        beforeEach(() => model.subjects.mockResolvedValue([INFANTINO, FOUND]));
+
+        it('should let any reader take a candidate off, with no validation, and have the news never bring him back', async () => {
+            expect((await call(`/subjects/${FOUND.qid}`, {method: 'DELETE', user: reader()})).status).toBe(204);
+            expect(model.deleteSubject).toHaveBeenCalledWith(FOUND.qid);
+            expect(model.dismiss).toHaveBeenCalledWith(FOUND.qid);
+            // one a reader added is taken off the same way
+            model.subjects.mockResolvedValue([INFANTINO, {...FOUND, origin: 'reader'}]);
+            expect((await call(`/subjects/${FOUND.qid}`, {method: 'DELETE', user: reader()})).status).toBe(204);
+        });
+
+        it('should keep the president in office: a reader is refused (even after marking him withdrawn), an administrator may', async () => {
+            expect((await call(`/subjects/${INFANTINO.qid}`, {method: 'DELETE', user: reader()})).status).toBe(403);
+            model.subjects.mockResolvedValue([{...INFANTINO, status: 'withdrawn', origin: 'seed'}]);
+            expect((await call(`/subjects/${INFANTINO.qid}`, {method: 'DELETE', user: reader()})).status).toBe(403);
+            expect(model.deleteSubject).not.toHaveBeenCalled();
+            expect((await call(`/subjects/${INFANTINO.qid}`, {method: 'DELETE', user: 1000})).status).toBe(204);
+            expect(model.deleteSubject).toHaveBeenCalledWith(INFANTINO.qid);
+            expect(model.dismiss).toHaveBeenCalledWith(INFANTINO.qid);
+        });
+
+        it('should answer 404 for a candidate that is not on the map, 401 for a reader who is not signed in, and stop a reader at ten an hour', async () => {
+            expect((await call('/subjects/Q5', {method: 'DELETE', user: reader()})).status).toBe(404);
+            expect((await call(`/subjects/${FOUND.qid}`, {method: 'DELETE'})).status).toBe(401);
+            const user = reader();
+            let last;
+            for (let i = 0; i < 11; i++) last = await call(`/subjects/${FOUND.qid}`, {method: 'DELETE', user});
+            expect(last.status).toBe(429);
+        });
     });
 });

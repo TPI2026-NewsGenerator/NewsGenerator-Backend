@@ -444,7 +444,7 @@ export const FifaService = {
 
     subjects: async () => ({generated_at: new Date().toISOString(), subjects: (await FifaService.map()).subjects}),
 
-    // --- the candidates: any reader adds one (no validation) and changes its status; only an administrator takes one off the map
+    // --- the candidates: any reader adds one (no validation), changes its status and takes one off the map (not the president in office: an administrator)
     // people the reader may pick: persons of Wikidata whose name starts with q, [{qid, name, description}]
     people: async (q) => {
         const found = await searchItems(q);
@@ -518,10 +518,15 @@ export const FifaService = {
         cache.clear();
     },
 
-    removeSubject: async (qid) => {
-        if (!(await FifaModel.subjects()).some(subject => subject.qid === qid)) throw fail(404, 'No such candidate.');
+    // Any reader takes a candidate off the map, with no validation (the system can be wrong: a person the news named that is no candidate). Everything read for him goes with
+    // him (the signals, the votes, the sources joined to them) and the news do not bring him back; a reader can still add him by hand. The president in office stays: only an
+    // administrator removes him
+    removeSubject: async ({qid, admin = false}) => {
+        const subject = (await FifaModel.subjects()).find(one => one.qid === qid);
+        if (!subject) throw fail(404, 'No such candidate.');
+        if ((subject.status === 'incumbent' || subject.origin === 'seed') && !admin) throw fail(403, 'The president in office stays on the map: only an administrator takes him off.');
         await FifaModel.deleteSubject(qid);
-        // the news do not bring back a candidate an administrator took off
+        // the news do not bring back a candidate taken off
         await FifaModel.dismiss(qid);
         cache.clear();
     },

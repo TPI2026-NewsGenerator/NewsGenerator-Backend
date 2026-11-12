@@ -3,7 +3,7 @@
 //  Date: 12.11.2026
 //  File: fifa-router.js
 //  Description: Router for the map "The FIFA presidency", under /api/fifa. The session of a reader (cookie), not the key of /api/v1. Every signed-in reader
-//               sees it, adds a candidate and votes; only an administrator takes a candidate off the map or a vote off
+//               sees it, adds a candidate, takes one off and votes; only an administrator takes the president in office off the map or a vote off
 //
 
 import express from 'express'
@@ -37,7 +37,11 @@ router.post('/subjects', authenticateToken,
 router.patch('/subjects/:qid', authenticateToken,
     rateLimit({windowMs: 3600e3, max: 20, key: req => `fifa status ${req.user.id}`, message: 'Too many changes, try again in an hour.'}),
     FifaController.setStatus);
-router.delete('/subjects/:qid', authenticateToken, adminOnly('Only an administrator takes a candidate off the map.'), FifaController.removeSubject);
+// any reader takes a candidate off the map (the system can be wrong), a few an hour: what was read for him goes with him, so it is not a click to repeat. The president in office stays
+// (an administrator only, decided in the service)
+router.delete('/subjects/:qid', authenticateToken,
+    rateLimit({windowMs: 3600e3, max: 10, key: req => `fifa remove subject ${req.user.id}`, message: 'Too many candidates taken off, try again in an hour.'}),
+    FifaController.removeSubject);
 
 // the vote of a reader decides for everyone: a limit so that one reader cannot flood the map
 router.post('/votes', authenticateToken,

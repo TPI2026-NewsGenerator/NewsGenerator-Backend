@@ -102,7 +102,7 @@ latest vote decides for everyone**. The page says first what it does not know: m
    the last 14 days are searched for the sentences that hold FIFA, a word of president and a word of candidacy (`services/utils/fifa-discovery.js`); the persons the tagger linked to an
    item of Wikidata that are named in them are counted by medium; each one named in two media at least is judged on up to six of those sentences by two models of two families, and
    **the map adds the person only when both say it**: `declared` (announced, or nominated by an association; both must say declared, in 2 media at least) or `rumoured` (5 media at least),
-   with words held in the sentences. At most two a run; **none takes the place of another** (a full map adds none); a person an administrator took off the map is never brought back
+   with words held in the sentences. At most two a run; **none takes the place of another** (a full map adds none); a person taken off the map is never brought back by the news
    (`fifa_dismissed`); the candidate comes with `origin: "news"` and `found` (status, articles, media, the words) on `subjects`, and is read like any other (the 30 days of news, about
    150 000 tokens). Any reader can mark it `withdrawn`. See the measure in the quality page.
 

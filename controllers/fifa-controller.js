@@ -88,7 +88,7 @@ export const FifaController = {
 
     removeSubject: async (req, res) => {
         try {
-            await FifaService.removeSubject(req.params.qid);
+            await FifaService.removeSubject({qid: req.params.qid, admin: await isAdmin(req.user.id)});
             res.status(204).end();
         } catch (error) {
             fail(res, error);

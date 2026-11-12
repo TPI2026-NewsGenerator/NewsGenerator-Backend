@@ -565,7 +565,7 @@ UNIQUE `(user_id, member_qid, url)`. A page a reader adds on its own, with no ca
 #### fifa_dismissed
 | Column | Type | |
 |---|---|---|
-| qid | text | PK — a candidate an administrator took off the map: the news do not bring it back |
+| qid | text | PK — a candidate taken off the map (by a reader, or an administrator): the news do not bring it back |
 | dismissed_at | timestamptz | NOT NULL, default `now()` |
 
 #### fifa_leaders
