@@ -44,6 +44,8 @@ The cards sent count as read: their stories are left out of the next briefings f
   published" (the user, 03.11.2026). The title can also be changed by hand, and the AI can propose a neutral one ("Suggest a neutral title",
   `MailNeutralTitle.jsx`, `POST /api/briefing/:id/stories/:storyId/neutral-title`): shown against the title word by word,
   used or kept by the reader, see [neutral titles](../README.md#a-neutral-title-on-demand).
+  A rewrite the checks refused (`item.titleProposal`) is the title the editor opens with, its warning shown and "Keep the title" to go back (12.11.2026,
+  a friend of the user); the card of the page keeps the title as published.
 - The countries of a card are chosen in the editor of the e-mail: the ones found ticked or not, and any other country of
   the world found by typing a few letters of its name (accents and case aside; Enter takes the first).
 - The pictures of a card (`BriefingService.pictures`, `services/utils/mail-pictures.js` `storyPictures`):
