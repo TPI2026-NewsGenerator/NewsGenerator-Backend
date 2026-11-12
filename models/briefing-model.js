@@ -252,6 +252,19 @@ export const BriefingModel = {
         ORDER BY "shownAt"`,
         profileId, since),
 
+    // The cards of this profile sent by e-mail since a date, with the start of their text and their source: what a new card is compared with (see
+    // sent-repeats.js). The oldest first: [{storyId, mergedStoryIds, title, text, source, media, shownAt}]
+    sentCardsSince: async (profileId, since) => prisma.$queryRawUnsafe(`
+        SELECT (item->>'storyId')::int AS "storyId", item->'mergedStoryIds' AS "mergedStoryIds",
+               COALESCE(item->>'titleTranslation', item->>'title') AS title,
+               CASE WHEN jsonb_typeof(item->'translation') = 'string' THEN item->>'translation' ELSE item->>'summary' END AS text,
+               item->'lead'->>'source' AS source, (item->'corroboration'->>'media')::int AS media, (item->>'sentAt')::timestamptz AS "shownAt"
+        FROM briefings b, jsonb_array_elements(b.items) AS item
+        WHERE b.id_profile = $1::int AND b.status = 'ready' AND jsonb_typeof(b.items) = 'array'
+          AND item->>'sentAt' IS NOT NULL AND (item->>'sentAt')::timestamptz >= $2::timestamptz
+        ORDER BY "shownAt"`,
+        profileId, since),
+
     // the cards of a ready briefing of this user just sent by e-mail, marked with the time: their stories
     // are not shown again for a while (see sentSince). One statement, as vote
     markSent: async (userId, briefingId, storyIds) => prisma.$executeRawUnsafe(`

@@ -41,6 +41,8 @@ measured on the code as it was built that day.
 | **Translation** meaning errors | the AI: 2.3% (DeepL: 9%) | | 310 texts | 16.10.2026 |
 | **Per-card AI analysis**, cards with a bad line | 5% with thinking on (27% off) | | 74 cards | 15.10.2026 |
 | **AI proofreading** of a card's pieces | 0 false alarm | 191 of 193 planted defects found | 480 cards | 09.11.2026 |
+| **The same news twice** (see "Duplicates" below): cards of one briefing | 16 true pairs in 12 of 47 briefings (990 cards) before the fold of card-merge.js; the two readers give 17 pairs, 11 true | 11 of 16 | 47 saved briefings, 3 profiles | 12.11.2026 |
+| **The same news twice**: a card of a briefing already told by a card of the 48 h before | 70 of 858 cards (8.2%); the "did it evolve?" check keeps 18 of the 20 same-news cards it is given | the proposed check of two readers: 59 of 70, 16 developments flagged | 47 saved briefings | 12.11.2026 |
 
 The sections below give each of them with what came before and what is known to be wrong.
 
@@ -185,6 +187,41 @@ The 11 names linked by `bench/countries/association-acronyms.sql` reach **1,197 
 | A story that drifts over days (idle decay in the grouping) | 23 drifting and 12 one-fact stories | cut drift 4 to 14 of 23, one-fact stories cut 1 to 2 of 12 | 28.09.2026 |
 | Unreadable cards and good cards removed by the review | 14 briefings; 264 and 237 cards | 8 unreadable cards in 14 briefings (about 1 a briefing); good cards wrongly removed 20 of 264 to **0 of 264** | 06-07.10.2026 |
 
+## Duplicates
+
+A friend of the user keeps meeting "doublons" (the user, 12.11.2026). Measured on the 47 ready briefings saved since 25.10.2026 (990 cards of 3 profiles),
+every pair of cards whose vectors (bge-m3, title and first 60 words) were at 0.72 or more, every pair sharing a story or an article, and a sample of 40
+pairs from 0.64 to 0.72, judged **SAME / DEVELOPMENT / DIFFERENT** by one AI judge (324 pairs), then the 112 pairs that judge called SAME (or DEVELOPMENT with
+a vector at 0.85+) by a second one. A pair on which they split counts as DEVELOPMENT (the doubt hides no news). `bench/dup-eval.mjs`. A duplicate whose cards are
+unlike in the vectors (under 0.64) was not looked for: the figures are a floor.
+
+| Measure | Sample | Result | Date |
+|---|---|---|---|
+| **Inside a briefing**: two cards telling the same news | 47 briefings, 990 cards | **16 pairs in 12 briefings (26%)**; nothing shared by story or article but 3 old pairs. None of the 47 holds a card folded by `card-merge.js` (no `joinedCards`). The code was already on the machine that stays on in the tree of the deploy before 12.11.2026 (`server.old` holds `card-merge.js` and the call in `briefing-service.js`; the day of the first deploy is not known), yet the 10 briefings made since 10.11 have no fold, while the same function replayed on the saved cards of the briefing 1208 (a true pair) folds it **3 times of 3, in 15 to 22 s**. In production it did not run or failed without a trace; the logs of the old container are gone (container made again 12.11.2026 13:37) | 12.11.2026 |
+| The fold of two readers (gemma4:31b and deepseek-v4-pro, both must give the pair) replayed on the 47 briefings | 16 true pairs | 17 pairs given: **11 true, 6 developments of one affair (folded as angles, none hidden), 0 different**; true found **11 of 16**. gemma alone 11 true of 28 given, deepseek alone 12 of 18. Missed: two briefings with the pair "Bomb of the day (L'Equipe)" and "Csányi", a GFA pair, an IFAB pair, "Infantino's Advantage". 489 s for 47, 200,000 tokens read, 206,000 written | 12.11.2026 |
+| **Across briefings** of one profile: a card of today telling the news of a card received in the previous 48 h (not a regeneration, 3 h) | 858 cards that had an earlier briefing | **70 cards (8.2%)**: profile 7 29 of 392 (7.4%), profile 137 21 of 262 (8.0%), profile 980 20 of 204 (9.8%). 41 of the 70 (59%) repeat a card **never sent by e-mail**, 17 a card sent that the filter let through as new, 12 a card sent kept as a follow-up | 12.11.2026 |
+| Why a card sent got through as new (before any judging: the cards sharing a story with a card sent in the 48 h before, with no follow-up mark) | 23 cards | all 23 passed by `mergedStoryIds`: the story is chosen after `notShownBefore`, then `keepSameNews` joins to it a story of before (a version in the reader's language or in another one), which the filter never sees | 12.11.2026 |
+| **"Did the news evolve?"** (`evolvedStories`, the prompt and model of the briefing) replayed on the 48 cards that share a story with a card sent | 20 SAME, 24 DEVELOPMENT, 4 DIFFERENT | it answers "evolved" for **42 of 48 (88%)**: 18 of 20 same-news cards kept, 4 developments left out. A living affair always has news since its card (a candidacy, a statement), whatever the card of today says | 12.11.2026 |
+| Proposed: the cards of today read **against the cards received** in the briefings of the 48 h before, by the two readers of the fold (bench `cross`) | the 70 true cards, 123 developments, 26 different | both readers: 76 pairs given, **60 true, 16 developments, 0 different**; true cards found **59 of 70 (84%)**; of the 29 whose earlier card was sent 24 (83%) with 8 developments flagged. deepseek alone: 64 of 70 but 25 developments; gemma alone: 60 of 70, 38 developments. About 50 s a briefing (662 s for 40 at 3 at a time), 317,000 tokens read and 295,000 written for 40 briefings | 12.11.2026 |
+
+The rule the user chose (12.11.2026): only a card **sent by e-mail** counts as read, and a news sent does not come back unless it evolved or the reader follows
+the affair. On the 98 judged pairs whose earlier card was sent (29 SAME, 56 DEVELOPMENT, 13 DIFFERENT; 48 of them share a story, 20 of the 29 SAME):
+
+| Check | Result on the 29 same-news cards | Wrong (a development hidden) | Date |
+|---|---|---|---|
+| The two readers of the fold, today's cards against the cards sent | 24 found (83%) | 7 of 31 flagged (23%) | 12.11.2026 |
+| One pair look with the full texts, gemma4:31b ("does B tell something new?") | 8 (28%) | 0 | 12.11.2026 |
+| The same look by deepseek-v4-pro with reasoning | 15 (52%) | 1 of 16 | 12.11.2026 |
+| The two readers, then the pair look of deepseek (both must say same) | 13 (45%) | 1 of 14 (7%) | 12.11.2026 |
+| The two readers, then the pair look of gemma | 8 (28%) | 0 of 8 | 12.11.2026 |
+| **Built** (`sent-repeats.js`): a story shared with a card sent, or paired by one reader of the list, then the look of gemma4:31b with reasoning | 11 (38%), none hidden of 56 developments; with deepseek 14 and 1 | 0 | 12.11.2026 |
+| The look judging "a NEW EVENT" (details do not count), gemma with reasoning | 28 of 29 | 23 of 56 developments called the same news: dropped | 12.11.2026 |
+
+The look pair by pair is stricter than the two judges (they called SAME some pairs where a card adds a detail): it is the safe side for a rule that must not hide an evolution.
+
+Not measured: what the reader read on the page (the page counts nothing since the tracking of the cards seen was dropped on 14.10.2026: "not sent by e-mail = not read"),
+duplicates with unlike vectors, and the cost in cards a wrong flag would hide (a development of one affair).
+
 ## Language and translation
 
 | Measure | Sample | Result | Date |
@@ -240,6 +277,7 @@ node --env-file=.env bench/countries/measure.mjs run         # the AI reading ea
 node --env-file=.env bench/countries/measure.mjs e2e         # the whole pipeline run again
 node --env-file=.env bench/countries/measure.mjs score       # against the labels of the judges
 node --env-file=.env bench/countries/acronym-gain.mjs        # the acronyms of associations
+node --env-file=.env bench/dup-eval.mjs build                # duplicates: the saved briefings; then vectors, pairs, (judges), score, replay, cross, crossScore
 pnpm run regression                                          # the corpus of regression, offline
 pnpm run regression:live                                     # and with the real model
 ```

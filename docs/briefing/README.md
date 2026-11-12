@@ -371,6 +371,47 @@ developments of the same affair (a question and its answer, a candidacy and the 
 A flag on the card for the reader ("maybe the same news as card 1", from that variant, joining nothing) was proposed
 the same day and put aside by the user, to come back to later.
 
+## A news sent by e-mail does not come back
+
+The rule of the user (12.11.2026): a news the reader got **by e-mail** is not shown again the next day or the days after, **unless it evolved or the
+reader follows its affair**. Only the cards sent count as read (the user kept the rule of 14.10.2026: "not sent = not read"; 59% of the news told again
+across briefings were cards never sent, which stay as they are). `repeats.js` already leaves out the stories sent before the AI chooses, but it reads the
+chosen stories only: a story joined to a card afterwards by `keepSameNews` (a version in the reader's language or in another one) was never looked at, and its
+question "did it evolve?" answers yes for 42 of 48 cards, because a living affair always has news since (`bench/dup-eval.mjs evolve`, 12.11.2026).
+
+`services/utils/sent-repeats.js` reads the cards once they are written (`sentRepeatsOf` of `briefing-service.js`, with the fold of the cards of one news and
+while the words are translated and proofread):
+1. **Candidates.** The cards of the profile sent by e-mail in the last 48 h (`BriefingModel.sentCardsSince`, one per story, the newest 80). A card of today
+   that shares a story (its own or one joined to it) with one of them is a candidate, at no cost. A reader of the whole list (the model of the briefing,
+   about 4 000 tokens in) pairs the cards of today with the cards sent that tell the same news: more candidates.
+2. **The look.** Each pair (12 at most) is read with the first three paragraphs of both cards: "same news, development or different?", with the definitions of
+   the judges of the bench and "be strict: a figure, a statement, a new step that the other card lacks is a development". gemma4:31b with reasoning
+   (`OLLAMA_REPEAT_MODEL` for another). Only a **same** verdict leaves the card out.
+3. **The affairs followed.** A card whose story (or a story joined to it) is one of the affairs the reader follows (`AffairModel.followedStories`) is never
+   left out nor asked about.
+
+Nothing is left out on a doubt: a reader that fails (the stories shared are still looked at), a look that is not answered or not "same", a failing query, an
+answer that cannot be read, more than 150 s, no card sent, all keep the cards. `AI_SENT_REPEATS=off` switches it off. A card left out is not replaced: the
+briefing is one card shorter. The log says each (`Briefing 512: sent repeats: "…" is left out, it tells the news of "…" sent on 2026-11-11`) and counts
+(`3 cards share a story with a card sent, 3 pairs by the reader, 3 looked at, 0 left out`).
+
+**Measured** on the 98 pairs of 47 saved briefings whose earlier card had been sent (29 the same news, 56 developments, 13 different; two blind judges),
+`bench/dup-eval.mjs strict`, 12.11.2026:
+
+| The look | the same news found (of 29) | developments called the same |
+|---|---|---|
+| gemma4:31b, no reasoning | 8 | 0 |
+| **gemma4:31b with reasoning (kept)** | **11** | **0** |
+| deepseek-v4-pro with reasoning | 15 | 1 |
+| gemma4:31b with reasoning, wording "does B report a new event" (details do not count) | 28 | 23 of 56 |
+
+The candidates then keep 11 of the 29 (the stories shared 7, the reader of the list 10, both 11); with deepseek 14 and 1 development. So the rule takes out about a
+third of the repeats of cards sent, and none of the 56 developments: the line between "the same news with more details" and "a development" is not one a
+model draws well (loosened, the look takes out 40% of the developments), and the rule is on the side of the development. The sample is small: no
+development hidden in 56 does not show the error is under about 5%. Live on the profile of Enzo, a briefing not saved: 3 cards sharing a story with a card
+sent, 3 looked at, 3 developments (a Blatter interview with other statements, the IRS complaint with more details, a supervisor of the Serbian federation whose
+assembly is cancelled), 4 calls, 5 700 tokens read and 1 300 written (about 2% of the 390 000 of a briefing); nothing is asked of a profile that sent no card.
+
 ## News told before the window
 
 A friend of the user (10.11.2026, "one of the most important problems"): a big affair is taken up again the next day, and a week

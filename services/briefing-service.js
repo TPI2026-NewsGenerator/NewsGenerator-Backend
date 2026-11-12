@@ -38,6 +38,8 @@ import {VERSION_DAYS, areVersions, forThePage, idsOf, restoredCard, sameCard, sw
 import {logBriefingChecks} from "./utils/briefing-checks.js";
 import {proofreadCards} from "./utils/proofread.js";
 import {foldCards, foldInto, sameNewsGroups} from "./utils/card-merge.js";
+import {receivedCards, repeatedCards, withoutSentRepeats} from "./utils/sent-repeats.js";
+import {AffairModel} from "../models/affair-model.js";
 import {reviewNames, withoutNonNames} from "./utils/name-review.js";
 import {failedTitle, translatedTitles} from "./utils/title-translation.js";
 import {relatedLines} from "./utils/timeline-relevance.js";
@@ -938,12 +940,26 @@ export const completeCards = async ({main, spare = []}, {briefingId = null, labe
         readOf: (article) => content.get(article.link)})};
 };
 
+// The cards of the briefing that tell the news of a card the profile sent by e-mail in the last REPEAT_HOURS (see sent-repeats.js), the stories of the
+// affairs the reader follows excepted. Nothing is left out on a doubt: a failing query or reader gives none
+const sentRepeatsOf = async (items, {profileId, userId, language, usage, label}) => {
+    try {
+        const received = receivedCards(await BriefingModel.sentCardsSince(profileId, new Date(Date.now() - REPEAT_HOURS * 3600e3)));
+        if (received.length === 0) return [];
+        const followed = new Set((await AffairModel.followedStories(userId)).flatMap(affair => [affair.anchor_story, ...(affair.story_ids ?? [])]).filter(id => id > 0));
+        return await repeatedCards(items, received, language, {usage, label, followed});
+    } catch (err) {
+        console.error(`Briefing ${label}: sent repeats: not looked for (${err.message})`);
+        return [];
+    }
+};
+
 // hours: of news it is written from, one of WINDOWS; size: its cards, one of BRIEFING_SIZES. Exported for the benches, which write a briefing
 // without saving it (bench/briefing-relevance.mjs)
 export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) => {
     // the stories ranked and given to the AI grow with the cards wanted
     const scale = size / MAX_BRIEFING;
-    const usage = {repeats: newUsage(), aging: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage(), titling: newUsage(), titleRewriting: newUsage(), proofreading: newUsage(), duplicates: newUsage(), nameReview: newUsage(), picturing: newUsage()};
+    const usage = {repeats: newUsage(), aging: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage(), titling: newUsage(), titleRewriting: newUsage(), proofreading: newUsage(), duplicates: newUsage(), sentRepeats: newUsage(), nameReview: newUsage(), picturing: newUsage()};
     // the interests of the profile and of the projects it runs: each gets its share of the cards
     const [profile, interests, projects] = await Promise.all([ProfileModel.get(profileId), ProfileModel.briefingInterests(profileId),
         ProfileModel.projects(profileId)]);
@@ -1068,6 +1084,8 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     // the cards that tell the same news, read again as a whole once they are written (see card-merge.js): two readers, asked now, answer while
     // the words of the cards are translated and proofread; never fails, never waits long
     const sameNews = sameNewsGroups(items, language, {usage: usage.duplicates, label});
+    // the cards that tell the news of a card the reader got by e-mail in the last days, unless it evolved or the reader follows its affair (see sent-repeats.js)
+    const sentRepeats = sentRepeatsOf(items, {profileId, userId: profile.id_user, language, usage: usage.sentRepeats, label});
     // the names that no item of Wikidata stands for and that are no names (a pairing of two teams, a common noun), pointed at by the AI at the same time
     const notNames = reviewNames(items, {usage: usage.nameReview, label});
     // the picture of each card looked at by the AI, which finds a better one among its articles' when it is much better (see picture-choice.js)
@@ -1078,7 +1096,8 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     // checks it (see proofread.js); never fails, never waits long
     const proofread = await proofreadCards(hedged, language, {usage: usage.proofreading, label});
     // the second card of a news both readers agree on is among the angles of the other: no news is hidden, a development taken for it is one click away
-    const written = withoutNonNames(foldCards(withAiPictures(proofread, await aiPictures), await sameNews, {label}), await notNames, {label});
+    const folded = withoutNonNames(foldCards(withAiPictures(proofread, await aiPictures), await sameNews, {label}), await notNames, {label});
+    const written = withoutSentRepeats(folded, await sentRepeats, {label});
     // the analysis of the cards that merit one, from their articles read whole: written after the
     // briefing is shown (it reasons for a minute or more a card, see card-analysis.js), never awaited
     if (briefingId) analyze(briefingId, written, articles, language);
