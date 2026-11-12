@@ -16,7 +16,10 @@ import express from 'express';
 // the mentions of the presidents are kept a quarter of an hour: not here, each test asks again
 process.env.FIFA_MENTIONS_CACHE_MS = '0';
 const model = Object.fromEntries(['subjects', 'addSubject', 'markChecked', 'setSubjectStatus', 'deleteSubject', 'news', 'linkedNames', 'mentionNames', 'knownHashes', 'insertSignal',
-    'unconfirmed', 'updateSignal', 'signals', 'signalsOf', 'votes', 'votesOf', 'votesOfPair', 'addVote', 'deleteVote', 'leaders', 'replaceLeaders', 'audits', 'auditSample', 'lastAudit', 'addAudit', 'mentionsOfLeaders', 'addVotes'].map(name => [name, jest.fn()]));
+    'unconfirmed', 'updateSignal', 'signals', 'signalsOf', 'votes', 'votesOf', 'votesOfPair', 'addVote', 'deleteVote', 'leaders', 'replaceLeaders', 'audits', 'auditSample', 'lastAudit', 'addAudit', 'mentionsOfLeaders', 'addVotes', 'voteById', 'setSourceCheck', 'sourcesSince', 'expireSources', 'pendingSources', 'notesOf', 'addNote', 'noteById', 'deleteNote', 'dismiss', 'dismissed'].map(name => [name, jest.fn()]));
+// the address of a source is checked against the network of the server with a DNS lookup: not here
+const publicUrl = await import('../../services/utils/public-url.js');
+jest.unstable_mockModule('../../services/utils/public-url.js', () => ({...publicUrl, assertPublicUrl: jest.fn(async (value) => new URL(value))}));
 jest.unstable_mockModule('../../models/fifa-model.js', () => ({FifaModel: model}));
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson: jest.fn(), newUsage: () => ({calls: 0, input: 0, output: 0})}));
 const wikidata = {searchItems: jest.fn(), describeItems: jest.fn(), isQid: (value) => /^Q[1-9]\d*$/.test(String(value)), wikimediaHeaders: () => ({})};
@@ -27,7 +30,8 @@ jest.unstable_mockModule('../../services/utils/jwt.js', () => ({authenticateToke
     req.user = {id: Number(req.headers['x-user']), username: `reader${req.headers['x-user']}`};
     next();
 }}));
-jest.unstable_mockModule('../../services/utils/admin.js', () => ({adminOnly: (refused) => (req, res, next) => req.headers['x-admin'] === '1' ? next() : res.status(403).json({error: refused})}));
+// the reader 1000 is an administrator for the routes that ask the role of the signed-in reader
+jest.unstable_mockModule('../../services/utils/admin.js', () => ({adminOnly: (refused) => (req, res, next) => req.headers['x-admin'] === '1' ? next() : res.status(403).json({error: refused}), isAdmin: async (userId) => userId === 1000}));
 const {default: fifaRouter} = await import('../../routes/fifa-router.js');
 
 const app = express();
@@ -62,10 +66,12 @@ const reader = () => ++nextUser;
 beforeEach(() => {
     for (const fn of Object.values(model)) fn.mockReset();
     model.mentionsOfLeaders.mockResolvedValue({counts: [], latest: []});
-    for (const name of ['subjects', 'signals', 'signalsOf', 'votes', 'votesOf', 'votesOfPair', 'leaders', 'news', 'unconfirmed', 'mentionNames', 'linkedNames']) model[name].mockResolvedValue([]);
+    for (const name of ['subjects', 'signals', 'signalsOf', 'votes', 'votesOf', 'votesOfPair', 'leaders', 'news', 'unconfirmed', 'mentionNames', 'linkedNames', 'notesOf']) model[name].mockResolvedValue([]);
     model.subjects.mockResolvedValue([INFANTINO]);
-    model.addVote.mockResolvedValue(1);
+    model.addVote.mockResolvedValue([{id: 1}]);
     model.addVotes.mockResolvedValue([]);
+    model.sourcesSince.mockResolvedValue(0);
+    model.voteById.mockResolvedValue(null);
     model.knownHashes.mockResolvedValue(new Set());
     wikidata.searchItems.mockReset();
     wikidata.describeItems.mockReset();
@@ -125,7 +131,7 @@ describe('the votes', () => {
         model.votesOfPair.mockResolvedValue([{user_id: user, username: `reader${user}`, subject_qid: INFANTINO.qid, member_qid: JAPAN, value: 'for', note: '', created_at: new Date()}]);
         const {status, body} = await call('/votes', {method: 'POST', user, body: {subject: INFANTINO.qid, member: JAPAN, value: 'for', note: ' It said so '}});
         expect(status).toBe(200);
-        expect(model.addVote).toHaveBeenCalledWith({userId: user, subjectQid: INFANTINO.qid, memberQid: JAPAN, value: 'for', note: 'It said so', seen: ''});
+        expect(model.addVote).toHaveBeenCalledWith({userId: user, subjectQid: INFANTINO.qid, memberQid: JAPAN, value: 'for', note: 'It said so', seen: '', source: null});
         expect(body).toMatchObject({ok: true, human: {value: 'for', by: `reader${user}`, newer_evidence: false}});
     });
 
@@ -211,7 +217,7 @@ describe('the choice of the candidate an association leans toward', () => {
         const {status, body} = await lean(user, {subject: WENGER.qid});
         expect(status).toBe(200);
         expect(model.addVotes).toHaveBeenCalledTimes(1);
-        expect(model.addVotes).toHaveBeenCalledWith(user, [{subjectQid: INFANTINO.qid, memberQid: JAPAN, value: 'unknown'}, {subjectQid: WENGER.qid, memberQid: JAPAN, value: 'for'}]);
+        expect(model.addVotes).toHaveBeenCalledWith(user, [{subjectQid: INFANTINO.qid, memberQid: JAPAN, value: 'unknown'}, {subjectQid: WENGER.qid, memberQid: JAPAN, value: 'for', note: '', source: null}]);
         expect(body.lean).toEqual({subject_qid: WENGER.qid, source: 'reader', conflicting: []});
         expect(body.positions[WENGER.qid]).toMatchObject({position: 'soutien_declare', human: {value: 'for', by: `reader${user}`}});
         expect(body.positions[INFANTINO.qid]).toMatchObject({position: 'inconnue', ai_position: 'soutien_declare', human: {value: 'unknown'}});
@@ -229,7 +235,7 @@ describe('the choice of the candidate an association leans toward', () => {
         model.signalsOf.mockResolvedValue([{...signal, stance: 'against', level: 'declared'}]);
         model.votesOf.mockResolvedValue([]);
         await lean(user, {subject: WENGER.qid});
-        expect(model.addVotes).toHaveBeenCalledWith(user, [{subjectQid: WENGER.qid, memberQid: JAPAN, value: 'for'}]);
+        expect(model.addVotes).toHaveBeenCalledWith(user, [{subjectQid: WENGER.qid, memberQid: JAPAN, value: 'for', note: '', source: null}]);
     });
 
     it('should write nothing when the reader makes the choice that already stands', async () => {
@@ -263,6 +269,129 @@ describe('the choice of the candidate an association leans toward', () => {
     });
 });
 
+describe('the source a reader joins to a choice', () => {
+    const PAGE = 'https://www.example.com/news/jfa-backs-infantino?utm=1#top';
+    const CLEAN = 'https://www.example.com/news/jfa-backs-infantino?utm=1';
+    const WENGER = {...INFANTINO, qid: 'Q215244', name: 'Arsene Wenger', terms: ['wenger'], status: 'declared', color_index: 2};
+    const withSource = {user_id: 7, username: 'reader7', subject_qid: INFANTINO.qid, member_qid: JAPAN, value: 'for', note: 'See paragraph 3', seen: '', created_at: new Date(),
+        source_url: CLEAN, source_medium: 'example.com', source_check: 'pending', source_found: '', source_checked_at: null};
+
+    it('should keep the source of a vote for or against (the address cleaned, the medium named), start its check and answer it pending', async () => {
+        const user = reader();
+        model.votesOfPair.mockResolvedValue([{...withSource, user_id: user, username: `reader${user}`}]);
+        const {status, body} = await call('/votes', {method: 'POST', user, body: {subject: INFANTINO.qid, member: JAPAN, value: 'for', source: {url: PAGE}}});
+        expect(status).toBe(200);
+        expect(model.addVote).toHaveBeenCalledWith(expect.objectContaining({value: 'for', source: {url: CLEAN, medium: 'example.com'}}));
+        expect(body.human).toMatchObject({value: 'for', source: {url: CLEAN, medium: 'example.com', check: 'pending', found: '', checked_at: null}});
+    });
+
+    it('should accept the address as a plain string, and refuse what is no address, a password in it, another scheme, and a source with a confirmation or no position', async () => {
+        const user = reader();
+        const post = (body) => call('/votes', {method: 'POST', user, body: {subject: INFANTINO.qid, member: JAPAN, value: 'for', ...body}});
+        expect((await post({source: PAGE})).status).toBe(200);
+        for (const source of ['not an address', 'ftp://example.com/a', 'https://name:secret@example.com/a', {url: 'https://example.com/' + 'a'.repeat(500)}]) {
+            const answer = await post({source});
+            expect([source, answer.status]).toEqual([source, 422]);
+        }
+        expect((await post({value: 'confirm', source: PAGE})).status).toBe(422);
+        expect((await post({value: 'unknown', source: PAGE})).status).toBe(422);
+        expect(model.addVote).toHaveBeenCalledTimes(1);
+    });
+
+    it('should refuse an address of the network of the server with the answer of the check of public addresses', async () => {
+        const {assertPublicUrl} = await import('../../services/utils/public-url.js');
+        assertPublicUrl.mockRejectedValueOnce(Object.assign(new Error('"intranet" is a private address, it can\'t be used.'), {status: 400}));
+        const answer = await call('/votes', {method: 'POST', user: reader(), body: {subject: INFANTINO.qid, member: JAPAN, value: 'for', source: 'http://intranet/a'}});
+        expect(answer.status).toBe(400);
+        expect(model.addVote).not.toHaveBeenCalled();
+    });
+
+    it('should stop a reader at their sources of the day with a 429, and write nothing', async () => {
+        model.sourcesSince.mockResolvedValue(20);
+        const answer = await call('/votes', {method: 'POST', user: reader(), body: {subject: INFANTINO.qid, member: JAPAN, value: 'for', source: PAGE}});
+        expect(answer.status).toBe(429);
+        expect(model.addVote).not.toHaveBeenCalled();
+    });
+
+    it('should join the source to the vote FOR the chosen candidate only, with the word of the reader, and write again a choice that stands when the page is another', async () => {
+        const user = reader();
+        model.subjects.mockResolvedValue([INFANTINO, WENGER]);
+        model.signalsOf.mockResolvedValue([]);
+        model.votesOf.mockResolvedValue([]);
+        model.addVotes.mockResolvedValue([[{id: 11}]]);
+        const post = (subject, more = {}) => call('/leans', {method: 'POST', user, body: {member: JAPAN, subject, ...more}});
+        await post(WENGER.qid, {source: {url: PAGE}, note: ' The president said it '});
+        expect(model.addVotes).toHaveBeenLastCalledWith(user, [{subjectQid: WENGER.qid, memberQid: JAPAN, value: 'for', note: 'The president said it', source: {url: CLEAN, medium: 'example.com'}}]);
+        // the choice stands with that page: nothing to write; with another page: written again
+        model.votesOf.mockResolvedValue([{user_id: user, username: 'x', subject_qid: WENGER.qid, member_qid: JAPAN, value: 'for', note: '', created_at: new Date(), source_url: CLEAN}]);
+        await post(WENGER.qid, {source: PAGE});
+        expect(model.addVotes).toHaveBeenLastCalledWith(user, []);
+        await post(WENGER.qid, {source: 'https://other.example.org/b'});
+        expect(model.addVotes).toHaveBeenLastCalledWith(user, [expect.objectContaining({value: 'for', source: {url: 'https://other.example.org/b', medium: 'example.org'}})]);
+        // a source has no meaning with "none" or "withdraw"
+        expect((await post('none', {source: PAGE})).status).toBe(422);
+        expect((await post('withdraw', {source: PAGE})).status).toBe(422);
+    });
+
+    it('should list on the sheet the sources the choices stand on, each with what the AI read, and none of a vote taken back', async () => {
+        const read = {...withSource, id: 3, source_check: 'says', source_found: 'The JFA will back Infantino.', source_checked_at: new Date('2026-11-12T12:00:00Z')};
+        model.votesOf.mockResolvedValue([read, {...withSource, id: 4, user_id: 8, username: 'reader8', created_at: new Date(Date.now() - 5000), source_url: 'https://other.example.org/b'},
+            {user_id: 8, username: 'reader8', subject_qid: INFANTINO.qid, member_qid: JAPAN, value: 'withdraw', note: '', created_at: new Date()}]);
+        const sheet = (await call(`/associations/${JAPAN}`, {user: reader()})).body;
+        expect(sheet.sources).toEqual([expect.objectContaining({subject_qid: INFANTINO.qid, value: 'for', by: 'reader7', url: CLEAN, medium: 'example.com', check: 'says', found: 'The JFA will back Infantino.',
+            checked_at: '2026-11-12T12:00:00.000Z', note: 'See paragraph 3'})]);
+        expect(sheet.votes.find(one => one.by === 'reader7').source).toMatchObject({check: 'says'});
+    });
+});
+
+describe('the notes on an association', () => {
+    const row = (id, userId, text, at) => ({id, user_id: userId, username: `reader${userId}`, text, created_at: new Date(at)});
+
+    it('should carry the notes on the sheet, newest first as the model gives them, each told mine to the reader who wrote it', async () => {
+        model.notesOf.mockResolvedValue([row(2, 7, 'Second', '2026-11-12T10:00:00Z'), row(1, 8, 'First', '2026-11-11T10:00:00Z')]);
+        const sheet = (await call(`/associations/${JAPAN}`, {user: 7})).body;
+        expect(sheet.notes).toEqual([{id: 2, by: 'reader7', at: '2026-11-12T10:00:00.000Z', text: 'Second', mine: true}, {id: 1, by: 'reader8', at: '2026-11-11T10:00:00.000Z', text: 'First', mine: false}]);
+        expect(model.notesOf).toHaveBeenCalledWith(JAPAN);
+    });
+
+    it('should let any reader add a note, trimmed, and answer it as theirs with a 201', async () => {
+        model.addNote.mockResolvedValue(row(5, 9, 'The president spoke on TV', '2026-11-12T11:00:00Z'));
+        const {status, body} = await call('/notes', {method: 'POST', user: 9, body: {member: JAPAN, text: '  The president spoke on TV  '}});
+        expect(status).toBe(201);
+        expect(model.addNote).toHaveBeenCalledWith({userId: 9, memberQid: JAPAN, text: 'The president spoke on TV'});
+        expect(body).toEqual({note: {id: 5, by: 'reader9', at: '2026-11-12T11:00:00.000Z', text: 'The president spoke on TV', mine: true}});
+    });
+
+    it('should refuse an empty note, one over 500 characters, an association that does not exist, and a reader who is not signed in', async () => {
+        const post = (body, user = reader()) => call('/notes', {method: 'POST', user, body});
+        expect((await post({member: JAPAN, text: '   '})).status).toBe(422);
+        expect((await post({member: JAPAN, text: 'a'.repeat(501)})).status).toBe(422);
+        expect((await post({member: 'Q1', text: 'ok'})).status).toBe(422);
+        expect((await post({member: JAPAN})).status).toBe(422);
+        expect((await call('/notes', {method: 'POST', body: {member: JAPAN, text: 'ok'}})).status).toBe(401);
+        expect(model.addNote).not.toHaveBeenCalled();
+    });
+
+    it('should stop a reader at ten notes an hour with a 429', async () => {
+        const user = reader();
+        model.addNote.mockResolvedValue(row(1, user, 'x', '2026-11-12T11:00:00Z'));
+        let last;
+        for (let i = 0; i < 11; i++) last = await call('/notes', {method: 'POST', user, body: {member: JAPAN, text: 'x'}});
+        expect(last.status).toBe(429);
+    });
+
+    it('should let the author or an administrator take a note off, and nobody else', async () => {
+        model.noteById.mockResolvedValue({id: 5, user_id: 9});
+        expect((await call('/notes/5', {method: 'DELETE', user: 10})).status).toBe(403);
+        expect(model.deleteNote).not.toHaveBeenCalled();
+        expect((await call('/notes/5', {method: 'DELETE', user: 9})).status).toBe(204);
+        expect((await call('/notes/5', {method: 'DELETE', user: 1000})).status).toBe(204);
+        expect(model.deleteNote).toHaveBeenCalledTimes(2);
+        model.noteById.mockResolvedValue(null);
+        expect((await call('/notes/6', {method: 'DELETE', user: 9})).status).toBe(404);
+    });
+});
+
 describe('the audits', () => {
     it('should let only an administrator read the last audits of the positions shown', async () => {
         model.audits.mockResolvedValue([{id: 1, made_at: new Date('2026-11-12T10:00:00Z'), auditor: 'gpt-oss:120b', sampled: 30, agreed: 27, unreadable: 0, votes_total: 2, votes_contradicting: 1, verdict: 'ok', details: {}}]);
@@ -283,7 +412,7 @@ describe('the candidates', () => {
         const {status, body} = await call('/subjects', {method: 'POST', user, body: {qid: WENGER.qid}});
         expect(status).toBe(201);
         expect(body).toMatchObject({already: false, subject: {qid: WENGER.qid, state: 'computing'}});
-        expect(model.addSubject).toHaveBeenCalledWith({qid: WENGER.qid, name: 'Arsène Wenger', terms: ['wenger'], status: 'declared', userId: user});
+        expect(model.addSubject).toHaveBeenCalledWith({qid: WENGER.qid, name: 'Arsène Wenger', terms: ['wenger'], status: 'declared', userId: user, origin: 'reader', found: null});
     });
 
     it('should answer 200 already for a candidate that is on the map, and add nothing', async () => {
@@ -340,5 +469,7 @@ describe('the candidates', () => {
         expect((await call(`/subjects/${INFANTINO.qid}`, {method: 'DELETE', user: reader()})).status).toBe(403);
         expect((await call(`/subjects/${INFANTINO.qid}`, {method: 'DELETE', user: reader(), admin: true})).status).toBe(204);
         expect(model.deleteSubject).toHaveBeenCalledWith(INFANTINO.qid);
+        // the news do not bring back a candidate an administrator took off
+        expect(model.dismiss).toHaveBeenCalledWith(INFANTINO.qid);
     });
 });

@@ -492,7 +492,9 @@ Added 12.11.2026 by `add_fifa_map.sql`, to the twenty-five above. See [The FIFA 
 | status | text | NOT NULL, CHECK in (`incumbent`, `declared`, `rumoured`, `withdrawn`) |
 | state | text | NOT NULL, CHECK in (`computing`, `ready`) — `computing` while the 30 days of news are being read |
 | color_index | integer | NOT NULL, CHECK between 1 and 6 — one colour each on the page |
-| created_by | integer | null, FK to `users` ON DELETE SET NULL |
+| created_by | integer | null, FK to `users` ON DELETE SET NULL — null for the president in office and for a candidate the news brought |
+| origin | text | NOT NULL, default 'reader', CHECK in (`seed`, `reader`, `news`) — who put the candidate on the map |
+| found | jsonb | null — for a candidate of the news: the status judged, the articles and media it was named in, the words, the date |
 | created_at, checked_at, backfilled_at | timestamptz | the news created since `checked_at` are the ones read next |
 
 #### fifa_signals
@@ -522,11 +524,33 @@ Indexes on `(member_qid, subject_qid)` and, partial, on the unconfirmed ones.
 | user_id | integer | NOT NULL, FK to `users` ON DELETE CASCADE |
 | subject_qid | text | NOT NULL, FK to `fifa_subjects` ON DELETE CASCADE |
 | member_qid | text | NOT NULL |
-| value | text | NOT NULL, CHECK in (`for`, `against`, `unknown`, `withdraw`) |
+| value | text | NOT NULL, CHECK in (`for`, `against`, `unknown`, `withdraw`, `confirm`) — a `confirm` keeps the position as it is and decides nothing |
 | note | text | NOT NULL, default '' |
+| seen | text | NOT NULL, default '' — for a `confirm`: the position the reader saw (`soutien_declare`, `inconnue`...), to tell a confirmation from before the news changed it |
+| source_url, source_medium | text | NOT NULL, default '' — the page the reader joined to a `for` or `against`, and its medium |
+| source_check | text | NOT NULL, default '', CHECK in ('', `pending`, `says`, `contradicts`, `unclear`, `unreadable`) — what the AI read in the page; it decides nothing |
+| source_found | text | NOT NULL, default '' — the sentence of the page that says it |
+| source_checked_at | timestamptz | null |
 | created_at | timestamptz | NOT NULL, default `now()` |
 
-Only added. The vote that decides is the latest of each reader who has not taken it back, the newest of those.
+Only added. The vote that decides is the latest decision of each reader who has not taken it back, the newest of those; a confirmation is no decision.
+
+#### fifa_notes
+| Column | Type | |
+|---|---|---|
+| id | integer | PK |
+| user_id | integer | NOT NULL, FK to `users` ON DELETE CASCADE |
+| member_qid | text | NOT NULL — the association |
+| text | text | NOT NULL, 1 to 500 characters |
+| created_at | timestamptz | NOT NULL, default `now()` |
+
+A word on an association, visible to every signed-in reader; its author or an administrator takes it off.
+
+#### fifa_dismissed
+| Column | Type | |
+|---|---|---|
+| qid | text | PK — a candidate an administrator took off the map: the news do not bring it back |
+| dismissed_at | timestamptz | NOT NULL, default `now()` |
 
 #### fifa_leaders
 | Column | Type | |

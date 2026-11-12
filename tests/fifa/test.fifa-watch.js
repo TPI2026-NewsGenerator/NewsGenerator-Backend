@@ -12,7 +12,7 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 import process from 'node:process';
 
 process.env.FIFA_MAX_PASSAGES = '3';
-const model = Object.fromEntries(['subjects', 'markChecked', 'news', 'linkedNames', 'mentionNames', 'knownHashes', 'insertSignal', 'unconfirmed', 'updateSignal'].map(name => [name, jest.fn()]));
+const model = Object.fromEntries(['subjects', 'markChecked', 'news', 'linkedNames', 'mentionNames', 'knownHashes', 'insertSignal', 'unconfirmed', 'updateSignal', 'expireSources', 'pendingSources'].map(name => [name, jest.fn()]));
 jest.unstable_mockModule('../../models/fifa-model.js', () => ({FifaModel: model}));
 const ollamaJson = jest.fn();
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson, newUsage: () => ({calls: 0, input: 0, output: 0})}));
@@ -33,6 +33,8 @@ beforeEach(() => {
     model.linkedNames.mockResolvedValue([]);
     model.mentionNames.mockResolvedValue([]);
     model.unconfirmed.mockResolvedValue([]);
+    model.expireSources.mockResolvedValue(0);
+    model.pendingSources.mockResolvedValue([]);
     model.knownHashes.mockResolvedValue(new Set());
     ollamaJson.mockResolvedValue(reading());
     jest.spyOn(console, 'log').mockImplementation(() => {});

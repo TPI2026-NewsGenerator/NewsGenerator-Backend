@@ -47,11 +47,17 @@ const standing = (votes) => {
 };
 const newest = (a, b) => new Date(b.created_at) - new Date(a.created_at);
 
+// The source a reader joined to a vote (the link of the page that says it) and what the AI read in it: {url, medium, check, found, checked_at} or null. check:
+// "pending" (not read yet), "says" (the page says what the reader chose; found = the sentence), "contradicts" (it says the other thing), "unclear", "unreadable"
+export const sourceOf = (vote) => vote?.source_url
+    ? {url: vote.source_url, medium: vote.source_medium ?? '', check: vote.source_check || 'pending', found: vote.source_found ?? '', checked_at: vote.source_checked_at ? new Date(vote.source_checked_at).toISOString() : null}
+    : null;
+
 // The vote that decides: of each reader the latest decision counts, a reader who took it back counts for nothing, and the newest of the rest decides.
-// votes: [{user_id, username, value, note, created_at}] -> {value, by, at, note} | null
+// votes: [{user_id, username, value, note, created_at, source_*}] -> {value, by, at, note, source} | null
 export const decisiveVote = (votes) => {
     const decisions = standing(votes).map(state => state.decision).filter(Boolean).sort(newest);
-    return decisions.length === 0 ? null : {value: decisions[0].value, by: decisions[0].username, at: new Date(decisions[0].created_at).toISOString(), note: decisions[0].note ?? ''};
+    return decisions.length === 0 ? null : {value: decisions[0].value, by: decisions[0].username, at: new Date(decisions[0].created_at).toISOString(), note: decisions[0].note ?? '', source: sourceOf(decisions[0])};
 };
 
 // The readers who confirmed the position ("Confirm this position"): {count, by, at, outdated} or null when nobody did. A confirmation counts for the
@@ -123,7 +129,7 @@ export const positionFor = ({signals, votes, colour, now}) => {
     // news that say the other thing after the vote: the page invites to vote again, the colour does not move
     const after = signals.filter(signal => signal.certainty === 'established' && new Date(signal.published_at) > new Date(human.at));
     const newer = after.some(signal => human.value === 'unknown' || (human.value === 'for') !== (signal.stance === 'for'));
-    return {...answer, position: VOTED[human.value], ai_position: answer.position, stale: false, human: {value: human.value, by: human.by, at: human.at, newer_evidence: newer}, confirmed};
+    return {...answer, position: VOTED[human.value], ai_position: answer.position, stale: false, human: {value: human.value, by: human.by, at: human.at, newer_evidence: newer, source: human.source}, confirmed};
 };
 
 // The candidate an association leans toward, from its positions on the candidates: {subject_qid, source, conflicting} or null when it supports none.
@@ -146,6 +152,19 @@ const group = (rows, key) => {
     return groups;
 };
 const voted = (position) => position !== null && position.position !== 'inconnue';
+
+// The sources the readers' choices stand on, the newest first: of each reader the decision that stands (for or against) when it carries a source.
+// [{subject_qid, value, by, at, note, url, medium, check, found, checked_at}]
+export const sourcesOf = (votes) => {
+    const list = [];
+    for (const [subject, rows] of group(votes, vote => vote.subject_qid)) {
+        for (const state of standing(rows)) {
+            const vote = state.decision;
+            if (vote?.source_url && ['for', 'against'].includes(vote.value)) list.push({subject_qid: subject, value: vote.value, by: vote.username, at: new Date(vote.created_at).toISOString(), note: vote.note ?? '', ...sourceOf(vote)});
+        }
+    }
+    return list.sort((a, b) => new Date(b.at) - new Date(a.at));
+};
 
 // {generated_at, levels, subjects, members} (bench/fifa/README.md of the client)
 export const buildMap = ({members, subjects, signals, votes, leaders = new Map(), colour = colourSetting(), now = new Date()}) => {
@@ -173,7 +192,7 @@ export const buildMap = ({members, subjects, signals, votes, leaders = new Map()
     return {
         generated_at: now.toISOString(), levels: levelsOf(colour),
         subjects: subjects.map(subject => ({qid: subject.qid, name: subject.name, color_index: subject.color_index, status: subject.status, state: subject.state,
-            positions_known: known.get(subject.qid) ?? 0, uncertain_count: uncertain.get(subject.qid) ?? 0})),
+            origin: subject.origin ?? 'reader', found: subject.found ?? null, positions_known: known.get(subject.qid) ?? 0, uncertain_count: uncertain.get(subject.qid) ?? 0})),
         members: rows,
     };
 };
@@ -188,8 +207,8 @@ export const buildSheet = ({member, subjects, signals, votes, leader = null, col
     const history = subjects.flatMap(subject => historyOf(withColour(signals.filter(signal => signal.subject_qid === subject.qid), colour).map(dated)).map(change => ({subject_qid: subject.qid, ...change})));
     return {
         member: {qid: member.qid, fifa: member.fifa, name: member.name, association: member.association, level: member.level, confederation: member.confederation, iso: member.iso, lat: member.lat, lng: member.lng},
-        positions, leader, lean: leanOf(positions),
-        votes: [...votes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).map(vote => ({subject_qid: vote.subject_qid, value: vote.value, by: vote.username, at: new Date(vote.created_at).toISOString(), note: vote.note ?? '', seen: vote.seen ?? ''})),
+        positions, leader, lean: leanOf(positions), sources: sourcesOf(votes),
+        votes: [...votes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).map(vote => ({subject_qid: vote.subject_qid, value: vote.value, by: vote.username, at: new Date(vote.created_at).toISOString(), note: vote.note ?? '', seen: vote.seen ?? '', source: sourceOf(vote)})),
         signals: signals.filter(signal => signal.certainty !== 'discarded').sort((a, b) => new Date(b.published_at) - new Date(a.published_at)).map(signal => ({
             id: signal.id, subject_qid: signal.subject_qid,
             certainty: signal.certainty === 'established' && withColour([signal], colour)[0].certainty === 'established' ? 'established' : 'uncertain',

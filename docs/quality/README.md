@@ -338,6 +338,15 @@ April to May 2026, out of the 30 days kept). The page's default is `FIFA_COLOUR=
 `declared` is the safer setting, `off` colours nothing. A weekly audit of the positions shown is made by the server (30 established signals read again by a third model, `gpt-oss:120b`, and the votes of the readers against
 the news, kept in `fifa_audits`): it is a live agreement, not a measure of the truth.
 
+**The candidates the news name** (12.11.2026, `bench/fifa/discover.mjs`, `scripts/fifa-discover.js`): the words alone (FIFA, a president word, a candidacy word in one sentence, a person the
+tagger linked to Wikidata) find 25 persons in the 30 days of news: the real candidates (Tashima 88 media, Wenger 71, Vega 14, Beckham 13) and also Blatter (15 media, attacking
+the president), a Nigerian presidential candidate (5 media), Macron (urging Wenger), so a count of media is not enough and the map adds nobody without two models of two families saying it.
+First run of the judgment, dry, on the 14 days: 5 persons judged, 2 added by the rule (Wenger "rumoured" by both, Vega "declared" by both; Tashima and the president in office were already on
+the map) and 3 refused (Blatter, Obi, Macron: both models said no), which is right for the 5, **on 5 persons only: it shows the rule works, it is not a precision**. 7 calls, 4 400 tokens.
+Not measured: other weeks, other languages than those of the 30 days, the status (declared or rumoured) against the truth. The source a reader joins to a choice (a link) is read by the same chain
+as the news and only informs; read on 4 real pages (5 tried, 1 not readable): 1 said it ("CAF supports Infantino"), 3 unclear (the page does not name the association and the candidate in one
+sentence), a count too small to give a rate.
+
 ## What these figures do not say
 
 - **Judges.** Most are AI agents with the definition of the product; the hedging 51% is one reader, not blind. Judge variance is real: the

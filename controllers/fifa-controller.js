@@ -9,6 +9,7 @@
 "use strict"
 
 import {FifaService} from '../services/fifa-service.js';
+import {isAdmin} from '../services/utils/admin.js';
 
 const fail = (res, error) => res.status(error.status || 500).json({error: error.message ?? String(error)});
 
@@ -23,7 +24,7 @@ export const FifaController = {
 
     association: async (req, res) => {
         try {
-            res.status(200).json(await FifaService.association(req.params.qid));
+            res.status(200).json(await FifaService.association(req.params.qid, req.user.id));
         } catch (error) {
             fail(res, error);
         }
@@ -94,21 +95,42 @@ export const FifaController = {
         }
     },
 
-    // {subject, member, value: for|against|unknown|withdraw, note?} -> {ok, human}
+    // {subject, member, value: for|against|unknown|withdraw|confirm, note?, source?: {url}} -> {ok, human, confirmed}
     vote: async (req, res) => {
         try {
-            const {subject, member, value, note} = req.body ?? {};
-            res.status(200).json(await FifaService.vote({userId: req.user.id, subject, member, value, note}));
+            const {subject, member, value, note, source} = req.body ?? {};
+            res.status(200).json(await FifaService.vote({userId: req.user.id, subject, member, value, note, source}));
         } catch (error) {
             fail(res, error);
         }
     },
 
-    // {member, subject: a candidate | "none" | "withdraw"}: the reader says which candidate an association leans toward -> {ok, positions, lean}
+    // {member, subject: a candidate | "none" | "withdraw", source?: {url}, note?}: the reader says which candidate an association leans toward, with the page that says
+    // it when they have one -> {ok, positions, lean}
     lean: async (req, res) => {
         try {
-            const {member, subject} = req.body ?? {};
-            res.status(200).json(await FifaService.lean({userId: req.user.id, member, subject}));
+            const {member, subject, source, note} = req.body ?? {};
+            res.status(200).json(await FifaService.lean({userId: req.user.id, member, subject, source, note}));
+        } catch (error) {
+            fail(res, error);
+        }
+    },
+
+    // {member, text}: a note on an association, visible to every reader -> 201 {note: {id, by, at, text, mine}}
+    addNote: async (req, res) => {
+        try {
+            const {member, text} = req.body ?? {};
+            res.status(201).json(await FifaService.addNote({userId: req.user.id, member, text}));
+        } catch (error) {
+            fail(res, error);
+        }
+    },
+
+    // the author of a note or an administrator takes it off
+    removeNote: async (req, res) => {
+        try {
+            await FifaService.removeNote({id: req.params.id, userId: req.user.id, admin: await isAdmin(req.user.id)});
+            res.status(204).end();
         } catch (error) {
             fail(res, error);
         }

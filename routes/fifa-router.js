@@ -43,6 +43,11 @@ router.post('/votes', authenticateToken,
 router.post('/leans', authenticateToken,
     rateLimit({windowMs: 10 * 60e3, max: 30, key: req => `fifa lean ${req.user.id}`, message: 'Too many votes in a short time, try again in a few minutes.'}),
     FifaController.lean);
+// a note on an association, visible to every reader: a few an hour for each (the author or an administrator takes it off)
+router.post('/notes', authenticateToken,
+    rateLimit({windowMs: 3600e3, max: 10, key: req => `fifa note ${req.user.id}`, message: 'Too many notes, try again in an hour.'}),
+    FifaController.addNote);
+router.delete('/notes/:id', authenticateToken, FifaController.removeNote);
 // the weekly audit of the positions shown: how far a third model and the readers agree with them (see fifa-audit.js)
 router.get('/audits', authenticateToken, adminOnly('Only an administrator reads the audits.'), FifaController.audits);
 router.delete('/votes/:id', authenticateToken, adminOnly('Only an administrator takes a vote off.'), FifaController.removeVote);

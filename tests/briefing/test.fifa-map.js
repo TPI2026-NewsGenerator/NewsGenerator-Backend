@@ -229,7 +229,7 @@ describe('buildSheet', () => {
             {subject_qid: SUBJECT.qid, date: '2026-09-10T10:00:00Z', from: 'inconnue', to: 'non_soutien_declare', kind: 'first'},
             {subject_qid: SUBJECT.qid, date: '2026-10-23T10:00:00Z', from: 'non_soutien_declare', to: 'soutien_declare', kind: 'reversal'},
         ]);
-        expect(sheet.votes).toEqual([{subject_qid: SUBJECT.qid, value: 'for', by: 'reader1', at: '2026-10-30T10:00:00.000Z', note: 'It said so on its site', seen: ''}]);
+        expect(sheet.votes).toEqual([{subject_qid: SUBJECT.qid, value: 'for', by: 'reader1', at: '2026-10-30T10:00:00.000Z', note: 'It said so on its site', seen: '', source: null}]);
         expect(sheet.positions[SUBJECT.qid]).toMatchObject({position: 'soutien_declare', human: {value: 'for'}});
     });
 

@@ -9,20 +9,30 @@
 "use strict"
 
 import {prisma} from '../config/db.js';
+import {DISCOVERY_REGEX} from '../services/utils/fifa-discovery.js';
 
 const SIGNAL = `s.id, s.subject_qid, s.member_qid, s.certainty, s.uncertain_reason, s.stance, s.level, s.mark, s.speaker_kind, s.speaker, s.sentence, s.lang, s.url,
     s.medium, s.published_at, s.news_count, s.media_count, s.confirmed`;
-const VOTE = `v.id, v.user_id, u.username, v.subject_qid, v.member_qid, v.value, v.note, v.seen, v.created_at`;
+const VOTE = `v.id, v.user_id, u.username, v.subject_qid, v.member_qid, v.value, v.note, v.seen, v.created_at, v.source_url, v.source_medium, v.source_check, v.source_found, v.source_checked_at`;
+// one vote written, with its source when the reader joined one (checked later: "pending"); answers the id
+const INSERT_VOTE = `INSERT INTO fifa_votes (user_id, subject_qid, member_qid, value, note, seen, source_url, source_medium, source_check)
+    VALUES ($1::int, $2::text, $3::text, $4::text, $5::text, $6::text, $7::text, $8::text, $9::text) RETURNING id`;
+const voteArguments = (userId, vote) => [userId, vote.subjectQid, vote.memberQid, vote.value, vote.note ?? '', vote.seen ?? '', vote.source?.url ?? '', vote.source?.medium ?? '', vote.source ? 'pending' : ''];
 
 export const FifaModel = {
     // --- the candidates
-    subjects: async () => prisma.$queryRawUnsafe(`SELECT qid, name, terms, status, state, color_index, created_at, checked_at, backfilled_at FROM fifa_subjects ORDER BY color_index, created_at`),
+    subjects: async () => prisma.$queryRawUnsafe(`SELECT qid, name, terms, status, state, color_index, origin, found, created_at, checked_at, backfilled_at FROM fifa_subjects ORDER BY color_index, created_at`),
 
-    addSubject: async ({qid, name, terms, status, userId}) => prisma.$queryRawUnsafe(`
-        INSERT INTO fifa_subjects (qid, name, terms, status, state, color_index, created_by)
+    // origin: reader | news (found: what the news said, for a candidate they brought; userId null for the news)
+    addSubject: async ({qid, name, terms, status, userId, origin = 'reader', found = null}) => prisma.$queryRawUnsafe(`
+        INSERT INTO fifa_subjects (qid, name, terms, status, state, color_index, created_by, origin, found)
         VALUES ($1::text, $2::text, $3::text[], $4::text, 'computing',
-            (SELECT COALESCE(MIN(i), 6) FROM generate_series(1, 6) i WHERE i NOT IN (SELECT color_index FROM fifa_subjects)), $5::int)
-        ON CONFLICT (qid) DO NOTHING RETURNING qid, name, terms, status, state, color_index`, qid, name, terms, status, userId),
+            (SELECT COALESCE(MIN(i), 6) FROM generate_series(1, 6) i WHERE i NOT IN (SELECT color_index FROM fifa_subjects)), $5::int, $6::text, $7::jsonb)
+        ON CONFLICT (qid) DO NOTHING RETURNING qid, name, terms, status, state, color_index, origin, found`, qid, name, terms, status, userId ?? null, origin, found ? JSON.stringify(found) : null),
+
+    // the candidates an administrator took off the map: the news do not bring them back
+    dismissed: async () => new Set((await prisma.$queryRawUnsafe(`SELECT qid FROM fifa_dismissed`)).map(row => row.qid)),
+    dismiss: async (qid) => prisma.$executeRawUnsafe(`INSERT INTO fifa_dismissed (qid) VALUES ($1::text) ON CONFLICT (qid) DO NOTHING`, qid),
 
     // an administrator: the status of a candidate (withdrawn, rumoured...), or taking one off the map with all it holds
     setSubjectStatus: async (qid, status) => prisma.$executeRawUnsafe(`UPDATE fifa_subjects SET status = $2::text WHERE qid = $1::text`, qid, status),
@@ -42,6 +52,15 @@ export const FifaModel = {
         SELECT am.id_article AS id, m.qid, m.name FROM article_mentions am JOIN mentions m ON m.id = am.id_mention
         WHERE am.id_article = ANY($1::int[]) AND m.qid = ANY($2::text[])`, articleIds, qids),
 
+    // the news since a date that hold FIFA, a word of president and a word of candidacy (the three stems of fifa-discovery.js), and the persons the tagger linked in them
+    discoveryNews: async ({since}) => prisma.$queryRawUnsafe(`
+        SELECT id, title, description, search_text AS text, lang, medium_of(link) AS medium, link, COALESCE(published_at, created_at) AS at
+        FROM articles WHERE created_at >= $1::timestamptz AND search_text ~* $2::text AND search_text ~* $3::text AND search_text ~* $4::text`,
+        since, DISCOVERY_REGEX.fifa, DISCOVERY_REGEX.president, DISCOVERY_REGEX.candidacy),
+    personsOfArticles: async (articleIds) => articleIds.length === 0 ? [] : prisma.$queryRawUnsafe(`
+        SELECT am.id_article AS id, m.qid, m.name FROM article_mentions am JOIN mentions m ON m.id = am.id_mention
+        WHERE am.id_article = ANY($1::int[]) AND m.kind = 'person' AND m.qid IS NOT NULL`, articleIds),
+
     mentionNames: async (qids) => prisma.$queryRawUnsafe(`SELECT name, qid FROM mentions WHERE qid = ANY($1::text[]) AND kind = 'organization'`, qids),
 
     // --- the signals
@@ -54,7 +73,8 @@ export const FifaModel = {
             lang, url, medium, published_at, news_count, media_count, read_by, confirmed)
         VALUES ($1::text, $2::text, $3::text, $4::text, $5::text, $6::text, $7::text, $8::text, $9::text, $10::text, $11::text, $12::text, $13::text, $14::text, $15::text,
             $16::text, $17::text, $18::text, $19::timestamptz, $20::int, $21::int, $22::text[], $23::boolean)
-        ON CONFLICT (subject_qid, member_qid, hash) DO UPDATE SET news_count = GREATEST(fifa_signals.news_count, EXCLUDED.news_count), media_count = GREATEST(fifa_signals.media_count, EXCLUDED.media_count)`,
+        ON CONFLICT (subject_qid, member_qid, hash) DO UPDATE SET news_count = GREATEST(fifa_signals.news_count, EXCLUDED.news_count), media_count = GREATEST(fifa_signals.media_count, EXCLUDED.media_count),
+            updated_at = CASE WHEN EXCLUDED.news_count > fifa_signals.news_count OR EXCLUDED.media_count > fifa_signals.media_count THEN now() ELSE fifa_signals.updated_at END`,
         signal.subject_qid, signal.member_qid, signal.hash, signal.certainty, signal.uncertain_reason, signal.stance, signal.level, signal.mark, signal.speaker_kind, signal.speaker, signal.matched,
         signal.sentence, signal.title, signal.description, signal.quote, signal.lang, signal.url, signal.medium, signal.published_at, signal.news_count, signal.media_count, signal.read_by, signal.confirmed),
 
@@ -65,7 +85,7 @@ export const FifaModel = {
 
     updateSignal: async (id, reading) => prisma.$executeRawUnsafe(`
         UPDATE fifa_signals SET certainty = $2::text, uncertain_reason = $3::text, stance = $4::text, level = $5::text, mark = $6::text, speaker_kind = $7::text, speaker = $8::text,
-            quote = $9::text, read_by = $10::text[], confirmed = $11::boolean WHERE id = $1::int`,
+            quote = $9::text, read_by = $10::text[], confirmed = $11::boolean, updated_at = now() WHERE id = $1::int`,
         id, reading.certainty, reading.uncertain_reason, reading.stance, reading.level, reading.mark, reading.speaker_kind, reading.speaker, reading.quote, reading.read_by, reading.confirmed),
 
     // the established signals of a FAMILY: the ones whose title, description or sentence match a pattern (a regular expression of Postgres, case ignored),
@@ -97,12 +117,33 @@ export const FifaModel = {
     votesOf: async (memberQid) => prisma.$queryRawUnsafe(`SELECT ${VOTE} FROM fifa_votes v JOIN users u ON u.id = v.user_id WHERE v.member_qid = $1::text ORDER BY v.created_at`, memberQid),
     votesOfPair: async (subjectQid, memberQid) => prisma.$queryRawUnsafe(
         `SELECT ${VOTE} FROM fifa_votes v JOIN users u ON u.id = v.user_id WHERE v.subject_qid = $1::text AND v.member_qid = $2::text ORDER BY v.created_at`, subjectQid, memberQid),
-    addVote: async ({userId, subjectQid, memberQid, value, note, seen = ''}) => prisma.$executeRawUnsafe(
-        `INSERT INTO fifa_votes (user_id, subject_qid, member_qid, value, note, seen) VALUES ($1::int, $2::text, $3::text, $4::text, $5::text, $6::text)`, userId, subjectQid, memberQid, value, note, seen),
-    // the votes of one choice, all or none: [{subjectQid, memberQid, value}] for a reader
-    addVotes: async (userId, votes) => votes.length === 0 ? [] : prisma.$transaction(votes.map(vote => prisma.$executeRawUnsafe(
-        `INSERT INTO fifa_votes (user_id, subject_qid, member_qid, value, note, seen) VALUES ($1::int, $2::text, $3::text, $4::text, '', '')`, userId, vote.subjectQid, vote.memberQid, vote.value))),
+    // {userId, subjectQid, memberQid, value, note?, seen?, source?: {url, medium}} -> [{id}]
+    addVote: async (vote) => prisma.$queryRawUnsafe(INSERT_VOTE, ...voteArguments(vote.userId, vote)),
+    // the votes of one choice, all or none: [{subjectQid, memberQid, value, note?, source?}] for a reader -> one [{id}] for each, in order
+    addVotes: async (userId, votes) => votes.length === 0 ? [] : prisma.$transaction(votes.map(vote => prisma.$queryRawUnsafe(INSERT_VOTE, ...voteArguments(userId, vote)))),
     deleteVote: async (id) => prisma.$executeRawUnsafe(`DELETE FROM fifa_votes WHERE id = $1::int`, id),
+
+    // --- the notes of the readers on an association
+    notesOf: async (memberQid) => prisma.$queryRawUnsafe(`
+        SELECT n.id, n.user_id, u.username, n.text, n.created_at FROM fifa_notes n JOIN users u ON u.id = n.user_id WHERE n.member_qid = $1::text ORDER BY n.created_at DESC, n.id DESC`, memberQid),
+    addNote: async ({userId, memberQid, text}) => (await prisma.$queryRawUnsafe(`
+        WITH added AS (INSERT INTO fifa_notes (user_id, member_qid, text) VALUES ($1::int, $2::text, $3::text) RETURNING id, user_id, text, created_at)
+        SELECT a.id, a.user_id, u.username, a.text, a.created_at FROM added a JOIN users u ON u.id = a.user_id`, userId, memberQid, text))[0],
+    noteById: async (id) => (await prisma.$queryRawUnsafe(`SELECT id, user_id FROM fifa_notes WHERE id = $1::int`, id))[0] ?? null,
+    deleteNote: async (id) => prisma.$executeRawUnsafe(`DELETE FROM fifa_notes WHERE id = $1::int`, id),
+
+    // --- the sources the readers join to their choice
+    voteById: async (id) => (await prisma.$queryRawUnsafe(`SELECT id, user_id, subject_qid, member_qid, value, source_url FROM fifa_votes WHERE id = $1::int`, id))[0] ?? null,
+    setSourceCheck: async (id, {check, found = ''}) => prisma.$executeRawUnsafe(
+        `UPDATE fifa_votes SET source_check = $2::text, source_found = $3::text, source_checked_at = now() WHERE id = $1::int AND source_url <> ''`, id, check, found),
+    // the checks still to make: the ones of the last day that nobody is making now (a check starts the minute the source is added: a few minutes later it is the watch's)
+    pendingSources: async (limit) => prisma.$queryRawUnsafe(`
+        SELECT id FROM fifa_votes WHERE source_check = 'pending' AND created_at < now() - interval '3 minutes' AND created_at >= now() - interval '1 day' ORDER BY id LIMIT $1::int`, limit),
+    // a check that waited a day (the AI never answered) is told as unreadable
+    expireSources: async () => prisma.$executeRawUnsafe(`
+        UPDATE fifa_votes SET source_check = 'unreadable', source_checked_at = now() WHERE source_check = 'pending' AND created_at < now() - interval '1 day'`),
+    sourcesSince: async (userId, hours = 24) => (await prisma.$queryRawUnsafe(
+        `SELECT count(*)::int AS n FROM fifa_votes WHERE user_id = $1::int AND source_url <> '' AND created_at >= now() - make_interval(hours => $2::int)`, userId, hours))[0].n,
 
     // --- the presidents
     // What the news of the last 30 days say of each president: [{lid, articles, last_at}] (the articles of the last 30 days only) and [{lid, medium, link, title, at}] for the

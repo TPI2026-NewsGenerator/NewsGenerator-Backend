@@ -52,7 +52,7 @@ latest vote decides for everyone**. The page says first what it does not know: m
    association FOR X (a vote, so solid) and "no position" on each other candidate it was shown supporting; opposition is never inferred nor touched; all the votes of a
    choice are written together, and a choice that already stands writes nothing. The map says it for each association (`lean`: the candidate, "reader" or "news", or the candidates
    in conflict). With one candidate chosen on the page the reader confirms or changes the position on that candidate instead (item 6).
-8. **A candidate is added by a reader**, with no validation: a person of Wikidata, at most six on the map (one colour each; when it is full the oldest
+8. **A candidate is added by a reader** (or found in the news, item 13), with no validation: a person of Wikidata, at most six on the map (one colour each; when it is full the oldest
    candidate marked `withdrawn` makes room), three a day for each reader. The 30 days of news are then read: about 4 600 tokens a passage, so about 3 million tokens (about 1.5 dollars of credits)
    for the person in office (680 passages), about 0.5 million (0.3 dollar) for a candidate named in 130 sentences, and at most 800 passages whoever it is
    (`FIFA_MAX_PASSAGES`, the newest). Then about 57 new passages a day for four candidates, about 4 dollars a month.
@@ -72,6 +72,25 @@ latest vote decides for everyone**. The page says first what it does not know: m
    is kept in `fifa_audits` (an administrator reads the last ones at `GET /api/fifa/audits`) and written in the log; below `FIFA_AUDIT_MIN_AGREEMENT` (85%) the verdict is
    `warning` (with the disagreements listed: look at them, and think of `FIFA_COLOUR=declared` or `off`), under 10 signals `too_few`. It is an agreement with a model, not the
    truth: the gold set of `bench/fifa` is the truth, this is the live drift.
+
+11. **A source joined to a choice.** A reader who sets a position (`POST /api/fifa/votes` for or against) or chooses the candidate an association leans toward
+   (`POST /api/fifa/leans`) can join the link of the page that says it (`source: {url}`, with a word of their own, 280 characters). The address is checked before it is kept (http or
+   https, no name or password in it, a public address: the server fetches it, so the network of the server is refused, redirects included; 20 sources a day for each reader,
+   `FIFA_SOURCES_PER_DAY`). Then, in the background, the page is read as the news are (`services/utils/fifa-source.js`): the passages that name THE association and the candidate in one
+   sentence, the attribution by the code, the two readings, at most six passages, about 5 000 to 28 000 tokens a page. The vote keeps `source_check`: `says` (an established reading on
+   the side of the reader, with the sentence), `contradicts` (the only established readings are on the other side), `unclear` (nothing established: the AI could not confirm, which is not
+   "wrong"; a page that never names the association with the candidate in one sentence is always unclear), `unreadable` (not an article, too large, fetch failed), `pending` while it waits
+   (an AI that does not answer leaves it pending: the watch makes it again for a day, then unreadable; `FIFA_SOURCE_CHECK=off` reads none). **It informs and decides nothing**: the choice of the
+   reader is what colours the map. The sheet lists the sources the choices stand on (`sources`, newest first) and each position carries the one of its deciding vote (`human.source`).
+12. **Notes.** Any signed-in reader adds a note on an association (`POST /api/fifa/notes`, 1 to 500 characters, ten an hour), visible to every reader on its sheet (`notes`, newest
+   first, `mine` for the reader who wrote it); its author or an administrator takes it off (`DELETE /api/fifa/notes/:id`). The word a reader writes with a vote stays on the vote.
+13. **Candidates found in the news.** Once a day (`FIFA_DISCOVER=off` looks for none; `node --env-file=.env scripts/fifa-discover.js [--days=14] [--apply]` shows what would be added) the news of
+   the last 14 days are searched for the sentences that hold FIFA, a word of president and a word of candidacy (`services/utils/fifa-discovery.js`); the persons the tagger linked to an
+   item of Wikidata that are named in them are counted by medium; each one named in two media at least is judged on up to six of those sentences by two models of two families, and
+   **the map adds the person only when both say it**: `declared` (announced, or nominated by an association; both must say declared, in 2 media at least) or `rumoured` (5 media at least),
+   with words held in the sentences. At most two a run; **none takes the place of another** (a full map adds none); a person an administrator took off the map is never brought back
+   (`fifa_dismissed`); the candidate comes with `origin: "news"` and `found` (status, articles, media, the words) on `subjects`, and is read like any other (the 30 days of news, about
+   150 000 tokens). Any reader can mark it `withdrawn`. See the measure in the quality page.
 
 ## When a rule of the guide changes
 

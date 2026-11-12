@@ -59,6 +59,11 @@ CREATE TABLE IF NOT EXISTS public.fifa_signals (
 );
 CREATE INDEX IF NOT EXISTS i_fifa_signals_member ON public.fifa_signals (member_qid, subject_qid);
 CREATE INDEX IF NOT EXISTS i_fifa_signals_unconfirmed ON public.fifa_signals (id) WHERE certainty = 'uncertain' AND NOT confirmed;
+-- 12.11.2026, when a signal last changed (its second reading, a rule of the guide read again, more news telling it). GET /api/v1/fifa/news goes on from it, so
+-- that a passage that settled after the other party read it comes again with its new reading. The table of the first run gets the column (every signal at the
+-- time of the migration: a first call of the other party still gives all of them)
+ALTER TABLE public.fifa_signals ADD COLUMN IF NOT EXISTS updated_at timestamp with time zone NOT NULL DEFAULT now();
+CREATE INDEX IF NOT EXISTS i_fifa_signals_updated ON public.fifa_signals (updated_at, id);
 
 -- The votes of the readers on the position of an association on a candidate: only added, never changed. The vote that decides is the latest
 -- of each reader who has not taken it back, the newest of those (see fifa-map.js decisiveVote)
@@ -79,6 +84,39 @@ CREATE INDEX IF NOT EXISTS i_fifa_votes_member ON public.fifa_votes (subject_qid
 ALTER TABLE public.fifa_votes ADD COLUMN IF NOT EXISTS seen text NOT NULL DEFAULT '';
 ALTER TABLE public.fifa_votes DROP CONSTRAINT IF EXISTS fifa_votes_value_check;
 ALTER TABLE public.fifa_votes ADD CONSTRAINT fifa_votes_value_check CHECK (value IN ('for', 'against', 'unknown', 'withdraw', 'confirm'));
+-- 12.11.2026, the source a reader joins to a choice (the link of the page that says it): shown on the sheet and read by the AI, which says whether the page SAYS the
+-- choice, says the OTHER thing, or does not say it clearly. It informs and decides nothing: the choice of the reader is what colours the map
+ALTER TABLE public.fifa_votes ADD COLUMN IF NOT EXISTS source_url text NOT NULL DEFAULT '';
+ALTER TABLE public.fifa_votes ADD COLUMN IF NOT EXISTS source_medium text NOT NULL DEFAULT '';
+ALTER TABLE public.fifa_votes ADD COLUMN IF NOT EXISTS source_check text NOT NULL DEFAULT '';
+ALTER TABLE public.fifa_votes ADD COLUMN IF NOT EXISTS source_found text NOT NULL DEFAULT '';
+ALTER TABLE public.fifa_votes ADD COLUMN IF NOT EXISTS source_checked_at timestamp with time zone;
+ALTER TABLE public.fifa_votes DROP CONSTRAINT IF EXISTS fifa_votes_source_check_check;
+ALTER TABLE public.fifa_votes ADD CONSTRAINT fifa_votes_source_check_check CHECK (source_check IN ('', 'pending', 'says', 'contradicts', 'unclear', 'unreadable'));
+CREATE INDEX IF NOT EXISTS i_fifa_votes_source_pending ON public.fifa_votes (id) WHERE source_check = 'pending';
+
+-- 12.11.2026, the notes of the readers on an association: a word visible to every signed-in reader on its sheet, added by any reader, taken off by its author or an administrator
+CREATE TABLE IF NOT EXISTS public.fifa_notes (
+    id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id integer NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    member_qid text NOT NULL,
+    text text NOT NULL CHECK (char_length(text) BETWEEN 1 AND 500),
+    created_at timestamp with time zone NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS i_fifa_notes_member ON public.fifa_notes (member_qid, created_at DESC);
+
+-- 12.11.2026, the candidates the news name: the map adds one by itself when two readings of the news say a person is a candidate for the presidency of FIFA.
+-- origin: "seed" (the president in office, put there by this file), "reader" (a reader added the person), "news" (found in the news; found = what was found:
+-- status, articles, media, the words); an administrator who takes a candidate off the map is remembered in fifa_dismissed so that the news do not bring the person back
+ALTER TABLE public.fifa_subjects ADD COLUMN IF NOT EXISTS origin text NOT NULL DEFAULT 'reader';
+ALTER TABLE public.fifa_subjects DROP CONSTRAINT IF EXISTS fifa_subjects_origin_check;
+ALTER TABLE public.fifa_subjects ADD CONSTRAINT fifa_subjects_origin_check CHECK (origin IN ('seed', 'reader', 'news'));
+ALTER TABLE public.fifa_subjects ADD COLUMN IF NOT EXISTS found jsonb;
+UPDATE public.fifa_subjects SET origin = 'seed' WHERE status = 'incumbent' AND created_by IS NULL AND origin = 'reader';
+CREATE TABLE IF NOT EXISTS public.fifa_dismissed (
+    qid text PRIMARY KEY,
+    dismissed_at timestamp with time zone NOT NULL DEFAULT now()
+);
 
 -- The president of each association as Wikidata has it (P488), read once a day
 CREATE TABLE IF NOT EXISTS public.fifa_leaders (
