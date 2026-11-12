@@ -67,11 +67,18 @@ CREATE TABLE IF NOT EXISTS public.fifa_votes (
     user_id integer NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     subject_qid text NOT NULL REFERENCES public.fifa_subjects(qid) ON DELETE CASCADE,
     member_qid text NOT NULL,
-    value text NOT NULL CHECK (value IN ('for', 'against', 'unknown', 'withdraw')),
+    value text NOT NULL CHECK (value IN ('for', 'against', 'unknown', 'withdraw', 'confirm')),
     note text NOT NULL DEFAULT '',
+    seen text NOT NULL DEFAULT '',          -- for a "confirm": the position the reader saw and confirmed
     created_at timestamp with time zone NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS i_fifa_votes_member ON public.fifa_votes (subject_qid, member_qid, created_at DESC);
+-- 12.11.2026, the button "Confirm this position": a "confirm" records that a reader checked the position shown and keeps it as it is (it decides nothing);
+-- "seen" says which position that was, so that a confirmation older than the news that changed it is told apart. The table of the first run gets the column
+-- and the new word
+ALTER TABLE public.fifa_votes ADD COLUMN IF NOT EXISTS seen text NOT NULL DEFAULT '';
+ALTER TABLE public.fifa_votes DROP CONSTRAINT IF EXISTS fifa_votes_value_check;
+ALTER TABLE public.fifa_votes ADD CONSTRAINT fifa_votes_value_check CHECK (value IN ('for', 'against', 'unknown', 'withdraw', 'confirm'));
 
 -- The president of each association as Wikidata has it (P488), read once a day
 CREATE TABLE IF NOT EXISTS public.fifa_leaders (
@@ -80,8 +87,13 @@ CREATE TABLE IF NOT EXISTS public.fifa_leaders (
     name text NOT NULL,
     role text NOT NULL DEFAULT 'President',
     since date,
+    source text NOT NULL DEFAULT 'wikidata',     -- 'fifa' (the public page of the association on inside.fifa.com) or 'wikidata'
+    source_url text NOT NULL DEFAULT '',
     checked_at timestamp with time zone NOT NULL DEFAULT now()
 );
+-- 12.11.2026: where a president comes from; the table of the first run gets the two columns
+ALTER TABLE public.fifa_leaders ADD COLUMN IF NOT EXISTS source text NOT NULL DEFAULT 'wikidata';
+ALTER TABLE public.fifa_leaders ADD COLUMN IF NOT EXISTS source_url text NOT NULL DEFAULT '';
 
 -- The weekly audit of the positions shown (see fifa-audit.js): a sample of the established signals read again by a third model, and the votes of the
 -- readers against the news. verdict "warning": the agreement is under the threshold

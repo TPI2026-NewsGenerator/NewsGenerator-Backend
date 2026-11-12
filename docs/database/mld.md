@@ -536,7 +536,9 @@ Only added. The vote that decides is the latest of each reader who has not taken
 | name | text | NOT NULL |
 | role | text | NOT NULL, default 'President' |
 | since | date | null |
-| checked_at | timestamptz | NOT NULL, default `now()` — replaced once a day from Wikidata (P488) |
+| source | text | NOT NULL, default 'wikidata' — `fifa` (the public page of the association on inside.fifa.com, read once a week) or `wikidata` (P488, read every day) |
+| source_url | text | NOT NULL, default '' — the page of FIFA |
+| checked_at | timestamptz | NOT NULL, default `now()` — replaced once a day (Wikidata), the site of FIFA once a week |
 
 #### fifa_audits
 | Column | Type | |
@@ -552,6 +554,9 @@ Only added. The vote that decides is the latest of each reader who has not taken
 Once a week, see [The FIFA presidency map](../briefing/fifa-map/README.md).
 
 roles          1 ──< N  users
+## Relations
+
+```
 users          1 ──< N  custom_searches   1 ──< N  custom_searches_has_categories  N >── 1  categories
 users          1 ──< N  user_profiles
 users          1 ──< N  user_feeds, profile_interests, briefings, sent_mails   (the owner, for the cascade)

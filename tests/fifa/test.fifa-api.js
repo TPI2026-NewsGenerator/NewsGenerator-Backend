@@ -9,11 +9,14 @@
 //
 
 import http from 'node:http';
+import process from 'node:process';
 import {afterAll, beforeAll, beforeEach, describe, expect, it, jest} from '@jest/globals';
 import express from 'express';
 
+// the mentions of the presidents are kept a quarter of an hour: not here, each test asks again
+process.env.FIFA_MENTIONS_CACHE_MS = '0';
 const model = Object.fromEntries(['subjects', 'addSubject', 'markChecked', 'setSubjectStatus', 'deleteSubject', 'news', 'linkedNames', 'mentionNames', 'knownHashes', 'insertSignal',
-    'unconfirmed', 'updateSignal', 'signals', 'signalsOf', 'votes', 'votesOf', 'votesOfPair', 'addVote', 'deleteVote', 'leaders', 'replaceLeaders', 'audits', 'auditSample', 'lastAudit', 'addAudit'].map(name => [name, jest.fn()]));
+    'unconfirmed', 'updateSignal', 'signals', 'signalsOf', 'votes', 'votesOf', 'votesOfPair', 'addVote', 'deleteVote', 'leaders', 'replaceLeaders', 'audits', 'auditSample', 'lastAudit', 'addAudit', 'mentionsOfLeaders', 'addVotes'].map(name => [name, jest.fn()]));
 jest.unstable_mockModule('../../models/fifa-model.js', () => ({FifaModel: model}));
 jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson: jest.fn(), newUsage: () => ({calls: 0, input: 0, output: 0})}));
 const wikidata = {searchItems: jest.fn(), describeItems: jest.fn(), isQid: (value) => /^Q[1-9]\d*$/.test(String(value)), wikimediaHeaders: () => ({})};
@@ -58,9 +61,11 @@ const reader = () => ++nextUser;
 
 beforeEach(() => {
     for (const fn of Object.values(model)) fn.mockReset();
+    model.mentionsOfLeaders.mockResolvedValue({counts: [], latest: []});
     for (const name of ['subjects', 'signals', 'signalsOf', 'votes', 'votesOf', 'votesOfPair', 'leaders', 'news', 'unconfirmed', 'mentionNames', 'linkedNames']) model[name].mockResolvedValue([]);
     model.subjects.mockResolvedValue([INFANTINO]);
     model.addVote.mockResolvedValue(1);
+    model.addVotes.mockResolvedValue([]);
     model.knownHashes.mockResolvedValue(new Set());
     wikidata.searchItems.mockReset();
     wikidata.describeItems.mockReset();
@@ -96,7 +101,21 @@ describe('the reading routes', () => {
         const confederations = (await call('/confederations', {user: 1})).body.confederations;
         expect(confederations.find(item => item.fifa === 'UEFA').members_count).toBe(55);
         const presidents = (await call('/presidents', {user: 1})).body.presidents;
-        expect(presidents).toEqual([expect.objectContaining({member_qid: JAPAN, name: 'A President', since: '2022-01-01'})]);
+        expect(presidents).toEqual([expect.objectContaining({member_qid: JAPAN, name: 'A President', since: '2022-01-01', articles_30d: 0, last_mention: null})]);
+    });
+
+    it('should give each president the articles of the last 30 days that name him and the latest one, asked by his item of Wikidata or by his name', async () => {
+        model.leaders.mockResolvedValue([
+            {member_qid: JAPAN, person_qid: 'Q1', name: 'Kozo Tashima', role: 'President', since: null, checked_at: new Date()},
+            {member_qid: 'Q502018', person_qid: null, name: 'Jesper Møller', role: 'President', since: null, checked_at: new Date()}]);
+        model.mentionsOfLeaders.mockResolvedValue({
+            counts: [{lid: 1, articles: 12, last_at: new Date('2026-11-11T10:00:00Z')}],
+            latest: [{lid: 1, medium: 'camfoot.com', link: 'https://camfoot.com/a', title: 'A title', at: new Date('2026-11-11T10:00:00Z')}]});
+        const {body} = await call('/presidents', {user: reader()});
+        const [first, second] = body.presidents;
+        expect(model.mentionsOfLeaders.mock.calls.at(-1)[0]).toEqual([{lid: 1, qid: 'Q1', key: 'kozo tashima'}, {lid: 2, qid: null, key: 'jesper moller'}]);
+        expect(first).toMatchObject({articles_30d: 12, last_mention: {at: '2026-11-11T10:00:00.000Z', medium: 'camfoot.com', url: 'https://camfoot.com/a', title: 'A title'}});
+        expect(second).toMatchObject({articles_30d: 0, last_mention: null});
     });
 });
 
@@ -106,7 +125,7 @@ describe('the votes', () => {
         model.votesOfPair.mockResolvedValue([{user_id: user, username: `reader${user}`, subject_qid: INFANTINO.qid, member_qid: JAPAN, value: 'for', note: '', created_at: new Date()}]);
         const {status, body} = await call('/votes', {method: 'POST', user, body: {subject: INFANTINO.qid, member: JAPAN, value: 'for', note: ' It said so '}});
         expect(status).toBe(200);
-        expect(model.addVote).toHaveBeenCalledWith({userId: user, subjectQid: INFANTINO.qid, memberQid: JAPAN, value: 'for', note: 'It said so'});
+        expect(model.addVote).toHaveBeenCalledWith({userId: user, subjectQid: INFANTINO.qid, memberQid: JAPAN, value: 'for', note: 'It said so', seen: ''});
         expect(body).toMatchObject({ok: true, human: {value: 'for', by: `reader${user}`, newer_evidence: false}});
     });
 
@@ -114,7 +133,41 @@ describe('the votes', () => {
         const user = reader();
         model.votesOfPair.mockResolvedValue([{user_id: user, username: 'x', value: 'for', created_at: new Date(Date.now() - 1000)}, {user_id: user, username: 'x', value: 'withdraw', created_at: new Date()}]);
         const {body} = await call('/votes', {method: 'POST', user, body: {subject: INFANTINO.qid, member: JAPAN, value: 'withdraw'}});
-        expect(body).toEqual({ok: true, human: null});
+        expect(body).toEqual({ok: true, human: null, confirmed: null});
+    });
+
+    it('should record a confirmation with the position the reader saw, keep the position as it is, and answer who confirmed it', async () => {
+        const user = reader();
+        model.signalsOf.mockResolvedValue([signal]);
+        model.votesOfPair.mockResolvedValueOnce([]).mockResolvedValue([{user_id: user, username: `reader${user}`, subject_qid: INFANTINO.qid, member_qid: JAPAN, value: 'confirm', note: '', seen: 'non_soutien_declare', created_at: new Date()}]);
+        const {status, body} = await call('/votes', {method: 'POST', user, body: {subject: INFANTINO.qid, member: JAPAN, value: 'confirm'}});
+        expect(status).toBe(200);
+        expect(model.addVote).toHaveBeenCalledWith(expect.objectContaining({userId: user, value: 'confirm', seen: 'non_soutien_declare'}));
+        expect(body).toMatchObject({ok: true, human: null, confirmed: {count: 1, by: [`reader${user}`], outdated: 0}});
+    });
+
+    it('should record the position of the NEWS a second reader confirms, not the solid colour the first confirmation gave it, and answer it as validated', async () => {
+        const user = reader();
+        const probable = {...signal, stance: 'for', level: 'probable'};
+        model.signalsOf.mockResolvedValue([probable]);
+        const first = {user_id: 1, username: 'reader1', subject_qid: INFANTINO.qid, member_qid: JAPAN, value: 'confirm', note: '', seen: 'soutien_probable', created_at: new Date(Date.now() - 5000)};
+        model.votesOfPair.mockResolvedValueOnce([first]).mockResolvedValue([first, {user_id: user, username: `reader${user}`, subject_qid: INFANTINO.qid, member_qid: JAPAN, value: 'confirm', note: '', seen: 'soutien_probable', created_at: new Date()}]);
+        const {body} = await call('/votes', {method: 'POST', user, body: {subject: INFANTINO.qid, member: JAPAN, value: 'confirm'}});
+        expect(model.addVote).toHaveBeenCalledWith(expect.objectContaining({value: 'confirm', seen: 'soutien_probable'}));
+        expect(body.confirmed).toMatchObject({count: 2, outdated: 0});
+        // the map draws it solid, the news kept as ai_position
+        model.signals.mockResolvedValue([probable]);
+        model.votes.mockResolvedValue([{...first, id: 1}]);
+        const map = (await call('/map', {user: reader()})).body;
+        expect(map.members.find(member => member.fifa === 'JPN').positions[INFANTINO.qid]).toMatchObject({position: 'soutien_declare', ai_position: 'soutien_probable', human: null});
+    });
+
+    it('should record the confirmation of "no position" when the news say nothing', async () => {
+        const user = reader();
+        model.signalsOf.mockResolvedValue([]);
+        model.votesOfPair.mockResolvedValue([]);
+        await call('/votes', {method: 'POST', user, body: {subject: INFANTINO.qid, member: JAPAN, value: 'confirm'}});
+        expect(model.addVote).toHaveBeenCalledWith(expect.objectContaining({value: 'confirm', seen: 'inconnue'}));
     });
 
     it('should refuse what is not a vote: a word, an association or a candidate that does not exist', async () => {
@@ -139,6 +192,74 @@ describe('the votes', () => {
         expect((await call('/votes/5', {method: 'DELETE', user: reader()})).status).toBe(403);
         expect((await call('/votes/5', {method: 'DELETE', user: reader(), admin: true})).status).toBe(204);
         expect(model.deleteVote).toHaveBeenCalledWith(5);
+    });
+});
+
+describe('the choice of the candidate an association leans toward', () => {
+    const WENGER = {...INFANTINO, qid: 'Q215244', name: 'Arsene Wenger', terms: ['wenger'], status: 'declared', color_index: 2};
+    const supports = {...signal, stance: 'for', level: 'declared'};
+    const vote = (user, subject, value, at = new Date()) => ({user_id: user, username: `reader${user}`, subject_qid: subject, member_qid: JAPAN, value, note: '', seen: '', created_at: at});
+    const lean = (user, body) => call('/leans', {method: 'POST', user, body: {member: JAPAN, ...body}});
+    beforeEach(() => {
+        model.subjects.mockResolvedValue([INFANTINO, WENGER]);
+        model.signalsOf.mockResolvedValue([supports]);
+    });
+
+    it('should set the association FOR the chosen candidate and "no position" for the one the news show it supporting, in one write', async () => {
+        const user = reader();
+        model.votesOf.mockResolvedValueOnce([]).mockResolvedValue([vote(user, INFANTINO.qid, 'unknown'), vote(user, WENGER.qid, 'for')]);
+        const {status, body} = await lean(user, {subject: WENGER.qid});
+        expect(status).toBe(200);
+        expect(model.addVotes).toHaveBeenCalledTimes(1);
+        expect(model.addVotes).toHaveBeenCalledWith(user, [{subjectQid: INFANTINO.qid, memberQid: JAPAN, value: 'unknown'}, {subjectQid: WENGER.qid, memberQid: JAPAN, value: 'for'}]);
+        expect(body.lean).toEqual({subject_qid: WENGER.qid, source: 'reader', conflicting: []});
+        expect(body.positions[WENGER.qid]).toMatchObject({position: 'soutien_declare', human: {value: 'for', by: `reader${user}`}});
+        expect(body.positions[INFANTINO.qid]).toMatchObject({position: 'inconnue', ai_position: 'soutien_declare', human: {value: 'unknown'}});
+    });
+
+    it('should leave the association with no candidate when the reader says it leans toward none, touching only what shows support', async () => {
+        const user = reader();
+        model.votesOf.mockResolvedValue([]);
+        await lean(user, {subject: 'none'});
+        expect(model.addVotes).toHaveBeenCalledWith(user, [{subjectQid: INFANTINO.qid, memberQid: JAPAN, value: 'unknown'}]);
+    });
+
+    it('should never touch the opposition: a candidate the association is against stays as it is', async () => {
+        const user = reader();
+        model.signalsOf.mockResolvedValue([{...signal, stance: 'against', level: 'declared'}]);
+        model.votesOf.mockResolvedValue([]);
+        await lean(user, {subject: WENGER.qid});
+        expect(model.addVotes).toHaveBeenCalledWith(user, [{subjectQid: WENGER.qid, memberQid: JAPAN, value: 'for'}]);
+    });
+
+    it('should write nothing when the reader makes the choice that already stands', async () => {
+        const user = reader();
+        model.votesOf.mockResolvedValue([vote(user, INFANTINO.qid, 'unknown'), vote(user, WENGER.qid, 'for')]);
+        const {body} = await lean(user, {subject: WENGER.qid});
+        expect(model.addVotes).toHaveBeenCalledWith(user, []);
+        expect(body.written).toBe(0);
+    });
+
+    it('should take the choice of the reader back on every candidate they decided on', async () => {
+        const user = reader();
+        model.votesOf.mockResolvedValue([vote(user, INFANTINO.qid, 'unknown'), vote(user, WENGER.qid, 'for')]);
+        await lean(user, {subject: 'withdraw'});
+        expect(model.addVotes).toHaveBeenCalledWith(user, [{subjectQid: INFANTINO.qid, memberQid: JAPAN, value: 'withdraw'}, {subjectQid: WENGER.qid, memberQid: JAPAN, value: 'withdraw'}]);
+    });
+
+    it('should refuse an association or a candidate that does not exist, and a word that is none', async () => {
+        const user = reader();
+        expect((await call('/leans', {method: 'POST', user, body: {member: 'Q1', subject: WENGER.qid}})).status).toBe(422);
+        expect((await lean(user, {subject: 'Q5'})).status).toBe(422);
+        expect((await lean(user, {subject: 'maybe'})).status).toBe(422);
+        expect((await call('/leans', {method: 'POST', body: {member: JAPAN, subject: 'none'}})).status).toBe(401);
+        expect(model.addVotes).not.toHaveBeenCalled();
+    });
+
+    it('should carry the candidate each association leans toward in the map', async () => {
+        model.signals.mockResolvedValue([supports]);
+        const row = (await call('/map', {user: reader()})).body.members.find(member => member.fifa === 'JPN');
+        expect(row.lean).toEqual({subject_qid: INFANTINO.qid, source: 'news', conflicting: []});
     });
 });
 

@@ -9,7 +9,7 @@
 
 import {describe, expect, it} from '@jest/globals';
 import {MEMBER_LIST, memberOfFifa} from '../../services/utils/fifa-members.js';
-import {buildMap, buildSheet, colourSetting, decisiveVote, levelsOf, reasonFor} from '../../services/utils/fifa-map.js';
+import {buildMap, buildSheet, colourSetting, confirmationsOf, decisiveVote, leanOf, levelsOf, reasonFor} from '../../services/utils/fifa-map.js';
 
 const NOW = new Date('2026-11-12T12:00:00Z');
 const SUBJECT = {qid: 'Q124138', name: 'Gianni Infantino', color_index: 1, status: 'incumbent', state: 'ready'};
@@ -99,6 +99,95 @@ describe('the vote of a reader', () => {
     });
 });
 
+describe('the candidate an association leans toward', () => {
+    it('should be none when it supports none, the candidate it supports, and conflicting when it supports two', () => {
+        expect(leanOf({})).toBeNull();
+        expect(leanOf({A: {position: 'non_soutien_declare'}, B: {position: 'inconnue'}})).toBeNull();
+        expect(leanOf({A: {position: 'soutien_probable'}, B: {position: 'non_soutien_declare'}})).toEqual({subject_qid: 'A', source: 'news', conflicting: []});
+        expect(leanOf({A: {position: 'soutien_probable'}, B: {position: 'soutien_declare'}})).toEqual({subject_qid: null, source: 'news', conflicting: ['A', 'B']});
+    });
+
+    it('should say "reader" when a reader chose it or confirmed it, from the map as the page reads it', () => {
+        expect(leanOf({A: {position: 'soutien_declare', human: {value: 'for'}}})).toMatchObject({subject_qid: 'A', source: 'reader'});
+        expect(leanOf({A: {position: 'soutien_declare', human: null, confirmed: {count: 1}}})).toMatchObject({source: 'reader'});
+        expect(leanOf({A: {position: 'soutien_declare', human: null, confirmed: {count: 0, outdated: 1}}})).toMatchObject({source: 'news'});
+    });
+
+    it('should be carried by the map and the sheet of the association', () => {
+        const answer = map([signal(jp, '2026-10-20T10:00:00Z', {stance: 'for', level: 'probable'})]);
+        expect(memberRow(answer, jp).lean).toEqual({subject_qid: SUBJECT.qid, source: 'news', conflicting: []});
+        expect(memberRow(answer, afc).lean).toBeNull();
+        expect(buildSheet({member: jp, subjects: [SUBJECT], signals: [signal(jp, '2026-10-20T10:00:00Z', {stance: 'for'})], votes: [], now: NOW}).lean).toMatchObject({subject_qid: SUBJECT.qid});
+    });
+});
+
+describe('the confirmation of a position', () => {
+    const confirm = (member, userId, seen, at) => vote(member, userId, 'confirm', at, {seen});
+
+    it('should decide nothing by itself: a reader who sets a position and then confirms keeps their decision, and a confirmation alone is no decision', () => {
+        const votes = [vote(jp, 1, 'for', '2026-11-01T10:00:00Z'), confirm(jp, 1, 'soutien_declare', '2026-11-02T10:00:00Z')];
+        expect(decisiveVote(votes)).toMatchObject({value: 'for', by: 'reader1'});
+        expect(decisiveVote([confirm(jp, 2, 'non_soutien_declare', '2026-11-02T10:00:00Z')])).toBeNull();
+    });
+
+    it('should say who confirmed the position shown, and the confirmations of a position the news have changed since as outdated', () => {
+        const votes = [confirm(jp, 1, 'non_soutien_declare', '2026-11-02T10:00:00Z'), confirm(jp, 2, 'non_soutien_declare', '2026-11-03T10:00:00Z'), confirm(jp, 3, 'soutien_declare', '2026-10-01T10:00:00Z')];
+        expect(confirmationsOf(votes, 'non_soutien_declare')).toEqual({count: 2, by: ['reader2', 'reader1'], at: '2026-11-03T10:00:00.000Z', outdated: 1});
+        expect(confirmationsOf(votes, 'soutien_probable')).toEqual({count: 0, by: [], at: null, outdated: 3});
+        expect(confirmationsOf([], 'inconnue')).toBeNull();
+    });
+
+    it('should take the confirmation of a reader away when they take their vote back, and keep the last confirmation of each reader only', () => {
+        const votes = [confirm(jp, 1, 'non_soutien_declare', '2026-11-02T10:00:00Z'), vote(jp, 1, 'withdraw', '2026-11-03T10:00:00Z'), confirm(jp, 2, 'non_soutien_declare', '2026-11-02T10:00:00Z'), confirm(jp, 2, 'non_soutien_declare', '2026-11-04T10:00:00Z')];
+        expect(confirmationsOf(votes, 'non_soutien_declare')).toMatchObject({count: 1, by: ['reader2'], at: '2026-11-04T10:00:00.000Z'});
+    });
+
+    it('should make a probable position solid, at the declared level, when a reader confirms it: the validation by hand, with the reading of the news kept', () => {
+        const answer = map([signal(jp, '2026-10-20T10:00:00Z', {stance: 'for', level: 'probable'})], [confirm(jp, 1, 'soutien_probable', '2026-11-05T10:00:00Z')]);
+        expect(memberRow(answer, jp).positions[SUBJECT.qid]).toMatchObject({
+            position: 'soutien_declare', ai_position: 'soutien_probable', human: null, stale: false, confirmed: {count: 1, by: ['reader1'], outdated: 0}});
+        expect(answer.subjects[0].positions_known).toBe(1);
+        // the same on the other side, and a declared position stays what it is
+        const against = map([signal(jp, '2026-10-20T10:00:00Z', {stance: 'against', level: 'probable'}), signal(den, '2026-10-20T10:00:00Z', {stance: 'against', level: 'declared'})],
+            [confirm(jp, 1, 'non_soutien_probable', '2026-11-05T10:00:00Z'), confirm(den, 1, 'non_soutien_declare', '2026-11-05T10:00:00Z')]);
+        expect(memberRow(against, jp).positions[SUBJECT.qid]).toMatchObject({position: 'non_soutien_declare', ai_position: 'non_soutien_probable'});
+        expect(memberRow(against, den).positions[SUBJECT.qid]).toMatchObject({position: 'non_soutien_declare'});
+    });
+
+    it('should not age a position a reader validated, and let a position nobody confirmed be probable and stale as the news say', () => {
+        const old = signal(jp, '2026-06-01T10:00:00Z', {stance: 'for', level: 'probable'});
+        const answer = map([old, signal(den, '2026-06-01T10:00:00Z', {stance: 'for', level: 'probable'})], [confirm(jp, 1, 'soutien_probable', '2026-11-05T10:00:00Z')]);
+        expect(memberRow(answer, jp).positions[SUBJECT.qid]).toMatchObject({position: 'soutien_declare', stale: false});
+        expect(memberRow(answer, den).positions[SUBJECT.qid]).toMatchObject({position: 'soutien_probable', stale: true});
+    });
+
+    it('should leave out of the colour, in the "declared" setting, a probable position (it is only uncertain there: nothing to validate)', () => {
+        const answer = map([signal(jp, '2026-10-20T10:00:00Z', {stance: 'for', level: 'probable'}), signal(den, '2026-10-20T10:00:00Z', {stance: 'for', level: 'probable'})],
+            [], {colour: 'declared'});
+        expect(memberRow(answer, jp).positions[SUBJECT.qid]).toMatchObject({position: 'inconnue', uncertain_count: 1});
+    });
+
+    it('should validate nothing once the news changed the position after the confirmation: it is outdated and the reading of the news shows', () => {
+        const answer = map([signal(jp, '2026-10-20T10:00:00Z', {stance: 'for', level: 'declared'}), signal(jp, '2026-11-08T10:00:00Z', {stance: 'against', level: 'declared'})],
+            [confirm(jp, 1, 'soutien_declare', '2026-11-05T10:00:00Z')]);
+        expect(memberRow(answer, jp).positions[SUBJECT.qid]).toMatchObject({position: 'non_soutien_declare', confirmed: {count: 0, outdated: 1}});
+    });
+
+    it('should keep a pair with nothing but a confirmation of "no position" (the reader checked, there is none)', () => {
+        const answer = map([], [confirm(afc, 1, 'inconnue', '2026-11-05T10:00:00Z')]);
+        expect(memberRow(answer, afc).positions[SUBJECT.qid]).toMatchObject({position: 'inconnue', confirmed: {count: 1}});
+        expect(answer.subjects[0].positions_known).toBe(0);
+    });
+
+    it('should confirm a position set by a reader as the position shown, and list the confirmation in the sheet with what was seen', () => {
+        const votes = [vote(jp, 1, 'for', '2026-11-01T10:00:00Z'), confirm(jp, 2, 'soutien_declare', '2026-11-02T10:00:00Z')];
+        const answer = map([signal(jp, '2026-10-20T10:00:00Z', {stance: 'against'})], votes);
+        expect(memberRow(answer, jp).positions[SUBJECT.qid]).toMatchObject({position: 'soutien_declare', human: {value: 'for'}, confirmed: {count: 1, by: ['reader2']}});
+        const sheet = buildSheet({member: jp, subjects: [SUBJECT], signals: [], votes, now: NOW});
+        expect(sheet.votes[0]).toMatchObject({value: 'confirm', by: 'reader2', seen: 'soutien_declare'});
+    });
+});
+
 describe('buildSheet', () => {
     const signals = [
         signal(afc, '2026-09-10T10:00:00Z', {stance: 'against', level: 'declared'}),
@@ -119,7 +208,7 @@ describe('buildSheet', () => {
             {subject_qid: SUBJECT.qid, date: '2026-09-10T10:00:00Z', from: 'inconnue', to: 'non_soutien_declare', kind: 'first'},
             {subject_qid: SUBJECT.qid, date: '2026-10-23T10:00:00Z', from: 'non_soutien_declare', to: 'soutien_declare', kind: 'reversal'},
         ]);
-        expect(sheet.votes).toEqual([{subject_qid: SUBJECT.qid, value: 'for', by: 'reader1', at: '2026-10-30T10:00:00.000Z', note: 'It said so on its site'}]);
+        expect(sheet.votes).toEqual([{subject_qid: SUBJECT.qid, value: 'for', by: 'reader1', at: '2026-10-30T10:00:00.000Z', note: 'It said so on its site', seen: ''}]);
         expect(sheet.positions[SUBJECT.qid]).toMatchObject({position: 'soutien_declare', human: {value: 'for'}});
     });
 

@@ -16,23 +16,35 @@ import {FifaModel} from '../models/fifa-model.js';
 import {ASSOCIATIONS, CONFEDERATIONS, MEMBERS, MEMBER_LIST} from './utils/fifa-members.js';
 import {aliasIndexOf, norm, passagesOf} from './utils/fifa-passages.js';
 import {readPassage, readWith} from './utils/fifa-reading.js';
-import {agrees, reportOf, sampleOf, verdictOf, votesAgainstNews} from './utils/fifa-audit.js';
-import {buildMap, buildSheet, colourSetting, decisiveVote, positionFor} from './utils/fifa-map.js';
+import {agrees, reportOf, sampleOf, sideOf, verdictOf, votesAgainstNews} from './utils/fifa-audit.js';
+import {basePosition, buildMap, buildSheet, colourSetting, leanOf, positionFor} from './utils/fifa-map.js';
 import {mapWithConcurrency} from './utils/concurrency.js';
 import {newUsage} from './utils/ollama.js';
 import {memo} from './utils/memo.js';
+import {mentionKey} from './utils/mentions.js';
 import {describeItems, isQid, searchItems, wikimediaHeaders} from './utils/wikidata.js';
+import {leaderOfPage, pageUrl, sameName} from './utils/fifa-site.js';
+import {setTimeout as sleep} from 'node:timers/promises';
 
 const WATCH_MINUTES = Number(process.env.FIFA_WATCH_MINUTES) || 30;
 const FIRST_WATCH_MS = 4 * 60e3;
 const LEADERS_EVERY_MS = 24 * 3600e3;
+// the public pages of FIFA are read once a week, one request every 1.2 s, by a client that says who it is (FIFA_SITE_LEADERS=off reads none)
+const SITE_EVERY_MS = 7 * 864e5;
+const SITE_DELAY_MS = process.env.FIFA_SITE_DELAY_MS === undefined ? 1200 : Number(process.env.FIFA_SITE_DELAY_MS);
+const SITE_HEADERS = {'User-Agent': 'NewsGenerator/1.0 (+https://news.fabianrostello.com; personal news reader, reads each public page once a week)', Accept: 'text/html'};
+// fewer pages than this give a president: the site is down or changed, the presidents of the week before are kept
+const SITE_MIN_PAGES = 100;
 const BACKFILL_DAYS = 30;                 // the news we keep (RETENTION_DAYS)
 const OVERLAP_MS = 10 * 60e3;             // a run reads from a little before where the last stopped
 const CONCURRENCY = 3;
 const RECONFIRM_PER_RUN = 20;
+// What a reading of the news may cost: about 4 600 tokens a passage (2 800 for the first model, and 3 700 more for the second on the 45% it would
+// colour), measured on the gold set. A candidate named in thousands of sentences would cost more than a reader thinks when adding him: the newest are read
+const MAX_PASSAGES = Number(process.env.FIFA_MAX_PASSAGES) || 800;
 export const MAX_SUBJECTS = 6;            // one colour each on the page
 export const SUBJECT_STATUSES = ['incumbent', 'declared', 'rumoured', 'withdrawn'];
-const VOTES = ['for', 'against', 'unknown', 'withdraw'];
+const VOTES = ['for', 'against', 'unknown', 'withdraw', 'confirm'];
 const AUDIT_DAYS = Number(process.env.FIFA_AUDIT_DAYS) || 7;
 // the third model of the audit: another family than the two that read (gemma, deepseek)
 const auditModel = () => process.env.FIFA_AUDIT_MODEL || 'gpt-oss:120b';
@@ -40,6 +52,8 @@ const auditModel = () => process.env.FIFA_AUDIT_MODEL || 'gpt-oss:120b';
 let watching = false;
 let scheduled = false;
 const cache = memo({ttlMs: 60e3, max: 4});
+// what the news say of the presidents (articles, the latest one) changes slowly and costs a query of the shared tables: kept a quarter of an hour
+const slow = memo({ttlMs: process.env.FIFA_MENTIONS_CACHE_MS === undefined ? 15 * 60e3 : Number(process.env.FIFA_MENTIONS_CACHE_MS), max: 2});
 
 const fail = (status, message) => Object.assign(new Error(message), {status});
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -73,7 +87,9 @@ const readSubject = async (subject, since, usage) => {
     const passages = passagesOf({news, linked, index, members: MEMBERS, terms});
     stats.passages = passages.length;
     const known = await FifaModel.knownHashes(subject.qid, passages.map(passage => passage.hash));
-    const fresh = passages.filter(passage => !known.has(passage.hash));
+    const unread = passages.filter(passage => !known.has(passage.hash)).sort((a, b) => b.article.date.localeCompare(a.article.date));
+    const fresh = unread.slice(0, MAX_PASSAGES);
+    if (unread.length > fresh.length) console.warn(`FIFA map: ${subject.name}: ${unread.length - fresh.length} older passages are left unread (FIFA_MAX_PASSAGES=${MAX_PASSAGES})`);
     const results = await mapWithConcurrency(fresh, CONCURRENCY, async (passage) => {
         const reading = await readPassage({passage, subject}, {usage});
         // a passage the code cannot attribute to the association is not kept: it would be shown under the wrong country
@@ -131,6 +147,22 @@ SELECT ?fa ?person ?personLabel ?start WHERE {
     return [...byMember.values()].filter(leader => leader.name && !/^Q\d+$/.test(leader.name));
 };
 
+// The president of each association as its public page of FIFA gives it: Map(member qid -> {name, url}), only the pages that name one
+const readSiteLeaders = async () => {
+    const found = new Map();
+    for (const member of ASSOCIATIONS) {
+        try {
+            const response = await fetch(pageUrl(member.fifa), {headers: SITE_HEADERS, signal: AbortSignal.timeout(25000)});
+            const leader = response.ok ? leaderOfPage(await response.text()) : null;
+            if (leader) found.set(member.qid, {name: leader.name, url: pageUrl(member.fifa)});
+        } catch (error) {
+            console.error(`FIFA map: the page of ${member.fifa} on the site of FIFA (${error.message})`);
+        }
+        if (SITE_DELAY_MS > 0) await sleep(SITE_DELAY_MS);
+    }
+    return found;
+};
+
 export const FifaService = {
     // --- what the page reads
     // fresh: not the answer kept for a minute (the audit counts the votes as they are)
@@ -153,12 +185,28 @@ export const FifaService = {
             leader: leader ? {name: leader.name, role: leader.role, person_qid: leader.person_qid, since: leader.since ? new Date(leader.since).toISOString().slice(0, 10) : null} : null});
     },
 
-    presidents: async () => ({
-        generated_at: new Date().toISOString(),
-        presidents: (await FifaModel.leaders()).filter(row => MEMBERS.has(row.member_qid)).map(row => ({
-            person_qid: row.person_qid, name: row.name, role: row.role, since: row.since ? new Date(row.since).toISOString().slice(0, 10) : null,
-            checked_at: new Date(row.checked_at).toISOString(), member_qid: row.member_qid})),
-    }),
+    // The presidents, each with what the news of the last 30 days say of him: the articles that name him and the latest one (medium, link, title). The mentions
+    // are a bonus: when the query fails the presidents are still given
+    presidents: async () => {
+        const kept = slow.get('presidents');
+        if (kept) return kept;
+        const rows = (await FifaModel.leaders()).filter(row => MEMBERS.has(row.member_qid));
+        const asked = rows.map((row, at) => ({lid: at + 1, qid: row.person_qid ?? null, key: mentionKey(row.name)}));
+        const {counts, latest} = await FifaModel.mentionsOfLeaders(asked).catch(error => { console.error(`FIFA map: the mentions of the presidents (${error.message})`); return {counts: [], latest: []}; });
+        const count = new Map(counts.map(row => [row.lid, row]));
+        const last = new Map(latest.map(row => [row.lid, row]));
+        const answer = {
+            generated_at: new Date().toISOString(),
+            presidents: rows.map((row, at) => ({
+                person_qid: row.person_qid, name: row.name, role: row.role, since: row.since ? new Date(row.since).toISOString().slice(0, 10) : null,
+                checked_at: new Date(row.checked_at).toISOString(), member_qid: row.member_qid, source: row.source ?? 'wikidata', source_url: row.source_url ?? '',
+                articles_30d: count.get(at + 1)?.articles ?? 0,
+                last_mention: last.has(at + 1) ? {at: new Date(last.get(at + 1).at).toISOString(), medium: last.get(at + 1).medium, url: last.get(at + 1).link, title: last.get(at + 1).title} : null,
+            })),
+        };
+        slow.set('presidents', answer);
+        return answer;
+    },
 
     confederations: async () => {
         const leaders = new Map((await FifaModel.leaders()).map(row => [row.member_qid, row]));
@@ -219,17 +267,63 @@ export const FifaService = {
         cache.clear();
     },
 
-    // --- the votes: {ok, human}, human the vote that decides AFTER this one (with the news since)
+    // --- the votes: {ok, human, confirmed}, human the vote that decides AFTER this one (with the news since), confirmed who confirmed the position.
+    // "confirm" is a validation by hand: it records which position the reader saw and makes it solid (see fifa-map.js)
     vote: async ({userId, subject, member, value, note = ''}) => {
-        if (!VOTES.includes(value)) throw fail(422, 'value: for, against, unknown or withdraw.');
+        if (!VOTES.includes(value)) throw fail(422, 'value: for, against, unknown, withdraw or confirm.');
         if (!MEMBERS.has(member)) throw fail(422, 'member: no such association.');
         if (!(await FifaModel.subjects()).some(row => row.qid === subject)) throw fail(422, 'subject: no such candidate.');
-        await FifaModel.addVote({userId, subjectQid: subject, memberQid: member, value, note: String(note ?? '').trim().slice(0, 280)});
+        const pair = async () => ({signals: (await FifaModel.signalsOf(member)).filter(signal => signal.subject_qid === subject),
+            votes: await FifaModel.votesOfPair(subject, member), colour: colourSetting(), now: new Date()});
+        const positionNow = async () => positionFor(await pair());
+        // the position the reader confirms: the one a reader set, else the one the news gave (not the solid colour another confirmation gave it)
+        const seen = value === 'confirm' ? basePosition(await pair()) : '';
+        await FifaModel.addVote({userId, subjectQid: subject, memberQid: member, value, note: String(note ?? '').trim().slice(0, 280), seen});
         cache.clear();
-        const votes = await FifaModel.votesOfPair(subject, member);
-        if (!decisiveVote(votes)) return {ok: true, human: null};
-        const signals = (await FifaModel.signalsOf(member)).filter(signal => signal.subject_qid === subject);
-        return {ok: true, human: positionFor({signals, votes, colour: colourSetting(), now: new Date()}).human};
+        const after = await positionNow();
+        return {ok: true, human: after?.human ?? null, confirmed: after?.confirmed ?? null};
+    },
+
+    // The reader says which candidate an association leans toward, when no candidate is chosen on the page. subject: the item of a candidate, "none" (it leans toward
+    // none: undecided) or "withdraw" (the reader takes their choice back). An association has one vote, so choosing a candidate sets it FOR him and, for each other
+    // candidate it is shown supporting (the news or another reader), "no position": the reader's word replaces it. Opposition is never inferred or touched. All the
+    // votes of a choice are written together; a choice already standing writes nothing. Answers {ok, positions, lean}: what the page puts in its map
+    lean: async ({userId, member, subject}) => {
+        if (!MEMBERS.has(member)) throw fail(422, 'member: no such association.');
+        const subjects = await FifaModel.subjects();
+        if (!['none', 'withdraw'].includes(subject) && !subjects.some(row => row.qid === subject)) throw fail(422, 'subject: a candidate, "none" or "withdraw".');
+        const read = async () => {
+            const [signals, votes] = await Promise.all([FifaModel.signalsOf(member), FifaModel.votesOf(member)]);
+            return {signals, votes};
+        };
+        const {signals, votes} = await read();
+        const colour = colourSetting();
+        const standing = (qid, data) => positionFor({signals: data.signals.filter(signal => signal.subject_qid === qid), votes: data.votes.filter(vote => vote.subject_qid === qid), colour, now: new Date()});
+        // the latest decision of this reader on a candidate (a confirmation is no decision), none when they took it back
+        const mine = (qid) => {
+            const own = votes.filter(vote => vote.subject_qid === qid && vote.user_id === userId && vote.value !== 'confirm')
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+            return own && own.value !== 'withdraw' ? own.value : null;
+        };
+        const writes = [];
+        for (const row of subjects) {
+            if (subject === 'withdraw') {
+                if (mine(row.qid) !== null || votes.some(vote => vote.subject_qid === row.qid && vote.user_id === userId && vote.value === 'confirm')) writes.push({subjectQid: row.qid, memberQid: member, value: 'withdraw'});
+            } else if (row.qid === subject) {
+                if (mine(row.qid) !== 'for') writes.push({subjectQid: row.qid, memberQid: member, value: 'for'});
+            } else if (sideOf(standing(row.qid, {signals, votes})?.position) === 'for' && mine(row.qid) !== 'unknown') {
+                writes.push({subjectQid: row.qid, memberQid: member, value: 'unknown'});
+            }
+        }
+        await FifaModel.addVotes(userId, writes);
+        cache.clear();
+        const after = await read();
+        const positions = {};
+        for (const row of subjects) {
+            const position = standing(row.qid, after);
+            if (position) positions[row.qid] = position;
+        }
+        return {ok: true, positions, lean: leanOf(positions), written: writes.length};
     },
 
     // an administrator takes a vote off (a vandal's)
@@ -302,11 +396,33 @@ export const FifaService = {
         }
     },
 
+    // The presidents: the page of each association on the site of FIFA first (the associations give it themselves; read once a week), with the item of Wikidata of
+    // the person when Wikidata has the same one, else Wikidata alone (read every day). A day with Wikidata not answering, or a week with the site of FIFA down
+    // or changed (fewer than SITE_MIN_PAGES pages give a president), leaves the presidents of the time before
     refreshLeaders: async () => {
-        const leaders = await readLeaders();
-        // a day with Wikidata not answering leaves the presidents of the day before
+        const wikidata = await readLeaders();
+        const before = await FifaModel.leaders();
+        const fromSite = new Map(before.filter(row => row.source === 'fifa').map(row => [row.member_qid, {name: row.name, url: row.source_url}]));
+        const lastSite = Math.max(0, ...before.filter(row => row.source === 'fifa').map(row => new Date(row.checked_at).getTime()));
+        let site = fromSite;
+        if (process.env.FIFA_SITE_LEADERS !== 'off' && (fromSite.size === 0 || Date.now() - lastSite > SITE_EVERY_MS)) {
+            const read = await readSiteLeaders();
+            if (read.size >= SITE_MIN_PAGES) site = read;
+            else console.error(`FIFA map: the site of FIFA gave ${read.size} presidents, kept the ones of before`);
+        }
+        if (process.env.FIFA_SITE_LEADERS === 'off') site = new Map();
+        const wiki = new Map(wikidata.map(row => [row.member_qid, row]));
+        const leaders = [];
+        for (const member of MEMBER_LIST) {
+            const named = site.get(member.qid);
+            const other = wiki.get(member.qid);
+            if (named) leaders.push({member_qid: member.qid, person_qid: other && sameName(named.name, other.name) ? other.person_qid : null, name: named.name, role: 'President',
+                since: other && sameName(named.name, other.name) ? other.since : '', source: 'fifa', source_url: named.url});
+            else if (other) leaders.push({...other, source: 'wikidata', source_url: ''});
+        }
         if (leaders.length > 0) await FifaModel.replaceLeaders(leaders);
         cache.clear();
+        slow.clear();
         return leaders.length;
     },
 

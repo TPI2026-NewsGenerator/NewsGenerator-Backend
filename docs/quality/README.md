@@ -322,8 +322,11 @@ Never an error of side (for instead of against) in any variant. The same model r
 model of another family removes them. The four wrong colours of the sealed half: a thank-you of the South African association to FIFA taken for a support, a
 headline on a court ruling taken for a position against, a criticism "of last month" of the AFC taken as current when it had just changed sides, and a request
 of explanations by UEFA that the gold calls uncertain (a point of the labelling, not of the model). The positions lost are mostly passages where deepseek,
-stricter, did not confirm. Cost of a first reading of a candidate: the 30 days are about 300 to 800 passages, about 2 000 tokens each for gemma and about the same
-again, with thinking, for deepseek on the 40% it would colour.
+stricter, did not confirm. Cost of a first reading of a candidate, measured on the real passages of the 30 days to 12.11.2026: Infantino 684 passages read (754 found, 70 left out by the code),
+Tashima 128, Wenger 49, Vega 18. A passage costs about 2 800 tokens in and 150 out for gemma, and about 2 700 in and 1 000 out (thinking) for deepseek on the 45% that
+would colour: 4 600 tokens on average. So about 3 million tokens (about 1.5 dollars of credits: gemma 0.14 and 0.40 dollar per million tokens in and out, deepseek about
+1.2 dollars blended) for Infantino, 0.5 million (0.3 dollar) for Tashima, 0.2 and 0.07 million for the other two; about 57 passages a day for the four, about 4 dollars a month;
+the weekly audit about 0.1 million tokens. The reading of 10.11.2026 (775 tokens a passage) was 4 times lighter and 40% wrong on the sealed half.
 
 **What it does not say.** The aim was 2% of wrong colours with an upper bound of 5%: **not reached**, and with this volume it cannot be shown (with no error
 in 60 positions shown the upper bound is 6%). Over the two halves the chain colours 6 of 98 wrongly (6.1%; 2.8 to 12.7%); only the declared, 2 of 63 (3.2%).

@@ -37,9 +37,11 @@ export const agrees = (reading, signal) => reading?.status === 'established' && 
 // "confirms": the reader sets the side the news gave; "contradicts": the other side, or no position where the news gave one;
 // "adds": a position where the news had none
 export const votesAgainstNews = (map) => {
-    const found = {voted: 0, confirms: 0, contradicts: 0, adds: 0, contradicting: []};
+    const found = {voted: 0, confirms: 0, contradicts: 0, adds: 0, contradicting: [], validated: 0};
     for (const member of map.members) {
         for (const [subject, position] of Object.entries(member.positions)) {
+            // a position a reader validated by hand (confirmed): a human agreement with the news, the best live sign of precision there is
+            if (!position.human && position.confirmed?.count > 0 && sideOf(position.ai_position)) found.validated++;
             if (!position.human) continue;
             found.voted++;
             const ai = sideOf(position.ai_position);
@@ -70,7 +72,7 @@ export const reportOf = ({sampled, agreed, unreadable, auditor, votes, verdict, 
     const lines = [
         `FIFA map audit: ${verdict.toUpperCase()}`,
         `  ${sampled} established signals read again by ${auditor}: ${agreed} agree${sampled ? ` = ${pct(agreed / sampled)} (95% interval ${pct(lo)} to ${pct(hi)}, threshold ${pct(threshold)})` : ''}${unreadable ? `, ${unreadable} unreadable` : ''}`,
-        `  votes of the readers: ${votes.voted} (${votes.confirms} confirm the news, ${votes.contradicts} contradict them, ${votes.adds} add a position where there was none)`,
+        `  votes of the readers: ${votes.voted} (${votes.confirms} confirm the news, ${votes.contradicts} contradict them, ${votes.adds} add a position where there was none); ${votes.validated} positions of the news validated by a confirmation`,
     ];
     for (const item of disagreements.slice(0, 10)) lines.push(`  - the auditor says ${item.auditor}${item.reason ? `/${item.reason}` : ''}, the signal says ${item.stance}: [${item.member}] ${item.sentence}`);
     for (const item of votes.contradicting.slice(0, 10)) lines.push(`  - ${item.by} sets "${item.human}" on ${item.fifa}, the news said ${item.ai}`);

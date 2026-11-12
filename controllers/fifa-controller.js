@@ -104,6 +104,16 @@ export const FifaController = {
         }
     },
 
+    // {member, subject: a candidate | "none" | "withdraw"}: the reader says which candidate an association leans toward -> {ok, positions, lean}
+    lean: async (req, res) => {
+        try {
+            const {member, subject} = req.body ?? {};
+            res.status(200).json(await FifaService.lean({userId: req.user.id, member, subject}));
+        } catch (error) {
+            fail(res, error);
+        }
+    },
+
     // the last audits of the positions shown (an administrator)
     audits: async (req, res) => {
         try {

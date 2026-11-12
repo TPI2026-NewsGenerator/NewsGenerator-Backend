@@ -40,14 +40,29 @@ latest vote decides for everyone**. The page says first what it does not know: m
 5. **The position.** From the established signals of an association on a candidate (`fifa-positions.js`): the latest holds it; a flip to the other side
    needs a declared signal or two signals; one probable signal against a declared position makes the indications "conflicting"; a position older than
    90 days is stale. An uncertain signal never colours: it is counted and shown with its badge ("Uncertain") and its reason.
-6. **The vote.** A reader votes `for`, `against`, `unknown` ("no position") or takes the vote back. Of each reader the latest vote counts and the newest of
+6. **The vote and the confirmation.** A reader votes `for`, `against`, `unknown` ("no position") or takes the vote back; or `confirm`s the position of the news ("Confirm this position"): it is a **validation by hand, the heaviest word there is**, so the position is
+   drawn **solid, at the declared level**, whatever it was (a probable one included), with the reading of the news kept (`ai_position`) and never aged. It records who confirmed
+   which position (`fifa_votes.seen`); once the news change the position the confirmation is "outdated" and validates nothing: the reading of the news shows again. A
+   confirmation is no decision (a vote that sets a position still wins over it), and taking the vote back takes the reader's confirmation away too. Of each reader the latest vote counts and the newest of
    those decides for everyone; the position of the news stays visible under it, and when the news say the other thing after the vote the sheet says so
    ("new evidence since the vote") without changing the colour. Votes are only added (who, when), an administrator can take one off, a reader is limited to
    30 votes in 10 minutes.
-7. **A candidate is added by a reader**, with no validation: a person of Wikidata, at most six on the map (one colour each; when it is full the oldest
-   candidate marked `withdrawn` makes room), three a day for each reader. The 30 days of news are then read (a few hundred thousand tokens).
-8. **The presidents** are read from Wikidata (`P488`) once a day; Wikidata has some only.
-9. **The weekly audit** (`services/utils/fifa-audit.js`, `FifaService.audit`, `node --env-file=.env scripts/fifa-audit.js [--days=7] [--sample=30] [--dry]`). Once a week
+7. **The candidate an association leans toward.** An association has one vote, so it leans toward at most one candidate. When no candidate is chosen on the page and a reader
+   clicks a country, the reader chooses which candidate it leans toward (`POST /api/fifa/leans`, `subject`: a candidate, `none` or `withdraw`). Choosing candidate X sets the
+   association FOR X (a vote, so solid) and "no position" on each other candidate it was shown supporting; opposition is never inferred nor touched; all the votes of a
+   choice are written together, and a choice that already stands writes nothing. The map says it for each association (`lean`: the candidate, "reader" or "news", or the candidates
+   in conflict). With one candidate chosen on the page the reader confirms or changes the position on that candidate instead (item 6).
+8. **A candidate is added by a reader**, with no validation: a person of Wikidata, at most six on the map (one colour each; when it is full the oldest
+   candidate marked `withdrawn` makes room), three a day for each reader. The 30 days of news are then read: about 4 600 tokens a passage, so about 3 million tokens (about 1.5 dollars of credits)
+   for the person in office (680 passages), about 0.5 million (0.3 dollar) for a candidate named in 130 sentences, and at most 800 passages whoever it is
+   (`FIFA_MAX_PASSAGES`, the newest). Then about 57 new passages a day for four candidates, about 4 dollars a month.
+9. **The presidents.** First the public page of each association on the site of FIFA (`inside.fifa.com/en/associations/{code}/organisation`, read by `services/utils/fifa-site.js`:
+   its robots.txt allows it, one request every 1.2 s with a User-Agent that says who reads, once a week, 211 pages in about 6 minutes; `FIFA_SITE_LEADERS=off` reads none).
+   Then Wikidata (`P488`, once a day): it gives the item of the person when it names the same one, and the president of an association whose page names none. Fewer than
+   100 presidents from the site (it is down or changed) leaves the ones of the week before. Each president carries his `source` (`fifa` or `wikidata`) and its page.
+   What the news say of him comes with it, from our own tagged news of the last 30 days: the number of articles that name him and the latest one (medium, link, title),
+   asked by his item of Wikidata or by his name, kept a quarter of an hour (`GET /api/fifa/presidents`: `articles_30d`, `last_mention`).
+10. **The weekly audit** (`services/utils/fifa-audit.js`, `FifaService.audit`, `node --env-file=.env scripts/fifa-audit.js [--days=7] [--sample=30] [--dry]`). Once a week
    (`FIFA_AUDIT_DAYS`, checked every hour, so a deploy does not start the week again) a random sample of 30 established signals (the ones of the last days first) is read
    again by a **third model**, of a family that read neither time (`FIFA_AUDIT_MODEL`, `gpt-oss:120b`); it agrees when it says established on the same side. The
    votes of the readers are counted against the news too: a reader who sets the other side, or no position where the news gave one, contradicts the system. The result

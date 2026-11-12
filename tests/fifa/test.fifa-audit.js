@@ -61,8 +61,19 @@ describe('the numbers', () => {
             member('EEE', {S: {human: null, ai_position: undefined}}),
         ]};
         const votes = votesAgainstNews(map);
-        expect(votes).toMatchObject({voted: 4, confirms: 1, contradicts: 2, adds: 1});
+        expect(votes).toMatchObject({voted: 4, confirms: 1, contradicts: 2, adds: 1, validated: 0});
         expect(votes.contradicting.map(item => item.fifa)).toEqual(['BBB', 'CCC']);
+    });
+
+    it('should count the positions of the news a reader validated by a confirmation, apart from the votes', () => {
+        const member = (fifa, position) => ({qid: `Q-${fifa}`, fifa, positions: {S: position}});
+        const map = {members: [
+            member('AAA', {human: null, ai_position: 'soutien_probable', position: 'soutien_declare', confirmed: {count: 1, by: ['reader1']}}),
+            member('BBB', {human: null, ai_position: undefined, position: 'inconnue', confirmed: {count: 1, by: ['reader1']}}),
+            member('CCC', {human: null, ai_position: undefined, position: 'soutien_declare', confirmed: {count: 0, outdated: 1}}),
+        ]};
+        expect(votesAgainstNews(map)).toMatchObject({voted: 0, validated: 1});
+        expect(reportOf({sampled: 30, agreed: 27, unreadable: 0, auditor: 'x', verdict: 'ok', votes: votesAgainstNews(map)})).toContain('1 positions of the news validated by a confirmation');
     });
 
     it('should say ok, warning or too few, from the threshold (85% by default)', () => {

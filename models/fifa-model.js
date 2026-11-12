@@ -12,7 +12,7 @@ import {prisma} from '../config/db.js';
 
 const SIGNAL = `s.id, s.subject_qid, s.member_qid, s.certainty, s.uncertain_reason, s.stance, s.level, s.mark, s.speaker_kind, s.speaker, s.sentence, s.lang, s.url,
     s.medium, s.published_at, s.news_count, s.media_count, s.confirmed`;
-const VOTE = `v.id, v.user_id, u.username, v.subject_qid, v.member_qid, v.value, v.note, v.created_at`;
+const VOTE = `v.id, v.user_id, u.username, v.subject_qid, v.member_qid, v.value, v.note, v.seen, v.created_at`;
 
 export const FifaModel = {
     // --- the candidates
@@ -90,18 +90,41 @@ export const FifaModel = {
     votesOf: async (memberQid) => prisma.$queryRawUnsafe(`SELECT ${VOTE} FROM fifa_votes v JOIN users u ON u.id = v.user_id WHERE v.member_qid = $1::text ORDER BY v.created_at`, memberQid),
     votesOfPair: async (subjectQid, memberQid) => prisma.$queryRawUnsafe(
         `SELECT ${VOTE} FROM fifa_votes v JOIN users u ON u.id = v.user_id WHERE v.subject_qid = $1::text AND v.member_qid = $2::text ORDER BY v.created_at`, subjectQid, memberQid),
-    addVote: async ({userId, subjectQid, memberQid, value, note}) => prisma.$executeRawUnsafe(
-        `INSERT INTO fifa_votes (user_id, subject_qid, member_qid, value, note) VALUES ($1::int, $2::text, $3::text, $4::text, $5::text)`, userId, subjectQid, memberQid, value, note),
+    addVote: async ({userId, subjectQid, memberQid, value, note, seen = ''}) => prisma.$executeRawUnsafe(
+        `INSERT INTO fifa_votes (user_id, subject_qid, member_qid, value, note, seen) VALUES ($1::int, $2::text, $3::text, $4::text, $5::text, $6::text)`, userId, subjectQid, memberQid, value, note, seen),
+    // the votes of one choice, all or none: [{subjectQid, memberQid, value}] for a reader
+    addVotes: async (userId, votes) => votes.length === 0 ? [] : prisma.$transaction(votes.map(vote => prisma.$executeRawUnsafe(
+        `INSERT INTO fifa_votes (user_id, subject_qid, member_qid, value, note, seen) VALUES ($1::int, $2::text, $3::text, $4::text, '', '')`, userId, vote.subjectQid, vote.memberQid, vote.value))),
     deleteVote: async (id) => prisma.$executeRawUnsafe(`DELETE FROM fifa_votes WHERE id = $1::int`, id),
 
     // --- the presidents
-    leaders: async () => prisma.$queryRawUnsafe(`SELECT member_qid, person_qid, name, role, since, checked_at FROM fifa_leaders`),
+    // What the news of the last 30 days say of each president: [{lid, articles, last_at}] and [{lid, medium, link, title, at}] for the latest one. A president with an item of
+    // Wikidata is looked for by it (the tagger linked the name), one without by his name as it is compared (the key of mentions: "philippe diallo"). leaders: [{lid, qid, key}]
+    mentionsOfLeaders: async (leaders) => {
+        if (leaders.length === 0) return {counts: [], latest: []};
+        const params = [leaders.map(l => l.lid), leaders.map(l => l.qid), leaders.map(l => l.key)];
+        const HIT = `
+            WITH leaders(lid, qid, key) AS (SELECT * FROM unnest($1::int[], $2::text[], $3::text[])),
+            hit AS (
+                SELECT l.lid, am.id_article FROM leaders l JOIN mentions m ON m.qid = l.qid AND m.kind = 'person' JOIN article_mentions am ON am.id_mention = m.id WHERE l.qid IS NOT NULL
+                UNION
+                SELECT l.lid, am.id_article FROM leaders l JOIN mentions m ON m.key = l.key AND m.kind = 'person' JOIN article_mentions am ON am.id_mention = m.id WHERE l.qid IS NULL)`;
+        const counts = await prisma.$queryRawUnsafe(`${HIT}
+            SELECT h.lid, count(*)::int AS articles, max(COALESCE(a.published_at, a.created_at)) AS last_at FROM hit h JOIN articles a ON a.id = h.id_article GROUP BY h.lid`, ...params);
+        const latest = await prisma.$queryRawUnsafe(`${HIT}
+            SELECT DISTINCT ON (h.lid) h.lid, medium_of(a.link) AS medium, a.link, a.title, COALESCE(a.published_at, a.created_at) AS at
+            FROM hit h JOIN articles a ON a.id = h.id_article ORDER BY h.lid, COALESCE(a.published_at, a.created_at) DESC`, ...params);
+        return {counts, latest};
+    },
+
+    leaders: async () => prisma.$queryRawUnsafe(`SELECT member_qid, person_qid, name, role, since, source, source_url, checked_at FROM fifa_leaders`),
     replaceLeaders: async (leaders) => {
         await prisma.$executeRawUnsafe(`DELETE FROM fifa_leaders`);
         if (leaders.length === 0) return;
         await prisma.$executeRawUnsafe(`
-            INSERT INTO fifa_leaders (member_qid, person_qid, name, role, since)
-            SELECT x.member_qid, x.person_qid, x.name, x.role, NULLIF(x.since, '')::date FROM jsonb_to_recordset($1::jsonb) AS x(member_qid text, person_qid text, name text, role text, since text)
+            INSERT INTO fifa_leaders (member_qid, person_qid, name, role, since, source, source_url)
+            SELECT x.member_qid, x.person_qid, x.name, x.role, NULLIF(x.since, '')::date, COALESCE(x.source, 'wikidata'), COALESCE(x.source_url, '')
+            FROM jsonb_to_recordset($1::jsonb) AS x(member_qid text, person_qid text, name text, role text, since text, source text, source_url text)
             ON CONFLICT (member_qid) DO NOTHING`, JSON.stringify(leaders));
     },
 };
