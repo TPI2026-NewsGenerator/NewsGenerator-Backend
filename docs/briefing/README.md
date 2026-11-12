@@ -16,7 +16,7 @@ saved in `briefings.step` and shown on the page while it runs:
    the window, in every language, of every shared feed, every reader's sources (but the ones the reader removed from
    this profile, `removed_sources`) and the Google News searches of the interests, are scored in SQL on the interests' vectors (`rank_profile_stories`, dense + 0.5 × sparse); 600
    ranked for 10 cards, each interest its share; the stories sent by e-mail in the last 48 h left out unless they
-   evolved; 40 candidates of feeds, 10 of Google News only, 10 of a trusted medium; then the candidates whose news
+   evolved; 67 candidates of feeds (40 until 12.11.2026, see [the funnel](#the-funnel-from-the-feeds-to-the-cards)), 10 of Google News only, 10 of a trusted medium; then the candidates whose news
    the media had told before the window and only tell again in it are left out ([News told before the window](#news-told-before-the-window)).
 2. **choosing**: the AI (`selectStories`, gemma4:31b) reads the candidates against the whole profile and its
    projects, with the thumbs as examples, and chooses more stories than cards (`chosenFor`: 20 for 10 cards, 30
@@ -485,3 +485,55 @@ stories are noise with 18 old ones. (That measure was on stories chosen for havi
 news told late, and the affair does help them: see above, built the same day.)
 
 Not done: the threshold of a week the friend named: a window of 24 hours already asks for the facts of that day, and the AI says which is old.
+
+## Cards of another sport
+
+The user (12.11.2026, on a briefing of a reader of football refereeing with 3 cards of basketball: "c'est un problème grave"). The AI that chooses the stories reads a
+title and a description in the language of the news, and an acronym that looks alike from a sport to another is read as the one it knows: the Greek ΕΟΚ (the basketball
+federation) was written down by it as "Greek Football Federation (EPO)", the list of referees of the ABA league (basketball) was chosen for its referees. It was not new:
+the saved briefings of the three profiles since 4.11 hold 5 such cards in 25 briefings (the Greek basketball federation, ice hockey, two of rugby, cricket), and the
+Greek federation had come on 26.10, 29.10 and 10.11. Nothing downstream removes them by design: the review of the cards (`reviewCards`) leaves out only what the reader
+refuses in his profile, and "a subject the profile does not mention is not refused".
+
+Added to the prompt of the choice, a sentence on the sport changed nothing (`bench/funnel-audit.mjs choose`, 5 runs of the same 115 candidates: the Greek federation and the ABA league
+chosen 5 times of 5 with it as without; of the 11 candidates of another sport of the day, 2 to 4 were chosen in a run with the prompt as it is, 2 with the sentence, 2 to 4 with the sentence on the
+acronyms, always the same two). The knowledge is missing in the title, not the rule. The cards
+written say it: the names Wikidata spells ("Hellenic Basketball Federation") and the text translated.
+
+**The rule** (`services/utils/sport-check.js`, in parallel with the fold of the same news and the cards sent, after the cards are written): the AI is given the profile, and the title the
+reader sees, the names and the first 45 words of the text of each card, and answers the sports the profile follows (football means FIFA, UEFA, futsal, beach soccer; `["all"]` when the
+profile follows sport in general or says nothing) and for each card the sport of its main subject and the words of the card that show it. **The code decides**: a card is left out only
+when its sport is not one the profile follows AND the words the AI quotes are in what it was shown (a word it invents shows nothing); a profile of every sport, a card of no sport in
+particular (the law of sport in general), a doubt, a failing call and a news the reader added by its link all keep the card. The call has reasoning (`think`): without it the ABA league
+was football 3 times of 3, with it basketball 3 of 3. About 2 600 tokens in and 2 400 out a briefing (1.3%); the card is not replaced (the reserve is used up by then).
+The log says it: `Briefing 1208: sport: "..." is left out, it is about basketball ("Hellenic Basketball Federation")`. `AI_SPORT_CHECK=off` switches it off.
+
+Measured on the 583 cards of the 25 saved briefings of the three profiles since 4.11 (bench/sport-check.mjs): 5 cards left out, all of another sport (ice hockey, basketball, rugby league,
+rugby union, cricket), none of football; on the 27 cards of a briefing written live, the 3 of basketball (the two of the Greek federation by their names, the ABA league with reasoning).
+
+## The funnel from the feeds to the cards
+
+The user (12.11.2026): "dans 200k nouvelles par jour, on n'arrive pas à trouver 30 qui sont clairement pertinentes pour le lecteur, est-ce que le filtrage ne laisse pas des cartes
+pertinentes s'échapper ?" Measured on the briefing of a reader (profile 7, 24 hours, 30 cards, `bench/funnel-audit.mjs trace`, the trace of `write()` stopped once the AI has chosen):
+
+| Step | Stories |
+|---|---|
+| news of the last 24 h in the database | 189 281 |
+| stories told by a feed of the reader (1 980 feeds) | 47 710 |
+| scored on the interest vectors (`RANKED_POOL`) | 1 800 |
+| kept, each interest its share (`RANKED`) | 450 |
+| credible, not delivered by e-mail in the last 48 h | 432 |
+| picked as candidates (`CANDIDATES`, Google News only, trusted media) | 121 (40 for 10 cards until 12.11.2026) |
+| not old news (`old-news.js`) | 115 |
+| chosen by the AI | 45 (`chosenFor`), 30 cards |
+
+720 stories were judged blind by five readers from the profile (`CLEAR` / `MAYBE` / `NO`: the 450 kept, 150 drawn among the 1 350 scored and not kept, 120 drawn among the 294 not scored
+whose title holds a word of the subjects). **47 are clearly for the reader among the 450 kept**; they were lost at 11 to the repeat filter (delivered before, by design), **14 at the cut to
+121 candidates** (ranks 91 to 597: the elections of the Italian federation, a change of the red card rules...), 2 at the age gate and 1 by the AI; 19 were chosen. Beyond the 450,
+4 of the 150 scored ones drawn are clear (about 36 more in the 1 350) and 1 of the 120 not scored. Many of the 52 clear stories are one news told in several languages (the housemaid
+complaint against Infantino, Blatter's "dictator", the FIGC elections): the number of different news was not counted, so a lack of 30 clear cards a day is neither shown nor refuted.
+
+**The cut was widened** (`CANDIDATES` 40 -> 67 for 10 cards, 200 for 30): the choice replayed 4 times on the same day kept 17 clear stories each time against 11 to 16 with 115
+candidates (the candidates held 29 clear stories instead of 20), and chose about as many stories judged not for the reader (3 to 4 against 2 to 4). Live, 183 candidates were asked after the age gate: the call of the choice
+reads 18 200 tokens against 11 500 to 12 300, the age gate (two calls now) 9 500 against 5 200: about 12 000 tokens more, 3% of a briefing, and 30 to 50 seconds. A story of
+a rank far from the interests by the vectors can still be missed: the red card story was at rank 597 of 1 800.

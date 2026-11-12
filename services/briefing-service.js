@@ -39,6 +39,7 @@ import {logBriefingChecks} from "./utils/briefing-checks.js";
 import {proofreadCards} from "./utils/proofread.js";
 import {foldCards, foldInto, sameNewsGroups} from "./utils/card-merge.js";
 import {SENT_DAYS, SENT_LIKENESS, receivedCards, repeatedCards, withoutSentRepeats} from "./utils/sent-repeats.js";
+import {withoutOtherSport, wrongSportOf} from "./utils/sport-check.js";
 import {AffairModel} from "../models/affair-model.js";
 import {reviewNames, withoutNonNames} from "./utils/name-review.js";
 import {failedTitle, translatedTitles} from "./utils/title-translation.js";
@@ -101,7 +102,10 @@ export const WATCH_LIMIT = 100;
 // selectionPrompt)
 const WEEK_FROM_HOURS = 72;
 const SPARSE_WEIGHT = 0.5;
-const CANDIDATES = 40;              // stories the AI chooses from, told by at least one feed
+// stories the AI chooses from, told by at least one feed, for 10 cards (times the size over 10). 40 until 12.11.2026, 67 since (the user: "oui" to 200 candidates
+// for a briefing of 30): of the 47 stories clearly for the reader among the 450 kept by interest, 14 were lost at the cut to 121 candidates (ranks 91 to 597)
+// (bench/funnel-audit.mjs). With 200 the choice replayed 4 times kept 17 clear stories each time instead of 11 to 16, for about 9 000 tokens more
+const CANDIDATES = 67;
 // and at most this many known only through Google News, GOOGLE_PER_MEDIUM of one medium (see
 // pickCandidates): the AI leaves the pages that are no news out
 const GOOGLE_CANDIDATES = 10;
@@ -963,10 +967,12 @@ const sentRepeatsOf = async (items, {profileId, userId, language, usage, label})
 
 // hours: of news it is written from, one of WINDOWS; size: its cards, one of BRIEFING_SIZES. Exported for the benches, which write a briefing
 // without saving it (bench/briefing-relevance.mjs)
-export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) => {
+// trace: an object the benches give to read the funnel (bench/funnel-audit.mjs): the stories at each step of the choice, filled in as the steps go; its
+// 'stop' set, the briefing ends once the AI has chosen and answers no card. Nothing is read from it
+export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING, trace = null) => {
     // the stories ranked and given to the AI grow with the cards wanted
     const scale = size / MAX_BRIEFING;
-    const usage = {repeats: newUsage(), aging: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage(), titling: newUsage(), titleRewriting: newUsage(), proofreading: newUsage(), duplicates: newUsage(), sentRepeats: newUsage(), nameReview: newUsage(), picturing: newUsage()};
+    const usage = {repeats: newUsage(), aging: newUsage(), choosing: newUsage(), checking: newUsage(), merging: newUsage(), summarizing: newUsage(), writing: newUsage(), contesting: newUsage(), reviewing: newUsage(), angles: newUsage(), official: newUsage(), naming: newUsage(), titling: newUsage(), titleRewriting: newUsage(), proofreading: newUsage(), duplicates: newUsage(), sentRepeats: newUsage(), sportCheck: newUsage(), nameReview: newUsage(), picturing: newUsage()};
     // the interests of the profile and of the projects it runs: each gets its share of the cards
     const [profile, interests, projects] = await Promise.all([ProfileModel.get(profileId), ProfileModel.briefingInterests(profileId),
         ProfileModel.projects(profileId)]);
@@ -998,12 +1004,17 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     const feedUrls = (await feedsOf(profileId)).filter(url => !refused.has(url));
     // the media the reader trusts: their stories among the TRUST_POOL closest are candidates too
     const trusted = new Set(await FeedModel.trustedMedia(profileId));
-    const ranked = shareOut(await StoryModel.rank({
+    const pool = await StoryModel.rank({
         profileId, feedUrls, since,
         languages: null,
         sparseWeight: SPARSE_WEIGHT,
         limit: RANKED_POOL * scale,
-    }), RANKED * scale, row => row.id_interest, interests);
+    });
+    const ranked = shareOut(pool, RANKED * scale, row => row.id_interest, interests);
+    if (trace) Object.assign(trace, {
+        pool: pool.map(row => ({story: row.id_story, article: row.id_article, interest: row.id_interest, score: Number(row.score)})),
+        ranked: ranked.map(row => row.id_story), interests: interests.map(interest => ({id: interest.id, text: interest.text, weight: interest.weight})), feedUrls,
+    });
     if (ranked.length === 0) {
         throw new Error(`No story to choose from: the news of the last ${spanOf(hours)} are not read and embedded yet. The background work runs every few minutes, try again soon.`);
     }
@@ -1049,18 +1060,27 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
         since, hours, usage: usage.aging, earlierNews: StoryModel.earlierNews,
         earlierInAffair: process.env.AI_OLD_NEWS_AFFAIR === 'off' ? null : StoryModel.earlierInAffair,
     });
+    if (trace) Object.assign(trace, {
+        credible: closestFirst.map(story => story.storyId), fresh: fresh.map(story => story.storyId), kept: [...kept].map(story => story.storyId),
+        candidates: candidates.map(story => story.storyId),
+    });
 
     // 2. the AI chooses, against the whole profile and what it refuses
     await step('choosing');
     const language = readerLanguage(profile);
-    const chosenByAi = await selectStories(wanted, candidates.map(story => ({
+    const asked = candidates.map(story => ({
         id: String(story.storyId),
         title: story.best.title,
         description: (story.best.description ?? '').slice(0, DESCRIPTION_CHARS),
         others: story.members.filter(article => article !== story.best).map(article => article.title).slice(0, 3),
         trusted: story.told,
         media: new Set(story.members.map(mediumOfArticle)).size,
-    })), usage.choosing, feedback.examples, interests.map(interest => interest.text), week && hours / 24, size, language);
+    }));
+    const chosenByAi = await selectStories(wanted, asked, usage.choosing, feedback.examples, interests.map(interest => interest.text), week && hours / 24, size, language);
+    if (trace) {
+        Object.assign(trace, {wanted, asked, chosen: chosenByAi, examples: feedback.examples, week: week && hours / 24, size, language});
+        if (trace.stop) return [];
+    }
     const selected = balanceSelection(chosenByAi, id => byId.get(id)?.interestId, interests, size);
     if (selected.length === 0) return [];
     // the next stories the AI chose, in its order: they replace a card no article of which can be read
@@ -1097,6 +1117,9 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     const sameNews = sameNewsGroups(items, language, {usage: usage.duplicates, label});
     // the cards that tell the news of a card the reader got by e-mail in the last days, unless it evolved or the reader follows its affair (see sent-repeats.js)
     const sentRepeats = sentRepeatsOf(items, {profileId, userId: profile.id_user, language, usage: usage.sentRepeats, label});
+    // the cards about another sport than the profile follows (the AI that chooses reads a title in the language of the news: the Greek ΕΟΚ, the basketball
+    // federation, was taken for the football one), read with the words the cards are written with (see sport-check.js)
+    const otherSport = wrongSportOf(items, wanted, {usage: usage.sportCheck, label});
     // the names that no item of Wikidata stands for and that are no names (a pairing of two teams, a common noun), pointed at by the AI at the same time
     const notNames = reviewNames(items, {usage: usage.nameReview, label});
     // the picture of each card looked at by the AI, which finds a better one among its articles' when it is much better (see picture-choice.js)
@@ -1108,7 +1131,7 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     const proofread = await proofreadCards(hedged, language, {usage: usage.proofreading, label});
     // the second card of a news both readers agree on is among the angles of the other: no news is hidden, a development taken for it is one click away
     const folded = withoutNonNames(foldCards(withAiPictures(proofread, await aiPictures), await sameNews, {label}), await notNames, {label});
-    const written = withoutSentRepeats(folded, await sentRepeats, {label});
+    const written = withoutOtherSport(withoutSentRepeats(folded, await sentRepeats, {label}), await otherSport, {label});
     // the analysis of the cards that merit one, from their articles read whole: written after the
     // briefing is shown (it reasons for a minute or more a card, see card-analysis.js), never awaited
     if (briefingId) analyze(briefingId, written, articles, language);
