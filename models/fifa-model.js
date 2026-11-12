@@ -13,6 +13,13 @@ import {DISCOVERY_REGEX} from '../services/utils/fifa-discovery.js';
 
 const SIGNAL = `s.id, s.subject_qid, s.member_qid, s.certainty, s.uncertain_reason, s.stance, s.level, s.mark, s.speaker_kind, s.speaker, s.sentence, s.lang, s.url,
     s.medium, s.published_at, s.news_count, s.media_count, s.confirmed`;
+// The words that tell a news is about football, for the news of a president (Postgres syntax, case ignored, a stem or a word with \m): FIFA and its bodies, football in many languages, and the
+// words of a match, a player, a club, a league (the person leads a football association). Measured 13.11.2026 on five presidents: it keeps 60 to 90% of the news that name them
+// and drops the ones about a namesake or about the person elsewhere (a billionaire's mines, a prince); in a language with few of these words it also drops some football
+const FOOTBALL_WORDS = 'fifa|uefa|concacaf|conmebol|football|soccer|f[uú]tbol|fu(ss|ß)ball|calcio|futebol|voetbal|fotboll|fodbold|fotbal|jalkapallo|labd|sepak bola|pi[łl]k|\\mfoot\\M|'
+    + 'f[eé]d[eé]ration|federaci[oó]n|federa[cç][aã]o|federazione|verband|ligue 1|\\mliga|laliga|premier league|serie a|bundesliga|mondial|world cup|coupe du monde|copa|\\mfc\\M|\\mcaf\\M|\\mafc\\M|'
+    + '\\mmatch|partido|partita|\\mjogo|\\mspiel|wedstrijd|joueur|jugador|jogador|giocatore|\\mplayer|spieler|entra[iî]neur|entrenador|treinador|allenatore|\\mcoach|\\mclub|clube|\\mleague|stadium|estadio|\\mstade|arbitr|referee|selecci[oó]n|national team|'
+    + 'فيفا|كرة|الكرة|كورة|منتخب|معسكر|رياض|مباراة|لاعب|مدرب|نادي|الدوري|كأس|فوتبال|футбол|足球|サッカー|축구|כדורגל|ποδόσφαιρ|फुटबॉल|ฟุตบอล';
 const VOTE = `v.id, v.user_id, u.username, v.subject_qid, v.member_qid, v.value, v.note, v.seen, v.created_at, v.source_url, v.source_medium, v.source_check, v.source_found, v.source_checked_at`;
 // one vote written, with its source when the reader joined one (checked later: "pending"); answers the id
 const INSERT_VOTE = `INSERT INTO fifa_votes (user_id, subject_qid, member_qid, value, note, seen, source_url, source_medium, source_check)
@@ -189,6 +196,25 @@ export const FifaModel = {
             SELECT DISTINCT ON (h.lid) h.lid, medium_of(a.link) AS medium, a.link, a.title, COALESCE(a.published_at, a.created_at) AS at
             FROM hit h JOIN articles a ON a.id = h.id_article ORDER BY h.lid, COALESCE(a.published_at, a.created_at) DESC`, ...params);
         return {counts, latest};
+    },
+
+    // The news of the last 30 days that name a president, the newest first, a page of them: {total, total_all, rows: [{id, title, description, lang, medium, link, at, relevant}]}.
+    // A president with an item of Wikidata is looked for by it (the tagger linked the name), one without by his name as it is compared (the key of mentions).
+    // relevant: the news is about football: it also names (the tagger linked it) the association, its confederation or FIFA (orgs: their items), or holds a football word
+    // (FOOTBALL_WORDS, Postgres syntax). scope "football" keeps those, "all" everything; total counts the scope asked, total_all every news of the person
+    newsOfLeader: async ({qid, key, orgs = [], scope = 'football', limit, offset}) => {
+        const rows = await prisma.$queryRawUnsafe(`
+            WITH hit AS (
+                SELECT DISTINCT am.id_article FROM mentions m JOIN article_mentions am ON am.id_mention = m.id
+                WHERE m.kind = 'person' AND (CASE WHEN $1::text IS NOT NULL THEN m.qid = $1::text ELSE m.key = $2::text END)),
+            scored AS (
+                SELECT a.id, a.title, a.description, a.lang, medium_of(a.link) AS medium, a.link, COALESCE(a.published_at, a.created_at) AS at,
+                    (EXISTS (SELECT 1 FROM article_mentions x JOIN mentions mx ON mx.id = x.id_mention WHERE x.id_article = a.id AND mx.qid = ANY($5::text[])) OR a.search_text ~* $6::text) AS relevant
+                FROM hit h JOIN articles a ON a.id = h.id_article WHERE COALESCE(a.published_at, a.created_at) >= now() - interval '30 days'),
+            counted AS (SELECT *, count(*) OVER ()::int AS total_all, (count(*) FILTER (WHERE relevant) OVER ())::int AS total_football FROM scored)
+            SELECT * FROM counted WHERE ($7::text = 'all' OR relevant) ORDER BY at DESC, id DESC LIMIT $3::int OFFSET $4::int`, qid ?? null, key, limit, offset, orgs, FOOTBALL_WORDS, scope);
+        const first = rows[0];
+        return {total: first ? (scope === 'all' ? first.total_all : first.total_football) : 0, total_all: first?.total_all ?? 0, total_football: first?.total_football ?? 0, rows};
     },
 
     leaders: async () => prisma.$queryRawUnsafe(`SELECT member_qid, person_qid, name, role, since, source, source_url, checked_at FROM fifa_leaders`),

@@ -19,6 +19,10 @@ router.get('/subjects', authenticateToken, FifaController.subjects);
 router.get('/presidents', authenticateToken, FifaController.presidents);
 router.get('/confederations', authenticateToken, FifaController.confederations);
 router.get('/associations/:qid', authenticateToken, FifaController.association);
+// the news that name the president of the association (a query of the shared tables: a few a minute)
+router.get('/associations/:qid/leader/news', authenticateToken,
+    rateLimit({windowMs: 60e3, max: 30, key: req => `fifa leader news ${req.user.id}`, message: 'Too many requests, try again in a minute.'}),
+    FifaController.leaderNews);
 
 // the persons of Wikidata the reader picks a candidate from: one call of Wikidata, a few a minute
 router.get('/people', authenticateToken,

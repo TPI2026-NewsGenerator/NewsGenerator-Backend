@@ -52,6 +52,8 @@ const VOTES = ['for', 'against', 'unknown', 'withdraw', 'confirm'];
 const SOURCES_PER_DAY = Number(process.env.FIFA_SOURCES_PER_DAY) || 20;
 const SOURCE_RECHECK_PER_RUN = 10;
 const NOTE_MAX = 280;
+// FIFA as the tagger links it in the news (an organisation of the mentions): a news that names it is about football
+const FIFA_ORG = 'Q253414';
 // the candidates the news name: looked for once a day in the news of the last two weeks, a person judged is not judged again for half a day, at most two are added
 // by a run (a candidate costs about 150 000 tokens to read: the 30 days of news that name him), and none takes the place of another
 const DISCOVER_EVERY_MS = 24 * 3600e3;
@@ -348,6 +350,27 @@ export const FifaService = {
             leader: leader ? {name: leader.name, role: leader.role, person_qid: leader.person_qid, since: leader.since ? new Date(leader.since).toISOString().slice(0, 10) : null} : null});
         // the sources of the choices that stand and the ones added on their own, the newest first
         return {...sheet, sources: [...sheet.sources, ...pages.map(page => pageShape(page, userId))].sort((a, b) => new Date(b.at) - new Date(a.at)), notes: notes.map(note => noteShape(note, userId))};
+    },
+
+    // The news of the last 30 days that name the president of an association, the newest first, a page of them (limit 1 to 100, 50 by default; offset). The same news the
+    // number of articles of the presidents counts. scope "football" (the default): only the news about football, those that also name (linked by the tagger) the association,
+    // its confederation or FIFA, or hold a football word; "all": every news that names the person. total counts the scope asked, total_all every news of the person and
+    // total_football the football ones, so the page says what the filter hides. {leader: {name, person_qid} | null, scope, total, total_all, total_football, limit, offset,
+    // articles: [{id, title, description, medium, url, lang, published_at, relevant}]}
+    leaderNews: async ({qid, limit = 50, offset = 0, scope = 'football'}) => {
+        if (!MEMBERS.has(qid)) throw fail(404, 'No such association.');
+        const asked = scope === undefined || scope === '' ? 'football' : scope;
+        if (!['football', 'all'].includes(asked)) throw fail(422, 'scope: football or all.');
+        const size = Math.min(100, Math.max(1, Math.trunc(Number(limit)) || 50));
+        const skip = Math.max(0, Math.trunc(Number(offset)) || 0);
+        const leader = (await FifaModel.leaders()).find(row => row.member_qid === qid);
+        if (!leader) return {leader: null, scope: asked, total: 0, total_all: 0, total_football: 0, limit: size, offset: skip, articles: []};
+        const confederation = CONFEDERATIONS.find(item => item.fifa === MEMBERS.get(qid).confederation);
+        const orgs = [...new Set([qid, confederation?.qid, FIFA_ORG].filter(Boolean))];
+        const {total, total_all: totalAll, total_football: totalFootball, rows} = await FifaModel.newsOfLeader({qid: leader.person_qid ?? null, key: mentionKey(leader.name), orgs, scope: asked, limit: size, offset: skip});
+        return {leader: {name: leader.name, person_qid: leader.person_qid ?? null}, scope: asked, total, total_all: totalAll, total_football: totalFootball, limit: size, offset: skip, articles: rows.map(row => ({
+            id: row.id, title: row.title ?? '', description: String(row.description ?? '').replace(/\s+/g, ' ').trim().slice(0, 280), medium: row.medium ?? '', url: row.link, lang: row.lang ?? null,
+            published_at: new Date(row.at).toISOString(), relevant: Boolean(row.relevant)}))};
     },
 
     // --- the notes: a word on an association, visible to every reader. 1 to 500 characters; the author or an administrator takes it off

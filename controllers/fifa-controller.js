@@ -116,6 +116,15 @@ export const FifaController = {
         }
     },
 
+    // ?limit=&offset=&scope=football|all: the news of the last 30 days that name the president of the association, the newest first -> {leader, scope, total, total_all, total_football, limit, offset, articles}
+    leaderNews: async (req, res) => {
+        try {
+            res.status(200).json(await FifaService.leaderNews({qid: req.params.qid, limit: req.query.limit, offset: req.query.offset, scope: req.query.scope}));
+        } catch (error) {
+            fail(res, error);
+        }
+    },
+
     // {member, text}: a note on an association, visible to every reader -> 201 {note: {id, by, at, text, mine}}
     addNote: async (req, res) => {
         try {

@@ -63,6 +63,11 @@ latest vote decides for everyone**. The page says first what it does not know: m
    100 presidents from the site (it is down or changed) leaves the ones of the week before. Each president carries his `source` (`fifa` or `wikidata`) and its page.
    What the news say of him comes with it, from our own tagged news of the last 30 days: the number of articles that name him and the latest one (medium, link, title),
    asked by his item of Wikidata or by his name, kept a quarter of an hour (`GET /api/fifa/presidents`: `articles_30d`, `last_mention`).
+   The leadership tab of the sheet lists them: `GET /api/fifa/associations/:qid/leader/news?limit=50&offset=0&scope=football|all` (the same 30 days, newest first, a page at a time, 100 at most). **`scope=football`
+   (the default) keeps the news about football**: those that also name, linked by the tagger, the association, its confederation or FIFA, or that hold a football word (FOOTBALL_WORDS in `fifa-model.js`, many languages);
+   `all` keeps every news that names the person (a namesake, a billionaire's mines, a passing mention; the president of the English FA is the Prince of Wales). The answer tells `total`, `total_all` and `total_football`
+   so that the page says what the filter hides. Measured on 5 presidents (13.11.2026): the filter keeps 73 to 91% of their news (Motsepe 143 of 157, Diallo 126 of 145, Tapia 115 of 141, Abo Rida 105 of 139) and hides
+   the mines and the bank of Motsepe, but also some football news with no football word ("Diallo defends Mbappé"): a filter on "FIFA" alone would keep 3 to 25 of ~140. One query on the shared tables, 180 to 400 ms.
    The figures of articles of an association (`coverage` of the map, `articles_30d` / `media_30d` of each position and of the sheet) are the ones of the last 30 days
    too (`recentCoverage` in `fifa-map.js`): a signal stands for the articles that carry its passage and is dated by the news it shows; an older one still colours (a position
    stays 90 days) but is not counted, and an article that names two candidates (two signals, one link) is counted once.

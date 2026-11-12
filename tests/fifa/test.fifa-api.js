@@ -16,7 +16,7 @@ import express from 'express';
 // the mentions of the presidents are kept a quarter of an hour: not here, each test asks again
 process.env.FIFA_MENTIONS_CACHE_MS = '0';
 const model = Object.fromEntries(['subjects', 'addSubject', 'markChecked', 'setSubjectStatus', 'deleteSubject', 'news', 'linkedNames', 'mentionNames', 'knownHashes', 'insertSignal',
-    'unconfirmed', 'updateSignal', 'signals', 'signalsOf', 'votes', 'votesOf', 'votesOfPair', 'addVote', 'deleteVote', 'leaders', 'replaceLeaders', 'audits', 'auditSample', 'lastAudit', 'addAudit', 'mentionsOfLeaders', 'addVotes', 'voteById', 'setSourceCheck', 'sourcesSince', 'expireSources', 'pendingSources', 'notesOf', 'addNote', 'noteById', 'deleteNote', 'dismiss', 'dismissed', 'addSource', 'sourceById', 'setPageCheck', 'pagesOf', 'pendingPages', 'expirePages', 'deletePage'].map(name => [name, jest.fn()]));
+    'unconfirmed', 'updateSignal', 'signals', 'signalsOf', 'votes', 'votesOf', 'votesOfPair', 'addVote', 'deleteVote', 'leaders', 'replaceLeaders', 'audits', 'auditSample', 'lastAudit', 'addAudit', 'mentionsOfLeaders', 'addVotes', 'voteById', 'setSourceCheck', 'sourcesSince', 'expireSources', 'pendingSources', 'notesOf', 'addNote', 'noteById', 'deleteNote', 'dismiss', 'dismissed', 'addSource', 'sourceById', 'setPageCheck', 'pagesOf', 'pendingPages', 'expirePages', 'deletePage', 'newsOfLeader'].map(name => [name, jest.fn()]));
 // the address of a source is checked against the network of the server with a DNS lookup: not here
 const publicUrl = await import('../../services/utils/public-url.js');
 jest.unstable_mockModule('../../services/utils/public-url.js', () => ({...publicUrl, assertPublicUrl: jest.fn(async (value) => new URL(value))}));
@@ -122,6 +122,58 @@ describe('the reading routes', () => {
         expect(model.mentionsOfLeaders.mock.calls.at(-1)[0]).toEqual([{lid: 1, qid: 'Q1', key: 'kozo tashima'}, {lid: 2, qid: null, key: 'jesper moller'}]);
         expect(first).toMatchObject({articles_30d: 12, last_mention: {at: '2026-11-11T10:00:00.000Z', medium: 'camfoot.com', url: 'https://camfoot.com/a', title: 'A title'}});
         expect(second).toMatchObject({articles_30d: 0, last_mention: null});
+    });
+});
+
+describe('the news of the president of an association', () => {
+    const LEADER = {member_qid: JAPAN, person_qid: 'Q33208412', name: 'Philippe Diallo', role: 'President', since: '2021-06-01', checked_at: new Date()};
+    const news = (id, at, relevant = true) => ({id, title: `Title ${id}`, description: `  A description \n of ${id}  `, lang: 'fr', medium: 'lequipe.fr', link: `https://lequipe.fr/a${id}`, at: new Date(at), relevant});
+    const page = (rows, more = {}) => ({total: 126, total_all: 145, total_football: 126, rows, ...more});
+
+    it('should give the news of the last 30 days that name the president, newest first, with the total and the page asked', async () => {
+        model.leaders.mockResolvedValue([LEADER]);
+        model.newsOfLeader.mockResolvedValue(page([news(2, '2026-11-12T10:00:00Z'), news(1, '2026-11-11T10:00:00Z')]));
+        const {status, body} = await call(`/associations/${JAPAN}/leader/news?limit=2&offset=40`, {user: 1});
+        expect(status).toBe(200);
+        expect(model.newsOfLeader).toHaveBeenCalledWith({qid: 'Q33208412', key: 'philippe diallo', orgs: [JAPAN, expect.stringMatching(/^Q\d+$/), 'Q253414'], scope: 'football', limit: 2, offset: 40});
+        expect(body).toEqual({leader: {name: 'Philippe Diallo', person_qid: 'Q33208412'}, scope: 'football', total: 126, total_all: 145, total_football: 126, limit: 2, offset: 40, articles: [
+            {id: 2, title: 'Title 2', description: 'A description of 2', medium: 'lequipe.fr', url: 'https://lequipe.fr/a2', lang: 'fr', published_at: '2026-11-12T10:00:00.000Z', relevant: true},
+            {id: 1, title: 'Title 1', description: 'A description of 1', medium: 'lequipe.fr', url: 'https://lequipe.fr/a1', lang: 'fr', published_at: '2026-11-11T10:00:00.000Z', relevant: true},
+        ]});
+    });
+
+    it('should keep only the football news by default and every news with scope=all, telling both totals so that the page says what the filter hides', async () => {
+        model.leaders.mockResolvedValue([LEADER]);
+        model.newsOfLeader.mockResolvedValue(page([news(3, '2026-11-12T10:00:00Z', false), news(2, '2026-11-11T10:00:00Z')], {total: 145}));
+        const all = (await call(`/associations/${JAPAN}/leader/news?scope=all`, {user: 1})).body;
+        expect(model.newsOfLeader).toHaveBeenLastCalledWith(expect.objectContaining({scope: 'all'}));
+        expect(all).toMatchObject({scope: 'all', total: 145, total_all: 145, total_football: 126});
+        expect(all.articles.map(one => one.relevant)).toEqual([false, true]);
+        await call(`/associations/${JAPAN}/leader/news`, {user: 1});
+        expect(model.newsOfLeader).toHaveBeenLastCalledWith(expect.objectContaining({scope: 'football'}));
+        expect((await call(`/associations/${JAPAN}/leader/news?scope=fifa`, {user: 1})).status).toBe(422);
+    });
+
+    it('should look for a president with no item of Wikidata by his name, take 50 by default and at most 100, and never a page before the first', async () => {
+        model.leaders.mockResolvedValue([{...LEADER, person_qid: null}]);
+        model.newsOfLeader.mockResolvedValue(page([], {total: 0, total_all: 0, total_football: 0}));
+        const last = () => model.newsOfLeader.mock.calls.at(-1)[0];
+        await call(`/associations/${JAPAN}/leader/news`, {user: 1});
+        expect(last()).toMatchObject({qid: null, key: 'philippe diallo', limit: 50, offset: 0});
+        await call(`/associations/${JAPAN}/leader/news?limit=5000&offset=-3`, {user: 1});
+        expect(last()).toMatchObject({qid: null, limit: 100, offset: 0});
+        await call(`/associations/${JAPAN}/leader/news?limit=abc&offset=x`, {user: 1});
+        expect(last()).toMatchObject({qid: null, limit: 50, offset: 0});
+    });
+
+    it('should answer an empty list for an association with no president, 404 for one that does not exist, and 401 for a reader who is not signed in', async () => {
+        model.leaders.mockResolvedValue([]);
+        const {status, body} = await call(`/associations/${JAPAN}/leader/news`, {user: 1});
+        expect(status).toBe(200);
+        expect(body).toEqual({leader: null, scope: 'football', total: 0, total_all: 0, total_football: 0, limit: 50, offset: 0, articles: []});
+        expect(model.newsOfLeader).not.toHaveBeenCalled();
+        expect((await call('/associations/Q1/leader/news', {user: 1})).status).toBe(404);
+        expect((await call(`/associations/${JAPAN}/leader/news`)).status).toBe(401);
     });
 });
 
