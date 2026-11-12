@@ -10,7 +10,7 @@ import {beforeEach, describe, expect, it, jest} from '@jest/globals';
 
 const chat = jest.fn();
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat}))}));
-const {ASK_BY, EARLIER, GRACE_HOURS, normalizeOld, notOldNews, oldNewsPrompt, oldStories, withoutOldNews} = await import('../../services/utils/old-news.js');
+const {AFFAIR_LIKENESS, ASK_BY, EARLIER, GRACE_HOURS, normalizeOld, notOldNews, oldNewsPrompt, oldStories, withoutOldNews} = await import('../../services/utils/old-news.js');
 
 const NOW = Date.parse('2026-11-10T07:00:00Z');
 const hoursAgo = (hours) => new Date(NOW - hours * 3600e3);
@@ -180,5 +180,77 @@ describe('notOldNews', () => {
         const earlierNews = jest.fn();
         expect(await notOldNews(stories, {since, hours: 24, earlierNews, judge: jest.fn()})).toBe(stories);
         expect(earlierNews).not.toHaveBeenCalled();
+    });
+
+    describe('with the news of the affair', () => {
+        // the stories 1 (no news of its own: a news told late starts a story of its own), 2 (EARLIER media of its own), 3 (two of its own)
+        const own = [...Array.from({length: EARLIER}, (_, i) => found(2, `Own two ${i}`, 60 + i)), found(3, 'Own three a', 60), found(3, 'Own three b', 61)];
+        const stories = () => [story(1, [row('Today', 3)]), story(2, [row('Today', 3)]), story(3, [row('Today', 3)])];
+        const quiet = () => jest.spyOn(console, 'log').mockImplementation(() => {});
+
+        it('should ask the affairs only for the stories that hold fewer than EARLIER media of their own, with the same date and number', async () => {
+            const earlierNews = jest.fn(async () => own);
+            const earlierInAffair = jest.fn(async () => [found(1, 'Affair one', 100)]);
+            const log = quiet();
+            await notOldNews(stories(), {since, hours: 24, earlierNews, earlierInAffair, judge: jest.fn(async () => ({stories: []})), now: NOW});
+            expect(earlierInAffair).toHaveBeenCalledTimes(1);
+            expect(earlierInAffair).toHaveBeenCalledWith({storyIds: [1, 3], before: new Date(since.getTime() - GRACE_HOURS * 3600e3), perStory: EARLIER, minimum: AFFAIR_LIKENESS});
+            log.mockRestore();
+        });
+
+        it('should judge a story with no news of its own on the news of its affair, and leave it out when they tell its fact', async () => {
+            const earlierNews = jest.fn(async () => []);
+            const earlierInAffair = jest.fn(async () => [found(1, 'Late fact told in the affair', 200)]);
+            const judge = jest.fn(async () => ({stories: [{id: '1', earlier: 'the late fact', old: true}]}));
+            const log = quiet();
+            const kept = await notOldNews([story(1, [row('Today', 3)]), story(2, [row('Today', 3)])], {since, hours: 24, earlierNews, earlierInAffair, judge, now: NOW});
+            expect(kept.map(one => one.storyId)).toEqual([2]);
+            expect(judge).toHaveBeenCalledTimes(1);
+            expect(judge.mock.calls[0][0]).toContain('- 8.3 days ago: Late fact told in the affair');
+            expect(judge.mock.calls[0][0]).not.toContain('[2] Headline');
+            log.mockRestore();
+        });
+
+        it('should put the news of the story first and the ones of the affair after, one news a medium', async () => {
+            const earlierNews = jest.fn(async () => [found(3, 'Own three a', 60)]);
+            const earlierInAffair = jest.fn(async () => [{...found(3, 'Affair same medium', 90), medium: 'Own three a.example'}, found(3, 'Affair other medium', 95)]);
+            const judge = jest.fn(async () => ({stories: []}));
+            const log = quiet();
+            await notOldNews([story(3, [row('Today', 3)])], {since, hours: 24, earlierNews, earlierInAffair, judge, now: NOW});
+            const before = judge.mock.calls[0][0].split('Earlier coverage:\n')[1].split('\nDuring')[0].split('\n');
+            expect(before.map(text => text.replace(/^- [\d.]+ (days|hours) ago: /, ''))).toEqual(['Own three a', 'Affair other medium']);
+            log.mockRestore();
+        });
+
+        it('should say in the log how many stories were compared with their affair', async () => {
+            const earlierInAffair = jest.fn(async () => [found(1, 'Affair one', 100), found(1, 'Affair one bis', 101), found(3, 'Affair three', 100)]);
+            const log = quiet();
+            await notOldNews(stories(), {since, hours: 24, earlierNews: jest.fn(async () => own), earlierInAffair, judge: jest.fn(async () => ({stories: []})), now: NOW});
+            expect(log).toHaveBeenCalledWith(expect.stringContaining('2 stories compared with the news of their affair'));
+            log.mockRestore();
+        });
+
+        it('should not look for the affair of a story that follows a card of before, nor when no affair is given', async () => {
+            const earlierInAffair = jest.fn(async () => []);
+            await notOldNews([story(1, [row('Today', 3)], {followUp: {storyId: 90}}), story(2, [row('Today', 3)])], {since, hours: 24, earlierNews: jest.fn(async () => []), earlierInAffair, judge: jest.fn(), now: NOW});
+            expect(earlierInAffair).toHaveBeenCalledWith(expect.objectContaining({storyIds: [2]}));
+            const judge = jest.fn(async () => ({stories: []}));
+            await notOldNews(stories(), {since, hours: 24, earlierNews: jest.fn(async () => own), earlierInAffair: null, judge, now: NOW});
+            // without the affairs the story 1 has nothing to compare, the two others are asked
+            expect(judge.mock.calls[0][0]).not.toContain('[1] Headline');
+            expect(judge.mock.calls[0][0]).toContain('[3] Headline');
+        });
+
+        it('should go on with the news of the stories themselves when the affairs cannot be read', async () => {
+            const earlierInAffair = jest.fn().mockRejectedValue(new Error('affairs unavailable'));
+            const judge = jest.fn(async () => ({stories: [{id: '2', old: true, earlier: 'known'}]}));
+            const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+            const log = quiet();
+            const kept = await notOldNews(stories(), {since, hours: 24, earlierNews: jest.fn(async () => own), earlierInAffair, judge, now: NOW});
+            expect(kept.map(one => one.storyId)).toEqual([1, 3]);
+            expect(error).toHaveBeenCalledWith(expect.stringContaining('affairs unavailable'));
+            error.mockRestore();
+            log.mockRestore();
+        });
     });
 });

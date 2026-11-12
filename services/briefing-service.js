@@ -1044,7 +1044,11 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING) =
     });
     const kept = new Set([...closest, ...choosable.filter(story => story.told && story.pooled && !closest.includes(story)).slice(0, TRUSTED_CANDIDATES * scale)]);
     // the news the media told before the window began are not candidates when the window only tells them again (see old-news.js)
-    const candidates = await notOldNews(choosable.filter(story => kept.has(story)), {since, hours, usage: usage.aging, earlierNews: StoryModel.earlierNews});
+    // a story that holds few earlier news of its own (a news told late starts a story of its own) is compared with the ones of its affair; AI_OLD_NEWS_AFFAIR=off leaves the affairs out
+    const candidates = await notOldNews(choosable.filter(story => kept.has(story)), {
+        since, hours, usage: usage.aging, earlierNews: StoryModel.earlierNews,
+        earlierInAffair: process.env.AI_OLD_NEWS_AFFAIR === 'off' ? null : StoryModel.earlierInAffair,
+    });
 
     // 2. the AI chooses, against the whole profile and what it refuses
     await step('choosing');

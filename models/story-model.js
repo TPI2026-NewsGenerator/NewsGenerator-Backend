@@ -248,6 +248,32 @@ export const StoryModel = {
         ORDER BY id_story, place`,
         storyIds, before, perStory)).map(article => ({...article, title: cleanTitle(article.title, article.medium)})),
 
+    // The news of the OTHER stories of the affair (the thread, db/add_threads.sql) of these stories, told before a date, shaped as earlierNews gives them:
+    // the closest to the story by meaning first, one per medium, at most perStory for each. A news told late after more than 48 hours of silence starts a story
+    // of its own (the grouping joins a news only to the stories of the last 48 hours), so the story has no earlier news and old-news.js had nothing to compare;
+    // its affair holds what the media had told before (bench/late-news.mjs: of the 8 of 60 delivered cards that told a fact known before the window, 4 had no
+    // earlier news in their story, 5 had it in their affair). A story with no thread (not judged yet) or no centroid gives nothing. A thread is a topic as much as an
+    // affair, so only the news at least 'minimum' like the story (the cosine of the vector of their text to its centroid) are given. {id_story, at, medium, title, likeness}
+    earlierInAffair: async ({storyIds, before, perStory, minimum = 0}) => (await prisma.$queryRawUnsafe(`
+        SELECT id_story, at, medium, title, 1 - distance AS likeness FROM (
+            SELECT news.*, row_number() OVER (PARTITION BY id_story ORDER BY distance, at) AS place
+            FROM (
+                SELECT DISTINCT ON (s0.id, a.medium)
+                       s0.id AS id_story, a.medium, a.title, COALESCE(a.published_at, a.created_at) AS at, a.text_dense <=> s0.centroid AS distance
+                FROM stories s0
+                JOIN stories s ON s.id_thread = s0.id_thread AND s.id <> s0.id
+                JOIN articles a ON a.id_story = s.id
+                WHERE s0.id = ANY($1::int[]) AND s0.id_thread IS NOT NULL AND s0.centroid IS NOT NULL
+                  AND a.text_dense IS NOT NULL
+                  AND COALESCE(a.published_at, a.created_at) < $2::timestamptz
+                  AND a.text_dense <=> s0.centroid <= 1 - $4::float8
+                ORDER BY s0.id, a.medium, a.text_dense <=> s0.centroid
+            ) news
+        ) ranked
+        WHERE place <= $3::int
+        ORDER BY id_story, place`,
+        storyIds, before, perStory, minimum)).map(article => ({...article, likeness: Number(article.likeness), title: cleanTitle(article.title, article.medium)})),
+
     // the news of these stories the user can read, once per link, the newest first, their titles
     // without the name of their medium or a date at the end (see titles.js)
     storyArticles: async ({storyIds, feedUrls, since}) => (await prisma.$queryRawUnsafe(`

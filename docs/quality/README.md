@@ -233,9 +233,17 @@ the gate drew their cards among the ones whose first news was older than the win
 | ... adding the affair (thread) to the own story | asked 19, flags **5 of 8** old, **2 of 48** new (own else affair: 4 and 2) | 12.11.2026 |
 | ... adding the close stories of the 14 days before (the vectors) | asked 60, flags 7 of 8 old, **5 of 48** new; the close stories alone 6 and 9. A scan of the stories of 14 days costs 6 to 9.5 s a card on the database | 12.11.2026 |
 | The query of the affair (the closest earlier news of the stories of the thread) | 4 ms the median, 26 ms the slowest, 40 cards | 12.11.2026 |
+| **Second sample**, 60 other cards of the same briefings (not used to choose the variant), two blind judges | 11 of 60 (18%) tell a fact told before, 2 UNSURE; the own story holds the earlier news for 6 of the 11, the affair for 5, the close stories for 9; own story empty for 4 | 12.11.2026 |
+| **Built** (`notOldNews` + `StoryModel.earlierInAffair`, the real function and queries, each variant run twice): first sample, own story only / affairs with no floor / affairs with the floor 0.75 | flags 0 / 5 / 4 of 8 old, 1 / 3 / 1-2 of 48 new | 12.11.2026 |
+| ... second sample (held out), same three | flags 3 / 4 / 4 of 11 old, 0 / 0 / 0 of 47 new | 12.11.2026 |
+| ... both samples (120 cards: 19 old, 95 new, 6 unsure) | own only **3 of 19 old (16%)**, 1 of 95 new left out; with the affairs and the floor **8 of 19 (42%)**, 1-2 of 95 (1-2%); with no floor 9 of 19 (47%), 3 of 95 (3%) | 12.11.2026 |
+| Live, an unsaved briefing of profile 7 (30 cards, 114 candidates): no affairs / affairs with no floor / affairs with the floor 0.75 | 7 / 9 / 7 stories left out; the call of the gate 3.3k / 8.0k / 6.1k tokens (+2.8k with the floor, 0.7% of a briefing); with no floor 2 of the 5 stories left out on the affair only were another fact of the same topic (0.70 and 0.73), which led to the floor | 12.11.2026 |
+| The query of the affair on the production database, for the stories of the 10 saved briefings (10 to 30 stories) | 8 to 221 ms a call; 120 stories in one call 14 ms. Every story has a thread (a story alone in it gives nothing) | 12.11.2026 |
 
-One judge, titles only, 60 cards: 8 old ones is a small number (13%, from 6% to 24%), and "flags 0 of 8" is a replay on cards that were delivered, so it does not say whether the gate ran in
-production when they were made.
+Titles only, 120 cards in two samples (the first by one judge, the variant was chosen on it; the second by two blind judges, drawn after): 19 old ones is a small number (16%, from 10% to 23%), the
+second sample alone gives +1 old one of 11 (the first +4 or +5 of 8), and the replays of the gate on cards that were delivered do not say whether the gate ran in
+production when they were made. The AI of the gate gives the same answer twice for almost every card (1 card of 120 differs between two runs of a variant). The floor of 0.75 was set from the first sample
+and from a live briefing (below), before the second one was judged: it took away 1 or 2 wrong drops of the first and nothing in the second.
 
 Not measured: what the reader read on the page (the page counts nothing since the tracking of the cards seen was dropped on 14.10.2026: "not sent by e-mail = not read"),
 duplicates with unlike vectors, and the cost in cards a wrong flag would hide (a development of one affair).

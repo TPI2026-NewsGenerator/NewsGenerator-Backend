@@ -23,6 +23,11 @@ export const GRACE_HOURS = 12;
 export const EARLIER = 5;           // news of the earlier coverage given for each story, one per medium, the closest to the story first (see StoryModel.earlierNews)
 const IN_WINDOW = 8;                // news of the window given for each, one per medium, the newest
 export const ASK_BY = 30;           // stories judged in one call
+// A thread is a topic as much as an affair: a live briefing of 12.11.2026 (profile 7, bench/enzo-measure.mjs) left out 9 stories of 43 with the affairs, 5 of them on
+// the news of their affair only, and two of those were another fact of the same topic (the changes of the Scottish legal sector against "taxing times for Scottish
+// savers", an article on AI in the benefits administration against "why insurers struggle to scale AI") whose news were the least like the story (0.70 and 0.73
+// the cosine of their text to its centroid). Only the news of the affair at least that like the story are given as earlier coverage
+export const AFFAIR_LIKENESS = 0.75;
 
 const DAY = 24 * 3600e3;
 
@@ -93,19 +98,44 @@ export const withoutOldNews = async (stories, earlierOf, hours, {usage = null, n
     };
 };
 
+// A news told late after more than 48 hours of silence starts a story of its own (the grouping joins a news only to the stories of the last 48 hours), so
+// its story holds no news from before the window and there is nothing to compare. Its affair (the thread of stories, see StoryModel.earlierInAffair) holds
+// what the media had told: the earlier coverage of a story is completed with the news of its affair when its own story gives fewer than EARLIER media. On
+// the 60 cards really delivered between 10 and 12.11.2026 (bench/late-news.mjs, one judge): 8 told a fact known before the window, 4 of them with no earlier
+// news in their story. The age gate with the own story alone flagged 0 of the 8 and hid 0 of the 48 new facts; completed by the affair: 5 of the 8 and 2 of
+// the 48 (the limit between "the same fact" and "a step further in the same affair" is the AI's). Completed in the map: the own news first, the affair's
+// after (withoutOldNews keeps one news a medium, the first ones)
+const completedByAffair = async (earlierOf, ids, {before, earlierInAffair}) => {
+    if (!earlierInAffair) return 0;
+    const short = ids.filter(id => onePerMedium(earlierOf.get(id) ?? []).length < EARLIER);
+    if (short.length === 0) return 0;
+    try {
+        const rows = await earlierInAffair({storyIds: short, before, perStory: EARLIER, minimum: AFFAIR_LIKENESS});
+        for (const found of rows) earlierOf.set(found.id_story, [...(earlierOf.get(found.id_story) ?? []), found]);
+        return new Set(rows.map(found => found.id_story)).size;
+    } catch (err) {
+        // the age gate goes on with the news of the stories themselves: the affairs are a help, never a need
+        console.error(`Briefing: the earlier news of the affairs were not looked for, the stories are judged on their own (${err.message})`);
+        return 0;
+    }
+};
+
 // The stories of a briefing without the ones that tell an old news: the news told before the window began (GRACE_HOURS before its start, since) are read
-// with earlierNews({storyIds, before, perStory}), the briefing never fails on it: all the stories are kept when something goes wrong, and when every
-// one is judged old (that is no briefing)
-export const notOldNews = async (stories, {since, hours, usage = null, earlierNews, judge = ollamaJson, now = Date.now()}) => {
+// with earlierNews({storyIds, before, perStory}), completed for the stories that hold few of them with the news of their affair (earlierInAffair, same
+// shape, null leaves it out), the briefing never fails on it: all the stories are kept when something goes wrong, and when every one is judged old (that
+// is no briefing)
+export const notOldNews = async (stories, {since, hours, usage = null, earlierNews, earlierInAffair = null, judge = ollamaJson, now = Date.now()}) => {
     try {
         const ids = stories.filter(story => !story.followUp).map(story => story.storyId);
         if (ids.length === 0) return stories;
-        const rows = await earlierNews({storyIds: ids, before: new Date(new Date(since).getTime() - GRACE_HOURS * 3600e3), perStory: EARLIER});
+        const before = new Date(new Date(since).getTime() - GRACE_HOURS * 3600e3);
+        const rows = await earlierNews({storyIds: ids, before, perStory: EARLIER});
         const earlierOf = new Map();
         for (const found of rows) earlierOf.set(found.id_story, [...(earlierOf.get(found.id_story) ?? []), found]);
+        const withAffair = await completedByAffair(earlierOf, ids, {before, earlierInAffair});
         const result = await withoutOldNews(stories, earlierOf, hours, {usage, now, judge});
-        if (result.left.length > 0) {
-            console.log(`Briefing: ${result.left.length} stories left out, the media told their news before the last ${spanOf(hours)} and only tell it again${
+        if (result.left.length > 0 || withAffair > 0) {
+            console.log(`Briefing: ${result.left.length} stories left out, the media told their news before the last ${spanOf(hours)} and only tell it again (${withAffair} stories compared with the news of their affair)${
                 result.left.map(({storyId, earlier}) => `
   [${storyId}] ${earlier ?? ''}`).join('')}`);
         }

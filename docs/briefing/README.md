@@ -436,9 +436,27 @@ announced or decided in the window, the event itself after its preview, a step f
 told it: a medium picking it up late, a reminder, a recap, an analysis, a reaction to an old fact, a preview of an event played since). In doubt it
 is old. The old ones are not candidates; the log says them (`Briefing: 3 stories left out, the media told their news before the last 24 hours and only
 tell it again` and one line each with the earlier fact). 30 stories a call, in parallel; a story that follows a card of before (`followUp`, already
-judged on what is new since), one with no earlier news and one with no news in the window are not asked. The earlier news are read from every
-medium, not only the reader's (`StoryModel.earlierNews`): they only tell the AI whether a fact is old. The briefing never fails on it: a failed
-query or call keeps every story, and when all of them were judged old none is left out. A news the reader adds by its link is never judged.
+judged on what is new since), one with no earlier news (neither its own nor its affair's, see below) and one with no news in the window are not asked.
+The earlier news are read from every medium, not only the reader's (`StoryModel.earlierNews`): they only tell the AI whether a fact is old. The briefing
+never fails on it: a failed query or call keeps every story, and when all of them were judged old none is left out. A news the reader adds by its link
+is never judged.
+
+**A news told late: the affair completes the earlier news** (12.11.2026, `StoryModel.earlierInAffair`). The grouping joins a news only to the stories
+updated in the last 48 hours, so a news told after more than 48 hours of silence (a medium taking up a fact of a week ago) starts a story of its own, with no
+earlier news: the gate above had nothing to compare and never asked. A story that holds fewer than 5 media of earlier news of its own is completed with the
+closest earlier news of the other stories of its affair (its thread, `db/add_threads.sql`: every story has one, so a story alone in its thread gets nothing),
+the own news first, the affair's after, one news a medium. The same prompt, the same model, nothing else changes. The query is one call for all the stories
+(8 to 221 ms for a briefing's 10 to 30 stories on the production database, 14 ms for 120 stories); a failed query leaves the stories judged on their own
+news (`Briefing: the earlier news of the affairs were not looked for...`), and `AI_OLD_NEWS_AFFAIR=off` leaves the affairs out. The log says how many stories were
+compared with their affair (`... only tell it again (5 stories compared with the news of their affair)`). Measures: [quality page](../quality/README.md), "News told late".
+Only the news of the affair at least 0.75 like the story (`AFFAIR_LIKENESS`, the cosine of their text to its centroid) are given: a thread is a topic as much as an
+affair, and a first live briefing without it left out an article on the changes of the Scottish legal sector as the repeat of "taxing times for Scottish savers" (0.70) and
+one on AI in the benefits administration as the repeat of "why insurers struggle to scale AI" (0.73). Measured on 120 cards really delivered (two samples, the second
+judged after the choice of the floor): the gate with the story's own news alone caught 3 of the 19 old news, with the affairs 8 of 19, and left out wrongly 1 or 2 new
+facts of 95 (with no floor 9 of 19 and 3 of 95); on the second sample alone, which did not serve to build it, the affairs add 1 old news of 11 and no wrong drop. Live (profile 7,
+30 cards, 114 candidates, an unsaved briefing): the call of the gate goes from 2 773 tokens in and 518 out to 5 192 in and 916 out (+2.8k, 0.7% of the ~390k of a
+briefing), 17 stories compared with the news of their affair, 7 stories left out with or without it (the affairs change 1 or 2 of them). The line between "the same fact told again" and
+"a step further in the same affair" is the AI's, and a doubt is old.
 
 **Why not the age alone.** On 14 saved briefings (336 cards of 3 profiles, `bench/old-news-age.mjs`) the first news of the story is older than the
 window plus 12 hours for 26% of the cards, but a story of the grouping is long (a week of one affair: 1 000 news, 400 media): the older news are often
@@ -462,8 +480,7 @@ time). Measured on the 66 stories rated by hand (`bench/old-news-thread.mjs`, 3 
 told its fact. **The affair as the earlier coverage was measured and not built**: the 5 closest of the whole affair caught 15 of 18 and lost 5 of 40, but its part for the
 stories with no earlier news of their own (10 more asked) caught 1 old one, by luck (its neighbours told another fact), lost 1 new one and left 1 unsure; the closest news of
 the affair have the same similarity for the old and the new (median 0.89 and 0.90). The same method lost 2 of 40 new in the morning and 5 of 40 in the same run: 1 or 2
-stories are noise with 18 old ones.
+stories are noise with 18 old ones. (That measure was on stories chosen for having earlier news; on the cards really delivered, 12.11.2026, the stories with none are the
+news told late, and the affair does help them: see above, built the same day.)
 
-Not done: the affair (thread) as the earlier coverage, for a story that begins after its affair did (one old news of the second set had its earlier
-news only in the thread); and the threshold of a week the friend named: a window of 24 hours already asks for the facts of that day, and the AI says
-which is old.
+Not done: the threshold of a week the friend named: a window of 24 hours already asks for the facts of that day, and the AI says which is old.

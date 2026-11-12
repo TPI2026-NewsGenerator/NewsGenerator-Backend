@@ -11,13 +11,18 @@
 //
 //  node --env-file=.env bench/late-news.mjs build [cards=60]     the sample and its evidence: bench/data/late-news/pack.json, judge-*.md
 //  node --env-file=.env bench/late-news.mjs score                reads verdicts-L-*.json
+//  node --env-file=.env bench/late-news.mjs ask                  the age gate (old-news.js, real prompt and model) on the same cards, the earlier coverage taken from each place,
+//                                                                then the real notOldNews with its real queries, without and with the affairs (the built variant, 12.11.2026)
+//  node --env-file=.env bench/late-news.mjs time                 the affair query on the production database: time of a call for a briefing's stories, stories with an affair
+//  LATE_DIR=bench/data/late-news/second LATE_SKIP=60 ...         a second sample: the cards after the first 60 of the same shuffle (judged after the variant was built)
 //
 
 import process from 'node:process';
 import {existsSync, mkdirSync, readFileSync, writeFileSync} from 'node:fs';
 import pg from 'pg';
 
-const DIR = 'bench/data/late-news';
+const DIR = process.env.LATE_DIR ?? 'bench/data/late-news';
+const SKIP = Number(process.env.LATE_SKIP ?? 0);
 const DAY = 86400e3;
 const GRACE_HOURS = 12;
 const SINCE = '2026-11-10T06:00:00Z';
@@ -32,7 +37,7 @@ const build = async (count = 60) => {
         .filter(({card}) => card.storyId > 0 && !card.imported && !seen.has(card.storyId) && seen.add(card.storyId));
     let seed = 20261112;
     const random = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
-    const sample = pool.map(row => [random(), row]).sort((x, y) => x[0] - y[0]).slice(0, count).map(([, row]) => row);
+    const sample = pool.map(row => [random(), row]).sort((x, y) => x[0] - y[0]).slice(SKIP, SKIP + count).map(([, row]) => row);
 
     const c = new pg.Client({connectionString: process.env.DATABASE_URL, statement_timeout: 90000});
     await c.connect();
@@ -141,7 +146,7 @@ const ask = async () => {
     };
     const usage = newUsage();
     console.log(`${cards.length} cards: ${['OLD', 'NEW', 'UNSURE'].map(v => `${v} ${cards.filter(card => card.verdict === v).length}`).join(', ')}`);
-    for (const [name, pick] of Object.entries(variants)) {
+    for (const [name, pick] of process.env.LATE_REAL_ONLY ? [] : Object.entries(variants)) {
         const flagged = new Set();
         let asked = 0;
         for (const group of Object.values(Object.groupBy(cards, card => card.item.briefing))) {
@@ -156,12 +161,58 @@ const ask = async () => {
         const of = (v) => cards.filter(card => card.verdict === v);
         console.log(`${name.padEnd(30)} asked ${String(asked).padStart(2)}: flags ${of('OLD').filter(card => flagged.has(card.item.n)).length} of ${of('OLD').length} old, ${of('NEW').filter(card => flagged.has(card.item.n)).length} of ${of('NEW').length} new, ${of('UNSURE').filter(card => flagged.has(card.item.n)).length} of ${of('UNSURE').length} unsure`);
     }
+    // the real notOldNews with its real queries (the earlier news of the story, then of its affair), the cards of a briefing as the stories of its window: what the briefing does
+    const {notOldNews} = await import('../services/utils/old-news.js');
+    const of = (v) => cards.filter(card => card.verdict === v);
+    for (const [name, earlierInAffair] of [['notOldNews, own story only (10.11)', null], ['notOldNews + affairs, no floor', (args) => StoryModel.earlierInAffair({...args, minimum: 0})], ['notOldNews + affairs (built, floor 0.75)', StoryModel.earlierInAffair], ['notOldNews, own story only (10.11) 2nd run', null], ['notOldNews + affairs, no floor 2nd run', (args) => StoryModel.earlierInAffair({...args, minimum: 0})], ['notOldNews + affairs (built, floor 0.75) 2nd run', StoryModel.earlierInAffair]]) {
+        const flagged = new Set();
+        for (const group of Object.values(Object.groupBy(cards, card => card.item.briefing))) {
+            const written = new Date(group[0].item.written);
+            const stories = group.filter(card => card.within.length > 0).map(card => ({storyId: card.item.storyId, members: card.within, best: {title: card.item.title}}));
+            if (stories.length === 0) continue;
+            const kept = await notOldNews(stories, {since: new Date(written - group[0].item.hours * 3600e3), hours: group[0].item.hours, usage, earlierNews: StoryModel.earlierNews, earlierInAffair, now: written.getTime()});
+            // a call that keeps every story (all judged old, or a failure) leaves nothing flagged
+            for (const story of stories) if (kept !== stories && !kept.includes(story)) flagged.add(story.storyId);
+        }
+        const hit = (v) => of(v).filter(card => flagged.has(card.item.storyId));
+        console.log(`${name.padEnd(50)} flags ${hit('OLD').length} of ${of('OLD').length} old, ${hit('NEW').length} of ${of('NEW').length} new, ${hit('UNSURE').length} of ${of('UNSURE').length} unsure`);
+        for (const v of ['NEW', 'UNSURE']) for (const card of hit(v)) console.log(`    left out, judged ${v}: card ${card.item.n} "${card.item.title.slice(0, 80)}"`);
+    }
     console.log(`tokens ${JSON.stringify(usage)}`);
+    await prisma.$disconnect();
+};
+
+// ---- the affair query on the production database: how long a call takes for the stories of a briefing, and for how many of them the affair holds earlier news
+const time = async () => {
+    const {StoryModel} = await import('../models/story-model.js');
+    const {prisma} = await import('../config/db.js');
+    const dataset = JSON.parse(readFileSync('bench/data/dup-eval/dataset.json', 'utf8')).filter(briefing => briefing.at >= SINCE);
+    const rows = [];
+    let totalStories = 0, withAffair = 0, completed = 0;
+    for (const briefing of dataset) {
+        const written = new Date(briefing.at);
+        const ids = [...new Set(briefing.cards.map(card => card.storyId).filter(id => id > 0))];
+        const before = new Date(written - (briefing.hours + GRACE_HOURS) * 3600e3);
+        const t0 = Date.now();
+        const found = await StoryModel.earlierInAffair({storyIds: ids, before, perStory: 5});
+        const ms = Date.now() - t0;
+        const threads = await StoryModel.threadsOf(ids);
+        totalStories += ids.length; withAffair += threads.filter(row => row.id_thread).length; completed += new Set(found.map(row => row.id_story)).size;
+        rows.push(ms);
+        console.log(`briefing ${briefing.id} (${briefing.at.slice(0, 16)}): ${ids.length} stories, ${threads.filter(row => row.id_thread).length} with an affair, ${new Set(found.map(row => row.id_story)).size} with earlier news in it, ${found.length} news, ${ms} ms`);
+    }
+    // the same call for one candidate list of a briefing (about 100 stories): the cards of all the briefings, to see a longer call
+    const all = [...new Set(dataset.flatMap(briefing => briefing.cards.map(card => card.storyId)).filter(id => id > 0))];
+    const t0 = Date.now();
+    const found = await StoryModel.earlierInAffair({storyIds: all.slice(0, 120), before: new Date(SINCE), perStory: 5});
+    console.log(`${Math.min(120, all.length)} stories in one call: ${Date.now() - t0} ms, ${found.length} news`);
+    console.log(`${totalStories} cards, ${withAffair} with an affair, ${completed} with earlier news in their affair; calls ${rows.map(ms => `${ms} ms`).join(', ')}`);
     await prisma.$disconnect();
 };
 
 const [command, argument] = process.argv.slice(2);
 if (command === 'ask') await ask();
+else if (command === 'time') await time();
 else if (command === 'build') await build(argument ? Number(argument) : 60);
 else if (command === 'score') score();
 else console.error('build [cards] | score');
