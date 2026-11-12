@@ -13,6 +13,7 @@ import app from './app.js';
 import {FeedService} from './services/feed-service.js';
 import {IngestService} from './services/ingest-service.js';
 import {AffairService} from './services/affair-service.js';
+import {FifaService} from './services/fifa-service.js';
 import {TaggingService} from './services/tagging-service.js';
 import {DiscoveryService} from './services/discovery-service.js';
 import {guardFetch} from './services/utils/public-url.js';
@@ -40,3 +41,5 @@ if (process.env.INGEST_IN_SERVER !== 'false') TaggingService.schedule();
 // the affairs the readers follow, checked for the stories created since (see AffairService.watch): by the same server, whose
 // ingestion makes the stories, so that the stories compared are the ones just grouped
 if (process.env.INGEST_IN_SERVER !== 'false') AffairService.schedule();
+// the map of the FIFA presidency: the news read for the position of the associations on the candidates (see FifaService.watch)
+if (process.env.INGEST_IN_SERVER !== 'false') FifaService.schedule();

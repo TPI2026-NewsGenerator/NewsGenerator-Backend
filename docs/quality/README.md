@@ -280,7 +280,60 @@ duplicates with unlike vectors, and the cost in cards a wrong flag would hide (a
 | Keyword search with operators at 4.6 million news | "infantino" **35.2 s to 0.9 s** by folding the accents in Postgres on both sides (index `i_articles_search_plain`) | 11.11.2026 |
 | Grouping into threads on the machine that stays on | the bottleneck of the ingest: `assign_threads` 56% and `assign_stories` 24% of the database's time; 300 stories 70 s to 4 to 8 s on 3 cores | 09.10.2026 |
 | Cost of a briefing of 30 cards | about 390,000 tokens; about 8.5 million tokens and 5 to 6.5 dollars of credits a month for a profile | 11.11.2026 |
+| **FIFA map**: an association coloured on a candidate (declared and probable) | 96.7% on the half used to tune it, 88.2% on the half kept sealed, 93.9% over both: the wrong colour is 3.3%, 11.8% and 6.1% | 86.6% of the positions of the gold set found (dev, production code); 85.7% sealed | 308 passages of 4 candidates, 3 labellers; 149 to tune, 151 sealed (35 positions) | 12.11.2026 |
+| **FIFA map**: coloured only when declared by both models | 95.7% dev, 100% sealed (0 of 17), 96.8% over both (2 of 63) | 66% dev, 49% sealed | the same set | 12.11.2026 |
 | Cost of the steps | names check about 1,500 tokens; contested about 300 tokens a card; official source about 900 tokens a card; countries reading about 170 tokens a card; per-card analysis about 0.08 dollar a briefing; neutral titles about 21,000 tokens | 2026 |
+
+## The FIFA map: the position of an association on a candidate
+
+The page "The FIFA presidency" ([the feature](../briefing/fifa-map/README.md)) colours an association when the news say, in a sentence that names it and the
+candidate, that it backs or opposes him. **A wrong colour** is an association coloured while the gold set says it should not be, or not on this side:
+a wrong association (the "JFA" of Jordan read as Japan), a sentence that is not about the election, a position that was only uncertain (a headline saying
+"UEFA will support X" with nobody speaking). It is the error that costs, so it is the number minimised; the recall (the positions found) comes second.
+
+**The set.** The census of the 30 days to 12.11.2026 for Infantino, Tashima, Wenger and Vega: 1 722 sentences that name the person and a member; kept every
+sentence of an association and the sentences of a confederation with a word of support or opposition, at most 15 a group (association x person, chosen to differ
+in media, language, week and wording): **308 passages**, split in two halves by group so that near copies never fall on both sides: 149 to tune the
+pipeline on ("dev"), 151 sealed, read once at the end ("test"). Labelled by three independent labellers who did not see any model (two Claude, one
+deepseek-v4-pro): agreement on the status 77 to 87% (Cohen's kappa 0.65 to 0.81), on the side for or against 82 to 92%, on declared or probable among the
+positions both call established 76 to 94%. 222 passages had the three agree, 38 two of three, 48 were settled by the user's rules and by hand (Claude's
+reading, to be disputed): criticism of the conduct of the FIFA president by the head of an association counts as a position against; a headline or a journalist
+saying that an association supports someone, with nobody speaking, is only uncertain. The gold: 108 established (71 declared, 37 probable), 127 uncertain,
+73 discarded; 8 sentences repeated in several stories are counted once.
+
+**The chain** (`services/utils/fifa-reading.js`): the code shows the association; `gemma4:31b` reads with the guide and the code decides the status from its closed
+words; what would colour is read again by `deepseek-v4-pro` (thinking): the same side is needed, "declared" only if both say declared.
+
+| Variant | Shown as established | Wrong colour | Positions found | Half |
+|---|---|---|---|---|
+| The reading of 10.11.2026 (`stance.js`, no "uncertain") | 105 / 67 | 42.9% / 49.3% | 98% / 97% | dev / test |
+| The guide, the status by the code (gemma) | 75 | 12.0% (9) | 98% | dev |
+| + the association by the code | 73 to 76 | 10 to 13% | 98% | dev |
+| + the quote checked by the code | 77 | 14.3% | 98% | dev |
+| The same read three times, all alike | 75 | 13.3% | 97% | dev |
+| + a second model (deepseek), level of both | 64 | 3.1% (2 of 64; 95% interval 0.9 to 10.7%) | 92.5% | dev |
+| The same, the production code | 60 | 3.3% (2 of 60) | 86.6% | dev |
+| gemma + the association by the code | 47 | 29.8% (14 of 47; 18.7 to 44.0%) | 94.3% | **sealed** |
+| **gemma + deepseek, level of both** | **34** | **11.8% (4 of 34; 4.7 to 26.6%)** | **85.7%** | **sealed** |
+| the same, only the declared | 17 | 0% (0 of 17; 0 to 18.4%) | 49% | sealed |
+| the same, only the declared | 46 | 4.3% (2 of 46) | 66% | dev |
+
+Never an error of side (for instead of against) in any variant. The same model read three times makes the same errors (13%, as with one reading); only a second
+model of another family removes them. The four wrong colours of the sealed half: a thank-you of the South African association to FIFA taken for a support, a
+headline on a court ruling taken for a position against, a criticism "of last month" of the AFC taken as current when it had just changed sides, and a request
+of explanations by UEFA that the gold calls uncertain (a point of the labelling, not of the model). The positions lost are mostly passages where deepseek,
+stricter, did not confirm. Cost of a first reading of a candidate: the 30 days are about 300 to 800 passages, about 2 000 tokens each for gemma and about the same
+again, with thinking, for deepseek on the 40% it would colour.
+
+**What it does not say.** The aim was 2% of wrong colours with an upper bound of 5%: **not reached**, and with this volume it cannot be shown (with no error
+in 60 positions shown the upper bound is 6%). Over the two halves the chain colours 6 of 98 wrongly (6.1%; 2.8 to 12.7%); only the declared, 2 of 63 (3.2%).
+The dev half was used to tune the prompt and the rules, so its 3% is optimistic; the sealed half has 35 positions, mostly of Jordan, Denmark and France, so its 11.8% rests on
+4 errors. The gold is labelled by models and by the user's rules, not by an independent human reading, and the 48 hard passages were decided by Claude on the
+user's rules. Not measured: other languages than the ones of the 30 days, other candidates than the four, the aggregation of the signals (the reversals) beyond
+the unit tests, the vote of the readers, and the 18 associations that a friend's site marks (13 of the 18 have no sentence behind them, the other 5 are dated
+April to May 2026, out of the 30 days kept). The page's default is `FIFA_COLOUR=established` (the user's choice, the probable ones apart in the sheet);
+`declared` is the safer setting, `off` colours nothing. A weekly audit of the positions shown is made by the server (30 established signals read again by a third model, `gpt-oss:120b`, and the votes of the readers against
+the news, kept in `fifa_audits`): it is a live agreement, not a measure of the truth.
 
 ## What these figures do not say
 
@@ -306,6 +359,8 @@ node --env-file=.env bench/countries/measure.mjs run         # the AI reading ea
 node --env-file=.env bench/countries/measure.mjs e2e         # the whole pipeline run again
 node --env-file=.env bench/countries/measure.mjs score       # against the labels of the judges
 node --env-file=.env bench/countries/acronym-gain.mjs        # the acronyms of associations
+node --env-file=.env bench/fifa/census.mjs "Gianni Infantino" infantino 30   # the FIFA map: the census, then pool.mjs, labels.mjs batches, label-model.mjs,
+node bench/fifa/adjudicate.mjs                               # the gold set, then run.mjs L5 dev|test (the variants), P is the code of the server
 node --env-file=.env bench/dup-eval.mjs build                # duplicates: the saved briefings; then vectors, pairs, (judges), score, replay, cross, crossScore
 pnpm run regression                                          # the corpus of regression, offline
 pnpm run regression:live                                     # and with the real model

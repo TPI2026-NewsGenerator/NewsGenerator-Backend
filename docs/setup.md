@@ -213,6 +213,10 @@ second. The `.env` of the server lists the taggers in `NER_URL`, separated by co
 41. Do the same with "add_user_preferences.sql" (the display preferences of a reader, kept on their account, see
     [Preferences](accounts/preferences/README.md)). Run it before the server of this version: the login reads
     the whole row of an account, so a server started before it cannot sign anyone in
+42. Do the same with "add_fifa_map.sql" (the map of the FIFA presidency: the candidates, what the news said of the position of each
+    association on each, the votes of the readers and the presidents, see [The FIFA presidency map](briefing/fifa-map/README.md)).
+    The server reads the news for it every 30 minutes (`FIFA_WATCH_MINUTES`): until it is run, it says so once in its log and does
+    nothing else. The first reading of a candidate is the 30 days of news; `FIFA_COLOUR` says what colours the map
 
 The scripts are in this order on purpose: each one only adds what the one before did not create, so a
 database already in service is brought up to date by running the missing ones, without losing its cache.

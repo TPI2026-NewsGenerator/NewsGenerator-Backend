@@ -17,6 +17,12 @@ const FIFA = 'Q253414';
 // the confederations are no association of a country: they come apart, level "confederation"
 const CONFEDERATION = /^(confederation of african|asian football confederation|union of european|oceania football|conmebol|south american football|concacaf|confederation of north)/i;
 
+// Federations that Wikidata does not type "association football federation", so that the filter on the type left them out (12.11.2026): the
+// Hellenic Football Federation is a "sports governing body" there, and Greece had no association ("country=GR" found nothing). Checked
+// by hand against all the current members of FIFA: it is the only one (the Kenya Football Federation Q1093591 is the former body, the
+// current one is typed right)
+const WRONGLY_TYPED = ['Q389763'];
+
 // A membership that ended is no member (11.11.2026): the Saarland Football Association (until 1957), the first Brunei association (until
 // 2009) and the Netherlands Antillean Football Union (until 2011) were still listed, so that Germany, Brunei had two associations
 const query = `
@@ -24,7 +30,7 @@ SELECT ?fa ?faLabel ?iso WHERE {
   ?fa p:P463 ?membership ; wdt:P31 ?type .
   ?membership ps:P463 wd:${FIFA} .
   FILTER NOT EXISTS { ?membership pq:P582 ?end }
-  ?type rdfs:label "association football federation"@en .
+  { ?type rdfs:label "association football federation"@en } UNION { VALUES ?fa { ${WRONGLY_TYPED.map(qid => `wd:${qid}`).join(' ')} } }
   OPTIONAL { ?fa wdt:P17 ?country . ?country wdt:P297 ?iso . }
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }`;

@@ -1,0 +1,2777 @@
+{
+ "about": "The 211 member associations of FIFA and its 6 confederations, made by scripts/build-fifa-members.js: do not edit by hand",
+ "confederations": [
+  {
+   "qid": "Q83276",
+   "fifa": "AFC",
+   "name": "Asian Football Confederation",
+   "level": "confederation"
+  },
+  {
+   "qid": "Q168360",
+   "fifa": "CAF",
+   "name": "Confederation of African Football",
+   "level": "confederation"
+  },
+  {
+   "qid": "Q160549",
+   "fifa": "CONCACAF",
+   "name": "Confederation of North, Central America and Caribbean Association Football",
+   "level": "confederation"
+  },
+  {
+   "qid": "Q58733",
+   "fifa": "CONMEBOL",
+   "name": "South American Football Confederation",
+   "level": "confederation"
+  },
+  {
+   "qid": "Q180344",
+   "fifa": "OFC",
+   "name": "Oceania Football Confederation",
+   "level": "confederation"
+  },
+  {
+   "qid": "Q35572",
+   "fifa": "UEFA",
+   "name": "Union of European Football Associations",
+   "level": "confederation"
+  }
+ ],
+ "members": [
+  {
+   "qid": "Q383179",
+   "fifa": "AFG",
+   "country": "Afghanistan",
+   "association": "Afghanistan Football Federation",
+   "iso": "AF",
+   "acronyms": [
+    "AFF"
+   ],
+   "confederation": "AFC",
+   "lat": 33,
+   "lng": 66,
+   "level": "association"
+  },
+  {
+   "qid": "Q390598",
+   "fifa": "ALB",
+   "country": "Albania",
+   "association": "Albanian Football Federation",
+   "iso": "AL",
+   "confederation": "UEFA",
+   "lat": 41,
+   "lng": 20,
+   "level": "association"
+  },
+  {
+   "qid": "Q647526",
+   "fifa": "ALG",
+   "country": "Algeria",
+   "association": "Algerian Football Federation",
+   "iso": "DZ",
+   "acronyms": [
+    "FAF"
+   ],
+   "confederation": "CAF",
+   "lat": 28,
+   "lng": 1,
+   "level": "association"
+  },
+  {
+   "qid": "Q1116647",
+   "fifa": "ASA",
+   "country": "American Samoa",
+   "association": "Football Federation American Samoa",
+   "iso": "AS",
+   "acronyms": [
+    "FFAS"
+   ],
+   "confederation": "OFC",
+   "lat": -14.296,
+   "lng": -170.707,
+   "level": "association"
+  },
+  {
+   "qid": "Q317705",
+   "fifa": "AND",
+   "country": "Andorra",
+   "association": "Andorran Football Federation",
+   "iso": "AD",
+   "confederation": "UEFA",
+   "lat": 42.543,
+   "lng": 1.6,
+   "level": "association"
+  },
+  {
+   "qid": "Q1048119",
+   "fifa": "ANG",
+   "country": "Angola",
+   "association": "Angolan Football Federation",
+   "iso": "AO",
+   "acronyms": [
+    "FAF"
+   ],
+   "confederation": "CAF",
+   "lat": -12.35,
+   "lng": 17.35,
+   "level": "association"
+  },
+  {
+   "qid": "Q2333265",
+   "fifa": "AIA",
+   "country": "Anguilla",
+   "association": "Anguilla Football Association",
+   "iso": "AI",
+   "acronyms": [
+    "AFA"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 18.227,
+   "lng": -63.049,
+   "level": "association"
+  },
+  {
+   "qid": "Q540988",
+   "fifa": "ATG",
+   "country": "Antigua and Barbuda",
+   "association": "Antigua and Barbuda Football Association",
+   "iso": "AG",
+   "confederation": "CONCACAF",
+   "lat": 17.117,
+   "lng": -61.85,
+   "level": "association"
+  },
+  {
+   "qid": "Q496548",
+   "fifa": "ARG",
+   "country": "Argentina",
+   "association": "Argentine Football Association",
+   "iso": "AR",
+   "acronyms": [
+    "AFA"
+   ],
+   "confederation": "CONMEBOL",
+   "lat": -34,
+   "lng": -64,
+   "level": "association"
+  },
+  {
+   "qid": "Q391151",
+   "fifa": "ARM",
+   "country": "Armenia",
+   "association": "Football Federation of Armenia",
+   "iso": "AM",
+   "confederation": "UEFA",
+   "lat": 40.383,
+   "lng": 44.95,
+   "level": "association"
+  },
+  {
+   "qid": "Q1998399",
+   "fifa": "ARU",
+   "country": "Aruba",
+   "association": "Aruba Football Federation",
+   "iso": "AW",
+   "confederation": "CONCACAF",
+   "lat": 12.515,
+   "lng": -69.975,
+   "level": "association"
+  },
+  {
+   "qid": "Q781890",
+   "fifa": "AUS",
+   "country": "Australia",
+   "association": "Football Australia",
+   "iso": "AU",
+   "confederation": "AFC",
+   "lat": -25,
+   "lng": 133,
+   "level": "association"
+  },
+  {
+   "qid": "Q222108",
+   "fifa": "AUT",
+   "country": "Austria",
+   "association": "Austrian Football Association",
+   "iso": "AT",
+   "confederation": "UEFA",
+   "lat": 48,
+   "lng": 14,
+   "level": "association"
+  },
+  {
+   "qid": "Q381129",
+   "fifa": "AZE",
+   "country": "Azerbaijan",
+   "association": "Association of Football Federations of Azerbaijan",
+   "iso": "AZ",
+   "acronyms": [
+    "AFFA"
+   ],
+   "confederation": "UEFA",
+   "lat": 40.3,
+   "lng": 47.7,
+   "level": "association"
+  },
+  {
+   "qid": "Q2606456",
+   "fifa": "BAH",
+   "country": "Bahamas",
+   "association": "Bahamas Football Association",
+   "iso": "BS",
+   "confederation": "CONCACAF",
+   "lat": 25,
+   "lng": -77.4,
+   "level": "association"
+  },
+  {
+   "qid": "Q622263",
+   "fifa": "BHR",
+   "country": "Bahrain",
+   "association": "Bahrain Football Association",
+   "iso": "BH",
+   "acronyms": [
+    "BFA"
+   ],
+   "confederation": "AFC",
+   "lat": 26.068,
+   "lng": 50.551,
+   "level": "association"
+  },
+  {
+   "qid": "Q806536",
+   "fifa": "BAN",
+   "country": "Bangladesh",
+   "association": "Bangladesh Football Federation",
+   "iso": "BD",
+   "acronyms": [
+    "BFF"
+   ],
+   "confederation": "AFC",
+   "lat": 24.017,
+   "lng": 89.867,
+   "level": "association"
+  },
+  {
+   "qid": "Q612670",
+   "fifa": "BRB",
+   "country": "Barbados",
+   "association": "Barbados Football Association",
+   "iso": "BB",
+   "acronyms": [
+    "BFA"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 13.17,
+   "lng": -59.552,
+   "level": "association"
+  },
+  {
+   "qid": "Q473245",
+   "fifa": "BLR",
+   "country": "Belarus",
+   "association": "Football Federation of Belarus",
+   "iso": "BY",
+   "confederation": "UEFA",
+   "lat": 53.528,
+   "lng": 28.047,
+   "level": "association"
+  },
+  {
+   "qid": "Q381124",
+   "fifa": "BEL",
+   "country": "Belgium",
+   "association": "Royal Belgian Football Association",
+   "iso": "BE",
+   "acronyms": [
+    "URBSFA",
+    "KBVB",
+    "KBFV",
+    "RBFA"
+   ],
+   "confederation": "UEFA",
+   "lat": 50.641,
+   "lng": 4.668,
+   "level": "association"
+  },
+  {
+   "qid": "Q2421684",
+   "fifa": "BLZ",
+   "country": "Belize",
+   "association": "Football Federation of Belize",
+   "iso": "BZ",
+   "acronyms": [
+    "FFB"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 17.067,
+   "lng": -88.7,
+   "level": "association"
+  },
+  {
+   "qid": "Q792926",
+   "fifa": "BEN",
+   "country": "Benin",
+   "association": "Fédération Béninoise de Football",
+   "iso": "BJ",
+   "confederation": "CAF",
+   "lat": 8.833,
+   "lng": 2.183,
+   "level": "association"
+  },
+  {
+   "qid": "Q777967",
+   "fifa": "BER",
+   "country": "Bermuda",
+   "association": "Bermuda Football Association",
+   "iso": "BM",
+   "confederation": "CONCACAF",
+   "lat": 32.32,
+   "lng": -64.74,
+   "level": "association"
+  },
+  {
+   "qid": "Q279795",
+   "fifa": "BHU",
+   "country": "Bhutan",
+   "association": "Bhutan Football Federation",
+   "iso": "BT",
+   "acronyms": [
+    "BFF"
+   ],
+   "confederation": "AFC",
+   "lat": 27.45,
+   "lng": 90.5,
+   "level": "association"
+  },
+  {
+   "qid": "Q834333",
+   "fifa": "BOL",
+   "country": "Bolivia",
+   "association": "Bolivian Football Federation",
+   "iso": "BO",
+   "acronyms": [
+    "FBF"
+   ],
+   "confederation": "CONMEBOL",
+   "lat": -17.057,
+   "lng": -64.991,
+   "level": "association"
+  },
+  {
+   "qid": "Q387611",
+   "fifa": "BIH",
+   "country": "Bosnia and Herzegovina",
+   "association": "Football Federation of Bosnia and Herzegovina",
+   "iso": "BA",
+   "confederation": "UEFA",
+   "lat": 44,
+   "lng": 18,
+   "level": "association"
+  },
+  {
+   "qid": "Q634742",
+   "fifa": "BOT",
+   "country": "Botswana",
+   "association": "Botswana Football Association",
+   "iso": "BW",
+   "acronyms": [
+    "BFA"
+   ],
+   "confederation": "CAF",
+   "lat": -22.2,
+   "lng": 23.7,
+   "level": "association"
+  },
+  {
+   "qid": "Q244754",
+   "fifa": "BRA",
+   "country": "Brazil",
+   "association": "Brazilian Football Confederation",
+   "iso": "BR",
+   "acronyms": [
+    "CBF"
+   ],
+   "confederation": "CONMEBOL",
+   "lat": -14,
+   "lng": -53,
+   "level": "association"
+  },
+  {
+   "qid": "Q746272",
+   "fifa": "VGB",
+   "country": "British Virgin Islands",
+   "association": "British Virgin Islands Football Association",
+   "iso": "VG",
+   "acronyms": [
+    "BVIFA"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 18.445,
+   "lng": -64.54,
+   "level": "association"
+  },
+  {
+   "qid": "Q622172",
+   "fifa": "BRU",
+   "country": "Brunei",
+   "association": "Football Association of Brunei Darussalam",
+   "iso": "BN",
+   "acronyms": [
+    "NFABD",
+    "FABD"
+   ],
+   "confederation": "AFC",
+   "lat": 4.4,
+   "lng": 114.567,
+   "level": "association"
+  },
+  {
+   "qid": "Q630248",
+   "fifa": "BUL",
+   "country": "Bulgaria",
+   "association": "Bulgarian Football Union",
+   "iso": "BG",
+   "confederation": "UEFA",
+   "lat": 42.75,
+   "lng": 25.5,
+   "level": "association"
+  },
+  {
+   "qid": "Q852148",
+   "fifa": "BFA",
+   "country": "Burkina Faso",
+   "association": "Burkinabe Football Federation",
+   "iso": "BF",
+   "confederation": "CAF",
+   "lat": 12.267,
+   "lng": -2.067,
+   "level": "association"
+  },
+  {
+   "qid": "Q852227",
+   "fifa": "BDI",
+   "country": "Burundi",
+   "association": "Football Federation of Burundi",
+   "iso": "BI",
+   "confederation": "CAF",
+   "lat": -3.667,
+   "lng": 29.817,
+   "level": "association"
+  },
+  {
+   "qid": "Q622260",
+   "fifa": "CAM",
+   "country": "Cambodia",
+   "association": "Football Federation of Cambodia",
+   "iso": "KH",
+   "confederation": "AFC",
+   "lat": 12.5,
+   "lng": 105,
+   "level": "association"
+  },
+  {
+   "qid": "Q921938",
+   "fifa": "CMR",
+   "country": "Cameroon",
+   "association": "Cameroonian Football Federation",
+   "iso": "CM",
+   "acronyms": [
+    "FECAFOOT"
+   ],
+   "confederation": "CAF",
+   "lat": 5.133,
+   "lng": 12.65,
+   "level": "association"
+  },
+  {
+   "qid": "Q1032414",
+   "fifa": "CAN",
+   "country": "Canada",
+   "association": "Canadian Soccer Association",
+   "iso": "CA",
+   "acronyms": [
+    "CSA"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 56,
+   "lng": -109,
+   "level": "association"
+  },
+  {
+   "qid": "Q463623",
+   "fifa": "CPV",
+   "country": "Cape Verde",
+   "association": "Federação Caboverdiana de Futebol",
+   "iso": "CV",
+   "acronyms": [
+    "FCF"
+   ],
+   "confederation": "CAF",
+   "lat": 15.3,
+   "lng": -23.7,
+   "level": "association"
+  },
+  {
+   "qid": "Q2466978",
+   "fifa": "CAY",
+   "country": "Cayman Islands",
+   "association": "Cayman Islands Football Association",
+   "iso": "KY",
+   "acronyms": [
+    "CIFA"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 19.5,
+   "lng": -80.5,
+   "level": "association"
+  },
+  {
+   "qid": "Q286496",
+   "fifa": "CTA",
+   "country": "Central African Republic",
+   "association": "Fédération Centrafricaine de Football",
+   "iso": "CF",
+   "confederation": "CAF",
+   "lat": 6.7,
+   "lng": 20.9,
+   "level": "association"
+  },
+  {
+   "qid": "Q874992",
+   "fifa": "CHA",
+   "country": "Chad",
+   "association": "Fédération Tchadienne de Football",
+   "iso": "TD",
+   "acronyms": [
+    "FTFA"
+   ],
+   "confederation": "CAF",
+   "lat": 15.467,
+   "lng": 19.4,
+   "level": "association"
+  },
+  {
+   "qid": "Q602656",
+   "fifa": "CHI",
+   "country": "Chile",
+   "association": "Football Federation of Chile",
+   "iso": "CL",
+   "acronyms": [
+    "FFCh"
+   ],
+   "confederation": "CONMEBOL",
+   "lat": -33,
+   "lng": -71,
+   "level": "association"
+  },
+  {
+   "qid": "Q573747",
+   "fifa": "CHN",
+   "country": "China",
+   "association": "Chinese Football Association",
+   "iso": "CN",
+   "acronyms": [
+    "CFA"
+   ],
+   "confederation": "AFC",
+   "lat": 35.845,
+   "lng": 103.452,
+   "level": "association"
+  },
+  {
+   "qid": "Q700929",
+   "fifa": "TPE",
+   "country": "Chinese Taipei",
+   "association": "Chinese Taipei Football Association",
+   "iso": "TW",
+   "acronyms": [
+    "CTFA"
+   ],
+   "confederation": "AFC",
+   "lat": 24,
+   "lng": 121,
+   "level": "association"
+  },
+  {
+   "qid": "Q830922",
+   "fifa": "COL",
+   "country": "Colombia",
+   "association": "Colombian Football Federation",
+   "iso": "CO",
+   "acronyms": [
+    "FCF"
+   ],
+   "confederation": "CONMEBOL",
+   "lat": 4,
+   "lng": -73.25,
+   "level": "association"
+  },
+  {
+   "qid": "Q868584",
+   "fifa": "COM",
+   "country": "Comoros",
+   "association": "Comoros Football Federation",
+   "iso": "KM",
+   "acronyms": [
+    "FFC"
+   ],
+   "confederation": "CAF",
+   "lat": -12.3,
+   "lng": 43.7,
+   "level": "association"
+  },
+  {
+   "qid": "Q921528",
+   "fifa": "CGO",
+   "country": "Congo",
+   "association": "Fédération Congolaise de Football",
+   "iso": "CG",
+   "confederation": "CAF",
+   "lat": -0.75,
+   "lng": 15.383,
+   "level": "association"
+  },
+  {
+   "qid": "Q1129588",
+   "fifa": "COK",
+   "country": "Cook Islands",
+   "association": "Cook Islands Football Association",
+   "iso": "CK",
+   "acronyms": [
+    "CIFA"
+   ],
+   "confederation": "OFC",
+   "lat": -21.2,
+   "lng": -159.8,
+   "level": "association"
+  },
+  {
+   "qid": "Q869327",
+   "fifa": "CRC",
+   "country": "Costa Rica",
+   "association": "Costa Rican Football Federation",
+   "iso": "CR",
+   "acronyms": [
+    "FEDEFUT"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 10,
+   "lng": -84,
+   "level": "association"
+  },
+  {
+   "qid": "Q328689",
+   "fifa": "CRO",
+   "country": "Croatia",
+   "association": "Croatian Football Federation",
+   "iso": "HR",
+   "acronyms": [
+    "HNS"
+   ],
+   "confederation": "UEFA",
+   "lat": 45.25,
+   "lng": 15.467,
+   "level": "association"
+  },
+  {
+   "qid": "Q956927",
+   "fifa": "CUB",
+   "country": "Cuba",
+   "association": "Football Association of Cuba",
+   "iso": "CU",
+   "confederation": "CONCACAF",
+   "lat": 22,
+   "lng": -79.5,
+   "level": "association"
+  },
+  {
+   "qid": "Q4136296",
+   "fifa": "CUW",
+   "country": "Curaçao",
+   "association": "Curaçao Football Federation",
+   "iso": "CW",
+   "acronyms": [
+    "FFK"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 12.2,
+   "lng": -69,
+   "level": "association"
+  },
+  {
+   "qid": "Q473248",
+   "fifa": "CYP",
+   "country": "Cyprus",
+   "association": "Cyprus Football Association",
+   "iso": "CY",
+   "confederation": "UEFA",
+   "lat": 35,
+   "lng": 33,
+   "level": "association"
+  },
+  {
+   "qid": "Q337065",
+   "fifa": "CZE",
+   "country": "Czech Republic",
+   "association": "Football Association of the Czech Republic",
+   "iso": "CZ",
+   "confederation": "UEFA",
+   "lat": 50,
+   "lng": 15,
+   "level": "association"
+  },
+  {
+   "qid": "Q502018",
+   "fifa": "DEN",
+   "country": "Denmark",
+   "association": "Danish Football Association",
+   "iso": "DK",
+   "confederation": "UEFA",
+   "lat": 56,
+   "lng": 10,
+   "level": "association"
+  },
+  {
+   "qid": "Q912098",
+   "fifa": "DJI",
+   "country": "Djibouti",
+   "association": "Fédération Djiboutienne de Football",
+   "iso": "DJ",
+   "confederation": "CAF",
+   "lat": 11.8,
+   "lng": 42.433,
+   "level": "association"
+  },
+  {
+   "qid": "Q2467019",
+   "fifa": "DMA",
+   "country": "Dominica",
+   "association": "Dominica Football Association",
+   "iso": "DM",
+   "confederation": "CONCACAF",
+   "lat": 15.417,
+   "lng": -61.333,
+   "level": "association"
+  },
+  {
+   "qid": "Q744812",
+   "fifa": "DOM",
+   "country": "Dominican Republic",
+   "association": "Dominican Football Federation",
+   "iso": "DO",
+   "acronyms": [
+    "FEDO"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 18.8,
+   "lng": -70.2,
+   "level": "association"
+  },
+  {
+   "qid": "Q568669",
+   "fifa": "COD",
+   "country": "DR Congo",
+   "association": "Fédération Congolaise de Football-Association",
+   "iso": "CD",
+   "confederation": "CAF",
+   "lat": -2.88,
+   "lng": 23.656,
+   "level": "association"
+  },
+  {
+   "qid": "Q538118",
+   "fifa": "ECU",
+   "country": "Ecuador",
+   "association": "Ecuadorian Football Federation",
+   "iso": "EC",
+   "acronyms": [
+    "FEF"
+   ],
+   "confederation": "CONMEBOL",
+   "lat": -1,
+   "lng": -78,
+   "level": "association"
+  },
+  {
+   "qid": "Q921881",
+   "fifa": "EGY",
+   "country": "Egypt",
+   "association": "Egyptian Football Association",
+   "iso": "EG",
+   "acronyms": [
+    "EFA"
+   ],
+   "confederation": "CAF",
+   "lat": 27,
+   "lng": 29,
+   "level": "association"
+  },
+  {
+   "qid": "Q547761",
+   "fifa": "SLV",
+   "country": "El Salvador",
+   "association": "Salvadoran Football Federation",
+   "iso": "SV",
+   "acronyms": [
+    "FESFUT"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 13.669,
+   "lng": -88.866,
+   "level": "association"
+  },
+  {
+   "qid": "Q9500",
+   "fifa": "ENG",
+   "country": "England",
+   "association": "The Football Association",
+   "iso": "GB-ENG",
+   "acronyms": [
+    "FA"
+   ],
+   "confederation": "UEFA",
+   "lat": 53,
+   "lng": -1,
+   "level": "association"
+  },
+  {
+   "qid": "Q988088",
+   "fifa": "EQG",
+   "country": "Equatorial Guinea",
+   "association": "Equatoguinean Football Federation",
+   "iso": "GQ",
+   "acronyms": [
+    "FEGUIFUT"
+   ],
+   "confederation": "CAF",
+   "lat": 1.5,
+   "lng": 10,
+   "level": "association"
+  },
+  {
+   "qid": "Q427896",
+   "fifa": "ERI",
+   "country": "Eritrea",
+   "association": "Eritrean National Football Federation",
+   "iso": "ER",
+   "confederation": "CAF",
+   "lat": 15.483,
+   "lng": 38.25,
+   "level": "association"
+  },
+  {
+   "qid": "Q264335",
+   "fifa": "EST",
+   "country": "Estonia",
+   "association": "Estonian Football Association",
+   "iso": "EE",
+   "acronyms": [
+    "EJL"
+   ],
+   "confederation": "UEFA",
+   "lat": 59,
+   "lng": 26,
+   "level": "association"
+  },
+  {
+   "qid": "Q1193440",
+   "fifa": "SWZ",
+   "country": "Eswatini",
+   "association": "Eswatini Football Association",
+   "iso": "SZ",
+   "acronyms": [
+    "EFA"
+   ],
+   "confederation": "CAF",
+   "lat": -26.483,
+   "lng": 31.433,
+   "level": "association"
+  },
+  {
+   "qid": "Q537717",
+   "fifa": "ETH",
+   "country": "Ethiopia",
+   "association": "Ethiopian Football Federation",
+   "iso": "ET",
+   "acronyms": [
+    "EFF"
+   ],
+   "confederation": "CAF",
+   "lat": 9,
+   "lng": 40,
+   "level": "association"
+  },
+  {
+   "qid": "Q268628",
+   "fifa": "FRO",
+   "country": "Faroe Islands",
+   "association": "Faroe Islands Football Association",
+   "iso": "FO",
+   "confederation": "UEFA",
+   "lat": 61.97,
+   "lng": -6.844,
+   "level": "association"
+  },
+  {
+   "qid": "Q1084234",
+   "fifa": "FIJ",
+   "country": "Fiji",
+   "association": "Fiji Football Association",
+   "iso": "FJ",
+   "confederation": "OFC",
+   "lat": -18,
+   "lng": 178,
+   "level": "association"
+  },
+  {
+   "qid": "Q474947",
+   "fifa": "FIN",
+   "country": "Finland",
+   "association": "Football Association of Finland",
+   "iso": "FI",
+   "confederation": "UEFA",
+   "lat": 65,
+   "lng": 27,
+   "level": "association"
+  },
+  {
+   "qid": "Q244750",
+   "fifa": "FRA",
+   "country": "France",
+   "association": "French Football Federation",
+   "iso": "FR",
+   "acronyms": [
+    "FFF"
+   ],
+   "confederation": "UEFA",
+   "lat": 47,
+   "lng": 2,
+   "level": "association"
+  },
+  {
+   "qid": "Q579192",
+   "fifa": "GAB",
+   "country": "Gabon",
+   "association": "Gabonese Football Federation",
+   "iso": "GA",
+   "confederation": "CAF",
+   "lat": -0.683,
+   "lng": 11.5,
+   "level": "association"
+  },
+  {
+   "qid": "Q1007927",
+   "fifa": "GAM",
+   "country": "Gambia",
+   "association": "Gambia Football Association",
+   "iso": "GM",
+   "acronyms": [
+    "GFA"
+   ],
+   "confederation": "CAF",
+   "lat": 13.5,
+   "lng": -15.5,
+   "level": "association"
+  },
+  {
+   "qid": "Q371451",
+   "fifa": "GEO",
+   "country": "Georgia",
+   "association": "Georgian Football Federation",
+   "iso": "GE",
+   "confederation": "UEFA",
+   "lat": 42,
+   "lng": 44,
+   "level": "association"
+  },
+  {
+   "qid": "Q154191",
+   "fifa": "GER",
+   "country": "Germany",
+   "association": "German Football Association",
+   "iso": "DE",
+   "acronyms": [
+    "DFB"
+   ],
+   "confederation": "UEFA",
+   "lat": 51,
+   "lng": 10,
+   "level": "association"
+  },
+  {
+   "qid": "Q923074",
+   "fifa": "GHA",
+   "country": "Ghana",
+   "association": "Ghana Football Association",
+   "iso": "GH",
+   "confederation": "CAF",
+   "lat": 7.947,
+   "lng": -1.023,
+   "level": "association"
+  },
+  {
+   "qid": "Q508376",
+   "fifa": "GIB",
+   "country": "Gibraltar",
+   "association": "Gibraltar Football Association",
+   "iso": "GI",
+   "confederation": "UEFA",
+   "lat": 36.14,
+   "lng": -5.35,
+   "level": "association"
+  },
+  {
+   "qid": "Q389763",
+   "fifa": "GRE",
+   "country": "Greece",
+   "association": "Hellenic Football Federation",
+   "iso": "GR",
+   "confederation": "UEFA",
+   "lat": 38.5,
+   "lng": 23,
+   "level": "association"
+  },
+  {
+   "qid": "Q2573964",
+   "fifa": "GRN",
+   "country": "Grenada",
+   "association": "Grenada Football Association",
+   "iso": "GD",
+   "confederation": "CONCACAF",
+   "lat": 12.1,
+   "lng": -61.7,
+   "level": "association"
+  },
+  {
+   "qid": "Q622248",
+   "fifa": "GUM",
+   "country": "Guam",
+   "association": "Guam Football Association",
+   "iso": "GU",
+   "confederation": "AFC",
+   "lat": 13.5,
+   "lng": 144.8,
+   "level": "association"
+  },
+  {
+   "qid": "Q1028524",
+   "fifa": "GUA",
+   "country": "Guatemala",
+   "association": "National Football Federation of Guatemala",
+   "iso": "GT",
+   "acronyms": [
+    "FENAFUTG"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 15.5,
+   "lng": -90.25,
+   "level": "association"
+  },
+  {
+   "qid": "Q1028610",
+   "fifa": "GUI",
+   "country": "Guinea",
+   "association": "Guinean Football Federation",
+   "iso": "GN",
+   "acronyms": [
+    "FGF"
+   ],
+   "confederation": "CAF",
+   "lat": 10,
+   "lng": -11,
+   "level": "association"
+  },
+  {
+   "qid": "Q804049",
+   "fifa": "GNB",
+   "country": "Guinea-Bissau",
+   "association": "Federação de Futebol da Guiné-Bissau",
+   "iso": "GW",
+   "confederation": "CAF",
+   "lat": 12,
+   "lng": -15,
+   "level": "association"
+  },
+  {
+   "qid": "Q1029049",
+   "fifa": "GUY",
+   "country": "Guyana",
+   "association": "Guyana Football Federation",
+   "iso": "GY",
+   "acronyms": [
+    "GFF"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 5.733,
+   "lng": -59.317,
+   "level": "association"
+  },
+  {
+   "qid": "Q2604400",
+   "fifa": "HAI",
+   "country": "Haiti",
+   "association": "Haitian Football Federation",
+   "iso": "HT",
+   "acronyms": [
+    "FHF"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 19,
+   "lng": -72.8,
+   "level": "association"
+  },
+  {
+   "qid": "Q780843",
+   "fifa": "HON",
+   "country": "Honduras",
+   "association": "Football Federation of Honduras",
+   "iso": "HN",
+   "acronyms": [
+    "FENAFUTH",
+    "FFH"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 14.633,
+   "lng": -86.817,
+   "level": "association"
+  },
+  {
+   "qid": "Q622321",
+   "fifa": "HKG",
+   "country": "Hong Kong",
+   "association": "Football Association of Hong Kong, China",
+   "iso": "HK",
+   "acronyms": [
+    "HKFA"
+   ],
+   "confederation": "AFC",
+   "lat": 22.278,
+   "lng": 114.159,
+   "level": "association"
+  },
+  {
+   "qid": "Q733029",
+   "fifa": "HUN",
+   "country": "Hungary",
+   "association": "Hungarian Football Federation",
+   "iso": "HU",
+   "confederation": "UEFA",
+   "lat": 47,
+   "lng": 19,
+   "level": "association"
+  },
+  {
+   "qid": "Q478734",
+   "fifa": "ISL",
+   "country": "Iceland",
+   "association": "Football Association of Iceland",
+   "iso": "IS",
+   "confederation": "UEFA",
+   "lat": 65,
+   "lng": -19,
+   "level": "association"
+  },
+  {
+   "qid": "Q622332",
+   "fifa": "IND",
+   "country": "India",
+   "association": "All India Football Federation",
+   "iso": "IN",
+   "acronyms": [
+    "AIFF",
+    "AFC"
+   ],
+   "confederation": "AFC",
+   "lat": 22.8,
+   "lng": 83,
+   "level": "association"
+  },
+  {
+   "qid": "Q622257",
+   "fifa": "IDN",
+   "country": "Indonesia",
+   "association": "Football Association of Indonesia",
+   "iso": "ID",
+   "acronyms": [
+    "PSSI"
+   ],
+   "confederation": "AFC",
+   "lat": -2,
+   "lng": 118,
+   "level": "association"
+  },
+  {
+   "qid": "Q1042614",
+   "fifa": "IRN",
+   "country": "Iran",
+   "association": "Football Federation of Iran",
+   "iso": "IR",
+   "acronyms": [
+    "FFIRI"
+   ],
+   "confederation": "AFC",
+   "lat": 32,
+   "lng": 53,
+   "level": "association"
+  },
+  {
+   "qid": "Q1475056",
+   "fifa": "IRQ",
+   "country": "Iraq",
+   "association": "Iraq Football Association",
+   "iso": "IQ",
+   "acronyms": [
+    "IFA"
+   ],
+   "confederation": "AFC",
+   "lat": 33,
+   "lng": 43,
+   "level": "association"
+  },
+  {
+   "qid": "Q641712",
+   "fifa": "ISR",
+   "country": "Israel",
+   "association": "Israel Football Association",
+   "iso": "IL",
+   "confederation": "UEFA",
+   "lat": 31,
+   "lng": 35,
+   "level": "association"
+  },
+  {
+   "qid": "Q201897",
+   "fifa": "ITA",
+   "country": "Italy",
+   "association": "Italian Football Federation",
+   "iso": "IT",
+   "acronyms": [
+    "FIGC"
+   ],
+   "confederation": "UEFA",
+   "lat": 42.5,
+   "lng": 12.5,
+   "level": "association"
+  },
+  {
+   "qid": "Q923018",
+   "fifa": "CIV",
+   "country": "Ivory Coast",
+   "association": "Ivorian Football Federation",
+   "iso": "CI",
+   "confederation": "CAF",
+   "lat": 8,
+   "lng": -6,
+   "level": "association"
+  },
+  {
+   "qid": "Q578917",
+   "fifa": "JAM",
+   "country": "Jamaica",
+   "association": "Jamaica Football Federation",
+   "iso": "JM",
+   "acronyms": [
+    "JFF"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 18.18,
+   "lng": -77.4,
+   "level": "association"
+  },
+  {
+   "qid": "Q579842",
+   "fifa": "JPN",
+   "country": "Japan",
+   "association": "Japan Football Association",
+   "iso": "JP",
+   "acronyms": [
+    "JFA"
+   ],
+   "confederation": "AFC",
+   "lat": 35,
+   "lng": 136,
+   "level": "association"
+  },
+  {
+   "qid": "Q250720",
+   "fifa": "JOR",
+   "country": "Jordan",
+   "association": "Jordan Football Association",
+   "iso": "JO",
+   "acronyms": [
+    "JFA"
+   ],
+   "confederation": "AFC",
+   "lat": 31.2,
+   "lng": 36.5,
+   "level": "association"
+  },
+  {
+   "qid": "Q528699",
+   "fifa": "KAZ",
+   "country": "Kazakhstan",
+   "association": "Football Federation of Kazakhstan",
+   "iso": "KZ",
+   "acronyms": [
+    "QFF"
+   ],
+   "confederation": "UEFA",
+   "lat": 48,
+   "lng": 68,
+   "level": "association"
+  },
+  {
+   "qid": "Q5465856",
+   "fifa": "KEN",
+   "country": "Kenya",
+   "association": "Football Kenya Federation",
+   "iso": "KE",
+   "confederation": "CAF",
+   "lat": 0.1,
+   "lng": 38,
+   "level": "association"
+  },
+  {
+   "qid": "Q1289049",
+   "fifa": "KOS",
+   "country": "Kosovo",
+   "association": "Football Federation of Kosovo",
+   "iso": "XK",
+   "confederation": "UEFA",
+   "lat": 42.55,
+   "lng": 20.833,
+   "level": "association"
+  },
+  {
+   "qid": "Q1086979",
+   "fifa": "KUW",
+   "country": "Kuwait",
+   "association": "Kuwait Football Association",
+   "iso": "KW",
+   "acronyms": [
+    "KFA"
+   ],
+   "confederation": "AFC",
+   "lat": 29.167,
+   "lng": 47.6,
+   "level": "association"
+  },
+  {
+   "qid": "Q622272",
+   "fifa": "KGZ",
+   "country": "Kyrgyzstan",
+   "association": "Kyrgyz Football Union",
+   "iso": "KG",
+   "acronyms": [
+    "FFKR"
+   ],
+   "confederation": "AFC",
+   "lat": 41,
+   "lng": 75,
+   "level": "association"
+  },
+  {
+   "qid": "Q623951",
+   "fifa": "LAO",
+   "country": "Laos",
+   "association": "Lao Football Federation",
+   "iso": "LA",
+   "confederation": "AFC",
+   "lat": 18.2,
+   "lng": 104.1,
+   "level": "association"
+  },
+  {
+   "qid": "Q630231",
+   "fifa": "LVA",
+   "country": "Latvia",
+   "association": "Latvian Football Federation",
+   "iso": "LV",
+   "acronyms": [
+    "LFF"
+   ],
+   "confederation": "UEFA",
+   "lat": 57,
+   "lng": 25,
+   "level": "association"
+  },
+  {
+   "qid": "Q1514606",
+   "fifa": "LBN",
+   "country": "Lebanon",
+   "association": "Lebanese Football Association",
+   "iso": "LB",
+   "acronyms": [
+    "LFA"
+   ],
+   "confederation": "AFC",
+   "lat": 33.833,
+   "lng": 35.767,
+   "level": "association"
+  },
+  {
+   "qid": "Q570331",
+   "fifa": "LES",
+   "country": "Lesotho",
+   "association": "Lesotho Football Association",
+   "iso": "LS",
+   "acronyms": [
+    "LFA"
+   ],
+   "confederation": "CAF",
+   "lat": -29.55,
+   "lng": 28.25,
+   "level": "association"
+  },
+  {
+   "qid": "Q1129903",
+   "fifa": "LBR",
+   "country": "Liberia",
+   "association": "Liberia Football Association",
+   "iso": "LR",
+   "confederation": "CAF",
+   "lat": 6.533,
+   "lng": -9.75,
+   "level": "association"
+  },
+  {
+   "qid": "Q239089",
+   "fifa": "LBY",
+   "country": "Libya",
+   "association": "Libyan Football Federation",
+   "iso": "LY",
+   "acronyms": [
+    "LFF"
+   ],
+   "confederation": "CAF",
+   "lat": 27,
+   "lng": 17,
+   "level": "association"
+  },
+  {
+   "qid": "Q387416",
+   "fifa": "LIE",
+   "country": "Liechtenstein",
+   "association": "Liechtenstein Football Association",
+   "iso": "LI",
+   "confederation": "UEFA",
+   "lat": 47.145,
+   "lng": 9.554,
+   "level": "association"
+  },
+  {
+   "qid": "Q512915",
+   "fifa": "LTU",
+   "country": "Lithuania",
+   "association": "Lithuanian Football Federation",
+   "iso": "LT",
+   "confederation": "UEFA",
+   "lat": 55.2,
+   "lng": 24,
+   "level": "association"
+  },
+  {
+   "qid": "Q696850",
+   "fifa": "LUX",
+   "country": "Luxembourg",
+   "association": "Luxembourg Football Federation",
+   "iso": "LU",
+   "acronyms": [
+    "FLF"
+   ],
+   "confederation": "UEFA",
+   "lat": 49.77,
+   "lng": 6.13,
+   "level": "association"
+  },
+  {
+   "qid": "Q549676",
+   "fifa": "MAC",
+   "country": "Macau",
+   "association": "Associação de Futebol de Macau",
+   "iso": "MO",
+   "confederation": "AFC",
+   "lat": 22.19,
+   "lng": 113.538,
+   "level": "association"
+  },
+  {
+   "qid": "Q662763",
+   "fifa": "MAD",
+   "country": "Madagascar",
+   "association": "Fédération Malagasy de Football",
+   "iso": "MG",
+   "acronyms": [
+    "FMF"
+   ],
+   "confederation": "CAF",
+   "lat": -20,
+   "lng": 47,
+   "level": "association"
+  },
+  {
+   "qid": "Q181740",
+   "fifa": "MWI",
+   "country": "Malawi",
+   "association": "Football Association of Malawi",
+   "iso": "MW",
+   "acronyms": [
+    "FAM"
+   ],
+   "confederation": "CAF",
+   "lat": -13,
+   "lng": 34,
+   "level": "association"
+  },
+  {
+   "qid": "Q622250",
+   "fifa": "MAS",
+   "country": "Malaysia",
+   "association": "Football Association of Malaysia",
+   "iso": "MY",
+   "acronyms": [
+    "FAM"
+   ],
+   "confederation": "AFC",
+   "lat": 3.781,
+   "lng": 102.314,
+   "level": "association"
+  },
+  {
+   "qid": "Q622270",
+   "fifa": "MDV",
+   "country": "Maldives",
+   "association": "Football Association of Maldives",
+   "iso": "MV",
+   "acronyms": [
+    "FAM"
+   ],
+   "confederation": "AFC",
+   "lat": 4.18,
+   "lng": 73.51,
+   "level": "association"
+  },
+  {
+   "qid": "Q1068648",
+   "fifa": "MLI",
+   "country": "Mali",
+   "association": "Mali Football Federation",
+   "iso": "ML",
+   "acronyms": [
+    "FEMAFOOT"
+   ],
+   "confederation": "CAF",
+   "lat": 17,
+   "lng": -4,
+   "level": "association"
+  },
+  {
+   "qid": "Q728575",
+   "fifa": "MLT",
+   "country": "Malta",
+   "association": "Malta Football Association",
+   "iso": "MT",
+   "acronyms": [
+    "MFA"
+   ],
+   "confederation": "UEFA",
+   "lat": 35.9,
+   "lng": 14.4,
+   "level": "association"
+  },
+  {
+   "qid": "Q1061066",
+   "fifa": "MTN",
+   "country": "Mauritania",
+   "association": "Fédération de Football de la Républic Islamique de Mauritanie",
+   "iso": "MR",
+   "acronyms": [
+    "FFRIM"
+   ],
+   "confederation": "CAF",
+   "lat": 21,
+   "lng": -11,
+   "level": "association"
+  },
+  {
+   "qid": "Q269119",
+   "fifa": "MRI",
+   "country": "Mauritius",
+   "association": "Mauritius Football Association",
+   "iso": "MU",
+   "acronyms": [
+    "MFA"
+   ],
+   "confederation": "CAF",
+   "lat": -20.2,
+   "lng": 57.5,
+   "level": "association"
+  },
+  {
+   "qid": "Q1160682",
+   "fifa": "MEX",
+   "country": "Mexico",
+   "association": "Mexican Football Federation",
+   "iso": "MX",
+   "acronyms": [
+    "FMF"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 23,
+   "lng": -102,
+   "level": "association"
+  },
+  {
+   "qid": "Q738074",
+   "fifa": "MDA",
+   "country": "Moldova",
+   "association": "Football Association of Moldova",
+   "iso": "MD",
+   "acronyms": [
+    "FMF"
+   ],
+   "confederation": "UEFA",
+   "lat": 47.25,
+   "lng": 28.517,
+   "level": "association"
+  },
+  {
+   "qid": "Q623799",
+   "fifa": "MNG",
+   "country": "Mongolia",
+   "association": "Mongolian Football Federation",
+   "iso": "MN",
+   "confederation": "AFC",
+   "lat": 46,
+   "lng": 105,
+   "level": "association"
+  },
+  {
+   "qid": "Q738128",
+   "fifa": "MNE",
+   "country": "Montenegro",
+   "association": "Football Association of Montenegro",
+   "iso": "ME",
+   "confederation": "UEFA",
+   "lat": 42.767,
+   "lng": 19.217,
+   "level": "association"
+  },
+  {
+   "qid": "Q2606450",
+   "fifa": "MSR",
+   "country": "Montserrat",
+   "association": "Montserrat Football Association",
+   "iso": "MS",
+   "confederation": "CONCACAF",
+   "lat": 16.75,
+   "lng": -62.2,
+   "level": "association"
+  },
+  {
+   "qid": "Q3116927",
+   "fifa": "MAR",
+   "country": "Morocco",
+   "association": "Moroccan Football Federation",
+   "iso": "MA",
+   "acronyms": [
+    "FRMF",
+    "FMF"
+   ],
+   "confederation": "CAF",
+   "lat": 32,
+   "lng": -6,
+   "level": "association"
+  },
+  {
+   "qid": "Q650130",
+   "fifa": "MOZ",
+   "country": "Mozambique",
+   "association": "Mozambican Football Federation",
+   "iso": "MZ",
+   "acronyms": [
+    "FMF"
+   ],
+   "confederation": "CAF",
+   "lat": -19,
+   "lng": 35,
+   "level": "association"
+  },
+  {
+   "qid": "Q623756",
+   "fifa": "MYA",
+   "country": "Myanmar",
+   "association": "Myanmar Football Federation",
+   "iso": "MM",
+   "confederation": "AFC",
+   "lat": 22,
+   "lng": 96,
+   "level": "association"
+  },
+  {
+   "qid": "Q750090",
+   "fifa": "NAM",
+   "country": "Namibia",
+   "association": "Namibia Football Association",
+   "iso": "NA",
+   "acronyms": [
+    "NFA"
+   ],
+   "confederation": "CAF",
+   "lat": -23,
+   "lng": 17,
+   "level": "association"
+  },
+  {
+   "qid": "Q623651",
+   "fifa": "NEP",
+   "country": "Nepal",
+   "association": "All Nepal Football Association",
+   "iso": "NP",
+   "acronyms": [
+    "ANFA"
+   ],
+   "confederation": "AFC",
+   "lat": 28,
+   "lng": 84,
+   "level": "association"
+  },
+  {
+   "qid": "Q213116",
+   "fifa": "NED",
+   "country": "Netherlands",
+   "association": "Royal Dutch Football Association",
+   "iso": "NL",
+   "acronyms": [
+    "KNVB"
+   ],
+   "confederation": "UEFA",
+   "lat": 52.367,
+   "lng": 4.883,
+   "level": "association"
+  },
+  {
+   "qid": "Q1307814",
+   "fifa": "NCL",
+   "country": "New Caledonia",
+   "association": "New Caledonian Football Federation",
+   "iso": "NC",
+   "acronyms": [
+    "FCF"
+   ],
+   "confederation": "OFC",
+   "lat": -21.25,
+   "lng": 165.3,
+   "level": "association"
+  },
+  {
+   "qid": "Q842596",
+   "fifa": "NZL",
+   "country": "New Zealand",
+   "association": "New Zealand Football",
+   "iso": "NZ",
+   "acronyms": [
+    "NZF"
+   ],
+   "confederation": "OFC",
+   "lat": -41.2,
+   "lng": 174,
+   "level": "association"
+  },
+  {
+   "qid": "Q2287945",
+   "fifa": "NCA",
+   "country": "Nicaragua",
+   "association": "Nicaraguan Football Federation",
+   "iso": "NI",
+   "acronyms": [
+    "FENIFUT"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 13,
+   "lng": -85,
+   "level": "association"
+  },
+  {
+   "qid": "Q1094787",
+   "fifa": "NIG",
+   "country": "Niger",
+   "association": "Fédération Nigérienne de Football",
+   "iso": "NE",
+   "acronyms": [
+    "FENIFOOT"
+   ],
+   "confederation": "CAF",
+   "lat": 17,
+   "lng": 10,
+   "level": "association"
+  },
+  {
+   "qid": "Q932762",
+   "fifa": "NGA",
+   "country": "Nigeria",
+   "association": "Nigeria Football Federation",
+   "iso": "NG",
+   "acronyms": [
+    "NFF"
+   ],
+   "confederation": "CAF",
+   "lat": 9,
+   "lng": 8,
+   "level": "association"
+  },
+  {
+   "qid": "Q1067403",
+   "fifa": "PRK",
+   "country": "North Korea",
+   "association": "DPR Korea Football Association",
+   "iso": "KP",
+   "confederation": "AFC",
+   "lat": 40,
+   "lng": 127,
+   "level": "association"
+  },
+  {
+   "qid": "Q630262",
+   "fifa": "MKD",
+   "country": "North Macedonia",
+   "association": "Football Federation of Macedonia",
+   "iso": "MK",
+   "acronyms": [
+    "FFM",
+    "FSM"
+   ],
+   "confederation": "UEFA",
+   "lat": 41.65,
+   "lng": 21.717,
+   "level": "association"
+  },
+  {
+   "qid": "Q620280",
+   "fifa": "NIR",
+   "country": "Northern Ireland",
+   "association": "Irish Football Association",
+   "iso": "GB-NIR",
+   "acronyms": [
+    "IFA"
+   ],
+   "confederation": "UEFA",
+   "lat": 54.608,
+   "lng": -6.692,
+   "level": "association"
+  },
+  {
+   "qid": "Q474952",
+   "fifa": "NOR",
+   "country": "Norway",
+   "association": "Norwegian Football Federation",
+   "iso": "NO",
+   "acronyms": [
+    "NFF"
+   ],
+   "confederation": "UEFA",
+   "lat": 59.933,
+   "lng": 10.683,
+   "level": "association"
+  },
+  {
+   "qid": "Q1067949",
+   "fifa": "OMA",
+   "country": "Oman",
+   "association": "Oman Football Association",
+   "iso": "OM",
+   "acronyms": [
+    "OFA"
+   ],
+   "confederation": "AFC",
+   "lat": 21,
+   "lng": 57,
+   "level": "association"
+  },
+  {
+   "qid": "Q623614",
+   "fifa": "PAK",
+   "country": "Pakistan",
+   "association": "Pakistan Football Federation",
+   "iso": "PK",
+   "acronyms": [
+    "PFF"
+   ],
+   "confederation": "AFC",
+   "lat": 30,
+   "lng": 71,
+   "level": "association"
+  },
+  {
+   "qid": "Q623618",
+   "fifa": "PLE",
+   "country": "Palestine",
+   "association": "Palestinian Football Association",
+   "iso": "PS",
+   "acronyms": [
+    "PFA"
+   ],
+   "confederation": "AFC",
+   "lat": 32,
+   "lng": 35.25,
+   "level": "association"
+  },
+  {
+   "qid": "Q2287930",
+   "fifa": "PAN",
+   "country": "Panama",
+   "association": "Panamanian Football Federation",
+   "iso": "PA",
+   "acronyms": [
+    "FEPAFUT",
+    "Fepafut"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 8.617,
+   "lng": -80.367,
+   "level": "association"
+  },
+  {
+   "qid": "Q1485130",
+   "fifa": "PNG",
+   "country": "Papua New Guinea",
+   "association": "Papua New Guinea Football Association",
+   "iso": "PG",
+   "acronyms": [
+    "PNGFA",
+    "PNG"
+   ],
+   "confederation": "OFC",
+   "lat": -6.3,
+   "lng": 147,
+   "level": "association"
+  },
+  {
+   "qid": "Q517883",
+   "fifa": "PAR",
+   "country": "Paraguay",
+   "association": "Paraguayan Football Association",
+   "iso": "PY",
+   "acronyms": [
+    "APF"
+   ],
+   "confederation": "CONMEBOL",
+   "lat": -23.5,
+   "lng": -58,
+   "level": "association"
+  },
+  {
+   "qid": "Q680253",
+   "fifa": "PER",
+   "country": "Peru",
+   "association": "Peruvian Football Federation",
+   "iso": "PE",
+   "acronyms": [
+    "FPF"
+   ],
+   "confederation": "CONMEBOL",
+   "lat": -9.4,
+   "lng": -76,
+   "level": "association"
+  },
+  {
+   "qid": "Q623980",
+   "fifa": "PHI",
+   "country": "Philippines",
+   "association": "Philippine Football Federation",
+   "iso": "PH",
+   "confederation": "AFC",
+   "lat": 12,
+   "lng": 123,
+   "level": "association"
+  },
+  {
+   "qid": "Q309008",
+   "fifa": "POL",
+   "country": "Poland",
+   "association": "Polish Football Association",
+   "iso": "PL",
+   "confederation": "UEFA",
+   "lat": 52,
+   "lng": 19,
+   "level": "association"
+  },
+  {
+   "qid": "Q309005",
+   "fifa": "POR",
+   "country": "Portugal",
+   "association": "Portuguese Football Federation",
+   "iso": "PT",
+   "acronyms": [
+    "FPF"
+   ],
+   "confederation": "UEFA",
+   "lat": 38.7,
+   "lng": -9.183,
+   "level": "association"
+  },
+  {
+   "qid": "Q2605454",
+   "fifa": "PUR",
+   "country": "Puerto Rico",
+   "association": "Puerto Rican Football Federation",
+   "iso": "PR",
+   "acronyms": [
+    "FPF"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 18.25,
+   "lng": -66.5,
+   "level": "association"
+  },
+  {
+   "qid": "Q622313",
+   "fifa": "QAT",
+   "country": "Qatar",
+   "association": "Qatar Football Association",
+   "iso": "QA",
+   "acronyms": [
+    "QFA"
+   ],
+   "confederation": "AFC",
+   "lat": 25.27,
+   "lng": 51.213,
+   "level": "association"
+  },
+  {
+   "qid": "Q497782",
+   "fifa": "IRL",
+   "country": "Republic of Ireland",
+   "association": "Football Association of Ireland",
+   "iso": "IE",
+   "acronyms": [
+    "FAI"
+   ],
+   "confederation": "UEFA",
+   "lat": 53,
+   "lng": -8,
+   "level": "association"
+  },
+  {
+   "qid": "Q631999",
+   "fifa": "ROU",
+   "country": "Romania",
+   "association": "Romanian Football Federation",
+   "iso": "RO",
+   "confederation": "UEFA",
+   "lat": 46,
+   "lng": 25,
+   "level": "association"
+  },
+  {
+   "qid": "Q318386",
+   "fifa": "RUS",
+   "country": "Russia",
+   "association": "Russian Football Union",
+   "iso": "RU",
+   "confederation": "UEFA",
+   "lat": 66.417,
+   "lng": 94.25,
+   "level": "association"
+  },
+  {
+   "qid": "Q1194884",
+   "fifa": "RWA",
+   "country": "Rwanda",
+   "association": "Rwanda Football Federation",
+   "iso": "RW",
+   "confederation": "CAF",
+   "lat": -2,
+   "lng": 30,
+   "level": "association"
+  },
+  {
+   "qid": "Q2723332",
+   "fifa": "SKN",
+   "country": "Saint Kitts and Nevis",
+   "association": "St. Kitts and Nevis Football Association",
+   "iso": "KN",
+   "confederation": "CONCACAF",
+   "lat": 17.272,
+   "lng": -62.667,
+   "level": "association"
+  },
+  {
+   "qid": "Q2528803",
+   "fifa": "LCA",
+   "country": "Saint Lucia",
+   "association": "Saint Lucia Football Association",
+   "iso": "LC",
+   "acronyms": [
+    "SLFA"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 13.883,
+   "lng": -60.967,
+   "level": "association"
+  },
+  {
+   "qid": "Q2553207",
+   "fifa": "VIN",
+   "country": "Saint Vincent and the Grenadines",
+   "association": "Saint Vincent and the Grenadines Football Federation",
+   "iso": "VC",
+   "confederation": "CONCACAF",
+   "lat": 13.25,
+   "lng": -61.2,
+   "level": "association"
+  },
+  {
+   "qid": "Q2468903",
+   "fifa": "SAM",
+   "country": "Samoa",
+   "association": "Football Federation Samoa",
+   "iso": "WS",
+   "acronyms": [
+    "FFS"
+   ],
+   "confederation": "OFC",
+   "lat": -13.745,
+   "lng": -172.217,
+   "level": "association"
+  },
+  {
+   "qid": "Q125658",
+   "fifa": "SMR",
+   "country": "San Marino",
+   "association": "San Marino Football Federation",
+   "iso": "SM",
+   "confederation": "UEFA",
+   "lat": 43.933,
+   "lng": 12.467,
+   "level": "association"
+  },
+  {
+   "qid": "Q1193445",
+   "fifa": "STP",
+   "country": "São Tomé and Príncipe",
+   "association": "Federação Santomense de Futebol",
+   "iso": "ST",
+   "confederation": "CAF",
+   "lat": 0.317,
+   "lng": 6.6,
+   "level": "association"
+  },
+  {
+   "qid": "Q621084",
+   "fifa": "KSA",
+   "country": "Saudi Arabia",
+   "association": "Saudi Football Federation",
+   "iso": "SA",
+   "acronyms": [
+    "SAFF"
+   ],
+   "confederation": "AFC",
+   "lat": 23.717,
+   "lng": 44.117,
+   "level": "association"
+  },
+  {
+   "qid": "Q478320",
+   "fifa": "SCO",
+   "country": "Scotland",
+   "association": "Scottish Football Association",
+   "iso": "GB-SCT",
+   "confederation": "UEFA",
+   "lat": 57,
+   "lng": -5,
+   "level": "association"
+  },
+  {
+   "qid": "Q1084958",
+   "fifa": "SEN",
+   "country": "Senegal",
+   "association": "Senegalese Football Federation",
+   "iso": "SN",
+   "confederation": "CAF",
+   "lat": 14.367,
+   "lng": -14.283,
+   "level": "association"
+  },
+  {
+   "qid": "Q754433",
+   "fifa": "SRB",
+   "country": "Serbia",
+   "association": "Football Association of Serbia",
+   "iso": "RS",
+   "confederation": "UEFA",
+   "lat": 43.95,
+   "lng": 20.933,
+   "level": "association"
+  },
+  {
+   "qid": "Q614839",
+   "fifa": "SEY",
+   "country": "Seychelles",
+   "association": "Seychelles Football Federation",
+   "iso": "SC",
+   "acronyms": [
+    "SFF"
+   ],
+   "confederation": "CAF",
+   "lat": -7.1,
+   "lng": 52.767,
+   "level": "association"
+  },
+  {
+   "qid": "Q1082194",
+   "fifa": "SLE",
+   "country": "Sierra Leone",
+   "association": "Sierra Leone Football Association",
+   "iso": "SL",
+   "confederation": "CAF",
+   "lat": 8.5,
+   "lng": -12.1,
+   "level": "association"
+  },
+  {
+   "qid": "Q625707",
+   "fifa": "SGP",
+   "country": "Singapore",
+   "association": "Football Association of Singapore",
+   "iso": "SG",
+   "confederation": "AFC",
+   "lat": 1.3,
+   "lng": 103.8,
+   "level": "association"
+  },
+  {
+   "qid": "Q685899",
+   "fifa": "SVK",
+   "country": "Slovakia",
+   "association": "Slovak Football Association",
+   "iso": "SK",
+   "acronyms": [
+    "SFZ"
+   ],
+   "confederation": "UEFA",
+   "lat": 48.7,
+   "lng": 19.7,
+   "level": "association"
+  },
+  {
+   "qid": "Q725496",
+   "fifa": "SVN",
+   "country": "Slovenia",
+   "association": "Football Association of Slovenia",
+   "iso": "SI",
+   "acronyms": [
+    "NZS"
+   ],
+   "confederation": "UEFA",
+   "lat": 46,
+   "lng": 15,
+   "level": "association"
+  },
+  {
+   "qid": "Q1469434",
+   "fifa": "SOL",
+   "country": "Solomon Islands",
+   "association": "Solomon Islands Football Federation",
+   "iso": "SB",
+   "acronyms": [
+    "SIFF"
+   ],
+   "confederation": "OFC",
+   "lat": -9.467,
+   "lng": 159.817,
+   "level": "association"
+  },
+  {
+   "qid": "Q524193",
+   "fifa": "SOM",
+   "country": "Somalia",
+   "association": "Somali Football Federation",
+   "iso": "SO",
+   "acronyms": [
+    "SFF"
+   ],
+   "confederation": "CAF",
+   "lat": 6,
+   "lng": 47,
+   "level": "association"
+  },
+  {
+   "qid": "Q833624",
+   "fifa": "RSA",
+   "country": "South Africa",
+   "association": "South African Football Association",
+   "iso": "ZA",
+   "acronyms": [
+    "SAFA"
+   ],
+   "confederation": "CAF",
+   "lat": -29,
+   "lng": 24,
+   "level": "association"
+  },
+  {
+   "qid": "Q495584",
+   "fifa": "KOR",
+   "country": "South Korea",
+   "association": "Korea Football Association",
+   "iso": "KR",
+   "confederation": "AFC",
+   "lat": 36,
+   "lng": 128,
+   "level": "association"
+  },
+  {
+   "qid": "Q3040716",
+   "fifa": "SSD",
+   "country": "South Sudan",
+   "association": "South Sudan Football Association",
+   "iso": "SS",
+   "confederation": "CAF",
+   "lat": 7,
+   "lng": 30,
+   "level": "association"
+  },
+  {
+   "qid": "Q207615",
+   "fifa": "ESP",
+   "country": "Spain",
+   "association": "Royal Spanish Football Federation",
+   "iso": "ES",
+   "acronyms": [
+    "RFEF"
+   ],
+   "confederation": "UEFA",
+   "lat": 40.2,
+   "lng": -3.5,
+   "level": "association"
+  },
+  {
+   "qid": "Q625729",
+   "fifa": "SRI",
+   "country": "Sri Lanka",
+   "association": "Football Federation of Sri Lanka",
+   "iso": "LK",
+   "acronyms": [
+    "FFSL"
+   ],
+   "confederation": "AFC",
+   "lat": 7,
+   "lng": 81,
+   "level": "association"
+  },
+  {
+   "qid": "Q1085464",
+   "fifa": "SDN",
+   "country": "Sudan",
+   "association": "Sudan Football Association",
+   "iso": "SD",
+   "acronyms": [
+    "SFA"
+   ],
+   "confederation": "CAF",
+   "lat": 15,
+   "lng": 32,
+   "level": "association"
+  },
+  {
+   "qid": "Q1854491",
+   "fifa": "SUR",
+   "country": "Suriname",
+   "association": "Surinamese Football Association",
+   "iso": "SR",
+   "acronyms": [
+    "SVB"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 4,
+   "lng": -56,
+   "level": "association"
+  },
+  {
+   "qid": "Q455428",
+   "fifa": "SWE",
+   "country": "Sweden",
+   "association": "Swedish Football Association",
+   "iso": "SE",
+   "confederation": "UEFA",
+   "lat": 61,
+   "lng": 15,
+   "level": "association"
+  },
+  {
+   "qid": "Q474181",
+   "fifa": "SUI",
+   "country": "Switzerland",
+   "association": "Swiss Football Association",
+   "iso": "CH",
+   "confederation": "UEFA",
+   "lat": 46.799,
+   "lng": 8.232,
+   "level": "association"
+  },
+  {
+   "qid": "Q1186646",
+   "fifa": "SYR",
+   "country": "Syria",
+   "association": "Syrian Football Association",
+   "iso": "SY",
+   "acronyms": [
+    "SFA",
+    "FASF"
+   ],
+   "confederation": "AFC",
+   "lat": 35.217,
+   "lng": 38.583,
+   "level": "association"
+  },
+  {
+   "qid": "Q2082037",
+   "fifa": "TAH",
+   "country": "Tahiti",
+   "association": "Tahitian Football Federation",
+   "iso": "PF",
+   "acronyms": [
+    "FTF"
+   ],
+   "confederation": "OFC",
+   "lat": -17.7,
+   "lng": -149.4,
+   "level": "association"
+  },
+  {
+   "qid": "Q625726",
+   "fifa": "TJK",
+   "country": "Tajikistan",
+   "association": "Tajikistan Football Federation",
+   "iso": "TJ",
+   "acronyms": [
+    "FFT"
+   ],
+   "confederation": "AFC",
+   "lat": 38.583,
+   "lng": 71.367,
+   "level": "association"
+  },
+  {
+   "qid": "Q962067",
+   "fifa": "TAN",
+   "country": "Tanzania",
+   "association": "Tanzania Football Federation",
+   "iso": "TZ",
+   "confederation": "CAF",
+   "lat": -6.307,
+   "lng": 34.854,
+   "level": "association"
+  },
+  {
+   "qid": "Q1318927",
+   "fifa": "THA",
+   "country": "Thailand",
+   "association": "Football Association of Thailand",
+   "iso": "TH",
+   "acronyms": [
+    "FAT"
+   ],
+   "confederation": "AFC",
+   "lat": 14,
+   "lng": 101,
+   "level": "association"
+  },
+  {
+   "qid": "Q625723",
+   "fifa": "TLS",
+   "country": "Timor-Leste",
+   "association": "Federação de Futebol de Timor-Leste",
+   "iso": "TL",
+   "confederation": "AFC",
+   "lat": -8.967,
+   "lng": 125.75,
+   "level": "association"
+  },
+  {
+   "qid": "Q1048509",
+   "fifa": "TOG",
+   "country": "Togo",
+   "association": "Fédération Togolaise de Football",
+   "iso": "TG",
+   "confederation": "CAF",
+   "lat": 8.25,
+   "lng": 1.183,
+   "level": "association"
+  },
+  {
+   "qid": "Q1937479",
+   "fifa": "TGA",
+   "country": "Tonga",
+   "association": "Tonga Football Association",
+   "iso": "TO",
+   "acronyms": [
+    "TFA"
+   ],
+   "confederation": "OFC",
+   "lat": -20.588,
+   "lng": -174.81,
+   "level": "association"
+  },
+  {
+   "qid": "Q1193426",
+   "fifa": "TRI",
+   "country": "Trinidad and Tobago",
+   "association": "Trinidad and Tobago Football Association",
+   "iso": "TT",
+   "acronyms": [
+    "TTFA"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 10.667,
+   "lng": -61.517,
+   "level": "association"
+  },
+  {
+   "qid": "Q921559",
+   "fifa": "TUN",
+   "country": "Tunisia",
+   "association": "Tunisian Football Federation",
+   "iso": "TN",
+   "acronyms": [
+    "FTF"
+   ],
+   "confederation": "CAF",
+   "lat": 34,
+   "lng": 10,
+   "level": "association"
+  },
+  {
+   "qid": "Q726183",
+   "fifa": "TUR",
+   "country": "Turkey",
+   "association": "Turkish Football Federation",
+   "iso": "TR",
+   "acronyms": [
+    "TFF"
+   ],
+   "confederation": "UEFA",
+   "lat": 39,
+   "lng": 36,
+   "level": "association"
+  },
+  {
+   "qid": "Q625805",
+   "fifa": "TKM",
+   "country": "Turkmenistan",
+   "association": "Football Federation of Turkmenistan",
+   "iso": "TM",
+   "acronyms": [
+    "FFT"
+   ],
+   "confederation": "AFC",
+   "lat": 39,
+   "lng": 60,
+   "level": "association"
+  },
+  {
+   "qid": "Q255772",
+   "fifa": "TCA",
+   "country": "Turks and Caicos Islands",
+   "association": "Turks and Caicos Islands Football Association",
+   "iso": "TC",
+   "confederation": "CONCACAF",
+   "lat": 21.78,
+   "lng": -71.8,
+   "level": "association"
+  },
+  {
+   "qid": "Q2604237",
+   "fifa": "VIR",
+   "country": "U.S. Virgin Islands",
+   "association": "U.S. Virgin Islands Soccer Federation",
+   "iso": "VI",
+   "acronyms": [
+    "USVISA"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 18.333,
+   "lng": -64.833,
+   "level": "association"
+  },
+  {
+   "qid": "Q375485",
+   "fifa": "UGA",
+   "country": "Uganda",
+   "association": "Federation of Uganda Football Associations",
+   "iso": "UG",
+   "acronyms": [
+    "FUFA"
+   ],
+   "confederation": "CAF",
+   "lat": 1.28,
+   "lng": 32.39,
+   "level": "association"
+  },
+  {
+   "qid": "Q140486",
+   "fifa": "UKR",
+   "country": "Ukraine",
+   "association": "Ukrainian Association of Football",
+   "iso": "UA",
+   "confederation": "UEFA",
+   "lat": 49,
+   "lng": 32,
+   "level": "association"
+  },
+  {
+   "qid": "Q944522",
+   "fifa": "UAE",
+   "country": "United Arab Emirates",
+   "association": "United Arab Emirates Football Association",
+   "iso": "AE",
+   "acronyms": [
+    "UAEFA"
+   ],
+   "confederation": "AFC",
+   "lat": 24.4,
+   "lng": 54.3,
+   "level": "association"
+  },
+  {
+   "qid": "Q222131",
+   "fifa": "USA",
+   "country": "United States",
+   "association": "United States Soccer Federation",
+   "iso": "US",
+   "acronyms": [
+    "USSF"
+   ],
+   "confederation": "CONCACAF",
+   "lat": 39.828,
+   "lng": -98.579,
+   "level": "association"
+  },
+  {
+   "qid": "Q722749",
+   "fifa": "URU",
+   "country": "Uruguay",
+   "association": "Uruguayan Football Association",
+   "iso": "UY",
+   "acronyms": [
+    "AUF"
+   ],
+   "confederation": "CONMEBOL",
+   "lat": -33,
+   "lng": -56,
+   "level": "association"
+  },
+  {
+   "qid": "Q621112",
+   "fifa": "UZB",
+   "country": "Uzbekistan",
+   "association": "Uzbekistan Football Association",
+   "iso": "UZ",
+   "confederation": "AFC",
+   "lat": 41,
+   "lng": 66,
+   "level": "association"
+  },
+  {
+   "qid": "Q1067795",
+   "fifa": "VAN",
+   "country": "Vanuatu",
+   "association": "Vanuatu Football Federation",
+   "iso": "VU",
+   "acronyms": [
+    "VFF"
+   ],
+   "confederation": "OFC",
+   "lat": -16.633,
+   "lng": 168.017,
+   "level": "association"
+  },
+  {
+   "qid": "Q849148",
+   "fifa": "VEN",
+   "country": "Venezuela",
+   "association": "Venezuelan Football Federation",
+   "iso": "VE",
+   "acronyms": [
+    "FVF"
+   ],
+   "confederation": "CONMEBOL",
+   "lat": 8,
+   "lng": -67,
+   "level": "association"
+  },
+  {
+   "qid": "Q849362",
+   "fifa": "VIE",
+   "country": "Vietnam",
+   "association": "Vietnam Football Federation",
+   "iso": "VN",
+   "acronyms": [
+    "VFF"
+   ],
+   "confederation": "AFC",
+   "lat": 16,
+   "lng": 108,
+   "level": "association"
+  },
+  {
+   "qid": "Q275173",
+   "fifa": "WAL",
+   "country": "Wales",
+   "association": "Football Association of Wales",
+   "iso": "GB-WLS",
+   "acronyms": [
+    "FAW"
+   ],
+   "confederation": "UEFA",
+   "lat": 52.35,
+   "lng": -3.633,
+   "level": "association"
+  },
+  {
+   "qid": "Q625790",
+   "fifa": "YEM",
+   "country": "Yemen",
+   "association": "Yemen Football Association",
+   "iso": "YE",
+   "acronyms": [
+    "YFA"
+   ],
+   "confederation": "AFC",
+   "lat": 15.5,
+   "lng": 48,
+   "level": "association"
+  },
+  {
+   "qid": "Q765566",
+   "fifa": "ZAM",
+   "country": "Zambia",
+   "association": "Football Association of Zambia",
+   "iso": "ZM",
+   "acronyms": [
+    "FAZ"
+   ],
+   "confederation": "CAF",
+   "lat": -14,
+   "lng": 28,
+   "level": "association"
+  },
+  {
+   "qid": "Q931302",
+   "fifa": "ZIM",
+   "country": "Zimbabwe",
+   "association": "Zimbabwe Football Association",
+   "iso": "ZW",
+   "acronyms": [
+    "ZIFA"
+   ],
+   "confederation": "CAF",
+   "lat": -19,
+   "lng": 30,
+   "level": "association"
+  }
+ ]
+}

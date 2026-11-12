@@ -31,6 +31,8 @@ __pycache__/
 /bench/data
 # the same for the measure of the positions (its four scorecards were committed before, they stay tracked)
 /bench/federations/data
+# the census, the labels and the runs of the precision study of the FIFA map (the gold set kept for good goes to tests/regression)
+/bench/fifa/data
 
 # the documentation site: its venv and the site built (pnpm run docs, docs:build)
 .venv-docs/

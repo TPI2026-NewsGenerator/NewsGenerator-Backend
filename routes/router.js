@@ -16,6 +16,7 @@ import customSearchRouter from './customsearch-router.js';
 import profileRouter from './profile-router.js';
 import briefingRouter from './briefing-router.js';
 import affairRouter from './affair-router.js';
+import fifaRouter from './fifa-router.js';
 import entityRouter from './entity-router.js';
 import mailRouter from './mail-router.js';
 import v1Router from './v1-router.js';
@@ -35,6 +36,8 @@ router.use('/customsearch', customSearchRouter);
 router.use('/profile', profileRouter);
 router.use('/briefing', briefingRouter);
 router.use('/affairs', affairRouter);
+// the map "The FIFA presidency": the position of the associations on the candidates (the session of a reader, see fifa-router.js)
+router.use('/fifa', fifaRouter);
 router.use('/entities', entityRouter);
 router.use('/mails', mailRouter);
 // for another system, by key (not by session): /api/v1/subjects, /api/v1/positions

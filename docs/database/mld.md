@@ -479,6 +479,78 @@ any other, by its address.
 ## Relations
 
 ```
+### The map of the FIFA presidency
+
+Added 12.11.2026 by `add_fifa_map.sql`, to the twenty-five above. See [The FIFA presidency map](../briefing/fifa-map/README.md).
+
+#### fifa_subjects
+| Column | Type | |
+|---|---|---|
+| qid | text | PK — the item of Wikidata of the person (the incumbent, then each candidate a reader adds) |
+| name | text | NOT NULL |
+| terms | text[] | NOT NULL — the words of the person a sentence must hold to be read ("infantino") |
+| status | text | NOT NULL, CHECK in (`incumbent`, `declared`, `rumoured`, `withdrawn`) |
+| state | text | NOT NULL, CHECK in (`computing`, `ready`) — `computing` while the 30 days of news are being read |
+| color_index | integer | NOT NULL, CHECK between 1 and 6 — one colour each on the page |
+| created_by | integer | null, FK to `users` ON DELETE SET NULL |
+| created_at, checked_at, backfilled_at | timestamptz | the news created since `checked_at` are the ones read next |
+
+#### fifa_signals
+| Column | Type | |
+|---|---|---|
+| id | integer | PK |
+| subject_qid | text | NOT NULL, FK to `fifa_subjects` ON DELETE CASCADE |
+| member_qid | text | NOT NULL — the association or the confederation (`services/utils/fifa-members.json`), no foreign key |
+| hash | text | NOT NULL — of the member and the sentence; UNIQUE with the two above |
+| certainty | text | NOT NULL, CHECK in (`established`, `uncertain`, `discarded`) — a position that colours / about the election but no position (badge, no colour) / read and left out |
+| uncertain_reason | text | NOT NULL, default '' — `not_binding`, `rival`, `request`, `reported`, `denied`, `past`, `ambiguous`, `readings_disagree`, `unconfirmed`, `other` |
+| stance, level, mark, speaker_kind, speaker | text | NOT NULL — for/against/none, declared/probable/none, official/reported/denied, who speaks |
+| matched, sentence, title, description, quote | text | the passage copied whole: the news are purged after 30 days and the history of a position goes on |
+| lang, url, medium | text | null |
+| published_at | timestamptz | NOT NULL |
+| news_count, media_count | integer | NOT NULL, default 1 — the news and the media that wrote this sentence |
+| read_by | text[] | the models that read it |
+| confirmed | boolean | NOT NULL, default true — false when the second reading failed: read again at the next run |
+| created_at | timestamptz | NOT NULL, default `now()` |
+
+Indexes on `(member_qid, subject_qid)` and, partial, on the unconfirmed ones.
+
+#### fifa_votes
+| Column | Type | |
+|---|---|---|
+| id | integer | PK |
+| user_id | integer | NOT NULL, FK to `users` ON DELETE CASCADE |
+| subject_qid | text | NOT NULL, FK to `fifa_subjects` ON DELETE CASCADE |
+| member_qid | text | NOT NULL |
+| value | text | NOT NULL, CHECK in (`for`, `against`, `unknown`, `withdraw`) |
+| note | text | NOT NULL, default '' |
+| created_at | timestamptz | NOT NULL, default `now()` |
+
+Only added. The vote that decides is the latest of each reader who has not taken it back, the newest of those.
+
+#### fifa_leaders
+| Column | Type | |
+|---|---|---|
+| member_qid | text | PK |
+| person_qid | text | null |
+| name | text | NOT NULL |
+| role | text | NOT NULL, default 'President' |
+| since | date | null |
+| checked_at | timestamptz | NOT NULL, default `now()` — replaced once a day from Wikidata (P488) |
+
+#### fifa_audits
+| Column | Type | |
+|---|---|---|
+| id | integer | PK |
+| made_at | timestamptz | NOT NULL, default `now()` |
+| auditor | text | NOT NULL — the third model that read the sample again |
+| sampled, agreed, unreadable | integer | NOT NULL — the established signals read again, the ones the auditor agrees with, the ones it gave nothing for |
+| votes_total, votes_contradicting | integer | NOT NULL, default 0 — the votes of the readers, and the ones that set the other side than the news |
+| verdict | text | NOT NULL, CHECK in (`ok`, `warning`, `too_few`) |
+| details | jsonb | NOT NULL — the disagreements, the votes against the news, the tokens |
+
+Once a week, see [The FIFA presidency map](../briefing/fifa-map/README.md).
+
 roles          1 ──< N  users
 users          1 ──< N  custom_searches   1 ──< N  custom_searches_has_categories  N >── 1  categories
 users          1 ──< N  user_profiles
