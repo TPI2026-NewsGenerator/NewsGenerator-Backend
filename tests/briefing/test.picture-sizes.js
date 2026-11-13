@@ -15,7 +15,7 @@ jest.unstable_mockModule('../../services/utils/public-url.js', () => ({
         return new URL(value);
     }),
 }));
-const {dimensionsOf, isStanding, sizeOf, sizesOf} = await import('../../services/utils/picture-sizes.js');
+const {dimensionsOf, forbidsEmbedding, isStanding, sizeOf, sizesOf, whyNotShown} = await import('../../services/utils/picture-sizes.js');
 
 const png = (width, height) => {
     const bytes = Buffer.alloc(33);
@@ -123,6 +123,83 @@ describe('sizeOf', () => {
     it('should give undefined when the connection failed: not told, not dead', async () => {
         globalThis.fetch.mockRejectedValue(new TypeError('fetch failed'));
         expect(await sizeOf('https://cdn.example/a.jpg')).toBeUndefined();
+    });
+
+    it('should give null for a picture its site forbids the other sites to show: a script gets it (a 200, an image), the browser of the reader blocks it', async () => {
+        // editor.kosovapress.com, card 12 of the briefing of Enzo of 13.11.2026: Cross-Origin-Resource-Policy: same-site
+        for (const policy of ['same-site', 'same-origin', 'Same-Site']) {
+            globalThis.fetch.mockResolvedValueOnce(answering(jpeg(900, 506), {headers: {'cross-origin-resource-policy': policy, 'content-type': 'image/jpeg'}}));
+            expect(await sizeOf(`https://editor.example/${policy}.jpg`)).toBeNull();
+        }
+        globalThis.fetch.mockResolvedValueOnce(answering(jpeg(900, 506), {headers: {'cross-origin-resource-policy': 'cross-origin'}}));
+        expect(await sizeOf('https://cdn.example/open.jpg')).toEqual({width: 900, height: 506});
+        globalThis.fetch.mockResolvedValueOnce(answering(jpeg(900, 506), {headers: {'content-type': 'image/jpeg'}}));
+        expect(await sizeOf('https://cdn.example/none.jpg')).toEqual({width: 900, height: 506});
+    });
+});
+
+describe('the redirects of a picture', () => {
+    const redirect = (to, headers = {}) => new Response(null, {status: 302, headers: {location: to, ...headers}});
+
+    it('should see the policy that forbids the other sites on the redirect, not only on the picture it leads to (editor.kosovapress.com, 13.11.2026)', async () => {
+        // the address answers a 302 with Cross-Origin-Resource-Policy: same-site and sends the browser to a storage host whose picture has no such header
+        globalThis.fetch.mockResolvedValueOnce(redirect('https://storage.example/2026/11/12.jpg?X-Amz=1', {'cross-origin-resource-policy': 'same-site'}));
+        expect(await sizeOf('https://editor.example/api/media/12.jpg')).toBeNull();
+        expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+        globalThis.fetch.mockResolvedValueOnce(redirect('https://storage.example/2026/11/12.jpg?X-Amz=1', {'cross-origin-resource-policy': 'same-site'}));
+        expect(await whyNotShown('https://editor.example/api/media/12.jpg')).toBe('its site forbids the other sites to show it (Cross-Origin-Resource-Policy: same-site)');
+    });
+
+    it('should follow a redirect with no such policy to the picture, one answer at a time, each address a public one', async () => {
+        globalThis.fetch.mockResolvedValueOnce(redirect('https://storage.example/a.jpg')).mockResolvedValueOnce(answering(jpeg(1200, 800)));
+        expect(await sizeOf('https://cdn.example/a.jpg')).toEqual({width: 1200, height: 800});
+        expect(globalThis.fetch.mock.calls.map(call => call[0])).toEqual(['https://cdn.example/a.jpg', 'https://storage.example/a.jpg']);
+        expect(globalThis.fetch.mock.calls[0][1]).toMatchObject({redirect: 'manual'});
+        // a relative address, and a redirect to a private one
+        globalThis.fetch.mockResolvedValueOnce(redirect('/media/b.jpg')).mockResolvedValueOnce(answering(jpeg(640, 480)));
+        expect(await sizeOf('https://cdn.example/b')).toEqual({width: 640, height: 480});
+        globalThis.fetch.mockResolvedValueOnce(redirect('http://private.example/inside.jpg'));
+        expect(await sizeOf('https://cdn.example/c.jpg')).toBeNull();
+        globalThis.fetch.mockResolvedValueOnce(redirect('http://private.example/inside.jpg'));
+        expect(await whyNotShown('https://cdn.example/c.jpg')).toBe('its address is not a public one');
+    });
+
+    it('should give up on a chain that never ends', async () => {
+        globalThis.fetch.mockImplementation(async () => redirect('https://cdn.example/again.jpg'));
+        expect(await sizeOf('https://cdn.example/loop.jpg')).toBeNull();
+        expect(await whyNotShown('https://cdn.example/loop.jpg')).toBe('the address redirects too many times');
+    });
+});
+
+describe('forbidsEmbedding', () => {
+    it('should name the policy that keeps the other sites from showing a picture, and nothing for the others', () => {
+        const of = (policy) => forbidsEmbedding(new Response('x', {headers: policy === undefined ? {} : {'cross-origin-resource-policy': policy}}));
+        expect([of('same-site'), of('same-origin'), of(' SAME-ORIGIN ')]).toEqual(['same-site', 'same-origin', 'same-origin']);
+        expect([of('cross-origin'), of(''), of(undefined)]).toEqual([null, null, null]);
+    });
+});
+
+describe('whyNotShown', () => {
+    it('should say nothing of a picture a browser shows', async () => {
+        globalThis.fetch.mockResolvedValue(answering(jpeg(1200, 800)));
+        expect(await whyNotShown('https://cdn.example/a.jpg')).toBeNull();
+    });
+
+    it('should say in words why a browser would show none: a site that forbids it, an error, a page that is no image, a private address', async () => {
+        globalThis.fetch.mockResolvedValueOnce(answering(jpeg(900, 506), {headers: {'cross-origin-resource-policy': 'same-site'}}));
+        expect(await whyNotShown('https://editor.example/a.jpg')).toBe('its site forbids the other sites to show it (Cross-Origin-Resource-Policy: same-site)');
+        globalThis.fetch.mockResolvedValueOnce(answering('gone', {status: 404}));
+        expect(await whyNotShown('https://cdn.example/gone.jpg')).toBe('the address answers 404');
+        globalThis.fetch.mockResolvedValueOnce(answering('<!doctype html><html><body>Not an image at all, a page</body></html>'));
+        expect(await whyNotShown('https://cdn.example/page.jpg')).toBe('what the address gives is no image');
+        expect(await whyNotShown('http://private.example/a.jpg')).toBe('its address is not a public one');
+    });
+
+    it('should say nothing, not that it is dead, for a refusal aimed at robots and for a connection that failed', async () => {
+        globalThis.fetch.mockResolvedValueOnce(answering('<html>Just a moment...</html>', {status: 403, headers: {'cf-mitigated': 'challenge'}}));
+        expect(await whyNotShown('https://pictures.example/challenged')).toBeUndefined();
+        globalThis.fetch.mockRejectedValueOnce(new TypeError('fetch failed'));
+        expect(await whyNotShown('https://cdn.example/slow.jpg')).toBeUndefined();
     });
 });
 

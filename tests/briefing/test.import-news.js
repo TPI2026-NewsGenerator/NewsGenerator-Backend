@@ -42,7 +42,7 @@ jest.unstable_mockModule('../../services/utils/card-names.js', () => ({namesAndC
 const officialSourcesOf = jest.fn(async (cards) => new Map(cards.map(card => [card.id, [{party: 'SBB', title: 'Statement', url: 'https://sbb.example/s', channel: 'website'}]])));
 jest.unstable_mockModule('../../services/utils/official-sources.js', () => ({officialSourcesOf}));
 jest.unstable_mockModule('../../services/utils/illustrations.js', () => ({illustrationsOf: jest.fn(async () => new Map())}));
-jest.unstable_mockModule('../../services/utils/picture-sizes.js', () => ({sizesOf: jest.fn(async () => new Map()), SHARP_WIDTH: 560, PICTURE_HEADERS: {}, isStanding: () => false}));
+jest.unstable_mockModule('../../services/utils/picture-sizes.js', () => ({sizesOf: jest.fn(async () => new Map()), whyNotShown: jest.fn(async () => null), SHARP_WIDTH: 560, PICTURE_HEADERS: {}, isStanding: () => false}));
 const analysesOf = jest.fn(async (cards) => ({picked: cards.map(card => ({storyId: card.storyId, reason: 'a decisive news'})),
     cards: Object.fromEntries(cards.map(card => [card.storyId, {why: ['Why it matters.'], next: [], dropped: 0}]))}));
 const cardAnalysis = await import('../../services/utils/card-analysis.js');

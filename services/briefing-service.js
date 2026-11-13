@@ -35,7 +35,7 @@ import {evolvedStories, REPEAT_HOURS, shownStories, withoutRepeats} from "./util
 import {notOldNews} from "./utils/old-news.js";
 import {readerLanguage, scriptLanguage, writtenIn} from "./utils/language.js";
 import {VERSION_DAYS, areVersions, forThePage, idsOf, restoredCard, sameCard, swappedCard, versionsOfCards} from "./utils/card-versions.js";
-import {logBriefingChecks} from "./utils/briefing-checks.js";
+import {logBriefingChecks, logPictureChecks} from "./utils/briefing-checks.js";
 import {proofreadCards} from "./utils/proofread.js";
 import {foldCards, foldInto, sameNewsGroups} from "./utils/card-merge.js";
 import {SENT_DAYS, SENT_LIKENESS, receivedCards, repeatedCards, withoutSentRepeats} from "./utils/sent-repeats.js";
@@ -1137,6 +1137,8 @@ export const write = async (briefingId, profileId, hours, size = MAX_BRIEFING, t
     if (briefingId) analyze(briefingId, written, articles, language);
     // the checks of the cards run on what the reader will see, named in the log: the reader is not to be the first to find what a check finds
     logBriefingChecks(label, written, language);
+    // and the pictures that load, which needs the network: asked in the background, said in the log when it is done, never awaited (not in the tests, which have no network to ask)
+    if (process.env.NODE_ENV !== 'test') logPictureChecks(label, written).catch(() => {});
     return written;
 };
 

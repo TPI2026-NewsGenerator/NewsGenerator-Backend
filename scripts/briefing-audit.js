@@ -21,7 +21,7 @@ import {ProfileModel} from '../models/profile-model.js';
 import {MentionModel} from '../models/mention-model.js';
 import {NO_COUNTRY_BECAUSE, countryInfoOf, whyNoCountry} from '../services/utils/countries.js';
 import {lacksCapital, lowerFirst, capitalWordsOfCard} from '../services/utils/card-analysis.js';
-import {cardChecks, short} from '../services/utils/briefing-checks.js';
+import {cardChecks, pictureLoadChecks, short} from '../services/utils/briefing-checks.js';
 import {UNCHECKED} from '../services/utils/original-marks.js';
 import {readerLanguage, writtenIn} from '../services/utils/language.js';
 
@@ -52,6 +52,8 @@ const foreign = items.filter(item => item.language && item.language !== language
 const angles = items.flatMap(item => (item.angles ?? []).map(angle => ({...angle, card: item.storyId})));
 const checks = [
     ...cardChecks(items, language),
+    // the pictures a browser on the page of a reader would show none of (the network: a request for each picture)
+    ...await pictureLoadChecks(items),
     ['no "If" of the analysis keeps a capital that is no name', Object.entries(row.analysis?.cards ?? {}).flatMap(([storyId, card]) => {
         const known = capitalWordsOfCard(items.find(item => String(item.storyId) === storyId));
         return (card.next ?? []).filter(line => lowerFirst(line.if, known) !== line.if).map(line => `If ${short(line.if, 50)}`);

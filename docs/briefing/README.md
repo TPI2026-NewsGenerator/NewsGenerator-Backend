@@ -165,6 +165,14 @@ cards, the share of the cards with their names, countries, angles and picture ag
 country, then what the AI readings of the cards did (the pieces the proofreading took out, the names with no item left out as no names), so that each
 is read and, if the rules did not know it, becomes a case. A line of the log that fails is a case for the corpus of `tests/regression`, then a rule of the code.
 
+**The pictures that load** (13.11.2026). "Every card has a picture" only sees that an address is there. The picture of the card 12 of the briefing of Enzo of 13.11.2026 was there, and a script fetched it (200, an image),
+but the browser blocked it: its site answers a redirect with `Cross-Origin-Resource-Policy: same-site`, which forbids the other sites to show the picture, and the picture it leads to has no such header, so a client that
+follows the redirect by itself never saw it. `services/utils/picture-sizes.js` now follows the redirects one by one (each address a public one, five at most) and counts a policy `same-origin` or `same-site` on ANY answer of the
+chain as a picture a browser shows none of (`sizeOf` gives null, so the card takes another picture of its articles, or its illustration); `whyNotShown` says why in words. The audit has a check that needs the network, `pictureLoadChecks`:
+"every picture a card shows loads on the page of a reader", one request for each picture (eight at a time), run by `scripts/briefing-audit.js` and, in the background after every briefing the server writes (never awaited, never in the
+tests), by `logPictureChecks`: `Briefing 1407: audit: every picture a card shows loads on the page of a reader (1: Law for sponsor changes after 32 years: its site forbids the other sites to show it (Cross-Origin-Resource-Policy: same-site))`.
+The addresses that could not be told (too slow, a refusal aimed at robots) are said, not counted as loading. Proved in a browser: 54 of the 55 pictures of the three briefings of the day load, that one did not.
+
 ## The proofreading before the reader
 
 The same problems came back since the start of the project (a translation not done, a word nobody wants in a title or in the key points): every

@@ -71,6 +71,34 @@ const isImage = (bytes) => bytes.length >= 4 && (bytes.readUInt32BE(0) === 0x895
 // get past the wall: it does not know, and says so
 const ROBOT_REFUSALS = new Set([401, 403, 429]);
 
+// A site can forbid the others to show its pictures: Cross-Origin-Resource-Policy: same-origin or same-site. A script fetches such a picture all the same (a 200, an image), but the
+// browser on the page of the reader BLOCKS it, and the card shows none. Found on the card 12 of the briefing of Enzo of 13.11.2026 (editor.kosovapress.com, same-site): 1 of the 55
+// pictures of the three briefings of the day. The picture is then one a browser would show none of (null in sizeOf, a reason in whyNotShown)
+export const forbidsEmbedding = (response) => {
+    const policy = String(response.headers.get('cross-origin-resource-policy') ?? '').trim().toLowerCase();
+    return ['same-origin', 'same-site'].includes(policy) ? policy : null;
+};
+
+// The picture at this address, the redirects followed ONE BY ONE: {response, policy}, policy the Cross-Origin-Resource-Policy that forbids the other sites to show it, on ANY answer of
+// the chain, not only the last: a browser checks every one. The address of editor.kosovapress.com answers a 302 with "same-site" and sends the browser to a storage host whose picture has
+// no such header: followed by fetch itself the picture looked fine, and the card of Enzo of 13.11.2026 showed none. response is null for a chain too long (more than 5 redirects). Every address
+// of the chain is checked to be a public one
+const MAX_REDIRECTS = 5;
+const pictureChain = async (url, signal) => {
+    let current = url;
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+        await assertPublicUrl(current);
+        const response = await fetch(current, {headers: HEADERS, signal, redirect: 'manual'});
+        const policy = forbidsEmbedding(response);
+        if (policy) return {response, policy};
+        const location = response.status >= 300 && response.status < 400 ? response.headers.get('location') : null;
+        if (!location) return {response, policy: null};
+        await response.body?.cancel();
+        current = new URL(location, current).href;
+    }
+    return {response: null, policy: null};
+};
+
 // {width, height} of the image at this address; null when the address answers with something that is no
 // image (an error, a page, a format it can't read) so the browser would show none; undefined when it could
 // not be told (too slow, the connection failed, a refusal aimed at robots)
@@ -78,8 +106,11 @@ export const sizeOf = async (url) => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
-        await assertPublicUrl(url);
-        const response = await fetch(url, {headers: HEADERS, signal: controller.signal, redirect: 'follow'});
+        const {response, policy} = await pictureChain(url, controller.signal);
+        if (policy || !response) {
+            await response?.body?.cancel();
+            return null;
+        }
         if (!response.ok && (ROBOT_REFUSALS.has(response.status) || response.headers.get('cf-mitigated'))) {
             await response.body?.cancel();
             return undefined;
@@ -96,6 +127,40 @@ export const sizeOf = async (url) => {
         return null;
     } catch (err) {
         return err?.status === 400 ? null : undefined;
+    } finally {
+        clearTimeout(timer);
+    }
+};
+
+// Why a browser on the page of a reader would show NONE of the picture at this address, in words; null when it would show it; undefined when it could not be told (too slow, the connection
+// failed, a refusal aimed at robots). The same reading as sizeOf, for the audit of a briefing already written (briefing-checks.js)
+export const whyNotShown = async (url) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    try {
+        const {response, policy} = await pictureChain(url, controller.signal);
+        if (policy) {
+            await response.body?.cancel();
+            return `its site forbids the other sites to show it (Cross-Origin-Resource-Policy: ${policy})`;
+        }
+        if (!response) return 'the address redirects too many times';
+        if (!response.ok && (ROBOT_REFUSALS.has(response.status) || response.headers.get('cf-mitigated'))) {
+            await response.body?.cancel();
+            return undefined;
+        }
+        if (!response.ok) {
+            await response.body?.cancel();
+            return `the address answers ${response.status}`;
+        }
+        let bytes = Buffer.alloc(0);
+        for await (const chunk of response.body ?? []) {
+            bytes = Buffer.concat([bytes, chunk]);
+            if (bytes.length >= 32) break;
+        }
+        await response.body?.cancel().catch(() => {});
+        return isImage(bytes) ? null : 'what the address gives is no image';
+    } catch (err) {
+        return err?.status === 400 ? 'its address is not a public one' : undefined;
     } finally {
         clearTimeout(timer);
     }

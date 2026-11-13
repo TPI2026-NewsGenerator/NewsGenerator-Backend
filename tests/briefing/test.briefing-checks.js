@@ -10,7 +10,7 @@ import {describe, expect, it, jest} from '@jest/globals';
 
 jest.unstable_mockModule('ollama', () => ({Ollama: jest.fn(() => ({chat: jest.fn()}))}));
 jest.unstable_mockModule('../../config/db.js', () => ({prisma: {}}));
-const {cardChecks, logBriefingChecks} = await import('../../services/utils/briefing-checks.js');
+const {cardChecks, logBriefingChecks, logPictureChecks, pictureLoadChecks} = await import('../../services/utils/briefing-checks.js');
 
 const card = (changes = {}) => ({storyId: 1, title: 'The federation names a new referee', language: 'en', summary: 'The federation named a new referee on Monday for the final.',
     points: 'The federation named a new referee on Monday for the final.', thumbnail: 'https://media.example/p.jpg', ...changes});
@@ -62,6 +62,50 @@ describe('cardChecks', () => {
         expect(broken([card({thumbnail: null})], 'every card has a picture')).toHaveLength(1);
         expect(broken([card({angles: [{title: 'Der Verband ernennt einen neuen Schiedsrichter für das Finale am Montag', language: 'en', titleTranslation: 'x'}]})],
             'no angle has a language its title does not say')).toHaveLength(1);
+    });
+});
+
+describe('pictureLoadChecks and logPictureChecks (the network)', () => {
+    const log = () => ({log: jest.fn(), error: jest.fn()});
+    const probeOf = (reasons) => jest.fn(async (url) => reasons[url]);
+    const blocked = 'its site forbids the other sites to show it (Cross-Origin-Resource-Policy: same-site)';
+
+    it('should name the cards whose picture a browser would show none of, with why, and leave out the ones it shows or that could not be told', async () => {
+        const items = [card({storyId: 1, thumbnail: 'https://media.example/ok.jpg'}), card({storyId: 2, title: 'Law for sponsor changes after 32 years', thumbnail: 'https://editor.example/12.jpg'}),
+            card({storyId: 3, thumbnail: 'https://slow.example/p.jpg'}), card({storyId: 4, thumbnail: null})];
+        const probe = probeOf({'https://media.example/ok.jpg': null, 'https://editor.example/12.jpg': blocked, 'https://slow.example/p.jpg': undefined});
+        const [[name, broken]] = await pictureLoadChecks(items, probe);
+        expect(name).toBe('every picture a card shows loads on the page of a reader');
+        expect(broken).toEqual([`Law for sponsor changes after 32 years: ${blocked}`]);
+        expect(probe).toHaveBeenCalledTimes(3);
+    });
+
+    it('should ask each address once, whatever the number of cards that show it', async () => {
+        const items = [card({storyId: 1, thumbnail: 'https://media.example/same.jpg'}), card({storyId: 2, thumbnail: 'https://media.example/same.jpg'})];
+        const probe = probeOf({'https://media.example/same.jpg': 'the address answers 404'});
+        const [[, broken]] = await pictureLoadChecks(items, probe);
+        expect(broken).toHaveLength(2);
+        expect(probe).toHaveBeenCalledTimes(1);
+    });
+
+    it('should say in the log that every picture loads, or which do not with their count and first example, and answer the ones that fail', async () => {
+        const quiet = log();
+        expect(await logPictureChecks(1407, [card()], quiet, probeOf({'https://media.example/p.jpg': null}))).toEqual([]);
+        expect(quiet.log).toHaveBeenCalledWith('Briefing 1407: audit: every picture of the cards loads');
+        // the addresses that could not be told are said, not taken for loading
+        const unsure = log();
+        await logPictureChecks(1407, [card()], unsure, probeOf({'https://media.example/p.jpg': undefined}));
+        expect(unsure.log).toHaveBeenCalledWith('Briefing 1407: audit: every picture of the cards loads (1 could not be told)');
+        const loud = log();
+        const failed = await logPictureChecks(1407, [card({title: 'Law for sponsor changes after 32 years'})], loud, probeOf({'https://media.example/p.jpg': blocked}));
+        expect(failed).toEqual([expect.objectContaining({name: 'every picture a card shows loads on the page of a reader', count: 1})]);
+        expect(loud.error.mock.calls[0][0]).toContain(`Briefing 1407: audit: every picture a card shows loads on the page of a reader (1: Law for sponsor changes after 32 years: ${blocked})`);
+    });
+
+    it('should never throw: a probe that fails is a line in the log', async () => {
+        const loud = log();
+        expect(await logPictureChecks(1, [card()], loud, jest.fn(async () => { throw new Error('boom'); }))).toEqual([]);
+        expect(loud.error.mock.calls[0][0]).toContain('the audit of the pictures failed');
     });
 });
 

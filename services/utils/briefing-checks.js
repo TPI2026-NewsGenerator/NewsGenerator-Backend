@@ -16,6 +16,8 @@ import {isPhotoCaption, withoutDateline} from './extract.js';
 import {ORIGINAL_START} from './original-marks.js';
 import {scriptLanguage, shownLanguage, titleLanguage, writtenIn} from './language.js';
 import {withoutAccessLabel} from './neutral-titles.js';
+import {mapWithConcurrency} from './concurrency.js';
+import {whyNotShown} from './picture-sizes.js';
 
 const plain = (word) => word.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 export const short = (text, n = 70) => String(text ?? '').replace(/\s+/g, ' ').slice(0, n);
@@ -75,6 +77,39 @@ export const cardChecks = (items, language) => {
             return read.language !== angle.language && !read.guessed;
         })()).map(angle => `[${angle.language} for ${titleLanguage(angle.title, angle.language).language}] ${short(angle.title, 60)}`)],
     ];
+};
+
+// The check that needs the network: [[name, [what breaks it]]] for the pictures the cards show. A picture a browser on the page of a reader would show none of (an address that answers an error,
+// no image, a site that forbids the others to show its pictures) is a card the reader sees without a picture though the data holds one: "every card has a picture" cannot see it.
+// probe(url): why it would not show (see whyNotShown), null when it would, undefined when it could not be told (said nothing). Each address once, eight at a time
+const askPictures = async (items, probe) => {
+    const urls = [...new Set(items.map(item => item.thumbnail).filter(Boolean))];
+    const reasons = new Map();
+    const results = await mapWithConcurrency(urls, 8, async (url) => { reasons.set(url, await probe(url)); });
+    // a probe that breaks is a mistake of the code, not a picture that cannot be told: it is said
+    const broke = results.find(result => result.status === 'rejected');
+    if (broke) throw broke.reason;
+    return reasons;
+};
+const pictureCheck = (items, reasons) => ['every picture a card shows loads on the page of a reader',
+    items.filter(item => item.thumbnail && reasons.get(item.thumbnail)).map(item => `${short(item.titleTranslation ?? item.title, 50)}: ${reasons.get(item.thumbnail)}`)];
+export const pictureLoadChecks = async (items, probe = whyNotShown) => [pictureCheck(items, await askPictures(items, probe))];
+
+// The same line in the log for the pictures, asked after the briefing is written and never waited on (about a request for each picture). Never throws
+export const logPictureChecks = async (label, items, log = console, probe = whyNotShown) => {
+    try {
+        const reasons = await askPictures(items, probe);
+        const failed = [pictureCheck(items, reasons)].filter(([, broken]) => broken.length > 0)
+            .map(([name, broken]) => ({name, count: broken.length, examples: broken.slice(0, 2)}));
+        // the addresses that could not be told (too slow, a refusal aimed at robots) are said, not counted as loading
+        const untold = [...reasons.values()].filter(reason => reason === undefined).length;
+        if (failed.length === 0) log.log(`Briefing ${label}: audit: every picture of the cards loads${untold > 0 ? ` (${untold} could not be told)` : ''}`);
+        else log.error(`Briefing ${label}: audit: ${failed.map(one => `${one.name} (${one.count}: ${one.examples.join(' | ')})`).join('; ')}`);
+        return failed;
+    } catch (err) {
+        log.error(`Briefing ${label}: the audit of the pictures failed (${err.message})`);
+        return [];
+    }
 };
 
 // A line for the log of the server: the checks of the cards of a briefing it has just written, the ones that fail named with their count and
