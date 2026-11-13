@@ -39,6 +39,30 @@ describe('summaryOf, built by the code', () => {
         expect(candidates[1]).toMatchObject({position: 'inconnue', uncertain_count: 1, sides: []});
     });
 
+    it('should put the candidates the association supports first, then the ones it opposes, whatever their order and strength, then the ones with no position', () => {
+        const sheet = sheetOf([
+            signal(jp, '2026-11-05T10:00:00Z', {stance: 'against', level: 'declared'}),
+            signal(jp, '2026-11-06T10:00:00Z', {subject_qid: WENGER.qid, stance: 'for', level: 'declared'}),
+            signal(jp, '2026-11-07T10:00:00Z', {subject_qid: TASHIMA.qid, stance: 'for', level: 'probable'}),
+            signal(jp, '2026-11-08T10:00:00Z', {subject_qid: 'Q9999', certainty: 'uncertain', uncertain_reason: 'praise', stance: 'none', level: 'none'}),
+        ], jp, [SUBJECT, WENGER, TASHIMA, {qid: 'Q9999', name: 'Someone Else', color_index: 4, status: 'declared', state: 'ready'}]);
+        // Infantino (the first colour) opposed and declared comes AFTER Wenger (supported, declared) and Tashima (supported, probable)
+        expect(sheet.summary.candidates.map(one => one.name)).toEqual(['Arsene Wenger', 'Kozo Tashima', 'Gianni Infantino', 'Someone Else']);
+        expect(sheet.summary.candidates.map(one => one.position)).toEqual(['soutien_declare', 'soutien_probable', 'non_soutien_declare', 'inconnue']);
+    });
+
+    it('should put a candidate a reader confirmed or set among the supported ones, and a reader\'s "no position" with the ones with none', () => {
+        const votes = [
+            {user_id: 1, username: 'reader1', subject_qid: WENGER.qid, member_qid: jp.qid, value: 'confirm', note: '', seen: 'soutien_probable', created_at: '2026-11-10T10:00:00Z'},
+            {user_id: 2, username: 'reader2', subject_qid: TASHIMA.qid, member_qid: jp.qid, value: 'unknown', note: '', created_at: '2026-11-10T11:00:00Z'},
+        ];
+        const sheet = buildSheet({member: jp, subjects: [SUBJECT, WENGER, TASHIMA], signals: [signal(jp, '2026-11-05T10:00:00Z', {stance: 'against', level: 'declared'}),
+            signal(jp, '2026-11-06T10:00:00Z', {subject_qid: WENGER.qid, stance: 'for', level: 'probable'})], votes, now: NOW, colour: 'established'});
+        // Wenger: probable support confirmed by a reader (solid), Infantino: opposition, Tashima: a reader says no position
+        expect(sheet.summary.candidates.map(one => one.name)).toEqual(['Arsene Wenger', 'Gianni Infantino', 'Kozo Tashima']);
+        expect(sheet.summary.candidates[0].position).toBe('soutien_declare');
+    });
+
     it('should give for each side the sentences said word for word, the declared and the binding ones first, who spoke, and the dates', () => {
         const [infantino] = sheetOf(signals).summary.candidates;
         expect(infantino.sides.map(side => side.stance)).toEqual(['against', 'for']);   // the side of the position first

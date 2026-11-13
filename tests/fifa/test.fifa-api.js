@@ -152,9 +152,27 @@ describe('the summary of the sheet of an association', () => {
         const {status, body} = await ask();
         expect(status).toBe(200);
         expect(ollamaJson.mock.calls[0][0]).toContain('1. Japan is shown against Gianni Infantino at the declared level');
+        // written by DeepSeek with its reasoning on, with no fallback to another model (the user's choice)
+        expect(ollamaJson.mock.calls[0][2]).toMatchObject({model: 'deepseek-v4-pro', think: true, fallback: null});
+        expect(model.saveAiSummary).toHaveBeenCalledWith(expect.objectContaining({model: 'deepseek-v4-pro'}));
         expect(model.saveAiSummary).toHaveBeenCalledWith(expect.objectContaining({memberQid: JAPAN, userId: expect.any(Number), claims: [CLAIM], facts: expect.arrayContaining([expect.objectContaining({id: 1, kind: 'position'})])}));
         expect(body).toMatchObject({generated: true, ai_summary: {claims: [CLAIM], current: true, by: 'reader9', generated_at: '2026-11-13T10:00:00.000Z'}});
         expect(body.ai_summary.facts.length).toBeGreaterThan(1);
+    });
+
+    it('should use the model and the reasoning the settings name instead of the default ones', async () => {
+        withSignal();
+        keep();
+        ollamaJson.mockResolvedValue({claims: [CLAIM]});
+        process.env.FIFA_SUMMARY_MODEL = 'gemma4:31b';
+        process.env.FIFA_SUMMARY_THINK = 'off';
+        try {
+            expect((await ask()).status).toBe(200);
+            expect(ollamaJson.mock.calls[0][2]).toMatchObject({model: 'gemma4:31b', think: false, fallback: null});
+        } finally {
+            delete process.env.FIFA_SUMMARY_MODEL;
+            delete process.env.FIFA_SUMMARY_THINK;
+        }
     });
 
     it('should answer the one kept for nothing while the sheet has not changed, and write it again when it has', async () => {

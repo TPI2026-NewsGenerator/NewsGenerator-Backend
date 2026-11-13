@@ -305,6 +305,11 @@ const readSiteLeaders = async () => {
 
 // --- the summary of a sheet
 const aiSummaryOn = () => process.env.FIFA_AI_SUMMARY !== 'off';
+// The model that writes the summary: DeepSeek, with its reasoning on (the user's choice, 13.11.2026). Measured on the sheets of France and CAF against the default model (Gemma): all
+// the claims of the three kept by the check; DeepSeek with reasoning says what the facts say with the most care ("said he approves a possible candidacy", "an unnamed speaker said"), for
+// 1 100 to 1 600 tokens out and 5 to 8 s (about two thousandths of a dollar); without reasoning it adds claims that only repeat or drift to the rest of a sentence
+const summaryModel = () => process.env.FIFA_SUMMARY_MODEL || 'deepseek-v4-pro';
+const summaryThink = () => process.env.FIFA_SUMMARY_THINK !== 'off';
 // the summary the AI wrote, as the sheet gives it: {claims: [{text, facts}], facts: [{id, kind, text, url?, medium?, date?}], model, generated_at, by, current}; current: false once the sheet
 // has changed since it was written
 const aiSummaryShape = (row, hash) => ({claims: row.claims, facts: row.facts, model: row.model, generated_at: new Date(row.created_at).toISOString(), by: row.username ?? null, current: row.input_hash === hash});
@@ -380,14 +385,14 @@ export const FifaService = {
         let answered = null;
         let answer;
         try {
-            answer = await ollamaJson(promptOfSummary({member, facts}), newUsage(), {...(process.env.FIFA_SUMMARY_MODEL ? {model: process.env.FIFA_SUMMARY_MODEL, fallback: null} : {}), think: false, timeoutMs: 120000, onModel: (model) => { answered = model; }});
+            answer = await ollamaJson(promptOfSummary({member, facts}), newUsage(), {model: summaryModel(), fallback: null, think: summaryThink(), timeoutMs: 120000, onModel: (model) => { answered = model; }});
         } catch (error) {
             console.warn(`FIFA map: the summary of ${member.name} was not written (${String(error.message).slice(0, 80)})`);
             throw fail(502, 'The AI did not answer: try again in a moment.');
         }
         const claims = claimsOf(answer, facts);
         if (claims.length === 0) throw fail(502, 'The AI gave nothing the facts hold: try again in a moment.');
-        const row = await FifaModel.saveAiSummary({memberQid: qid, claims, facts, model: answered ?? process.env.FIFA_SUMMARY_MODEL ?? 'default', hash, userId});
+        const row = await FifaModel.saveAiSummary({memberQid: qid, claims, facts, model: answered ?? summaryModel(), hash, userId});
         return {ai_summary: aiSummaryShape(row, hash), generated: true};
     },
 

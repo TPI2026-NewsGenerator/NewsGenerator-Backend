@@ -197,12 +197,15 @@ export const buildMap = ({members, subjects, signals, votes, leaders = new Map()
     };
 };
 
-// How much a position says, to put the candidates with something to say first: set by a reader or declared 3, probable 2, only uncertain sentences 1
+// How much a position says: set by a reader or declared 3, probable 2, only uncertain sentences 1
 const weightOf = (entry) => entry.human ? 3 : entry.position === 'inconnue' ? (entry.uncertain_count > 0 ? 1 : 0) : String(entry.position).endsWith('declare') ? 3 : 2;
+// Where a candidate goes in the summary: the ones the association SUPPORTS first (a position of the news, set or confirmed by a reader), then the ones it OPPOSES, then the ones it has no
+// position on (a reader's "no position", only uncertain sentences)
+const sideRankOf = (entry) => { const side = sideOf(entry.position); return side === 'for' ? 0 : side === 'against' ? 1 : 2; };
 const isoOf = (date) => new Date(date).toISOString();
 
 // The summary of the sheet, BUILT BY THE CODE from the positions and the established signals (no AI writes anything here): for each candidate the association has something on,
-// the strongest first: where it stands, and for each side the sentences said (the strongest two, word for word, with their link and who says it), who spoke, how many and in how
+// the ones it supports first, then the ones it opposes, then the ones with no position (inside each the stronger first, then the order of the candidates): where it stands, and for each side the sentences said (the strongest two, word for word, with their link and who says it), who spoke, how many and in how
 // many media, from when to when. positions: the positions of the sheet; history: its changes, [{subject_qid, date, from, to, kind, url, medium}]
 // -> {candidates: [{subject_qid, name, color_index, status, position, ai_position, since, previous, changed, stale, signals_count, uncertain_count, articles_30d, media_30d, human, confirmed,
 //    sides: [{stance, declared, probable, first_at, last_at, media, speakers: [{name, role, binds}], key: [{id, sentence, url, medium, published_at, level, speaker, role, binds}]}], latest_change}]}
@@ -243,7 +246,7 @@ export const summaryOf = ({subjects, signals, positions, history = [], colour = 
             human: entry.human ? {value: entry.human.value, by: entry.human.by, at: entry.human.at, newer_evidence: Boolean(entry.human.newer_evidence)} : null, confirmed: entry.confirmed ?? null,
             sides, latest_change: changes.length > 0 ? {...changes[changes.length - 1], date: isoOf(changes[changes.length - 1].date)} : null});
     }
-    return {candidates: candidates.sort((a, b) => weightOf(b) - weightOf(a) || a.color_index - b.color_index)};
+    return {candidates: candidates.sort((a, b) => sideRankOf(a) - sideRankOf(b) || weightOf(b) - weightOf(a) || a.color_index - b.color_index)};
 };
 
 // What the rest of the confederation says, to put an association in its context: {confederation: {qid, fifa, name}, own: {subject_qid: {position, since}}, associations:

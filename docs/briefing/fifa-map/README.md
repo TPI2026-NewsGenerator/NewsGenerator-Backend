@@ -111,14 +111,14 @@ latest vote decides for everyone**. The page says first what it does not know: m
    The server reads the news every `FIFA_WATCH_MINUTES`; a run that finds nothing says nothing in the log.
 
 15. **The summary of a sheet.** To help a reader understand where an association stands in the affair, the sheet carries a summary in two parts (`GET /api/fifa/associations/:qid`). **`summary` is built by the code**, nothing in it
-   is written by an AI (`summaryOf` in `fifa-map.js`): for each candidate the association has something on, the strongest first (a position set by a reader or declared, then probable, then only uncertain sentences, then the
-   order of the candidates), where it stands (`position`, since when, what it was before, set or confirmed by a reader), and for each side the sentences said word for word (the declared and the binding ones first, two at most, with
+   is written by an AI (`summaryOf` in `fifa-map.js`): for each candidate the association has something on, **the ones it supports first, then the ones it opposes**, then the ones with no position (inside each group the stronger first: set by a
+   reader or declared, then probable, then only uncertain sentences, then the order of the candidates), where it stands (`position`, since when, what it was before, set or confirmed by a reader), and for each side the sentences said word for word (the declared and the binding ones first, two at most, with
    their link and who says it), who spoke, how many sentences and in how many media, from when to when, and the latest change. `context` (`contextOf`) puts it in its confederation: the position of the confederation itself on each
    candidate and how many of the OTHER associations of it are shown for and against him (null for a confederation). **`ai_summary` is written by the AI only when a reader asks** (`POST /api/fifa/associations/:qid/summary`, five an
-   hour for each reader; `FIFA_AI_SUMMARY=off` writes none, `FIFA_SUMMARY_MODEL` chooses the model, the default one of the AI otherwise): the code turns the summary into NUMBERED FACTS (`fifa-summary.js`: the positions, the
+   hour for each reader; `FIFA_AI_SUMMARY=off` writes none; the model is **DeepSeek (`deepseek-v4-pro`) with its reasoning on**, the user's choice, `FIFA_SUMMARY_MODEL` and `FIFA_SUMMARY_THINK=off` change it): the code turns the summary into NUMBERED FACTS (`fifa-summary.js`: the positions, the
    sentences word for word, the confederation), the model writes two to five one-sentence claims from them, each citing the facts it rests on, and **the code drops a claim that cites no fact that exists or holds a figure the
    cited facts do not hold**; what is kept (the claims and the facts they cite, with their links) is stored for the association (`fifa_summaries`, the latest) and shown to everyone with who asked and when. It is **told
-   older (`current: false`) once the sheet has changed** (a fingerprint of the facts), and asking again while it is current answers the one kept for nothing. About 600 tokens a summary (France: 583 in, 117 out). The user chose
+   older (`current: false`) once the sheet has changed** (a fingerprint of the facts), and asking again while it is current answers the one kept for nothing. About 600 tokens in and 1 100 to 1 600 out, 5 to 8 s, about two thousandths of a dollar (France: 567 in, 1 565 out; CAF: 386 in, 1 101 out). The user chose
    both parts (13.11.2026): the code's summary first, the AI's on a button; an AI summary of the news was measured to hold a meaning error in about one card in ten (12.10.2026), hence the facts, the citations and the check, which
    catch a wrong figure or a claim with no support, not every wrong meaning: it is marked as written by the AI.
 

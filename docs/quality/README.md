@@ -349,9 +349,9 @@ sentence), a count too small to give a rate. The same page added with no candida
 office, declared), 3 gave no passage (the association is not named with a candidate in one sentence, or by its acronym only), 1 was not readable. A page added on its own now gives signals like a news (they count for the position): the chain is the one measured on the news, but **no wrong-colour rate was measured for
 pages a reader pastes**; they are limited to 20 a day for each reader, tied to their author, and taken off with the source.
 
-**The summary of a sheet** (13.11.2026): the part the code builds holds no text written by an AI, so it has no error of meaning, only the errors of the positions it is made of. The part the AI writes on request is
-checked by the code (every claim cites facts that exist, no figure outside them) but **no rate of wrong claims was measured**; first run, on the sheet of France (7 facts): 3 claims written, 3 kept, all of them what the facts say
-(583 tokens in, 117 out). The check cannot catch a wrong meaning that uses the right figures, and an earlier measure of AI summaries of the news found a meaning error in about one card in ten: the summary is marked as written by the AI.
+**The summary of a sheet** (13.11.2026; written by DeepSeek with its reasoning on, the user's choice: on the sheets of France (7 facts) and CAF (3) the default model Gemma and DeepSeek without and with reasoning kept 3 to 5 claims each, all kept by the check; DeepSeek with reasoning was the most careful with who said what and the least repetitive, 1 100 to 1 600 tokens out, 5 to 8 s): the part the code builds holds no text written by an AI, so it has no error of meaning, only the errors of the positions it is made of. The part the AI writes on request is
+checked by the code (every claim cites facts that exist, no figure outside them) but **no rate of wrong claims was measured**; first run (with Gemma, before the change of model), on the sheet of France (7 facts): 3 claims written, 3 kept, all of them what the facts say
+(583 tokens in, 117 out); no run of the checked claims by hand on more sheets. The check cannot catch a wrong meaning that uses the right figures, and an earlier measure of AI summaries of the news found a meaning error in about one card in ten: the summary is marked as written by the AI.
 
 ## What these figures do not say
 
