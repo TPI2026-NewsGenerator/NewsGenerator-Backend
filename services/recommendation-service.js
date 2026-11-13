@@ -16,6 +16,7 @@ import {FeedbackService, siteOf} from "./feedback-service.js";
 import {CONFIRMED_TITLES, JUDGE_THRESHOLD} from "./discovery-service.js";
 import {knownMedia} from "./source-service.js";
 import {bridgeRoom, looksPrivate, MAX_USER_FEEDS} from "./utils/feed-limits.js";
+import {isWikiEditFeed} from "./utils/junk-links.js";
 import {isBridgeUrl, nameOf} from "./utils/public-url.js";
 import {confirmOnSubject} from "./utils/profile-ai.js";
 import {mapWithConcurrency} from "./utils/concurrency.js";
@@ -106,7 +107,7 @@ const recommended = async (profileId) => {
         limit: 3 * MAX_RECOMMENDED,
         maxTitles: CONFIRMED_TITLES,
     });
-    const candidates = rows.filter(row => !looksPrivate(row.url) && !known.has(nameOf(siteOf(row.url))));
+    const candidates = rows.filter(row => !looksPrivate(row.url) && !isWikiEditFeed(row.url) && !known.has(nameOf(siteOf(row.url))));
 
     // read by the AI a few at a time, the most relevant first, until there are enough
     const kept = [];

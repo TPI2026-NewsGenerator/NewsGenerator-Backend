@@ -44,6 +44,16 @@ describe('RecommendationService.list', () => {
         expect(sources[0]).not.toHaveProperty('titles');
     });
 
+    it('should not recommend a feed of the edits of a wiki, nor give its titles to the AI', async () => {
+        const WIKI = row(3, 'https://el.wikipedia.org/w/index.php?title=Special:RecentChanges&feed=atom', 9, 900, ['La VAR critiquée', 'Un arbitre suspendu']);
+        recommendedFeeds.mockResolvedValue([WIKI, REFEREES]);
+
+        const sources = await RecommendationService.list(profileId);
+
+        expect(sources.map(source => source.site)).toEqual(['arbitres.example']);
+        expect(confirmOnSubject).not.toHaveBeenCalledWith(expect.anything(), WIKI.titles);
+    });
+
     it('should ask the AI once a day per feed, again when the interests changed', async () => {
         await RecommendationService.list(profileId);
         await RecommendationService.list(profileId);

@@ -27,6 +27,11 @@ jest.unstable_mockModule('../../services/utils/crawlers.js', () => ({
                 {title: 'An old one', link: 'https://paper.invalid/2012', description: '', pubDate: 'Sun, 05 Aug 2012 10:00:00 GMT'},
                 {title: 'Of last week', link: 'https://paper.invalid/week', description: '', pubDate: new Date(Date.now() - 7 * 864e5).toUTCString()},
             ] : []),
+            ...(url.includes('wiki') ? [
+                {title: 'National League (αγγλικό ποδόσφαιρο)', link: 'https://el.wikipedia.org/w/index.php?title=National_League&diff=11919453&oldid=10428275', description: ''},
+                {title: 'Χρήστης:BlueOlive2026', link: 'https://el.wikipedia.org/wiki/%CE%A7%CF%81%CE%AE%CF%83%CF%84%CE%B7%CF%82:BlueOlive2026', description: ''},
+                {title: 'An article of a wiki', link: 'https://en.wikipedia.org/wiki/FIFA', description: ''},
+            ] : []),
             ...(url.includes('long') ? [
                 {title: 'A tracking link', link: `https://paper.invalid/t?u=${'x'.repeat(3600)}`, description: ''},
                 {title: 'Accented', link: `https://paper.invalid/${'é'.repeat(990)}`, description: ''},
@@ -53,6 +58,13 @@ describe('FeedService.refreshUrls', () => {
         expect(stats).toMatchObject({inserted: 2, archived: 1});
         // a news without a date is kept, its day is the one it is read
         expect(insertArticles.mock.calls[0][0].map(article => article.link)).toEqual(['https://paper.invalid/a', 'https://paper.invalid/week']);
+    });
+
+    it('should not save the edits of a wiki (a comparison of two versions, the page of a user), nor lose the others', async () => {
+        insertArticles.mockClear();
+        const stats = await FeedService.refreshUrls(['https://paper.invalid/wiki']);
+        expect(stats).toMatchObject({inserted: 2, junkLinks: 2});
+        expect(insertArticles.mock.calls[0][0].map(article => article.link)).toEqual(['https://paper.invalid/a', 'https://en.wikipedia.org/wiki/FIFA']);
     });
 
     it('should not save a news whose link is too long for the unique index, nor lose the others', async () => {

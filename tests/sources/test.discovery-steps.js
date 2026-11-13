@@ -40,6 +40,7 @@ const {DiscoveryService} = await import('../../services/discovery-service.js');
 const {ProfileModel} = await import('../../models/profile-model.js');
 const {IngestService} = await import('../../services/ingest-service.js');
 const {search} = await import('../../services/utils/google-news.js');
+const {findFeeds} = await import('../../services/utils/feed-finder.js');
 const {mediaFor, mediaCloudEnabled} = await import('../../services/utils/media-cloud.js');
 
 // the discovery runs in background: its steps are waited for
@@ -76,6 +77,16 @@ describe('DiscoveryService.start', () => {
         expect(saved(1)).toEqual(['https://yachting-daily.example/feed']);
         expect(IngestService.run).toHaveBeenLastCalledWith({urls: ['https://yachting-daily.example/feed']});
         expect(DiscoveryService.phaseOf(1)).toBeNull();
+    });
+
+    it('should not add the feed of the recent changes of a Wikipedia a medium gives, whatever its titles say', async () => {
+        findFeeds.mockResolvedValueOnce([{url: 'https://el.wikipedia.org/w/index.php?title=Special:RecentChanges&feed=atom', onSubject: 9, onSubjectTitles: []}]);
+        await DiscoveryService.start(5);
+        await until(() => ProfileModel.addProfileFeeds.mock.calls.length === 1);
+
+        expect(saved(0)).toEqual([]);
+        answerPress([]);
+        await until(() => statuses().includes('done'));
     });
 
     it('should not look for the press twice for a medium Google News already gave', async () => {

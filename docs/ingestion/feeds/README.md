@@ -43,6 +43,13 @@ saved.
   its feed gave already under another link (same feed, title and date of publication, index
   `i_articles_feed_published`, `db/add_article_repeats.sql`), then `insertArticles` inserts 1000 rows a
   statement, a link once per feed. The news of Google News keep their publisher in `source_url`.
+- **The edits of a wiki are no news.** A wiki shows its edits as a feed (the recent changes of a Wikipedia, the history of a page): every item
+  is a revision, a comparison of two versions or the page of a user. The refresh leaves such a link out (`isWikiEditLink`,
+  `services/utils/junk-links.js`: `index.php` with `diff`, `oldid` or an `action`, a special page, the page of a namespace in any language
+  such as `Χρήστης:` or `User_talk:`; an article of the wiki and Wikinews are kept), counted in the stats as `junkLinks`. Neither the discovery
+  of the sources (`tryMedium`), the directory (`isOwnFeed`) nor the suggestions offer a feed of them (`isWikiEditFeed`). The feed already there
+  and its news are taken out by `node --env-file=.env scripts/remove-junk-feeds.js` (what would go) and `--apply` (does it). Tests:
+  `tests/feeds/test.junk-links.js`, `test.feed-titles.js`, `tests/sources/test.discovery-steps.js`, `test.recommendations.js`.
 - **Retention.** Once an hour (`HOUSEKEEPING_MINUTES`) the run purges: `deleteArticlesOlderThan` (30 days,
   by `created_at`), then the empty stories and threads.
 - **The floods.** A feed of 500 news a day or more (`isFlood`, `services/utils/feed-limits.js`) is read like
@@ -54,6 +61,9 @@ saved.
 - All the feeds read every 20 minutes, a news waited 19 minutes in the median to be read and 28 to have its
   vectors; every feed read every minute would be 24 requests a second. With the rhythms: 220 requests a
   minute (77 before), the 200 feeds giving two thirds of the news read every 2 minutes ([the former README](../../archive/readme-features-2026-10-24.md)).
+- Edits of a wiki: the feed of the recent changes of the Greek Wikipedia (read for one reader since 8.10.2026) gave 29,289 items in 30 days, 965 a day,
+  0.6% of the 4,736,949 news, 20,513 of its 30,324 news grouped into stories, 1,035 of them pages of users; one card of 1 of 82 briefings (13.11.2026) was
+  such a page. No other feed gave a link of the family (140 links of the wikis, none an edit), 13.11.2026.
 - Repeats: 7,734 news given again under another link in one day in 297 feeds (agenzianova.com: 1,088 news
   a day stored 7,440 times), 5.10.2026 (`models/feed-model.js`).
 - Archives: americansoccernow.com since 2012, irishfa.com since 2006, 12,400 news stored at their first read

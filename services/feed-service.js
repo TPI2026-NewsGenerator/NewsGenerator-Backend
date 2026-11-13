@@ -14,6 +14,7 @@ import {Crawlers} from "./utils/crawlers.js";
 import {toDate} from "./utils/dates.js";
 import Links, {DEFAULT_LANGUAGE} from "./utils/links.js";
 import {isGoogleNewsUrl, readSearches} from "./utils/google-news.js";
+import {isWikiEditLink} from "./utils/junk-links.js";
 
 export const RETENTION_DAYS = Number(process.env.FEED_RETENTION_DAYS) || 30;
 // The longest link saved, in bytes: the unique index (id_feed, link) of the articles takes 2704 at most,
@@ -55,6 +56,7 @@ const doRefresh = async (urls, {purge = false} = {}) => {
     let skipped = 0;
     let archived = 0;
     let longLinks = 0;
+    let junkLinks = 0;
 
     for (let i = 0; i < feeds.length; i++) {
         const feed = feeds[i];
@@ -88,6 +90,11 @@ const doRefresh = async (urls, {purge = false} = {}) => {
                 longLinks++;
                 continue;
             }
+            // the edits of a wiki are no news (a feed of the recent changes of the Greek Wikipedia gave 965 a day, see junk-links.js)
+            if (isWikiEditLink(news.link)) {
+                junkLinks++;
+                continue;
+            }
             const published = toDate(news.pubDate);
             if (published && published < oldest) {
                 archived++;
@@ -115,7 +122,7 @@ const doRefresh = async (urls, {purge = false} = {}) => {
         ? await FeedModel.deleteArticlesOlderThan(new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000))
         : 0;
 
-    const stats = { feeds: feeds.length, notModified, failed, skipped, inserted, archived, longLinks, deleted, ms: Date.now() - start };
+    const stats = { feeds: feeds.length, notModified, failed, skipped, inserted, archived, longLinks, junkLinks, deleted, ms: Date.now() - start };
     console.log(`Feeds refreshed: ${JSON.stringify(stats)}`);
     return stats;
 };

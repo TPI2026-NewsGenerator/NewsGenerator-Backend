@@ -14,6 +14,7 @@ import {rss} from "../db/rss-links.js";
 import {DirectoryModel} from "../models/directory-model.js";
 import {findFeeds, readFeeds, siteFeeds} from "./utils/feed-finder.js";
 import {isGoogleNewsUrl, isPlatform} from "./utils/google-news.js";
+import {isWikiEditFeed} from "./utils/junk-links.js";
 import {feedLanguage, LANGUAGES} from "./utils/language.js";
 import {fetchPublicUrl, isBridgeUrl, readText} from "./utils/public-url.js";
 import {looksPrivate, MAX_FEED_ITEMS} from "./utils/feed-limits.js";
@@ -97,7 +98,7 @@ const normalized = (url) => {
 
 // feeds that are no feed of a medium for the directory: of Google News, of a platform, read through
 // our bridge, or with a key in their address (api.foxsports.com gave its partnerKey)
-const isOwnFeed = (url) => !isGoogleNewsUrl(url) && !isPlatform(url) && !isBridgeUrl(url) && !looksPrivate(url);
+const isOwnFeed = (url) => !isGoogleNewsUrl(url) && !isPlatform(url) && !isBridgeUrl(url) && !looksPrivate(url) && !isWikiEditFeed(url);
 
 // A podcast or a channel of videos has no article to read: "les grosses têtes" of rtl.fr was taken
 // for its main feed. Its episodes carry their sound (as scripts/import-awesome-feeds.js tells them)

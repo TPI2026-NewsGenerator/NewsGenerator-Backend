@@ -13,6 +13,7 @@ import {knownMedia} from "./source-service.js";
 import {IngestService, searchesOfUser} from "./ingest-service.js";
 import {FeedbackService} from "./feedback-service.js";
 import {search} from "./utils/google-news.js";
+import {isWikiEditFeed} from "./utils/junk-links.js";
 import {knownFeeds, mediaCloudEnabled, mediaFor as pressMediaFor} from "./utils/media-cloud.js";
 import {findFeeds, isOnSubject, subjectScore} from "./utils/feed-finder.js";
 import {parseVector} from "./utils/embedder.js";
@@ -148,7 +149,8 @@ export const discover = async (profileId, {onFound = async () => {}} = {}) => {
         const listed = withKnown ? await knownFeeds(medium.site) : [];
         const feed = await findFeeds(medium.site, {language: medium.lang, subject, judge, known: listed})
             .then(feeds => feeds[0], () => null);
-        if (!feed || !isOnSubject(feed)) return null;
+        // a feed of the edits of a wiki (the recent changes of a Wikipedia) is no source of news, whatever its titles say
+        if (!feed || !isOnSubject(feed) || isWikiEditFeed(feed.url)) return null;
         // the AI reads the news the vectors put on the interests: chance ones are near the threshold
         // (see confirmOnSubject). The discovery never waits on it failing
         const titles = (feed.onSubjectTitles ?? []).slice(0, CONFIRMED_TITLES);
