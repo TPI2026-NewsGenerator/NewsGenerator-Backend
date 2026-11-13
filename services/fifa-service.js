@@ -17,7 +17,8 @@ import {ASSOCIATIONS, CONFEDERATIONS, MEMBERS, MEMBER_LIST} from './utils/fifa-m
 import {aliasIndexOf, norm, passagesOf} from './utils/fifa-passages.js';
 import {confirmModel, readPassage, readWith} from './utils/fifa-reading.js';
 import {agrees, reportOf, sampleOf, sideOf, verdictOf, votesAgainstNews} from './utils/fifa-audit.js';
-import {basePosition, buildMap, buildSheet, colourSetting, leanOf, positionFor} from './utils/fifa-map.js';
+import {basePosition, buildMap, buildSheet, colourSetting, contextOf, leanOf, positionFor} from './utils/fifa-map.js';
+import {claimsOf, factsOf, inputHashOf, promptOfSummary} from './utils/fifa-summary.js';
 import {mapWithConcurrency} from './utils/concurrency.js';
 import {newUsage, ollamaJson} from './utils/ollama.js';
 import {memo} from './utils/memo.js';
@@ -302,6 +303,31 @@ const readSiteLeaders = async () => {
     return found;
 };
 
+// --- the summary of a sheet
+const aiSummaryOn = () => process.env.FIFA_AI_SUMMARY !== 'off';
+// the summary the AI wrote, as the sheet gives it: {claims: [{text, facts}], facts: [{id, kind, text, url?, medium?, date?}], model, generated_at, by, current}; current: false once the sheet
+// has changed since it was written
+const aiSummaryShape = (row, hash) => ({claims: row.claims, facts: row.facts, model: row.model, generated_at: new Date(row.created_at).toISOString(), by: row.username ?? null, current: row.input_hash === hash});
+
+// The sheet of an association as the page reads it, and the numbered facts its summary is made of (fifa-summary.js). userId: the reader asking, to tell the notes and sources they added (mine)
+const sheetOf = async (qid, userId = null) => {
+    const member = MEMBERS.get(qid);
+    if (!member) throw fail(404, 'No such association.');
+    const [subjects, signals, votes, leaders, notes, pages, stored] = await Promise.all([FifaModel.subjects(), FifaModel.signalsOf(qid), FifaModel.votesOf(qid), FifaModel.leaders(), FifaModel.notesOf(qid),
+        FifaModel.pagesOf(qid), FifaModel.aiSummaryOf(qid)]);
+    const leader = leaders.find(row => row.member_qid === qid);
+    const sheet = buildSheet({member, subjects, signals, votes, colour: colourSetting(),
+        leader: leader ? {name: leader.name, role: leader.role, person_qid: leader.person_qid, since: leader.since ? new Date(leader.since).toISOString().slice(0, 10) : null} : null});
+    // what the rest of the confederation says: the map is kept a minute; a map that cannot be built leaves the sheet without it
+    const context = await FifaService.map().then(map => contextOf({member, map})).catch(error => { console.error(`FIFA map: the context of a sheet (${error.message})`); return null; });
+    const facts = factsOf({member, summary: sheet.summary, context});
+    const hash = inputHashOf(facts);
+    return {member, facts, hash, sheet: {...sheet,
+        // the sources of the choices that stand and the ones added on their own, the newest first
+        sources: [...sheet.sources, ...pages.map(page => pageShape(page, userId))].sort((a, b) => new Date(b.at) - new Date(a.at)), notes: notes.map(note => noteShape(note, userId)),
+        context, ai_summary: stored ? aiSummaryShape(stored, hash) : null, ai_summary_available: aiSummaryOn() && facts.length > 0}};
+};
+
 // A candidate put on the map: a reader adds one (origin "reader"; a full map makes room by itself with the oldest candidate marked withdrawn), or the news bring one
 // (origin "news", found = what was found; evict false: a full map takes none). Answers {subject, already}
 const createSubject = async ({qid, status, userId, origin, found = null, evict = true}) => {
@@ -340,17 +366,31 @@ export const FifaService = {
         return answer;
     },
 
-    // userId: the reader asking, to tell the notes they wrote (mine)
-    association: async (qid, userId = null) => {
-        const member = MEMBERS.get(qid);
-        if (!member) throw fail(404, 'No such association.');
-        const [subjects, signals, votes, leaders, notes, pages] = await Promise.all([FifaModel.subjects(), FifaModel.signalsOf(qid), FifaModel.votesOf(qid), FifaModel.leaders(), FifaModel.notesOf(qid), FifaModel.pagesOf(qid)]);
-        const leader = leaders.find(row => row.member_qid === qid);
-        const sheet = buildSheet({member, subjects, signals, votes, colour: colourSetting(),
-            leader: leader ? {name: leader.name, role: leader.role, person_qid: leader.person_qid, since: leader.since ? new Date(leader.since).toISOString().slice(0, 10) : null} : null});
-        // the sources of the choices that stand and the ones added on their own, the newest first
-        return {...sheet, sources: [...sheet.sources, ...pages.map(page => pageShape(page, userId))].sort((a, b) => new Date(b.at) - new Date(a.at)), notes: notes.map(note => noteShape(note, userId))};
+    // userId: the reader asking, to tell the notes and the sources they added (mine). The sheet carries `summary` (built by the code), `context` (the confederation) and `ai_summary` (the one the AI wrote when a reader asked, or null)
+    association: async (qid, userId = null) => (await sheetOf(qid, userId)).sheet,
+
+    // The summary the AI writes of a sheet, ON DEMAND (a reader asks): a few claims from the numbered facts of the summary the code built, each citing the facts it rests on, checked by the
+    // code (a claim that cites nothing that exists, or holds a figure the facts do not hold, is dropped). Kept for the association (the latest one); asked again while the sheet has not
+    // changed it costs nothing and answers the one kept. {ai_summary, generated}. FIFA_AI_SUMMARY=off writes none
+    summarize: async ({qid, userId = null}) => {
+        if (!aiSummaryOn()) throw fail(403, 'The summary of the AI is switched off.');
+        const {member, facts, hash, sheet} = await sheetOf(qid, userId);
+        if (facts.length === 0) throw fail(409, 'Nothing to summarise yet: no signal on this association.');
+        if (sheet.ai_summary?.current) return {ai_summary: sheet.ai_summary, generated: false};
+        let answered = null;
+        let answer;
+        try {
+            answer = await ollamaJson(promptOfSummary({member, facts}), newUsage(), {...(process.env.FIFA_SUMMARY_MODEL ? {model: process.env.FIFA_SUMMARY_MODEL, fallback: null} : {}), think: false, timeoutMs: 120000, onModel: (model) => { answered = model; }});
+        } catch (error) {
+            console.warn(`FIFA map: the summary of ${member.name} was not written (${String(error.message).slice(0, 80)})`);
+            throw fail(502, 'The AI did not answer: try again in a moment.');
+        }
+        const claims = claimsOf(answer, facts);
+        if (claims.length === 0) throw fail(502, 'The AI gave nothing the facts hold: try again in a moment.');
+        const row = await FifaModel.saveAiSummary({memberQid: qid, claims, facts, model: answered ?? process.env.FIFA_SUMMARY_MODEL ?? 'default', hash, userId});
+        return {ai_summary: aiSummaryShape(row, hash), generated: true};
     },
+
 
     // The news of the last 30 days that name the president of an association, the newest first, a page of them (limit 1 to 100, 50 by default; offset). The same news the
     // number of articles of the presidents counts. scope "football" (the default): only the news about football, those that also name (linked by the tagger) the association,

@@ -15,7 +15,7 @@
 import process from 'node:process';
 import {sideOf} from './fifa-audit.js';
 import {historyOf, positionOf} from './fifa-positions.js';
-import {ROLE} from './fifa-labels.js';
+import {BINDING, ROLE} from './fifa-labels.js';
 
 export const COLOURS = ['established', 'declared', 'off'];
 export const colourSetting = (value = process.env.FIFA_COLOUR) => COLOURS.includes(value) ? value : 'established';
@@ -197,6 +197,75 @@ export const buildMap = ({members, subjects, signals, votes, leaders = new Map()
     };
 };
 
+// How much a position says, to put the candidates with something to say first: set by a reader or declared 3, probable 2, only uncertain sentences 1
+const weightOf = (entry) => entry.human ? 3 : entry.position === 'inconnue' ? (entry.uncertain_count > 0 ? 1 : 0) : String(entry.position).endsWith('declare') ? 3 : 2;
+const isoOf = (date) => new Date(date).toISOString();
+
+// The summary of the sheet, BUILT BY THE CODE from the positions and the established signals (no AI writes anything here): for each candidate the association has something on,
+// the strongest first: where it stands, and for each side the sentences said (the strongest two, word for word, with their link and who says it), who spoke, how many and in how
+// many media, from when to when. positions: the positions of the sheet; history: its changes, [{subject_qid, date, from, to, kind, url, medium}]
+// -> {candidates: [{subject_qid, name, color_index, status, position, ai_position, since, previous, changed, stale, signals_count, uncertain_count, articles_30d, media_30d, human, confirmed,
+//    sides: [{stance, declared, probable, first_at, last_at, media, speakers: [{name, role, binds}], key: [{id, sentence, url, medium, published_at, level, speaker, role, binds}]}], latest_change}]}
+export const summaryOf = ({subjects, signals, positions, history = [], colour = colourSetting()}) => {
+    const byWeight = (a, b) => Number(b.level === 'declared') - Number(a.level === 'declared') || Number(BINDING.has(b.speaker_kind)) - Number(BINDING.has(a.speaker_kind))
+        || new Date(b.published_at) - new Date(a.published_at);
+    const candidates = [];
+    for (const subject of subjects) {
+        const entry = positions[subject.qid];
+        if (!entry) continue;
+        const established = withColour(signals.filter(signal => signal.subject_qid === subject.qid), colour).filter(signal => signal.certainty === 'established' && ['for', 'against'].includes(signal.stance));
+        const sides = ['for', 'against'].map(stance => {
+            const list = established.filter(signal => signal.stance === stance);
+            if (list.length === 0) return null;
+            const times = list.map(signal => new Date(signal.published_at).getTime());
+            const speakers = [];
+            for (const signal of [...list].sort((a, b) => new Date(b.published_at) - new Date(a.published_at))) {
+                const name = String(signal.speaker ?? '').trim();
+                if (name && !speakers.some(one => one.name === name)) speakers.push({name, role: ROLE[signal.speaker_kind] ?? '', binds: BINDING.has(signal.speaker_kind)});
+            }
+            const key = [];
+            for (const signal of [...list].sort(byWeight)) {
+                if (key.length < 2 && !key.some(one => one.url === signal.url)) {
+                    key.push({id: signal.id, sentence: signal.sentence, url: signal.url, medium: signal.medium, published_at: isoOf(signal.published_at), level: signal.level,
+                        speaker: String(signal.speaker ?? '').trim(), role: ROLE[signal.speaker_kind] ?? '', binds: BINDING.has(signal.speaker_kind)});
+                }
+            }
+            return {stance, declared: list.filter(signal => signal.level === 'declared').length, probable: list.filter(signal => signal.level === 'probable').length,
+                first_at: isoOf(Math.min(...times)), last_at: isoOf(Math.max(...times)), media: new Set(list.map(signal => signal.medium)).size, speakers: speakers.slice(0, 3), key};
+        }).filter(Boolean);
+        // the side the position stands on first
+        const standing = sideOf(entry.position);
+        sides.sort((a, b) => Number(b.stance === standing) - Number(a.stance === standing));
+        const changes = history.filter(change => change.subject_qid === subject.qid);
+        candidates.push({subject_qid: subject.qid, name: subject.name, color_index: subject.color_index, status: subject.status, position: entry.position, ai_position: entry.ai_position ?? null,
+            since: entry.since ? isoOf(entry.since) : null, previous: entry.previous ?? null, changed: Boolean(entry.changed), stale: Boolean(entry.stale), signals_count: entry.signals_count ?? 0,
+            uncertain_count: entry.uncertain_count ?? 0, articles_30d: entry.articles_30d ?? 0, media_30d: entry.media_30d ?? 0,
+            human: entry.human ? {value: entry.human.value, by: entry.human.by, at: entry.human.at, newer_evidence: Boolean(entry.human.newer_evidence)} : null, confirmed: entry.confirmed ?? null,
+            sides, latest_change: changes.length > 0 ? {...changes[changes.length - 1], date: isoOf(changes[changes.length - 1].date)} : null});
+    }
+    return {candidates: candidates.sort((a, b) => weightOf(b) - weightOf(a) || a.color_index - b.color_index)};
+};
+
+// What the rest of the confederation says, to put an association in its context: {confederation: {qid, fifa, name}, own: {subject_qid: {position, since}}, associations:
+// {subject_qid: {for, against, unknown, total}}} - the confederation's own position on each candidate, and how the OTHER associations of it stand on each. map: the map of buildMap
+// (members, subjects); null for a confederation, or when the map has no such confederation
+export const contextOf = ({member, map}) => {
+    if (!member || member.level === 'confederation') return null;
+    const confederation = map.members.find(row => row.level === 'confederation' && row.fifa === member.confederation);
+    if (!confederation) return null;
+    const mates = map.members.filter(row => row.level !== 'confederation' && row.confederation === member.confederation && row.qid !== member.qid);
+    const own = {};
+    const associations = {};
+    for (const subject of map.subjects) {
+        const position = confederation.positions[subject.qid];
+        if (position && position.position !== 'inconnue') own[subject.qid] = {position: position.position, since: position.since ?? null};
+        const counts = {for: 0, against: 0, unknown: 0};
+        for (const mate of mates) counts[sideOf(mate.positions[subject.qid]?.position) ?? 'unknown']++;
+        associations[subject.qid] = {...counts, total: mates.length};
+    }
+    return {confederation: {qid: confederation.qid, fifa: confederation.fifa, name: confederation.name}, own, associations};
+};
+
 // the sheet of one association: {member, positions, leader, votes, signals, history}
 export const buildSheet = ({member, subjects, signals, votes, leader = null, colour = colourSetting(), now = new Date()}) => {
     const positions = {};
@@ -207,7 +276,7 @@ export const buildSheet = ({member, subjects, signals, votes, leader = null, col
     const history = subjects.flatMap(subject => historyOf(withColour(signals.filter(signal => signal.subject_qid === subject.qid), colour).map(dated)).map(change => ({subject_qid: subject.qid, ...change})));
     return {
         member: {qid: member.qid, fifa: member.fifa, name: member.name, association: member.association, level: member.level, confederation: member.confederation, iso: member.iso, lat: member.lat, lng: member.lng},
-        positions, leader, lean: leanOf(positions), sources: sourcesOf(votes),
+        positions, leader, lean: leanOf(positions), sources: sourcesOf(votes), summary: summaryOf({subjects, signals, positions, history, colour}),
         votes: [...votes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).map(vote => ({subject_qid: vote.subject_qid, value: vote.value, by: vote.username, at: new Date(vote.created_at).toISOString(), note: vote.note ?? '', seen: vote.seen ?? '', source: sourceOf(vote)})),
         signals: signals.filter(signal => signal.certainty !== 'discarded').sort((a, b) => new Date(b.published_at) - new Date(a.published_at)).map(signal => ({
             id: signal.id, subject_qid: signal.subject_qid,

@@ -133,6 +133,17 @@ export const FifaModel = {
     addVotes: async (userId, votes) => votes.length === 0 ? [] : prisma.$transaction(votes.map(vote => prisma.$queryRawUnsafe(INSERT_VOTE, ...voteArguments(userId, vote)))),
     deleteVote: async (id) => prisma.$executeRawUnsafe(`DELETE FROM fifa_votes WHERE id = $1::int`, id),
 
+    // --- the summary the AI wrote of a sheet (the latest, one for each association)
+    aiSummaryOf: async (memberQid) => (await prisma.$queryRawUnsafe(`
+        SELECT s.claims, s.facts, s.model, s.input_hash, s.created_at, u.username FROM fifa_summaries s LEFT JOIN users u ON u.id = s.created_by WHERE s.member_qid = $1::text`, memberQid))[0] ?? null,
+    saveAiSummary: async ({memberQid, claims, facts, model, hash, userId}) => (await prisma.$queryRawUnsafe(`
+        WITH saved AS (
+            INSERT INTO fifa_summaries (member_qid, claims, facts, model, input_hash, created_by) VALUES ($1::text, $2::jsonb, $3::jsonb, $4::text, $5::text, $6::int)
+            ON CONFLICT (member_qid) DO UPDATE SET claims = EXCLUDED.claims, facts = EXCLUDED.facts, model = EXCLUDED.model, input_hash = EXCLUDED.input_hash, created_by = EXCLUDED.created_by, created_at = now()
+            RETURNING claims, facts, model, input_hash, created_at, created_by)
+        SELECT s.claims, s.facts, s.model, s.input_hash, s.created_at, u.username FROM saved s LEFT JOIN users u ON u.id = s.created_by`,
+        memberQid, JSON.stringify(claims), JSON.stringify(facts), model, hash, userId ?? null))[0],
+
     // --- the notes of the readers on an association
     notesOf: async (memberQid) => prisma.$queryRawUnsafe(`
         SELECT n.id, n.user_id, u.username, n.text, n.created_at FROM fifa_notes n JOIN users u ON u.id = n.user_id WHERE n.member_qid = $1::text ORDER BY n.created_at DESC, n.id DESC`, memberQid),

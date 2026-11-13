@@ -139,6 +139,19 @@ CREATE INDEX IF NOT EXISTS i_fifa_sources_pending ON public.fifa_sources (id) WH
 ALTER TABLE public.fifa_signals ADD COLUMN IF NOT EXISTS source_id integer REFERENCES public.fifa_sources(id) ON DELETE CASCADE;
 CREATE INDEX IF NOT EXISTS i_fifa_signals_source ON public.fifa_signals (source_id) WHERE source_id IS NOT NULL;
 
+-- 13.11.2026, the summary the AI writes of the sheet of an association when a reader asks (the summary of the code is not stored: it is built at each reading). claims:
+-- [{text, facts: [ids]}] each citing the numbered facts it rests on (facts: [{id, kind, text, url?, medium?, date?}], kept with it so that the page can show them); input_hash: what the
+-- facts were, so that a sheet that changed since makes the summary "older"; one for each association, the latest
+CREATE TABLE IF NOT EXISTS public.fifa_summaries (
+    member_qid text PRIMARY KEY,
+    claims jsonb NOT NULL,
+    facts jsonb NOT NULL,
+    model text NOT NULL,
+    input_hash text NOT NULL,
+    created_by integer REFERENCES public.users(id) ON DELETE SET NULL,
+    created_at timestamp with time zone NOT NULL DEFAULT now()
+);
+
 -- The president of each association as Wikidata has it (P488), read once a day
 CREATE TABLE IF NOT EXISTS public.fifa_leaders (
     member_qid text PRIMARY KEY,

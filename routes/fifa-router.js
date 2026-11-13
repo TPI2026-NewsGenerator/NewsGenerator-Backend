@@ -19,6 +19,10 @@ router.get('/subjects', authenticateToken, FifaController.subjects);
 router.get('/presidents', authenticateToken, FifaController.presidents);
 router.get('/confederations', authenticateToken, FifaController.confederations);
 router.get('/associations/:qid', authenticateToken, FifaController.association);
+// the AI writes the summary of a sheet when a reader asks (about 3 000 tokens): a few an hour for each, and one kept while the sheet has not changed answers for nothing
+router.post('/associations/:qid/summary', authenticateToken,
+    rateLimit({windowMs: 3600e3, max: 5, key: req => `fifa summary ${req.user.id}`, message: 'Too many summaries asked, try again in an hour.'}),
+    FifaController.summarize);
 // the news that name the president of the association (a query of the shared tables: a few a minute)
 router.get('/associations/:qid/leader/news', authenticateToken,
     rateLimit({windowMs: 60e3, max: 30, key: req => `fifa leader news ${req.user.id}`, message: 'Too many requests, try again in a minute.'}),

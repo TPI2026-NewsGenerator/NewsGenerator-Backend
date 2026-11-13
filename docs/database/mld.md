@@ -568,6 +568,19 @@ UNIQUE `(user_id, member_qid, url)`. A page a reader adds on its own, with no ca
 | qid | text | PK — a candidate taken off the map (by a reader, or an administrator): the news do not bring it back |
 | dismissed_at | timestamptz | NOT NULL, default `now()` |
 
+#### fifa_summaries
+| Column | Type | |
+|---|---|---|
+| member_qid | text | PK — the association |
+| claims | jsonb | NOT NULL — what the AI wrote and the check kept: `[{text, facts: [ids]}]` |
+| facts | jsonb | NOT NULL — the numbered facts the claims cite (the position, the sentences word for word with their link, the confederation) |
+| model | text | NOT NULL — the model that wrote it |
+| input_hash | text | NOT NULL — a fingerprint of the facts: a sheet that changed since makes the summary older |
+| created_by | integer | null, FK to `users` ON DELETE SET NULL — the reader who asked |
+| created_at | timestamptz | NOT NULL, default `now()` |
+
+Written when a reader asks for the summary of the AI; the latest one for each association. The summary of the code is not stored.
+
 #### fifa_leaders
 | Column | Type | |
 |---|---|---|

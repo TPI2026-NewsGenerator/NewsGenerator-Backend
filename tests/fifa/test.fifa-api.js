@@ -16,12 +16,13 @@ import express from 'express';
 // the mentions of the presidents are kept a quarter of an hour: not here, each test asks again
 process.env.FIFA_MENTIONS_CACHE_MS = '0';
 const model = Object.fromEntries(['subjects', 'addSubject', 'markChecked', 'setSubjectStatus', 'deleteSubject', 'news', 'linkedNames', 'mentionNames', 'knownHashes', 'insertSignal',
-    'unconfirmed', 'updateSignal', 'signals', 'signalsOf', 'votes', 'votesOf', 'votesOfPair', 'addVote', 'deleteVote', 'leaders', 'replaceLeaders', 'audits', 'auditSample', 'lastAudit', 'addAudit', 'mentionsOfLeaders', 'addVotes', 'voteById', 'setSourceCheck', 'sourcesSince', 'expireSources', 'pendingSources', 'notesOf', 'addNote', 'noteById', 'deleteNote', 'dismiss', 'dismissed', 'addSource', 'sourceById', 'setPageCheck', 'pagesOf', 'pendingPages', 'expirePages', 'deletePage', 'newsOfLeader'].map(name => [name, jest.fn()]));
+    'unconfirmed', 'updateSignal', 'signals', 'signalsOf', 'votes', 'votesOf', 'votesOfPair', 'addVote', 'deleteVote', 'leaders', 'replaceLeaders', 'audits', 'auditSample', 'lastAudit', 'addAudit', 'mentionsOfLeaders', 'addVotes', 'voteById', 'setSourceCheck', 'sourcesSince', 'expireSources', 'pendingSources', 'notesOf', 'addNote', 'noteById', 'deleteNote', 'dismiss', 'dismissed', 'addSource', 'sourceById', 'setPageCheck', 'pagesOf', 'pendingPages', 'expirePages', 'deletePage', 'newsOfLeader', 'aiSummaryOf', 'saveAiSummary'].map(name => [name, jest.fn()]));
 // the address of a source is checked against the network of the server with a DNS lookup: not here
 const publicUrl = await import('../../services/utils/public-url.js');
 jest.unstable_mockModule('../../services/utils/public-url.js', () => ({...publicUrl, assertPublicUrl: jest.fn(async (value) => new URL(value))}));
 jest.unstable_mockModule('../../models/fifa-model.js', () => ({FifaModel: model}));
-jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson: jest.fn(), newUsage: () => ({calls: 0, input: 0, output: 0})}));
+const ollamaJson = jest.fn();
+jest.unstable_mockModule('../../services/utils/ollama.js', () => ({ollamaJson, newUsage: () => ({calls: 0, input: 0, output: 0})}));
 const wikidata = {searchItems: jest.fn(), describeItems: jest.fn(), isQid: (value) => /^Q[1-9]\d*$/.test(String(value)), wikimediaHeaders: () => ({})};
 jest.unstable_mockModule('../../services/utils/wikidata.js', () => wikidata);
 // who is signed in, and whether they are an administrator, as the headers of the test say
@@ -72,6 +73,8 @@ beforeEach(() => {
     model.addVotes.mockResolvedValue([]);
     model.sourcesSince.mockResolvedValue(0);
     model.voteById.mockResolvedValue(null);
+    model.aiSummaryOf.mockResolvedValue(null);
+    ollamaJson.mockReset();
     model.knownHashes.mockResolvedValue(new Set());
     wikidata.searchItems.mockReset();
     wikidata.describeItems.mockReset();
@@ -122,6 +125,88 @@ describe('the reading routes', () => {
         expect(model.mentionsOfLeaders.mock.calls.at(-1)[0]).toEqual([{lid: 1, qid: 'Q1', key: 'kozo tashima'}, {lid: 2, qid: null, key: 'jesper moller'}]);
         expect(first).toMatchObject({articles_30d: 12, last_mention: {at: '2026-11-11T10:00:00.000Z', medium: 'camfoot.com', url: 'https://camfoot.com/a', title: 'A title'}});
         expect(second).toMatchObject({articles_30d: 0, last_mention: null});
+    });
+});
+
+describe('the summary of the sheet of an association', () => {
+    const CLAIM = {text: 'Japan is shown against Gianni Infantino at the declared level.', facts: [1]};
+    const keep = () => model.saveAiSummary.mockImplementation(async (args) => ({claims: args.claims, facts: args.facts, model: args.model, input_hash: args.hash, created_at: new Date('2026-11-13T10:00:00Z'), username: 'reader9'}));
+    const withSignal = () => model.signalsOf.mockResolvedValue([signal]);
+    const ask = (user = reader(), qid = JAPAN) => call(`/associations/${qid}/summary`, {method: 'POST', user});
+
+    it('should carry on the sheet the summary the code built, the context of the confederation, and that the AI can be asked (nothing written yet)', async () => {
+        withSignal();
+        const sheet = (await call(`/associations/${JAPAN}`, {user: 9})).body;
+        expect(sheet.summary.candidates).toEqual([expect.objectContaining({subject_qid: INFANTINO.qid, position: 'non_soutien_declare', sides: [expect.objectContaining({stance: 'against', key: [expect.objectContaining({sentence: 'The JFA will not back Infantino.'})]})]})]);
+        expect(sheet.context).toMatchObject({confederation: {fifa: 'AFC'}});
+        expect(sheet).toMatchObject({ai_summary: null, ai_summary_available: true});
+        // nothing to summarise on an association with no signal: the button is not offered
+        model.signalsOf.mockResolvedValue([]);
+        expect((await call(`/associations/${JAPAN}`, {user: 9})).body).toMatchObject({summary: {candidates: []}, ai_summary_available: false});
+    });
+
+    it('should write the summary when a reader asks: the AI is given the numbered facts, the claims that hold are kept with the facts, and the sheet carries them', async () => {
+        withSignal();
+        keep();
+        ollamaJson.mockResolvedValue({claims: [CLAIM, {text: 'It has been against him for 99 years.', facts: [1]}]});
+        const {status, body} = await ask();
+        expect(status).toBe(200);
+        expect(ollamaJson.mock.calls[0][0]).toContain('1. Japan is shown against Gianni Infantino at the declared level');
+        expect(model.saveAiSummary).toHaveBeenCalledWith(expect.objectContaining({memberQid: JAPAN, userId: expect.any(Number), claims: [CLAIM], facts: expect.arrayContaining([expect.objectContaining({id: 1, kind: 'position'})])}));
+        expect(body).toMatchObject({generated: true, ai_summary: {claims: [CLAIM], current: true, by: 'reader9', generated_at: '2026-11-13T10:00:00.000Z'}});
+        expect(body.ai_summary.facts.length).toBeGreaterThan(1);
+    });
+
+    it('should answer the one kept for nothing while the sheet has not changed, and write it again when it has', async () => {
+        withSignal();
+        keep();
+        ollamaJson.mockResolvedValue({claims: [CLAIM]});
+        const written = (await ask()).body;
+        // the sheet now holds what was kept
+        const stored = {claims: [CLAIM], facts: written.ai_summary.facts, model: 'gemma4:31b', input_hash: model.saveAiSummary.mock.calls[0][0].hash, created_at: new Date('2026-11-13T10:00:00Z'), username: 'reader9'};
+        model.aiSummaryOf.mockResolvedValue(stored);
+        ollamaJson.mockClear();
+        expect((await ask(10)).body).toMatchObject({generated: false, ai_summary: {current: true}});
+        expect(ollamaJson).not.toHaveBeenCalled();
+        expect((await call(`/associations/${JAPAN}`, {user: 9})).body.ai_summary).toMatchObject({current: true});
+        // a sheet that changed since: the one kept is told older, and asking writes a new one
+        model.aiSummaryOf.mockResolvedValue({...stored, input_hash: 'an-older-sheet'});
+        expect((await call(`/associations/${JAPAN}`, {user: 9})).body.ai_summary).toMatchObject({current: false});
+        expect((await ask(10)).body).toMatchObject({generated: true});
+        expect(ollamaJson).toHaveBeenCalledTimes(1);
+    });
+
+    it('should refuse with nothing to summarise (409), when the AI does not answer or gives nothing the facts hold (502), when it is switched off (403), and for an association that does not exist (404)', async () => {
+        model.signalsOf.mockResolvedValue([]);
+        expect((await ask()).status).toBe(409);
+        withSignal();
+        keep();
+        const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        ollamaJson.mockRejectedValue(new Error('busy'));
+        expect((await ask()).status).toBe(502);
+        ollamaJson.mockResolvedValue({claims: [{text: 'It has been against him for 99 years.', facts: [1]}]});
+        expect((await ask()).status).toBe(502);
+        warn.mockRestore();
+        expect(model.saveAiSummary).not.toHaveBeenCalled();
+        expect((await ask(undefined, 'Q1')).status).toBe(404);
+        process.env.FIFA_AI_SUMMARY = 'off';
+        try {
+            expect((await ask()).status).toBe(403);
+            expect((await call(`/associations/${JAPAN}`, {user: 9})).body.ai_summary_available).toBe(false);
+        } finally {
+            delete process.env.FIFA_AI_SUMMARY;
+        }
+    });
+
+    it('should stop a reader at five summaries an hour, and refuse a reader who is not signed in', async () => {
+        withSignal();
+        keep();
+        ollamaJson.mockResolvedValue({claims: [CLAIM]});
+        const user = reader();
+        let last;
+        for (let i = 0; i < 6; i++) last = await ask(user);
+        expect(last.status).toBe(429);
+        expect((await call(`/associations/${JAPAN}/summary`, {method: 'POST'})).status).toBe(401);
     });
 });
 
